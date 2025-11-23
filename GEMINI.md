@@ -113,6 +113,11 @@ The web interface features a "War Archive" that allows users to browse and searc
 *   **Enhanced Search Filters:** The web search interface now includes advanced filters for `Attacker`, `Defender`, `Player`, `Node`, `Season` (multi-select), and `Has Video`. The champion comboboxes display selected champion images and allow clearing the selection.
 *   **Uploads:** Authenticated users can generate upload tokens and submit new war videos directly from the web interface.
 
+### Profile & Roster Management
+The web interface now includes a comprehensive Profile section.
+*   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, prestige, and a summary of their champion roster (grouped by star rating, rank, and class).
+*   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful OCR processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
+
 ## Building and Running
 
 The project is fully containerized with Docker, so the easiest way to get started is with Docker Compose.

@@ -12,7 +12,7 @@ import Fuse from "fuse.js";
 import { getGoogleVisionService } from "../../../services/googleVisionService.js";
 
 export async function processRosterScreenshot(
-  imageUrl: string,
+  imageInput: string | Buffer,
   stars: number,
   rank: number,
   isAscended: boolean = false,
@@ -22,12 +22,20 @@ export async function processRosterScreenshot(
   const googleVisionService = await getGoogleVisionService();
   const { prisma } = await import("../../../services/prismaService.js");
   if (debugMode)
-    console.log(`[DEBUG] Starting roster processing for URL: ${imageUrl}`);
+    console.log(`[DEBUG] Starting roster processing...`);
 
-  // 1. Download image
-  const imageBuffer = await downloadImage(imageUrl);
+  // 1. Prepare image buffer
+  let imageBuffer: Buffer;
+  if (typeof imageInput === 'string') {
+      if (debugMode) console.log(`[DEBUG] Downloading image from URL: ${imageInput}`);
+      imageBuffer = await downloadImage(imageInput);
+  } else {
+      if (debugMode) console.log(`[DEBUG] Using provided image buffer`);
+      imageBuffer = imageInput;
+  }
+
   if (debugMode)
-    console.log(`[DEBUG] Image downloaded, size: ${imageBuffer.length} bytes`);
+    console.log(`[DEBUG] Image ready, size: ${imageBuffer.length} bytes`);
 
   // 2. Run OCR using Google Cloud Vision
   if (debugMode)

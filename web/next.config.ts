@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
     } else {
       config.resolve.plugins = [new TsconfigPathsPlugin()];
     }
+    
+    // Handle .js imports resolving to .ts files for shared core code
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js', '.jsx'],
+    };
+
     return config;
   },
 };
