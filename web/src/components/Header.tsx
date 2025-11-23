@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
 
-export default function Header() {
+export default function Header({ userButton }: { userButton: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -45,15 +45,14 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8 text-sm">
-              <SmoothScrollLink href="#features" className="text-slate-300 hover:text-white transition-colors">Features</SmoothScrollLink>
-              <SmoothScrollLink href="#commands" className="text-slate-300 hover:text-white transition-colors">Commands</SmoothScrollLink>
-              <SmoothScrollLink href="#howitworks" className="text-slate-300 hover:text-white transition-colors">How it works</SmoothScrollLink>
-              <SmoothScrollLink href="#faq" className="text-slate-300 hover:text-white transition-colors">FAQ</SmoothScrollLink>
-              <SmoothScrollLink href="#support" className="text-slate-300 hover:text-white transition-colors">Support</SmoothScrollLink>
+            <nav className="hidden md:flex items-center gap-4 text-sm">
+              <Link href="/war-videos" className="text-slate-300 hover:text-white transition-colors">War Archive</Link>
             </nav>
 
             <div className="flex items-center gap-3">
+              <div className="hidden md:block">
+                {userButton}
+              </div>
               <Link href="https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=8&scope=bot%20applications.commands" target="_blank" className="hidden sm:inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold btn-primary text-slate-50 shadow-lg shadow-cyan-500/40">
                 <span>Invite CereBro</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -99,11 +98,10 @@ export default function Header() {
               </button>
             </div>
             <nav className="flex flex-col items-start space-y-6 text-lg mt-6">
-              <SmoothScrollLink href="#features" className="text-slate-300 hover:text-white transition-colors" onClick={toggleMobileMenu}>Features</SmoothScrollLink>
-              <SmoothScrollLink href="#commands" className="text-slate-300 hover:text-white transition-colors" onClick={toggleMobileMenu}>Commands</SmoothScrollLink>
-              <SmoothScrollLink href="#howitworks" className="text-slate-300 hover:text-white transition-colors" onClick={toggleMobileMenu}>How it works</SmoothScrollLink>
-              <SmoothScrollLink href="#faq" className="text-slate-300 hover:text-white transition-colors" onClick={toggleMobileMenu}>FAQ</SmoothScrollLink>
-              <SmoothScrollLink href="#support" className="text-slate-300 hover:text-white transition-colors" onClick={toggleMobileMenu}>Support</SmoothScrollLink>
+              <Link href="/war-videos" className="text-slate-300 hover:text-white transition-colors" onClick={toggleMobileMenu}>War Archive</Link>
+              <div className="w-full pt-4 border-t border-slate-800">
+                {userButton}
+              </div>
               <Link href="https://discord.com/api/oauth2/authorize?client_id=YOUR_BOT_ID&permissions=8&scope=bot%20applications.commands" target="_blank" className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold btn-primary text-slate-50 shadow-lg shadow-cyan-500/40 mt-4">
                 <span>Invite CereBro</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

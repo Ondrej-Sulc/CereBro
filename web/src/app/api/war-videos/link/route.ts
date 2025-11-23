@@ -58,22 +58,55 @@ export async function POST(req: NextRequest) {
       const parsedWarTier = parseInt(warTier);
       const parsedBattlegroup = parseInt(battlegroup); // this battlegroup is for all fights in this submission
 
-      const war = await prisma.war.upsert({
+      let war;
+      if (parsedWarNumber !== null) {
+        // For regular wars, use upsert with the unique constraint
+        war = await prisma.war.upsert({
           where: {
-              allianceId_season_warNumber: {
-                  allianceId: allianceId,
-                  season: parsedSeason,
-                  warNumber: parsedWarNumber,
-              },
+            allianceId_season_warNumber: {
+              allianceId: allianceId,
+              season: parsedSeason,
+              warNumber: parsedWarNumber,
+            },
           },
           update: { warTier: parsedWarTier },
           create: {
+            season: parsedSeason,
+            warTier: parsedWarTier,
+            warNumber: parsedWarNumber,
+            allianceId: allianceId,
+          },
+        });
+      } else {
+        // For offseason wars (warNumber is null), find the most recent offseason war or create a new one
+        war = await prisma.war.findFirst({
+          where: {
+            allianceId: allianceId,
+            season: parsedSeason,
+            warNumber: null,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        if (!war) {
+          war = await prisma.war.create({
+            data: {
               season: parsedSeason,
               warTier: parsedWarTier,
-              warNumber: parsedWarNumber,
+              warNumber: null,
               allianceId: allianceId,
-          },
-      });
+            },
+          });
+        } else {
+          // Update the tier if needed
+          war = await prisma.war.update({
+            where: { id: war.id },
+            data: { warTier: parsedWarTier },
+          });
+        }
+      }
 
       // 3.4. Create WarFights
       const createdFights = await Promise.all(newFights.map(async (fight: any) => {

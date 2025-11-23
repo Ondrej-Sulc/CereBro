@@ -5,10 +5,10 @@ import crypto from 'crypto';
 
 export async function GET(
   request: NextRequest,
-  { params: paramsPromise }: { params: { token: string } }
+  context: { params: Promise<{ token: string }> }
 ): Promise<NextResponse> {
-  const params = await paramsPromise;
-  const { token } = params;
+  const resolvedParams = await context.params;
+  const { token } = resolvedParams;
 
   if (!token) {
     return NextResponse.json({ error: 'Missing session token' }, { status: 400 });

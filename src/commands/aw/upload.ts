@@ -1,5 +1,4 @@
 import {
-  SlashCommandBuilder,
   CommandInteraction,
   ContainerBuilder,
   TextDisplayBuilder,
@@ -8,11 +7,10 @@ import {
   ButtonStyle,
   MessageFlags,
 } from 'discord.js';
-import { Command, CommandAccess } from '../../types/command';
 import loggerService from '../../services/loggerService';
 import crypto from 'crypto';
 
-async function handleUploadSubcommand(interaction: CommandInteraction) {
+export async function handleUploadSubcommand(interaction: CommandInteraction) {
   if (!interaction.isChatInputCommand()) return;
 
   const { prisma } = await import('../../services/prismaService.js');
@@ -90,33 +88,3 @@ async function handleUploadSubcommand(interaction: CommandInteraction) {
     });
   }
 }
-
-export const command: Command = {
-  data: new SlashCommandBuilder()
-    .setName('war-videos')
-    .setDescription('Commands for the Alliance War video library.')
-    .addSubcommand(subcommand =>
-      subcommand
-        .setName('upload')
-        .setDescription('Generates a link to upload a new Alliance War video.')
-    ),
-  access: CommandAccess.USER,
-  help: {
-    group: 'Alliance Tools',
-    color: 'gold',
-  },
-  async execute(interaction: CommandInteraction) {
-    if (!interaction.isChatInputCommand()) return;
-
-    const subcommand = interaction.options.getSubcommand();
-
-    if (subcommand === 'upload') {
-      await handleUploadSubcommand(interaction);
-    } else {
-      await interaction.reply({
-        content: 'Unknown subcommand.',
-        ephemeral: true,
-      });
-    }
-  },
-};

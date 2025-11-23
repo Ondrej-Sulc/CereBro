@@ -7,6 +7,7 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
 ## Key Features
 
 - **Web Interface:** A modern, visually appealing web interface built with Next.js, Tailwind CSS, and shadcn/ui. It serves as a landing page for the bot, showcasing its features, commands, and providing an FAQ section.
+    - **War Archive:** A searchable database of uploaded Alliance War videos and fight logs. Features Discord OAuth2 authentication to allow users to upload videos and view alliance-restricted content. The search interface includes interactive filters for attacker, defender (with champion image display and clear functionality), player, node, and supports multi-season selection.
 - **Dynamic Command Loading:** Commands in the `src/commands` directory are automatically registered on startup.
 - **Tiered Command Access:** The bot now implements a granular command access system, categorizing commands into different tiers:
     - **Public:** Accessible to all users by default (e.g., `/champion`, `/glossary`, `/search all`).
@@ -41,7 +42,10 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
     - `/search all`: Performs a global search across all champions in the database based on a wide range of criteria, including abilities, immunities, tags, classes, ability categories, and attack types.
     - `/search roster`: Allows users to search within their own personal roster, making it easy to find specific champions they own.
 - **AQ Management:** An interactive `/aq` command to manage Alliance Quest (AQ) trackers. Users can `start` and `end` trackers, and progress is updated through interactive buttons, providing a real-time view of the AQ status. It also includes a comprehensive, interactive `/aq schedule` command for Alliance Admins to manage the automated AQ schedule for their alliance.
-- **War Videos Database:** A fully integrated system for war planning and video analysis. The `/aw plan` command reads data from a Google Sheet, creates a persistent record of the war plan in the database, and sends each player their assignments with a button to upload videos. This button provides a unique link to the web UI, which pre-fills the upload form with all the relevant fight data, creating a seamless plan-to-upload workflow.
+- **Alliance War & Video Archive:** A fully integrated system for war planning, video uploading, and fight analysis.
+    - **Search:** The `/aw search` command allows users to search for past fights and videos by attacker, defender, node, player, tier, and season. It features smart autocomplete for all search fields.
+    - **Plan & Upload:** The `/aw plan` command reads war assignments from a Google Sheet, creates persistent records, and sends assignments to players. Each assignment includes an "Upload Video" button, providing a seamless link to the web UI with pre-filled fight data.
+    - **Web Archive:** The web interface features a comprehensive "War Archive" where users can browse and filter all logged fights and videos with an advanced search interface.
 - **PostgreSQL Database:** Uses a robust PostgreSQL database managed with Prisma for persistent data storage.
 - **Google Sheets Integration:** Utilizes Google Sheets for data storage and retrieval (e.g., for scheduling).
 - **Advanced Scheduling:** Schedule commands or custom messages with flexible timing (e.g., daily, weekly, monthly) via `/schedule`.
@@ -59,6 +63,7 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
 - **Database:** PostgreSQL with Prisma ORM
 - **APIs:** Google Sheets, OpenRouter, Google Cloud Storage, PostHog
 - **Scheduling:** `node-cron`
+- **Authentication:** NextAuth.js (v5 beta) with Discord Provider
 - **Containerization:** Docker & Docker Compose
 
 ## Hosting
@@ -80,7 +85,7 @@ Currently, the Next.js configuration has `typescript: { ignoreBuildErrors: true 
 | `/admin` | Administrative commands for managing champions, abilities, attacks, and the glossary. These commands are typically restricted to bot administrators and are used for data management and bot configuration. | Bot Admin |
 | `/alliance` | A comprehensive suite of commands to view and manage your alliance, its members, roles, and features. | User |
 | `/aq` | Alliance Quest (AQ) utilities. These commands help alliances coordinate and track their progress in Alliance Quests. | User |
-| `/aw` | Commands for Alliance War planning and details. | Feature |
+| `/aw` | Commands for Alliance War planning, details, searching fights/videos, and generating upload links. | Feature |
 | `/champion` | Get detailed, interactive information about any champion. Features buttons to switch between views (abilities, attacks, etc.), pagination for long descriptions, and community-sourced duel targets. | Public |
 | `/debug` | Debugging commands, restricted to bot administrators. These commands are used for testing and troubleshooting bot features. | Bot Admin |
 | `/glossary` | Look up MCOC effects, buffs, and debuffs. This acts as an in-game dictionary for various terms. | Public |

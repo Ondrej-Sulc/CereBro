@@ -720,6 +720,67 @@
             "required": false
           }
         ]
+      },
+      {
+        "type": 1,
+        "name": "upload",
+        "description": "Generates a link to upload a new Alliance War video.",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "search",
+        "description": "Search for war fights and videos.",
+        "options": [
+          {
+            "autocomplete": true,
+            "type": 3,
+            "name": "attacker",
+            "description": "Attacker Champion name",
+            "required": false
+          },
+          {
+            "autocomplete": true,
+            "type": 3,
+            "name": "defender",
+            "description": "Defender Champion name",
+            "required": false
+          },
+          {
+            "autocomplete": true,
+            "type": 3,
+            "name": "player",
+            "description": "Player in-game name",
+            "required": false
+          },
+          {
+            "autocomplete": true,
+            "type": 4,
+            "name": "node",
+            "description": "Node number",
+            "required": false
+          },
+          {
+            "autocomplete": true,
+            "type": 4,
+            "name": "tier",
+            "description": "War Tier",
+            "required": false
+          },
+          {
+            "autocomplete": true,
+            "type": 4,
+            "name": "season",
+            "description": "War Season",
+            "required": false
+          },
+          {
+            "name": "has_video",
+            "description": "Filter for fights with video",
+            "required": false,
+            "type": 5
+          }
+        ]
       }
     ],
     "subcommands": {}

@@ -1,4 +1,4 @@
-import { User, ChatInputCommandInteraction, ButtonInteraction } from "discord.js";
+import { User, ChatInputCommandInteraction, ButtonInteraction, ApplicationCommandOptionType } from "discord.js";
 import { Player } from "@prisma/client";
 import { safeReply } from "./errorHandler";
 
@@ -26,8 +26,12 @@ export async function getPlayer(
 ): Promise<Player | null> {
   let targetUser: User;
   if (interaction.isChatInputCommand()) {
-    const playerOption = interaction.options.getUser("player");
-    targetUser = playerOption || interaction.user;
+    const playerOption = interaction.options.get("player");
+    if (playerOption && playerOption.type === ApplicationCommandOptionType.User) {
+        targetUser = playerOption.user!;
+    } else {
+        targetUser = interaction.user;
+    }
   } else {
     targetUser = interaction.user;
   }

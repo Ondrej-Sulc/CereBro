@@ -77,7 +77,7 @@ export async function handleGenerateUploadLink(interaction: ButtonInteraction) {
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setURL(uploadUrl)
-      .setLabel("Upload Video(s) - Not finished yet")
+      .setLabel("Upload Video(s)")
       .setStyle(ButtonStyle.Link)
   );
 

@@ -1,10 +1,13 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  AutocompleteInteraction,
 } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
-import { handlePlan } from "./plan";
-import { handleDetails } from "./details";
+import { handlePlan } from "./plan.js";
+import { handleDetails } from "./details.js";
+import { handleSearchSubcommand, handleSearchAutocomplete } from "./search.js";
+import { handleUploadSubcommand } from "./upload.js";
 
 export const command: Command = {
   data: new SlashCommandBuilder()
@@ -45,6 +48,35 @@ export const command: Command = {
             .setDescription("A specific node to get details for.")
             .setRequired(false)
         )
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('upload')
+        .setDescription('Generates a link to upload a new Alliance War video.')
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('search')
+        .setDescription('Search for war fights and videos.')
+        .addStringOption(option => 
+            option.setName('attacker')
+            .setDescription('Attacker Champion name')
+            .setAutocomplete(true))
+        .addStringOption(option => 
+            option.setName('defender')
+            .setDescription('Defender Champion name')
+            .setAutocomplete(true))
+        .addStringOption(option => 
+            option.setName('player')
+            .setDescription('Player in-game name')
+            .setAutocomplete(true))
+        .addIntegerOption(option => 
+            option.setName('node')
+            .setDescription('Node number')
+            .setAutocomplete(true))
+        .addIntegerOption(option => option.setName('tier').setDescription('War Tier').setAutocomplete(true))
+        .addIntegerOption(option => option.setName('season').setDescription('War Season').setAutocomplete(true))
+        .addBooleanOption(option => option.setName('has_video').setDescription('Filter for fights with video'))
     ),
   access: CommandAccess.FEATURE,
   help: {
@@ -63,6 +95,18 @@ export const command: Command = {
       case "details":
         await handleDetails(interaction);
         break;
+      case "upload":
+        await handleUploadSubcommand(interaction);
+        break;
+      case "search":
+        await handleSearchSubcommand(interaction);
+        break;
     }
   },
+  async autocomplete(interaction: AutocompleteInteraction) {
+    const subcommand = interaction.options.getSubcommand();
+    if (subcommand === 'search') {
+        await handleSearchAutocomplete(interaction);
+    }
+  }
 };

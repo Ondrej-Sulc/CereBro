@@ -1,0 +1,155 @@
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Search } from "lucide-react";
+import { ChampionCombobox } from "@/components/ChampionCombobox";
+import { Champion } from "@/types/champion";
+import { useState, useTransition } from "react";
+import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
+
+interface SearchFiltersProps {
+  champions: Champion[];
+  availableSeasons: number[];
+}
+
+export function SearchFilters({ champions, availableSeasons }: SearchFiltersProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  // Local state for controlled inputs
+  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [attacker, setAttacker] = useState(searchParams.get("attacker") || "");
+  const [defender, setDefender] = useState(searchParams.get("defender") || "");
+  const [node, setNode] = useState(searchParams.get("node") || "");
+  const [player, setPlayer] = useState(searchParams.get("player") || "");
+  
+  const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
+  const [selectedSeasons, setSelectedSeasons] = useState<number[]>(initialSeasons);
+  
+  const [hasVideo, setHasVideo] = useState(searchParams.get("hasVideo") === "true");
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    startTransition(() => {
+      const params = new URLSearchParams();
+      if (query) params.set("q", query);
+      
+      const attackerName = champions.find(c => String(c.id) === attacker)?.name || attacker;
+      const defenderName = champions.find(c => String(c.id) === defender)?.name || defender;
+
+      if (attackerName) params.set("attacker", attackerName);
+      if (defenderName) params.set("defender", defenderName);
+      if (node) params.set("node", node);
+      if (player) params.set("player", player);
+      
+      selectedSeasons.forEach(s => params.append("season", s.toString()));
+      
+      if (hasVideo) params.set("hasVideo", "true");
+
+      router.push(`/war-videos?${params.toString()}`);
+    });
+  };
+
+  const getIdByName = (name: string) => champions.find(c => c.name.toLowerCase() === name.toLowerCase())?.id.toString() || "";
+
+  const [attackerId, setAttackerId] = useState(getIdByName(attacker));
+  const [defenderId, setDefenderId] = useState(getIdByName(defender));
+
+  const handleAttackerSelect = (id: string) => {
+      setAttackerId(id);
+      setAttacker(id); 
+  }
+
+  const handleDefenderSelect = (id: string) => {
+      setDefenderId(id);
+      setDefender(id);
+  }
+
+  return (
+    <form onSubmit={handleSearch} className="flex flex-col gap-4 max-w-5xl w-full">
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Input
+            name="q"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Global search (player, champion, description)..."
+            className="pl-9 bg-slate-900/50 border-slate-800 text-slate-200 placeholder:text-slate-500"
+          />
+        </div>
+        <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white" disabled={isPending}>
+          {isPending ? "Searching..." : "Search"}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-4 bg-slate-900/30 rounded-lg border border-slate-800/50">
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Attacker</Label>
+          <ChampionCombobox 
+            champions={champions}
+            value={attackerId}
+            onSelect={handleAttackerSelect}
+            placeholder="Select Attacker"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Defender</Label>
+          <ChampionCombobox 
+            champions={champions}
+            value={defenderId}
+            onSelect={handleDefenderSelect}
+            placeholder="Select Defender"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="player" className="text-xs text-slate-400">Player</Label>
+          <Input
+            id="player"
+            value={player}
+            onChange={(e) => setPlayer(e.target.value)}
+            placeholder="Name"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs text-slate-400">Seasons</Label>
+          <SeasonMultiSelect 
+            seasons={availableSeasons}
+            selected={selectedSeasons}
+            onChange={setSelectedSeasons}
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="node" className="text-xs text-slate-400">Node</Label>
+          <Input
+            id="node"
+            type="number"
+            value={node}
+            onChange={(e) => setNode(e.target.value)}
+            placeholder="#"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        </div>
+        <div className="flex items-end pb-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="hasVideo"
+              checked={hasVideo}
+              onCheckedChange={(checked) => setHasVideo(Boolean(checked))}
+            />
+            <Label htmlFor="hasVideo" className="text-sm cursor-pointer text-slate-300">Has Video</Label>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}

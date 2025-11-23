@@ -80,6 +80,7 @@ The bot is built with a modern tech stack, including:
 *   **Framework:** Discord.js v14
 *   **Database:** PostgreSQL with Prisma ORM
 *   **APIs:** Google Sheets, OpenRouter, Google Cloud Storage, PostHog
+*   **Authentication:** NextAuth.js (Discord OAuth2) for the web interface
 *   **Containerization:** Docker and Docker Compose
 
 The project is well-structured, with a clear separation of concerns. Commands are organized into their own directories, each containing sub-files for subcommands, handlers, and other related logic. This modular approach is demonstrated in the `roster`, `search`, and `aq` commands. The bot also includes a robust error handling system and a dynamic command loading mechanism.
@@ -104,6 +105,14 @@ The production environment for both the bot and its PostgreSQL database is hoste
 
 The project includes a modern, visually appealing web interface built with Next.js and hosted at `/web`. This interface serves as a landing page for the bot, showcasing its features, commands, and providing an FAQ section. It is styled with Tailwind CSS and uses shadcn/ui for its component library.
 
+### War Archive & Authentication
+
+The web interface features a "War Archive" that allows users to browse and search for uploaded Alliance War videos and fight logs.
+*   **Authentication:** It uses `next-auth` with Discord OAuth2 provider. Users can log in with their Discord account.
+*   **Access Control:** The system checks the user's Discord ID against the `Player` database to resolve their `allianceId`. Users can see public videos and videos restricted to their specific alliance. Visibility is now tied to the `War` entity's `allianceId`, ensuring historic alliance context is preserved for fight logs and alliance-private videos.
+*   **Enhanced Search Filters:** The web search interface now includes advanced filters for `Attacker`, `Defender`, `Player`, `Node`, `Season` (multi-select), and `Has Video`. The champion comboboxes display selected champion images and allow clearing the selection.
+*   **Uploads:** Authenticated users can generate upload tokens and submit new war videos directly from the web interface.
+
 ## Building and Running
 
 The project is fully containerized with Docker, so the easiest way to get started is with Docker Compose.
@@ -114,6 +123,7 @@ The project is fully containerized with Docker, so the easiest way to get starte
 *   Docker and Docker Compose
 *   A Discord Bot application
 *   API keys for Google, OpenRouter, and PostHog
+*   Discord OAuth2 Client ID and Secret (for web auth)
 
 ### 1. Set Up Environment Variables
 
@@ -123,7 +133,7 @@ Create a `.env` file by copying the example:
 cp .env.example .env
 ```
 
-Fill in the values in the `.env` file. This includes your Discord bot token, API keys, the connection details for your PostgreSQL database, the `GCS_BUCKET_NAME` for champion image uploads, and the `POSTHOG_API_KEY` and `POSTHOG_HOST` for product analytics.
+Fill in the values in the `.env` file. This includes your Discord bot token, API keys, the connection details for your PostgreSQL database, the `GCS_BUCKET_NAME` for champion image uploads, the `POSTHOG_API_KEY` and `POSTHOG_HOST` for product analytics, and the Discord OAuth2 credentials (`DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `AUTH_SECRET`).
 
 ### 2. Run the Bot
 
