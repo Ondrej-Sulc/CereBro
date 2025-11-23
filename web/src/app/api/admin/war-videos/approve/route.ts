@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import loggerService from '@cerebro/core/services/loggerService';
 
+import { isUserBotAdmin } from "@/lib/auth-helpers";
+
 export async function POST(req: NextRequest) {
-  // TODO: Add authentication to ensure only admins can access this endpoint
+  const isAdmin = await isUserBotAdmin();
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { videoId } = await req.json();
 

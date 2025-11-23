@@ -1,13 +1,15 @@
-"use client";
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CommandReference from "@/components/CommandReference";
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
-import Tilt from "react-parallax-tilt";
+import Tilt from "@/components/TiltWrapper";
+import { isUserBotAdmin } from "@/lib/auth-helpers";
 
-export default function Home() {
+export default async function Home() {
+  const isAdmin = await isUserBotAdmin();
+
   return (
     <div className="min-h-screen relative page-container">
       <PageBackground />
@@ -402,7 +404,7 @@ export default function Home() {
           </div>
 
           <Suspense fallback={<div className="h-96 flex items-center justify-center text-slate-500">Loading commands...</div>}>
-            <CommandReference />
+            <CommandReference isAdmin={isAdmin} />
           </Suspense>
         </section>
 

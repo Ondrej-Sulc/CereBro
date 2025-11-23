@@ -3,7 +3,6 @@
 import commandData from "@/lib/data/commands.json";
 
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -94,10 +93,11 @@ const getGroupColorBorder = (group: string) => {
 
 
 
-export default function CommandReference() {
-  const searchParams = useSearchParams();
-  const isAdmin = searchParams.get("admin") === "true";
+interface CommandReferenceProps {
+  isAdmin?: boolean;
+}
 
+export default function CommandReference({ isAdmin = false }: CommandReferenceProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("All");
   const [selectedCommand, setSelectedCommand] = useState<Command | null>(null);

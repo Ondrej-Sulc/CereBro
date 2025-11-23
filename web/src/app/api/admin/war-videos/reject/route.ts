@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getYouTubeService } from '@cerebro/core/services/youtubeService';
+import { isUserBotAdmin } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
+  const isAdmin = await isUserBotAdmin();
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const { videoId } = await req.json();
 
   if (!videoId) {
@@ -10,8 +16,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // TODO: Add authentication to ensure only admins can access this endpoint
-
     const warVideo = await prisma.warVideo.findUnique({
       where: { id: videoId },
     });
