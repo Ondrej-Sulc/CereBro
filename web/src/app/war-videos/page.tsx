@@ -287,13 +287,13 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
             <table className="w-full text-left text-sm text-slate-400">
                 <thead className="bg-slate-900/80 text-xs uppercase font-semibold text-slate-500 border-b border-slate-800/60">
                     <tr>
-                        <th className="px-6 py-4 w-[160px]">War Info</th>
-                        <th className="px-6 py-4 w-[100px]">Node</th>
-                        <th className="px-6 py-4">Attacker</th>
-                        <th className="px-6 py-4">Defender</th>
-                        <th className="px-6 py-4 w-[120px]">Prefights</th> {/* Added Prefights column header */}
-                        <th className="px-6 py-4">Player</th>
-                        <th className="px-6 py-4 text-right">View</th>
+                        <th className="px-4 py-3 w-[160px]">War Info</th>
+                        <th className="px-4 py-3 w-[100px]">Node</th>
+                        <th className="px-4 py-3">Attacker</th>
+                        <th className="px-4 py-3">Defender</th>
+                        <th className="px-4 py-3 w-[120px]">Prefights</th> {/* Added Prefights column header */}
+                        <th className="px-4 py-3">Player</th>
+                        <th className="px-4 py-3 text-right">View</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -305,7 +305,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 fight.video ? "cursor-pointer" : "cursor-default"
                             )}
                         >
-                            <td className="px-6 py-4 align-middle">
+                            <td className="px-4 py-3 align-middle">
                                 <Link 
                                     href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
                                     className={cn("block", !fight.video && "pointer-events-none")}
@@ -325,7 +325,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     </div>
                                 </Link>
                             </td>
-                            <td className="px-6 py-4 align-middle">
+                            <td className="px-4 py-3 align-middle">
                                 <Link 
                                     href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
                                     className={cn("block", !fight.video && "pointer-events-none")}
@@ -335,7 +335,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     </Badge>
                                 </Link>
                             </td>
-                            <td className="px-6 py-4 align-middle">
+                            <td className="px-4 py-3 align-middle">
                                 <Link 
                                     href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
                                     className={cn("block", !fight.video && "pointer-events-none")}
@@ -356,7 +356,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     </div>
                                 </Link>
                             </td>
-                            <td className="px-6 py-4 align-middle">
+                            <td className="px-4 py-3 align-middle">
                                 <Link 
                                     href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
                                     className={cn("block", !fight.video && "pointer-events-none")}
@@ -377,7 +377,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     </div>
                                 </Link>
                             </td>
-                            <td className="px-6 py-4 align-middle">
+                            <td className="px-4 py-3 align-middle">
                                 {fight.prefightChampions.length > 0 ? (
                                     <div className="flex -space-x-1 overflow-hidden">
                                         {fight.prefightChampions.map((champ) => (
@@ -395,7 +395,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     <span className="text-slate-600">-</span>
                                 )}
                             </td>
-                            <td className="px-6 py-4 align-middle">
+                            <td className="px-4 py-3 align-middle">
                                 <Link 
                                     href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
                                     className={cn("block", !fight.video && "pointer-events-none")}
@@ -408,7 +408,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     </div>
                                 </Link>
                             </td>
-                            <td className="px-6 py-4 align-middle text-right">
+                            <td className="px-4 py-3 align-middle text-right">
                                 {fight.video ? (
                                     <Link href={`/war-videos/${fight.video.id}`}>
                                         <Button variant="ghost" size="sm" className="h-8 px-3 text-xs bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200 shadow-md shadow-sky-500/10 hover:shadow-sky-500/30">

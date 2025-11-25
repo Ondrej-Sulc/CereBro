@@ -68,9 +68,9 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
           <Image
             src={getChampionImageUrl(champion.images, '32', 'primary')}
             alt={champion.name}
-            width={18}
-            height={18}
-            className="rounded-full"
+            width={32}
+            height={32}
+            className="rounded-full h-7 w-7 flex-shrink-0"
           />
           <span className="text-xs">{champion.name}</span>
           <button
@@ -123,9 +123,9 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                                     <Image 
                                         src={getChampionImageUrl(champion.images, '32', 'primary')} 
                                         alt="" 
-                                        width={20} 
-                                        height={20} 
-                                        className="rounded-full"
+                                        width={32} 
+                                        height={32} 
+                                        className="rounded-full h-7 w-7 flex-shrink-0"
                                     />
                                     <span className="text-sm">{champion.name}</span>
                                 </div>

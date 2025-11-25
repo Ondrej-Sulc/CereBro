@@ -59,7 +59,7 @@ export const NodeCombobox = React.memo(function NodeCombobox({
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
         >
-          <span className="truncate">
+          <span className="">
             {value ? `${nodes.find((n) => String(n.id) === value)?.nodeNumber}` : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

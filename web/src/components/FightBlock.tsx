@@ -84,78 +84,91 @@ export function FightBlock({
       {/* --- Header: Node & Actions --- */}
       <div className="flex items-center justify-between border-b border-slate-800/50 bg-slate-950/30 px-4 py-3">
         <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Node</span>
-                <div>
-                    <NodeCombobox
-                        nodes={initialNodes}
-                        value={fight.nodeId}
-                        onSelect={(val) => updateFight({ nodeId: val })}
-                        placeholder="#"
-                        className={cn("h-7 w-[80px] bg-slate-900 border-slate-700 text-sm font-bold", errors?.[`nodeId-${fight.id}`] && "border-red-500")}
-                    />
-                    {errors?.[`nodeId-${fight.id}`] && (
-                        <p className="text-xs text-red-400 mt-1">{errors[`nodeId-${fight.id}`]}</p>
-                    )}
-                </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Node
+            </span>
+            <div>
+              <NodeCombobox
+                nodes={initialNodes}
+                value={fight.nodeId}
+                onSelect={(val) => updateFight({ nodeId: val })}
+                placeholder="#"
+                className={cn(
+                  "h-7 w-[80px] bg-slate-900 border-slate-700 text-sm font-bold",
+                  errors?.[`nodeId-${fight.id}`] && "border-red-500"
+                )}
+              />
+              {errors?.[`nodeId-${fight.id}`] && (
+                <p className="text-xs text-red-400 mt-1">
+                  {errors[`nodeId-${fight.id}`]}
+                </p>
+              )}
             </div>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-            {/* Individual Video Input (Multiple Mode) - Moved to Header */}
-            {uploadMode === "multiple" && (
-                <div className="flex items-center gap-2 mr-2">
-                    {sourceMode === "upload" ? (
-                    <div className="flex items-center">
-                        <Label
-                        htmlFor={`videoFile-${fight.id}`}
-                        className={cn("cursor-pointer flex items-center justify-center gap-2 h-7 px-3 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 transition-all text-xs text-slate-300", errors?.[`videoFile-${fight.id}`] && "border-red-500")}
-                        >
-                        <UploadCloud className="h-3 w-3" />
-                        <span className="truncate max-w-[100px]">
-                            {fight.videoFile ? fight.videoFile.name : "Video"}
-                        </span>
-                        </Label>
-                        <Input
-                        id={`videoFile-${fight.id}`}
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) =>
-                            updateFight({
-                            videoFile: e.target.files ? e.target.files[0] : null,
-                            })
-                        }
-                        className="hidden"
-                        />
-                    </div>
-                    ) : (
-                    <div className="relative">
-                        <Video className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-sky-400 pointer-events-none" />
-                        <Input
-                            id={`videoUrl-${fight.id}`}
-                            type="url"
-                            value={fight.videoUrl || ""}
-                            onChange={(e) => updateFight({ videoUrl: e.target.value })}
-                            placeholder="Video URL..."
-                            className={cn("h-7 w-[150px] pl-7 bg-slate-900 border-slate-700 text-xs", errors?.[`videoUrl-${fight.id}`] && "border-red-500")}
-                        />
-                    </div>
-                    )}
-                </div>
-            )}
 
-            {canRemove && (
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-slate-500 hover:bg-red-500/10 hover:text-red-400 -mr-2"
-                    onClick={() => onRemove(fight.id)}
-                >
-                    <X className="h-4 w-4" />
-                    <span className="sr-only">Remove fight</span>
-                </Button>
-            )}
+        <div className="flex items-center gap-2">
+          {/* Individual Video Input (Multiple Mode) - Moved to Header */}
+          {uploadMode === "multiple" && (
+            <div className="flex items-center gap-2 mr-2">
+              {sourceMode === "upload" ? (
+                <div className="flex items-center">
+                  <Label
+                    htmlFor={`videoFile-${fight.id}`}
+                    className={cn(
+                      "cursor-pointer flex items-center justify-center gap-2 h-7 px-3 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 transition-all text-xs text-slate-300",
+                      errors?.[`videoFile-${fight.id}`] && "border-red-500"
+                    )}
+                  >
+                    <UploadCloud className="h-3 w-3" />
+                    <span className="truncate max-w-[100px]">
+                      {fight.videoFile ? fight.videoFile.name : "Video"}
+                    </span>
+                  </Label>
+                  <Input
+                    id={`videoFile-${fight.id}`}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) =>
+                      updateFight({
+                        videoFile: e.target.files ? e.target.files[0] : null,
+                      })
+                    }
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div className="relative">
+                  <Video className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-sky-400 pointer-events-none" />
+                  <Input
+                    id={`videoUrl-${fight.id}`}
+                    type="url"
+                    value={fight.videoUrl || ""}
+                    onChange={(e) => updateFight({ videoUrl: e.target.value })}
+                    placeholder="Video URL..."
+                    className={cn(
+                      "h-7 w-[150px] pl-7 bg-slate-900 border-slate-700 text-xs",
+                      errors?.[`videoUrl-${fight.id}`] && "border-red-500"
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {canRemove && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-slate-500 hover:bg-red-500/10 hover:text-red-400 -mr-2"
+              onClick={() => onRemove(fight.id)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Remove fight</span>
+            </Button>
+          )}
         </div>
       </div>
       <div className="p-4 space-y-4">
@@ -175,11 +188,14 @@ export function FightBlock({
                 "w-full bg-slate-950/50 border-slate-700/50",
                 selectedAttacker &&
                   getChampionClassColors(selectedAttacker.class).text,
-                errors?.[`attackerId-${fight.id}`] && "border-red-500"
+                errors?.[`attackerId-${fight.id}`] && "border-red-500",
+                fight.attackerId && "font-bold text-base"
               )}
             />
             {errors?.[`attackerId-${fight.id}`] && (
-                <p className="text-xs text-red-400 mt-1">{errors[`attackerId-${fight.id}`]}</p>
+              <p className="text-xs text-red-400 mt-1">
+                {errors[`attackerId-${fight.id}`]}
+              </p>
             )}
           </div>
 
@@ -190,7 +206,7 @@ export function FightBlock({
           <hr className="w-full sm:hidden border-slate-700/50" />
 
           {/* Defender Card */}
-          <div className="flex-1 flex items-center gap-2 w-full justify-end">
+          <div className="flex-1 flex items-center gap-2 w-full justify-end font-bold">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-300">
               <Shield className="h-6 w-6 text-amber-500" />
             </div>
@@ -203,71 +219,74 @@ export function FightBlock({
                 "w-full bg-slate-950/50 border-slate-700/50 text-right",
                 selectedDefender &&
                   getChampionClassColors(selectedDefender.class).text,
-                errors?.[`defenderId-${fight.id}`] && "border-red-500"
+                errors?.[`defenderId-${fight.id}`] && "border-red-500",
+                fight.defenderId && "font-bold text-base"
               )}
             />
             {errors?.[`defenderId-${fight.id}`] && (
-                <p className="text-xs text-red-400 mt-1">{errors[`defenderId-${fight.id}`]}</p>
+              <p className="text-xs text-red-400 mt-1">
+                {errors[`defenderId-${fight.id}`]}
+              </p>
             )}
           </div>
         </div>
 
         {/* --- Footer: Meta & Options --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-2 border-t border-slate-800/50">
-            {/* Left Column: Death Toggle */}
-            <div className="flex flex-col gap-4 justify-start">
-                <label
-                className={cn(
-                    "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all h-full",
-                    fight.death
-                    ? "bg-red-500/10 border-red-500/30"
-                    : "bg-slate-950/30 border-slate-800 hover:border-slate-700"
-                )}
-                >
-                <div className="flex items-center gap-2">
-                    <Skull
-                    className={cn(
-                        "h-4 w-4",
-                        fight.death ? "text-red-400" : "text-slate-500"
-                    )}
-                    />
-                    <span
-                    className={cn(
-                        "text-sm font-medium",
-                        fight.death ? "text-red-200" : "text-slate-400"
-                    )}
-                    >
-                    Attacker Died
-                    </span>
-                </div>
-                <Checkbox
-                    id={`death-${fight.id}`}
-                    checked={fight.death}
-                    onCheckedChange={(c) => updateFight({ death: !!c })}
-                    className={cn(
-                    "data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
-                    )}
+          {/* Left Column: Death Toggle */}
+          <div className="flex flex-col gap-4 justify-start">
+            <label
+              className={cn(
+                "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all h-full",
+                fight.death
+                  ? "bg-red-500/10 border-red-500/30"
+                  : "bg-slate-950/30 border-slate-800 hover:border-slate-700"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <Skull
+                  className={cn(
+                    "h-4 w-4",
+                    fight.death ? "text-red-400" : "text-slate-500"
+                  )}
                 />
-                </label>
-            </div>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    fight.death ? "text-red-200" : "text-slate-400"
+                  )}
+                >
+                  Attacker Died
+                </span>
+              </div>
+              <Checkbox
+                id={`death-${fight.id}`}
+                checked={fight.death}
+                onCheckedChange={(c) => updateFight({ death: !!c })}
+                className={cn(
+                  "data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
+                )}
+              />
+            </label>
+          </div>
 
-            {/* Right Column: Prefights */}
-            <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                    <Label className="text-xs text-slate-400 flex items-center gap-1.5 shrink-0">
-                        <Diamond className="h-3 w-3 text-purple-400" />
-                        Prefights
-                    </Label>
-                    <MultiChampionCombobox
-                        champions={prefightChampions}
-                        selectedIds={fight.prefightChampionIds}
-                        onSelectionChange={(val) =>
-                            updateFight({ prefightChampionIds: val })
-                        }
-                        className="bg-slate-950/30 border-slate-800 rounded-md"
-                    />
-                </div>
+          {/* Right Column: Prefights */}
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-slate-400 flex items-center gap-1.5 shrink-0">
+                <Diamond className="h-3 w-3 text-purple-400" />
+                Prefights
+              </Label>
+              <MultiChampionCombobox
+                champions={prefightChampions}
+                selectedIds={fight.prefightChampionIds}
+                onSelectionChange={(val) =>
+                  updateFight({ prefightChampionIds: val })
+                }
+                className="bg-slate-950/30 border-slate-800 rounded-md"
+              />
             </div>
+          </div>
         </div>
       </div>{" "}
     </div>

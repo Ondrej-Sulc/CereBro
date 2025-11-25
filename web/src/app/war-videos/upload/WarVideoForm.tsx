@@ -51,7 +51,7 @@ export function WarVideoForm({
 
   // Form state
   const [uploadMode, setUploadMode] = useState<"single" | "multiple">("single");
-  const [sourceMode, setSourceMode] = useState<"upload" | "link">("upload");
+  const [sourceMode, setSourceMode] = useState<"upload" | "link">("link");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [fights, setFights] = useState<FightData[]>(() => {
