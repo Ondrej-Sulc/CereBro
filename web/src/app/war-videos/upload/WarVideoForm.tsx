@@ -373,7 +373,7 @@ export function WarVideoForm({
               const result = await linkVideo({
                 ...commonPayload,
                 videoUrl,
-                fightIds: fights.map(f => f.id),
+                fightUpdates: fights,
               });
               toast({ title: "Success!", description: "Video has been linked to all fights." });
               if (result.videoIds && result.videoIds.length > 0) {
@@ -415,7 +415,7 @@ export function WarVideoForm({
                 const result = await linkVideo({
                   ...commonPayload,
                   videoUrl: fight.videoUrl,
-                  fightIds: [fight.id],
+                  fightUpdates: [fight],
                 });
                 if (result.videoIds && result.videoIds.length > 0) {
                   allLinkedVideoIds.push(result.videoIds[0]);
@@ -474,7 +474,7 @@ export function WarVideoForm({
             formData.append("mode", "single");
 
             if (preFilledFights) {
-              formData.append("fightIds", JSON.stringify(fights.map(f => f.id)));
+              formData.append("fightUpdates", JSON.stringify(fights));
             } else {
               formData.append("fights", JSON.stringify(fights));
               formData.append("season", season);
@@ -508,7 +508,7 @@ export function WarVideoForm({
               formData.append("mode", "multiple");
 
               if (preFilledFights) {
-                formData.append("fightIds", JSON.stringify([fight.id]));
+                formData.append("fightUpdates", JSON.stringify([fight]));
               } else {
                 formData.append("fights", JSON.stringify([fight])); // send single fight
                 formData.append("season", season);

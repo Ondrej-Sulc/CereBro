@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ChampionCombobox } from '@/components/ChampionCombobox';
 import { MultiChampionCombobox } from '@/components/MultiChampionCombobox';
 import { NodeCombobox } from '@/components/NodeCombobox';
-import { Swords, Shield, Skull, Diamond, X, UploadCloud, Link } from 'lucide-react';
+import { Swords, Shield, Skull, Diamond, X, UploadCloud, Video } from 'lucide-react';
 import { getChampionImageUrl } from '@/lib/championHelper';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -49,138 +49,166 @@ export function FightBlock({
   uploadMode,
   sourceMode,
 }: FightBlockProps) {
-  const [nodeId, setNodeId] = useState(fight.nodeId);
-  const [attackerId, setAttackerId] = useState(fight.attackerId);
-  const [defenderId, setDefenderId] = useState(fight.defenderId);
-  const [prefightChampionIds, setPrefightChampionIds] = useState(fight.prefightChampionIds);
-  const [death, setDeath] = useState(fight.death);
-  const [videoFile, setVideoFile] = useState<File | null>(fight.videoFile || null);
-  const [videoUrl, setVideoUrl] = useState<string>(fight.videoUrl || '');
+  
+  const selectedAttacker = useMemo(() => initialChampions.find(c => String(c.id) === fight.attackerId), [initialChampions, fight.attackerId]);
+  const selectedDefender = useMemo(() => initialChampions.find(c => String(c.id) === fight.defenderId), [initialChampions, fight.defenderId]);
 
-  useEffect(() => {
-    onFightChange({
-      id: fight.id,
-      battlegroup: fight.battlegroup,
-      nodeId,
-      attackerId,
-      defenderId,
-      prefightChampionIds,
-      death,
-      videoFile,
-      videoUrl,
-    });
-  }, [nodeId, attackerId, defenderId, prefightChampionIds, death, videoFile, videoUrl, fight.id, fight.battlegroup, onFightChange]);
-
-  const selectedAttacker = useMemo(() => initialChampions.find(c => String(c.id) === attackerId), [initialChampions, attackerId]);
-  const selectedDefender = useMemo(() => initialChampions.find(c => String(c.id) === defenderId), [initialChampions, defenderId]);
+  const updateFight = (updates: Partial<FightData>) => {
+    onFightChange({ ...fight, ...updates });
+  };
 
   return (
     <div className={cn(
-      "glass rounded-xl border border-slate-800/50 p-3 sm:p-6 relative transition-all hover:border-slate-700/50",
-      death && "border-red-500/30 bg-red-500/5"
+      "group relative overflow-hidden rounded-xl border bg-slate-900/40 transition-all duration-300",
+      fight.death 
+        ? "border-red-500/30 bg-red-950/10 shadow-[0_0_15px_-3px_rgba(239,68,68,0.1)]" 
+        : "border-slate-800/50 hover:border-slate-700/50 hover:shadow-lg hover:shadow-black/20"
     )}>
-      {canRemove && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3 h-8 w-8 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-          onClick={() => onRemove(fight.id)}
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Remove fight</span>
-        </Button>
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <Label htmlFor={`node-${fight.id}`} className="text-base font-semibold text-white">Node</Label>
-          <NodeCombobox
-            nodes={initialNodes}
-            value={nodeId}
-            onSelect={setNodeId}
-            placeholder="Select..."
-          />
-          {fight.battlegroup && (
-            <span className="bg-sky-500/10 text-sky-300 text-xs font-semibold px-3 py-1.5 rounded-full border border-sky-500/20">
-              BG {fight.battlegroup}
-            </span>
-          )}
-        </div>
-
-        {uploadMode === 'multiple' && (
-          <div className="flex items-center gap-2">
-            {sourceMode === 'upload' ? (
-              <>
-                <Label htmlFor={`videoFile-${fight.id}`} className="cursor-pointer flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
-                  <UploadCloud className="h-5 w-5" />
-                  <span>{videoFile ? videoFile.name : 'Choose Video'}</span>
-                </Label>
-                <Input id={`videoFile-${fight.id}`} type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)} required className="hidden" />
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link className="h-5 w-5 text-slate-400" />
-                <Input
-                  id={`videoUrl-${fight.id}`}
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://youtube.com/..."
-                  className="max-w-xs bg-slate-900/50 border-slate-700/50"
-                />
+      
+            {/* --- Header: Node & Actions --- */}
+            <div className="flex items-center justify-between border-b border-slate-800/50 bg-slate-950/30 px-4 py-3">
+              <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Node</span>
+                      <NodeCombobox
+                          nodes={initialNodes}
+                          value={fight.nodeId}
+                          onSelect={(val) => updateFight({ nodeId: val })}
+                          placeholder="#"
+                          className="h-7 w-[80px] bg-slate-900 border-slate-700 text-sm"
+                      />
+                  </div>
               </div>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center space-x-2">
-          <Checkbox id={`death-${fight.id}`} checked={death} onCheckedChange={(checked) => setDeath(Boolean(checked))} />
-          <div className="flex items-center gap-2">
-            <Skull className="h-5 w-5 text-red-400" />
-            <Label htmlFor={`death-${fight.id}`} className="text-sm text-slate-300">Attacker Died?</Label>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[65%,35%] gap-4">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-4 p-4 rounded-xl bg-slate-900/30 border border-slate-800/50">
-          <div className="flex flex-col items-center gap-3 w-full min-w-0">
-            <div className="flex items-center gap-2 text-base font-semibold text-white">
-              <Swords className="h-5 w-5 text-sky-400" />
-              <h3>Attacker</h3>
+              
+              {canRemove && (
+                  <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-slate-500 hover:bg-red-500/10 hover:text-red-400 -mr-2"
+                      onClick={() => onRemove(fight.id)}
+                  >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Remove fight</span>
+                  </Button>
+              )}
             </div>
-            <div className="flex items-center gap-3 w-full">
-              {selectedAttacker && <Image src={getChampionImageUrl(selectedAttacker.images, '128', 'primary')} alt={selectedAttacker.name} width={50} height={50} className={cn("rounded-full", getChampionClassColors(selectedAttacker?.class).border)} />}
-              <ChampionCombobox champions={initialChampions} value={attackerId} onSelect={setAttackerId} placeholder="Select attacker..." className={getChampionClassColors(selectedAttacker?.class).text} />
-            </div>
-          </div>
-          <div className="font-bold text-2xl text-slate-600 hidden md:block">VS</div>
-          <hr className="w-full md:hidden border-slate-700/50" />
-          <div className="flex flex-col items-center gap-3 w-full min-w-0">
-            <div className="flex items-center gap-2 text-base font-semibold text-white">
-              <Shield className="h-5 w-5 text-indigo-400" />
-              <h3>Defender</h3>
-            </div>
-            <div className="flex items-center gap-3 w-full">
-              {selectedDefender && <Image src={getChampionImageUrl(selectedDefender.images, '128', 'primary')} alt={selectedDefender.name} width={50} height={50} className={cn("rounded-full", getChampionClassColors(selectedDefender?.class).border)} />}
-              <ChampionCombobox champions={initialChampions} value={defenderId} onSelect={setDefenderId} placeholder="Select defender..." className={getChampionClassColors(selectedDefender?.class).text} />
-            </div>
-          </div>
-        </div>
-        <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/50">
-          <div className="flex items-center gap-2 mb-3">
-            <Diamond className="h-5 w-5 text-pink-400" />
-            <h3 className="text-sm font-semibold text-white">Prefight Champions</h3>
-          </div>
-          <MultiChampionCombobox
-            champions={prefightChampions}
-            selectedIds={prefightChampionIds}
-            onSelectionChange={setPrefightChampionIds}
-            placeholder="Select active prefights..."
-          />
-        </div>
-      </div>
-    </div>
+      
+            <div className="p-4 space-y-4">
+                
+                {/* --- Matchup Section --- */}
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                    {/* Attacker Card */}
+                    <div className="flex-1 flex items-center gap-3 w-full">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                            <Swords className="h-4 w-4 text-sky-400" />
+                            <span>Attacker</span>
+                        </div>
+                        <ChampionCombobox 
+                          champions={initialChampions} 
+                          value={fight.attackerId} 
+                          onSelect={(val) => updateFight({ attackerId: val })} 
+                          placeholder="Select attacker..." 
+                          className={cn("w-full bg-slate-950/50 border-slate-700/50", selectedAttacker && getChampionClassColors(selectedAttacker.class).text)}
+                        />
+                    </div>
+      
+                    {/* VS Divider (Desktop) */}
+                    <div className="hidden sm:flex items-center justify-center px-1 text-slate-700 font-black text-xs italic opacity-50">VS</div>
+                    <hr className="w-full sm:hidden border-slate-700/50" />
+      
+                    {/* Defender Card */}
+                    <div className="flex-1 flex items-center gap-3 w-full justify-end">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-300">
+                            <span>Defender</span>
+                            <Shield className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <ChampionCombobox 
+                          champions={initialChampions} 
+                          value={fight.defenderId} 
+                          onSelect={(val) => updateFight({ defenderId: val })} 
+                          placeholder="Select defender..." 
+                          className={cn("w-full bg-slate-950/50 border-slate-700/50 text-right", selectedDefender && getChampionClassColors(selectedDefender.class).text)}
+                        />
+                    </div>
+                </div>
+      
+                {/* --- Footer: Meta & Options --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 pt-2 border-t border-slate-800/50">
+                    
+                    {/* Prefights */}
+                    <div className="space-y-1">
+                        <Label className="text-xs text-slate-400 flex items-center gap-1.5">
+                            <Diamond className="h-3 w-3 text-purple-400" />
+                            Prefight Champions
+                        </Label>
+                        <MultiChampionCombobox
+                            champions={prefightChampions}
+                            selectedIds={fight.prefightChampionIds}
+                            onSelectionChange={(val) => updateFight({ prefightChampionIds: val })}
+                            className="bg-slate-950/30 border-slate-800 rounded-md"
+                        />
+                    </div>
+      
+                    {/* Options & Video */}
+                    <div className="flex flex-col gap-4 justify-start">
+                                                            {/* Death Toggle */}
+                                                            <label 
+                                                              className={cn(
+                                                                  "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all",
+                                                                  fight.death 
+                                                                      ? "bg-red-500/10 border-red-500/30" 
+                                                                      : "bg-slate-950/30 border-slate-800 hover:border-slate-700"
+                                                              )}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <Skull className={cn("h-4 w-4", fight.death ? "text-red-400" : "text-slate-500")} />
+                                                                    <span className={cn("text-sm font-medium", fight.death ? "text-red-200" : "text-slate-400")}>Attacker Died</span>
+                                                                </div>
+                                                                <Checkbox 
+                                                                  id={`death-${fight.id}`} 
+                                                                  checked={fight.death} 
+                                                                  onCheckedChange={(c) => updateFight({ death: !!c })} 
+                                                                  className={cn("data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500")}
+                                                                />
+                                                            </label>                        {/* Individual Video Input (Multiple Mode) */}
+                        {uploadMode === 'multiple' && (
+                            <div className="space-y-1">
+                                <Label className="text-xs text-slate-400 flex items-center gap-1.5">
+                                    <Video className="h-3 w-3 text-sky-400" />
+                                    Fight Video
+                                </Label>
+                                {sourceMode === 'upload' ? (
+                                  <div className="flex items-center gap-2">
+                                      <Label 
+                                          htmlFor={`videoFile-${fight.id}`} 
+                                          className="flex-1 cursor-pointer flex items-center justify-center gap-2 h-9 px-3 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 transition-all text-sm text-slate-300"
+                                      >
+                                          <UploadCloud className="h-4 w-4" />
+                                          <span className="truncate max-w-[150px]">{fight.videoFile ? fight.videoFile.name : 'Choose File'}</span>
+                                      </Label>
+                                      <Input 
+                                          id={`videoFile-${fight.id}`} 
+                                          type="file" 
+                                          accept="video/*" 
+                                          onChange={(e) => updateFight({ videoFile: e.target.files ? e.target.files[0] : null })}
+                                          className="hidden" 
+                                      />
+                                  </div>
+                                ) : (
+                                  <Input
+                                      id={`videoUrl-${fight.id}`}
+                                      type="url"
+                                      value={fight.videoUrl || ''}
+                                      onChange={(e) => updateFight({ videoUrl: e.target.value })}
+                                      placeholder="https://youtube.com/..."
+                                      className="h-9 bg-slate-950/30 border-slate-800 text-sm"
+                                  />
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>    </div>
   );
 }

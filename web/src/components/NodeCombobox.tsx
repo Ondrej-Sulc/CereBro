@@ -25,6 +25,7 @@ interface NodeComboboxProps {
   value: string;
   onSelect: (value: string) => void;
   placeholder?: string;
+  className?: string; // Add className here
 }
 
 export const NodeCombobox = React.memo(function NodeCombobox({
@@ -32,6 +33,7 @@ export const NodeCombobox = React.memo(function NodeCombobox({
   value,
   onSelect,
   placeholder = "Select a node...",
+  className,
 }: NodeComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -55,7 +57,7 @@ export const NodeCombobox = React.memo(function NodeCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className={cn("w-full justify-between", className)}
         >
           <span className="truncate">
             {value ? `${nodes.find((n) => String(n.id) === value)?.nodeNumber}` : placeholder}
@@ -82,12 +84,6 @@ export const NodeCombobox = React.memo(function NodeCombobox({
                             value={String(node.nodeNumber)}
                             onSelect={() => handleSelect(String(node.id))}
                         >
-                            <Check
-                                className={cn(
-                                    "mr-2 h-4 w-4",
-                                    value === String(node.id) ? "opacity-100" : "opacity-0"
-                                )}
-                            />
                             {node.nodeNumber}
                         </CommandItem>
                     )}

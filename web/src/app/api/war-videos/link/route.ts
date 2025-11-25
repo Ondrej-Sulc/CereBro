@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
     const { 
         token, videoUrl, description, visibility,
         fightIds: existingFightIdsJson, // for existing fights
+        fightUpdates,                   // for updating existing fights
         fights: newFightsJson,         // for creating new fights
         season, warNumber, warTier, battlegroup
     } = body;
@@ -126,6 +127,30 @@ export async function POST(req: NextRequest) {
           });
       }));
       fightIdsToLink = createdFights.map(f => f.id);
+
+    } else if (fightUpdates) {
+      // Logic for updating existing fights
+      if (!Array.isArray(fightUpdates) || fightUpdates.length === 0) {
+        return NextResponse.json({ error: 'fightUpdates must be a non-empty array.' }, { status: 400 });
+      }
+
+      fightIdsToLink = [];
+      await Promise.all(fightUpdates.map(async (update: any) => {
+        await prisma.warFight.update({
+          where: { id: update.id },
+          data: {
+            nodeId: parseInt(update.nodeId),
+            attackerId: parseInt(update.attackerId),
+            defenderId: parseInt(update.defenderId),
+            death: update.death,
+            battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
+            prefightChampions: {
+              set: update.prefightChampionIds ? update.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) : []
+            }
+          }
+        });
+        fightIdsToLink.push(update.id);
+      }));
 
     } else if (existingFightIdsJson) {
       // Logic for linking to existing fights (from pre-filled plans)

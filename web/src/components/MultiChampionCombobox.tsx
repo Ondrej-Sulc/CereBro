@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Check, ChevronsUpDown, X } from "lucide-react"
+import { Check, Plus, X } from "lucide-react"
 import { Virtuoso } from "react-virtuoso";
 
 import { cn } from "@/lib/utils"
@@ -34,7 +34,6 @@ interface MultiChampionComboboxProps {
   champions: Champion[];
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
-  placeholder?: string;
   className?: string;
 }
 
@@ -42,7 +41,6 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
   champions,
   selectedIds,
   onSelectionChange,
-  placeholder = "Select champions...",
   className,
 }: MultiChampionComboboxProps) {
   const [open, setOpen] = React.useState(false)
@@ -64,32 +62,53 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
   );
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      {selectedChampions.map(champion => (
+        <Badge key={champion.id} variant="secondary" className="flex items-center gap-1.5 py-1 pl-1 pr-2 bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300">
+          <Image
+            src={getChampionImageUrl(champion.images, '32', 'primary')}
+            alt={champion.name}
+            width={18}
+            height={18}
+            className="rounded-full"
+          />
+          <span className="text-xs">{champion.name}</span>
+          <button
+            type="button"
+            onClick={() => handleSelect(String(champion.id))}
+            className="ml-1 rounded-full hover:bg-slate-600 p-0.5 transition-colors"
+            aria-label={`Remove ${champion.name}`}
+          >
+            <X className="h-3 w-3 text-slate-400" />
+          </button>
+        </Badge>
+      ))}
+      
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
+            size="icon"
+            className="h-7 w-7 rounded-full border-dashed border-slate-600 bg-transparent hover:bg-slate-800 hover:text-sky-400 transition-colors"
           >
-            {placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">Add prefight champion</span>
           </Button>
         </PopoverTrigger>
-        <PopoverContent sideOffset={4} className="w-[--radix-popover-trigger-width] p-0">
-          <Command>
+        <PopoverContent align="start" sideOffset={8} className="w-[250px] p-0 bg-slate-950 border-slate-800">
+          <Command className="bg-transparent">
             <CommandInput
                 placeholder="Search champion..."
                 value={search}
                 onValueChange={setSearch}
+                className="h-9"
             />
             <CommandList>
-              <CommandEmpty>No champion found.</CommandEmpty>
+              <CommandEmpty className="py-2 text-center text-xs text-slate-500">No champion found.</CommandEmpty>
               <CommandGroup>
                 {open && (
                     <Virtuoso
-                        style={{ height: "288px" }}
+                        style={{ height: "200px" }}
                         data={filteredChampions}
                         itemContent={(index, champion) => (
                             <CommandItem
@@ -98,14 +117,24 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                                 onSelect={() => {
                                     handleSelect(String(champion.id));
                                 }}
+                                className="aria-selected:bg-slate-900 aria-selected:text-sky-400"
                             >
                                 <Check
                                     className={cn(
-                                        "mr-2 h-4 w-4",
+                                        "mr-2 h-3 w-3",
                                         selectedIds.includes(String(champion.id)) ? "opacity-100" : "opacity-0"
                                     )}
                                 />
-                                {champion.name}
+                                <div className="flex items-center gap-2">
+                                    <Image 
+                                        src={getChampionImageUrl(champion.images, '32', 'primary')} 
+                                        alt="" 
+                                        width={20} 
+                                        height={20} 
+                                        className="rounded-full"
+                                    />
+                                    <span className="text-sm">{champion.name}</span>
+                                </div>
                             </CommandItem>
                         )}
                     />
@@ -115,28 +144,6 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
           </Command>
         </PopoverContent>
       </Popover>
-      <div className="flex flex-wrap gap-2">
-        {selectedChampions.map(champion => (
-          <Badge key={champion.id} variant="secondary" className="flex items-center gap-2">
-            <Image
-              src={getChampionImageUrl(champion.images, '32', 'primary')}
-              alt={champion.name}
-              width={20}
-              height={20}
-              className="rounded-full"
-            />
-            {champion.name}
-            <button
-              type="button"
-              onClick={() => handleSelect(String(champion.id))}
-              className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-              aria-label={`Remove ${champion.name}`}
-            >
-              <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-            </button>
-          </Badge>
-        ))}
-      </div>
     </div>
   )
 });

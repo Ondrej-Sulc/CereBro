@@ -126,6 +126,9 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
     }
   };
 
+  // Sort fights by node number
+  const sortedFights = [...warVideo.fights].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+
   return (
     <div className="container mx-auto p-4 max-w-6xl space-y-6">
       {/* Header Section */}
@@ -177,7 +180,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fights List Section */}
         <div className="lg:col-span-2 space-y-6">
-          {warVideo.fights.map((fight) => (
+          {sortedFights.map((fight) => (
             <div key={fight.id} className="glass rounded-xl border border-slate-800/50 overflow-hidden">
               {/* Node Header & Outcome */}
               <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-500/30 px-4 py-3 flex items-center justify-between">
@@ -251,13 +254,13 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
               </div>
 
               {/* Prefights Footer */}
-              <div className="bg-slate-900/50 border-t border-slate-800/50 p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2 text-sm text-purple-400 font-medium">
-                    <Diamond className="h-4 w-4" />
-                    <span>Prefights:</span>
-                  </div>
-                  {fight.prefightChampions.length > 0 ? (
+              {fight.prefightChampions.length > 0 && (
+                <div className="bg-slate-900/50 border-t border-slate-800/50 p-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 text-sm text-purple-400 font-medium">
+                      <Diamond className="h-4 w-4" />
+                      <span>Prefights:</span>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {fight.prefightChampions.map((champ) => (
                         <div key={champ.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
@@ -266,11 +269,9 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <span className="text-xs text-slate-500 italic">None</span>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
