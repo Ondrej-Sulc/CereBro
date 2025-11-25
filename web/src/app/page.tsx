@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CommandReference from "@/components/CommandReference";
+import { CalendarCheck, Award, Search, Users, Database, BookOpen, Coffee, DollarSign, Heart, Server, HardDrive, Code } from "lucide-react";
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
 import Tilt from "@/components/TiltWrapper";
@@ -150,20 +151,7 @@ export default async function Home() {
                 <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-sky-500/40 transition h-full">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-300 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                        />
-                      </svg>
+                      <Search className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
                       Advanced Champion Search
@@ -189,20 +177,7 @@ export default async function Home() {
                 <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-indigo-500/40 transition h-full">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-300 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm-3.75 0h.008v.015h-.008V9.375z"
-                        />
-                      </svg>
+                      <Users className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
                       Personal Roster Management
@@ -228,20 +203,7 @@ export default async function Home() {
                 <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-pink-500/40 transition h-full">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-300 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5z"
-                        />
-                      </svg>
+                      <Database className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
                       In-Depth Champion Database
@@ -267,25 +229,7 @@ export default async function Home() {
                 <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-sky-500/40 transition h-full">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-300 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-4.5 12h13.5"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-                        />
-                      </svg>
+                      <CalendarCheck className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
                       Automated AQ Scheduling
@@ -311,20 +255,7 @@ export default async function Home() {
                 <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-indigo-500/40 transition h-full">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-300 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.75-.625m3.75.625l-6.25 3.75"
-                        />
-                      </svg>
+                      <Award className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
                       Prestige & Profile Tracking
@@ -350,25 +281,7 @@ export default async function Home() {
                 <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-pink-500/40 transition h-full">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-300 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-5 h-5"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 15v-3m0 3h.008v.008H12v-.008z"
-                        />
-                      </svg>
+                      <BookOpen className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
                       MCOC Glossary
@@ -522,84 +435,118 @@ export default async function Home() {
           </div>
         </section>
 
-        <section id="support" className="section-offset py-10 lg:py-14">
-          <div className="max-w-4xl mx-auto px-4 lg:px-6 text-center">
-            <p className="text-xs uppercase tracking-wide text-pink-400/80 mb-1">
-              Support the Project
-            </p>
-            <h2 className="text-2xl font-semibold text-white mb-3">
-              Help Keep CereBro Running
-            </h2>
-            <p className="text-sm text-slate-300 max-w-2xl mx-auto mb-8">
-              CereBro is a passion project, offered completely free. If you find
-              the bot useful, please consider supporting its development and
-              hosting costs. Donations are greatly appreciated but never
-              required.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-lg mx-auto">
-              <a
-                href="https://ko-fi.com/cerebrobot"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass rounded-xl p-5 border border-slate-800/40 hover:border-pink-500/40 transition card-tilt flex items-center gap-4"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-8 h-8 text-pink-300 icon icon-tabler icon-tabler-coffee"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  strokeWidth="2"
-                  stroke="currentColor"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M3 14c.83 .642 2.077 1.017 3.5 1h9c1.423 .017 2.67 -.358 3.5 -1" />
-                  <path d="M8 3a2.4 2.4 0 0 0 -1 2a2.4 2.4 0 0 0 1 2h8a2.4 2.4 0 0 0 1 -2a2.4 2.4 0 0 0 -1 -2h-8z" />
-                  <path d="M3 14v3m18 -3v3" />
-                </svg>
-                <div>
-                  <h3 className="text-sm font-semibold text-white text-left">
-                    Buy me a snack
+        <section id="support" className="section-offset py-16 relative">
+          {/* Background Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-pink-600/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
+
+          <div className="max-w-5xl mx-auto px-4 lg:px-6">
+            <div className="relative rounded-3xl border border-pink-500/30 bg-slate-900/60 p-8 md:p-12 overflow-hidden backdrop-blur-sm">
+              {/* Top Decor */}
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent opacity-50" />
+
+              {/* Header */}
+              <div className="text-center mb-10">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-300 text-xs font-semibold uppercase tracking-wider mb-4">
+                  <Heart className="w-3 h-3 fill-pink-500/50" />
+                  Community Powered
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  Help Keep CereBro Online
+                </h2>
+                <p className="text-slate-300 max-w-2xl mx-auto text-lg">
+                  CereBro is a free, passion-driven project. Your support directly
+                  funds the infrastructure required to process thousands of
+                  rosters and war plans daily.
+                </p>
+              </div>
+
+              {/* Breakdown Grid */}
+              <div className="grid md:grid-cols-3 gap-6 mb-12">
+                {/* Item 1: Server Costs */}
+                <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 shadow-lg shadow-sky-900/20">
+                    <Server className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-white font-semibold mb-1">
+                    Server Costs
                   </h3>
-                  <p className="text-xs text-slate-300 text-left">
-                    A small, one-time donation through Ko-fi.
+                  <p className="text-sm text-slate-400">
+                    Monthly hosting fees to ensure 99.9% uptime and fast response
+                    times.
                   </p>
                 </div>
-              </a>
-              <a
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glass rounded-xl p-5 border border-slate-800/40 hover:border-sky-500/40 transition card-tilt flex items-center gap-4"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-8 h-8 text-sky-300 icon icon-tabler icon-tabler-currency-dollar"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  strokeWidth="2"
-                  stroke="currentColor"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M16.7 8a3 3 0 0 0 -2.7 -2h-4a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6h-4a3 3 0 0 1 -2.7 -2" />
-                  <path d="M12 18v3m0 -18v3" />
-                </svg>
-                <div>
-                  <h3 className="text-sm font-semibold text-white text-left">
-                    Donate with PayPal
+                {/* Item 2: Storage */}
+                <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3 shadow-lg shadow-indigo-900/20">
+                    <HardDrive className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-white font-semibold mb-1">
+                    Data Storage
                   </h3>
-                  <p className="text-xs text-slate-300 text-left">
-                    Make a direct donation using PayPal.
+                  <p className="text-sm text-slate-400">
+                    Secure cloud storage for thousands of user rosters, images,
+                    and war history.
                   </p>
                 </div>
-              </a>
+                {/* Item 3: Development */}
+                <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-pink-400 mb-3 shadow-lg shadow-pink-900/20">
+                    <Code className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-white font-semibold mb-1">
+                    Active Development
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    Dedication to building new features, updating data, and
+                    fixing bugs.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                {/* Ko-fi */}
+                <Link
+                  href="https://ko-fi.com/cerebrobot"
+                  target="_blank"
+                  className="group relative overflow-hidden rounded-xl bg-[#FF5E5B] transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#FF5E5B]/20"
+                >
+                  <div className="relative flex items-center justify-center gap-4 px-6 py-4 text-white">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <Coffee className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-lg leading-none">
+                        Support on Ko-fi
+                      </div>
+                      <div className="text-xs text-white/90 mt-1 font-medium">
+                        One-time donation
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* PayPal */}
+                <Link
+                  href="#"
+                  target="_blank"
+                  className="group relative overflow-hidden rounded-xl bg-[#0070BA] transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#0070BA]/20"
+                >
+                  <div className="relative flex items-center justify-center gap-4 px-6 py-4 text-white">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <DollarSign className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-lg leading-none">
+                        Donate via PayPal
+                      </div>
+                      <div className="text-xs text-white/90 mt-1 font-medium">
+                        Direct contribution
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
