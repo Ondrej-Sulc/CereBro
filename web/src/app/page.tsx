@@ -321,22 +321,26 @@ export default async function Home() {
           </Suspense>
         </section>
 
-        <section id="howitworks" className="section-offset py-10 lg:py-14">
+        <section id="howitworks" className="section-offset py-16 relative">
           <div className="max-w-6xl mx-auto px-4 lg:px-6">
-            <div className="text-center mb-10">
-              <p className="text-xs uppercase tracking-wide text-sky-400/80 mb-1">
-                How it works
+            <div className="text-center mb-16">
+              <p className="text-xs uppercase tracking-wide text-sky-400/80 mb-2">
+                Streamlined Onboarding
               </p>
-              <h2 className="text-2xl font-semibold text-white mb-3">
-                Simple to set up, powerful when configured
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Up and running in minutes
               </h2>
-              <p className="text-sm text-slate-300 max-w-2xl mx-auto">
-                CereBro guides your officers through initial setup, then
-                automates daily operations.
+              <p className="text-slate-300 max-w-2xl mx-auto text-lg">
+                We've stripped away the complexity. CereBro plugs directly into your
+                existing Discord server structure.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid md:grid-cols-3 gap-8 mb-12 relative">
+              {/* Connecting Line (Desktop) */}
+              <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-sky-500/0 via-sky-500/20 to-sky-500/0 border-t border-dashed border-slate-700/50 -z-10" />
+
+              {/* Step 1 */}
               <Tilt
                 tiltMaxAngleX={2}
                 tiltMaxAngleY={2}
@@ -346,19 +350,23 @@ export default async function Home() {
                 glarePosition="all"
                 scale={1.02}
                 className="rounded-xl"
-                style={{ overflow: 'hidden' }}
+                style={{ overflow: "hidden" }}
               >
-                <div className="glass rounded-xl p-6 border border-slate-800/40 hover:border-sky-500/40 transition h-full">
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-300 mb-4 border border-sky-500/20">
-                    <span className="text-lg font-bold">1</span>
+                <div className="glass rounded-2xl p-8 border border-slate-800/40 hover:border-sky-500/40 transition h-full group">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-sky-400 mb-6 shadow-lg shadow-sky-900/10 group-hover:scale-110 transition-transform duration-300 relative z-10">
+                    <span className="text-xl font-bold">1</span>
                   </div>
-                  <h3 className="text-base font-semibold text-white mb-2">Invite the bot</h3>
-                  <p className="text-sm text-slate-300">
-                    Grant required permissions for channels and roles. CereBro will guide you through the setup process.
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Invite & Initialize
+                  </h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    Add CereBro to your server. It instantly creates a dedicated
+                    workspace for your alliance data, secure and ready.
                   </p>
                 </div>
               </Tilt>
 
+              {/* Step 2 */}
               <Tilt
                 tiltMaxAngleX={2}
                 tiltMaxAngleY={2}
@@ -368,19 +376,27 @@ export default async function Home() {
                 glarePosition="all"
                 scale={1.02}
                 className="rounded-xl"
-                style={{ overflow: 'hidden' }}
+                style={{ overflow: "hidden" }}
               >
-                <div className="glass rounded-xl p-6 border border-slate-800/40 hover:border-indigo-500/40 transition h-full">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-300 mb-4 border border-indigo-500/20">
-                    <span className="text-lg font-bold">2</span>
+                <div className="glass rounded-2xl p-8 border border-slate-800/40 hover:border-indigo-500/40 transition h-full group">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-indigo-400 mb-6 shadow-lg shadow-indigo-900/10 group-hover:scale-110 transition-transform duration-300 relative z-10">
+                    <span className="text-xl font-bold">2</span>
                   </div>
-                  <h3 className="text-base font-semibold text-white mb-2">Register Your Profile</h3>
-                  <p className="text-sm text-slate-300">
-                    Use the /register command to link your MCOC in-game name and start building your roster.
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Map Your Roles
+                  </h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    Use{" "}
+                    <code className="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300 text-sm">
+                      /alliance config-roles
+                    </code>{" "}
+                    to link your Discord roles. CereBro automatically grants
+                    permissions and sorts members.
                   </p>
                 </div>
               </Tilt>
 
+              {/* Step 3 */}
               <Tilt
                 tiltMaxAngleX={2}
                 tiltMaxAngleY={2}
@@ -390,15 +406,22 @@ export default async function Home() {
                 glarePosition="all"
                 scale={1.02}
                 className="rounded-xl"
-                style={{ overflow: 'hidden' }}
+                style={{ overflow: "hidden" }}
               >
-                <div className="glass rounded-xl p-6 border border-slate-800/40 hover:border-pink-500/40 transition h-full">
-                  <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-300 mb-4 border border-pink-500/20">
-                    <span className="text-lg font-bold">3</span>
+                <div className="glass rounded-2xl p-8 border border-slate-800/40 hover:border-pink-500/40 transition h-full group">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-pink-400 mb-6 shadow-lg shadow-pink-900/10 group-hover:scale-110 transition-transform duration-300 relative z-10">
+                    <span className="text-xl font-bold">3</span>
                   </div>
-                  <h3 className="text-base font-semibold text-white mb-2">Review dashboards</h3>
-                  <p className="text-sm text-slate-300">
-                    Use web or Discord embeds to monitor progress and manage your alliance efficiently.
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    Register & Sync
+                  </h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    Members run{" "}
+                    <code className="bg-slate-800 px-1.5 py-0.5 rounded text-pink-300 text-sm">
+                      /register
+                    </code>{" "}
+                    once. CereBro keeps your roster and prestige data in sync
+                    automatically.
                   </p>
                 </div>
               </Tilt>
