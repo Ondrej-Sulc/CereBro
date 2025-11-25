@@ -121,9 +121,23 @@ export function WarVideoForm({
 
   // Memoized derived data
   const prefightChampions = useMemo(() => {
-    return initialChampions.filter((champ) =>
+    const champs = initialChampions.filter((champ) =>
       champ.abilities?.some((link) => link.ability.name === "Pre-Fight Ability")
     );
+    // Sort logic: Magneto (House Of X) and Odin first, then alphabetical
+    return champs.sort((a, b) => {
+      const priorityNames = ["Magneto (House Of X)", "Odin"];
+      const aPriority = priorityNames.indexOf(a.name);
+      const bPriority = priorityNames.indexOf(b.name);
+
+      if (aPriority !== -1 && bPriority !== -1) {
+        return aPriority - bPriority; // Keep relative order of priority champs
+      }
+      if (aPriority !== -1) return -1; // a is priority, goes first
+      if (bPriority !== -1) return 1; // b is priority, goes first
+      
+      return a.name.localeCompare(b.name); // Default alphabetical
+    });
   }, [initialChampions]);
 
   const warNumberOptions = useMemo(
@@ -710,6 +724,7 @@ export function WarVideoForm({
             prefightChampions={prefightChampions}
             uploadMode={uploadMode}
             sourceMode={sourceMode}
+            errors={errors}
           />
         ))}
         <Button type="button" variant="outline" onClick={handleAddFight} className="w-full bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors">

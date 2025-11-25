@@ -119,12 +119,6 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                                 }}
                                 className="aria-selected:bg-slate-900 aria-selected:text-sky-400"
                             >
-                                <Check
-                                    className={cn(
-                                        "mr-2 h-3 w-3",
-                                        selectedIds.includes(String(champion.id)) ? "opacity-100" : "opacity-0"
-                                    )}
-                                />
                                 <div className="flex items-center gap-2">
                                     <Image 
                                         src={getChampionImageUrl(champion.images, '32', 'primary')} 

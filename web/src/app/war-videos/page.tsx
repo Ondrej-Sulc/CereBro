@@ -24,6 +24,7 @@ interface WarFightWithRelations extends WarFight {
   node: WarNode;
   war: War;
   player: Player;
+  prefightChampions: Pick<Champion, 'id' | 'name' | 'images' | 'class'>[];
   video: (WarVideo & { submittedBy: Player }) | null;
 }
 
@@ -45,6 +46,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const attacker = getSingleParam("attacker") || "";
   const defender = getSingleParam("defender") || "";
   const node = getSingleParam("node") ? parseInt(getSingleParam("node") as string) : undefined;
+  const warNumber = getSingleParam("war") ? parseInt(getSingleParam("war") as string) : undefined; // Added this line
+  const warTierFilter = getSingleParam("tier") ? parseInt(getSingleParam("tier") as string) : undefined; // Renamed to avoid conflict
   
   const seasonParam = resolvedSearchParams.season;
   const selectedSeasons = (Array.isArray(seasonParam) ? seasonParam : [seasonParam])
@@ -112,6 +115,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         attacker ? { attacker: { name: { contains: attacker, mode: "insensitive" } } } : {},
         defender ? { defender: { name: { contains: defender, mode: "insensitive" } } } : {},
         node ? { node: { nodeNumber: node } } : {},
+        warNumber ? { war: { warNumber: warNumber } } : {}, // Added this line
+        warTierFilter ? { war: { warTier: warTierFilter } } : {}, // Added this line
         selectedSeasons.length > 0 ? { war: { season: { in: selectedSeasons } } } : {},
         tier ? { war: { warTier: tier } } : {},
         player ? { player: { ingameName: { contains: player, mode: "insensitive" } } } : {},
@@ -124,6 +129,9 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       node: true,
       war: true,
       player: true,
+      prefightChampions: { // Added this line
+        select: { id: true, name: true, images: true, class: true } // Select necessary fields
+      },
       video: {
         include: { submittedBy: true }
       }
@@ -173,6 +181,9 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                     <div className="flex gap-2 items-center">
                         <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] h-5">
                             S{fight.war.season}
+                        </Badge>
+                        <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] h-5">
+                            W{fight.war.warNumber || '-'}
                         </Badge>
                         <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] h-5">
                             T{fight.war.warTier}
@@ -230,6 +241,23 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             <span className="text-sm font-bold text-center leading-tight truncate w-full">{fight.defender.name}</span>
                         </div>
                 </div>
+                {fight.prefightChampions.length > 0 && (
+                    <div className="flex items-center justify-center gap-2 mt-2 px-2 py-1 bg-slate-950/40 rounded-full border border-purple-500/30 shadow-inner shadow-purple-900/20">
+                        <span className="text-xs text-purple-300 font-medium">Prefights:</span>
+                        <div className="flex -space-x-1 overflow-hidden">
+                            {fight.prefightChampions.map((champ) => (
+                                <Image
+                                    key={champ.id}
+                                    src={getChampionImageUrl(champ.images as any, '64', 'primary')}
+                                    alt={champ.name}
+                                    width={20}
+                                    height={20}
+                                    className="relative inline-block h-5 w-5 rounded-full ring-1 ring-purple-400/50"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
                 </div>
 
                 {/* Footer */}
@@ -239,9 +267,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                         <span className="text-xs font-medium truncate max-w-[120px]">{fight.player.ingameName}</span>
                     </div>
                     {fight.video ? (
-                        <Badge variant="secondary" className="bg-sky-900/20 text-sky-400 border-sky-500/20 text-[10px] gap-1 pl-1.5">
-                            <Play className="h-2.5 w-2.5" /> Video
-                        </Badge>
+                        <Link href={`/war-videos/${fight.video.id}`}>
+                            <Button variant="ghost" size="sm" className="h-7 px-3 text-xs bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200 shadow-md shadow-sky-500/10 hover:shadow-sky-500/30">
+                                <Play className="h-3 w-3 mr-1.5" /> Video
+                            </Button>
+                        </Link>
                     ) : (
                         <span className="text-[10px] text-slate-600 flex items-center gap-1">
                             <EyeOff className="h-3 w-3" /> Log Only
@@ -257,10 +287,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
             <table className="w-full text-left text-sm text-slate-400">
                 <thead className="bg-slate-900/80 text-xs uppercase font-semibold text-slate-500 border-b border-slate-800/60">
                     <tr>
-                        <th className="px-6 py-4 w-[140px]">War Info</th>
+                        <th className="px-6 py-4 w-[160px]">War Info</th>
                         <th className="px-6 py-4 w-[100px]">Node</th>
                         <th className="px-6 py-4">Attacker</th>
                         <th className="px-6 py-4">Defender</th>
+                        <th className="px-6 py-4 w-[120px]">Prefights</th> {/* Added Prefights column header */}
                         <th className="px-6 py-4">Player</th>
                         <th className="px-6 py-4 text-right">View</th>
                     </tr>
@@ -280,10 +311,16 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     className={cn("block", !fight.video && "pointer-events-none")}
                                 >
                                     <div className="flex flex-col gap-1">
-                                        <span className="font-mono text-slate-300 font-medium">S{fight.war.season}</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">W{fight.war.warNumber || '-'}</span>
-                                            <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">T{fight.war.warTier}</span>
+                                        <div className="flex items-center gap-1">
+                                            <Badge variant="outline" className="border-slate-700 text-slate-300 text-[11px] h-5 px-2 py-0.5">
+                                                S{fight.war.season}
+                                            </Badge>
+                                            <Badge variant="outline" className="border-slate-700 text-slate-400 text-[11px] h-5 px-2 py-0.5">
+                                                W{fight.war.warNumber || '-'}
+                                            </Badge>
+                                            <Badge variant="outline" className="border-slate-700 text-slate-400 text-[11px] h-5 px-2 py-0.5">
+                                                T{fight.war.warTier}
+                                            </Badge>
                                         </div>
                                     </div>
                                 </Link>
@@ -293,7 +330,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
                                     className={cn("block", !fight.video && "pointer-events-none")}
                                 >
-                                    <Badge variant="secondary" className="bg-amber-900/20 text-amber-500 border-amber-500/20 font-mono text-xs whitespace-nowrap">
+                                    <Badge variant="secondary" className="bg-amber-900/20 text-amber-500 border-amber-500/20 font-mono text-sm whitespace-nowrap">
                                         {fight.node.nodeNumber}
                                     </Badge>
                                 </Link>
@@ -313,7 +350,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                 className={cn("relative rounded-full ring-1", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
                                             />
                                         </div>
-                                        <span className={cn("font-medium truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
+                                        <span className={cn("font-bold truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
                                             {fight.attacker.name}
                                         </span>
                                     </div>
@@ -334,11 +371,29 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                 className={cn("relative rounded-full ring-1", getChampionClassColors(fight.defender.class as ChampionClass).border)}
                                             />
                                         </div>
-                                        <span className={cn("font-medium truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
+                                        <span className={cn("font-bold truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
                                             {fight.defender.name}
                                         </span>
                                     </div>
                                 </Link>
+                            </td>
+                            <td className="px-6 py-4 align-middle">
+                                {fight.prefightChampions.length > 0 ? (
+                                    <div className="flex -space-x-1 overflow-hidden">
+                                        {fight.prefightChampions.map((champ) => (
+                                            <Image
+                                                key={champ.id}
+                                                src={getChampionImageUrl(champ.images as any, '64', 'primary')}
+                                                alt={champ.name}
+                                                width={28}
+                                                height={28}
+                                                className="relative inline-block h-7 w-7 rounded-full ring-1 ring-purple-400/50"
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span className="text-slate-600">-</span>
+                                )}
                             </td>
                             <td className="px-6 py-4 align-middle">
                                 <Link 
@@ -356,9 +411,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             <td className="px-6 py-4 align-middle text-right">
                                 {fight.video ? (
                                     <Link href={`/war-videos/${fight.video.id}`}>
-                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-sky-500/10 hover:text-sky-400">
-                                            <Play className="h-4 w-4" />
-                                            <span className="sr-only">Watch Video</span>
+                                        <Button variant="ghost" size="sm" className="h-8 px-3 text-xs bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200 shadow-md shadow-sky-500/10 hover:shadow-sky-500/30">
+                                            <Play className="h-3 w-3 mr-1.5" /> Watch Video
                                         </Button>
                                     </Link>
                                 ) : (

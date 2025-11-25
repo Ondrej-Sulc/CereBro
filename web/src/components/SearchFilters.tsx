@@ -26,6 +26,8 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
   const [attacker, setAttacker] = useState(searchParams.get("attacker") || "");
   const [defender, setDefender] = useState(searchParams.get("defender") || "");
   const [node, setNode] = useState(searchParams.get("node") || "");
+  const [war, setWar] = useState(searchParams.get("war") || "");
+  const [tier, setTier] = useState(searchParams.get("tier") || "");
   const [player, setPlayer] = useState(searchParams.get("player") || "");
   
   const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
@@ -45,6 +47,8 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
       if (attackerName) params.set("attacker", attackerName);
       if (defenderName) params.set("defender", defenderName);
       if (node) params.set("node", node);
+      if (war) params.set("war", war);
+      if (tier) params.set("tier", tier);
       if (player) params.set("player", player);
       
       selectedSeasons.forEach(s => params.append("season", s.toString()));
@@ -71,25 +75,9 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
   }
 
   return (
-    <form onSubmit={handleSearch} className="flex flex-col gap-4 max-w-5xl w-full">
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <Input
-            name="q"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Global search (player, champion, description)..."
-            className="pl-9 bg-slate-900/50 border-slate-800 text-slate-200 placeholder:text-slate-500"
-          />
-        </div>
-        <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white" disabled={isPending}>
-          {isPending ? "Searching..." : "Search"}
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 p-4 bg-slate-900/30 rounded-lg border border-slate-800/50">
-        <div className="space-y-2">
+    <form onSubmit={handleSearch} className="flex flex-col gap-4 max-w-7xl w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3 p-3 bg-slate-900/30 rounded-lg border border-slate-800/50">
+        <div className="space-y-2 lg:col-span-2 xl:col-span-2">
           <Label className="text-xs text-slate-400">Attacker</Label>
           <ChampionCombobox 
             champions={champions}
@@ -99,7 +87,7 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
             className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 lg:col-span-2 xl:col-span-2">
           <Label className="text-xs text-slate-400">Defender</Label>
           <ChampionCombobox 
             champions={champions}
@@ -107,6 +95,17 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
             onSelect={handleDefenderSelect}
             placeholder="Select Defender"
             className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="node" className="text-xs text-slate-400">Node</Label>
+          <Input
+            id="node"
+            type="number"
+            value={node}
+            onChange={(e) => setNode(e.target.value)}
+            placeholder="#"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </div>
         <div className="space-y-2">
@@ -129,12 +128,23 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="node" className="text-xs text-slate-400">Node</Label>
+          <Label htmlFor="war" className="text-xs text-slate-400">War</Label>
           <Input
-            id="node"
+            id="war"
             type="number"
-            value={node}
-            onChange={(e) => setNode(e.target.value)}
+            value={war}
+            onChange={(e) => setWar(e.target.value)}
+            placeholder="#"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tier" className="text-xs text-slate-400">Tier</Label>
+          <Input
+            id="tier"
+            type="number"
+            value={tier}
+            onChange={(e) => setTier(e.target.value)}
             placeholder="#"
             className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
@@ -148,6 +158,11 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
             />
             <Label htmlFor="hasVideo" className="text-sm cursor-pointer text-slate-300">Has Video</Label>
           </div>
+        </div>
+        <div className="flex items-end">
+          <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white w-full h-8" disabled={isPending}>
+            {isPending ? "..." : "Search"}
+          </Button>
         </div>
       </div>
     </form>
