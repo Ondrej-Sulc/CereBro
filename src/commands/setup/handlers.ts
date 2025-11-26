@@ -51,13 +51,19 @@ export function registerSetupHandlers() {
 
   registerSelectMenuHandler("setup:select_officer_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
+    
+    if (!interaction.guildId || !interaction.guild) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
+
     const roleId = interaction.values[0];
 
     // Save to DB
     await prisma.alliance.upsert({
-      where: { guildId: interaction.guildId! },
+      where: { guildId: interaction.guildId },
       update: { officerRole: roleId },
-      create: { guildId: interaction.guildId!, officerRole: roleId, name: interaction.guild!.name },
+      create: { guildId: interaction.guildId, officerRole: roleId, name: interaction.guild.name },
     });
 
     // Move to next step
@@ -92,13 +98,21 @@ export function registerSetupHandlers() {
   // --- Step 2: BG1 Role ---
   registerSelectMenuHandler("setup:select_bg1_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
+    if (!interaction.guildId) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
     const roleId = interaction.values[0];
-    await updateAllianceRole(interaction.guildId!, "battlegroup1Role", roleId);
+    await updateAllianceRole(interaction.guildId, "battlegroup1Role", roleId);
     await promptBG2(interaction);
   });
 
   registerButtonHandler("setup:skip_bg1", async (interaction) => {
-    await updateAllianceRole(interaction.guildId!, "battlegroup1Role", null);
+    if (!interaction.guildId) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
+    await updateAllianceRole(interaction.guildId, "battlegroup1Role", null);
     await promptBG2(interaction);
   });
 
@@ -127,12 +141,20 @@ export function registerSetupHandlers() {
 
   registerSelectMenuHandler("setup:select_bg2_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
-    await updateAllianceRole(interaction.guildId!, "battlegroup2Role", interaction.values[0]);
+    if (!interaction.guildId) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
+    await updateAllianceRole(interaction.guildId, "battlegroup2Role", interaction.values[0]);
     await promptBG3(interaction);
   });
 
   registerButtonHandler("setup:skip_bg2", async (interaction) => {
-    await updateAllianceRole(interaction.guildId!, "battlegroup2Role", null);
+    if (!interaction.guildId) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
+    await updateAllianceRole(interaction.guildId, "battlegroup2Role", null);
     await promptBG3(interaction);
   });
 
@@ -161,12 +183,20 @@ export function registerSetupHandlers() {
 
   registerSelectMenuHandler("setup:select_bg3_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
-    await updateAllianceRole(interaction.guildId!, "battlegroup3Role", interaction.values[0]);
+    if (!interaction.guildId) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
+    await updateAllianceRole(interaction.guildId, "battlegroup3Role", interaction.values[0]);
     await promptSync(interaction);
   });
 
   registerButtonHandler("setup:skip_bg3", async (interaction) => {
-    await updateAllianceRole(interaction.guildId!, "battlegroup3Role", null);
+    if (!interaction.guildId) {
+        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+        return;
+    }
+    await updateAllianceRole(interaction.guildId, "battlegroup3Role", null);
     await promptSync(interaction);
   });
 
@@ -195,9 +225,13 @@ export function registerSetupHandlers() {
   }
 
   registerButtonHandler("setup:trigger_sync", async (interaction) => {
+      if (!interaction.guild) {
+          await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+          return;
+      }
       await interaction.deferUpdate();
       try {
-          const result = await syncRolesForGuild(interaction.guild!);
+          const result = await syncRolesForGuild(interaction.guild);
           
           const embed = new EmbedBuilder()
             .setTitle("🎉 Setup Complete!")

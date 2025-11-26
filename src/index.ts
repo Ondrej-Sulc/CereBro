@@ -128,16 +128,29 @@ client.on(Events.GuildCreate, async (guild) => {
     // Try system channel first, then first viewable text channel
     let channel = guild.systemChannel;
 
-    if (!channel || !channel.permissionsFor(guild.members.me!)?.has(PermissionFlagsBits.SendMessages)) {
-      const channels = await guild.channels.fetch();
-      const firstTextChannel = channels.find(
-        (c) =>
-          c &&
-          c.type === ChannelType.GuildText &&
-          c.permissionsFor(guild.members.me!)?.has(PermissionFlagsBits.ViewChannel) &&
-          c.permissionsFor(guild.members.me!)?.has(PermissionFlagsBits.SendMessages)
-      ) as TextChannel | undefined;
-      channel = firstTextChannel || null;
+    let me = guild.members.me;
+    if (!me) {
+      try {
+        me = await guild.members.fetch(client.user!.id);
+      } catch (e) {
+        logger.warn({ error: String(e), guildId: guild.id }, "Could not fetch bot member in guild");
+      }
+    }
+
+    if (me) {
+      if (!channel || !channel.permissionsFor(me)?.has(PermissionFlagsBits.SendMessages)) {
+        const channels = await guild.channels.fetch();
+        const firstTextChannel = channels.find(
+          (c) =>
+            c &&
+            c.type === ChannelType.GuildText &&
+            c.permissionsFor(me!)?.has(PermissionFlagsBits.ViewChannel) &&
+            c.permissionsFor(me!)?.has(PermissionFlagsBits.SendMessages)
+        ) as TextChannel | undefined;
+        channel = firstTextChannel || null;
+      }
+    } else {
+      channel = null;
     }
 
     if (channel) {
@@ -155,7 +168,7 @@ client.on(Events.GuildCreate, async (guild) => {
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId("setup:start")
+          .setCustomId("setup:step1_intro")
           .setLabel("Start Setup")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("🚀")
