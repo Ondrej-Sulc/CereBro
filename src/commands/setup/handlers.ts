@@ -28,6 +28,10 @@ import logger from "../../services/loggerService";
 export function registerSetupHandlers() {
   // --- Step 1: Officer Role Selection ---
   registerButtonHandler("setup:step1_intro", async (interaction) => {
+    if (!interaction.guildId || !interaction.guild) {
+      await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+      return;
+    }
     const embed = new EmbedBuilder()
       .setTitle("Step 1: Officer Role")
       .setDescription(
@@ -258,8 +262,13 @@ export function registerSetupHandlers() {
 }
 
 async function updateAllianceRole(guildId: string, field: string, roleId: string | null) {
-    await prisma.alliance.update({
-        where: { guildId },
-        data: { [field]: roleId }
-    });
+    try {
+        await prisma.alliance.update({
+            where: { guildId },
+            data: { [field]: roleId }
+        });
+    } catch (error) {
+        logger.error({ error, guildId, field }, "Failed to update alliance role");
+        throw new Error("Failed to update alliance configuration. Please try /setup again.");
+    }
 }
