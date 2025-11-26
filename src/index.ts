@@ -258,7 +258,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  if (interaction.isStringSelectMenu()) {
+  if (interaction.isAnySelectMenu()) {
     if (interaction.customId.startsWith("interactive:")) {
       return;
     }

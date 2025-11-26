@@ -8,7 +8,6 @@ import { handleAllianceSyncRoles } from './sync-roles';
 import { handleAllianceView } from './view';
 import { handleAllianceManageRemove } from './manage/remove';
 import { handleAllianceManageList } from './manage/list';
-import { handleAllianceManageAdd } from './manage/add';
 
 export const command: Command = {
   data: new SlashCommandBuilder()
@@ -81,13 +80,6 @@ export const command: Command = {
             .setName('list')
             .setDescription('List all players in the alliance roster.')
         )
-        .addSubcommand(subcommand =>
-          subcommand
-            .setName('add')
-            .setDescription('Add a player to the alliance roster.')
-            .addUserOption(option => option.setName('user').setDescription('The user to add.').setRequired(true))
-            .addStringOption(option => option.setName('ingame-name').setDescription('The in-game name of the user.').setRequired(true))
-        )
     ),
   access: CommandAccess.USER,
 
@@ -122,9 +114,6 @@ export const command: Command = {
           break;
         case 'list':
           await handleAllianceManageList(interaction);
-          break;
-        case 'add':
-          await handleAllianceManageAdd(interaction);
           break;
       }
     } else {

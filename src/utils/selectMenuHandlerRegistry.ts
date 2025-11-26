@@ -1,23 +1,18 @@
-import { StringSelectMenuInteraction } from "discord.js";
+import { AnySelectMenuInteraction, Collection } from "discord.js";
 
-export type SelectMenuHandler = (
-  interaction: StringSelectMenuInteraction
-) => Promise<void>;
+type SelectMenuHandler = (interaction: AnySelectMenuInteraction) => Promise<void>;
 
-const selectMenuHandlers = new Map<string, SelectMenuHandler>();
+const selectMenuHandlers = new Collection<string, SelectMenuHandler>();
 
 export function registerSelectMenuHandler(
-  prefix: string,
+  customId: string,
   handler: SelectMenuHandler
 ) {
-  selectMenuHandlers.set(prefix, handler);
+  selectMenuHandlers.set(customId, handler);
 }
 
 export function getSelectMenuHandler(
   customId: string
 ): SelectMenuHandler | undefined {
-  for (const [prefix, handler] of selectMenuHandlers) {
-    if (customId.startsWith(prefix)) return handler;
-  }
-  return undefined;
+  return selectMenuHandlers.get(customId);
 }

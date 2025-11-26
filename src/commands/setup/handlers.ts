@@ -14,12 +14,12 @@ import {
   TextInputStyle,
   ModalSubmitInteraction,
   MessageFlags,
+  MessageComponentInteraction,
 } from "discord.js";
 import { prisma } from "../../services/prismaService";
 import { registerButtonHandler } from "../../utils/buttonHandlerRegistry";
 import { registerSelectMenuHandler } from "../../utils/selectMenuHandlerRegistry";
 import { syncRolesForGuild } from "../alliance/sync-roles";
-import { getErrorMessage } from "../../utils/errorHandler";
 import logger from "../../services/loggerService";
 
 /**
@@ -103,7 +103,7 @@ export function registerSetupHandlers() {
   });
 
   // --- Step 3: BG2 Role ---
-  async function promptBG2(interaction: any) {
+  async function promptBG2(interaction: MessageComponentInteraction) {
     const embed = new EmbedBuilder()
         .setTitle("Step 3: Battlegroup 2 Role")
         .setDescription("Select the role for **Battlegroup 2**.")
@@ -137,7 +137,7 @@ export function registerSetupHandlers() {
   });
 
    // --- Step 4: BG3 Role ---
-   async function promptBG3(interaction: any) {
+   async function promptBG3(interaction: MessageComponentInteraction) {
     const embed = new EmbedBuilder()
         .setTitle("Step 4: Battlegroup 3 Role")
         .setDescription("Select the role for **Battlegroup 3**.")
@@ -172,7 +172,7 @@ export function registerSetupHandlers() {
 
 
   // --- Step 5: Sync Confirmation ---
-  async function promptSync(interaction: any) {
+  async function promptSync(interaction: MessageComponentInteraction) {
       const embed = new EmbedBuilder()
           .setTitle("✅ Configuration Complete")
           .setDescription(
@@ -202,9 +202,11 @@ export function registerSetupHandlers() {
           const embed = new EmbedBuilder()
             .setTitle("🎉 Setup Complete!")
             .setDescription(
-                `Successfully synced roles for **${result.updatedCount}** members.\n\n` +
+                `Successfully synced roles for your alliance!\n\n` +
+                `✅ **${result.created}** new profiles created.\n` +
+                `🔄 **${result.updated}** existing profiles updated.\n\n` +
                 "**What's Next?**\n" +
-                "• Tell your members to run `/register` to create their profile.\n" +
+                "• All members with roles have been auto-registered.\n" +
                 "• Use `/alliance view` to see your roster overview.\n" +
                 "• Explore commands with `/help`."
             )
