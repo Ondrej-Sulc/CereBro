@@ -9,6 +9,11 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
 - **Web Interface:** A modern, visually appealing web interface built with Next.js, Tailwind CSS, and shadcn/ui. It serves as a landing page for the bot, showcasing its features, commands, and providing an FAQ section.
     - **War Archive:** A searchable database of uploaded Alliance War videos and fight logs. Features Discord OAuth2 authentication to allow users to upload videos and view alliance-restricted content. The search interface includes interactive filters for attacker, defender (with champion image display and clear functionality), player, node, and supports multi-season selection.
     - **Profile Management:** Users can view their profile summary (Prestige, Alliance, Roster stats) and update their roster by uploading screenshots directly from the web interface, leveraging the same powerful OCR technology as the bot.
+    - **War Planning:** An interactive, map-based interface for planning Alliance Wars.
+        - **Interactive Map:** A zoomable, pannable SVG map of the war node layout, updated dynamically to match the game.
+        - **Real-time Planning:** Officers can assign defenders, attackers, and players to specific nodes directly on the map.
+        - **Visual Feedback:** The map visually represents assigned champions (with portraits) and attackers (badges), providing an instant overview of the war plan.
+        - **Tools:** Integrated search tools allow officers to quickly find which alliance members own specific champions or view a player's top roster to make informed assignment decisions.
 - **Dynamic Command Loading:** Commands in the `src/commands` directory are automatically registered on startup.
 - **Tiered Command Access:** The bot now implements a granular command access system, categorizing commands into different tiers:
     - **Public:** Accessible to all users by default (e.g., `/champion`, `/glossary`, `/search all`).
