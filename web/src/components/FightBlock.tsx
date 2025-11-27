@@ -28,7 +28,7 @@ export interface FightData {
   attackerId: string;
   defenderId: string;
   prefightChampionIds: string[];
-  death: boolean;
+  death: number;
   videoFile?: File | null;
   videoUrl?: string;
   battlegroup?: number;
@@ -238,7 +238,7 @@ export function FightBlock({
             <label
               className={cn(
                 "flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all h-full",
-                fight.death
+                fight.death > 0
                   ? "bg-red-500/10 border-red-500/30"
                   : "bg-slate-950/30 border-slate-800 hover:border-slate-700"
               )}
@@ -247,25 +247,24 @@ export function FightBlock({
                 <Skull
                   className={cn(
                     "h-4 w-4",
-                    fight.death ? "text-red-400" : "text-slate-500"
+                    fight.death > 0 ? "text-red-400" : "text-slate-500"
                   )}
                 />
                 <span
                   className={cn(
                     "text-sm font-medium",
-                    fight.death ? "text-red-200" : "text-slate-400"
+                    fight.death > 0 ? "text-red-200" : "text-slate-400"
                   )}
                 >
-                  Attacker Died
+                  Deaths
                 </span>
               </div>
-              <Checkbox
-                id={`death-${fight.id}`}
-                checked={fight.death}
-                onCheckedChange={(c) => updateFight({ death: !!c })}
-                className={cn(
-                  "data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
-                )}
+              <Input
+                type="number"
+                min={0}
+                value={fight.death}
+                onChange={(e) => updateFight({ death: parseInt(e.target.value) || 0 })}
+                className="w-16 h-8 text-sm bg-slate-900 border-slate-700"
               />
             </label>
           </div>

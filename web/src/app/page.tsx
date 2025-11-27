@@ -2,14 +2,30 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CommandReference from "@/components/CommandReference";
-import { CalendarCheck, Award, Search, Users, Database, BookOpen, Coffee, DollarSign, Heart, Server, HardDrive, Code } from "lucide-react";
+import { CalendarCheck, Award, Search, Users, Database, BookOpen, Coffee, DollarSign, Heart, Server, HardDrive, Code, Swords } from "lucide-react";
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
 import Tilt from "@/components/TiltWrapper";
 import { isUserBotAdmin } from "@/lib/auth-helpers";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function Home() {
   const isAdmin = await isUserBotAdmin();
+  const session = await auth();
+  let isOfficer = false;
+
+  if (session?.user?.id) {
+    const account = await prisma.account.findFirst({
+        where: { userId: session.user.id, provider: "discord" }
+    });
+    if (account?.providerAccountId) {
+        const player = await prisma.player.findFirst({
+            where: { discordId: account.providerAccountId }
+        });
+        isOfficer = player?.isOfficer || false;
+    }
+  }
 
   return (
     <div className="min-h-screen relative page-container">
@@ -73,6 +89,15 @@ export default async function Home() {
                     />
                   </svg>
                 </Link>
+                {isOfficer && (
+                  <Link
+                    href="/planning"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-lg shadow-red-500/30"
+                  >
+                    War Planning
+                    <Swords className="w-4 h-4" />
+                  </Link>
+                )}
                 <Link
                   href="#commands"
                   className="inline-flex items-center gap-1 px-4 py-2.5 text-sm rounded-lg border border-slate-600/50 hover:bg-slate-800/50 transition"

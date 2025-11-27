@@ -19,11 +19,11 @@ import { SearchFilters } from "@/components/SearchFilters";
 export const dynamic = 'force-dynamic';
 
 interface WarFightWithRelations extends WarFight {
-  attacker: Champion;
-  defender: Champion;
+  attacker: Champion | null;
+  defender: Champion | null;
   node: WarNode;
   war: War;
-  player: Player;
+  player: Player | null;
   prefightChampions: Pick<Champion, 'id' | 'name' | 'images' | 'class'>[];
   video: (WarVideo & { submittedBy: Player }) | null;
 }
@@ -206,6 +206,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                 <div className="flex items-center justify-between w-full gap-4">
                         {/* Attacker */}
                         <div className="flex flex-col items-center gap-2 flex-1">
+                            {fight.attacker ? (
                             <div className="relative">
                                 <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
                                 <Image 
@@ -215,7 +216,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     className={cn("relative rounded-full ring-2", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
                                 />
                             </div>
-                            <span className="text-sm font-bold text-center leading-tight truncate w-full">{fight.attacker.name}</span>
+                            ) : <div className="w-14 h-14 bg-slate-800 rounded-full" />}
+                            <span className="text-sm font-bold text-center leading-tight truncate w-full">{fight.attacker?.name || '?'}</span>
                         </div>
 
                         {/* VS / Node */}
@@ -229,6 +231,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
 
                         {/* Defender */}
                         <div className="flex flex-col items-center gap-2 flex-1">
+                            {fight.defender ? (
                             <div className="relative">
                                 <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
                                 <Image 
@@ -238,7 +241,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     className={cn("relative rounded-full ring-2", getChampionClassColors(fight.defender.class as ChampionClass).border)}
                                 />
                             </div>
-                            <span className="text-sm font-bold text-center leading-tight truncate w-full">{fight.defender.name}</span>
+                            ) : <div className="w-14 h-14 bg-slate-800 rounded-full" />}
+                            <span className="text-sm font-bold text-center leading-tight truncate w-full">{fight.defender?.name || '?'}</span>
                         </div>
                 </div>
                 {fight.prefightChampions.length > 0 && (
@@ -264,7 +268,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                 <div className="px-4 py-3 bg-slate-950/30 border-t border-slate-800/60 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-slate-400">
                         <User className="h-3.5 w-3.5" />
-                        <span className="text-xs font-medium truncate max-w-[120px]">{fight.player.ingameName}</span>
+                        <span className="text-xs font-medium truncate max-w-[120px]">{fight.player?.ingameName || 'Unknown'}</span>
                     </div>
                     {fight.video ? (
                         <Link href={`/war-videos/${fight.video.id}`}>
@@ -341,18 +345,22 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     className={cn("block", !fight.video && "pointer-events-none")}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="relative flex-shrink-0">
-                                            <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
-                                            <Image 
-                                                src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
-                                                alt={fight.attacker.name}
-                                                width={36} height={36}
-                                                className={cn("relative rounded-full ring-1", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
-                                            />
-                                        </div>
-                                        <span className={cn("font-bold truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
-                                            {fight.attacker.name}
-                                        </span>
+                                        {fight.attacker ? (
+                                        <>
+                                            <div className="relative flex-shrink-0">
+                                                <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
+                                                <Image 
+                                                    src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
+                                                    alt={fight.attacker.name}
+                                                    width={36} height={36}
+                                                    className={cn("relative rounded-full ring-1", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
+                                                />
+                                            </div>
+                                            <span className={cn("font-bold truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
+                                                {fight.attacker.name}
+                                            </span>
+                                        </>
+                                        ) : <span className="text-slate-500">?</span>}
                                     </div>
                                 </Link>
                             </td>
@@ -362,18 +370,22 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     className={cn("block", !fight.video && "pointer-events-none")}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="relative flex-shrink-0">
-                                            <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
-                                            <Image 
-                                                src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
-                                                alt={fight.defender.name}
-                                                width={36} height={36}
-                                                className={cn("relative rounded-full ring-1", getChampionClassColors(fight.defender.class as ChampionClass).border)}
-                                            />
-                                        </div>
-                                        <span className={cn("font-bold truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
-                                            {fight.defender.name}
-                                        </span>
+                                        {fight.defender ? (
+                                        <>
+                                            <div className="relative flex-shrink-0">
+                                                <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
+                                                <Image 
+                                                    src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
+                                                    alt={fight.defender.name}
+                                                    width={36} height={36}
+                                                    className={cn("relative rounded-full ring-1", getChampionClassColors(fight.defender.class as ChampionClass).border)}
+                                                />
+                                            </div>
+                                            <span className={cn("font-bold truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
+                                                {fight.defender.name}
+                                            </span>
+                                        </>
+                                        ) : <span className="text-slate-500">?</span>}
                                     </div>
                                 </Link>
                             </td>
@@ -401,7 +413,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     className={cn("block", !fight.video && "pointer-events-none")}
                                 >
                                     <div className="flex flex-col">
-                                        <span className="font-medium text-slate-300">{fight.player.ingameName}</span>
+                                        <span className="font-medium text-slate-300">{fight.player?.ingameName || 'Unknown'}</span>
                                         {fight.battlegroup && (
                                             <span className="text-[10px] text-slate-500">BG {fight.battlegroup}</span>
                                         )}
