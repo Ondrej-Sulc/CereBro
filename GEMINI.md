@@ -31,6 +31,22 @@ The bot features a sophisticated system for tracking Alliance War performance by
     6.  The web UI uses the token to fetch the fight data and pre-fills the video upload form, creating a seamless user experience.
     7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s).
 
+### War Planning UI (Web)
+
+The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.
+
+*   **Interactive Map:** A highly interactive, SVG-based map of the Alliance War node layout.
+    *   **Zoom & Pan:** Powered by `react-zoom-pan-pinch`, allowing officers to navigate the complex map easily.
+    *   **Dynamic Layout:** The map structure (nodes, paths, portals) is defined in a constant-driven configuration (`nodes-data.ts`), allowing for easy updates to match game changes.
+    *   **Visual Feedback:** Nodes display assigned defenders (champion portraits), attackers (small badges), and node numbers. Portals are visually distinct.
+*   **Planning Workflow:**
+    *   **Initialization:** Officers can start a new war directly from the dashboard, which automatically generates placeholder `WarFight` records for all 3 Battlegroups and 50 Nodes.
+    *   **Node Editing:** Clicking a node opens a `NodeEditor` modal (or sidebar on desktop) where officers can assign Defenders, Attackers, and Players, set death counts, and add notes.
+    *   **Responsive Layout:** On desktop, a collapsible sidebar provides access to planning tools alongside the map. On mobile, these tools are accessible via a slide-out Sheet.
+*   **Search Tools:** Integrated tools to assist planning:
+    *   **Player Roster:** View a specific player's top champions to find suitable attackers/defenders.
+    *   **Find Champion:** Search for a specific champion to see which alliance members own it (and at what rank/ascension).
+
 ### Alliance Structure & Role Management
 
 The bot includes a robust system for managing alliance structure, including officer roles and battlegroup assignments, directly linked to Discord roles.
