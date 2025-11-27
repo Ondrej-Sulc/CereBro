@@ -47,6 +47,11 @@ enum WarVideoStatus {
   REJECTED
 }
 
+enum WarStatus {
+  PLANNING
+  FINISHED
+}
+
 enum DuelStatus {
   ACTIVE
   SUGGESTED
@@ -370,6 +375,7 @@ model War {
   warNumber      Int?
   warTier        Int
   enemyAlliance  String?
+  status         WarStatus @default(PLANNING)
   createdAt      DateTime @default(now())
 
   // A war belongs to an alliance
@@ -385,15 +391,15 @@ model War {
 
 model WarFight {
   id          String   @id @default(cuid())
-  death       Boolean
-  battlegroup Int?
+  death       Int      @default(0)
+  battlegroup Int
   createdAt   DateTime @default(now())
 
   // --- Core Fight Details ---
-  attackerId Int
-  attacker   Champion @relation("AttackerRelation", fields: [attackerId], references: [id])
-  defenderId Int
-  defender   Champion @relation("DefenderRelation", fields: [defenderId], references: [id])
+  attackerId Int?
+  attacker   Champion? @relation("AttackerRelation", fields: [attackerId], references: [id])
+  defenderId Int?
+  defender   Champion? @relation("DefenderRelation", fields: [defenderId], references: [id])
   nodeId     Int
   node       WarNode  @relation(fields: [nodeId], references: [id])
 
@@ -401,18 +407,21 @@ model WarFight {
 
   // --- Contextual Links ---
   // The player who performed the fight
-  playerId String
-  player   Player @relation("PlayerInFight", fields: [playerId], references: [id])
+  playerId String?
+  player   Player? @relation("PlayerInFight", fields: [playerId], references: [id])
 
   // The war this fight belongs to
   warId String
   war   War @relation(fields: [warId], references: [id], onDelete: Cascade)
 
+  // Optional notes for the fight
+  notes String?
+
   // The video this fight appears in (optional, can be null)
   videoId String?
   video   WarVideo? @relation(fields: [videoId], references: [id], onDelete: SetNull)
 
-  @@unique([warId, playerId, nodeId])
+  @@unique([warId, battlegroup, nodeId])
   @@index([attackerId])
   @@index([defenderId])
   @@index([nodeId])
