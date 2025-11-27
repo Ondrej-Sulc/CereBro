@@ -256,16 +256,16 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
 
         await prisma.warFight.upsert({
           where: {
-            warId_playerId_nodeId: {
+            warId_battlegroup_nodeId: {
               warId: war.id,
-              playerId: dbPlayer.id,
+              battlegroup: battlegroup,
               nodeId: node.id,
             },
           },
           update: {
             attackerId: attacker.id,
             defenderId: defender.id,
-            death: assignments.some((a) => a.raw.deaths === "1"),
+            death: assignments.some((a) => a.raw.deaths === "1") ? 1 : 0,
             battlegroup,
             prefightChampions: {
               set: uniquePrefightIds.map((id) => ({ id })),
@@ -277,7 +277,7 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
             nodeId: node.id,
             attackerId: attacker.id,
             defenderId: defender.id,
-            death: assignments.some((a) => a.raw.deaths === "1"),
+            death: assignments.some((a) => a.raw.deaths === "1") ? 1 : 0,
             battlegroup,
             prefightChampions: {
               connect: uniquePrefightIds.map((id) => ({ id })),

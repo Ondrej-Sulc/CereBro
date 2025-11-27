@@ -174,8 +174,12 @@ export async function handleSearchSubcommand(interaction: ChatInputCommandIntera
         );
         
         const fightListText = fights.map(f => {
-            const title = `**${f.attacker.name}** vs **${f.defender.name}** (Node ${f.node.nodeNumber})`;
-            const meta = `S${f.war.season} T${f.war.warTier} • ${f.player.ingameName}`;
+            const attackerName = f.attacker?.name || 'Unknown';
+            const defenderName = f.defender?.name || 'Unknown';
+            const playerName = f.player?.ingameName || 'Unknown';
+
+            const title = `**${attackerName}** vs **${defenderName}** (Node ${f.node.nodeNumber})`;
+            const meta = `S${f.war.season} T${f.war.warTier} • ${playerName}`;
             const videoIcon = f.video ? '🎥 ' : '';
             const link = f.video ? `[Watch](${config.botBaseUrl}/war-videos/${f.video.id})` : '';
             return `${videoIcon} ${title} - ${meta} ${link}`;
