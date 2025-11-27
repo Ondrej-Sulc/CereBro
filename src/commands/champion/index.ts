@@ -41,7 +41,12 @@ import {
 registerButtonHandler("champion-duel-suggest_", handleDuelSuggestButton);
 registerButtonHandler("champion-duel-report_", handleDuelReportButton);
 registerModalHandler("champion-duel-suggest-modal_", handleDuelSuggestModalSubmit);
-registerSelectMenuHandler("champion-duel-report-select_", handleDuelReportSelect);
+registerSelectMenuHandler("champion-duel-report-select_", (interaction) => {
+    if (interaction.isStringSelectMenu()) {
+        return handleDuelReportSelect(interaction);
+    }
+    return Promise.resolve();
+});
 
 export const command: Command = {
   data: new SlashCommandBuilder()

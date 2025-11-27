@@ -232,7 +232,7 @@ export default async function Home() {
                       <CalendarCheck className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-semibold text-white">
-                      Automated AQ Scheduling
+                      Automated AQ Tracking
                     </h3>
                   </div>
                   <p className="text-sm text-slate-300">
@@ -416,12 +416,15 @@ export default async function Home() {
                     Register & Sync
                   </h3>
                   <p className="text-slate-400 leading-relaxed">
-                    Members run{" "}
+                    Your members are **automatically registered** when roles sync. They can use{" "}
+                    <code className="bg-slate-800 px-1.5 py-0.5 rounded text-pink-300 text-sm">
+                      /profile update name
+                    </code>{" "}
+                    to set their in-game name, or{" "}
                     <code className="bg-slate-800 px-1.5 py-0.5 rounded text-pink-300 text-sm">
                       /register
                     </code>{" "}
-                    once. CereBro keeps your roster and prestige data in sync
-                    automatically.
+                    if they are solo.
                   </p>
                 </div>
               </Tilt>

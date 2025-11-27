@@ -4,6 +4,13 @@ import {
   GatewayIntentBits,
   Partials,
   Collection,
+  EmbedBuilder,
+  ButtonBuilder,
+  ActionRowBuilder,
+  ButtonStyle,
+  ChannelType,
+  PermissionFlagsBits,
+  TextChannel,
 } from "discord.js";
 import { config } from "./config";
 import { loadCommands, commands } from "./utils/commandHandler";
@@ -25,6 +32,7 @@ import { registerChampionAdminHandlers } from "./commands/admin/champion/init";
 import { registerAttackAdminHandlers } from "./commands/admin/attack/init";
 import { registerScheduleHandlers } from "./commands/schedule/buttons";
 import { registerPrestigeHandlers } from "./commands/prestige/leaderboard";
+import { registerSetupHandlers } from "./commands/setup/handlers";
 import { getPosthogClient } from "./services/posthogService";
 import { prisma } from "./services/prismaService";
 import logger from "./services/loggerService";
@@ -97,7 +105,83 @@ client.once(Events.ClientReady, async (readyClient) => {
   registerAttackAdminHandlers();
   registerScheduleHandlers();
   registerPrestigeHandlers();
+  registerSetupHandlers();
   logger.info("✅ Registered all button handlers.");
+});
+
+client.on(Events.GuildCreate, async (guild) => {
+  logger.info(`🆕 Joined new guild: ${guild.name} (${guild.id})`);
+
+  try {
+    // 1. Create/Update Alliance Record
+    await prisma.alliance.upsert({
+      where: { guildId: guild.id },
+      update: {},
+      create: {
+        guildId: guild.id,
+        name: guild.name,
+      },
+    });
+    logger.info(`✅ Initialized alliance record for ${guild.name}`);
+
+    // 2. Find a suitable channel for the welcome message
+    // Try system channel first, then first viewable text channel
+    let channel = guild.systemChannel;
+
+    let me = guild.members.me;
+    if (!me) {
+      try {
+        me = await guild.members.fetch(client.user!.id);
+      } catch (e) {
+        logger.warn({ error: String(e), guildId: guild.id }, "Could not fetch bot member in guild");
+      }
+    }
+
+    if (me) {
+      if (!channel || !channel.permissionsFor(me)?.has(PermissionFlagsBits.SendMessages)) {
+        const channels = await guild.channels.fetch();
+        const firstTextChannel = channels.find(
+          (c) =>
+            c &&
+            c.type === ChannelType.GuildText &&
+            c.permissionsFor(me!)?.has(PermissionFlagsBits.ViewChannel) &&
+            c.permissionsFor(me!)?.has(PermissionFlagsBits.SendMessages)
+        ) as TextChannel | undefined;
+        channel = firstTextChannel || null;
+      }
+    } else {
+      channel = null;
+    }
+
+    if (channel) {
+      const embed = new EmbedBuilder()
+        .setTitle("🧠 CereBro has connected!")
+        .setDescription(
+          `Thanks for inviting CereBro to **${guild.name}**!\n\n` +
+          "I'm here to help you manage your MCOC alliance with ease. " +
+          "To get started, an administrator needs to configure your alliance roles.\n\n" +
+          "Click the button below to start the interactive setup wizard."
+        )
+        .setColor(0x0ea5e9) // Sky 500
+        .setThumbnail("https://cerebro-bot.com/CereBro_logo_512.png")
+        .setFooter({ text: "You can also run /setup manually at any time." });
+
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("setup:step1_intro")
+          .setLabel("Start Setup")
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji("🚀")
+      );
+
+      await channel.send({ embeds: [embed], components: [row] });
+      logger.info(`📨 Sent welcome message to ${channel.name} in ${guild.name}`);
+    } else {
+      logger.warn(`⚠️ Could not find a channel to send welcome message in ${guild.name}`);
+    }
+  } catch (error) {
+    logger.error({ error: String(error) }, `❌ Error initializing guild ${guild.name}:`);
+  }
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -187,7 +271,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  if (interaction.isStringSelectMenu()) {
+  if (interaction.isAnySelectMenu()) {
     if (interaction.customId.startsWith("interactive:")) {
       return;
     }
