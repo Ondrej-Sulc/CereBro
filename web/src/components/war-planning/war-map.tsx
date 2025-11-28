@@ -1,20 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Maximize2, Minimize2, History, PlayCircle } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Maximize2, Minimize2, History, PlayCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { WarFight, WarNode } from '@prisma/client';
-import { warNodesData, WarNodePosition } from './nodes-data';
-import { prisma } from '@/lib/prisma';
+import { warNodesData } from './nodes-data';
 import { getChampionImageUrl } from '@/lib/championHelper';
 
 interface WarMapProps {
   warId: string;
   battlegroup: number;
   onNodeClick: (nodeId: number, fight?: FightWithNode) => void;
+  refreshTrigger?: number;
 }
 
 interface FightWithNode extends WarFight {
@@ -22,15 +22,40 @@ interface FightWithNode extends WarFight {
   attacker: { name: string; images: any } | null;
   defender: { name: string; images: any } | null;
   player: { ingameName: string } | null;
+  prefightChampions?: { name: string; images: any }[];
 }
 
-export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps) {
+export default function WarMap({ warId, battlegroup, onNodeClick, refreshTrigger = 0 }: WarMapProps) {
   const [fights, setFights] = useState<FightWithNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
+
+  // Generate cosmic assets once
+  const { stars, nebulas } = useMemo(() => {
+    const starCount = 400;
+    const generatedStars = Array.from({ length: starCount }).map((_, i) => ({
+      id: i,
+      x: Math.random() * 4000 - 1500, // Covers large zoom area
+      y: Math.random() * 3000 - 1000,
+      r: Math.random() * 1.5 + 0.5,
+      opacity: Math.random() * 0.7 + 0.3,
+      delay: Math.random() * 5 + 's',
+      duration: Math.random() * 3 + 3 + 's' // 3s to 6s
+    }));
+
+    // Large background gradients
+    const generatedNebulas = [
+      { cx: -500, cy: -500, r: 800, color: "#4c1d95", id: "nebula-0" }, // Violet
+      { cx: 800, cy: 400, r: 900, color: "#1e3a8a", id: "nebula-1" },   // Blue
+      { cx: 200, cy: 1200, r: 700, color: "#be185d", id: "nebula-2" },  // Pink
+      { cx: 1500, cy: -200, r: 600, color: "#0f766e", id: "nebula-3" }, // Teal
+    ];
+
+    return { stars: generatedStars, nebulas: generatedNebulas };
+  }, []);
 
   useEffect(() => {
     async function fetchFights() {
@@ -51,7 +76,7 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
       }
     }
     fetchFights();
-  }, [warId, battlegroup]);
+  }, [warId, battlegroup, refreshTrigger]);
 
   // Fetch history when toggle is enabled
   useEffect(() => {
@@ -76,7 +101,7 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
     if (showHistory && historyData.size === 0) {
         fetchAllHistory();
     }
-  }, [showHistory, fights]);
+  }, [showHistory, fights, historyData.size]);
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -89,7 +114,14 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isFullscreen]);
 
-  if (loading) return <div>Loading War Map...</div>;
+  if (loading) {
+    return (
+      <div className="w-full h-[600px] flex flex-col items-center justify-center bg-slate-950 border rounded-md border-slate-800">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-500 mb-4" />
+        <p className="text-slate-400 animate-pulse">Loading War Map...</p>
+      </div>
+    );
+  }
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
   // Create a map for quick lookup of fight data by nodeNumber
@@ -137,21 +169,62 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
           wrapperStyle={{ width: '100%', height: '100%' }}
           contentStyle={{ width: '100%', height: '100%' }}
         >
-          <svg viewBox="0 0 1200 900" className="w-full h-full overflow-visible">
+          <svg viewBox="0 0 1200 900" className="w-full h-full overflow-visible" style={{ backgroundColor: '#020617' }}>
+            <style>
+              {`
+                @keyframes twinkle {
+                  0%, 100% { opacity: 0.2; }
+                  50% { opacity: 1; }
+                }
+                .star-anim {
+                  animation: twinkle infinite ease-in-out;
+                }
+              `}
+            </style>
             <defs>
-              <pattern id="hex-pattern" x="0" y="0" width="40" height="69.28" patternUnits="userSpaceOnUse" patternTransform="scale(1)">
-                <path d="M20 0 L40 11.54 L40 34.64 L20 46.18 L0 34.64 L0 11.54 Z" fill="none" stroke="#1e293b" strokeWidth="1" />
-              </pattern>
               <radialGradient id="node-glow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
                 <stop offset="0%" stopColor="rgba(59, 130, 246, 0.5)" />
                 <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
               </radialGradient>
+              
+              <radialGradient id="shadow-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                  <stop offset="0%" stopColor="#000000" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+              </radialGradient>
+
+              {nebulas.map((nebula) => (
+                  <radialGradient key={nebula.id} id={nebula.id} cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                      <stop offset="0%" stopColor={nebula.color} stopOpacity="0.3" />
+                      <stop offset="100%" stopColor={nebula.color} stopOpacity="0" />
+                  </radialGradient>
+              ))}
             </defs>
             
-            {/* Background Pattern - covering a much larger area */}
-            <rect x="-1600" y="-1200" width="4000" height="3000" fill="url(#hex-pattern)" />
+            <rect x="-2000" y="-1500" width="5000" height="4000" fill="#020617" />
+            
+            {nebulas.map((nebula) => (
+                <circle 
+                    key={nebula.id}
+                    cx={nebula.cx} 
+                    cy={nebula.cy} 
+                    r={nebula.r} 
+                    fill={`url(#${nebula.id})`}
+                />
+            ))}
 
-            {/* Render paths */}
+            {stars.map((star) => (
+                <circle
+                    key={`star-${star.id}`}
+                    cx={star.x}
+                    cy={star.y}
+                    r={star.r}
+                    fill="white"
+                    opacity={star.opacity}
+                    className="star-anim"
+                    style={{ animationDuration: star.duration, animationDelay: star.delay }}
+                />
+            ))}
+
             {warNodesData.map(node => {
               return node.paths.map(pathToId => {
                 const pathToNode = warNodesData.find(n => n.id === pathToId);
@@ -164,21 +237,26 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                     y1={node.y}
                     x2={pathToNode.x}
                     y2={pathToNode.y}
-                    stroke="#6ee7b7" // Always greenish for paths
+                    stroke="#6ee7b7" 
                     strokeWidth="1"
-                    strokeDasharray="4 4" // Always dashed
-                    opacity="0.6"
+                    strokeDasharray="4 4" 
+                    opacity="0.4"
                   />
                 );
               });
             })}
 
-            {/* Render nodes */}
             {warNodesData.map(node => {
               // Handle portals distinctly
               if (node.isPortal) {
                 return (
                   <g key={node.id}>
+                    <circle
+                        cx={node.x}
+                        cy={node.y + 5}
+                        r={8}
+                        fill="url(#shadow-gradient)"
+                    />
                     <circle
                       cx={node.x}
                       cy={node.y}
@@ -210,23 +288,29 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
               
               const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, '128') : null;
               const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, '128') : null;
+              
+              const prefightChampions = fight?.prefightChampions;
+              const hasPrefight = prefightChampions && prefightChampions.length > 0;
 
               // Historical Counter Logic
               const history = showHistory && defender ? historyData.get(numericId) : null;
 
               // Node Dimensions
-              const nodeRadius = 24; // Slightly larger for better visibility
+              const nodeRadius = 24; 
               const showAttacker = !!(attacker && attackerImgUrl);
               const pillWidth = showAttacker ? nodeRadius * 3.5 : nodeRadius * 2;
               const pillHeight = nodeRadius * 2;
               
-              // Offsets for centering
-              const defenderX = showAttacker ? -nodeRadius * 0.8 : 0;
-              const attackerX = showAttacker ? nodeRadius * 0.8 : 0;
-
               return (
                 <g key={node.id} className="cursor-pointer group" onClick={() => onNodeClick(numericId, fight)}>
-                  {/* Hover Glow Effect */}
+                  <ellipse
+                    cx={node.x}
+                    cy={node.y + nodeRadius + 5}
+                    rx={pillWidth / 2 - 4}
+                    ry={8}
+                    fill="url(#shadow-gradient)"
+                  />
+
                   <rect
                     x={node.x - pillWidth / 2 - 4}
                     y={node.y - pillHeight / 2 - 4}
@@ -237,22 +321,19 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   />
                   
-                  {/* --- MAIN PILL CONTAINER --- */}
                   <g>
-                    {/* Pill Background */}
                     <rect
                       x={node.x - pillWidth / 2}
                       y={node.y - pillHeight / 2}
                       width={pillWidth}
                       height={pillHeight}
                       rx={nodeRadius}
-                      fill="rgba(15, 23, 42, 0.9)" // Slate-950/90
-                      stroke={hasDefender ? (showAttacker ? "#3b82f6" : "#ef4444") : "#3b82f6"} // Red if just defender, Blue if assigned
+                      fill="rgba(15, 23, 42, 0.9)" 
+                      stroke={hasDefender ? (showAttacker ? "#3b82f6" : "#ef4444") : "#3b82f6"} 
                       strokeWidth="2"
                       className="transition-colors duration-200"
                     />
 
-                    {/* --- ATTACKER (Left) --- */}
                     {showAttacker && (
                         <g transform={`translate(${node.x - nodeRadius * 0.8}, ${node.y})`}>
                           <defs>
@@ -272,7 +353,6 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                         </g>
                     )}
 
-                    {/* --- DEFENDER (Right or Center) --- */}
                     <g transform={`translate(${node.x + (showAttacker ? nodeRadius * 0.8 : 0)}, ${node.y})`}>
                        {hasDefender && defenderImgUrl ? (
                         <>
@@ -293,13 +373,32 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                           />
                         </>
                        ) : (
-                         // Empty Defender Placeholder
                          <circle r={nodeRadius - 6} fill="transparent" stroke="#334155" strokeWidth="1" strokeDasharray="3 3" />
                        )}
                     </g>
                   </g>
                   
-                  {/* --- HISTORICAL COUNTERS (Bottom Right, Horizontal Stack) --- */}
+                  {hasPrefight && prefightChampions && (
+                    <g transform={`translate(${node.x - (showAttacker ? pillWidth/2 : nodeRadius) + 8}, ${node.y + nodeRadius + 6})`}>
+                       {prefightChampions.map((champ, index) => (
+                          <g key={`${champ.name}-${index}`} transform={`translate(${index * 20}, 0)`}>
+                            <defs>
+                                <clipPath id={`clip-prefight-${node.id}-${index}`}>
+                                    <circle cx={0} cy={0} r={9} />
+                                </clipPath>
+                            </defs>
+                            <circle cx={0} cy={0} r={10} fill="#1e293b" stroke="#94a3b8" strokeWidth="1" />
+                             <image
+                                href={getChampionImageUrl(champ.images as any, '64')}
+                                x={-9} y={-9}
+                                width={18} height={18}
+                                clipPath={`url(#clip-prefight-${node.id}-${index})`}
+                             />
+                          </g>
+                       ))}
+                    </g>
+                  )}
+                  
                   {showHistory && history && history.length > 0 && (
                     <g transform={`translate(${node.x + (showAttacker ? pillWidth/2 : nodeRadius)}, ${node.y + nodeRadius})`}>
                       {history.slice(0, 3).map((histStat, index) => (
@@ -307,8 +406,10 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                           key={histStat.attackerId} 
                           transform={`translate(${index * 18}, ${index * 4})`} 
                           onClick={(e) => {
-                              if (histStat.sampleVideoUrl) {
-                                  e.stopPropagation();
+                              e.stopPropagation();
+                              if (histStat.sampleVideoInternalId) {
+                                  window.open(`/war-videos/${histStat.sampleVideoInternalId}`, '_blank');
+                              } else if (histStat.sampleVideoUrl) {
                                   window.open(histStat.sampleVideoUrl, '_blank');
                               }
                           }}
@@ -333,7 +434,6 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                               width="20" height="20"
                               clipPath={`url(#clip-hist-atk-${node.id}-${histStat.attackerId})`}
                             />
-                            {/* Solos Badge */}
                             <g transform={`translate(6, -6)`}>
                                 <rect x="-5" y="-5" width="10" height="10" rx="3" fill={histStat.solos > 0 ? "#10b981" : "#ef4444"} /> 
                                 <text y="3" textAnchor="middle" fill="#FFFFFF" fontSize="7" fontWeight="bold">{histStat.solos}</text>
@@ -343,7 +443,7 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                       ))}
                     </g>
                   )}
-                  {/* --- NODE NUMBER TAG (Top Center) --- */}
+                  
                   <g transform={`translate(${node.x}, ${node.y - nodeRadius - 8})`}>
                     <rect
                       x="-12"
@@ -351,7 +451,7 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
                       width="24"
                       height="18"
                       rx="6"
-                      fill="rgba(2, 6, 23, 0.9)" // Slate-950
+                      fill="rgba(2, 6, 23, 0.9)" 
                       stroke={hasDefender ? "#ef4444" : "#3b82f6"}
                       strokeWidth="1.5"
                     />

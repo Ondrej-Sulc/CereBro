@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import WarMap from "@/components/war-planning/war-map";
 import NodeEditor from "@/components/war-planning/node-editor";
 import PlanningTools from "@/components/war-planning/planning-tools";
 import PlanningToolsPanel from "@/components/war-planning/planning-tools-panel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { WarFight, Champion, Player, WarNode, War } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
@@ -27,6 +28,8 @@ export interface FightWithNode extends WarFight {
   player: { ingameName: string } | null;
 }
 
+type RightPanelState = 'closed' | 'tools' | 'editor';
+
 export default function WarDetailsClient({
   war,
   warId,
@@ -34,29 +37,45 @@ export default function WarDetailsClient({
   champions,
   players,
 }: WarDetailsClientProps) {
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [selectedFight, setSelectedFight] = useState<FightWithNode | null>(null);
-  const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("bg1");
+  const [isDesktop, setIsDesktop] = useState(true);
+  const [refreshMap, setRefreshMap] = useState(0);
+
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
 
   const handleNodeClick = (nodeId: number, fight?: FightWithNode) => {
     setSelectedNodeId(nodeId);
     setSelectedFight(fight || null);
-    setIsEditorOpen(true);
+    setRightPanelState('editor');
   };
 
   const handleEditorClose = () => {
-    setIsEditorOpen(false);
+    setRightPanelState('closed');
     setSelectedNodeId(null);
     setSelectedFight(null);
   };
 
+  const toggleTools = () => {
+    if (rightPanelState === 'tools') {
+      setRightPanelState('closed');
+    } else {
+      setRightPanelState('tools');
+    }
+  };
+
   const handleSaveFight = async (updatedFight: Partial<WarFight>) => {
     await updateWarFight(updatedFight);
-    // TODO: Re-fetch fights for the current battlegroup to update the map
+    setRefreshMap((prev) => prev + 1);
   };
 
   return (
@@ -82,8 +101,8 @@ export default function WarDetailsClient({
 
               {/* Desktop Tools (Sidebar Toggle) */}
               <div className="hidden md:block">
-                <Button variant="outline" onClick={() => setIsToolsOpen(!isToolsOpen)} className="gap-2">
-                  {isToolsOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+                <Button variant="outline" onClick={toggleTools} className="gap-2">
+                  {rightPanelState === 'tools' ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
                   Tools
                 </Button>
               </div>
@@ -99,13 +118,13 @@ export default function WarDetailsClient({
             
             <div className="mt-4 h-[calc(100vh-220px)] relative rounded-md overflow-hidden border border-slate-800">
               <TabsContent value="bg1" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} />
+                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} />
               </TabsContent>
               <TabsContent value="bg2" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} />
+                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} />
               </TabsContent>
               <TabsContent value="bg3" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} />
+                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} />
               </TabsContent>
             </div>
           </Tabs>
@@ -116,31 +135,55 @@ export default function WarDetailsClient({
       <div 
         className={cn(
           "hidden md:block border-l border-slate-800 bg-slate-950 transition-all duration-300 ease-in-out overflow-hidden",
-          isToolsOpen ? "w-[400px]" : "w-0"
+          rightPanelState !== 'closed' ? "w-[400px]" : "w-0"
         )}
       >
         <div className="w-[400px] h-full">
-          <PlanningToolsPanel 
-            players={players} 
-            champions={champions} 
-            allianceId={war.allianceId} 
-            currentBattlegroup={currentBattlegroup}
-            onClose={() => setIsToolsOpen(false)} 
-          />
+          {rightPanelState === 'tools' && (
+            <PlanningToolsPanel 
+              players={players} 
+              champions={champions} 
+              allianceId={war.allianceId} 
+              currentBattlegroup={currentBattlegroup}
+              onClose={() => setRightPanelState('closed')} 
+            />
+          )}
+          {rightPanelState === 'editor' && (
+             <NodeEditor
+                onClose={handleEditorClose}
+                warId={warId}
+                battlegroup={selectedFight?.battlegroup || 1}
+                nodeId={selectedNodeId}
+                currentFight={selectedFight}
+                onSave={handleSaveFight}
+                champions={champions}
+                players={players}
+            />
+          )}
         </div>
       </div>
 
-      <NodeEditor
-        isOpen={isEditorOpen}
-        onClose={handleEditorClose}
-        warId={warId}
-        battlegroup={selectedFight?.battlegroup || 1}
-        nodeId={selectedNodeId}
-        currentFight={selectedFight}
-        onSave={handleSaveFight}
-        champions={champions}
-        players={players}
-      />
+      {/* Mobile Node Editor (Sheet) */}
+      {!isDesktop && (
+        <Sheet open={rightPanelState === 'editor'} onOpenChange={(open) => !open && handleEditorClose()}>
+          <SheetContent side="bottom" className="h-[80vh] p-0 border-t border-slate-800 bg-slate-950 md:hidden">
+              <div className="sr-only">
+                  <SheetTitle>Edit Node</SheetTitle>
+                  <SheetDescription>Edit fight details</SheetDescription>
+              </div>
+              <NodeEditor
+                  onClose={handleEditorClose}
+                  warId={warId}
+                  battlegroup={selectedFight?.battlegroup || 1}
+                  nodeId={selectedNodeId}
+                  currentFight={selectedFight}
+                  onSave={handleSaveFight}
+                  champions={champions}
+                  players={players}
+              />
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

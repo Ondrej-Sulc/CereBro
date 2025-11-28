@@ -10,10 +10,12 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
     - **War Archive:** A searchable database of uploaded Alliance War videos and fight logs. Features Discord OAuth2 authentication to allow users to upload videos and view alliance-restricted content. The search interface includes interactive filters for attacker, defender (with champion image display and clear functionality), player, node, and supports multi-season selection.
     - **Profile Management:** Users can view their profile summary (Prestige, Alliance, Roster stats) and update their roster by uploading screenshots directly from the web interface, leveraging the same powerful OCR technology as the bot.
     - **War Planning:** An interactive, map-based interface for planning Alliance Wars.
-        - **Interactive Map:** A zoomable, pannable SVG map of the war node layout, updated dynamically to match the game.
-        - **Real-time Planning:** Officers can assign defenders, attackers, and players to specific nodes directly on the map.
-        - **Visual Feedback:** The map visually represents assigned champions (with portraits) and attackers (badges), providing an instant overview of the war plan.
+        - **Interactive Map:** A zoomable, pannable SVG map of the war node layout, updated dynamically to match the game. It features a new cosmic theme with twinkling stars, nebulas, and nodes that appear as floating islands.
+        - **Node Editor (Inspector Panel):** Clicking a node opens a dynamic sidebar (desktop) or bottom sheet (mobile) for editing. Changes to defenders, attackers, players, deaths, notes, and prefight champions are automatically saved, streamlining the planning process.
+        - **Prefight Champion Support:** Officers can assign prefight champions to individual fights, visualized as small icons on the node pills.
+        - **Historical Matchups:** Integrated historical data for each node, including suggested attackers, solos, deaths, and links to sample videos (now linking to internal `/war-videos/[id]` pages).
         - **Tools:** Integrated search tools allow officers to quickly find which alliance members own specific champions or view a player's top roster to make informed assignment decisions.
+        - **Permissions:** Both Alliance Officers and Bot Administrators can initiate new war plans.
 - **Dynamic Command Loading:** Commands in the `src/commands` directory are automatically registered on startup.
 - **Tiered Command Access:** The bot now implements a granular command access system, categorizing commands into different tiers:
     - **Public:** Accessible to all users by default (e.g., `/champion`, `/glossary`, `/search all`).

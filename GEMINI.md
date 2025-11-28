@@ -35,17 +35,18 @@ The bot features a sophisticated system for tracking Alliance War performance by
 
 The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.
 
-*   **Interactive Map:** A highly interactive, SVG-based map of the Alliance War node layout.
+*   **Interactive Map (Cosmic Theme):** A highly interactive, SVG-based map of the Alliance War node layout, now featuring a cosmic theme with twinkling stars, nebulas, and nodes designed as floating islands in space.
     *   **Zoom & Pan:** Powered by `react-zoom-pan-pinch`, allowing officers to navigate the complex map easily.
     *   **Dynamic Layout:** The map structure (nodes, paths, portals) is defined in a constant-driven configuration (`nodes-data.ts`), allowing for easy updates to match game changes.
-    *   **Visual Feedback:** Nodes display assigned defenders (champion portraits), attackers (small badges), and node numbers. Portals are visually distinct.
-*   **Planning Workflow:**
-    *   **Initialization:** Officers can start a new war directly from the dashboard, which automatically generates placeholder `WarFight` records for all 3 Battlegroups and 50 Nodes.
-    *   **Node Editing:** Clicking a node opens a `NodeEditor` modal (or sidebar on desktop) where officers can assign Defenders, Attackers, and Players, set death counts, and add notes.
-    *   **Responsive Layout:** On desktop, a collapsible sidebar provides access to planning tools alongside the map. On mobile, these tools are accessible via a slide-out Sheet.
+    *   **Visual Feedback:** Nodes display assigned defenders (champion portraits), attackers (small badges), and now prefight champions (small icons at the bottom-left of the node pill). Portals are visually distinct.
+*   **Planning Workflow (Inspector Panel & Auto-Save):**
+    *   **Initialization:** Officers can start a new war directly from the dashboard, which automatically generates placeholder `WarFight` records for all 3 Battlegroups and 50 Nodes. Bot Administrators are also authorized to initiate war plans.
+    *   **Node Editing:** Clicking a node opens an "Inspector Panel" (a dynamic sidebar on desktop or a slide-out Sheet on mobile) that allows officers to assign Defenders, Attackers, Prefight Champions, and Players, set death counts, and add notes. Changes are automatically saved on interaction or after a short debounce for text inputs, removing the need for a manual "Save" button.
+    *   **Responsive Layout:** On desktop, a collapsible sidebar provides access to planning tools and the node editor alongside the map. On mobile, these tools are accessible via slide-out Sheets.
 *   **Search Tools:** Integrated tools to assist planning:
     *   **Player Roster:** View a specific player's top champions to find suitable attackers/defenders.
     *   **Find Champion:** Search for a specific champion to see which alliance members own it (and at what rank/ascension).
+*   **Historical Matchups:** The Node Editor now displays historical matchup data, including solos, deaths, and prefight champions used in sample fights. Links to sample videos now point to the internal `/war-videos/[videoId]` page for seamless playback.
 
 ### Alliance Structure & Role Management
 

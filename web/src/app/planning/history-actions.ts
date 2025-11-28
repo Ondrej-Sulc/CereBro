@@ -13,7 +13,8 @@ export type HistoricalFightStat = {
   totalFights: number;
   videoCount: number;
   sampleVideoUrl?: string;
-  sampleVideoInternalId?: string; // New field for internal video ID
+  sampleVideoInternalId?: string;
+  prefightChampions?: { name: string; images: any }[];
 };
 
 export async function getHistoricalCounters(
@@ -25,7 +26,7 @@ export async function getHistoricalCounters(
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Raw query to get stats + a sample video URL and its internal ID
+  // Raw query to get stats + a sample video URL, its internal ID, and the fight ID
   const rawStats = await prisma.$queryRaw<any[]>`
     SELECT 
       "wf"."attackerId",
@@ -48,7 +49,15 @@ export async function getHistoricalCounters(
        AND "wf2"."nodeId" IN (SELECT "id" FROM "WarNode" WHERE "nodeNumber" = ${nodeNumber})
        AND "v"."id" IS NOT NULL
        LIMIT 1
-      ) as "sampleVideoInternalId"
+      ) as "sampleVideoInternalId",
+      (SELECT "wf2"."id" FROM "WarFight" "wf2"
+       JOIN "WarVideo" "v" ON "wf2"."videoId" = "v"."id"
+       WHERE "wf2"."attackerId" = "wf"."attackerId" 
+       AND "wf2"."defenderId" = ${defenderId}
+       AND "wf2"."nodeId" IN (SELECT "id" FROM "WarNode" WHERE "nodeNumber" = ${nodeNumber})
+       AND "v"."id" IS NOT NULL
+       LIMIT 1
+      ) as "sampleFightId"
     FROM "WarFight" "wf"
     JOIN "War" "w" ON "wf"."warId" = "w"."id"
     JOIN "WarNode" "wn" ON "wf"."nodeId" = "wn"."id"
@@ -60,6 +69,19 @@ export async function getHistoricalCounters(
       ${maxTier ? Prisma.sql`AND "w"."warTier" <= ${maxTier}` : Prisma.empty}
     GROUP BY "wf"."attackerId"
   `;
+
+  // Fetch prefight champions for the sample fights
+  const sampleFightIds = rawStats.map((r: any) => r.sampleFightId).filter(Boolean);
+  const fightPrefights = await prisma.warFight.findMany({
+    where: { id: { in: sampleFightIds } },
+    select: {
+      id: true,
+      prefightChampions: {
+        select: { name: true, images: true }
+      }
+    }
+  });
+  const prefightMap = new Map(fightPrefights.map(f => [f.id, f.prefightChampions]));
 
   // Map raw results
   const finalResults: HistoricalFightStat[] = [];
@@ -76,6 +98,8 @@ export async function getHistoricalCounters(
       const attacker = rawAttackerMap.get(row.attackerId);
       if (!attacker) continue;
 
+      const prefights = row.sampleFightId ? prefightMap.get(row.sampleFightId) : [];
+
       finalResults.push({
           attackerId: attacker.id,
           attackerName: attacker.name,
@@ -85,7 +109,8 @@ export async function getHistoricalCounters(
           totalFights: Number(row.totalFights),
           videoCount: Number(row.videoCount),
           sampleVideoUrl: row.sampleVideoUrl || undefined,
-          sampleVideoInternalId: row.sampleVideoInternalId || undefined
+          sampleVideoInternalId: row.sampleVideoInternalId || undefined,
+          prefightChampions: prefights || [],
       });
   }
 

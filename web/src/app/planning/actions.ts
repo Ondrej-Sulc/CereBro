@@ -38,8 +38,8 @@ export async function createWar(formData: FormData) {
     include: { alliance: true },
   });
 
-  if (!player || !player.allianceId || !player.isOfficer) {
-    throw new Error("You must be an Alliance Officer to plan a war.");
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to plan a war.");
   }
 
   const season = parseInt(formData.get("season") as string);
@@ -103,7 +103,7 @@ export async function createWar(formData: FormData) {
   redirect(`/planning/${war.id}`);
 }
 
-export async function updateWarFight(updatedFight: Partial<WarFight>) {
+export async function updateWarFight(updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -126,24 +126,53 @@ export async function updateWarFight(updatedFight: Partial<WarFight>) {
     include: { alliance: true },
   });
 
-  if (!player || !player.allianceId || !player.isOfficer) {
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
     throw new Error("You must be an Alliance Officer to update war fights.");
   }
 
-  if (!updatedFight.id) {
-      throw new Error("WarFight ID is required for update.");
-  }
+  const { id, warId, battlegroup, nodeId, prefightChampionIds, ...rest } = updatedFight;
 
-  await prisma.warFight.update({
-    where: { id: updatedFight.id },
-    data: {
-      attackerId: updatedFight.attackerId,
-      defenderId: updatedFight.defenderId,
-      playerId: updatedFight.playerId,
-      death: updatedFight.death,
-      notes: updatedFight.notes,
-    },
-  });
+  const updateData = {
+      attackerId: rest.attackerId,
+      defenderId: rest.defenderId,
+      playerId: rest.playerId,
+      death: rest.death,
+      notes: rest.notes,
+      prefightChampions: prefightChampionIds ? {
+          set: prefightChampionIds.map(cid => ({ id: cid })),
+      } : undefined,
+  };
+
+  if (id) {
+      await prisma.warFight.update({
+          where: { id },
+          data: updateData,
+      });
+  } else {
+      if (!warId || !battlegroup || !nodeId) {
+          throw new Error("WarFight ID is missing, and WarID/BG/NodeID are not sufficient to create it.");
+      }
+
+      await prisma.warFight.upsert({
+          where: {
+              warId_battlegroup_nodeId: { warId, battlegroup, nodeId }
+          },
+          create: {
+              warId,
+              battlegroup,
+              nodeId,
+              attackerId: rest.attackerId,
+              defenderId: rest.defenderId,
+              playerId: rest.playerId,
+              death: rest.death ?? 0,
+              notes: rest.notes,
+              prefightChampions: prefightChampionIds ? {
+                  connect: prefightChampionIds.map(cid => ({ id: cid }))
+              } : undefined
+          },
+          update: updateData
+      });
+  }
 }
 
 export async function getPlayerRoster(playerId: string) {

@@ -64,6 +64,7 @@ export async function GET(request: Request) {
         attacker: { select: { name: true, images: true } }, // Include champion details
         defender: { select: { name: true, images: true } }, // Include champion details
         player: { select: { ingameName: true } }, // Include player details
+        prefightChampions: { select: { id: true, name: true, images: true } }, // Include prefight champions
       },
     });
 
