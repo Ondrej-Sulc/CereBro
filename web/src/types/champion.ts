@@ -1,4 +1,4 @@
-import { ChampionClass } from '@prisma/client';
+import { Champion as PrismaChampion } from '@prisma/client';
 
 export interface ChampionImages {
   hero: string;
@@ -12,10 +12,6 @@ export interface ChampionImages {
   s_128: string;
 }
 
-export interface Champion {
-  id: number;
-  name: string;
-  class: ChampionClass;
-  images: any; // Allow any type from Prisma JsonValue
+export interface Champion extends PrismaChampion {
   abilities?: { ability: { name: string } }[];
 }

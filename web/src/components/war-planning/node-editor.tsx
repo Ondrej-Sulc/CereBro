@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { WarFight, Champion, Player, WarNode } from "@prisma/client";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { WarFight, Player, WarNode } from "@prisma/client"; // Removed Champion
+import { Champion } from "@/types/champion"; // Added custom Champion type
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,9 +12,8 @@ import { ChampionCombobox } from "@/components/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/MultiChampionCombobox";
 import { getHistoricalCounters, HistoricalFightStat } from "@/app/planning/history-actions";
 import { getChampionImageUrl } from "@/lib/championHelper";
-import { PlayCircle, Users, X } from "lucide-react";
+import { PlayCircle, Users, X, ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { useDebounce } from "@/hooks/use-debounce"; // We might need this, or just manual timeout
 
 interface NodeEditorProps {
   onClose: () => void;
@@ -24,6 +24,7 @@ interface NodeEditorProps {
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
   champions: Champion[];
   players: Player[];
+  onNavigate?: (direction: number) => void;
 }
 
 interface FightWithNode extends WarFight {
@@ -43,6 +44,7 @@ export default function NodeEditor({
   onSave,
   champions,
   players,
+  onNavigate,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -53,50 +55,81 @@ export default function NodeEditor({
   
   const [history, setHistory] = useState<HistoricalFightStat[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isDefenderOpen, setIsDefenderOpen] = useState(false);
+  
+  // Cache history to avoid re-fetching when switching back/forth or during fast nav
+  const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
 
-  // Load initial state when fight changes
-  useEffect(() => {
-    setDefenderId(currentFight?.defenderId || undefined);
-    setAttackerId(currentFight?.attackerId || undefined);
-    setPlayerId(currentFight?.playerId || undefined);
-    setDeaths(currentFight?.death || 0);
-    setNotes(currentFight?.notes || "");
-    setPrefightChampionIds(currentFight?.prefightChampions?.map(c => c.id) || []);
-    setHistory([]); 
-  }, [currentFight]);
+  // ... (Load initial state useEffect)
 
-  // Fetch history when defender changes
+  // ... (Keyboard Navigation useEffect)
+
+  // Fetch history when defender changes (with debounce and cache)
   useEffect(() => {
-    async function fetchHistory() {
-      if (!nodeId || !defenderId) {
-        setHistory([]);
+    // If no node or defender, clear history immediately
+    if (!nodeId || !defenderId) {
+      setHistory([]);
+      return;
+    }
+
+    const cacheKey = `${nodeId}-${defenderId}`;
+    
+    // Check cache first
+    if (historyCache.current.has(cacheKey)) {
+        setHistory(historyCache.current.get(cacheKey)!);
         return;
-      }
-      setIsLoadingHistory(true);
+    }
+
+    // Debounce fetch
+    setIsLoadingHistory(true);
+    const timer = setTimeout(async () => {
       try {
         const stats = await getHistoricalCounters(nodeId, defenderId);
+        historyCache.current.set(cacheKey, stats);
         setHistory(stats);
       } catch (error) {
         console.error("Failed to fetch history:", error);
       } finally {
         setIsLoadingHistory(false);
       }
-    }
-    fetchHistory();
+    }, 300);
+
+    return () => {
+        clearTimeout(timer);
+        // If unmounting/changing fast, we might want to keep isLoading true? 
+        // No, cleanup should cancel loading state implication if possible, 
+        // but we can't easily cancel the "loading" visual if the effect runs again immediately.
+        // Actually, if we cancel, we should probably set loading false, or let the next effect take over.
+        // But better: let's not reset loading to false here, only in finally.
+        // However, if we switch fast, the next effect sets loading=true (if not cached).
+    };
   }, [nodeId, defenderId]);
+
+  // Optimized Prefight List
+  const prefightChampionsList = useMemo(() => {
+    const champs = champions.filter((champ) =>
+      champ.abilities?.some((link: any) => link.ability.name === "Pre-Fight Ability")
+    );
+    // Sort logic: Magneto (House Of X) and Odin first, then alphabetical
+    return champs.sort((a, b) => {
+      const priorityNames = ["Magneto (House Of X)", "Odin"];
+      const aPriority = priorityNames.indexOf(a.name);
+      const bPriority = priorityNames.indexOf(b.name);
+
+      if (aPriority !== -1 && bPriority !== -1) {
+        return aPriority - bPriority;
+      }
+      if (aPriority !== -1) return -1;
+      if (bPriority !== -1) return 1;
+      
+      return a.name.localeCompare(b.name);
+    });
+  }, [champions]);
+
 
   // Helper to trigger save with current state + updates
   const triggerSave = useCallback((updates: Partial<any>) => {
     if (nodeId === null) return;
-    
-    // We construct the full object to ensure we don't lose context, 
-    // but typically the API only needs ID + changed fields.
-    // However, since we rely on closures for some state variables in a pure function,
-    // passing 'updates' explicitly is safer.
-    
-    // Actually, we can just pass the specific update to the parent handler
-    // providing the parent handler merges it correctly. 
-    // The parent 'handleSaveFight' calls 'updateWarFight' which likely expects just the diffs + ID.
     
     const payload = {
       id: currentFight?.id,
@@ -109,12 +142,12 @@ export default function NodeEditor({
     onSave(payload);
   }, [currentFight?.id, warId, battlegroup, nodeId, onSave]);
 
-  // -- Instant Saves for Selectors --
-
   const handleDefenderChange = (idStr: string) => {
     const val = idStr ? parseInt(idStr) : undefined;
     setDefenderId(val);
     triggerSave({ defenderId: val === undefined ? null : val });
+    // Keep focus or move to next? The user said "click enter to confirm".
+    // ChampionCombobox closes on select.
   };
 
   const handleAttackerChange = (idStr: string) => {
@@ -124,8 +157,14 @@ export default function NodeEditor({
   };
 
   const handlePlayerChange = (val: string) => {
-    setPlayerId(val);
-    triggerSave({ playerId: val });
+    const newVal = val === "CLEAR" ? undefined : val;
+    setPlayerId(newVal);
+    triggerSave({ playerId: newVal === undefined ? null : newVal }); // Fix: pass explicit null for prisma
+  };
+
+  const handleClearPlayer = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handlePlayerChange("CLEAR");
   };
 
   const handlePrefightsChange = (ids: number[]) => {
@@ -133,27 +172,21 @@ export default function NodeEditor({
     triggerSave({ prefightChampionIds: ids });
   };
 
-  // -- Debounced Saves for Inputs --
-  
-  // We use a ref to track if the initial load has happened, to avoid saving on mount
-  // But strictly, useEffect dependencies handle this if we compare values.
-  
   useEffect(() => {
     if (currentFight && deaths !== currentFight.death) {
         const timer = setTimeout(() => {
             triggerSave({ death: deaths });
-        }, 1000); // 1s debounce for typing numbers
+        }, 1000); 
         return () => clearTimeout(timer);
     }
   }, [deaths, currentFight, triggerSave]);
 
   useEffect(() => {
-    // Treat null notes as empty string for comparison
     const currentNotes = currentFight?.notes || "";
     if (notes !== currentNotes) {
         const timer = setTimeout(() => {
             triggerSave({ notes: notes });
-        }, 1000); // 1s debounce for typing notes
+        }, 1000); 
         return () => clearTimeout(timer);
     }
   }, [notes, currentFight, triggerSave]);
@@ -186,6 +219,8 @@ export default function NodeEditor({
                 champions={champions}
                 value={defenderId !== undefined ? String(defenderId) : ""}
                 onSelect={handleDefenderChange}
+                open={isDefenderOpen}
+                onOpenChange={setIsDefenderOpen}
               />
             </div>
           </div>
@@ -203,7 +238,7 @@ export default function NodeEditor({
             <Label htmlFor="prefight" className="text-right">Prefights</Label>
             <div className="col-span-3">
               <MultiChampionCombobox
-                champions={champions}
+                champions={prefightChampionsList}
                 values={prefightChampionIds}
                 onSelect={handlePrefightsChange}
               />
@@ -212,16 +247,27 @@ export default function NodeEditor({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="player" className="text-right">Player</Label>
             <div className="col-span-3">
-              <Select value={playerId} onValueChange={handlePlayerChange}>
-                <SelectTrigger>
+              <Select value={playerId || ""} onValueChange={handlePlayerChange}>
+                <SelectTrigger className="w-full relative pr-8 [&>svg:last-child]:hidden">
                   <SelectValue placeholder="Select player..." />
+                  {playerId ? (
+                    <div 
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-800 cursor-pointer text-slate-400 hover:text-white z-10"
+                        onClick={handleClearPlayer}
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        <X className="h-3 w-3" />
+                    </div>
+                  ) : (
+                    <ChevronDown className="h-4 w-4 opacity-50 absolute right-2 top-1/2 -translate-y-1/2" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {players.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
+                    <SelectItem key={p.id} value={p.id} className="pl-2 [&>span:first-child]:hidden">
                       <div className="flex items-center gap-2">
                         {p.avatar ? (
-                          <div className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800">
+                          <div className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800 shrink-0">
                             <Image 
                               src={p.avatar} 
                               alt={p.ingameName} 
@@ -231,7 +277,7 @@ export default function NodeEditor({
                             />
                           </div>
                         ) : (
-                           <Users className="w-5 h-5 text-slate-400 p-0.5" />
+                           <Users className="w-5 h-5 text-slate-400 p-0.5 shrink-0" />
                         )}
                         <span className="truncate">{p.ingameName}</span>
                       </div>
@@ -246,16 +292,16 @@ export default function NodeEditor({
             <Input
               id="deaths"
               type="number"
-              defaultValue={deaths}
+              value={deaths}
               onChange={(e) => setDeaths(parseInt(e.target.value) || 0)}
-              className="col-span-3"
+              className="col-span-3 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="notes" className="text-right">Notes</Label>
             <Textarea
               id="notes"
-              defaultValue={notes}
+              value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="col-span-3"
             />

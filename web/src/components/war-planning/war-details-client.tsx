@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import WarMap from "@/components/war-planning/war-map";
 import NodeEditor from "@/components/war-planning/node-editor";
 import PlanningTools from "@/components/war-planning/planning-tools";
 import PlanningToolsPanel from "@/components/war-planning/planning-tools-panel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { WarFight, Champion, Player, WarNode, War } from "@prisma/client";
+import { WarFight, Player, WarNode, War } from "@prisma/client";
+import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { warNodesData } from './nodes-data';
 
 interface WarDetailsClientProps {
   war: War;
@@ -43,6 +45,7 @@ export default function WarDetailsClient({
   const [activeTab, setActiveTab] = useState("bg1");
   const [isDesktop, setIsDesktop] = useState(true);
   const [refreshMap, setRefreshMap] = useState(0);
+  const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -53,30 +56,63 @@ export default function WarDetailsClient({
 
   const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
 
-  const handleNodeClick = (nodeId: number, fight?: FightWithNode) => {
+  const handleNodeClick = useCallback((nodeId: number, fight?: FightWithNode) => {
     setSelectedNodeId(nodeId);
     setSelectedFight(fight || null);
     setRightPanelState('editor');
-  };
+  }, []);
 
-  const handleEditorClose = () => {
+  const handleFightsLoaded = useCallback((fights: FightWithNode[]) => {
+    setCurrentFights(fights);
+  }, []);
+
+  const handleNavigateNode = useCallback((direction: number) => {
+    if (!selectedNodeId) return;
+    
+    const currentIndex = warNodesData.findIndex(n => {
+       const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
+       return nid === selectedNodeId;
+    });
+
+    if (currentIndex === -1) return;
+
+    let newIndex = currentIndex;
+    let attempts = 0;
+    const maxAttempts = warNodesData.length;
+
+    do {
+        newIndex += direction;
+        if (newIndex < 0) newIndex = warNodesData.length - 1;
+        if (newIndex >= warNodesData.length) newIndex = 0;
+        attempts++;
+    } while (warNodesData[newIndex].isPortal && attempts < maxAttempts);
+
+    const newNode = warNodesData[newIndex];
+    const newNodeId = typeof newNode.id === 'string' ? parseInt(newNode.id) : newNode.id;
+    
+    const newFight = currentFights.find(f => f.node.nodeNumber === newNodeId);
+    
+    handleNodeClick(newNodeId, newFight);
+  }, [selectedNodeId, currentFights, handleNodeClick]);
+
+  const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');
     setSelectedNodeId(null);
     setSelectedFight(null);
-  };
+  }, []);
 
-  const toggleTools = () => {
+  const toggleTools = useCallback(() => {
     if (rightPanelState === 'tools') {
       setRightPanelState('closed');
     } else {
       setRightPanelState('tools');
     }
-  };
+  }, [rightPanelState]);
 
-  const handleSaveFight = async (updatedFight: Partial<WarFight>) => {
+  const handleSaveFight = useCallback(async (updatedFight: Partial<WarFight>) => {
     await updateWarFight(updatedFight);
     setRefreshMap((prev) => prev + 1);
-  };
+  }, [updateWarFight]);
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
@@ -118,13 +154,13 @@ export default function WarDetailsClient({
             
             <div className="mt-4 h-[calc(100vh-220px)] relative rounded-md overflow-hidden border border-slate-800">
               <TabsContent value="bg1" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} />
+                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} />
               </TabsContent>
               <TabsContent value="bg2" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} />
+                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} />
               </TabsContent>
               <TabsContent value="bg3" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} />
+                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} />
               </TabsContent>
             </div>
           </Tabs>
@@ -150,6 +186,7 @@ export default function WarDetailsClient({
           )}
           {rightPanelState === 'editor' && (
              <NodeEditor
+                key={selectedNodeId}
                 onClose={handleEditorClose}
                 warId={warId}
                 battlegroup={selectedFight?.battlegroup || 1}
@@ -158,6 +195,7 @@ export default function WarDetailsClient({
                 onSave={handleSaveFight}
                 champions={champions}
                 players={players}
+                onNavigate={handleNavigateNode}
             />
           )}
         </div>
@@ -172,6 +210,7 @@ export default function WarDetailsClient({
                   <SheetDescription>Edit fight details</SheetDescription>
               </div>
               <NodeEditor
+                  key={selectedNodeId}
                   onClose={handleEditorClose}
                   warId={warId}
                   battlegroup={selectedFight?.battlegroup || 1}
@@ -180,6 +219,7 @@ export default function WarDetailsClient({
                   onSave={handleSaveFight}
                   champions={champions}
                   players={players}
+                  onNavigate={handleNavigateNode}
               />
           </SheetContent>
         </Sheet>

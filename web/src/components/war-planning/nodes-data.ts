@@ -20,7 +20,7 @@ const Y_START = CANVAS_HEIGHT - 100; // Start higher up
 const Y_STEP = 120; // Vertical spacing between node rows
 const Y_PORTAL_OFFSET = 60; // Vertical offset for portals
 const NODE_H_SPACING = 120; // Horizontal spacing within a group of 3 nodes
-const GROUP_H_SPACING = 400; // Horizontal spacing between Left-Center-Right groups
+const GROUP_H_SPACING = 420; // Horizontal spacing between Left-Center-Right groups
 
 // Base Y coordinates for rows
 const Y_ROW1 = Y_START;

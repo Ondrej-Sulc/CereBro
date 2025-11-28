@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Maximize2, Minimize2, History, PlayCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
+import { getHistoricalCounters, getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { WarFight, WarNode } from '@prisma/client';
 import { warNodesData } from './nodes-data';
@@ -15,6 +15,7 @@ interface WarMapProps {
   battlegroup: number;
   onNodeClick: (nodeId: number, fight?: FightWithNode) => void;
   refreshTrigger?: number;
+  onFightsLoaded?: (fights: FightWithNode[]) => void;
 }
 
 interface FightWithNode extends WarFight {
@@ -25,7 +26,7 @@ interface FightWithNode extends WarFight {
   prefightChampions?: { name: string; images: any }[];
 }
 
-export default function WarMap({ warId, battlegroup, onNodeClick, refreshTrigger = 0 }: WarMapProps) {
+export default function WarMap({ warId, battlegroup, onNodeClick, refreshTrigger = 0, onFightsLoaded }: WarMapProps) {
   const [fights, setFights] = useState<FightWithNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +67,9 @@ export default function WarMap({ warId, battlegroup, onNodeClick, refreshTrigger
         }
         const fetchedFights: FightWithNode[] = await response.json();
         setFights(fetchedFights);
+        if (onFightsLoaded) {
+            onFightsLoaded(fetchedFights);
+        }
         // Clear history when fights/bg changes to avoid stale overlays
         setHistoryData(new Map());
       } catch (err) {
@@ -76,7 +80,7 @@ export default function WarMap({ warId, battlegroup, onNodeClick, refreshTrigger
       }
     }
     fetchFights();
-  }, [warId, battlegroup, refreshTrigger]);
+  }, [warId, battlegroup, refreshTrigger, onFightsLoaded]);
 
   // Fetch history when toggle is enabled
   useEffect(() => {
@@ -84,18 +88,27 @@ export default function WarMap({ warId, battlegroup, onNodeClick, refreshTrigger
       if (!showHistory || fights.length === 0) return;
 
       const nodesWithDefenders = fights.filter(f => f.defenderId);
-      const historyMap = new Map<number, HistoricalFightStat[]>();
+      if (nodesWithDefenders.length === 0) return;
 
-      const promises = nodesWithDefenders.map(async (fight) => {
-        if (!fight.defenderId) return;
-        const stats = await getHistoricalCounters(fight.node.nodeNumber, fight.defenderId);
-        if (stats.length > 0) {
-            historyMap.set(fight.node.nodeNumber, stats);
-        }
-      });
+      // Prepare batch request
+      const requests = nodesWithDefenders.map(f => ({
+          nodeNumber: f.node.nodeNumber,
+          defenderId: f.defenderId!
+      }));
 
-      await Promise.all(promises);
-      setHistoryData(historyMap);
+      try {
+          const batchResults = await getBatchHistoricalCounters(requests);
+          
+          // Convert Record to Map
+          const historyMap = new Map<number, HistoricalFightStat[]>();
+          Object.entries(batchResults).forEach(([nodeNumStr, stats]) => {
+              historyMap.set(Number(nodeNumStr), stats);
+          });
+          
+          setHistoryData(historyMap);
+      } catch (err) {
+          console.error("Failed to fetch history batch:", err);
+      }
     }
 
     if (showHistory && historyData.size === 0) {

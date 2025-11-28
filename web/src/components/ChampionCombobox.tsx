@@ -28,6 +28,8 @@ interface ChampionComboboxProps {
   onSelect: (value: string) => void;
   placeholder?: string;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ChampionCombobox = React.memo(function ChampionCombobox({
@@ -36,14 +38,27 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   onSelect,
   placeholder = "Select a champion...",
   className,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ChampionComboboxProps) {
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
+
   const [search, setSearch] = React.useState("");
+
+  React.useEffect(() => {
+    if (!open) {
+      setSearch("");
+    }
+  }, [open]);
 
   const handleSelect = React.useCallback((championId: string) => {
     onSelect(championId);
     setOpen(false);
-  }, [onSelect]);
+  }, [onSelect, setOpen]);
 
   const handleClear = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

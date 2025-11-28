@@ -278,9 +278,9 @@ export function FightBlock({
               </Label>
               <MultiChampionCombobox
                 champions={prefightChampions}
-                selectedIds={fight.prefightChampionIds}
-                onSelectionChange={(val) =>
-                  updateFight({ prefightChampionIds: val })
+                values={fight.prefightChampionIds.map(id => parseInt(id))}
+                onSelect={(val) =>
+                  updateFight({ prefightChampionIds: val.map(id => String(id)) })
                 }
                 className="bg-slate-950/30 border-slate-800 rounded-md"
               />
