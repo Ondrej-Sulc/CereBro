@@ -17,9 +17,9 @@ const CANVAS_WIDTH = 1200; // Increased canvas width
 const CANVAS_HEIGHT = 900; // Increased canvas height
 const CENTER_X = CANVAS_WIDTH / 2;
 const Y_START = CANVAS_HEIGHT - 100; // Start higher up
-const Y_STEP = 80; // Vertical spacing between node rows
-const NODE_H_SPACING = 70; // Horizontal spacing within a group of 3 nodes
-const GROUP_H_SPACING = 270; // Horizontal spacing between Left-Center-Right groups
+const Y_STEP = 100; // Vertical spacing between node rows
+const NODE_H_SPACING = 120; // Horizontal spacing within a group of 3 nodes
+const GROUP_H_SPACING = 390; // Horizontal spacing between Left-Center-Right groups
 
 // Base Y coordinates for rows
 const Y_ROW1 = Y_START;

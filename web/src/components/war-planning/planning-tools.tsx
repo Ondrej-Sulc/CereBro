@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { PanelRightOpen } from "lucide-react";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { Champion, Player } from "@prisma/client";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"; // Import VisuallyHidden if available, or just hide it with CSS class
+
 
 interface PlanningToolsProps {
   players: Player[];
@@ -22,10 +22,10 @@ export default function PlanningTools({ players, champions, allianceId, currentB
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="p-0 w-full sm:w-[400px] border-l border-slate-800 bg-slate-950">
-        <VisuallyHidden>
+        <div className="sr-only">
             <SheetTitle>Planning Tools</SheetTitle>
             <SheetDescription>Search rosters and champions</SheetDescription>
-        </VisuallyHidden>
+        </div>
         <PlanningToolsPanel players={players} champions={champions} allianceId={allianceId} currentBattlegroup={currentBattlegroup} />
       </SheetContent>
     </Sheet>

@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Maximize2, Minimize2, History, PlayCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { getHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { WarFight, WarNode } from '@prisma/client';
 import { warNodesData, WarNodePosition } from './nodes-data';
 import { prisma } from '@/lib/prisma';
 import { getChampionImageUrl } from '@/lib/championHelper';
-import { Maximize2, Minimize2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 interface WarMapProps {
   warId: string;
@@ -28,6 +29,8 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
 
   useEffect(() => {
     async function fetchFights() {
@@ -38,6 +41,8 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
         }
         const fetchedFights: FightWithNode[] = await response.json();
         setFights(fetchedFights);
+        // Clear history when fights/bg changes to avoid stale overlays
+        setHistoryData(new Map());
       } catch (err) {
         console.error("Failed to fetch fights:", err);
         setError("Failed to load war data.");
@@ -47,6 +52,31 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
     }
     fetchFights();
   }, [warId, battlegroup]);
+
+  // Fetch history when toggle is enabled
+  useEffect(() => {
+    async function fetchAllHistory() {
+      if (!showHistory || fights.length === 0) return;
+
+      const nodesWithDefenders = fights.filter(f => f.defenderId);
+      const historyMap = new Map<number, HistoricalFightStat[]>();
+
+      const promises = nodesWithDefenders.map(async (fight) => {
+        if (!fight.defenderId) return;
+        const stats = await getHistoricalCounters(fight.node.nodeNumber, fight.defenderId);
+        if (stats.length > 0) {
+            historyMap.set(fight.node.nodeNumber, stats);
+        }
+      });
+
+      await Promise.all(promises);
+      setHistoryData(historyMap);
+    }
+
+    if (showHistory && historyData.size === 0) {
+        fetchAllHistory();
+    }
+  }, [showHistory, fights]);
 
   // Handle ESC key to exit fullscreen
   useEffect(() => {
@@ -73,7 +103,19 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
       "relative border rounded-md overflow-hidden bg-slate-950 transition-all duration-300",
       isFullscreen ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-[600px]"
     )}>
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button
+          variant={showHistory ? "default" : "secondary"}
+          size="icon"
+          onClick={() => setShowHistory(!showHistory)}
+          title="Toggle Historical Counters"
+          className={cn(
+            "border border-slate-700",
+            showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
+          )}
+        >
+          <History className="h-5 w-5" />
+        </Button>
         <Button
           variant="secondary"
           size="icon"
@@ -169,122 +211,156 @@ export default function WarMap({ warId, battlegroup, onNodeClick }: WarMapProps)
               const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, '128') : null;
               const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, '128') : null;
 
+              // Historical Counter Logic
+              const history = showHistory && defender ? historyData.get(numericId) : null;
+
+              // Node Dimensions
+              const nodeRadius = 24; // Slightly larger for better visibility
+              const showAttacker = !!(attacker && attackerImgUrl);
+              const pillWidth = showAttacker ? nodeRadius * 3.5 : nodeRadius * 2;
+              const pillHeight = nodeRadius * 2;
+              
+              // Offsets for centering
+              const defenderX = showAttacker ? -nodeRadius * 0.8 : 0;
+              const attackerX = showAttacker ? nodeRadius * 0.8 : 0;
+
               return (
                 <g key={node.id} className="cursor-pointer group" onClick={() => onNodeClick(numericId, fight)}>
                   {/* Hover Glow Effect */}
-                  <circle
-                    cx={node.x}
-                    cy={node.y}
-                    r={28}
+                  <rect
+                    x={node.x - pillWidth / 2 - 4}
+                    y={node.y - pillHeight / 2 - 4}
+                    width={pillWidth + 8}
+                    height={pillHeight + 8}
+                    rx={nodeRadius + 4}
                     fill="url(#node-glow)"
                     className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   />
                   
-                  {/* --- DEFENDER / MAIN NODE --- */}
-                  {hasDefender && defenderImgUrl ? (
-                    <g>
-                      <defs>
-                        <clipPath id={`clip-def-${node.id}`}>
-                          <circle cx={node.x} cy={node.y} r={20} />
-                        </clipPath>
-                      </defs>
-                      {/* Background for image (border color) */}
-                      <circle
-                        cx={node.x}
-                        cy={node.y}
-                        r={22}
-                        fill="#7f1d1d" // Dark Red background
-                      />
-                      {/* The Image */}
-                      <image
-                        href={defenderImgUrl}
-                        x={node.x - 20}
-                        y={node.y - 20}
-                        width="40"
-                        height="40"
-                        clipPath={`url(#clip-def-${node.id})`}
-                      />
-                      {/* Border Ring Overlay */}
-                      <circle
-                        cx={node.x}
-                        cy={node.y}
-                        r={20}
-                        fill="none"
-                        stroke="#ef4444"
-                        strokeWidth="2"
-                      />
-                    </g>
-                  ) : (
-                    // Empty Node State
-                    <g>
-                      <circle
-                        cx={node.x}
-                        cy={node.y}
-                        r={18}
-                        fill="#172554" // Dark Blue
-                        stroke="#3b82f6" // Blue Border
-                        strokeWidth="2"
-                        className="transition-colors duration-200"
-                      />
-                      <circle 
-                        cx={node.x} 
-                        cy={node.y} 
-                        r={14} 
-                        fill="transparent" 
-                        stroke="#93c5fd" 
-                        strokeWidth="1" 
-                        opacity="0.5"
-                      />
-                    </g>
-                  )}
-
-                  {/* --- ATTACKER BADGE (Bottom Right) --- */}
-                  {hasAttacker && attackerImgUrl && (
-                    <g>
-                      <defs>
-                        <clipPath id={`clip-atk-${node.id}`}>
-                          <circle cx={node.x + 14} cy={node.y + 14} r={10} />
-                        </clipPath>
-                      </defs>
-                      {/* Background/Border */}
-                      <circle
-                        cx={node.x + 14}
-                        cy={node.y + 14}
-                        r={11}
-                        fill="#000000"
-                        stroke="#3b82f6"
-                        strokeWidth="1.5"
-                      />
-                      {/* Image */}
-                      <image
-                        href={attackerImgUrl}
-                        x={node.x + 4} // (x+14) - 10
-                        y={node.y + 4} // (y+14) - 10
-                        width="20"
-                        height="20"
-                        clipPath={`url(#clip-atk-${node.id})`}
-                      />
-                    </g>
-                  )}
-
-                  {/* --- NODE NUMBER TAG (Top Center) --- */}
-                  <g transform={`translate(${node.x}, ${node.y - 26})`}>
+                  {/* --- MAIN PILL CONTAINER --- */}
+                  <g>
+                    {/* Pill Background */}
                     <rect
-                      x="-10"
-                      y="-8"
-                      width="20"
-                      height="16"
-                      rx="4"
-                      fill="rgba(15, 23, 42, 0.8)" // Slate-900 with opacity
+                      x={node.x - pillWidth / 2}
+                      y={node.y - pillHeight / 2}
+                      width={pillWidth}
+                      height={pillHeight}
+                      rx={nodeRadius}
+                      fill="rgba(15, 23, 42, 0.9)" // Slate-950/90
+                      stroke={hasDefender ? (showAttacker ? "#3b82f6" : "#ef4444") : "#3b82f6"} // Red if just defender, Blue if assigned
+                      strokeWidth="2"
+                      className="transition-colors duration-200"
+                    />
+
+                    {/* --- ATTACKER (Left) --- */}
+                    {showAttacker && (
+                        <g transform={`translate(${node.x - nodeRadius * 0.8}, ${node.y})`}>
+                          <defs>
+                            <clipPath id={`clip-atk-${node.id}`}>
+                              <circle cx={0} cy={0} r={nodeRadius - 2} />
+                            </clipPath>
+                          </defs>
+                          <circle r={nodeRadius - 2} fill="#000000" />
+                          <image
+                            href={attackerImgUrl!}
+                            x={-(nodeRadius - 2)}
+                            y={-(nodeRadius - 2)}
+                            width={(nodeRadius - 2) * 2}
+                            height={(nodeRadius - 2) * 2}
+                            clipPath={`url(#clip-atk-${node.id})`}
+                          />
+                        </g>
+                    )}
+
+                    {/* --- DEFENDER (Right or Center) --- */}
+                    <g transform={`translate(${node.x + (showAttacker ? nodeRadius * 0.8 : 0)}, ${node.y})`}>
+                       {hasDefender && defenderImgUrl ? (
+                        <>
+                          <defs>
+                            <clipPath id={`clip-def-${node.id}`}>
+                              <circle cx={0} cy={0} r={nodeRadius - 2} />
+                            </clipPath>
+                          </defs>
+                          <circle r={nodeRadius - 2} fill="#7f1d1d" />
+                          <image
+                            href={defenderImgUrl}
+                            x={-(nodeRadius - 2)}
+                            y={-(nodeRadius - 2)}
+                            width={(nodeRadius - 2) * 2}
+                            height={(nodeRadius - 2) * 2}
+                            clipPath={`url(#clip-def-${node.id})`}
+                            opacity={showHistory ? 0.7 : 1}
+                          />
+                        </>
+                       ) : (
+                         // Empty Defender Placeholder
+                         <circle r={nodeRadius - 6} fill="transparent" stroke="#334155" strokeWidth="1" strokeDasharray="3 3" />
+                       )}
+                    </g>
+                  </g>
+                  
+                  {/* --- HISTORICAL COUNTERS (Bottom Right, Horizontal Stack) --- */}
+                  {showHistory && history && history.length > 0 && (
+                    <g transform={`translate(${node.x + (showAttacker ? pillWidth/2 : nodeRadius)}, ${node.y + nodeRadius})`}>
+                      {history.slice(0, 3).map((histStat, index) => (
+                        <g 
+                          key={histStat.attackerId} 
+                          transform={`translate(${index * 18}, ${index * 4})`} 
+                          onClick={(e) => {
+                              if (histStat.sampleVideoUrl) {
+                                  e.stopPropagation();
+                                  window.open(histStat.sampleVideoUrl, '_blank');
+                              }
+                          }}
+                          style={{ cursor: histStat.sampleVideoUrl ? 'pointer' : 'default' }}
+                        >
+                          <g className="transition-transform hover:scale-110 origin-center" style={{ transformBox: 'fill-box' }}>
+                            <defs>
+                              <clipPath id={`clip-hist-atk-${node.id}-${histStat.attackerId}`}>
+                                <circle cx={0} cy={0} r={10} />
+                              </clipPath>
+                            </defs>
+                            <circle 
+                              cx={0} cy={0} 
+                              r={12} 
+                              fill="#0f172a" 
+                              stroke={histStat.sampleVideoUrl ? "#fbbf24" : "#64748b"} 
+                              strokeWidth="1.5" 
+                            />
+                            <image
+                              href={getChampionImageUrl(histStat.attackerImages as any, '128')}
+                              x={-10} y={-10}
+                              width="20" height="20"
+                              clipPath={`url(#clip-hist-atk-${node.id}-${histStat.attackerId})`}
+                            />
+                            {/* Solos Badge */}
+                            <g transform={`translate(6, -6)`}>
+                                <rect x="-5" y="-5" width="10" height="10" rx="3" fill={histStat.solos > 0 ? "#10b981" : "#ef4444"} /> 
+                                <text y="3" textAnchor="middle" fill="#FFFFFF" fontSize="7" fontWeight="bold">{histStat.solos}</text>
+                            </g>
+                          </g>
+                        </g>
+                      ))}
+                    </g>
+                  )}
+                  {/* --- NODE NUMBER TAG (Top Center) --- */}
+                  <g transform={`translate(${node.x}, ${node.y - nodeRadius - 8})`}>
+                    <rect
+                      x="-12"
+                      y="-10"
+                      width="24"
+                      height="18"
+                      rx="6"
+                      fill="rgba(2, 6, 23, 0.9)" // Slate-950
                       stroke={hasDefender ? "#ef4444" : "#3b82f6"}
-                      strokeWidth="1"
+                      strokeWidth="1.5"
                     />
                     <text
                       x="0"
-                      y="3" // Vertically centered approximation
+                      y="4"
                       textAnchor="middle"
-                      fill="#FFFFFF"
-                      fontSize="10"
+                      fill="#e2e8f0"
+                      fontSize="11"
                       fontWeight="bold"
                       className="pointer-events-none select-none font-mono"
                     >

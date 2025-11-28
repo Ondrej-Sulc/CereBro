@@ -16,6 +16,6 @@ export interface Champion {
   id: number;
   name: string;
   class: ChampionClass;
-  images: ChampionImages;
-  abilities: { ability: { name: string } }[];
+  images: any; // Allow any type from Prisma JsonValue
+  abilities?: { ability: { name: string } }[];
 }

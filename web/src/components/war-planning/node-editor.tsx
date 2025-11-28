@@ -17,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChampionCombobox } from "@/components/ChampionCombobox";
+import { getHistoricalCounters, HistoricalFightStat } from "@/app/planning/history-actions";
+import { getChampionImageUrl } from "@/lib/championHelper";
+import { PlayCircle } from "lucide-react";
+import Image from "next/image";
 
 interface NodeEditorProps {
   isOpen: boolean;
@@ -53,7 +57,10 @@ export default function NodeEditor({
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
   const [playerId, setPlayerId] = useState<string | undefined>(currentFight?.playerId || undefined);
   const [deaths, setDeaths] = useState<number>(currentFight?.death || 0);
-  const [notes, setNotes] = useState<string>(currentFight?.notes || ""); // Assuming notes field will be added to WarFight
+  const [notes, setNotes] = useState<string>(currentFight?.notes || "");
+  
+  const [history, setHistory] = useState<HistoricalFightStat[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   useEffect(() => {
     setDefenderId(currentFight?.defenderId || undefined);
@@ -61,7 +68,28 @@ export default function NodeEditor({
     setPlayerId(currentFight?.playerId || undefined);
     setDeaths(currentFight?.death || 0);
     setNotes(currentFight?.notes || "");
+    setHistory([]); // Reset history when opening new fight
   }, [currentFight]);
+
+  // Fetch history when defender changes
+  useEffect(() => {
+    async function fetchHistory() {
+      if (!nodeId || !defenderId) {
+        setHistory([]);
+        return;
+      }
+      setIsLoadingHistory(true);
+      try {
+        const stats = await getHistoricalCounters(nodeId, defenderId);
+        setHistory(stats);
+      } catch (error) {
+        console.error("Failed to fetch history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    }
+    fetchHistory();
+  }, [nodeId, defenderId]);
 
   const handleSave = () => {
     if (nodeId === null) return;
@@ -84,7 +112,7 @@ export default function NodeEditor({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Node {nodeId}</DialogTitle>
           <DialogDescription>
@@ -154,6 +182,62 @@ export default function NodeEditor({
               className="col-span-3"
             />
           </div>
+
+          {/* Historical Matchups Section */}
+          {defenderId && (
+            <div className="mt-4 border-t border-slate-800 pt-4">
+                <h4 className="text-sm font-semibold mb-3 flex items-center justify-between">
+                    <span>Historical Matchups</span>
+                    {isLoadingHistory && <span className="text-xs text-muted-foreground font-normal">Loading...</span>}
+                </h4>
+                
+                {history.length === 0 && !isLoadingHistory ? (
+                    <p className="text-xs text-muted-foreground">No history found for this defender on this node.</p>
+                ) : (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                        {history.map((stat) => (
+                            <div key={stat.attackerId} className="flex items-center justify-between p-2 rounded-md bg-slate-900/50 border border-slate-800 text-xs">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <div className="relative h-8 w-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+                                        <Image
+                                            src={getChampionImageUrl(stat.attackerImages, '64')}
+                                            alt={stat.attackerName}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div className="truncate">
+                                        <div className="font-bold truncate">{stat.attackerName}</div>
+                                        <div className="text-muted-foreground">{stat.totalFights} Fights</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-bold text-emerald-400">{stat.solos}</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase">Solos</span>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-bold text-red-400">{stat.deaths}</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase">Deaths</span>
+                                    </div>
+                                    {stat.sampleVideoUrl && (
+                                        <a 
+                                            href={stat.sampleVideoUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="ml-1 p-1 hover:bg-slate-800 rounded-full transition-colors text-amber-400"
+                                            title="Watch Video"
+                                        >
+                                            <PlayCircle className="h-5 w-5" />
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button type="submit" onClick={handleSave}>Save changes</Button>
