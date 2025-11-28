@@ -30,7 +30,7 @@ export default async function WarPlanningPage() {
     include: { alliance: true },
   });
 
-  if (!player || !player.allianceId || !player.isOfficer) {
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
     return <p>You must be an Alliance Officer to access War Planning.</p>;
   }
 
@@ -60,7 +60,7 @@ export default async function WarPlanningPage() {
           <CardDescription>Create a new Alliance War plan.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createWar} className="space-y-4">
+          <form action={createWar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="season">Season</Label>
               <Input
@@ -99,7 +99,7 @@ export default async function WarPlanningPage() {
                 required
               />
             </div>
-            <Button type="submit">Start War</Button>
+            <Button type="submit" className="btn-primary">Start War</Button>
           </form>
         </CardContent>
       </Card>
@@ -122,7 +122,7 @@ export default async function WarPlanningPage() {
               <CardContent>
                 <p>Created: {new Date(war.createdAt).toLocaleDateString()}</p>
                 <Link href={`/planning/${war.id}`}>
-                  <Button className="mt-4">View Plan</Button>
+                  <Button className="btn-primary mt-4">View Plan</Button>
                 </Link>
               </CardContent>
             </Card>

@@ -41,7 +41,7 @@ export async function GET(request: Request) {
       include: { alliance: true },
     });
   
-    if (!player || !player.allianceId || !player.isOfficer) {
+    if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
       return NextResponse.json({ message: 'You must be an Alliance Officer to access this resource.' }, { status: 403 });
     }
 

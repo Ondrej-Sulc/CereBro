@@ -1,36 +1,32 @@
-"use client";
-
-import { Champion, Player } from "@prisma/client";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"; // Import SheetTitle and SheetDescription
+import { PanelRightOpen } from "lucide-react";
 import PlanningToolsPanel from "./planning-tools-panel";
+import { Champion, Player } from "@prisma/client";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"; // Import VisuallyHidden if available, or just hide it with CSS class
 
 interface PlanningToolsProps {
   players: Player[];
   champions: Champion[];
   allianceId: string;
+  currentBattlegroup?: number;
 }
 
-export default function PlanningTools({ players, champions, allianceId }: PlanningToolsProps) {
+export default function PlanningTools({ players, champions, allianceId, currentBattlegroup }: PlanningToolsProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <Search className="h-4 w-4" />
-          Search Tools
+          <PanelRightOpen className="h-4 w-4" />
+          Tools
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px] p-0 bg-slate-950 border-l border-slate-800">
-         {/* Pass onClose undefined as Sheet handles it, or we can pass a handler to close sheet if needed */}
-         <PlanningToolsPanel players={players} champions={champions} allianceId={allianceId} />
+      <SheetContent side="right" className="p-0 w-full sm:w-[400px] border-l border-slate-800 bg-slate-950">
+        <VisuallyHidden>
+            <SheetTitle>Planning Tools</SheetTitle>
+            <SheetDescription>Search rosters and champions</SheetDescription>
+        </VisuallyHidden>
+        <PlanningToolsPanel players={players} champions={champions} allianceId={allianceId} currentBattlegroup={currentBattlegroup} />
       </SheetContent>
     </Sheet>
   );

@@ -17,16 +17,20 @@ export async function syncRolesForGuild(guild: Guild): Promise<number> {
     return 0;
   }
 
+  const alliancePlayers = await prisma.player.findMany({
+    where: { allianceId: alliance.id },
+  });
+
   const members = await guild.members.fetch();
   let updatedPlayers = 0;
 
-  for (const member of members.values()) {
-    const player = await prisma.player.findFirst({
-      where: { discordId: member.id, allianceId: alliance.id },
-    });
+  for (const player of alliancePlayers) {
+    const member = members.get(player.discordId);
+    
+    let battlegroup: number | null = null;
+    let isOfficer = false;
 
-    if (player) {
-      let battlegroup: number | null = null;
+    if (member) {
       if (alliance.battlegroup1Role && member.roles.cache.has(alliance.battlegroup1Role)) {
         battlegroup = 1;
       } else if (alliance.battlegroup2Role && member.roles.cache.has(alliance.battlegroup2Role)) {
@@ -35,8 +39,19 @@ export async function syncRolesForGuild(guild: Guild): Promise<number> {
         battlegroup = 3;
       }
 
-      const isOfficer = !!(alliance.officerRole && member.roles.cache.has(alliance.officerRole));
+      isOfficer = !!(alliance.officerRole && member.roles.cache.has(alliance.officerRole));
+    }
 
+    // Determine if we should remove the player from the alliance
+    // Remove if: Not in a BG AND Not an Officer AND Not a Bot Admin
+    if (battlegroup === null && !isOfficer && !player.isBotAdmin) {
+      await prisma.player.update({
+        where: { id: player.id },
+        data: { allianceId: null, battlegroup: null, isOfficer: false },
+      });
+      updatedPlayers++;
+    } else {
+      // Update roles if changed
       if (player.battlegroup !== battlegroup || player.isOfficer !== isOfficer) {
         await prisma.player.update({
           where: { id: player.id },
@@ -47,7 +62,7 @@ export async function syncRolesForGuild(guild: Guild): Promise<number> {
     }
   }
   
-  loggerService.info(`Alliance roles synced for guild ${guild.id}. ${updatedPlayers} players updated.`);
+  loggerService.info(`Alliance roles synced for guild ${guild.id}. ${updatedPlayers} players updated/removed.`);
   return updatedPlayers;
 }
 

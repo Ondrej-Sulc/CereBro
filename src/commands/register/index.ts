@@ -24,6 +24,7 @@ export const command: Command = {
     await interaction.deferReply({ ephemeral: true });
     const ingameName = interaction.options.getString("name", true);
     const discordId = interaction.user.id;
+    const avatar = interaction.user.displayAvatarURL({ extension: 'png', size: 256 });
 
     const anyProfile = await prisma.player.findFirst({
       where: { discordId },
@@ -51,6 +52,7 @@ export const command: Command = {
       data: {
         discordId,
         ingameName,
+        avatar,
         allianceId,
         isActive: true, // First profile is active
       },

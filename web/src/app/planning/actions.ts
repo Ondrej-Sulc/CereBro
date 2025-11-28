@@ -179,7 +179,7 @@ export async function getPlayerRoster(playerId: string) {
   });
 }
 
-export async function getOwnersOfChampion(championId: number, allianceId: string) {
+export async function getOwnersOfChampion(championId: number, allianceId: string, battlegroup?: number) {
   const session = await auth();
   if (!session?.user?.id) return [];
 
@@ -199,7 +199,10 @@ export async function getOwnersOfChampion(championId: number, allianceId: string
   return await prisma.roster.findMany({
     where: { 
       championId,
-      player: { allianceId }
+      player: { 
+        allianceId,
+        ...(battlegroup ? { battlegroup } : {})
+      }
     },
     include: { player: true },
     orderBy: [

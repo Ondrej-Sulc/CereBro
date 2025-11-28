@@ -8,9 +8,6 @@
     "./web"
   ],
   "main": "index.js",
-  "prisma": {
-    "schema": "prisma/schema.prisma"
-  },
   "pnpm": {
     "allowed-build-scripts": [
       "@prisma/client",

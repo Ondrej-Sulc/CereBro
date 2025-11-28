@@ -32,7 +32,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
     include: { alliance: true },
   });
 
-  if (!player || !player.allianceId || !player.isOfficer) {
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
     return <p>You must be an Alliance Officer to access War Planning.</p>;
   }
 

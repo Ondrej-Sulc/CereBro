@@ -38,6 +38,9 @@ export default function WarDetailsClient({
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [selectedFight, setSelectedFight] = useState<FightWithNode | null>(null);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("bg1");
+
+  const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
 
   const handleNodeClick = (nodeId: number, fight?: FightWithNode) => {
     setSelectedNodeId(nodeId);
@@ -63,13 +66,18 @@ export default function WarDetailsClient({
         <div className="p-4 sm:px-6 border-b border-slate-800 bg-slate-950">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
             <h1 className="text-2xl sm:text-3xl font-bold truncate">
-              {war.enemyAlliance} <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">(S{war.season} T{war.warTier})</span>
+              {war.enemyAlliance} <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">AW S{war.season} War {war.warNumber} T{war.warTier}</span>
             </h1>
             
             <div className="flex items-center gap-2 shrink-0">
               {/* Mobile Tools (Sheet) */}
               <div className="md:hidden">
-                <PlanningTools players={players} champions={champions} allianceId={war.allianceId} />
+                <PlanningTools 
+                  players={players} 
+                  champions={champions} 
+                  allianceId={war.allianceId}
+                  currentBattlegroup={currentBattlegroup}
+                />
               </div>
 
               {/* Desktop Tools (Sidebar Toggle) */}
@@ -82,7 +90,7 @@ export default function WarDetailsClient({
             </div>
           </div>
           
-          <Tabs defaultValue="bg1" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-slate-900">
               <TabsTrigger value="bg1">Battlegroup 1</TabsTrigger>
               <TabsTrigger value="bg2">Battlegroup 2</TabsTrigger>
@@ -116,6 +124,7 @@ export default function WarDetailsClient({
             players={players} 
             champions={champions} 
             allianceId={war.allianceId} 
+            currentBattlegroup={currentBattlegroup}
             onClose={() => setIsToolsOpen(false)} 
           />
         </div>
