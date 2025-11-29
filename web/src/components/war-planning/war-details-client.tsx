@@ -19,8 +19,18 @@ interface WarDetailsClientProps {
   warId: string;
   updateWarFight: (updatedFight: Partial<WarFight>) => Promise<void>;
   champions: Champion[];
-  players: Player[];
+  players: PlayerWithRoster[];
 }
+
+export type PlayerWithRoster = Player & {
+  roster: {
+    championId: number;
+    stars: number;
+    rank: number;
+    isAscended: boolean;
+    isAwakened: boolean;
+  }[];
+};
 
 // Re-defining FightWithNode here for clarity in this component
 export interface FightWithNode extends WarFight {
@@ -154,13 +164,13 @@ export default function WarDetailsClient({
             
             <div className="mt-4 h-[calc(100vh-220px)] relative rounded-md overflow-hidden border border-slate-800">
               <TabsContent value="bg1" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} />
+                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} selectedNodeId={selectedNodeId} />
               </TabsContent>
               <TabsContent value="bg2" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} />
+                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} selectedNodeId={selectedNodeId} />
               </TabsContent>
               <TabsContent value="bg3" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} />
+                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} selectedNodeId={selectedNodeId} />
               </TabsContent>
             </div>
           </Tabs>

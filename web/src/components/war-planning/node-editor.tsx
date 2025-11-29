@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { WarFight, Player, WarNode } from "@prisma/client"; // Removed Champion
-import { Champion } from "@/types/champion"; // Added custom Champion type
+import { WarFight, Player, WarNode } from "@prisma/client";
+import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,17 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { PlayCircle, Users, X, ChevronDown } from "lucide-react";
 import Image from "next/image";
 
+// Extended Player type to include roster info
+export type PlayerWithRoster = Player & {
+  roster: {
+    championId: number;
+    stars: number;
+    rank: number;
+    isAscended: boolean;
+    isAwakened: boolean;
+  }[];
+};
+
 interface NodeEditorProps {
   onClose: () => void;
   warId: string;
@@ -23,7 +34,7 @@ interface NodeEditorProps {
   currentFight: FightWithNode | null;
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
   champions: Champion[];
-  players: Player[];
+  players: PlayerWithRoster[];
   onNavigate?: (direction: number) => void;
 }
 
@@ -56,17 +67,48 @@ export default function NodeEditor({
   const [history, setHistory] = useState<HistoricalFightStat[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
-  
+
   // Cache history to avoid re-fetching when switching back/forth or during fast nav
   const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
 
-  // ... (Load initial state useEffect)
+  // Load initial state when fight changes
+  useEffect(() => {
+    setDefenderId(currentFight?.defenderId || undefined);
+    setAttackerId(currentFight?.attackerId || undefined);
+    setPlayerId(currentFight?.playerId || undefined);
+    setDeaths(currentFight?.death || 0);
+    setNotes(currentFight?.notes || "");
+    setPrefightChampionIds(currentFight?.prefightChampions?.map(c => c.id) || []);
+    setHistory([]); 
+    
+    if (currentFight && !currentFight.defenderId) {
+        setIsDefenderOpen(true);
+    } else {
+        setIsDefenderOpen(false);
+    }
+  }, [currentFight]);
 
-  // ... (Keyboard Navigation useEffect)
+  // Keyboard Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+            return;
+        }
+
+        if (e.key === 'ArrowRight') {
+            onNavigate?.(1);
+        } else if (e.key === 'ArrowLeft') {
+            onNavigate?.(-1);
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onNavigate]);
+
 
   // Fetch history when defender changes (with debounce and cache)
   useEffect(() => {
-    // If no node or defender, clear history immediately
     if (!nodeId || !defenderId) {
       setHistory([]);
       return;
@@ -74,13 +116,11 @@ export default function NodeEditor({
 
     const cacheKey = `${nodeId}-${defenderId}`;
     
-    // Check cache first
     if (historyCache.current.has(cacheKey)) {
         setHistory(historyCache.current.get(cacheKey)!);
         return;
     }
 
-    // Debounce fetch
     setIsLoadingHistory(true);
     const timer = setTimeout(async () => {
       try {
@@ -96,38 +136,82 @@ export default function NodeEditor({
 
     return () => {
         clearTimeout(timer);
-        // If unmounting/changing fast, we might want to keep isLoading true? 
-        // No, cleanup should cancel loading state implication if possible, 
-        // but we can't easily cancel the "loading" visual if the effect runs again immediately.
-        // Actually, if we cancel, we should probably set loading false, or let the next effect take over.
-        // But better: let's not reset loading to false here, only in finally.
-        // However, if we switch fast, the next effect sets loading=true (if not cached).
     };
   }, [nodeId, defenderId]);
 
-  // Optimized Prefight List
+  // --- DERIVED STATE FOR "SMART INPUTS" ---
+
+  // 1. Available Players (Filtered by BG + Attacker)
+  const availablePlayers = useMemo(() => {
+    // Filter by BG first
+    let filtered = players.filter(p => p.battlegroup === battlegroup);
+
+    // Ensure currently assigned player is in the list (if any), even if moved BG
+    if (currentFight?.playerId) {
+        const assigned = players.find(p => p.id === currentFight.playerId);
+        if (assigned && !filtered.includes(assigned)) {
+            filtered.push(assigned);
+        }
+    }
+
+    if (!attackerId) {
+         return filtered.sort((a, b) => a.ingameName.localeCompare(b.ingameName));
+    }
+
+    // Filter players who have this champion
+    const owners = filtered.filter(p => p.roster.some(r => r.championId === attackerId));
+    
+    // Sort owners by rank/ascension/stars of that champion
+    return owners.sort((a, b) => {
+        const rosterA = a.roster.find(r => r.championId === attackerId)!;
+        const rosterB = b.roster.find(r => r.championId === attackerId)!;
+        
+        // Priority: Stars > Rank > Ascended
+        if (rosterA.stars !== rosterB.stars) return rosterB.stars - rosterA.stars;
+        if (rosterA.rank !== rosterB.rank) return rosterB.rank - rosterA.rank;
+        if (rosterA.isAscended !== rosterB.isAscended) return (rosterA.isAscended ? 1 : 0) - (rosterB.isAscended ? 1 : 0);
+        return a.ingameName.localeCompare(b.ingameName);
+    });
+  }, [players, attackerId, battlegroup, currentFight?.playerId]);
+
+  // 2. Display Champions (Filtered by Player + Rank Info)
+  const displayChampions = useMemo(() => {
+    if (!playerId) return champions;
+    const player = players.find(p => p.id === playerId);
+    if (!player) return champions;
+
+    const rosterMap = new Map(player.roster.map(r => [r.championId, r]));
+    
+    return champions
+        .filter(c => rosterMap.has(c.id))
+        .map(c => {
+            const r = rosterMap.get(c.id)!;
+            const rankStr = `${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}`;
+            // Create a new object with modified name for display
+            return { ...c, name: `${c.name} (${rankStr})` };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+  }, [champions, players, playerId]);
+
+  // 3. Optimized Prefight List
   const prefightChampionsList = useMemo(() => {
     const champs = champions.filter((champ) =>
       champ.abilities?.some((link: any) => link.ability.name === "Pre-Fight Ability")
     );
-    // Sort logic: Magneto (House Of X) and Odin first, then alphabetical
     return champs.sort((a, b) => {
       const priorityNames = ["Magneto (House Of X)", "Odin"];
       const aPriority = priorityNames.indexOf(a.name);
       const bPriority = priorityNames.indexOf(b.name);
 
-      if (aPriority !== -1 && bPriority !== -1) {
-        return aPriority - bPriority;
-      }
+      if (aPriority !== -1 && bPriority !== -1) return aPriority - bPriority;
       if (aPriority !== -1) return -1;
       if (bPriority !== -1) return 1;
-      
       return a.name.localeCompare(b.name);
     });
   }, [champions]);
 
 
-  // Helper to trigger save with current state + updates
+  // Helper to trigger save
   const triggerSave = useCallback((updates: Partial<any>) => {
     if (nodeId === null) return;
     
@@ -146,8 +230,6 @@ export default function NodeEditor({
     const val = idStr ? parseInt(idStr) : undefined;
     setDefenderId(val);
     triggerSave({ defenderId: val === undefined ? null : val });
-    // Keep focus or move to next? The user said "click enter to confirm".
-    // ChampionCombobox closes on select.
   };
 
   const handleAttackerChange = (idStr: string) => {
@@ -159,7 +241,7 @@ export default function NodeEditor({
   const handlePlayerChange = (val: string) => {
     const newVal = val === "CLEAR" ? undefined : val;
     setPlayerId(newVal);
-    triggerSave({ playerId: newVal === undefined ? null : newVal }); // Fix: pass explicit null for prisma
+    triggerSave({ playerId: newVal === undefined ? null : newVal });
   };
 
   const handleClearPlayer = (e: React.MouseEvent) => {
@@ -212,6 +294,8 @@ export default function NodeEditor({
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid gap-4">
+          
+          {/* Defender */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="defender" className="text-right">Defender</Label>
             <div className="col-span-3">
@@ -224,26 +308,8 @@ export default function NodeEditor({
               />
             </div>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="attacker" className="text-right">Attacker</Label>
-            <div className="col-span-3">
-              <ChampionCombobox
-                champions={champions}
-                value={attackerId !== undefined ? String(attackerId) : ""}
-                onSelect={handleAttackerChange}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="prefight" className="text-right">Prefights</Label>
-            <div className="col-span-3">
-              <MultiChampionCombobox
-                champions={prefightChampionsList}
-                values={prefightChampionIds}
-                onSelect={handlePrefightsChange}
-              />
-            </div>
-          </div>
+
+          {/* Player (Reordered) */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="player" className="text-right">Player</Label>
             <div className="col-span-3">
@@ -263,30 +329,73 @@ export default function NodeEditor({
                   )}
                 </SelectTrigger>
                 <SelectContent>
-                  {players.map((p) => (
-                    <SelectItem key={p.id} value={p.id} className="pl-2 [&>span:first-child]:hidden">
-                      <div className="flex items-center gap-2">
-                        {p.avatar ? (
-                          <div className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800 shrink-0">
-                            <Image 
-                              src={p.avatar} 
-                              alt={p.ingameName} 
-                              fill 
-                              sizes="20px"
-                              className="object-cover" 
-                            />
-                          </div>
-                        ) : (
-                           <Users className="w-5 h-5 text-slate-400 p-0.5 shrink-0" />
-                        )}
-                        <span className="truncate">{p.ingameName}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {availablePlayers.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground text-center">No players found</div>
+                  )}
+                  {availablePlayers.map((p) => {
+                    // Logic to show rank if attacker selected
+                    let rosterInfo = "";
+                    if (attackerId) {
+                        const r = p.roster.find(r => r.championId === attackerId);
+                        if (r) {
+                            rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})`;
+                        }
+                    }
+
+                    return (
+                        <SelectItem key={p.id} value={p.id} className="pl-2 [&>span:first-child]:hidden">
+                        <div className="flex items-center gap-2">
+                            {p.avatar ? (
+                            <div className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800 shrink-0">
+                                <Image 
+                                src={p.avatar} 
+                                alt={p.ingameName} 
+                                fill 
+                                sizes="20px"
+                                className="object-cover" 
+                                />
+                            </div>
+                            ) : (
+                            <Users className="w-5 h-5 text-slate-400 p-0.5 shrink-0" />
+                            )}
+                            <span className="truncate">
+                                {p.ingameName} <span className="text-xs text-muted-foreground ml-1">{rosterInfo}</span>
+                            </span>
+                        </div>
+                        </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Attacker (Reordered & Smart) */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="attacker" className="text-right">Attacker</Label>
+            <div className="col-span-3">
+              <ChampionCombobox
+                champions={displayChampions}
+                value={attackerId !== undefined ? String(attackerId) : ""}
+                onSelect={handleAttackerChange}
+                placeholder={playerId ? "Select from roster..." : "Select generic counter..."}
+              />
+            </div>
+          </div>
+
+          {/* Prefights */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="prefight" className="text-right">Prefights</Label>
+            <div className="col-span-3">
+              <MultiChampionCombobox
+                champions={prefightChampionsList}
+                values={prefightChampionIds}
+                onSelect={handlePrefightsChange}
+              />
+            </div>
+          </div>
+          
+          {/* Deaths */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="deaths" className="text-right">Deaths</Label>
             <Input
@@ -297,6 +406,8 @@ export default function NodeEditor({
               className="col-span-3 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
+
+          {/* Notes */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="notes" className="text-right">Notes</Label>
             <Textarea

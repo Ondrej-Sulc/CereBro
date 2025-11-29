@@ -72,6 +72,17 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
   const allianceMembers = await prisma.player.findMany({
     where: { allianceId: player.allianceId },
     orderBy: { ingameName: 'asc' },
+    include: {
+      roster: {
+        select: {
+          championId: true,
+          stars: true,
+          rank: true,
+          isAscended: true,
+          isAwakened: true,
+        }
+      }
+    }
   });
 
   return (

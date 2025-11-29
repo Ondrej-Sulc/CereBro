@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { ChevronsUpDown, X } from "lucide-react"
-import { Virtuoso } from "react-virtuoso";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils"
@@ -13,6 +12,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -124,33 +124,29 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
             value={search}
             onValueChange={setSearch}
           />
-          <CommandEmpty>No champion found.</CommandEmpty>
-          <CommandGroup>
-            {open && (
-                <Virtuoso
-                    style={{ height: "288px" }}
-                    data={filteredChampions}
-                    itemContent={(index, champion) => (
-                        <CommandItem
-                            key={champion.id}
-                            value={champion.name}
-                            onSelect={() => handleSelect(String(champion.id))}
-                            className="flex items-center gap-2 cursor-pointer"
-                        >
-                            <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
-                              <Image 
-                                src={getChampionImageUrl(champion.images as any, '64')}
-                                alt={champion.name}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            <span>{champion.name}</span>
-                        </CommandItem>
-                    )}
-                />
-            )}
-          </CommandGroup>
+          <CommandList>
+            <CommandEmpty>No champion found.</CommandEmpty>
+            <CommandGroup>
+                {filteredChampions.map((champion) => (
+                    <CommandItem
+                        key={champion.id}
+                        value={champion.name}
+                        onSelect={() => handleSelect(String(champion.id))}
+                        className="flex items-center gap-2 cursor-pointer"
+                    >
+                        <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                            <Image 
+                            src={getChampionImageUrl(champion.images as any, '64')}
+                            alt={champion.name}
+                            fill
+                            className="object-cover"
+                            />
+                        </div>
+                        <span>{champion.name}</span>
+                    </CommandItem>
+                ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
