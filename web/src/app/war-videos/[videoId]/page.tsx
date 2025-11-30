@@ -26,6 +26,7 @@ export default async function WarVideoPage(props: any) {
           war: true,
           attacker: {
             include: {
+              tags: true,
               abilities: {
                 include: {
                   ability: true,
@@ -35,6 +36,7 @@ export default async function WarVideoPage(props: any) {
           },
           defender: {
             include: {
+              tags: true,
               abilities: {
                 include: {
                   ability: true,
@@ -62,5 +64,18 @@ export default async function WarVideoPage(props: any) {
     notFound();
   }
 
-  return <WarVideoDisplay warVideo={warVideo as any} isAdmin={isAdmin} />;
+  let activeTactic = null;
+  const war = warVideo.fights[0]?.war;
+  if (war) {
+     activeTactic = await prisma.warTactic.findFirst({
+        where: {
+            season: war.season,
+            minTier: { lte: war.warTier },
+            maxTier: { gte: war.warTier }
+        },
+        include: { attackTag: true, defenseTag: true }
+     });
+  }
+
+  return <WarVideoDisplay warVideo={warVideo as any} isAdmin={isAdmin} activeTactic={activeTactic} />;
 }

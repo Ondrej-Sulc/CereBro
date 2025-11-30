@@ -29,6 +29,8 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
   const [war, setWar] = useState(searchParams.get("war") || "");
   const [tier, setTier] = useState(searchParams.get("tier") || "");
   const [player, setPlayer] = useState(searchParams.get("player") || "");
+  const [alliance, setAlliance] = useState(searchParams.get("alliance") || "");
+  const [battlegroup, setBattlegroup] = useState(searchParams.get("battlegroup") || "");
   
   const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>(initialSeasons);
@@ -50,6 +52,8 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
       if (war) params.set("war", war);
       if (tier) params.set("tier", tier);
       if (player) params.set("player", player);
+      if (alliance) params.set("alliance", alliance);
+      if (battlegroup) params.set("battlegroup", battlegroup);
       
       selectedSeasons.forEach(s => params.append("season", s.toString()));
       
@@ -119,6 +123,16 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
           />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="alliance" className="text-xs text-slate-400">Alliance</Label>
+          <Input
+            id="alliance"
+            value={alliance}
+            onChange={(e) => setAlliance(e.target.value)}
+            placeholder="Tag or Name"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm"
+          />
+        </div>
+        <div className="space-y-2">
           <Label className="text-xs text-slate-400">Seasons</Label>
           <SeasonMultiSelect 
             seasons={availableSeasons}
@@ -145,6 +159,19 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
             type="number"
             value={tier}
             onChange={(e) => setTier(e.target.value)}
+            placeholder="#"
+            className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="battlegroup" className="text-xs text-slate-400">BG</Label>
+          <Input
+            id="battlegroup"
+            type="number"
+            min={1}
+            max={3}
+            value={battlegroup}
+            onChange={(e) => setBattlegroup(e.target.value)}
             placeholder="#"
             className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />

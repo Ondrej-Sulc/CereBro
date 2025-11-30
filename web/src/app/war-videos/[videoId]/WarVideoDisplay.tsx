@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getChampionImageUrl } from '@/lib/championHelper';
-import { WarNode, Player, ChampionClass, War } from '@prisma/client';
+import { WarNode, Player, ChampionClass, War, WarTactic, Tag } from '@prisma/client';
 import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info } from 'lucide-react';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
@@ -16,8 +16,8 @@ interface WarFight {
   id: string;
   death: boolean;
   battlegroup: number | null;
-  attacker: Champion;
-  defender: Champion;
+  attacker: Champion & { tags: Tag[] };
+  defender: Champion & { tags: Tag[] };
   prefightChampions: Champion[];
   node: WarNode;
   player: Player | null;
@@ -37,6 +37,7 @@ interface WarVideo {
 interface WarVideoDisplayProps {
   warVideo: WarVideo;
   isAdmin: boolean;
+  activeTactic?: (WarTactic & { attackTag: Tag | null; defenseTag: Tag | null }) | null;
 }
 
 function getYouTubeVideoId(url: string | null): string | null {
@@ -75,7 +76,7 @@ function getYouTubeVideoId(url: string | null): string | null {
   return videoId;
 }
 
-export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayProps) {
+export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: WarVideoDisplayProps) {
   const router = useRouter();
   const { toast } = useToast();
   const videoId = getYouTubeVideoId(warVideo.url);
@@ -180,7 +181,11 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fights List Section */}
         <div className="lg:col-span-2 space-y-6">
-          {sortedFights.map((fight) => (
+          {sortedFights.map((fight) => {
+            const isAttackerTactic = activeTactic?.attackTag && fight.attacker.tags?.some(t => t.name === activeTactic.attackTag!.name);
+            const isDefenderTactic = activeTactic?.defenseTag && fight.defender.tags?.some(t => t.name === activeTactic.defenseTag!.name);
+
+            return (
             <div key={fight.id} className="glass rounded-xl border border-slate-800/50 overflow-hidden">
               {/* Node Header & Outcome */}
               <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-500/30 px-4 py-3 flex items-center justify-between">
@@ -219,9 +224,12 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                     <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
                       {fight.attacker.name}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider truncate">
-                      {fight.attacker.class}
-                    </span>
+                    {isAttackerTactic && activeTactic?.attackTag && (
+                      <Badge variant="outline" className="mt-1 border-emerald-500/50 bg-emerald-900/20 text-emerald-400 gap-1 pl-1 pr-2 w-fit">
+                        <Swords className="h-3 w-3" />
+                        <span className="text-[10px]">{activeTactic.attackTag.name}</span>
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -236,9 +244,12 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                     <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
                       {fight.defender.name}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider truncate">
-                      {fight.defender.class}
-                    </span>
+                    {isDefenderTactic && activeTactic?.defenseTag && (
+                      <Badge variant="outline" className="mt-1 border-red-500/50 bg-red-900/20 text-red-400 gap-1 pl-1 pr-2 w-fit self-end">
+                        <Shield className="h-3 w-3" />
+                        <span className="text-[10px]">{activeTactic.defenseTag.name}</span>
+                      </Badge>
+                    )}
                   </div>
                   <div className="relative shrink-0">
                     <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
@@ -273,7 +284,8 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {/* War Details Section */}
