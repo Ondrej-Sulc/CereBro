@@ -271,7 +271,7 @@ export const WarNodeGroup = memo(function WarNodeGroup({
                       strokeWidth="1.5" 
                     />
                     <image
-                      href={getChampionImageUrl(histStat.attackerImages as any, '128')}
+                      href={getChampionImageUrl(histStat.attackerImages as any, '64')}
                       x={-10} y={-10}
                       width="20" height="20"
                       clipPath={`url(#clip-hist-atk-${node.id}-${histStat.attackerId})`}

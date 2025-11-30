@@ -9,10 +9,10 @@ export interface WarNodePosition {
 
 // --- Layout Configuration ---
 
-const LAYOUT = {
-  WIDTH: 1200,
-  HEIGHT: 900,
-  Y_START: 800, // HEIGHT - 100
+export const LAYOUT = {
+  WIDTH: 1400, // Increased from 1200
+  HEIGHT: 1600, // Increased from 900 to fit all nodes in positive coordinates
+  Y_START: 1500, // New start point
   Y_STEP: 120,
   SPACING_NODE: 120,  // Horizontal spacing within a group
   SPACING_GROUP: 420, // Horizontal spacing between groups

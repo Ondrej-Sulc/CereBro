@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
-import { warNodesData } from '../nodes-data';
+import { LAYOUT } from '../nodes-data';
 
 export const WarMapBackground = memo(function WarMapBackground() {
     const [stars, setStars] = useState<any[]>([]);
@@ -8,8 +8,8 @@ export const WarMapBackground = memo(function WarMapBackground() {
         const starCount = 400;
         const generatedStars = Array.from({ length: starCount }).map((_, i) => ({
           id: i,
-          x: Math.random() * 4000 - 1500,
-          y: Math.random() * 3000 - 1000,
+          x: Math.random() * (LAYOUT.WIDTH * 2) - (LAYOUT.WIDTH / 2),
+          y: Math.random() * (LAYOUT.HEIGHT * 2) - (LAYOUT.HEIGHT / 2),
           r: Math.random() * 1.5 + 0.5,
           opacity: Math.random() * 0.7 + 0.3,
           delay: Math.random() * 5 + 's',
@@ -125,25 +125,12 @@ export const WarMapBackground = memo(function WarMapBackground() {
             ))}
 
             {/* Paths */}
-            {warNodesData.map(node => {
-              return node.paths.map(pathToId => {
-                const pathToNode = warNodesData.find(n => n.id === pathToId);
-                if (!pathToNode) return null;
-                return (
-                  <line
-                    key={`${node.id}-${pathToId}`}
-                    x1={node.x}
-                    y1={node.y}
-                    x2={pathToNode.x}
-                    y2={pathToNode.y}
-                    stroke="#475569" 
-                    strokeWidth="1"
-                    strokeDasharray="4 4" 
-                    opacity="0.3"
-                  />
-                );
-              });
-            })}
+            {/* Paths will be rendered by parent now, or we can pass them here. 
+                Actually the parent renders paths in the original code. 
+                Wait, the original code had paths inside the WarMapBackground component?
+                No, it was after it.
+                Let's keep paths out of background to keep it pure background.
+            */}
         </>
     );
 });

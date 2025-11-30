@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { WarTactic, War } from '@prisma/client';
-import { warNodesData } from '../nodes-data';
+import { LAYOUT, warNodesData } from '../nodes-data';
 import { FightWithNode } from '../types';
 import { WarMapBackground } from './map-background';
 import { WarNodeGroup } from './map-node';
@@ -173,7 +173,11 @@ const WarMap = memo(function WarMap({
           wrapperStyle={{ width: '100%', height: '100%' }}
           contentStyle={{ width: '100%', height: '100%' }}
         >
-          <svg viewBox="0 0 1200 900" className="w-full h-full overflow-visible" style={{ backgroundColor: '#020617' }}>
+          <svg 
+            viewBox={`0 0 ${LAYOUT.WIDTH} ${LAYOUT.HEIGHT}`} 
+            className="w-full h-full overflow-visible" 
+            style={{ backgroundColor: '#020617' }}
+          >
             <style>
               {`
                 @keyframes twinkle {
