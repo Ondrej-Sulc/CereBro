@@ -6,11 +6,22 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { WarFight, WarNode, WarNodeAllocation, NodeModifier } from '@prisma/client';
+import { WarFight, WarNode, WarNodeAllocation, NodeModifier, WarTactic, ChampionClass } from '@prisma/client';
 import { warNodesData } from './nodes-data';
 import { getChampionImageUrl } from '@/lib/championHelper';
+import { Swords, Shield } from 'lucide-react';
 
 import { War } from '@prisma/client';
+
+const CLASS_COLORS: Record<ChampionClass, string> = {
+  SCIENCE: '#4ade80',  // Green-400
+  SKILL: '#ef4444',    // Red-500
+  MUTANT: '#facc15',   // Yellow-400
+  COSMIC: '#22d3ee',   // Cyan-400
+  TECH: '#3b82f6',     // Blue-500
+  MYSTIC: '#a855f7',   // Purple-500
+  SUPERIOR: '#d946ef', // Fuchsia-500
+};
 
 interface WarMapProps {
   warId: string;
@@ -24,14 +35,15 @@ interface WarMapProps {
     minSeason: number | undefined;
   };
   fights: FightWithNode[];
+  activeTactic?: WarTactic | null;
 }
 
 interface FightWithNode extends WarFight {
   node: WarNode & {
       allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
   };
-  attacker: { name: string; images: any } | null;
-  defender: { name: string; images: any } | null;
+  attacker: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  defender: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
   player: { ingameName: string } | null;
   prefightChampions?: { id: number; name: string; images: any }[];
 }
@@ -43,7 +55,8 @@ const WarMap = React.memo(function WarMap({
   selectedNodeId,
   currentWar,
   historyFilters,
-  fights
+  fights,
+  activeTactic
 }: WarMapProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -223,10 +236,101 @@ const WarMap = React.memo(function WarMap({
                 <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
               </radialGradient>
               
-              <radialGradient id="shadow-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                  <stop offset="0%" stopColor="#000000" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-              </radialGradient>
+                            <radialGradient id="shadow-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+              
+                                <stop offset="0%" stopColor="#000000" stopOpacity="0.8" />
+              
+                                <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+              
+                            </radialGradient>
+              
+              
+              
+                            {/* Class Glow Filters */}
+              
+                            <filter id="glow-science" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#4ade80" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
+              
+                            <filter id="glow-skill" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#ef4444" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
+              
+                            <filter id="glow-mutant" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#facc15" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
+              
+                            <filter id="glow-cosmic" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#22d3ee" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
+              
+                            <filter id="glow-tech" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#3b82f6" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
+              
+                            <filter id="glow-mystic" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#a855f7" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
+              
+                            <filter id="glow-superior" x="-50%" y="-50%" width="200%" height="200%">
+              
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+              
+                                <feFlood floodColor="#d946ef" result="color"/>
+              
+                                <feComposite in="color" in2="blur" operator="in" result="glow"/>
+              
+                                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              
+                            </filter>
 
               {nebulas.map((nebula) => (
                   <radialGradient key={nebula.id} id={nebula.id} cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -317,6 +421,11 @@ const WarMap = React.memo(function WarMap({
 
               const isSelected = selectedNodeId === numericId;
 
+              // Tactic Logic
+              const activeTacticAny = activeTactic as any;
+              const isAttackerTactic = activeTacticAny?.attackTag && attacker?.tags?.some((t: any) => t.name === activeTacticAny.attackTag.name);
+              const isDefenderTactic = activeTacticAny?.defenseTag && defender?.tags?.some((t: any) => t.name === activeTacticAny.defenseTag.name);
+
               // Dimensions
               const nodeRadius = 24; 
               const showAttacker = !!(attacker && attackerImgUrl);
@@ -391,13 +500,14 @@ const WarMap = React.memo(function WarMap({
 
                   {/* Attacker Circle */}
                   {showAttacker && (
-                      <g transform={`translate(${node.x - nodeRadius * 0.9}, ${node.y})`}>
+                      <g 
+                        transform={`translate(${node.x - nodeRadius * 0.9}, ${node.y})`}
+                      >
                         <defs>
                           <clipPath id={`clip-atk-${node.id}`}>
                             <circle cx={0} cy={0} r={nodeRadius - 4} />
                           </clipPath>
                         </defs>
-                        <circle r={nodeRadius - 4} fill="#0f172a" stroke="#3b82f6" strokeWidth="1.5" />
                         <image
                           href={attackerImgUrl!}
                           x={-(nodeRadius - 4)}
@@ -406,11 +516,28 @@ const WarMap = React.memo(function WarMap({
                           height={(nodeRadius - 4) * 2}
                           clipPath={`url(#clip-atk-${node.id})`}
                         />
+                        <circle 
+                            r={nodeRadius - 4} 
+                            fill="none" 
+                            stroke={attacker?.class ? CLASS_COLORS[attacker.class] : "#3b82f6"} 
+                            strokeWidth="1.5" 
+                            filter={attacker?.class ? `url(#glow-${attacker.class.toLowerCase()})` : ""}
+                        />
+                        {/* Tactic Icon - Top Left */}
+                        {isAttackerTactic && (
+                             <foreignObject x={-nodeRadius} y={-nodeRadius} width="14" height="14" className="overflow-visible pointer-events-none">
+                                <div className="bg-emerald-950/90 rounded-full border border-emerald-500 flex items-center justify-center w-3.5 h-3.5 shadow-lg shadow-black">
+                                    <Swords className="w-2 h-2 text-emerald-400" />
+                                </div>
+                             </foreignObject>
+                        )}
                       </g>
                   )}
 
                   {/* Defender Circle */}
-                  <g transform={`translate(${node.x + (showAttacker ? nodeRadius * 0.9 : 0)}, ${node.y})`}>
+                  <g 
+                    transform={`translate(${node.x + (showAttacker ? nodeRadius * 0.9 : 0)}, ${node.y})`}
+                  >
                      {defender && defenderImgUrl ? (
                       <>
                         <defs>
@@ -427,8 +554,22 @@ const WarMap = React.memo(function WarMap({
                           clipPath={`url(#clip-def-${node.id})`}
                           opacity={showHistory ? 0.7 : 1}
                         />
-                        {/* Red Ring Overlay */}
-                        <circle r={nodeRadius - 4} fill="none" stroke="#dc2626" strokeWidth="2" />
+                        {/* Class Ring Overlay */}
+                        <circle 
+                            r={nodeRadius - 4} 
+                            fill="none" 
+                            stroke={defender?.class ? CLASS_COLORS[defender.class] : "#dc2626"} 
+                            strokeWidth="1.5" 
+                            filter={defender?.class ? `url(#glow-${defender.class.toLowerCase()})` : ""}
+                        />
+                        {/* Tactic Icon - Top Right */}
+                        {isDefenderTactic && (
+                             <foreignObject x={nodeRadius - 14} y={-nodeRadius} width="14" height="14" className="overflow-visible pointer-events-none">
+                                <div className="bg-red-950/90 rounded-full border border-red-500 flex items-center justify-center w-3.5 h-3.5 shadow-lg shadow-black">
+                                    <Shield className="w-2 h-2 text-red-400" />
+                                </div>
+                             </foreignObject>
+                        )}
                       </>
                      ) : (
                        <circle r={nodeRadius - 6} fill="transparent" stroke="#334155" strokeWidth="1" strokeDasharray="3 3" />

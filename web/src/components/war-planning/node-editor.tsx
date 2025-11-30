@@ -6,6 +6,7 @@ import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,7 +18,7 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { PlayCircle, Users, X, ChevronDown, Settings2, ChevronRight, Swords, Skull, Info } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { WarNodeAllocation, NodeModifier, War } from "@prisma/client";
+import { WarNodeAllocation, NodeModifier, War, WarTactic, ChampionClass } from "@prisma/client";
 
 // Extended Player type to include roster info
 export type PlayerWithRoster = Player & {
@@ -54,14 +55,15 @@ interface NodeEditorProps {
       minSeason: number | undefined;
   }>>;
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
+  activeTactic?: WarTactic | null;
 }
 
 interface FightWithNode extends WarFight {
   node: WarNode & {
       allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
   };
-  attacker: { name: string; images: any } | null;
-  defender: { name: string; images: any } | null;
+  attacker: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  defender: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
   player: { ingameName: string } | null;
   prefightChampions?: { id: number; name: string; images: any }[];
 }
@@ -80,6 +82,7 @@ export default function NodeEditor({
   historyFilters,
   onHistoryFiltersChange,
   historyCache,
+  activeTactic,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -91,6 +94,24 @@ export default function NodeEditor({
   const [history, setHistory] = useState<HistoricalFightStat[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
+
+  // Check for tactic matches
+  const defenderTacticMatch = useMemo(() => {
+      const tactic = activeTactic as any;
+      if (!defenderId || !tactic?.defenseTag?.name) return false;
+      const def = champions.find(c => c.id === defenderId);
+      // Need to cast or check tags existence
+      const tags = (def as any).tags as { name: string }[] | undefined;
+      return tags?.some(t => t.name === tactic.defenseTag.name);
+  }, [defenderId, activeTactic, champions]);
+
+  const attackerTacticMatch = useMemo(() => {
+      const tactic = activeTactic as any;
+      if (!attackerId || !tactic?.attackTag?.name) return false;
+      const atk = champions.find(c => c.id === attackerId);
+      const tags = (atk as any).tags as { name: string }[] | undefined;
+      return tags?.some(t => t.name === tactic.attackTag.name);
+  }, [attackerId, activeTactic, champions]);
 
   // Filter active modifiers
   const activeModifiers = useMemo(() => {
@@ -331,7 +352,7 @@ export default function NodeEditor({
                     <PopoverContent className="w-80 bg-slate-950 border-slate-800 p-4 shadow-xl shadow-black/50" align="start" side="bottom">
                         <h4 className="font-semibold mb-3 text-sm text-sky-400 flex items-center gap-2">
                             <Info className="h-4 w-4" />
-                            Active Modifiers
+                            Active Nodes
                         </h4>
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                             {activeModifiers.map((mod) => (
@@ -363,13 +384,22 @@ export default function NodeEditor({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="defender" className="text-right">Defender</Label>
             <div className="col-span-3">
-              <ChampionCombobox
-                champions={champions}
-                value={defenderId !== undefined ? String(defenderId) : ""}
-                onSelect={handleDefenderChange}
-                open={isDefenderOpen}
-                onOpenChange={setIsDefenderOpen}
-              />
+              <div className="flex flex-col gap-1">
+                  <ChampionCombobox
+                    champions={champions}
+                    value={defenderId !== undefined ? String(defenderId) : ""}
+                    onSelect={handleDefenderChange}
+                    open={isDefenderOpen}
+                    onOpenChange={setIsDefenderOpen}
+                  />
+                  {defenderTacticMatch && (
+                      <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+                          <Badge variant="outline" className="border-indigo-500 text-indigo-400 bg-indigo-500/10 text-[10px] px-1.5 py-0 h-5">
+                              Tactic: {(activeTactic as any)?.defenseTag?.name}
+                          </Badge>
+                      </div>
+                  )}
+              </div>
             </div>
           </div>
 
@@ -438,12 +468,21 @@ export default function NodeEditor({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="attacker" className="text-right">Attacker</Label>
             <div className="col-span-3">
-              <ChampionCombobox
-                champions={displayChampions}
-                value={attackerId !== undefined ? String(attackerId) : ""}
-                onSelect={handleAttackerChange}
-                placeholder={playerId ? "Select from roster..." : "Select generic counter..."}
-              />
+              <div className="flex flex-col gap-1">
+                  <ChampionCombobox
+                    champions={displayChampions}
+                    value={attackerId !== undefined ? String(attackerId) : ""}
+                    onSelect={handleAttackerChange}
+                    placeholder={playerId ? "Select from roster..." : "Select generic counter..."}
+                  />
+                  {attackerTacticMatch && (
+                      <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+                          <Badge variant="outline" className="border-orange-500 text-orange-400 bg-orange-500/10 text-[10px] px-1.5 py-0 h-5">
+                              Tactic: {(activeTactic as any)?.attackTag?.name}
+                          </Badge>
+                      </div>
+                  )}
+              </div>
             </div>
           </div>
 

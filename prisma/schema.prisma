@@ -139,6 +139,9 @@ model Tag {
   category String
 
   champions Champion[]
+  
+  attackTactics  WarTactic[] @relation("AttackTactic")
+  defenseTactics WarTactic[] @relation("DefenseTactic")
 
   @@unique([name, category])
 }
@@ -483,6 +486,26 @@ model WarNodeAllocation {
 
   @@index([warNodeId])
   @@index([nodeModifierId])
+}
+
+model WarTactic {
+  id          String   @id @default(cuid())
+  season      Int
+  minTier     Int?
+  maxTier     Int?
+  
+  attackTagId Int?
+  attackTag   Tag?     @relation("AttackTactic", fields: [attackTagId], references: [id])
+  
+  defenseTagId Int?
+  defenseTag   Tag?    @relation("DefenseTactic", fields: [defenseTagId], references: [id])
+  
+  name        String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([season, minTier, maxTier])
 }
 
 model UploadSession {

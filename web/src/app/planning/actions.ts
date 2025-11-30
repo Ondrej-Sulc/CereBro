@@ -15,6 +15,28 @@ const createWarSchema = z.object({
   opponent: z.string().min(1),
 });
 
+export async function getActiveTactic(season: number, tier: number) {
+    const session = await auth();
+    if (!session?.user?.id) return null;
+
+    // Find a tactic that matches season and includes the tier in its range
+    // minTier (Best) <= tier AND maxTier (Worst) >= tier
+    // e.g. Tactic 1-5. War Tier 3. (1 <= 3) && (5 >= 3) -> Match.
+    const tactic = await prisma.warTactic.findFirst({
+        where: {
+            season,
+            minTier: { lte: tier },
+            maxTier: { gte: tier }
+        },
+        include: {
+            attackTag: true,
+            defenseTag: true
+        }
+    });
+
+    return tactic;
+}
+
 export async function createWar(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id) {

@@ -8,7 +8,7 @@ import PlanningTools from "@/components/war-planning/planning-tools";
 import PlanningToolsPanel from "@/components/war-planning/planning-tools-panel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { WarFight, Player, WarNode, War, WarStatus, WarNodeAllocation, NodeModifier } from "@prisma/client";
+import { WarFight, Player, WarNode, War, WarStatus, WarNodeAllocation, NodeModifier, WarTactic, ChampionClass } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { PanelRightClose, PanelRightOpen, Lock, Unlock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { warNodesData } from './nodes-data';
 import { HistoricalFightStat } from "@/app/planning/history-actions";
+import { getActiveTactic } from "@/app/planning/actions";
 
 interface WarDetailsClientProps {
   war: War;
@@ -41,8 +42,8 @@ export interface FightWithNode extends WarFight {
   node: WarNode & {
       allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
   };
-  attacker: { name: string; images: any } | null;
-  defender: { name: string; images: any } | null;
+  attacker: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  defender: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
   player: { ingameName: string } | null;
   prefightChampions?: { id: number; name: string; images: any }[];
 }
@@ -68,6 +69,7 @@ export default function WarDetailsClient({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
+  const [activeTactic, setActiveTactic] = useState<WarTactic | null>(null);
   
   // Persistent History Filters
   const [historyFilters, setHistoryFilters] = useState({
@@ -87,6 +89,16 @@ export default function WarDetailsClient({
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
+
+  // Fetch active tactic
+  useEffect(() => {
+      async function fetchTactic() {
+          if (!war.season || !war.warTier) return;
+          const tactic = await getActiveTactic(war.season, war.warTier);
+          setActiveTactic(tactic);
+      }
+      fetchTactic();
+  }, [war.season, war.warTier]);
 
   // Fetch fights when battlegroup or war changes
   useEffect(() => {
@@ -298,6 +310,7 @@ export default function WarDetailsClient({
                         currentWar={war}
                         historyFilters={historyFilters}
                         fights={currentFights}
+                        activeTactic={activeTactic}
                     />
                 )}
               </TabsContent>
@@ -315,6 +328,7 @@ export default function WarDetailsClient({
                         currentWar={war}
                         historyFilters={historyFilters}
                         fights={currentFights}
+                        activeTactic={activeTactic}
                     />
                 )}
               </TabsContent>
@@ -332,6 +346,7 @@ export default function WarDetailsClient({
                         currentWar={war}
                         historyFilters={historyFilters}
                         fights={currentFights}
+                        activeTactic={activeTactic}
                     />
                 )}
               </TabsContent>
@@ -373,6 +388,7 @@ export default function WarDetailsClient({
                 historyFilters={historyFilters}
                 onHistoryFiltersChange={setHistoryFilters}
                 historyCache={historyCache}
+                activeTactic={activeTactic}
             />
           )}
         </div>
@@ -401,6 +417,7 @@ export default function WarDetailsClient({
                   historyFilters={historyFilters}
                   onHistoryFiltersChange={setHistoryFilters}
                   historyCache={historyCache}
+                  activeTactic={activeTactic}
               />
           </SheetContent>
         </Sheet>

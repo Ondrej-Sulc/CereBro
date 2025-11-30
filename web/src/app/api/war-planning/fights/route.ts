@@ -69,8 +69,22 @@ export async function GET(request: Request) {
                 }
             }
         }, // Include WarNode details with modifiers
-        attacker: { select: { name: true, images: true } }, // Include champion details
-        defender: { select: { name: true, images: true } }, // Include champion details
+        attacker: { 
+            select: { 
+                name: true, 
+                images: true, 
+                class: true,
+                tags: { select: { name: true } }
+            } 
+        }, 
+        defender: { 
+            select: { 
+                name: true, 
+                images: true, 
+                class: true,
+                tags: { select: { name: true } }
+            } 
+        }, 
         player: { select: { ingameName: true } }, // Include player details
         prefightChampions: { select: { id: true, name: true, images: true } }, // Include prefight champions
       },

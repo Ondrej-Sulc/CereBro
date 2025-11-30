@@ -48,6 +48,23 @@ The project now includes a dedicated "War Planning" feature within the web inter
     *   **Find Champion:** Search for a specific champion to see which alliance members own it (and at what rank/ascension).
 *   **Historical Matchups:** The Node Editor now displays historical matchup data, including solos, deaths, and prefight champions used in sample fights. Links to sample videos now point to the internal `/war-videos/[videoId]` page for seamless playback.
 
+### War Tactics & Node Modifiers
+
+The system now includes robust support for managing the dynamic rules of Alliance War seasons.
+
+*   **Data Models:**
+    *   `WarTactic`: Defines season-wide tactics linked to specific tiers (min/max) and seasons. It relates to the `Tag` model for both `attackTag` and `defenseTag`.
+    *   `NodeModifier`: Represents specific buffs or rules (e.g., "Masochism").
+    *   `WarNodeAllocation`: Links a `WarNode` to a `NodeModifier` with constraints on tier and season, allowing for precise mapping of node rules.
+*   **Admin Management:**
+    *   **Tactics:** A dedicated admin page (`/admin/tactics`) allows Bot Admins to create and manage tactics. It features a "Tag Selector" that searches existing tags or creates new ones on the fly.
+    *   **Nodes:** The `/admin/nodes` page allows for the granular assignment of modifiers to specific nodes.
+*   **Visual Integration:**
+    *   **War Map:** Champions on the map now feature:
+        *   **Class Rings:** Outer glowing rings colored by champion class (e.g., Mystic=Purple, Science=Green).
+        *   **Tactic Icons:** Champions matching the active tactic display a green Sword (Attacker) or red Shield (Defender) icon.
+    *   **Node Editor:** Automatically highlights active tactics with badges and lists all active node modifiers in a popover for easy reference.
+
 ### Alliance Structure & Role Management
 
 The bot includes a robust system for managing alliance structure, including officer roles and battlegroup assignments, directly linked to Discord roles.

@@ -83,12 +83,20 @@ export default function WarPlanningDashboard({
         
         <div className="flex items-center gap-2">
             {isBotAdmin && (
-                <Link href="/admin/nodes">
-                    <Button variant="outline" className="border-slate-700 hover:bg-slate-800">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Manage Nodes
-                    </Button>
-                </Link>
+                <>
+                    <Link href="/admin/nodes">
+                        <Button variant="outline" className="border-slate-700 hover:bg-slate-800">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Nodes
+                        </Button>
+                    </Link>
+                    <Link href="/admin/tactics">
+                        <Button variant="outline" className="border-slate-700 hover:bg-slate-800">
+                            <Swords className="mr-2 h-4 w-4" />
+                            Tactics
+                        </Button>
+                    </Link>
+                </>
             )}
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>

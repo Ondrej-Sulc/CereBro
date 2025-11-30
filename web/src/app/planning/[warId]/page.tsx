@@ -65,6 +65,9 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
             select: { name: true }
           }
         }
+      },
+      tags: {
+        select: { name: true }
       }
     }
   });
