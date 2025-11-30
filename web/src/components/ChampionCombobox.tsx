@@ -117,8 +117,12 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent sideOffset={4} className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
+      <PopoverContent 
+        sideOffset={4} 
+        className="w-[--radix-popover-trigger-width] p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search champion..."
             value={search}

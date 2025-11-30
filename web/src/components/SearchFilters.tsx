@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Filter, ChevronDown } from "lucide-react";
 import { ChampionCombobox } from "@/components/ChampionCombobox";
 import { Champion } from "@/types/champion";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
 import { cn } from "@/lib/utils";
 
@@ -70,15 +70,15 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
   const [attackerId, setAttackerId] = useState(getIdByName(attacker));
   const [defenderId, setDefenderId] = useState(getIdByName(defender));
 
-  const handleAttackerSelect = (id: string) => {
+  const handleAttackerSelect = useCallback((id: string) => {
       setAttackerId(id);
       setAttacker(id); 
-  }
+  }, []);
 
-  const handleDefenderSelect = (id: string) => {
+  const handleDefenderSelect = useCallback((id: string) => {
       setDefenderId(id);
       setDefender(id);
-  }
+  }, []);
 
   return (
     <div className="flex flex-col gap-4 max-w-7xl w-full">

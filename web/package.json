@@ -7,7 +7,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "scan": "next dev --webpack & npx react-scan@latest localhost:3000"
+    "scan": "npx react-scan@latest localhost:3000"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

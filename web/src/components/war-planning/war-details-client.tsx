@@ -70,6 +70,7 @@ export default function WarDetailsClient({
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTactic | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Persistent History Filters
   const [historyFilters, setHistoryFilters] = useState({
@@ -131,7 +132,6 @@ export default function WarDetailsClient({
       router.refresh();
     } catch (error) {
       console.error("Failed to update war status:", error);
-      // Ideally show a toast notification here
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -190,17 +190,10 @@ export default function WarDetailsClient({
     // 1. Optimistic Update
     setCurrentFights(prev => prev.map(f => {
       if (f.id === updatedFight.id || (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)) {
-        // Construct the new state by merging. 
-        // Note: For complex relations (attacker/defender objects), we rely on the server refresh for now or 
-        // we'd need to look up the champion objects from the `champions` prop to fully simulate the update locally.
-        // For simple fields (death, notes, playerId), it's easy.
-        
-        // Find champion objects if IDs changed
         const newAttacker = updatedFight.attackerId ? champions.find(c => c.id === updatedFight.attackerId) : (updatedFight.attackerId === null ? null : f.attacker);
         const newDefender = updatedFight.defenderId ? champions.find(c => c.id === updatedFight.defenderId) : (updatedFight.defenderId === null ? null : f.defender);
         const newPlayer = updatedFight.playerId ? players.find(p => p.id === updatedFight.playerId) : (updatedFight.playerId === null ? null : f.player);
         
-        // Handle prefights logic if needed, simplified for now
         let newPrefights = f.prefightChampions;
         if (updatedFight.prefightChampionIds) {
              newPrefights = champions
@@ -208,7 +201,6 @@ export default function WarDetailsClient({
                 .map(c => ({ id: c.id, name: c.name, images: c.images }));
         }
 
-        // Update selected fight if it matches
         const updatedNode = {
             ...f,
             ...updatedFight,
@@ -227,19 +219,24 @@ export default function WarDetailsClient({
       return f;
     }));
 
-    // 2. Server Update
     await updateWarFight(updatedFight);
-    
-    // Optional: Re-fetch in background to ensure consistency, but not blocking UI
-    // For now, reliance on optimistic update makes it snappy.
   }, [updateWarFight, champions, players, selectedFight]);
 
   return (
-    <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
+    <div className={cn(
+        "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
+        isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100vh-64px)]"
+    )}>
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="p-4 sm:px-6 border-b border-slate-800 bg-slate-950">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+        <div className={cn(
+            "flex-1 flex flex-col",
+            !isFullscreen && "p-4 sm:px-6 border-b border-slate-800"
+        )}>
+          <div className={cn(
+             "flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4",
+             isFullscreen && "hidden"
+          )}>
             <div className="flex items-center gap-3 overflow-hidden">
                <h1 className="text-2xl sm:text-3xl font-bold truncate">
                   {war.enemyAlliance} <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">AW S{war.season} War {war.warNumber} T{war.warTier}</span>
@@ -288,14 +285,17 @@ export default function WarDetailsClient({
             </div>
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-slate-900">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col">
+            <TabsList className={cn("grid w-full grid-cols-3 bg-slate-900", isFullscreen && "hidden")}>
               <TabsTrigger value="bg1">Battlegroup 1</TabsTrigger>
               <TabsTrigger value="bg2">Battlegroup 2</TabsTrigger>
               <TabsTrigger value="bg3">Battlegroup 3</TabsTrigger>
             </TabsList>
             
-            <div className="mt-4 h-[calc(100vh-220px)] relative rounded-md overflow-hidden border border-slate-800">
+            <div className={cn(
+                "relative overflow-hidden flex-1",
+                !isFullscreen && "mt-4 h-[calc(100vh-220px)] rounded-md border border-slate-800"
+            )}>
               <TabsContent value="bg1" className="h-full m-0">
                 {loadingFights && currentFights.length === 0 ? (
                     <div className="w-full h-full flex items-center justify-center">
@@ -311,6 +311,8 @@ export default function WarDetailsClient({
                         historyFilters={historyFilters}
                         fights={currentFights}
                         activeTactic={activeTactic}
+                        isFullscreen={isFullscreen}
+                        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
                     />
                 )}
               </TabsContent>
@@ -329,6 +331,8 @@ export default function WarDetailsClient({
                         historyFilters={historyFilters}
                         fights={currentFights}
                         activeTactic={activeTactic}
+                        isFullscreen={isFullscreen}
+                        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
                     />
                 )}
               </TabsContent>
@@ -347,6 +351,8 @@ export default function WarDetailsClient({
                         historyFilters={historyFilters}
                         fights={currentFights}
                         activeTactic={activeTactic}
+                        isFullscreen={isFullscreen}
+                        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
                     />
                 )}
               </TabsContent>

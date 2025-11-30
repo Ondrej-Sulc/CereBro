@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getChampionImageUrl } from '@/lib/championHelper';
 import { WarNode, Player, ChampionClass, War, WarTactic, Tag } from '@prisma/client';
-import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info } from 'lucide-react';
+import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info, Play } from 'lucide-react';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
+import { useState } from 'react';
 
 interface WarFight {
   id: string;
@@ -80,6 +81,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
   const router = useRouter();
   const { toast } = useToast();
   const videoId = getYouTubeVideoId(warVideo.url);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   if (!warVideo.fights || warVideo.fights.length === 0) {
     return (
@@ -163,17 +165,34 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
       {/* Video Player */}
       {videoId && (
         <div className="rounded-xl overflow-hidden border border-slate-800/50 shadow-2xl bg-black">
-          <div className="aspect-video">
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${videoId}`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            ></iframe>
+          <div className="aspect-video relative group cursor-pointer" onClick={() => setIsPlaying(true)}>
+            {!isPlaying ? (
+              <>
+                <Image 
+                  src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                  alt="Video thumbnail"
+                  fill
+                  className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                  priority
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-red-600/90 text-white rounded-full p-4 shadow-lg scale-90 group-hover:scale-100 transition-transform duration-300">
+                    <Play className="h-8 w-8 fill-white" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              ></iframe>
+            )}
           </div>
         </div>
       )}
@@ -217,6 +236,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                       alt={fight.attacker.name}
                       width={56}
                       height={56}
+                      sizes="64px"
                       className={cn("relative rounded-full ring-2", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
                     />
                   </div>
@@ -258,6 +278,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                       alt={fight.defender.name}
                       width={56}
                       height={56}
+                      sizes="64px"
                       className={cn("relative rounded-full ring-2", getChampionClassColors(fight.defender.class as ChampionClass).border)}
                     />
                   </div>
@@ -275,7 +296,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                     <div className="flex flex-wrap gap-2">
                       {fight.prefightChampions.map((champ) => (
                         <div key={champ.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
-                          <Image src={getChampionImageUrl(champ.images as any, '64', 'primary')} alt={champ.name} width={24} height={24} className="rounded-full" />
+                          <Image src={getChampionImageUrl(champ.images as any, '64', 'primary')} alt={champ.name} width={24} height={24} className="rounded-full" unoptimized />
                           <span className="text-xs font-medium text-purple-200">{champ.name}</span>
                         </div>
                       ))}

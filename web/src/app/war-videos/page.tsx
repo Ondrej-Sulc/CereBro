@@ -235,6 +235,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
                                     alt={fight.attacker.name}
                                     width={56} height={56}
+                                    sizes="64px"
                                     className={cn("relative rounded-full ring-2", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
                                 />
                                 {isAttackerTactic && (
@@ -265,6 +266,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
                                     alt={fight.defender.name}
                                     width={56} height={56}
+                                    sizes="64px"
                                     className={cn("relative rounded-full ring-2", getChampionClassColors(fight.defender.class as ChampionClass).border)}
                                 />
                                 {isDefenderTactic && (
@@ -288,6 +290,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     alt={champ.name}
                                     width={20}
                                     height={20}
+                                    unoptimized
                                     className="relative inline-block h-5 w-5 rounded-full ring-1 ring-purple-400/50"
                                 />
                             ))}
@@ -391,6 +394,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                     src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
                                                     alt={fight.attacker.name}
                                                     width={36} height={36}
+                                                    sizes="48px"
                                                     className={cn("relative rounded-full ring-1", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
                                                 />
                                                 {isAttackerTactic && (
@@ -421,6 +425,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                     src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
                                                     alt={fight.defender.name}
                                                     width={36} height={36}
+                                                    sizes="48px"
                                                     className={cn("relative rounded-full ring-1", getChampionClassColors(fight.defender.class as ChampionClass).border)}
                                                 />
                                                 {isDefenderTactic && (
@@ -447,6 +452,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                 alt={champ.name}
                                                 width={28}
                                                 height={28}
+                                                unoptimized
                                                 className="relative inline-block h-7 w-7 rounded-full ring-1 ring-purple-400/50"
                                             />
                                         ))}

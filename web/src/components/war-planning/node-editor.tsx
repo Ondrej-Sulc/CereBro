@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { WarFight, Player, WarNode } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
@@ -286,33 +286,33 @@ export default function NodeEditor({
     onSave(payload);
   }, [currentFight?.id, warId, battlegroup, nodeId, onSave]);
 
-  const handleDefenderChange = (idStr: string) => {
+  const handleDefenderChange = useCallback((idStr: string) => {
     const val = idStr ? parseInt(idStr) : undefined;
     setDefenderId(val);
     triggerSave({ defenderId: val === undefined ? null : val });
-  };
+  }, [triggerSave]);
 
-  const handleAttackerChange = (idStr: string) => {
+  const handleAttackerChange = useCallback((idStr: string) => {
     const val = idStr ? parseInt(idStr) : undefined;
     setAttackerId(val);
     triggerSave({ attackerId: val === undefined ? null : val });
-  };
+  }, [triggerSave]);
 
-  const handlePlayerChange = (val: string) => {
+  const handlePlayerChange = useCallback((val: string) => {
     const newVal = val === "CLEAR" ? undefined : val;
     setPlayerId(newVal);
     triggerSave({ playerId: newVal === undefined ? null : newVal });
-  };
+  }, [triggerSave]);
 
-  const handleClearPlayer = (e: React.MouseEvent) => {
+  const handleClearPlayer = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     handlePlayerChange("CLEAR");
-  };
+  }, [handlePlayerChange]);
 
-  const handlePrefightsChange = (ids: number[]) => {
+  const handlePrefightsChange = useCallback((ids: number[]) => {
     setPrefightChampionIds(ids);
     triggerSave({ prefightChampionIds: ids });
-  };
+  }, [triggerSave]);
 
   useEffect(() => {
     if (currentFight && deaths !== currentFight.death) {
@@ -446,6 +446,7 @@ export default function NodeEditor({
                                 alt={p.ingameName} 
                                 fill 
                                 sizes="20px"
+                                unoptimized
                                 className="object-cover" 
                                 />
                             </div>
@@ -595,7 +596,7 @@ export default function NodeEditor({
   );
 }
 
-function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
+const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
     const [expanded, setExpanded] = useState(false);
     
     return (
@@ -611,6 +612,7 @@ function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
                             src={getChampionImageUrl(stat.attackerImages, '64')}
                             alt={stat.attackerName}
                             fill
+                            unoptimized
                             className="object-cover"
                         />
                     </div>
@@ -626,6 +628,7 @@ function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
                                             src={getChampionImageUrl(pf.images, '64')}
                                             alt={pf.name}
                                             fill
+                                            unoptimized
                                             className="object-cover"
                                         />
                                     </div>
@@ -673,6 +676,7 @@ function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
                                             src={player.avatar} 
                                             alt={player.name} 
                                             fill 
+                                            unoptimized
                                             className="object-cover" 
                                         />
                                     ) : (
@@ -700,6 +704,7 @@ function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
                                                     src={getChampionImageUrl(pf.images, '64')}
                                                     alt={pf.name}
                                                     fill
+                                                    unoptimized
                                                     className="object-cover"
                                                 />
                                             </div>
@@ -728,4 +733,4 @@ function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
             )}
         </div>
     );
-}
+});
