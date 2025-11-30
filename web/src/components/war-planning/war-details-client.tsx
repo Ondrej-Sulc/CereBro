@@ -1,23 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import WarMap from "@/components/war-planning/war-map";
 import NodeEditor from "@/components/war-planning/node-editor";
 import PlanningTools from "@/components/war-planning/planning-tools";
 import PlanningToolsPanel from "@/components/war-planning/planning-tools-panel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { WarFight, Player, WarNode, War } from "@prisma/client";
+import { WarFight, Player, WarNode, War, WarStatus, WarNodeAllocation, NodeModifier } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { PanelRightClose, PanelRightOpen, Lock, Unlock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { warNodesData } from './nodes-data';
+import { HistoricalFightStat } from "@/app/planning/history-actions";
 
 interface WarDetailsClientProps {
   war: War;
   warId: string;
   updateWarFight: (updatedFight: Partial<WarFight>) => Promise<void>;
+  updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
   champions: Champion[];
   players: PlayerWithRoster[];
 }
@@ -34,10 +38,13 @@ export type PlayerWithRoster = Player & {
 
 // Re-defining FightWithNode here for clarity in this component
 export interface FightWithNode extends WarFight {
-  node: WarNode;
+  node: WarNode & {
+      allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
+  };
   attacker: { name: string; images: any } | null;
   defender: { name: string; images: any } | null;
   player: { ingameName: string } | null;
+  prefightChampions?: { id: number; name: string; images: any }[];
 }
 
 type RightPanelState = 'closed' | 'tools' | 'editor';
@@ -46,16 +53,33 @@ export default function WarDetailsClient({
   war,
   warId,
   updateWarFight,
+  updateWarStatus,
   champions,
   players,
 }: WarDetailsClientProps) {
+  const router = useRouter();
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [selectedFight, setSelectedFight] = useState<FightWithNode | null>(null);
   const [activeTab, setActiveTab] = useState("bg1");
   const [isDesktop, setIsDesktop] = useState(true);
-  const [refreshMap, setRefreshMap] = useState(0);
   const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
+  const [status, setStatus] = useState<WarStatus>(war.status);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [loadingFights, setLoadingFights] = useState(false);
+  const [fightsError, setFightsError] = useState<string | null>(null);
+  
+  // Persistent History Filters
+  const [historyFilters, setHistoryFilters] = useState({
+      onlyCurrentTier: true,
+      onlyAlliance: true, // Default to own alliance
+      minSeason: undefined as number | undefined,
+  });
+
+  // Cache history to avoid re-fetching when switching back/forth
+  const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
+
+  const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -64,16 +88,47 @@ export default function WarDetailsClient({
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
+  // Fetch fights when battlegroup or war changes
+  useEffect(() => {
+    async function fetchFights() {
+      setLoadingFights(true);
+      setFightsError(null);
+      try {
+        const response = await fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${currentBattlegroup}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const fetchedFights: FightWithNode[] = await response.json();
+        setCurrentFights(fetchedFights);
+      } catch (err) {
+        console.error("Failed to fetch fights:", err);
+        setFightsError("Failed to load war data.");
+      } finally {
+        setLoadingFights(false);
+      }
+    }
+    fetchFights();
+  }, [warId, currentBattlegroup]);
+
+  const handleToggleStatus = async () => {
+    try {
+      setIsUpdatingStatus(true);
+      const newStatus = status === 'PLANNING' ? 'FINISHED' : 'PLANNING';
+      await updateWarStatus(warId, newStatus);
+      setStatus(newStatus);
+      router.refresh();
+    } catch (error) {
+      console.error("Failed to update war status:", error);
+      // Ideally show a toast notification here
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   const handleNodeClick = useCallback((nodeId: number, fight?: FightWithNode) => {
     setSelectedNodeId(nodeId);
     setSelectedFight(fight || null);
     setRightPanelState('editor');
-  }, []);
-
-  const handleFightsLoaded = useCallback((fights: FightWithNode[]) => {
-    setCurrentFights(fights);
   }, []);
 
   const handleNavigateNode = useCallback((direction: number) => {
@@ -119,10 +174,53 @@ export default function WarDetailsClient({
     }
   }, [rightPanelState]);
 
-  const handleSaveFight = useCallback(async (updatedFight: Partial<WarFight>) => {
+  const handleSaveFight = useCallback(async (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => {
+    // 1. Optimistic Update
+    setCurrentFights(prev => prev.map(f => {
+      if (f.id === updatedFight.id || (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)) {
+        // Construct the new state by merging. 
+        // Note: For complex relations (attacker/defender objects), we rely on the server refresh for now or 
+        // we'd need to look up the champion objects from the `champions` prop to fully simulate the update locally.
+        // For simple fields (death, notes, playerId), it's easy.
+        
+        // Find champion objects if IDs changed
+        const newAttacker = updatedFight.attackerId ? champions.find(c => c.id === updatedFight.attackerId) : (updatedFight.attackerId === null ? null : f.attacker);
+        const newDefender = updatedFight.defenderId ? champions.find(c => c.id === updatedFight.defenderId) : (updatedFight.defenderId === null ? null : f.defender);
+        const newPlayer = updatedFight.playerId ? players.find(p => p.id === updatedFight.playerId) : (updatedFight.playerId === null ? null : f.player);
+        
+        // Handle prefights logic if needed, simplified for now
+        let newPrefights = f.prefightChampions;
+        if (updatedFight.prefightChampionIds) {
+             newPrefights = champions
+                .filter(c => updatedFight.prefightChampionIds?.includes(c.id))
+                .map(c => ({ id: c.id, name: c.name, images: c.images }));
+        }
+
+        // Update selected fight if it matches
+        const updatedNode = {
+            ...f,
+            ...updatedFight,
+            attacker: newAttacker ? { name: newAttacker.name, images: newAttacker.images } : null,
+            defender: newDefender ? { name: newDefender.name, images: newDefender.images } : null,
+            player: newPlayer ? { ingameName: newPlayer.ingameName } : null,
+            prefightChampions: newPrefights
+        } as FightWithNode;
+
+        if (selectedFight && f.node.nodeNumber === selectedFight.node.nodeNumber) {
+            setSelectedFight(updatedNode);
+        }
+
+        return updatedNode;
+      }
+      return f;
+    }));
+
+    // 2. Server Update
     await updateWarFight(updatedFight);
-    setRefreshMap((prev) => prev + 1);
-  }, [updateWarFight]);
+    
+    // Optional: Re-fetch in background to ensure consistency, but not blocking UI
+    // For now, reliance on optimistic update makes it snappy.
+  }, [updateWarFight, champions, players, selectedFight]);
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden">
@@ -130,11 +228,34 @@ export default function WarDetailsClient({
       <div className="flex-1 flex flex-col min-w-0">
         <div className="p-4 sm:px-6 border-b border-slate-800 bg-slate-950">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-            <h1 className="text-2xl sm:text-3xl font-bold truncate">
-              {war.enemyAlliance} <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">AW S{war.season} War {war.warNumber} T{war.warTier}</span>
-            </h1>
+            <div className="flex items-center gap-3 overflow-hidden">
+               <h1 className="text-2xl sm:text-3xl font-bold truncate">
+                  {war.enemyAlliance} <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">AW S{war.season} War {war.warNumber} T{war.warTier}</span>
+               </h1>
+               {status === 'FINISHED' && (
+                   <Badge variant="outline" className="border-green-500 text-green-500 bg-green-500/10">Finished</Badge>
+               )}
+            </div>
             
             <div className="flex items-center gap-2 shrink-0">
+              <Button 
+                variant={status === 'PLANNING' ? "destructive" : "outline"} 
+                size="sm"
+                onClick={handleToggleStatus} 
+                disabled={isUpdatingStatus}
+                className="gap-2"
+              >
+                {status === 'PLANNING' ? (
+                    <>
+                        <Lock className="h-4 w-4" /> Finish War
+                    </>
+                ) : (
+                    <>
+                        <Unlock className="h-4 w-4" /> Reopen War
+                    </>
+                )}
+              </Button>
+
               {/* Mobile Tools (Sheet) */}
               <div className="md:hidden">
                 <PlanningTools 
@@ -164,13 +285,55 @@ export default function WarDetailsClient({
             
             <div className="mt-4 h-[calc(100vh-220px)] relative rounded-md overflow-hidden border border-slate-800">
               <TabsContent value="bg1" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={1} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} selectedNodeId={selectedNodeId} />
+                {loadingFights && currentFights.length === 0 ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-slate-400">Loading...</span>
+                    </div>
+                ) : (
+                    <WarMap 
+                        warId={warId} 
+                        battlegroup={1} 
+                        onNodeClick={handleNodeClick} 
+                        selectedNodeId={selectedNodeId} 
+                        currentWar={war}
+                        historyFilters={historyFilters}
+                        fights={currentFights}
+                    />
+                )}
               </TabsContent>
               <TabsContent value="bg2" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={2} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} selectedNodeId={selectedNodeId} />
+                {loadingFights && currentFights.length === 0 ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-slate-400">Loading...</span>
+                    </div>
+                ) : (
+                    <WarMap 
+                        warId={warId} 
+                        battlegroup={2} 
+                        onNodeClick={handleNodeClick} 
+                        selectedNodeId={selectedNodeId} 
+                        currentWar={war}
+                        historyFilters={historyFilters}
+                        fights={currentFights}
+                    />
+                )}
               </TabsContent>
               <TabsContent value="bg3" className="h-full m-0">
-                <WarMap warId={warId} battlegroup={3} onNodeClick={handleNodeClick} refreshTrigger={refreshMap} onFightsLoaded={handleFightsLoaded} selectedNodeId={selectedNodeId} />
+                {loadingFights && currentFights.length === 0 ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-slate-400">Loading...</span>
+                    </div>
+                ) : (
+                    <WarMap 
+                        warId={warId} 
+                        battlegroup={3} 
+                        onNodeClick={handleNodeClick} 
+                        selectedNodeId={selectedNodeId} 
+                        currentWar={war}
+                        historyFilters={historyFilters}
+                        fights={currentFights}
+                    />
+                )}
               </TabsContent>
             </div>
           </Tabs>
@@ -206,6 +369,10 @@ export default function WarDetailsClient({
                 champions={champions}
                 players={players}
                 onNavigate={handleNavigateNode}
+                currentWar={war}
+                historyFilters={historyFilters}
+                onHistoryFiltersChange={setHistoryFilters}
+                historyCache={historyCache}
             />
           )}
         </div>
@@ -230,6 +397,10 @@ export default function WarDetailsClient({
                   champions={champions}
                   players={players}
                   onNavigate={handleNavigateNode}
+                  currentWar={war}
+                  historyFilters={historyFilters}
+                  onHistoryFiltersChange={setHistoryFilters}
+                  historyCache={historyCache}
               />
           </SheetContent>
         </Sheet>

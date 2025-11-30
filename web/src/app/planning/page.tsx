@@ -1,12 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { createWar } from "./actions";
-import { prisma, WarStatus } from "@/lib/prisma";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import WarPlanningDashboard from "@/components/war-planning/war-planning-dashboard";
 
 export default async function WarPlanningPage() {
   const session = await auth();
@@ -51,84 +46,15 @@ export default async function WarPlanningPage() {
   const defaultTier = lastWar ? lastWar.warTier : 1;
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">War Planning</h1>
-
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Start New War</CardTitle>
-          <CardDescription>Create a new Alliance War plan.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={createWar} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="season">Season</Label>
-              <Input
-                id="season"
-                name="season"
-                type="number"
-                required
-                defaultValue={defaultSeason}
-              />
-            </div>
-            <div>
-              <Label htmlFor="warNumber">War Number (Optional)</Label>
-              <Input
-                id="warNumber"
-                name="warNumber"
-                type="number"
-                defaultValue={defaultWarNumber}
-              />
-            </div>
-            <div>
-              <Label htmlFor="tier">Tier</Label>
-              <Input
-                id="tier"
-                name="tier"
-                type="number"
-                required
-                defaultValue={defaultTier}
-              />
-            </div>
-            <div>
-              <Label htmlFor="opponent">Opponent Alliance</Label>
-              <Input
-                id="opponent"
-                name="opponent"
-                type="text"
-                required
-              />
-            </div>
-            <Button type="submit" className="btn-primary">Start War</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <h2 className="text-2xl font-bold mb-4">Past Wars</h2>
-      {wars.length === 0 ? (
-        <p>No past wars found for your alliance.</p>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {wars.map((war) => (
-            <Card key={war.id}>
-              <CardHeader>
-                <CardTitle>
-                  Season {war.season} - {war.enemyAlliance}
-                </CardTitle>
-                <CardDescription>
-                  War # {war.warNumber || "N/A"} | Tier {war.warTier} | Status: {war.status}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>Created: {new Date(war.createdAt).toLocaleDateString()}</p>
-                <Link href={`/planning/${war.id}`}>
-                  <Button className="btn-primary mt-4">View Plan</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+    <div className="container mx-auto py-8 min-h-screen">
+      <WarPlanningDashboard 
+        wars={wars}
+        defaultSeason={defaultSeason}
+        defaultWarNumber={defaultWarNumber}
+        defaultTier={defaultTier}
+        userTimezone={player.timezone}
+        isBotAdmin={player.isBotAdmin}
+      />
     </div>
   );
 }

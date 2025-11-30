@@ -8,12 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ChampionCombobox } from "@/components/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/MultiChampionCombobox";
 import { getHistoricalCounters, HistoricalFightStat } from "@/app/planning/history-actions";
 import { getChampionImageUrl } from "@/lib/championHelper";
-import { PlayCircle, Users, X, ChevronDown } from "lucide-react";
+import { PlayCircle, Users, X, ChevronDown, Settings2, ChevronRight, Swords, Skull, Info } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { WarNodeAllocation, NodeModifier, War } from "@prisma/client";
 
 // Extended Player type to include roster info
 export type PlayerWithRoster = Player & {
@@ -26,6 +30,8 @@ export type PlayerWithRoster = Player & {
   }[];
 };
 
+// ... existing imports
+
 interface NodeEditorProps {
   onClose: () => void;
   warId: string;
@@ -36,10 +42,24 @@ interface NodeEditorProps {
   champions: Champion[];
   players: PlayerWithRoster[];
   onNavigate?: (direction: number) => void;
+  currentWar?: War;
+  historyFilters: {
+      onlyCurrentTier: boolean;
+      onlyAlliance: boolean;
+      minSeason: number | undefined;
+  };
+  onHistoryFiltersChange: React.Dispatch<React.SetStateAction<{
+      onlyCurrentTier: boolean;
+      onlyAlliance: boolean;
+      minSeason: number | undefined;
+  }>>;
+  historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
 }
 
 interface FightWithNode extends WarFight {
-  node: WarNode;
+  node: WarNode & {
+      allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
+  };
   attacker: { name: string; images: any } | null;
   defender: { name: string; images: any } | null;
   player: { ingameName: string } | null;
@@ -56,6 +76,10 @@ export default function NodeEditor({
   champions,
   players,
   onNavigate,
+  currentWar,
+  historyFilters,
+  onHistoryFiltersChange,
+  historyCache,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -68,8 +92,17 @@ export default function NodeEditor({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
 
-  // Cache history to avoid re-fetching when switching back/forth or during fast nav
-  const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
+  // Filter active modifiers
+  const activeModifiers = useMemo(() => {
+    if (!currentFight?.node?.allocations || !currentWar) return [];
+    
+    return currentFight.node.allocations.filter(alloc => {
+        const tierMatch = (!alloc.minTier || alloc.minTier <= currentWar.warTier) && 
+                          (!alloc.maxTier || alloc.maxTier >= currentWar.warTier);
+        const seasonMatch = !alloc.season || alloc.season === currentWar.season;
+        return tierMatch && seasonMatch;
+    }).map(a => a.nodeModifier);
+  }, [currentFight?.node?.allocations, currentWar]);
 
   // Load initial state when fight changes
   useEffect(() => {
@@ -114,7 +147,8 @@ export default function NodeEditor({
       return;
     }
 
-    const cacheKey = `${nodeId}-${defenderId}`;
+    const filtersKey = JSON.stringify(historyFilters);
+    const cacheKey = `${nodeId}-${defenderId}-${filtersKey}`;
     
     if (historyCache.current.has(cacheKey)) {
         setHistory(historyCache.current.get(cacheKey)!);
@@ -124,7 +158,12 @@ export default function NodeEditor({
     setIsLoadingHistory(true);
     const timer = setTimeout(async () => {
       try {
-        const stats = await getHistoricalCounters(nodeId, defenderId);
+        const stats = await getHistoricalCounters(nodeId, defenderId, {
+            minTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
+            maxTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
+            allianceId: historyFilters.onlyAlliance && currentWar?.allianceId ? currentWar.allianceId : undefined,
+            minSeason: historyFilters.minSeason,
+        });
         historyCache.current.set(cacheKey, stats);
         setHistory(stats);
       } catch (error) {
@@ -137,7 +176,7 @@ export default function NodeEditor({
     return () => {
         clearTimeout(timer);
     };
-  }, [nodeId, defenderId]);
+  }, [nodeId, defenderId, historyFilters, currentWar]);
 
   // --- DERIVED STATE FOR "SMART INPUTS" ---
 
@@ -280,7 +319,32 @@ export default function NodeEditor({
     <div className="flex flex-col h-full bg-slate-950 border-l border-slate-800">
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-lg">Edit Node {nodeId}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-lg">Edit Node {nodeId}</h3>
+            {activeModifiers.length > 0 && (
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-5 w-5 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10 -ml-1">
+                            <Info className="h-4 w-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 bg-slate-950 border-slate-800 p-4 shadow-xl shadow-black/50" align="start" side="bottom">
+                        <h4 className="font-semibold mb-3 text-sm text-sky-400 flex items-center gap-2">
+                            <Info className="h-4 w-4" />
+                            Active Modifiers
+                        </h4>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            {activeModifiers.map((mod) => (
+                                <div key={mod.id} className="text-sm border-b border-slate-800/50 last:border-0 pb-3 last:pb-0">
+                                    <div className="font-bold text-slate-200 mb-1">{mod.name}</div>
+                                    <div className="text-slate-400 text-xs leading-relaxed">{mod.description}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">
              {currentFight?.defender?.name ? 
               `Current: ${currentFight.defender.name}` : 
@@ -421,68 +485,66 @@ export default function NodeEditor({
           {/* Historical Matchups Section */}
           {defenderId && (
             <div className="mt-4 border-t border-slate-800 pt-4">
-                <h4 className="text-sm font-semibold mb-3 flex items-center justify-between">
-                    <span>Historical Matchups</span>
-                    {isLoadingHistory && <span className="text-xs text-muted-foreground font-normal">Loading...</span>}
-                </h4>
+                <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold">Historical Matchups</h4>
+                    <div className="flex items-center gap-2">
+                        {isLoadingHistory && <span className="text-xs text-muted-foreground font-normal">Loading...</span>}
+                        
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Settings2 className="h-4 w-4 text-slate-400" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 bg-slate-950 border-slate-800 p-4" align="end">
+                                <h5 className="font-semibold mb-3 text-sm">History Filters</h5>
+                                <div className="space-y-3">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id="tier-filter" 
+                                            checked={historyFilters.onlyCurrentTier}
+                                            onCheckedChange={(c) => onHistoryFiltersChange(prev => ({ ...prev, onlyCurrentTier: !!c }))}
+                                        />
+                                        <Label htmlFor="tier-filter" className="text-sm font-normal cursor-pointer">
+                                            Current Tier Only {currentWar?.warTier ? `(T${currentWar.warTier})` : ''}
+                                        </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id="alliance-filter" 
+                                            checked={historyFilters.onlyAlliance}
+                                            onCheckedChange={(c) => onHistoryFiltersChange(prev => ({ ...prev, onlyAlliance: !!c }))}
+                                        />
+                                        <Label htmlFor="alliance-filter" className="text-sm font-normal cursor-pointer">
+                                            My Alliance Only
+                                        </Label>
+                                    </div>
+                                    <div className="space-y-1">
+                                         <Label htmlFor="min-season" className="text-xs text-muted-foreground">Min Season</Label>
+                                         <Input 
+                                            id="min-season"
+                                            type="number" 
+                                            placeholder="All time"
+                                            className="h-8 bg-slate-900 border-slate-800 text-xs no-spin-buttons"
+                                            value={historyFilters.minSeason || ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value ? parseInt(e.target.value) : undefined;
+                                                onHistoryFiltersChange(prev => ({ ...prev, minSeason: val }));
+                                            }}
+                                         />
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </div>
                 
                 {history.length === 0 && !isLoadingHistory ? (
                     <p className="text-xs text-muted-foreground">No history found for this defender on this node.</p>
                 ) : (
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
                         {history.map((stat) => (
-                            <div key={stat.attackerId} className="flex items-center justify-between p-2 rounded-md bg-slate-900/50 border border-slate-800 text-xs">
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <div className="relative h-8 w-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
-                                        <Image
-                                            src={getChampionImageUrl(stat.attackerImages, '64')}
-                                            alt={stat.attackerName}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div className="truncate">
-                                        <div className="font-bold truncate">{stat.attackerName}</div>
-                                        <div className="text-muted-foreground">{stat.totalFights} Fights</div>
-                                        {/* Display Prefights */}
-                                        {stat.prefightChampions && stat.prefightChampions.length > 0 && (
-                                            <div className="flex -space-x-1 mt-1">
-                                                {stat.prefightChampions.map((pf, idx) => (
-                                                    <div key={idx} className="relative h-4 w-4 rounded-full ring-1 ring-slate-900 overflow-hidden bg-slate-800" title={pf.name}>
-                                                        <Image
-                                                            src={getChampionImageUrl(pf.images, '64')}
-                                                            alt={pf.name}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 shrink-0">
-                                    <div className="flex flex-col items-center">
-                                        <span className="font-bold text-emerald-400">{stat.solos}</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase">Solos</span>
-                                    </div>
-                                    <div className="flex flex-col items-center">
-                                        <span className="font-bold text-red-400">{stat.deaths}</span>
-                                        <span className="text-[10px] text-muted-foreground uppercase">Deaths</span>
-                                    </div>
-                                    {(stat.sampleVideoInternalId || stat.sampleVideoUrl) && (
-                                        <a 
-                                            href={stat.sampleVideoInternalId ? `/war-videos/${stat.sampleVideoInternalId}` : stat.sampleVideoUrl} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="ml-1 p-1 hover:bg-slate-800 rounded-full transition-colors text-amber-400"
-                                            title="Watch Video"
-                                        >
-                                            <PlayCircle className="h-5 w-5" />
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
+                            <HistoricalRow key={stat.attackerId} stat={stat} />
                         ))}
                     </div>
                 )}
@@ -492,4 +554,139 @@ export default function NodeEditor({
       </div>
     </div>
   );
+}
+
+function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
+    const [expanded, setExpanded] = useState(false);
+    
+    return (
+        <div className="bg-slate-900/50 border border-slate-800 rounded-md overflow-hidden">
+            <div 
+                className="flex items-center justify-between p-2 cursor-pointer hover:bg-slate-800/50 transition-colors"
+                onClick={() => setExpanded(!expanded)}
+            >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <ChevronRight className={cn("h-3 w-3 text-slate-500 transition-transform", expanded && "rotate-90")} />
+                    <div className="relative h-8 w-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+                        <Image
+                            src={getChampionImageUrl(stat.attackerImages, '64')}
+                            alt={stat.attackerName}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                    <div className="truncate">
+                        <div className="font-bold truncate text-xs">{stat.attackerName}</div>
+                        <div className="text-[10px] text-muted-foreground">{stat.totalFights} Fights</div>
+                        {/* Display Prefights */}
+                        {stat.prefightChampions && stat.prefightChampions.length > 0 && (
+                            <div className="flex -space-x-1 mt-1">
+                                {stat.prefightChampions.map((pf, idx) => (
+                                    <div key={idx} className="relative h-3 w-3 rounded-full ring-1 ring-slate-900 overflow-hidden bg-slate-800" title={pf.name}>
+                                        <Image
+                                            src={getChampionImageUrl(pf.images, '64')}
+                                            alt={pf.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-col items-center w-8">
+                        <span className="font-bold text-emerald-400 text-xs">{stat.solos}</span>
+                        <span className="text-[8px] text-muted-foreground uppercase">Solos</span>
+                    </div>
+                    <div className="flex flex-col items-center w-8">
+                        <span className="font-bold text-red-400 text-xs">{stat.deaths}</span>
+                        <span className="text-[8px] text-muted-foreground uppercase">Deaths</span>
+                    </div>
+                    {(stat.sampleVideoInternalId || stat.sampleVideoUrl) && (
+                        <div 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (stat.sampleVideoInternalId) {
+                                    window.open(`/war-videos/${stat.sampleVideoInternalId}`, '_blank');
+                                } else if (stat.sampleVideoUrl) {
+                                    window.open(stat.sampleVideoUrl, '_blank');
+                                }
+                            }}
+                            className="ml-1 p-1 hover:bg-slate-700 rounded-full transition-colors text-amber-400 cursor-pointer"
+                            title="Watch Sample Video"
+                        >
+                            <PlayCircle className="h-4 w-4" />
+                        </div>
+                    )}
+                </div>
+            </div>
+            
+            {expanded && stat.players && stat.players.length > 0 && (
+                <div className="border-t border-slate-800/50 bg-slate-950/30">
+                    {stat.players.map((player, idx) => (
+                        <div key={idx} className="flex items-center justify-between px-8 py-1.5 text-xs hover:bg-slate-800/30">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0">
+                                    {player.avatar ? (
+                                        <Image 
+                                            src={player.avatar} 
+                                            alt={player.name} 
+                                            fill 
+                                            className="object-cover" 
+                                        />
+                                    ) : (
+                                        <Users className="w-2.5 h-2.5 text-slate-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                                    )}
+                                </div>
+                                <span className="text-slate-300 truncate">{player.name}</span>
+                                {player.battlegroup && (
+                                    <span className={cn(
+                                        "px-1 py-0.5 rounded text-[9px] font-mono leading-none",
+                                        player.battlegroup === 1 ? "bg-red-900/30 text-red-400 border border-red-900/50" :
+                                        player.battlegroup === 2 ? "bg-green-900/30 text-blue-400 border border-blue-900/50" :
+                                        "bg-blue-900/30 text-green-400 border border-green-900/50"
+                                    )}>
+                                        BG{player.battlegroup}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                                {player.prefightChampions && player.prefightChampions.length > 0 && (
+                                    <div className="flex -space-x-1">
+                                        {player.prefightChampions.map((pf, i) => (
+                                            <div key={i} className="relative h-4 w-4 rounded-full ring-1 ring-slate-900 overflow-hidden bg-slate-800" title={pf.name}>
+                                                <Image
+                                                    src={getChampionImageUrl(pf.images, '64')}
+                                                    alt={pf.name}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <div className="flex items-center gap-1 w-12 justify-end">
+                                    <span className={cn("font-medium", player.death === 0 ? "text-emerald-500" : "text-red-500")}>
+                                        {player.death === 0 ? "Solo" : `${player.death} Deaths`}
+                                    </span>
+                                </div>
+                                {player.videoId && (
+                                    <a 
+                                        href={`/war-videos/${player.videoId}`} 
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-amber-500/70 hover:text-amber-400"
+                                    >
+                                        <PlayCircle className="h-3 w-3" />
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 }

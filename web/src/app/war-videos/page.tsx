@@ -29,7 +29,7 @@ interface WarFightWithRelations extends WarFight {
 }
 
 interface WarVideosPageProps {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function WarVideosPage({ searchParams }: WarVideosPageProps) {
@@ -91,6 +91,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const fights: WarFightWithRelations[] = await prisma.warFight.findMany({
     where: {
       AND: [
+        { war: { status: 'FINISHED' } },
         {
             OR: [
                 {

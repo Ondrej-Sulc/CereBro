@@ -230,3 +230,13 @@
 .command-content > div {
   overflow: hidden;
 }
+
+/* Hide spin buttons for number inputs */
+.no-spin-buttons::-webkit-outer-spin-button,
+.no-spin-buttons::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spin-buttons {
+  -moz-appearance: textfield;
+}

@@ -1,43 +1,50 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
-import { Maximize2, Minimize2, History, Loader2 } from 'lucide-react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { Maximize2, Minimize2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
-import { WarFight, WarNode } from '@prisma/client';
+import { WarFight, WarNode, WarNodeAllocation, NodeModifier } from '@prisma/client';
 import { warNodesData } from './nodes-data';
 import { getChampionImageUrl } from '@/lib/championHelper';
+
+import { War } from '@prisma/client';
 
 interface WarMapProps {
   warId: string;
   battlegroup: number;
   onNodeClick: (nodeId: number, fight?: FightWithNode) => void;
-  refreshTrigger?: number;
-  onFightsLoaded?: (fights: FightWithNode[]) => void;
   selectedNodeId?: number | null;
+  currentWar?: War;
+  historyFilters: {
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  };
+  fights: FightWithNode[];
 }
 
 interface FightWithNode extends WarFight {
-  node: WarNode;
+  node: WarNode & {
+      allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
+  };
   attacker: { name: string; images: any } | null;
   defender: { name: string; images: any } | null;
   player: { ingameName: string } | null;
-  prefightChampions?: { name: string; images: any }[];
+  prefightChampions?: { id: number; name: string; images: any }[];
 }
 
-export default function WarMap({ 
+const WarMap = React.memo(function WarMap({ 
   warId, 
   battlegroup, 
   onNodeClick, 
-  refreshTrigger = 0, 
-  onFightsLoaded,
-  selectedNodeId 
+  selectedNodeId,
+  currentWar,
+  historyFilters,
+  fights
 }: WarMapProps) {
-  const [fights, setFights] = useState<FightWithNode[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
@@ -67,29 +74,6 @@ export default function WarMap({
     return { stars: generatedStars, nebulas: generatedNebulas };
   }, []);
 
-  useEffect(() => {
-    async function fetchFights() {
-      try {
-        const response = await fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${battlegroup}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const fetchedFights: FightWithNode[] = await response.json();
-        setFights(fetchedFights);
-        if (onFightsLoaded) {
-            onFightsLoaded(fetchedFights);
-        }
-        setHistoryData(new Map());
-      } catch (err) {
-        console.error("Failed to fetch fights:", err);
-        setError("Failed to load war data.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchFights();
-  }, [warId, battlegroup, refreshTrigger, onFightsLoaded]);
-
   // Fetch history when toggle is enabled (Batch optimized)
   useEffect(() => {
     async function fetchAllHistory() {
@@ -104,7 +88,15 @@ export default function WarMap({
       }));
 
       try {
-          const batchResults = await getBatchHistoricalCounters(requests);
+          // Prepare batch options
+          const options = {
+            minTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
+            maxTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
+            allianceId: historyFilters.onlyAlliance && currentWar?.allianceId ? currentWar.allianceId : undefined,
+            minSeason: historyFilters.minSeason,
+          };
+
+          const batchResults = await getBatchHistoricalCounters(requests, options as any); // Type assertion until actions updated properly
           const historyMap = new Map<number, HistoricalFightStat[]>();
           Object.entries(batchResults).forEach(([nodeNumStr, stats]) => {
               historyMap.set(Number(nodeNumStr), stats);
@@ -115,10 +107,10 @@ export default function WarMap({
       }
     }
 
-    if (showHistory && historyData.size === 0) {
+    if (showHistory) {
         fetchAllHistory();
     }
-  }, [showHistory, fights, historyData.size]);
+  }, [showHistory, fights, historyFilters, currentWar]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -149,25 +141,18 @@ export default function WarMap({
     }
   }, [selectedNodeId]);
 
-  if (loading) {
-    return (
-      <div className="w-full h-[600px] flex flex-col items-center justify-center bg-slate-950 border rounded-md border-slate-800">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-500 mb-4" />
-        <p className="text-slate-400 animate-pulse">Loading War Map...</p>
-      </div>
-    );
-  }
-  if (error) return <div className="text-red-500">Error: {error}</div>;
-
-  const fightsByNode = new Map<number, FightWithNode>();
-  fights.forEach(fight => {
-    fightsByNode.set(fight.node.nodeNumber, fight);
-  });
+  const fightsByNode = useMemo(() => {
+    const map = new Map<number, FightWithNode>();
+    fights.forEach(fight => {
+      map.set(fight.node.nodeNumber, fight);
+    });
+    return map;
+  }, [fights]);
 
   return (
     <div className={cn(
       "relative border rounded-md overflow-hidden bg-slate-950 transition-all duration-300",
-      isFullscreen ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-[600px]"
+      isFullscreen ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-full"
     )}>
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Button
@@ -323,8 +308,8 @@ export default function WarMap({
               const defender = fight?.defender;
               const attacker = fight?.attacker;
               
-              const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, '128') : null;
-              const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, '128') : null;
+              const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, 'full') : null;
+              const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, 'full') : null;
               
               const prefightChampions = fight?.prefightChampions;
               const hasPrefight = prefightChampions && prefightChampions.length > 0;
@@ -525,4 +510,6 @@ export default function WarMap({
       </TransformWrapper>
     </div>
   );
-}
+});
+
+export default WarMap;

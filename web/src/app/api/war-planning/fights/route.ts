@@ -60,7 +60,15 @@ export async function GET(request: Request) {
         battlegroup: bgNum,
       },
       include: {
-        node: true, // Include WarNode details
+        node: {
+            include: {
+                allocations: {
+                    include: {
+                        nodeModifier: true
+                    }
+                }
+            }
+        }, // Include WarNode details with modifiers
         attacker: { select: { name: true, images: true } }, // Include champion details
         defender: { select: { name: true, images: true } }, // Include champion details
         player: { select: { ingameName: true } }, // Include player details

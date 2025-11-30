@@ -15,17 +15,32 @@ export type HistoricalFightStat = {
   sampleVideoUrl?: string;
   sampleVideoInternalId?: string;
   prefightChampions?: { name: string; images: any }[];
+  players: {
+    name: string;
+    avatar: string | null;
+    battlegroup: number | null;
+    death: number;
+    videoId?: string;
+    prefightChampions: { name: string; images: any }[];
+  }[];
 };
 
 // ... existing imports
 
 export async function getBatchHistoricalCounters(
   requests: { nodeNumber: number, defenderId: number }[],
-  minSeason?: number,
-  maxTier?: number
+  options: {
+      minSeason?: number;
+      maxTier?: number;
+      minTier?: number;
+      seasons?: number[];
+      allianceId?: string;
+  } = {}
 ): Promise<Record<number, HistoricalFightStat[]>> {
   const session = await auth();
   if (!session?.user?.id || requests.length === 0) return {};
+
+  const { minSeason, maxTier, minTier, seasons, allianceId } = options;
 
   // Create tuple list for the IN clause: ((1, 101), (2, 202), ...)
   const valueTuples = Prisma.join(
@@ -73,6 +88,9 @@ export async function getBatchHistoricalCounters(
       AND "wf"."attackerId" IS NOT NULL
       ${minSeason ? Prisma.sql`AND "w"."season" >= ${minSeason}` : Prisma.empty}
       ${maxTier ? Prisma.sql`AND "w"."warTier" <= ${maxTier}` : Prisma.empty}
+      ${minTier ? Prisma.sql`AND "w"."warTier" >= ${minTier}` : Prisma.empty}
+      ${seasons && seasons.length > 0 ? Prisma.sql`AND "w"."season" IN (${Prisma.join(seasons)})` : Prisma.empty}
+      ${allianceId ? Prisma.sql`AND "w"."allianceId" = ${allianceId}` : Prisma.empty}
     GROUP BY "wn"."nodeNumber", "wf"."defenderId", "wf"."attackerId", "wf"."nodeId"
   `;
 
@@ -122,6 +140,7 @@ export async function getBatchHistoricalCounters(
           sampleVideoUrl: row.sampleVideoUrl || undefined,
           sampleVideoInternalId: row.sampleVideoInternalId || undefined,
           prefightChampions: prefights || [],
+          players: [],
       });
   }
 
@@ -139,103 +158,100 @@ export async function getBatchHistoricalCounters(
 export async function getHistoricalCounters(
   nodeNumber: number,
   defenderId: number,
-  minSeason?: number,
-  maxTier?: number
+  options: {
+      minSeason?: number;
+      maxTier?: number;
+      minTier?: number;
+      seasons?: number[];
+      allianceId?: string;
+  } = {}
 ): Promise<HistoricalFightStat[]> {
-    // ... (existing implementation)
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Raw query to get stats + a sample video URL, its internal ID, and the fight ID
-  const rawStats = await prisma.$queryRaw<any[]>`
-    SELECT 
-      "wf"."attackerId",
-      COUNT(*) as "totalFights",
-      SUM("wf"."death") as "totalDeaths",
-      COUNT(CASE WHEN "wf"."death" = 0 THEN 1 END) as "solos",
-      COUNT("wf"."videoId") as "videoCount",
-      (SELECT "v"."url" FROM "WarVideo" "v" 
-       JOIN "WarFight" "wf2" ON "wf2"."videoId" = "v"."id"
-       WHERE "wf2"."attackerId" = "wf"."attackerId" 
-       AND "wf2"."defenderId" = ${defenderId}
-       AND "wf2"."nodeId" IN (SELECT "id" FROM "WarNode" WHERE "nodeNumber" = ${nodeNumber})
-       AND "v"."url" IS NOT NULL
-       LIMIT 1
-      ) as "sampleVideoUrl",
-      (SELECT "v"."id" FROM "WarVideo" "v" 
-       JOIN "WarFight" "wf2" ON "wf2"."videoId" = "v"."id"
-       WHERE "wf2"."attackerId" = "wf"."attackerId" 
-       AND "wf2"."defenderId" = ${defenderId}
-       AND "wf2"."nodeId" IN (SELECT "id" FROM "WarNode" WHERE "nodeNumber" = ${nodeNumber})
-       AND "v"."id" IS NOT NULL
-       LIMIT 1
-      ) as "sampleVideoInternalId",
-      (SELECT "wf2"."id" FROM "WarFight" "wf2"
-       JOIN "WarVideo" "v" ON "wf2"."videoId" = "v"."id"
-       WHERE "wf2"."attackerId" = "wf"."attackerId" 
-       AND "wf2"."defenderId" = ${defenderId}
-       AND "wf2"."nodeId" IN (SELECT "id" FROM "WarNode" WHERE "nodeNumber" = ${nodeNumber})
-       AND "v"."id" IS NOT NULL
-       LIMIT 1
-      ) as "sampleFightId"
-    FROM "WarFight" "wf"
-    JOIN "War" "w" ON "wf"."warId" = "w"."id"
-    JOIN "WarNode" "wn" ON "wf"."nodeId" = "wn"."id"
-    WHERE 
-      "wn"."nodeNumber" = ${nodeNumber}
-      AND "wf"."defenderId" = ${defenderId}
-      AND "wf"."attackerId" IS NOT NULL
-      ${minSeason ? Prisma.sql`AND "w"."season" >= ${minSeason}` : Prisma.empty}
-      ${maxTier ? Prisma.sql`AND "w"."warTier" <= ${maxTier}` : Prisma.empty}
-    GROUP BY "wf"."attackerId"
-  `;
+  const { minSeason, maxTier, minTier, seasons, allianceId } = options;
 
-  // Fetch prefight champions for the sample fights
-  const sampleFightIds = rawStats.map((r: any) => r.sampleFightId).filter(Boolean);
-  const fightPrefights = await prisma.warFight.findMany({
-    where: { id: { in: sampleFightIds } },
-    select: {
-      id: true,
-      prefightChampions: {
-        select: { name: true, images: true }
+  // 1. Fetch detailed fight records
+  const fights = await prisma.warFight.findMany({
+    where: {
+      node: { nodeNumber },
+      defenderId,
+      attackerId: { not: null },
+      war: {
+        AND: [
+          minSeason ? { season: { gte: minSeason } } : {},
+          maxTier ? { warTier: { lte: maxTier } } : {},
+          minTier ? { warTier: { gte: minTier } } : {},
+          seasons && seasons.length > 0 ? { season: { in: seasons } } : {},
+          allianceId ? { allianceId } : {},
+        ]
       }
-    }
+    },
+    include: {
+      attacker: { select: { id: true, name: true, images: true } },
+      player: { select: { ingameName: true, avatar: true } },
+      video: { select: { id: true, url: true } },
+      prefightChampions: { select: { name: true, images: true } }
+    },
+    orderBy: { createdAt: 'desc' }
   });
-  const prefightMap = new Map(fightPrefights.map(f => [f.id, f.prefightChampions]));
 
-  // Map raw results
-  const finalResults: HistoricalFightStat[] = [];
-  
-  // We need to fetch attacker details for the raw results
-  const rawAttackerIds = rawStats.map((r: any) => r.attackerId);
-  const rawAttackers = await prisma.champion.findMany({
-    where: { id: { in: rawAttackerIds } },
-    select: { id: true, name: true, images: true }
-  });
-  const rawAttackerMap = new Map(rawAttackers.map(a => [a.id, a]));
+  // 2. Aggregate by Attacker
+  const statsMap = new Map<number, HistoricalFightStat>();
 
-  for (const row of rawStats) {
-      const attacker = rawAttackerMap.get(row.attackerId);
-      if (!attacker) continue;
+  for (const fight of fights) {
+    if (!fight.attacker) continue;
 
-      const prefights = row.sampleFightId ? prefightMap.get(row.sampleFightId) : [];
-
-      finalResults.push({
-          attackerId: attacker.id,
-          attackerName: attacker.name,
-          attackerImages: attacker.images,
-          solos: Number(row.solos),
-          deaths: Number(row.totalDeaths),
-          totalFights: Number(row.totalFights),
-          videoCount: Number(row.videoCount),
-          sampleVideoUrl: row.sampleVideoUrl || undefined,
-          sampleVideoInternalId: row.sampleVideoInternalId || undefined,
-          prefightChampions: prefights || [],
+    const attackerId = fight.attacker.id;
+    
+    if (!statsMap.has(attackerId)) {
+      statsMap.set(attackerId, {
+        attackerId,
+        attackerName: fight.attacker.name,
+        attackerImages: fight.attacker.images,
+        solos: 0,
+        deaths: 0,
+        totalFights: 0,
+        videoCount: 0,
+        sampleVideoUrl: undefined,
+        sampleVideoInternalId: undefined,
+        prefightChampions: [],
+        players: []
       });
+    }
+
+    const stat = statsMap.get(attackerId)!;
+    stat.totalFights++;
+    stat.deaths += fight.death;
+    if (fight.death === 0) stat.solos++;
+    if (fight.video) {
+        stat.videoCount++;
+        // Keep the first video found as sample
+        if (!stat.sampleVideoUrl && !stat.sampleVideoInternalId) {
+            stat.sampleVideoUrl = fight.video.url || undefined;
+            stat.sampleVideoInternalId = fight.video.id;
+            stat.prefightChampions = fight.prefightChampions;
+        }
+    } else if (stat.prefightChampions!.length === 0 && fight.prefightChampions.length > 0) {
+        // If no video yet, still capture prefights from a non-video fight if available
+        stat.prefightChampions = fight.prefightChampions;
+    }
+
+    // Add to player list
+    if (fight.player) {
+      stat.players.push({
+        name: fight.player.ingameName,
+        avatar: fight.player.avatar,
+        battlegroup: fight.battlegroup,
+        death: fight.death,
+        videoId: fight.video?.id,
+        prefightChampions: fight.prefightChampions
+      });
+    }
   }
 
-  // Sort by Solos desc, then Deaths asc
-  return finalResults.sort((a, b) => {
+  // 3. Convert to array and sort
+  return Array.from(statsMap.values()).sort((a, b) => {
       if (b.solos !== a.solos) return b.solos - a.solos;
       return a.deaths - b.deaths;
   });

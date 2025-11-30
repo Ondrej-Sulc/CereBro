@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import WarDetailsClient from "@/components/war-planning/war-details-client";
-import { updateWarFight } from "../actions";
+import { updateWarFight, updateWarStatus } from "../actions";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
@@ -90,6 +90,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       war={war}
       warId={warId}
       updateWarFight={updateWarFight}
+      updateWarStatus={updateWarStatus}
       champions={champions}
       players={allianceMembers}
     />

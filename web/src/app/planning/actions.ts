@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
 import { WarFight } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const createWarSchema = z.object({
@@ -241,4 +242,77 @@ export async function getOwnersOfChampion(championId: number, allianceId: string
       { player: { ingameName: 'asc' } }
     ]
   });
+}
+
+export async function updateWarStatus(warId: string, status: WarStatus) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const account = await prisma.account.findFirst({
+    where: {
+      userId: session.user.id,
+      provider: "discord",
+    },
+  });
+
+  if (!account?.providerAccountId) {
+    throw new Error("No linked Discord account found.");
+  }
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true },
+  });
+
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer to update war status.");
+  }
+
+  await prisma.war.update({
+    where: {
+      id: warId,
+      allianceId: player.allianceId,
+    },
+    data: {
+      status,
+    },
+  });
+}
+
+export async function deleteWar(warId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const account = await prisma.account.findFirst({
+    where: {
+      userId: session.user.id,
+      provider: "discord",
+    },
+  });
+
+  if (!account?.providerAccountId) {
+    throw new Error("No linked Discord account found.");
+  }
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true },
+  });
+
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer to delete a war.");
+  }
+
+  await prisma.war.delete({
+    where: {
+      id: warId,
+      allianceId: player.allianceId,
+    },
+  });
+
+  revalidatePath("/planning");
 }
