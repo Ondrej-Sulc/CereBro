@@ -13,10 +13,10 @@ export const LAYOUT = {
   WIDTH: 2800, // Doubled from 1400
   HEIGHT: 3200, // Doubled from 1600
   Y_START: 2300, // Adjusted to center vertically (1500 + 800)
-  Y_STEP: 120,
-  SPACING_NODE: 120,  
-  SPACING_GROUP: 420, 
-  OFFSET_PORTAL: 60,
+  Y_STEP: 115,
+  SPACING_NODE: 135,  
+  SPACING_GROUP: 430, 
+  OFFSET_PORTAL: 70,
 };
 
 const CENTER_X = LAYOUT.WIDTH / 2;

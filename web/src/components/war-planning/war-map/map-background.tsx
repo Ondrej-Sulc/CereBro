@@ -44,10 +44,18 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
             });
 
             // 2. Draw Paths
-            ctx.strokeStyle = "#475569";
-            ctx.lineWidth = 1;
-            ctx.setLineDash([4, 4]);
-            ctx.globalAlpha = 0.3;
+            ctx.save(); // Save state to isolate shadow/glow effects
+            ctx.strokeStyle = "#22d3ee"; // Cyan-400
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 10]);
+            ctx.globalAlpha = 0.6;
+            
+            // Add Energy Glow
+            ctx.shadowColor = "#0891b2"; // Cyan-600
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
             ctx.beginPath();
             warNodesData.forEach((node) => {
                 node.paths.forEach((pathToId) => {
@@ -59,6 +67,7 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
                 });
             });
             ctx.stroke();
+            ctx.restore(); // Restore state (removes shadow, resets alpha/color)
             
             // 3. Vignette Mask (Alpha Fade)
             // Use destination-in to fade the canvas content to transparent at the edges.

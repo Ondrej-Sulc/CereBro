@@ -294,7 +294,6 @@ export const CanvasNode = memo(function CanvasNode({
                             radius={nodeRadius - 4} 
                             border={1.5}
                             borderColor={defender?.class ? CLASS_COLORS[defender.class] : '#ef4444'}
-                            opacity={showHistory ? 0.7 : 1}
                             glowColor={defender?.class ? CLASS_COLORS[defender.class] : undefined}
                         />
                         {isDefenderTactic && (
@@ -328,14 +327,22 @@ export const CanvasNode = memo(function CanvasNode({
                 </Group>
             )}
 
-            {/* History Bubbles */}
+            {/* History Bubbles (Right Side, Vertical Stack) */}
             {showHistory && history && history.length > 0 && (
-                <Group y={nodeRadius + (hasPrefight ? 25 : 5)} x={showAttacker ? pillWidth / 4 : nodeRadius}>
-                    {history.slice(0, 3).map((stat, i) => (
+                <Group 
+                    x={(pillWidth / 2) + 14} 
+                    y={-((Math.min(history.length, 3) * 24) / 2) + 10} // Vertically center the stack
+                >
+                    {history.slice(0, 3).map((stat, i) => {
+                        const hasSolos = stat.solos > 0;
+                        const hasDeaths = stat.deaths > 0;
+                        const isSplit = hasSolos && hasDeaths;
+                        
+                        return (
                         <Group 
                             key={stat.attackerId} 
-                            x={i * 18} 
-                            y={i * 4}
+                            x={0} 
+                            y={i * 26} // Vertical spacing
                             onClick={(e) => {
                                 e.cancelBubble = true; // Prevent node select
                                 if (stat.sampleVideoInternalId) {
@@ -344,23 +351,52 @@ export const CanvasNode = memo(function CanvasNode({
                                     window.open(stat.sampleVideoUrl, '_blank');
                                 }
                             }}
+                            onMouseEnter={(e) => {
+                                const container = e.target.getStage()?.container();
+                                if (container) container.style.cursor = 'pointer';
+                            }}
+                            onMouseLeave={(e) => {
+                                const container = e.target.getStage()?.container();
+                                if (container) container.style.cursor = 'default';
+                            }}
                         >
                             <CircularImage
                                 src={getChampionImageUrl(stat.attackerImages as any, '64')}
                                 x={0} y={0}
-                                radius={10}
+                                radius={11}
                                 border={1.5}
-                                borderColor={stat.sampleVideoUrl ? '#fbbf24' : '#64748b'}
+                                borderColor={stat.sampleVideoUrl || stat.sampleVideoInternalId ? '#fbbf24' : '#64748b'}
                             />
+                            
                             {/* Solo/Death Badge */}
-                            <Rect x={6} y={-6} width={10} height={10} cornerRadius={3} fill={stat.solos > 0 ? "#10b981" : "#ef4444"} />
-                            <Text 
-                                text={String(stat.solos)}
-                                x={6} y={-5} width={10} align="center"
-                                fontSize={7} fill="white" fontStyle="bold"
-                            />
+                            <Group x={8} y={-8}>
+                                {isSplit ? (
+                                    <>
+                                        {/* Split Badge */}
+                                        <Rect x={0} y={0} width={12} height={10} fill="#10b981" cornerRadius={[3, 0, 0, 3]} />
+                                        <Rect x={12} y={0} width={12} height={10} fill="#ef4444" cornerRadius={[0, 3, 3, 0]} />
+                                        <Text text={String(stat.solos)} x={0} y={1} width={12} align="center" fontSize={8} fill="white" fontStyle="bold" />
+                                        <Text text={String(stat.deaths)} x={12} y={1} width={12} align="center" fontSize={8} fill="white" fontStyle="bold" />
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Single Badge */}
+                                        <Rect 
+                                            x={0} y={0} 
+                                            width={14} height={10} 
+                                            cornerRadius={3} 
+                                            fill={hasSolos ? "#10b981" : "#ef4444"} 
+                                        />
+                                        <Text 
+                                            text={String(hasSolos ? stat.solos : stat.deaths)}
+                                            x={0} y={1} width={14} align="center"
+                                            fontSize={8} fill="white" fontStyle="bold"
+                                        />
+                                    </>
+                                )}
+                            </Group>
                         </Group>
-                    ))}
+                    )})}
                 </Group>
             )}
         </Group>
