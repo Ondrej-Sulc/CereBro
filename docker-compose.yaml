@@ -20,6 +20,9 @@ services:
       context: .
       dockerfile: web.Dockerfile
       target: development
+      args:
+        NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY}
+        NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST}
     ports:
       - "3000:3000"
     volumes:

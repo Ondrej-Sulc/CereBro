@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChampionCombobox } from "@/components/ChampionCombobox";
+import { PlayerCombobox } from "@/components/PlayerCombobox";
 import { MultiChampionCombobox } from "@/components/MultiChampionCombobox";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { Users, X, ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 import { PlayerWithRoster, FightWithNode } from "../types";
 import { ActiveModifiers } from "./active-modifiers";
@@ -99,12 +99,28 @@ export default function NodeEditor({
 
   // Load initial state when fight changes
   useEffect(() => {
-    setDefenderId(currentFight?.defenderId || undefined);
-    setAttackerId(currentFight?.attackerId || undefined);
-    setPlayerId(currentFight?.playerId || undefined);
-    setDeaths(currentFight?.death || 0);
-    setNotes(currentFight?.notes || "");
-    setPrefightChampionIds(currentFight?.prefightChampions?.map(c => c.id) || []);
+    const newDefenderId = currentFight?.defenderId || undefined;
+    if (newDefenderId !== defenderId) setDefenderId(newDefenderId);
+
+    const newAttackerId = currentFight?.attackerId || undefined;
+    if (newAttackerId !== attackerId) setAttackerId(newAttackerId);
+
+    const newPlayerId = currentFight?.playerId || undefined;
+    if (newPlayerId !== playerId) setPlayerId(newPlayerId);
+
+    const newDeaths = currentFight?.death || 0;
+    if (newDeaths !== deaths) setDeaths(newDeaths);
+
+    const newNotes = currentFight?.notes || "";
+    if (newNotes !== notes) setNotes(newNotes);
+
+    const newPrefights = currentFight?.prefightChampions?.map(c => c.id) || [];
+    const arraysEqual = (a: number[], b: number[]) => 
+        a.length === b.length && a.every((val, index) => val === b[index]);
+    
+    if (!arraysEqual(newPrefights, prefightChampionIds)) {
+        setPrefightChampionIds(newPrefights);
+    }
     
     if (currentFight && !currentFight.defenderId) {
         setIsDefenderOpen(true);
@@ -317,61 +333,12 @@ export default function NodeEditor({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="player" className="text-right">Player</Label>
             <div className="col-span-3">
-              <Select value={playerId || ""} onValueChange={handlePlayerChange}>
-                <SelectTrigger className="w-full relative pr-8 [&>svg:last-child]:hidden">
-                  <SelectValue placeholder="Select player..." />
-                  {playerId ? (
-                    <div 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-800 cursor-pointer text-slate-400 hover:text-white z-10"
-                        onClick={handleClearPlayer}
-                        onPointerDown={(e) => e.stopPropagation()}
-                    >
-                        <X className="h-3 w-3" />
-                    </div>
-                  ) : (
-                    <ChevronDown className="h-4 w-4 opacity-50 absolute right-2 top-1/2 -translate-y-1/2" />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  {availablePlayers.length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground text-center">No players found</div>
-                  )}
-                  {availablePlayers.map((p) => {
-                    // Logic to show rank if attacker selected
-                    let rosterInfo = "";
-                    if (attackerId) {
-                        const r = p.roster.find(r => r.championId === attackerId);
-                        if (r) {
-                            rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})`;
-                        }
-                    }
-
-                    return (
-                        <SelectItem key={p.id} value={p.id} className="pl-2 [&>span:first-child]:hidden">
-                        <div className="flex items-center gap-2">
-                            {p.avatar ? (
-                            <div className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800 shrink-0">
-                                <Image 
-                                src={p.avatar} 
-                                alt={p.ingameName} 
-                                fill 
-                                sizes="20px"
-                                unoptimized
-                                className="object-cover" 
-                                />
-                            </div>
-                            ) : (
-                            <Users className="w-5 h-5 text-slate-400 p-0.5 shrink-0" />
-                            )}
-                            <span className="truncate">
-                                {p.ingameName} <span className="text-xs text-muted-foreground ml-1">{rosterInfo}</span>
-                            </span>
-                        </div>
-                        </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+              <PlayerCombobox
+                players={availablePlayers}
+                value={playerId}
+                onSelect={handlePlayerChange}
+                attackerId={attackerId}
+              />
             </div>
           </div>
 

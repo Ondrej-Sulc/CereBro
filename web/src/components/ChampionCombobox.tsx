@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover"
 import { Champion } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { Virtuoso } from "react-virtuoso";
 
 interface ChampionComboboxProps {
   champions: Champion[];
@@ -75,6 +76,8 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     value ? champions.find((c) => String(c.id) === value) : null,
   [value, champions]);
 
+
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -120,7 +123,6 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
       <PopoverContent 
         sideOffset={4} 
         className="w-[--radix-popover-trigger-width] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -129,26 +131,32 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
             onValueChange={setSearch}
           />
           <CommandList>
-            <CommandEmpty>No champion found.</CommandEmpty>
+            {filteredChampions.length === 0 && <CommandEmpty>No champion found.</CommandEmpty>}
             <CommandGroup>
-                {filteredChampions.map((champion) => (
-                    <CommandItem
-                        key={champion.id}
-                        value={champion.name}
-                        onSelect={() => handleSelect(String(champion.id))}
+                <div style={{ height: Math.min(filteredChampions.length * 46, 300) }}>
+                  <Virtuoso
+                    style={{ height: Math.min(filteredChampions.length * 46, 300) }}
+                    totalCount={filteredChampions.length}
+                    itemContent={(index) => (
+                      <CommandItem
+                        key={filteredChampions[index].id}
+                        value={filteredChampions[index].name}
+                        onSelect={() => handleSelect(String(filteredChampions[index].id))}
                         className="flex items-center gap-2 cursor-pointer"
-                    >
+                      >
                         <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
                             <Image 
-                            src={getChampionImageUrl(champion.images as any, '64')}
-                            alt={champion.name}
+                            src={getChampionImageUrl(filteredChampions[index].images as any, '64')}
+                            alt={filteredChampions[index].name}
                             fill
                             className="object-cover"
                             />
                         </div>
-                        <span>{champion.name}</span>
-                    </CommandItem>
-                ))}
+                        <span>{filteredChampions[index].name}</span>
+                      </CommandItem>
+                    )}
+                  />
+                </div>
             </CommandGroup>
           </CommandList>
         </Command>

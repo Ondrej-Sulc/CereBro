@@ -35,14 +35,17 @@ The bot features a sophisticated system for tracking Alliance War performance by
 
 The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.
 
-*   **Interactive Map (Cosmic Theme):** A highly interactive, SVG-based map of the Alliance War node layout, now featuring a cosmic theme with twinkling stars, nebulas, and nodes designed as floating islands in space.
-    *   **Zoom & Pan:** Powered by `react-zoom-pan-pinch`, allowing officers to navigate the complex map easily.
-    *   **Dynamic Layout:** The map structure (nodes, paths, portals) is defined in a constant-driven configuration (`nodes-data.ts`), allowing for easy updates to match game changes.
-    *   **Visual Feedback:** Nodes display assigned defenders (champion portraits), attackers (small badges), and now prefight champions (small icons at the bottom-left of the node pill). Portals are visually distinct.
-*   **Planning Workflow (Inspector Panel & Auto-Save):**
-    *   **Initialization:** Officers can start a new war directly from the dashboard, which automatically generates placeholder `WarFight` records for all 3 Battlegroups and 50 Nodes. Bot Administrators are also authorized to initiate war plans.
-    *   **Node Editing:** Clicking a node opens an "Inspector Panel" (a dynamic sidebar on desktop or a slide-out Sheet on mobile) that allows officers to assign Defenders, Attackers, Prefight Champions, and Players, set death counts, and add notes. Changes are automatically saved on interaction or after a short debounce for text inputs, removing the need for a manual "Save" button.
-    *   **Responsive Layout:** On desktop, a collapsible sidebar provides access to planning tools and the node editor alongside the map. On mobile, these tools are accessible via slide-out Sheets.
+*   **High-Performance Canvas Map (Konva):** The interactive Alliance War map has been completely rewritten using `react-konva` (HTML5 Canvas) to solve performance bottlenecks inherent in the previous DOM/SVG approach. This ensures a buttery-smooth 60fps experience even on low-end devices.
+    *   **Layered Architecture:**
+        *   **Background Layer:** Static visual elements (Nebulas, Paths, Stars) are rendered once to an offscreen canvas and cached. A "Picture Frame" linear gradient vignette is applied to fade edges seamlessly into the UI background.
+        *   **Node Layer:** Interactive nodes are rendered on a separate layer. Heavy effects like `shadowBlur` are avoided in favor of performant alternatives (e.g., offset circles for hard shadows).
+    *   **Zoom & Pan:** Native Canvas transformation logic replaces the DOM-based `react-zoom-pan-pinch` library, providing instant feedback without layout thrashing.
+    *   **Dynamic Layout:** The map structure remains configuration-driven (`nodes-data.ts`), preserving flexibility.
+*   **Optimized Planning Workflow:**
+    *   **Node Editing:** Clicking a node opens an optimized "Inspector Panel".
+        *   **Virtualization:** The Champion and Player selection dropdowns (`ChampionCombobox`, `PlayerCombobox`) use `react-virtuoso` to virtualize their lists, rendering only visible items. This eliminates the massive render storms caused by mounting hundreds of DOM nodes for large rosters.
+        *   **State Efficiency:** The editor uses deep equality checks to synchronize state with props, preventing unnecessary re-render cycles.
+    *   **Visual Polish:** Nodes feature class-colored background glows (using tinted fills behind transparent PNGs), crisp SVG-based tactic badges (Sword/Shield) matching the application's design system, and a cleaner, connector-free aesthetic.
 *   **Search Tools:** Integrated tools to assist planning:
     *   **Player Roster:** View a specific player's top champions to find suitable attackers/defenders.
     *   **Find Champion:** Search for a specific champion to see which alliance members own it (and at what rank/ascension).

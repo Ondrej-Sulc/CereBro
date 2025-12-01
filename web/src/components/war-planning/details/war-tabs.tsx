@@ -1,3 +1,4 @@
+import React, { memo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import WarMap from "../war-map";
@@ -19,7 +20,7 @@ interface WarTabsProps {
   onToggleFullscreen: () => void;
 }
 
-export function WarTabs({
+export const WarTabs = memo(function WarTabs({
   activeTab,
   onTabChange,
   isFullscreen,
@@ -70,4 +71,4 @@ export function WarTabs({
       </div>
     </Tabs>
   );
-}
+});

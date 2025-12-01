@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { WarFight, War, WarStatus } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
 
   const [isDesktop, setIsDesktop] = useState(true);
 
+  const handleToggleFullscreen = useCallback(() => {
+    setIsFullscreen(prev => !prev);
+  }, [setIsFullscreen]);
+
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
     checkDesktop();
@@ -94,7 +98,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             historyFilters={historyFilters}
             activeTactic={activeTactic}
             onNodeClick={handleNodeClick}
-            onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+            onToggleFullscreen={handleToggleFullscreen}
           />
         </div>
       </div>

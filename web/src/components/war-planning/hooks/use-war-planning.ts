@@ -165,10 +165,14 @@ export function useWarPlanning({
         const updatedNode = {
             ...f,
             ...updatedFight,
-            attacker: newAttacker ? { name: newAttacker.name, images: newAttacker.images } : null,
-            defender: newDefender ? { name: newDefender.name, images: newDefender.images } : null,
+            attacker: newAttacker ? { name: newAttacker.name, images: newAttacker.images, class: newAttacker.class } : null,
+            defender: newDefender ? { name: newDefender.name, images: newDefender.images, class: newDefender.class } : null,
             player: newPlayer ? { ingameName: newPlayer.ingameName } : null,
-            prefightChampions: newPrefights
+            prefightChampions: (newPrefights || []).map(c => {
+                // Ensure class is present if we just found it from champions list
+                const found = champions.find(champ => champ.id === c.id);
+                return found ? { id: c.id, name: c.name, images: c.images, class: found.class } : c;
+            })
         } as FightWithNode;
 
         if (selectedFight && f.node.nodeNumber === selectedFight.node.nodeNumber) {

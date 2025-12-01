@@ -1,136 +1,154 @@
-import React, { useState, useEffect, useMemo, memo } from 'react';
-import { LAYOUT } from '../nodes-data';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Shape } from 'react-konva';
+import { LAYOUT, warNodesData } from '../nodes-data';
+import Konva from 'konva';
 
-export const WarMapBackground = memo(function WarMapBackground() {
+export const WarMapBackground = React.memo(function WarMapBackground() {
     const [stars, setStars] = useState<any[]>([]);
+    // Cache the static background (nebulas + paths)
+    const staticBgCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
+    // Generate stars once
     useEffect(() => {
         const starCount = 400;
         const generatedStars = Array.from({ length: starCount }).map((_, i) => ({
           id: i,
-          x: Math.random() * (LAYOUT.WIDTH * 2) - (LAYOUT.WIDTH / 2),
-          y: Math.random() * (LAYOUT.HEIGHT * 2) - (LAYOUT.HEIGHT / 2),
+          x: Math.random() * LAYOUT.WIDTH,
+          y: Math.random() * LAYOUT.HEIGHT,
           r: Math.random() * 1.5 + 0.5,
           opacity: Math.random() * 0.7 + 0.3,
-          delay: Math.random() * 5 + 's',
-          duration: Math.random() * 3 + 3 + 's'
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinkleDir: Math.random() > 0.5 ? 1 : -1
         }));
         setStars(generatedStars);
+
+        // Pre-render static background
+        const canvas = document.createElement('canvas');
+        canvas.width = LAYOUT.WIDTH;
+        canvas.height = LAYOUT.HEIGHT;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+             // 1. Draw Nebulas (Scaled for 2800x3200)
+             const nebulas = [
+                { cx: 400, cy: 1600, r: 1200, color: "rgba(76, 29, 149, 0.15)" },  // Left-Mid Violet
+                { cx: 1600, cy: 800, r: 1400, color: "rgba(30, 58, 138, 0.15)" },  // Top-Right Blue
+                { cx: 2000, cy: 2400, r: 1000, color: "rgba(190, 24, 93, 0.15)" }, // Bottom-Right Pink
+                { cx: 1200, cy: 200, r: 1200, color: "rgba(15, 118, 110, 0.15)" }, // Top-Mid Teal
+            ];
+            nebulas.forEach(nebula => {
+                const gradient = ctx.createRadialGradient(nebula.cx, nebula.cy, 0, nebula.cx, nebula.cy, nebula.r);
+                gradient.addColorStop(0, nebula.color);
+                gradient.addColorStop(1, "rgba(0,0,0,0)");
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, LAYOUT.WIDTH, LAYOUT.HEIGHT);
+            });
+
+            // 2. Draw Paths
+            ctx.strokeStyle = "#475569";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            warNodesData.forEach((node) => {
+                node.paths.forEach((pathToId) => {
+                    const targetNode = warNodesData.find((n) => n.id === pathToId);
+                    if (targetNode) {
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(targetNode.x, targetNode.y);
+                    }
+                });
+            });
+            ctx.stroke();
+            
+            // 3. Vignette Mask (Alpha Fade)
+            // Use destination-in to fade the canvas content to transparent at the edges.
+            // This reveals the solid bg-slate-950 of the parent div perfectly.
+            ctx.globalCompositeOperation = 'destination-in';
+            
+            const cx = LAYOUT.WIDTH / 2;
+            const cy = LAYOUT.HEIGHT / 2;
+            // Radius to cover most of the map but fade corners. 
+            // Width 2800, Height 3200. Center is (1400, 1600).
+            // We want to keep the center 60% fully opaque.
+            const fadeStartRadius = Math.min(LAYOUT.WIDTH, LAYOUT.HEIGHT) * 0.4; // ~1100px
+            const fadeEndRadius = Math.max(LAYOUT.WIDTH, LAYOUT.HEIGHT) * 0.8;   // ~2500px (reaches corners)
+
+            const maskGradient = ctx.createRadialGradient(cx, cy, fadeStartRadius, cx, cy, fadeEndRadius);
+            maskGradient.addColorStop(0, "rgba(0, 0, 0, 1)"); // Fully Opaque (Content kept)
+            maskGradient.addColorStop(1, "rgba(0, 0, 0, 0)"); // Fully Transparent (Content removed)
+            
+            ctx.fillStyle = maskGradient;
+            ctx.fillRect(0, 0, LAYOUT.WIDTH, LAYOUT.HEIGHT);
+
+            // Reset composite operation for future draws (though we don't draw more on static)
+            ctx.globalCompositeOperation = 'source-over';
+        }
+        staticBgCanvasRef.current = canvas;
     }, []);
-    
-    const nebulas = useMemo(() => [
-        { cx: -500, cy: -500, r: 800, color: "#4c1d95", id: "nebula-0" }, // Violet
-        { cx: 800, cy: 400, r: 900, color: "#1e3a8a", id: "nebula-1" },   // Blue
-        { cx: 200, cy: 1200, r: 700, color: "#be185d", id: "nebula-2" },  // Pink
-        { cx: 1500, cy: -200, r: 600, color: "#0f766e", id: "nebula-3" }, // Teal
-    ], []);
+
+    const sceneFunc = useMemo(() => {
+        return (context: Konva.Context, shape: Konva.Shape) => {
+            const ctx = context._context;
+            ctx.clearRect(0, 0, LAYOUT.WIDTH, LAYOUT.HEIGHT);
+
+            // 1. Draw Cached Static Background
+            if (staticBgCanvasRef.current) {
+                ctx.drawImage(staticBgCanvasRef.current, 0, 0);
+            }
+
+            // 2. Draw Stars (Dynamic)
+            ctx.fillStyle = "white";
+            ctx.globalAlpha = 1.0; // Reset alpha
+            
+            stars.forEach(star => {
+                // Update state for animation (mutation is okay inside render loop for visual effects)
+                /*
+                star.opacity += star.twinkleSpeed * star.twinkleDir;
+                if (star.opacity > 1) {
+                    star.opacity = 1;
+                    star.twinkleDir = -1;
+                } else if (star.opacity < 0.2) {
+                    star.opacity = 0.2;
+                    star.twinkleDir = 1;
+                }
+
+                ctx.globalAlpha = star.opacity;
+                */
+                ctx.globalAlpha = star.opacity; // Use initial random opacity
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        };
+    }, [stars]);
+
+    const shapeRef = useRef<Konva.Shape>(null);
+
+    useEffect(() => {
+        if (!shapeRef.current) return;
+        
+        // const anim = new Konva.Animation(() => {
+        //      // Trigger redraw
+        // }, shapeRef.current.getLayer());
+
+        // anim.start();
+        // return () => {
+        //     anim.stop();
+        // };
+        
+        // Just draw once?
+        // The sceneFunc is called automatically by Konva on first render.
+        // If we want to re-draw when stars change (initial load), it happens via React prop update -> Konva update.
+    }, []);
 
     return (
-        <>
-            <defs>
-              <filter id="glow-selected" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                  <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-              </filter>
-              
-              <radialGradient id="node-glow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                <stop offset="0%" stopColor="rgba(59, 130, 246, 0.5)" />
-                <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
-              </radialGradient>
-              
-              <radialGradient id="shadow-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                <stop offset="0%" stopColor="#000000" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-              </radialGradient>
-
-              {/* Class Glow Filters */}
-              <filter id="glow-science" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#4ade80" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="glow-skill" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#ef4444" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="glow-mutant" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#facc15" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="glow-cosmic" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#22d3ee" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="glow-tech" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#3b82f6" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="glow-mystic" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#a855f7" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-              <filter id="glow-superior" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
-                  <feFlood floodColor="#d946ef" result="color"/>
-                  <feComposite in="color" in2="blur" operator="in" result="glow"/>
-                  <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-
-              {nebulas.map((nebula) => (
-                  <radialGradient key={nebula.id} id={nebula.id} cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                      <stop offset="0%" stopColor={nebula.color} stopOpacity="0.3" />
-                      <stop offset="100%" stopColor={nebula.color} stopOpacity="0" />
-                  </radialGradient>
-              ))}
-            </defs>
-            
-            <rect x="-2000" y="-1500" width="5000" height="4000" fill="#020617" />
-            
-            {/* Background elements */}
-            {nebulas.map((nebula) => (
-                <circle 
-                    key={nebula.id}
-                    cx={nebula.cx} 
-                    cy={nebula.cy} 
-                    r={nebula.r} 
-                    fill={`url(#${nebula.id})`}
-                />
-            ))}
-
-            {stars.map((star) => (
-                <circle
-                    key={`star-${star.id}`}
-                    cx={star.x}
-                    cy={star.y}
-                    r={star.r}
-                    fill="white"
-                    opacity={star.opacity}
-                    className="star-anim"
-                    style={{ animationDuration: star.duration, animationDelay: star.delay }}
-                />
-            ))}
-
-            {/* Paths */}
-            {/* Paths will be rendered by parent now, or we can pass them here. 
-                Actually the parent renders paths in the original code. 
-                Wait, the original code had paths inside the WarMapBackground component?
-                No, it was after it.
-                Let's keep paths out of background to keep it pure background.
-            */}
-        </>
+        <Shape 
+            sceneFunc={sceneFunc}
+            width={LAYOUT.WIDTH}
+            height={LAYOUT.HEIGHT}
+            listening={false}
+            ref={shapeRef}
+        />
     );
 });

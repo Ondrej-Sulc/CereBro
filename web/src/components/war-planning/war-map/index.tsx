@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef, memo } from 'react';
+import { Stage, Layer } from 'react-konva';
 import { Maximize2, Minimize2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
-import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef } from 'react-zoom-pan-pinch';
 import { WarTactic, War } from '@prisma/client';
 import { LAYOUT, warNodesData } from '../nodes-data';
 import { FightWithNode } from '../types';
 import { WarMapBackground } from './map-background';
-import { WarNodeGroup } from './map-node';
+import { CanvasNode } from './canvas-node';
+import Konva from 'konva';
 
 interface WarMapProps {
   warId: string;
@@ -46,7 +47,24 @@ const WarMap = memo(function WarMap({
   const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
   
   const isFull = isFullscreen !== undefined ? isFullscreen : internalFullscreen;
-  const transformRef = useRef<ReactZoomPanPinchRef>(null);
+  const stageRef = useRef<Konva.Stage>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [stageSize, setStageSize] = useState({ width: 1000, height: 800 });
+
+  // Responsive Stage Size
+  useEffect(() => {
+      const updateSize = () => {
+          if (containerRef.current) {
+              setStageSize({
+                  width: containerRef.current.offsetWidth,
+                  height: containerRef.current.offsetHeight
+              });
+          }
+      };
+      updateSize();
+      window.addEventListener('resize', updateSize);
+      return () => window.removeEventListener('resize', updateSize);
+  }, [isFull]);
 
   const handleToggleFullscreen = () => {
       if (onToggleFullscreen) {
@@ -56,7 +74,7 @@ const WarMap = memo(function WarMap({
       }
   };
 
-  // Fetch history when toggle is enabled (Batch optimized)
+  // Fetch history
   useEffect(() => {
     async function fetchAllHistory() {
       if (!showHistory || fights.length === 0) return;
@@ -70,7 +88,6 @@ const WarMap = memo(function WarMap({
       }));
 
       try {
-          // Prepare batch options
           const options = {
             minTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
             maxTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
@@ -94,34 +111,68 @@ const WarMap = memo(function WarMap({
     }
   }, [showHistory, fights, historyFilters, currentWar]);
 
+  // Center on selected node or init
   useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isFull) {
-        handleToggleFullscreen();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [isFull, onToggleFullscreen, internalFullscreen]); // Dependencies for effect
-
-  // Auto-pan to selected node
-  useEffect(() => {
-    if (selectedNodeId && transformRef.current) {
-        const timer = setTimeout(() => {
-            const state = transformRef.current?.instance.transformState;
-            const currentScale = state ? state.scale : 1;
-            
-            // "node-g-{id}" is the ID we assign to the group
-            transformRef.current?.zoomToElement(
-                `node-g-${selectedNodeId}`, 
-                currentScale, 
-                600, 
-                "easeOut"
-            );
-        }, 50); 
-        return () => clearTimeout(timer);
+    if (selectedNodeId && stageRef.current) {
+        const targetNode = warNodesData.find(n => n.id == selectedNodeId);
+        if (targetNode) {
+            const stage = stageRef.current;
+            const scale = stage.scaleX();
+            const newPos = {
+                x: -targetNode.x * scale + stage.width() / 2,
+                y: -targetNode.y * scale + stage.height() / 2
+            };
+            stage.to({
+                x: newPos.x,
+                y: newPos.y,
+                duration: 0.5,
+                easing: Konva.Easings.EaseInOut
+            });
+        }
     }
   }, [selectedNodeId]);
+
+  // Initial Centering (Once)
+  useEffect(() => {
+      if (stageRef.current) {
+          const stage = stageRef.current;
+          const initialScale = 0.6;
+          const newPos = {
+              x: (stage.width() - LAYOUT.WIDTH * initialScale) / 2,
+              y: (stage.height() - LAYOUT.HEIGHT * initialScale) / 2
+          };
+          stage.scale({ x: initialScale, y: initialScale });
+          stage.position(newPos);
+      }
+  }, []); 
+
+  const handleWheel = (e: any) => {
+    e.evt.preventDefault();
+    const scaleBy = 1.1;
+    const stage = e.target.getStage();
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+
+    if (!pointer) return;
+
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    let newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    
+    if (newScale > 4) newScale = 4;
+    if (newScale < 0.2) newScale = 0.2;
+
+    stage.scale({ x: newScale, y: newScale });
+
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.position(newPos);
+  };
 
   const fightsByNode = useMemo(() => {
     const map = new Map<number, FightWithNode>();
@@ -132,12 +183,13 @@ const WarMap = memo(function WarMap({
   }, [fights]);
 
   return (
-    <div className={cn(
-      "relative border rounded-md overflow-hidden bg-slate-950 transition-all duration-300",
-      // If not controlled, we handle fullscreen styles here.
-      // If controlled, parent handles it.
-      !onToggleFullscreen && isFull ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-full"
-    )}>
+    <div 
+        className={cn(
+            "relative border rounded-md overflow-hidden bg-slate-950 transition-all duration-300",
+            !onToggleFullscreen && isFull ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-full"
+        )}
+        ref={containerRef}
+    >
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Button
           variant={showHistory ? "default" : "secondary"}
@@ -161,38 +213,27 @@ const WarMap = memo(function WarMap({
         </Button>
       </div>
 
-      <TransformWrapper
-        ref={transformRef}
-        initialScale={1}
-        minScale={0.5}
-        maxScale={4}
-        limitToBounds={false}
-        centerOnInit
+      <Stage 
+        width={stageSize.width} 
+        height={stageSize.height} 
+        draggable
+        onWheel={handleWheel}
+        ref={stageRef}
+        style={{ cursor: 'grab' }}
+        onDragStart={() => {
+            if (stageRef.current) stageRef.current.container().style.cursor = 'grabbing';
+        }}
+        onDragEnd={() => {
+            if (stageRef.current) stageRef.current.container().style.cursor = 'grab';
+        }}
       >
-        <TransformComponent
-          wrapperStyle={{ width: '100%', height: '100%' }}
-          contentStyle={{ width: '100%', height: '100%' }}
-        >
-          <svg 
-            viewBox={`0 0 ${LAYOUT.WIDTH} ${LAYOUT.HEIGHT}`} 
-            className="w-full h-full overflow-visible" 
-            style={{ backgroundColor: '#020617' }}
-          >
-            <style>
-              {`
-                @keyframes twinkle {
-                  0%, 100% { opacity: 0.2; }
-                  50% { opacity: 1; }
-                }
-                .star-anim {
-                  animation: twinkle infinite ease-in-out;
-                }
-              `}
-            </style>
-            
+        {/* Background Layer */}
+        <Layer listening={false}>
             <WarMapBackground />
+        </Layer>
 
-            {/* Nodes */}
+        {/* Interactive Nodes Layer */}
+        <Layer>
             {warNodesData.map(node => {
               const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
               const fight = fightsByNode.get(numericId);
@@ -200,7 +241,7 @@ const WarMap = memo(function WarMap({
               const isSelected = selectedNodeId === numericId;
 
               return (
-                <WarNodeGroup
+                <CanvasNode
                     key={node.id}
                     node={node}
                     fight={fight}
@@ -212,9 +253,8 @@ const WarMap = memo(function WarMap({
                 />
               );
             })}
-          </svg>
-        </TransformComponent>
-      </TransformWrapper>
+        </Layer>
+      </Stage>
     </div>
   );
 });

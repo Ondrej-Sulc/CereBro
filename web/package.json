@@ -37,6 +37,7 @@
     "fuse.js": "^7.1.0",
     "google-auth-library": "^10.5.0",
     "google-spreadsheet": "^5.0.2",
+    "konva": "^10.0.12",
     "lucide-react": "^0.552.0",
     "next": "16.0.1",
     "next-auth": "5.0.0-beta.30",
@@ -45,6 +46,7 @@
     "posthog-js": "^1.290.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-konva": "^19.2.1",
     "react-parallax-tilt": "^1.7.313",
     "react-virtuoso": "^4.14.1",
     "react-zoom-pan-pinch": "^3.7.0",
@@ -52,6 +54,7 @@
     "tailwind-merge": "^3.3.1",
     "tsconfig-paths-webpack-plugin": "^4.2.0",
     "typescript": "^5",
+    "use-image": "^1.1.4",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
