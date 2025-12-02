@@ -51,20 +51,23 @@ const WarMap = memo(function WarMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 1000, height: 800 });
 
-  // Responsive Stage Size
+  // Responsive Stage Size via ResizeObserver
   useEffect(() => {
-      const updateSize = () => {
-          if (containerRef.current) {
-              setStageSize({
-                  width: containerRef.current.offsetWidth,
-                  height: containerRef.current.offsetHeight
-              });
+      if (!containerRef.current) return;
+
+      const resizeObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+              const { width, height } = entry.contentRect;
+              setStageSize({ width, height });
           }
+      });
+
+      resizeObserver.observe(containerRef.current);
+
+      return () => {
+          resizeObserver.disconnect();
       };
-      updateSize();
-      window.addEventListener('resize', updateSize);
-      return () => window.removeEventListener('resize', updateSize);
-  }, [isFull]);
+  }, [isFull]); // Re-bind if fullscreen state changes container ref logic (though ref is stable)
 
   const handleToggleFullscreen = () => {
       if (onToggleFullscreen) {
@@ -118,10 +121,12 @@ const WarMap = memo(function WarMap({
         if (targetNode) {
             const stage = stageRef.current;
             const scale = stage.scaleX();
+            
             const newPos = {
                 x: -targetNode.x * scale + stage.width() / 2,
                 y: -targetNode.y * scale + stage.height() / 2
             };
+            
             stage.to({
                 x: newPos.x,
                 y: newPos.y,

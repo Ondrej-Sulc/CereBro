@@ -76,12 +76,15 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   return (
     <div className={cn(
         "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
-        isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100vh-64px)]"
+        isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-64px)]",
+        isDesktop ? "flex-row" : "flex-col" // KEY LAYOUT CHANGE: flex-row for desktop, flex-col for mobile
     )}>
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main Content Area (WarHeader + WarTabs/WarMap) */}
+      <div className={cn(
+          "flex-1 flex flex-col min-w-0 min-h-0", // Added min-h-0 to allow shrinking
+      )}>
         <div className={cn(
-            "flex-1 flex flex-col",
+            "flex-1 flex flex-col min-h-0", // Added min-h-0 here too
             !isFullscreen && "p-4 sm:px-6 border-b border-slate-800"
         )}>
           <WarHeader 
@@ -114,41 +117,45 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         </div>
       </div>
 
-      <DesktopSidebar 
-        rightPanelState={rightPanelState}
-        players={props.players}
-        champions={props.champions}
-        war={props.war}
-        warId={props.warId}
-        currentBattlegroup={currentBattlegroup}
-        selectedNodeId={selectedNodeId}
-        selectedFight={selectedFight}
-        activeTactic={activeTactic}
-        historyFilters={historyFilters}
-        onHistoryFiltersChange={setHistoryFilters}
-        historyCache={historyCache}
-        onClose={handleEditorClose}
-        onNavigate={handleNavigateNode}
-        onSave={handleSaveFight}
-      />
-
-      <MobileSheet 
-        isDesktop={isDesktop}
-        rightPanelState={rightPanelState}
-        selectedNodeId={selectedNodeId}
-        selectedFight={selectedFight}
-        warId={props.warId}
-        war={props.war}
-        champions={props.champions}
-        players={props.players}
-        activeTactic={activeTactic}
-        historyFilters={historyFilters}
-        onHistoryFiltersChange={setHistoryFilters}
-        historyCache={historyCache}
-        onClose={handleEditorClose}
-        onNavigate={handleNavigateNode}
-        onSave={handleSaveFight}
-      />
+      {/* Conditional Sidebar / MobileSheet rendering */}
+      {isDesktop ? (
+        <DesktopSidebar 
+          rightPanelState={rightPanelState}
+          players={props.players}
+          champions={props.champions}
+          war={props.war}
+          warId={props.warId}
+          currentBattlegroup={currentBattlegroup}
+          selectedNodeId={selectedNodeId}
+          selectedFight={selectedFight}
+          activeTactic={activeTactic}
+          historyFilters={historyFilters}
+          onHistoryFiltersChange={setHistoryFilters}
+          historyCache={historyCache}
+          onClose={handleEditorClose}
+          onNavigate={handleNavigateNode}
+          onSave={handleSaveFight}
+        />
+      ) : (
+        // MobileSheet now rendered directly within the flex-col layout
+        <MobileSheet 
+          isDesktop={isDesktop} // This will be false here
+          rightPanelState={rightPanelState}
+          selectedNodeId={selectedNodeId}
+          selectedFight={selectedFight}
+          warId={props.warId}
+          war={props.war}
+          champions={props.champions}
+          players={props.players}
+          activeTactic={activeTactic}
+          historyFilters={historyFilters}
+          onHistoryFiltersChange={setHistoryFilters}
+          historyCache={historyCache}
+          onClose={handleEditorClose}
+          onNavigate={handleNavigateNode}
+          onSave={handleSaveFight}
+        />
+      )}
     </div>
   );
 }

@@ -35,7 +35,7 @@ export const WarTabs = memo(function WarTabs({
   onToggleFullscreen
 }: WarTabsProps) {
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full flex-1 flex flex-col">
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full flex-1 flex flex-col min-h-0">
       <TabsList className={cn("grid w-full grid-cols-3 bg-slate-900", isFullscreen && "hidden")}>
         <TabsTrigger value="bg1">Battlegroup 1</TabsTrigger>
         <TabsTrigger value="bg2">Battlegroup 2</TabsTrigger>
@@ -43,8 +43,8 @@ export const WarTabs = memo(function WarTabs({
       </TabsList>
       
       <div className={cn(
-          "relative overflow-hidden flex-1",
-          !isFullscreen && "mt-4 h-[calc(100vh-220px)] rounded-md border border-slate-800"
+          "relative overflow-hidden flex-1 min-h-0",
+          !isFullscreen && "mt-4 rounded-md border border-slate-800"
       )}>
         {['bg1', 'bg2', 'bg3'].map((bgValue, index) => (
           <TabsContent key={bgValue} value={bgValue} className="h-full m-0">
