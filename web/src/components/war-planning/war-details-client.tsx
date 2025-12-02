@@ -62,6 +62,17 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isFullscreen]);
+
   return (
     <div className={cn(
         "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
