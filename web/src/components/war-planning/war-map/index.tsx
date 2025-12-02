@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useMemo, useRef, memo } from 'react';
 import { Stage, Layer } from 'react-konva';
-import { Maximize2, Minimize2, History } from 'lucide-react';
+import { Maximize2, Minimize2, History, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
@@ -28,6 +28,9 @@ interface WarMapProps {
   activeTactic?: WarTactic | null;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  highlightedPlayerId: string | null;
+  onTogglePlayerPanel?: () => void;
+  isPlayerPanelOpen?: boolean;
 }
 
 const WarMap = memo(function WarMap({ 
@@ -40,7 +43,10 @@ const WarMap = memo(function WarMap({
   fights,
   activeTactic,
   isFullscreen,
-  onToggleFullscreen
+  onToggleFullscreen,
+  highlightedPlayerId,
+  onTogglePlayerPanel,
+  isPlayerPanelOpen
 }: WarMapProps) {
   const [internalFullscreen, setInternalFullscreen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -195,6 +201,26 @@ const WarMap = memo(function WarMap({
         )}
         ref={containerRef}
     >
+      {/* Top Left: Player Panel Toggle */}
+      {onTogglePlayerPanel && (
+        <div className="absolute top-4 left-4 z-10">
+           <Button
+             variant={isPlayerPanelOpen ? "default" : "secondary"}
+             size="icon"
+             onClick={onTogglePlayerPanel}
+             title="Toggle Roster"
+             className={cn(
+               "border border-slate-700",
+               isPlayerPanelOpen 
+                 ? "bg-indigo-600 hover:bg-indigo-700 text-white" 
+                 : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
+             )}
+           >
+             <Users className="h-5 w-5" />
+           </Button>
+        </div>
+      )}
+
       <div className="absolute top-4 right-4 z-10 flex gap-2">
         <Button
           variant={showHistory ? "default" : "secondary"}
@@ -255,6 +281,7 @@ const WarMap = memo(function WarMap({
                     showHistory={showHistory}
                     history={history}
                     activeTactic={activeTactic}
+                    highlightedPlayerId={highlightedPlayerId}
                 />
               );
             })}

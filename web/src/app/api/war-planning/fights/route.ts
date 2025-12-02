@@ -71,6 +71,7 @@ export async function GET(request: Request) {
         }, // Include WarNode details with modifiers
         attacker: { 
             select: { 
+                id: true,
                 name: true, 
                 images: true, 
                 class: true,
@@ -79,18 +80,37 @@ export async function GET(request: Request) {
         }, 
         defender: { 
             select: { 
+                id: true,
                 name: true, 
                 images: true, 
                 class: true,
                 tags: { select: { name: true } }
             } 
         }, 
-        player: { select: { ingameName: true } }, // Include player details
-        prefightChampions: { select: { id: true, name: true, images: true } }, // Include prefight champions
+        player: { select: { id: true, ingameName: true, avatar: true } }, // Include player details
+        prefightChampions: { 
+            select: { 
+                id: true, 
+                champion: { select: { id: true, name: true, images: true } },
+                player: { select: { id: true, ingameName: true, avatar: true } }
+            } 
+        },
       },
     });
 
-    return NextResponse.json(fights);
+    // Map the result to match the interface
+    const mappedFights = fights.map(f => ({
+        ...f,
+        prefightChampions: f.prefightChampions.map(pf => ({
+            id: pf.champion.id,
+            name: pf.champion.name,
+            images: pf.champion.images,
+            fightPrefightId: pf.id,
+            player: pf.player
+        }))
+    }));
+
+    return NextResponse.json(mappedFights);
   } catch (error) {
     console.error("Error fetching war fights:", error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

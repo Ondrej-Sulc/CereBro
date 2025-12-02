@@ -1,7 +1,7 @@
 import { War, WarStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Users } from "lucide-react";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
@@ -19,6 +19,8 @@ interface WarHeaderProps {
   champions: Champion[];
   currentBattlegroup: number;
   isFullscreen: boolean;
+  onTogglePlayerPanel?: () => void;
+  isPlayerPanelOpen?: boolean;
 }
 
 export function WarHeader({
@@ -32,6 +34,8 @@ export function WarHeader({
   champions,
   currentBattlegroup,
   isFullscreen,
+  onTogglePlayerPanel,
+  isPlayerPanelOpen
 }: WarHeaderProps) {
   return (
     <div className={cn(
@@ -48,6 +52,21 @@ export function WarHeader({
       </div>
       
       <div className="flex items-center gap-2 shrink-0">
+        {/* Player Roster Toggle (Desktop) */}
+        {onTogglePlayerPanel && (
+            <div className="hidden md:block">
+                <Button 
+                    variant={isPlayerPanelOpen ? "secondary" : "outline"} 
+                    size="sm"
+                    onClick={onTogglePlayerPanel}
+                    className="gap-2"
+                >
+                    <Users className="h-4 w-4" />
+                    Roster
+                </Button>
+            </div>
+        )}
+
         <Button 
           variant={status === 'PLANNING' ? "destructive" : "outline"} 
           size="sm"

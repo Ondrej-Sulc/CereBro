@@ -29,6 +29,7 @@ interface PlayerComboboxProps {
   placeholder?: string;
   className?: string;
   attackerId?: number; // To show rank info
+  compact?: boolean;
 }
 
 export const PlayerCombobox = React.memo(function PlayerCombobox({
@@ -37,7 +38,8 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
   onSelect,
   placeholder = "Select player...",
   className,
-  attackerId
+  attackerId,
+  compact
 }: PlayerComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -75,13 +77,17 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between pr-2 pl-0 rounded-full", className)}
+          className={cn(
+              "w-full justify-between pr-2 pl-0 rounded-full", 
+              compact ? "h-8 text-xs" : "",
+              className
+          )}
         >
           <div className="flex items-center gap-2 truncate ">
              {selectedPlayer ? (
                 <>
                     {selectedPlayer.avatar ? (
-                        <div className="relative h-6 w-6 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 ml-1">
+                        <div className={cn("relative rounded-full overflow-hidden flex-shrink-0 bg-slate-800 ml-1", compact ? "h-5 w-5" : "h-6 w-6")}>
                             <Image 
                                 src={selectedPlayer.avatar}
                                 alt={selectedPlayer.ingameName}
@@ -91,7 +97,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                             />
                         </div>
                     ) : (
-                        <Users className="h-5 w-5 ml-2 text-slate-400" />
+                        <Users className={cn("text-slate-400 ml-2", compact ? "h-4 w-4" : "h-5 w-5")} />
                     )}
                     <span className="truncate">{selectedPlayer.ingameName}</span>
                 </>

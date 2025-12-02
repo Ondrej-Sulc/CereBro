@@ -48,11 +48,15 @@ export default async function WarVideoPage(props: any) {
           player: true,
           prefightChampions: {
             include: {
-              abilities: {
+              champion: {
                 include: {
-                  ability: true,
+                  abilities: {
+                    include: {
+                      ability: true,
+                    },
+                  },
                 },
-              },
+              }
             },
           },
         },

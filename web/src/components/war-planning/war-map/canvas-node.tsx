@@ -159,6 +159,7 @@ interface CanvasNodeProps {
     showHistory: boolean;
     history: HistoricalFightStat[] | undefined | null;
     activeTactic: WarTactic | null | undefined;
+    highlightedPlayerId: string | null;
 }
 
 export const CanvasNode = memo(function CanvasNode({
@@ -168,7 +169,8 @@ export const CanvasNode = memo(function CanvasNode({
     onNodeClick,
     showHistory,
     history,
-    activeTactic
+    activeTactic,
+    highlightedPlayerId
 }: CanvasNodeProps) {
     const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
 
@@ -190,6 +192,7 @@ export const CanvasNode = memo(function CanvasNode({
 
     const defender = fight?.defender;
     const attacker = fight?.attacker;
+    const player = fight?.player;
     
     const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, '128') : null;
     const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, '128') : null;
@@ -201,6 +204,10 @@ export const CanvasNode = memo(function CanvasNode({
     const activeTacticAny = activeTactic as any;
     const isAttackerTactic = activeTacticAny?.attackTag && attacker?.tags?.some((t: any) => t.name === activeTacticAny.attackTag.name);
     const isDefenderTactic = activeTacticAny?.defenseTag && defender?.tags?.some((t: any) => t.name === activeTacticAny.defenseTag.name);
+    
+    // Player Logic
+    const isPlayerHighlighted = player?.id && player.id === highlightedPlayerId;
+    const isPrefightHighlighted = highlightedPlayerId && fight?.prefightChampions?.some(pf => pf.player?.id === highlightedPlayerId);
 
     // Dimensions
     const nodeRadius = 24; 
@@ -209,8 +216,26 @@ export const CanvasNode = memo(function CanvasNode({
     const pillHeight = nodeRadius * 2;
     
     // Colors
-    const borderColor = isSelected ? "#fbbf24" : "#475569"; 
-    const borderWidth = isSelected ? 3 : 1.5;
+    // Selection: Gold (#fbbf24)
+    // Attacker Highlight: Fuchsia (#d946ef)
+    // Prefight Highlight: Cyan (#22d3ee)
+    const highlightColor = "#d946ef"; 
+    const prefightHighlightColor = "#22d3ee";
+
+    let borderColor = "#475569"; // Default Slate-600
+    let borderWidth = 1.5;
+    
+    if (isSelected) {
+        borderColor = "#fbbf24";
+        borderWidth = 3;
+    } else if (isPlayerHighlighted) {
+        borderColor = highlightColor;
+        borderWidth = 3;
+    } else if (isPrefightHighlighted) {
+        borderColor = prefightHighlightColor;
+        borderWidth = 3;
+    }
+
     const pillFill = "rgba(15, 23, 42, 0.95)";
 
     return (
@@ -245,13 +270,12 @@ export const CanvasNode = memo(function CanvasNode({
                     fontSize={11}
                     fontFamily="monospace"
                     fontStyle="bold"
-                    fill={isSelected ? "#fbbf24" : "#cbd5e1"}
+                    fill={isSelected ? "#fbbf24" : (isPlayerHighlighted ? highlightColor : (isPrefightHighlighted ? prefightHighlightColor : "#cbd5e1"))}
                     align="center"
                     width={28}
                     y={-9 + 4} // Vertical center adjustment
                     x={-14}
                 />
-                {/* Connector REMOVED per request */}
             </Group>
 
             {/* Main Pill */}
@@ -264,7 +288,9 @@ export const CanvasNode = memo(function CanvasNode({
                 fill={pillFill}
                 stroke={borderColor}
                 strokeWidth={borderWidth}
-                // Shadows are expensive, disabling for performance
+                shadowColor={isPlayerHighlighted ? highlightColor : (isPrefightHighlighted ? prefightHighlightColor : undefined)}
+                shadowBlur={isPlayerHighlighted || isPrefightHighlighted ? 15 : 0}
+                shadowOpacity={0.6}
             />
 
             {/* Attacker Image */}
@@ -310,20 +336,45 @@ export const CanvasNode = memo(function CanvasNode({
                 )}
             </Group>
 
+            {/* Player Initials Badge (Bottom Left or Overlapping) */}
+            {player && (
+                <Group x={-pillWidth / 2 + 8} y={pillHeight / 2 - 2}>
+                    <Circle 
+                        radius={10} 
+                        fill="#1e293b"
+                        stroke={isPlayerHighlighted ? highlightColor : "#94a3b8"}
+                        strokeWidth={1}
+                    />
+                    <Text
+                        text={player.ingameName ? player.ingameName.substring(0, 2).toUpperCase() : "??"}
+                        fontSize={9}
+                        fontFamily="sans-serif"
+                        fontStyle="bold"
+                        fill="#f8fafc"
+                        align="center"
+                        width={20}
+                        x={-10}
+                        y={-4.5}
+                    />
+                </Group>
+            )}
+
             {/* Prefights */}
             {hasPrefight && prefightChampions && (
                 <Group y={nodeRadius + 8} x={-(prefightChampions.length * 10) + 10}>
-                    {prefightChampions.map((champ, i) => (
+                    {prefightChampions.map((champ, i) => {
+                        const isPlacedByHighlight = champ.player?.id === highlightedPlayerId;
+                        return (
                         <CircularImage
                             key={`pf-${i}`}
                             src={getChampionImageUrl(champ.images as any, '64')}
                             x={i * 20}
                             y={0}
                             radius={9}
-                            border={1}
-                            borderColor="#94a3b8"
+                            border={isPlacedByHighlight ? 2 : 1}
+                            borderColor={isPlacedByHighlight ? prefightHighlightColor : "#94a3b8"}
                         />
-                    ))}
+                    )})}
                 </Group>
             )}
 

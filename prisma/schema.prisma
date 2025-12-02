@@ -107,7 +107,8 @@ model Champion {
   duels              Duel[]
   asAttacker         WarFight[]    @relation("AttackerRelation")
   asDefender         WarFight[]    @relation("DefenderRelation")
-  usedAsPrefight     WarFight[]    @relation("PrefightChampions")
+  placedPrefights    FightPrefight[]
+  extraAssignments   WarExtraChampion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -262,6 +263,8 @@ model Player {
 
   playedInFights  WarFight[] @relation("PlayerInFight")
   submittedVideos WarVideo[] @relation("SubmittedBy")
+  placedPrefights FightPrefight[]
+  extraChampions  WarExtraChampion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -388,6 +391,7 @@ model War {
 
   // A war is comprised of many fights
   fights WarFight[]
+  extraChampions WarExtraChampion[]
 
   @@unique([allianceId, season, warNumber])
   @@index([allianceId])
@@ -407,7 +411,7 @@ model WarFight {
   nodeId     Int
   node       WarNode  @relation(fields: [nodeId], references: [id])
 
-  prefightChampions Champion[] @relation("PrefightChampions")
+  prefightChampions FightPrefight[]
 
   // --- Contextual Links ---
   // The player who performed the fight
@@ -432,6 +436,47 @@ model WarFight {
   @@index([playerId])
   @@index([warId])
   @@index([videoId])
+}
+
+model FightPrefight {
+  id String @id @default(cuid())
+  
+  warFightId String
+  warFight   WarFight @relation(fields: [warFightId], references: [id], onDelete: Cascade)
+  
+  championId Int
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  
+  playerId   String?
+  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([warFightId, championId])
+  @@index([warFightId])
+  @@index([championId])
+  @@index([playerId])
+}
+
+model WarExtraChampion {
+  id          String   @id @default(cuid())
+  
+  warId       String
+  war         War      @relation(fields: [warId], references: [id], onDelete: Cascade)
+  
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  
+  championId  Int
+  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  battlegroup Int
+
+  createdAt   DateTime @default(now())
+
+  @@index([warId])
+  @@index([playerId])
 }
 
 model WarVideo {

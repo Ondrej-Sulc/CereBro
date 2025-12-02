@@ -126,7 +126,9 @@ export async function createWar(formData: FormData) {
   redirect(`/planning/${war.id}`);
 }
 
-export async function updateWarFight(updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) {
+export async function updateWarFight(updatedFight: Partial<WarFight> & { 
+  prefightUpdates?: { championId: number; playerId?: string | null }[] 
+}) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -153,7 +155,7 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & { prefigh
     throw new Error("You must be an Alliance Officer to update war fights.");
   }
 
-  const { id, warId, battlegroup, nodeId, prefightChampionIds, ...rest } = updatedFight;
+  const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
 
   const updateData = {
       attackerId: rest.attackerId,
@@ -161,8 +163,12 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & { prefigh
       playerId: rest.playerId,
       death: rest.death,
       notes: rest.notes,
-      prefightChampions: prefightChampionIds ? {
-          set: prefightChampionIds.map(cid => ({ id: cid })),
+      prefightChampions: prefightUpdates ? {
+          deleteMany: {}, // Clear existing
+          create: prefightUpdates.map(p => ({
+              championId: p.championId,
+              playerId: p.playerId
+          }))
       } : undefined,
   };
 
@@ -176,6 +182,9 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & { prefigh
           throw new Error("WarFight ID is missing, and WarID/BG/NodeID are not sufficient to create it.");
       }
 
+      // For upsert, we first check if it exists to get the ID?
+      // upsert with explicit relations is tricky if we want to "replace" existing.
+      // But wait, if it creates, it works. If it updates, it runs updateData logic above.
       await prisma.warFight.upsert({
           where: {
               warId_battlegroup_nodeId: { warId, battlegroup, nodeId }
@@ -189,8 +198,11 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & { prefigh
               playerId: rest.playerId,
               death: rest.death ?? 0,
               notes: rest.notes,
-              prefightChampions: prefightChampionIds ? {
-                  connect: prefightChampionIds.map(cid => ({ id: cid }))
+              prefightChampions: prefightUpdates ? {
+                  create: prefightUpdates.map(p => ({
+                      championId: p.championId,
+                      playerId: p.playerId
+                  }))
               } : undefined
           },
           update: updateData
@@ -337,4 +349,81 @@ export async function deleteWar(warId: string) {
   });
 
   revalidatePath("/planning");
+}
+
+export async function addExtraChampion(warId: string, battlegroup: number, playerId: string, championId: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+  if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true },
+  });
+
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer to manage extra champions.");
+  }
+
+  const newExtra = await prisma.warExtraChampion.create({
+    data: {
+      warId,
+      battlegroup,
+      playerId,
+      championId,
+    },
+    include: {
+        champion: { select: { id: true, name: true, images: true } }
+    }
+  });
+
+  return newExtra;
+}
+
+export async function removeExtraChampion(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+  if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true },
+  });
+
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer to manage extra champions.");
+  }
+
+  await prisma.warExtraChampion.delete({ where: { id } });
+}
+
+export async function getExtraChampions(warId: string, battlegroup: number) {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+  if (!account?.providerAccountId) return [];
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+  });
+
+  if (!player || !player.allianceId) return [];
+
+  return await prisma.warExtraChampion.findMany({
+    where: { warId, battlegroup },
+    include: { 
+        champion: { select: { id: true, name: true, images: true } } 
+    }
+  });
 }

@@ -9,6 +9,7 @@ import { useWarPlanning } from "./hooks/use-war-planning";
 import { WarHeader } from "./details/war-header";
 import { WarTabs } from "./details/war-tabs";
 import { DesktopSidebar } from "./details/desktop-sidebar";
+import { PlayerListPanel } from "./details/player-list-panel";
 import { MobileSheet } from "./details/mobile-sheet";
 
 interface WarDetailsClientProps {
@@ -30,7 +31,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     setIsFullscreen,
     selectedNodeId,
     selectedFight,
+    selectedPlayerId, 
+    setSelectedPlayerId, 
     currentFights,
+    extraChampions, // Added
     status,
     isUpdatingStatus,
     loadingFights,
@@ -39,6 +43,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     setHistoryFilters,
     historyCache,
     currentBattlegroup,
+    validationError,
+    setValidationError,
 
     // Handlers
     handleToggleStatus,
@@ -46,14 +52,19 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     handleNavigateNode,
     handleEditorClose,
     toggleTools,
-    handleSaveFight
+    handleSaveFight,
+    handleAddExtra, // Added
+    handleRemoveExtra // Added
   } = useWarPlanning(props);
 
   const [isDesktop, setIsDesktop] = useState(true);
+  const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true); // Default open
 
   const handleToggleFullscreen = useCallback(() => {
     setIsFullscreen(prev => !prev);
   }, [setIsFullscreen]);
+
+  // Auto-collapse left panel on fullscreen REMOVED
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -77,14 +88,30 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     <div className={cn(
         "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
         isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-64px)]",
-        isDesktop ? "flex-row" : "flex-col" // KEY LAYOUT CHANGE: flex-row for desktop, flex-col for mobile
+        isDesktop ? "flex-row" : "flex-col"
     )}>
+      {/* Left Panel (Player Roster) - Desktop Only for now */}
+      <PlayerListPanel 
+        isOpen={isPlayerPanelOpen}
+        onToggle={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)}
+        players={props.players}
+        currentFights={currentFights}
+        extraChampions={extraChampions} // Added
+        onAddExtra={handleAddExtra} // Added
+        onRemoveExtra={handleRemoveExtra} // Added
+        champions={props.champions} // Added
+        highlightedPlayerId={selectedPlayerId}
+        onSelectPlayer={setSelectedPlayerId}
+        isDesktop={isDesktop}
+        currentBattlegroup={currentBattlegroup}
+      />
+
       {/* Main Content Area (WarHeader + WarTabs/WarMap) */}
       <div className={cn(
-          "flex-1 flex flex-col min-w-0 min-h-0", // Added min-h-0 to allow shrinking
+          "flex-1 flex flex-col min-w-0 min-h-0",
       )}>
         <div className={cn(
-            "flex-1 flex flex-col min-h-0", // Added min-h-0 here too
+            "flex-1 flex flex-col min-h-0",
             !isFullscreen && "p-4 sm:px-6 border-b border-slate-800"
         )}>
           <WarHeader 
@@ -98,6 +125,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             champions={props.champions}
             currentBattlegroup={currentBattlegroup}
             isFullscreen={isFullscreen}
+            onTogglePlayerPanel={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)} // Add toggle here too?
+            isPlayerPanelOpen={isPlayerPanelOpen}
           />
           
           <WarTabs 
@@ -113,6 +142,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             activeTactic={activeTactic}
             onNodeClick={handleNodeClick}
             onToggleFullscreen={handleToggleFullscreen}
+            rightPanelState={rightPanelState}
+            highlightedPlayerId={selectedPlayerId}
+            onTogglePlayerPanel={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)}
+            isPlayerPanelOpen={isPlayerPanelOpen}
           />
         </div>
       </div>

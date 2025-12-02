@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import WarMap from "../war-map";
 import { FightWithNode } from "../types";
 import { War, WarTactic } from "@prisma/client";
+import { RightPanelState } from "../hooks/use-war-planning";
 
 interface WarTabsProps {
   activeTab: string;
@@ -18,6 +19,10 @@ interface WarTabsProps {
   activeTactic: WarTactic | null;
   onNodeClick: (nodeId: number, fight?: FightWithNode) => void;
   onToggleFullscreen: () => void;
+  rightPanelState: RightPanelState;
+  highlightedPlayerId: string | null;
+  onTogglePlayerPanel?: () => void;
+  isPlayerPanelOpen?: boolean;
 }
 
 export const WarTabs = memo(function WarTabs({
@@ -32,7 +37,11 @@ export const WarTabs = memo(function WarTabs({
   historyFilters,
   activeTactic,
   onNodeClick,
-  onToggleFullscreen
+  onToggleFullscreen,
+  rightPanelState,
+  highlightedPlayerId,
+  onTogglePlayerPanel,
+  isPlayerPanelOpen
 }: WarTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full flex-1 flex flex-col min-h-0">
@@ -44,7 +53,8 @@ export const WarTabs = memo(function WarTabs({
       
       <div className={cn(
           "relative overflow-hidden flex-1 min-h-0",
-          !isFullscreen && "mt-4 rounded-md border border-slate-800"
+          !isFullscreen && "mt-4 rounded-md border border-slate-800",
+          rightPanelState === 'editor' && "rounded-b-none" // Remove bottom rounded corners when editor is open
       )}>
         {['bg1', 'bg2', 'bg3'].map((bgValue, index) => (
           <TabsContent key={bgValue} value={bgValue} className="h-full m-0">
@@ -64,6 +74,9 @@ export const WarTabs = memo(function WarTabs({
                     activeTactic={activeTactic}
                     isFullscreen={isFullscreen}
                     onToggleFullscreen={onToggleFullscreen}
+                    highlightedPlayerId={highlightedPlayerId}
+                    onTogglePlayerPanel={onTogglePlayerPanel}
+                    isPlayerPanelOpen={isPlayerPanelOpen}
                 />
             )}
           </TabsContent>

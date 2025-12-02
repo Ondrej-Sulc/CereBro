@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ChampionCombobox } from "@/components/ChampionCombobox";
 import { PlayerCombobox } from "@/components/PlayerCombobox";
-import { MultiChampionCombobox } from "@/components/MultiChampionCombobox";
+import { PrefightSelector } from "./prefight-selector";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { X } from "lucide-react";
 import Image from "next/image";
@@ -24,7 +24,9 @@ interface NodeEditorProps {
   battlegroup: number;
   nodeId: number | null;
   currentFight: FightWithNode | null;
-  onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
+  onSave: (updatedFight: Partial<WarFight> & { 
+      prefightUpdates?: { championId: number; playerId?: string | null }[] 
+  }) => void;
   champions: Champion[];
   players: PlayerWithRoster[];
   onNavigate?: (direction: number) => void;
@@ -61,7 +63,7 @@ export default function NodeEditor({
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
-  const [prefightChampionIds, setPrefightChampionIds] = useState<number[]>([]);
+  const [prefights, setPrefights] = useState<{ championId: number; playerId: string | null }[]>([]);
   const [playerId, setPlayerId] = useState<string | undefined>(currentFight?.playerId || undefined);
   const [deaths, setDeaths] = useState<number>(currentFight?.death || 0);
   const [notes, setNotes] = useState<string>(currentFight?.notes || "");
@@ -114,12 +116,18 @@ export default function NodeEditor({
     const newNotes = currentFight?.notes || "";
     if (newNotes !== notes) setNotes(newNotes);
 
-    const newPrefights = currentFight?.prefightChampions?.map(c => c.id) || [];
-    const arraysEqual = (a: number[], b: number[]) => 
-        a.length === b.length && a.every((val, index) => val === b[index]);
+    const newPrefights = currentFight?.prefightChampions?.map(c => ({
+        championId: c.id,
+        playerId: c.player?.id || null
+    })) || [];
     
-    if (!arraysEqual(newPrefights, prefightChampionIds)) {
-        setPrefightChampionIds(newPrefights);
+    const prefightsEqual = (a: typeof newPrefights, b: typeof newPrefights) => 
+        a.length === b.length && a.every((val, index) => 
+            val.championId === b[index].championId && val.playerId === b[index].playerId
+        );
+    
+    if (!prefightsEqual(newPrefights, prefights)) {
+        setPrefights(newPrefights);
     }
     
     if (currentFight && !currentFight.defenderId) {
@@ -140,7 +148,12 @@ export default function NodeEditor({
             onNavigate?.(1);
         } else if (e.key === 'ArrowLeft') {
             onNavigate?.(-1);
+        } else if (e.key === 'ArrowUp') {
+            onNavigate?.(9);
+        } else if (e.key === 'ArrowDown') {
+            onNavigate?.(-9);
         }
+
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -150,9 +163,13 @@ export default function NodeEditor({
   // --- DERIVED STATE FOR "SMART INPUTS" ---
 
   // 1. Available Players (Filtered by BG + Attacker)
+  const bgPlayers = useMemo(() => {
+      return players.filter(p => p.battlegroup === battlegroup);
+  }, [players, battlegroup]);
+
   const availablePlayers = useMemo(() => {
     // Filter by BG first
-    let filtered = players.filter(p => p.battlegroup === battlegroup);
+    let filtered = [...bgPlayers]; // Clone to avoid mutating memoized array if we push
 
     // Ensure currently assigned player is in the list (if any), even if moved BG
     if (currentFight?.playerId) {
@@ -165,6 +182,7 @@ export default function NodeEditor({
     if (!attackerId) {
          return filtered.sort((a, b) => a.ingameName.localeCompare(b.ingameName));
     }
+    // ... (rest of availablePlayers logic)
 
     // Filter players who have this champion
     const owners = filtered.filter(p => p.roster.some(r => r.championId === attackerId));
@@ -195,7 +213,6 @@ export default function NodeEditor({
         .map(c => {
             const r = rosterMap.get(c.id)!;
             const rankStr = `${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}`;
-            // Create a new object with modified name for display
             return { ...c, name: `${c.name} (${rankStr})` };
         })
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -217,7 +234,6 @@ export default function NodeEditor({
       return a.name.localeCompare(b.name);
     });
   }, [champions]);
-
 
   // Helper to trigger save
   const triggerSave = useCallback((updates: Partial<any>) => {
@@ -252,14 +268,9 @@ export default function NodeEditor({
     triggerSave({ playerId: newVal === undefined ? null : newVal });
   }, [triggerSave]);
 
-  const handleClearPlayer = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    handlePlayerChange("CLEAR");
-  }, [handlePlayerChange]);
-
-  const handlePrefightsChange = useCallback((ids: number[]) => {
-    setPrefightChampionIds(ids);
-    triggerSave({ prefightChampionIds: ids });
+  const handlePrefightsChange = useCallback((newPrefights: { championId: number; playerId: string | null }[]) => {
+    setPrefights(newPrefights);
+    triggerSave({ prefightUpdates: newPrefights });
   }, [triggerSave]);
 
   useEffect(() => {
@@ -365,13 +376,14 @@ export default function NodeEditor({
           </div>
 
           {/* Prefights */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="prefight" className="text-right">Prefights</Label>
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="prefight" className="text-right pt-2">Prefights</Label>
             <div className="col-span-3">
-              <MultiChampionCombobox
+              <PrefightSelector
+                prefights={prefights}
+                onChange={handlePrefightsChange}
                 champions={prefightChampionsList}
-                values={prefightChampionIds}
-                onSelect={handlePrefightsChange}
+                players={bgPlayers} 
               />
             </div>
           </div>

@@ -14,8 +14,14 @@ export interface FightWithNode extends WarFight {
   node: WarNode & {
       allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
   };
-  attacker: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
-  defender: { name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
-  player: { ingameName: string } | null;
-  prefightChampions?: { id: number; name: string; images: any }[];
+  attacker: { id: number; name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  defender: { id: number; name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  player: { id: string; ingameName: string; avatar: string | null } | null;
+  prefightChampions?: { 
+      id: number; // Champion ID
+      name: string; 
+      images: any;
+      fightPrefightId?: string;
+      player?: { id: string; ingameName: string; avatar: string | null } | null;
+  }[];
 }

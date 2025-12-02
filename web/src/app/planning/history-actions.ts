@@ -86,6 +86,7 @@ export async function getBatchHistoricalCounters(
     WHERE 
       ("wn"."nodeNumber", "wf"."defenderId") IN (${valueTuples})
       AND "wf"."attackerId" IS NOT NULL
+      AND "w"."status" = 'FINISHED'
       ${minSeason ? Prisma.sql`AND "w"."season" >= ${minSeason}` : Prisma.empty}
       ${maxTier ? Prisma.sql`AND "w"."warTier" <= ${maxTier}` : Prisma.empty}
       ${minTier ? Prisma.sql`AND "w"."warTier" >= ${minTier}` : Prisma.empty}
@@ -101,11 +102,16 @@ export async function getBatchHistoricalCounters(
     select: {
       id: true,
       prefightChampions: {
-        select: { name: true, images: true }
+        select: { 
+            champion: { select: { name: true, images: true } }
+        }
       }
     }
   });
-  const prefightMap = new Map(fightPrefights.map(f => [f.id, f.prefightChampions]));
+  const prefightMap = new Map(fightPrefights.map(f => [
+      f.id, 
+      f.prefightChampions.map(p => p.champion)
+  ]));
 
   // Fetch all attackers involved
   const rawAttackerIds = [...new Set(rawStats.map((r: any) => r.attackerId))]; // dedupe
@@ -179,6 +185,7 @@ export async function getHistoricalCounters(
       attackerId: { not: null },
       war: {
         AND: [
+          { status: 'FINISHED' },
           minSeason ? { season: { gte: minSeason } } : {},
           maxTier ? { warTier: { lte: maxTier } } : {},
           minTier ? { warTier: { gte: minTier } } : {},
@@ -191,7 +198,11 @@ export async function getHistoricalCounters(
       attacker: { select: { id: true, name: true, images: true } },
       player: { select: { ingameName: true, avatar: true } },
       video: { select: { id: true, url: true } },
-      prefightChampions: { select: { name: true, images: true } }
+      prefightChampions: { 
+          select: { 
+              champion: { select: { name: true, images: true } } 
+          } 
+      }
     },
     orderBy: { createdAt: 'desc' }
   });
@@ -203,6 +214,7 @@ export async function getHistoricalCounters(
     if (!fight.attacker) continue;
 
     const attackerId = fight.attacker.id;
+    const prefights = fight.prefightChampions.map(p => p.champion);
     
     if (!statsMap.has(attackerId)) {
       statsMap.set(attackerId, {
@@ -230,11 +242,11 @@ export async function getHistoricalCounters(
         if (!stat.sampleVideoUrl && !stat.sampleVideoInternalId) {
             stat.sampleVideoUrl = fight.video.url || undefined;
             stat.sampleVideoInternalId = fight.video.id;
-            stat.prefightChampions = fight.prefightChampions;
+            stat.prefightChampions = prefights;
         }
-    } else if (stat.prefightChampions!.length === 0 && fight.prefightChampions.length > 0) {
+    } else if (stat.prefightChampions!.length === 0 && prefights.length > 0) {
         // If no video yet, still capture prefights from a non-video fight if available
-        stat.prefightChampions = fight.prefightChampions;
+        stat.prefightChampions = prefights;
     }
 
     // Add to player list
@@ -245,7 +257,7 @@ export async function getHistoricalCounters(
         battlegroup: fight.battlegroup,
         death: fight.death,
         videoId: fight.video?.id,
-        prefightChampions: fight.prefightChampions
+        prefightChampions: prefights
       });
     }
   }

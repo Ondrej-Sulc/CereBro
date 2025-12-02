@@ -43,9 +43,13 @@ export function MobileSheet({
   onSave,
 }: MobileSheetProps) {
   const controls = useAnimation();
-  const dragControls = useDragControls();
   const sheetRef = useRef<HTMLDivElement>(null);
   const sheetHeight = useMotionValue(0); // Tracks current height
+
+  // Refs for drag state
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const startHeight = useRef(0);
 
   // Snap points for height (in pixels)
   // These need to be responsive to actual screen height.
@@ -82,44 +86,76 @@ export function MobileSheet({
       }
   }, [rightPanelState, controls, sheetHeight, collapsedHeight]);
 
-  // Manually handle drag to update height
-  const handleDrag = useCallback((event: any, info: PanInfo) => {
-    // If dragging down (positive delta.y), height should decrease.
-    // If dragging up (negative delta.y), height should increase.
-    let newHeight = sheetHeight.get() - info.delta.y; // Correctly adjusts height from drag
+  // Pointer Event Handlers for Resizing
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+      if (!isDragging.current) return;
 
-    // Clamp height between min_drag_height (handle only) and expanded height
-    newHeight = Math.max(minDragHeight, Math.min(newHeight, expandedHeight));
-    sheetHeight.set(newHeight);
-  }, [sheetHeight, minDragHeight, expandedHeight]);
+      e.preventDefault(); // Prevent scrolling while dragging
+      const deltaY = startY.current - e.clientY; // Dragging UP (negative clientY delta) increases height
+      let newHeight = startHeight.current + deltaY;
 
-  const handleDragEnd = useCallback((event: any, info: PanInfo) => {
+      // Clamp height between min_drag_height (handle only) and expanded height
+      newHeight = Math.max(minDragHeight, Math.min(newHeight, expandedHeight));
+      sheetHeight.set(newHeight);
+  }, [minDragHeight, expandedHeight, sheetHeight]);
+
+  const handlePointerUp = useCallback((e: PointerEvent) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+
+      // Clean up listeners
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+
       const currentHeight = sheetHeight.get();
-      const velocity = info.velocity.y; // Velocity in Y direction
-
-      let targetHeight = currentHeight; // Default: stay where it was dragged
-
-      // Determine target snap height based on velocity (flick gesture)
-      if (velocity < -300) { // Flicked up significantly
-          targetHeight = expandedHeight;
-      } else if (velocity > 300) { // Flicked down significantly
-          targetHeight = minDragHeight;
-      }
-      // No 'else' block for proximity snapping - allows for continuous adjustment
-
-      // Check if we should close the sheet
-      // If target is min drag height and velocity was strongly down, consider closing
-      if (targetHeight <= minDragHeight + 10 && velocity > 200) { // +10 buffer
-          onClose(); // Close the sheet completely
+      
+      // Simple snap logic based on nearest point or flick
+      let targetHeight = currentHeight;
+      
+      // If dragged very low (near handle), close
+      if (currentHeight < minDragHeight + 20) {
+          onClose();
           controls.start({ height: 0 });
           sheetHeight.set(0);
-      } else {
-          // Clamp targetHeight just in case (though handleDrag should already do this)
-          targetHeight = Math.max(minDragHeight, Math.min(targetHeight, expandedHeight));
-          controls.start({ height: targetHeight });
-          sheetHeight.set(targetHeight); // Ensure motion value is synced after animation
+          return;
       }
-  }, [sheetHeight, minDragHeight, expandedHeight, controls, onClose]);
+      
+      // Determine target snap height based on position zones if not continuous
+      // But user requested "move it anywhere".
+      // We will only SNAP if it's close to the extremes, otherwise leave it.
+      
+      const SNAP_THRESHOLD = 50;
+      if (Math.abs(currentHeight - expandedHeight) < SNAP_THRESHOLD) {
+           targetHeight = expandedHeight;
+      } else if (Math.abs(currentHeight - collapsedHeight) < SNAP_THRESHOLD) {
+           targetHeight = collapsedHeight;
+      } else if (Math.abs(currentHeight - minDragHeight) < SNAP_THRESHOLD) {
+           targetHeight = minDragHeight;
+      }
+      // Otherwise targetHeight = currentHeight (Free movement)
+
+      controls.start({ height: targetHeight });
+      sheetHeight.set(targetHeight);
+  }, [sheetHeight, minDragHeight, collapsedHeight, expandedHeight, controls, onClose, handlePointerMove]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+      e.preventDefault(); // Prevent text selection
+      isDragging.current = true;
+      startY.current = e.clientY;
+      startHeight.current = sheetHeight.get();
+
+      // Attach window listeners to track drag outside the handle
+      window.addEventListener('pointermove', handlePointerMove, { passive: false });
+      window.addEventListener('pointerup', handlePointerUp);
+  }, [sheetHeight, handlePointerMove, handlePointerUp]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+      return () => {
+          window.removeEventListener('pointermove', handlePointerMove);
+          window.removeEventListener('pointerup', handlePointerUp);
+      };
+  }, [handlePointerMove, handlePointerUp]);
 
 
   if (isDesktop) return null; // No longer needs to return null immediately
@@ -128,29 +164,24 @@ export function MobileSheet({
     <AnimatePresence>
       {/* We only render the sheet if it's in editor state, otherwise its height is 0 */}
       {rightPanelState === 'editor' && (
-                <motion.div
-                    key="mobile-node-editor-sheet"
-                    ref={sheetRef}
-                    initial={{ height: 0 }}
-                    animate={controls}
-                    exit={{ height: 0 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    onDrag={handleDrag} // Manual drag event for height manipulation
-                    onDragEnd={handleDragEnd} // Pass dragEnd to the handle as well
-                    dragControls={dragControls} // Link dragControls to this motion div
-                    dragListener={false} // Important: we initiate drag from the handle
-                    // Dummy constraints. Real constraints handled in handleDrag/handleDragEnd
-                    dragConstraints={{ top: 0, bottom: 0 }} 
-                    className="w-full bg-slate-950 border-t border-slate-800 rounded-t-xl shadow-2xl flex flex-col shrink-0"
-                    style={{ height: sheetHeight, willChange: "height" }} // Use motion value for height
-                >
-                    {/* Drag Handle */}
-                    <div 
-                        onPointerDown={(e) => dragControls.start(e)}
-                        className="w-full h-9 flex items-center justify-center cursor-grab active:cursor-grabbing bg-slate-900 hover:bg-slate-800 transition-colors rounded-t-xl shrink-0 touch-none"
-                    >
-                        <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
-                    </div>
+        <motion.div
+            key="mobile-node-editor-sheet"
+            ref={sheetRef}
+            initial={{ height: 0 }}
+            animate={controls}
+            exit={{ height: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="w-full bg-slate-950 border-t border-slate-800 shadow-2xl flex flex-col shrink-0"
+            style={{ height: sheetHeight, willChange: "height" }} // Use motion value for height
+        >
+            {/* Drag Handle */}
+            <div 
+                onPointerDown={handlePointerDown}
+                className="w-full h-6 flex items-center justify-center cursor-grab active:cursor-grabbing bg-slate-900 hover:bg-slate-800 transition-colors shrink-0 touch-none"
+            >
+                <div className="w-12 h-1.5 bg-slate-600 rounded-full" />
+            </div>
+
             {/* Content */}
             <div className="flex-1 overflow-hidden relative bg-slate-950">
                  <NodeEditor

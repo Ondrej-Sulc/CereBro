@@ -95,7 +95,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
     }
   }
 
-  const fights: WarFightWithRelations[] = await prisma.warFight.findMany({
+  const rawFights = await prisma.warFight.findMany({
     where: {
       AND: [
         { war: { status: 'FINISHED' } },
@@ -140,7 +140,9 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       war: { include: { alliance: true } },
       player: true,
       prefightChampions: { 
-        select: { id: true, name: true, images: true, class: true } 
+        select: { 
+            champion: { select: { id: true, name: true, images: true, class: true } }
+        } 
       },
       video: {
         include: { submittedBy: true }
@@ -149,6 +151,12 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
     orderBy: { createdAt: 'desc' },
     take: 50,
   });
+
+  // Map fights to flatten prefightChampions
+  const fights: WarFightWithRelations[] = rawFights.map(f => ({
+      ...f,
+      prefightChampions: f.prefightChampions.map(p => p.champion)
+  }));
 
   return (
     <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
