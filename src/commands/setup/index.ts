@@ -12,6 +12,10 @@ import { Command, CommandAccess } from "../../types/command";
 
 export const command: Command = {
   access: CommandAccess.ALLIANCE_ADMIN, // Restricted to admins
+  help: {
+    group: "Alliance Tools",
+    color: "blue",
+  },
   data: new SlashCommandBuilder()
     .setName("setup")
     .setDescription("Interactive setup wizard for CereBro configuration"),

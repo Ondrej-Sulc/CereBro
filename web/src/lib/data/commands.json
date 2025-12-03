@@ -556,25 +556,6 @@
             "name": "list",
             "description": "List all players in the alliance roster.",
             "options": []
-          },
-          {
-            "type": 1,
-            "name": "add",
-            "description": "Add a player to the alliance roster.",
-            "options": [
-              {
-                "name": "user",
-                "description": "The user to add.",
-                "required": true,
-                "type": 6
-              },
-              {
-                "type": 3,
-                "name": "ingame-name",
-                "description": "The in-game name of the user.",
-                "required": true
-              }
-            ]
           }
         ]
       }

@@ -269,7 +269,7 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
             battlegroup,
             prefightChampions: {
               set: uniquePrefightIds.map((id) => ({ id })),
-            },
+            } as any,
           },
           create: {
             warId: war.id,
@@ -281,7 +281,7 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
             battlegroup,
             prefightChampions: {
               connect: uniquePrefightIds.map((id) => ({ id })),
-            },
+            } as any,
           },
         });
       }
