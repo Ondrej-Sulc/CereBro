@@ -268,8 +268,9 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
             death: assignments.some((a) => a.raw.deaths === "1") ? 1 : 0,
             battlegroup,
             prefightChampions: {
-              set: uniquePrefightIds.map((id) => ({ id })),
-            } as any,
+              deleteMany: {},
+              create: uniquePrefightIds.map((id) => ({ championId: id })),
+            },
           },
           create: {
             warId: war.id,
@@ -280,8 +281,8 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
             death: assignments.some((a) => a.raw.deaths === "1") ? 1 : 0,
             battlegroup,
             prefightChampions: {
-              connect: uniquePrefightIds.map((id) => ({ id })),
-            } as any,
+              create: uniquePrefightIds.map((id) => ({ championId: id })),
+            },
           },
         });
       }
