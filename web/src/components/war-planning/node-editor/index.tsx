@@ -265,10 +265,9 @@ export default function NodeEditor({
     triggerSave({ attackerId: val === undefined ? null : val });
   }, [triggerSave]);
 
-  const handlePlayerChange = useCallback((val: string) => {
-    const newVal = val === "CLEAR" ? undefined : val;
-    setPlayerId(newVal);
-    triggerSave({ playerId: newVal === undefined ? null : newVal });
+  const handlePlayerChange = useCallback((val: string | undefined) => {
+    setPlayerId(val);
+    triggerSave({ playerId: val === undefined ? null : val });
   }, [triggerSave]);
 
   const handlePrefightsChange = useCallback((newPrefights: { championId: number; playerId: string | null }[]) => {

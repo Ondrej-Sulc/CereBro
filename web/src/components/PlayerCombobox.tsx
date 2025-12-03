@@ -24,8 +24,8 @@ import { Virtuoso } from "react-virtuoso";
 
 interface PlayerComboboxProps {
   players: PlayerWithRoster[];
-  value: string | undefined;
-  onSelect: (value: string) => void;
+  value: PlayerWithRoster["id"] | undefined;
+  onSelect: (value: PlayerWithRoster["id"] | undefined) => void;
   placeholder?: string;
   className?: string;
   attackerId?: number; // To show rank info
@@ -50,25 +50,43 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
     }
   }, [open]);
 
-  const handleSelect = React.useCallback((playerId: string) => {
+  const handleSelect = React.useCallback((playerId: PlayerWithRoster["id"]) => {
     onSelect(playerId);
     setOpen(false);
   }, [onSelect]);
 
   const handleClear = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onSelect("CLEAR"); // Or whatever the parent expects for clearing
+    onSelect(undefined);
   }, [onSelect]);
 
-  const filteredPlayers = React.useMemo(() =>
-    players.filter(player =>
-      player.ingameName.toLowerCase().includes(search.toLowerCase())
-    ), [players, search]
-  );
+    const filteredPlayers = React.useMemo(() => {
 
-  const selectedPlayer = React.useMemo(() => 
-    value ? players.find((p) => p.id === value) : null,
-  [value, players]);
+      const searchLower = search.toLowerCase();
+
+      return players.filter((player) =>
+
+        player.ingameName.toLowerCase().includes(searchLower),
+
+      );
+
+    }, [players, search]);
+
+  
+
+      const selectedPlayer = React.useMemo(
+
+  
+
+        () => (value != null ? players.find((p) => p.id === value) : null),
+
+  
+
+        [value, players],
+
+  
+
+      );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -135,48 +153,56 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
           <CommandList>
             {filteredPlayers.length === 0 && <CommandEmpty>No players found.</CommandEmpty>}
             <CommandGroup>
-                <div style={{ height: Math.min(filteredPlayers.length * 46, 300) }}>
-                  <Virtuoso
-                    style={{ height: Math.min(filteredPlayers.length * 46, 300) }}
-                    totalCount={filteredPlayers.length}
-                    itemContent={(index) => {
-                        const p = filteredPlayers[index];
-                        let rosterInfo = "";
-                        if (attackerId) {
-                            const r = p.roster.find((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
-                            if (r) {
-                                rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})`;
-                            }
-                        }
+                {(() => {
+                  const listHeight = Math.min(filteredPlayers.length * 46, 300);
+                  return (
+                    <div style={{ height: listHeight }}>
+                      <Virtuoso
+                        style={{ height: listHeight }}
+                             totalCount={filteredPlayers.length}
+                             itemContent={(index) => {
+                               const p = filteredPlayers[index];
+                               let rosterInfo = "";
+                               if (attackerId != null) { // Changed to nullish check
+                                   const r = p.roster.find((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
+                                   if (r) {
+                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})`;
+                                   }
+                               }
 
-                        return (
-                          <CommandItem
-                            key={p.id}
-                            value={p.ingameName}
-                            onSelect={() => handleSelect(p.id)}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <div className="relative h-6 w-6 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
-                                {p.avatar ? (
-                                    <Image 
-                                        src={p.avatar}
-                                        alt={p.ingameName}
-                                        fill
-                                        sizes="24px"
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <Users className="h-4 w-4 m-1 text-slate-400" />
-                                )}
-                            </div>
-                            <span className="truncate">
-                                {p.ingameName} <span className="text-xs text-muted-foreground ml-1">{rosterInfo}</span>
-                            </span>
-                          </CommandItem>
-                        );
-                    }}
-                  />
-                </div>
+                               return (
+                                 <CommandItem
+                                   key={p.id}
+                                   value={p.ingameName}
+                                   onSelect={() => handleSelect(p.id)}
+                                   className="flex items-center gap-2 cursor-pointer"
+                                 >
+                                   <div className="relative h-6 w-6 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                                       {p.avatar ? (
+                                           <Image 
+                                               src={p.avatar}
+                                               alt={p.ingameName}
+                                               fill
+                                               sizes="24px"
+                                               className="object-cover"
+                                           />
+                                       ) : (
+                                           <Users className="h-4 w-4 m-1 text-slate-400" />
+                                       )}
+                                   </div>
+                                   <span className="truncate">
+                                       {p.ingameName}
+                                       {rosterInfo && ( // Conditionally render span
+                                         <span className="text-xs text-muted-foreground ml-1">{rosterInfo}</span>
+                                       )}
+                                   </span>
+                                 </CommandItem>
+                               );
+                           }}
+                         />
+                       </div>
+                     );
+                   })()}
             </CommandGroup>
           </CommandList>
         </Command>

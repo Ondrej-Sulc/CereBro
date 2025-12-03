@@ -41,10 +41,10 @@ export function PrefightSelector({
     onChange(prefights.filter(p => p.championId !== championId));
   };
 
-  const handlePlayerChange = (championId: number, playerId: string | null) => {
+  const handlePlayerChange = (championId: number, playerId: string | undefined) => {
     onChange(prefights.map(p => 
       p.championId === championId 
-        ? { ...p, playerId: playerId === "CLEAR" ? null : playerId } 
+        ? { ...p, playerId: playerId === undefined ? null : playerId } 
         : p
     ));
   };

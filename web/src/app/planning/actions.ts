@@ -465,12 +465,16 @@ export async function getExtraChampions(warId: string, battlegroup: number) {
     where: { discordId: account.providerAccountId },
   });
 
-  if (!player || !player.allianceId) return [];
-
-  return await prisma.warExtraChampion.findMany({
-    where: { warId, battlegroup },
-    include: { 
-        champion: { select: { id: true, name: true, images: true } } 
-    }
-  });
-}
+    if (!player || !player.allianceId) return [];
+  
+    return await prisma.warExtraChampion.findMany({
+      where: {
+        warId,
+        battlegroup,
+        war: { allianceId: player.allianceId }, // Filter by alliance ID
+      },
+      include: {
+          champion: { select: { id: true, name: true, images: true } }
+      }
+    });
+  }

@@ -122,7 +122,7 @@ const WarMap = memo(function WarMap({
   // Center on selected node or init
   useEffect(() => {
     if (selectedNodeId && stageRef.current) {
-        const targetNode = warNodesData.find(n => n.id == selectedNodeId);
+        const targetNode = warNodesData.find(n => n.id === selectedNodeId);
         if (targetNode) {
             const stage = stageRef.current;
             const scale = stage.scaleX();
@@ -160,6 +160,9 @@ const WarMap = memo(function WarMap({
     e.evt.preventDefault();
     const scaleBy = 1.1;
     const stage = e.target.getStage();
+
+    if (!stage) return;
+
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
 
