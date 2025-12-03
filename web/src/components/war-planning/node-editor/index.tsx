@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { WarFight, WarTactic, War } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,15 @@ import Image from "next/image";
 import { PlayerWithRoster, FightWithNode } from "../types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
+
+interface WarTacticWithTags extends WarTactic {
+  defenseTag?: { name: string } | null;
+  attackTag?: { name: string } | null;
+}
+
+interface ChampionWithTags extends Champion {
+  tags?: { name: string }[];
+}
 
 interface NodeEditorProps {
   onClose: () => void;
@@ -42,7 +51,7 @@ interface NodeEditorProps {
       minSeason: number | undefined;
   }>>;
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
-  activeTactic?: WarTactic | null;
+  activeTactic?: WarTacticWithTags | null;
 }
 
 export default function NodeEditor({
@@ -69,22 +78,21 @@ export default function NodeEditor({
   const [notes, setNotes] = useState<string>(currentFight?.notes || "");
   
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
+  const isUserEdit = useRef(false);
 
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
-      const tactic = activeTactic as any;
+      const tactic = activeTactic as WarTacticWithTags | null | undefined;
       if (!defenderId || !tactic?.defenseTag?.name) return false;
-      const def = champions.find(c => c.id === defenderId);
-      const tags = (def as any).tags as { name: string }[] | undefined;
-      return tags?.some(t => t.name === tactic.defenseTag.name);
+      const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
+      return def?.tags?.some(t => t.name === tactic.defenseTag!.name) ?? false;
   }, [defenderId, activeTactic, champions]);
 
   const attackerTacticMatch = useMemo(() => {
-      const tactic = activeTactic as any;
+      const tactic = activeTactic as WarTacticWithTags | null | undefined;
       if (!attackerId || !tactic?.attackTag?.name) return false;
-      const atk = champions.find(c => c.id === attackerId);
-      const tags = (atk as any).tags as { name: string }[] | undefined;
-      return tags?.some(t => t.name === tactic.attackTag.name);
+      const atk = champions.find(c => c.id === attackerId) as ChampionWithTags | undefined;
+      return atk?.tags?.some(t => t.name === tactic.attackTag!.name) ?? false;
   }, [attackerId, activeTactic, champions]);
 
   // Filter active modifiers
@@ -101,6 +109,7 @@ export default function NodeEditor({
 
   // Load initial state when fight changes
   useEffect(() => {
+    isUserEdit.current = false;
     const newDefenderId = currentFight?.defenderId || undefined;
     setDefenderId(prev => prev !== newDefenderId ? newDefenderId : prev);
 
@@ -276,9 +285,10 @@ export default function NodeEditor({
   }, [triggerSave]);
 
   useEffect(() => {
-    if (currentFight && deaths !== currentFight.death) {
+    if (currentFight && isUserEdit.current && deaths !== currentFight.death) {
         const timer = setTimeout(() => {
             triggerSave({ death: deaths });
+            isUserEdit.current = false;
         }, 1000); 
         return () => clearTimeout(timer);
     }
@@ -286,9 +296,10 @@ export default function NodeEditor({
 
   useEffect(() => {
     const currentNotes = currentFight?.notes || "";
-    if (notes !== currentNotes) {
+    if (isUserEdit.current && notes !== currentNotes) {
         const timer = setTimeout(() => {
             triggerSave({ notes: notes });
+            isUserEdit.current = false;
         }, 1000); 
         return () => clearTimeout(timer);
     }
@@ -397,7 +408,10 @@ export default function NodeEditor({
               id="deaths"
               type="number"
               value={deaths}
-              onChange={(e) => setDeaths(parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                  isUserEdit.current = true;
+                  setDeaths(parseInt(e.target.value, 10) || 0);
+              }}
               className="col-span-3 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
@@ -408,7 +422,10 @@ export default function NodeEditor({
             <Textarea
               id="notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => {
+                  isUserEdit.current = true;
+                  setNotes(e.target.value);
+              }}
               className="col-span-3"
             />
           </div>
