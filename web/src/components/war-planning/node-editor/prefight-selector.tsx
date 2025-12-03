@@ -29,7 +29,8 @@ export function PrefightSelector({
   const [isAdding, setIsAdding] = React.useState(false);
 
   const handleAdd = (championIdStr: string) => {
-    const championId = parseInt(championIdStr);
+    const championId = parseInt(championIdStr, 10);
+    if (isNaN(championId)) return;
     if (!prefights.some(p => p.championId === championId)) {
       onChange([...prefights, { championId, playerId: null }]);
     }
