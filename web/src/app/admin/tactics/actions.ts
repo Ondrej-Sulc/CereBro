@@ -20,28 +20,22 @@ export async function addTactic(season: number, minTier: number | undefined, max
 
     let attackTagId: number | null = null;
     if (attackTag) {
-        const tag = await prisma.tag.findFirst({ where: { name: attackTag } });
-        if (tag) {
-            attackTagId = tag.id;
-        } else {
-            const newTag = await prisma.tag.create({
-                data: { name: attackTag, category: 'Alliance War' }
-            });
-            attackTagId = newTag.id;
-        }
+        const tag = await prisma.tag.upsert({
+            where: { name_category: { name: attackTag, category: 'Alliance War' } },
+            update: {},
+            create: { name: attackTag, category: 'Alliance War' }
+        });
+        attackTagId = tag.id;
     }
 
     let defenseTagId: number | null = null;
     if (defenseTag) {
-        const tag = await prisma.tag.findFirst({ where: { name: defenseTag } });
-        if (tag) {
-            defenseTagId = tag.id;
-        } else {
-            const newTag = await prisma.tag.create({
-                data: { name: defenseTag, category: 'Alliance War' }
-            });
-            defenseTagId = newTag.id;
-        }
+        const tag = await prisma.tag.upsert({
+            where: { name_category: { name: defenseTag, category: 'Alliance War' } },
+            update: {},
+            create: { name: defenseTag, category: 'Alliance War' }
+        });
+        defenseTagId = tag.id;
     }
 
     await prisma.warTactic.create({
