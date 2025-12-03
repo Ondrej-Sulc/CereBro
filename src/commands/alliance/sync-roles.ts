@@ -17,6 +17,7 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
     return { updated: 0, created: 0 };
   }
 
+
   const members = await guild.members.fetch();
   let updatedCount = 0;
   let createdCount = 0;

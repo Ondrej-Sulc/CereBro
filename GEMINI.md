@@ -31,6 +31,43 @@ The bot features a sophisticated system for tracking Alliance War performance by
     6.  The web UI uses the token to fetch the fight data and pre-fills the video upload form, creating a seamless user experience.
     7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s).
 
+### War Planning UI (Web)
+
+The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.
+
+*   **High-Performance Canvas Map (Konva):** The interactive Alliance War map has been completely rewritten using `react-konva` (HTML5 Canvas) to solve performance bottlenecks inherent in the previous DOM/SVG approach. This ensures a buttery-smooth 60fps experience even on low-end devices.
+    *   **Layered Architecture:**
+        *   **Background Layer:** Static visual elements (Nebulas, Paths, Stars) are rendered once to an offscreen canvas and cached. A "Picture Frame" linear gradient vignette is applied to fade edges seamlessly into the UI background.
+        *   **Node Layer:** Interactive nodes are rendered on a separate layer. Heavy effects like `shadowBlur` are avoided in favor of performant alternatives (e.g., offset circles for hard shadows).
+    *   **Zoom & Pan:** Native Canvas transformation logic replaces the DOM-based `react-zoom-pan-pinch` library, providing instant feedback without layout thrashing.
+    *   **Dynamic Layout:** The map structure remains configuration-driven (`nodes-data.ts`), preserving flexibility.
+*   **Optimized Planning Workflow:**
+    *   **Node Editing:** Clicking a node opens an optimized "Inspector Panel".
+        *   **Virtualization:** The Champion and Player selection dropdowns (`ChampionCombobox`, `PlayerCombobox`) use `react-virtuoso` to virtualize their lists, rendering only visible items. This eliminates the massive render storms caused by mounting hundreds of DOM nodes for large rosters.
+        *   **State Efficiency:** The editor uses deep equality checks to synchronize state with props, preventing unnecessary re-render cycles.
+    *   **Visual Polish:** Nodes feature class-colored background glows (using tinted fills behind transparent PNGs), crisp SVG-based tactic badges (Sword/Shield) matching the application's design system, and a cleaner, connector-free aesthetic.
+*   **Search Tools:** Integrated tools to assist planning:
+    *   **Player Roster:** View a specific player's top champions to find suitable attackers/defenders.
+    *   **Find Champion:** Search for a specific champion to see which alliance members own it (and at what rank/ascension).
+*   **Historical Matchups:** The Node Editor now displays historical matchup data, including solos, deaths, and prefight champions used in sample fights. Links to sample videos now point to the internal `/war-videos/[videoId]` page for seamless playback.
+
+### War Tactics & Node Modifiers
+
+The system now includes robust support for managing the dynamic rules of Alliance War seasons.
+
+*   **Data Models:**
+    *   `WarTactic`: Defines season-wide tactics linked to specific tiers (min/max) and seasons. It relates to the `Tag` model for both `attackTag` and `defenseTag`.
+    *   `NodeModifier`: Represents specific buffs or rules (e.g., "Masochism").
+    *   `WarNodeAllocation`: Links a `WarNode` to a `NodeModifier` with constraints on tier and season, allowing for precise mapping of node rules.
+*   **Admin Management:**
+    *   **Tactics:** A dedicated admin page (`/admin/tactics`) allows Bot Admins to create and manage tactics. It features a "Tag Selector" that searches existing tags or creates new ones on the fly.
+    *   **Nodes:** The `/admin/nodes` page allows for the granular assignment of modifiers to specific nodes.
+*   **Visual Integration:**
+    *   **War Map:** Champions on the map now feature:
+        *   **Class Rings:** Outer glowing rings colored by champion class (e.g., Mystic=Purple, Science=Green).
+        *   **Tactic Icons:** Champions matching the active tactic display a green Sword (Attacker) or red Shield (Defender) icon.
+    *   **Node Editor:** Automatically highlights active tactics with badges and lists all active node modifiers in a popover for easy reference.
+
 ### Alliance Structure & Role Management
 
 The bot includes a robust system for managing alliance structure, including officer roles and battlegroup assignments, directly linked to Discord roles.

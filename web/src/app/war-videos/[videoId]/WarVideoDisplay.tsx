@@ -6,22 +6,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getChampionImageUrl } from '@/lib/championHelper';
-import { WarNode, Player, ChampionClass, War } from '@prisma/client';
-import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info } from 'lucide-react';
+import { WarNode, Player, ChampionClass, War, WarTactic, Tag } from '@prisma/client';
+import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info, Play } from 'lucide-react';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
+import { useState } from 'react';
 
 interface WarFight {
   id: string;
-  death: boolean;
+  death: number;
   battlegroup: number | null;
-  attacker: Champion;
-  defender: Champion;
-  prefightChampions: Champion[];
+  attacker: (Champion & { tags: Tag[] }) | null; // Made nullable
+  defender: (Champion & { tags: Tag[] }) | null; // Made nullable
+  prefightChampions: { champion: Champion }[]; 
   node: WarNode;
   player: Player | null;
-  war: War;
+  war: War; // Added back
 }
 
 interface WarVideo {
@@ -37,6 +38,7 @@ interface WarVideo {
 interface WarVideoDisplayProps {
   warVideo: WarVideo;
   isAdmin: boolean;
+  activeTactic?: (WarTactic & { attackTag: Tag | null; defenseTag: Tag | null }) | null;
 }
 
 function getYouTubeVideoId(url: string | null): string | null {
@@ -75,10 +77,11 @@ function getYouTubeVideoId(url: string | null): string | null {
   return videoId;
 }
 
-export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayProps) {
+export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: WarVideoDisplayProps) {
   const router = useRouter();
   const { toast } = useToast();
   const videoId = getYouTubeVideoId(warVideo.url);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   if (!warVideo.fights || warVideo.fights.length === 0) {
     return (
@@ -162,17 +165,34 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
       {/* Video Player */}
       {videoId && (
         <div className="rounded-xl overflow-hidden border border-slate-800/50 shadow-2xl bg-black">
-          <div className="aspect-video">
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${videoId}`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            ></iframe>
+          <div className="aspect-video relative group cursor-pointer" onClick={() => setIsPlaying(true)}>
+            {!isPlaying ? (
+              <>
+                <Image 
+                  src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
+                  alt="Video thumbnail"
+                  fill
+                  className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                  priority
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-red-600/90 text-white rounded-full p-4 shadow-lg scale-90 group-hover:scale-100 transition-transform duration-300">
+                    <Play className="h-8 w-8 fill-white" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              ></iframe>
+            )}
           </div>
         </div>
       )}
@@ -180,7 +200,11 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fights List Section */}
         <div className="lg:col-span-2 space-y-6">
-          {sortedFights.map((fight) => (
+          {sortedFights.map((fight) => {
+            const isAttackerTactic = activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name);
+            const isDefenderTactic = activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name);
+
+            return (
             <div key={fight.id} className="glass rounded-xl border border-slate-800/50 overflow-hidden">
               {/* Node Header & Outcome */}
               <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 border-b border-amber-500/30 px-4 py-3 flex items-center justify-between">
@@ -206,22 +230,26 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                 {/* Attacker */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative shrink-0">
-                    <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
-                    <Image
+                    {fight.attacker && <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />}
+                    {fight.attacker && <Image
                       src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')}
                       alt={fight.attacker.name}
                       width={56}
                       height={56}
+                      sizes="64px"
                       className={cn("relative rounded-full ring-2", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
-                    />
+                    />}
                   </div>
                   <div className="min-w-0 flex flex-col">
-                    <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
+                    {fight.attacker && <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
                       {fight.attacker.name}
-                    </span>
-                    <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider truncate">
-                      {fight.attacker.class}
-                    </span>
+                    </span>}
+                    {isAttackerTactic && activeTactic?.attackTag && (
+                      <Badge variant="outline" className="mt-1 border-emerald-500/50 bg-emerald-900/20 text-emerald-400 gap-1 pl-1 pr-2 w-fit">
+                        <Swords className="h-3 w-3" />
+                        <span className="text-[10px]">{activeTactic.attackTag.name}</span>
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
@@ -233,22 +261,26 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                 {/* Defender */}
                 <div className="flex items-center justify-end gap-3 min-w-0 text-right">
                   <div className="min-w-0 flex flex-col items-end">
-                    <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
+                    {fight.defender && <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
                       {fight.defender.name}
-                    </span>
-                    <span className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider truncate">
-                      {fight.defender.class}
-                    </span>
+                    </span>}
+                    {isDefenderTactic && activeTactic?.defenseTag && (
+                      <Badge variant="outline" className="mt-1 border-red-500/50 bg-red-900/20 text-red-400 gap-1 pl-1 pr-2 w-fit self-end">
+                        <Shield className="h-3 w-3" />
+                        <span className="text-[10px]">{activeTactic.defenseTag.name}</span>
+                      </Badge>
+                    )}
                   </div>
                   <div className="relative shrink-0">
-                    <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
-                    <Image
+                    {fight.defender && <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />}
+                    {fight.defender && <Image
                       src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')}
                       alt={fight.defender.name}
                       width={56}
                       height={56}
+                      sizes="64px"
                       className={cn("relative rounded-full ring-2", getChampionClassColors(fight.defender.class as ChampionClass).border)}
-                    />
+                    />}
                   </div>
                 </div>
               </div>
@@ -262,10 +294,10 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                       <span>Prefights:</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {fight.prefightChampions.map((champ) => (
-                        <div key={champ.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
-                          <Image src={getChampionImageUrl(champ.images as any, '64', 'primary')} alt={champ.name} width={24} height={24} className="rounded-full" />
-                          <span className="text-xs font-medium text-purple-200">{champ.name}</span>
+                      {fight.prefightChampions.map((pf) => (
+                        <div key={pf.champion.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
+                          <Image src={getChampionImageUrl(pf.champion.images as any, '64', 'primary')} alt={pf.champion.name} width={24} height={24} className="rounded-full" unoptimized />
+                          <span className="text-xs font-medium text-purple-200">{pf.champion.name}</span>
                         </div>
                       ))}
                     </div>
@@ -273,7 +305,8 @@ export default function WarVideoDisplay({ warVideo, isAdmin }: WarVideoDisplayPr
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {/* War Details Section */}

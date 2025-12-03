@@ -8,9 +8,6 @@
     "./web"
   ],
   "main": "index.js",
-  "prisma": {
-    "schema": "prisma/schema.prisma"
-  },
   "pnpm": {
     "allowed-build-scripts": [
       "@prisma/client",
@@ -47,6 +44,7 @@
     "@google-cloud/storage": "^7.17.2",
     "@google-cloud/vision": "^5.3.3",
     "@prisma/client": "^6.14.0",
+    "@radix-ui/react-visually-hidden": "^1.2.4",
     "axios": "^1.13.1",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.0",
@@ -61,7 +59,8 @@
     "postgres": "^3.4.7",
     "posthog-node": "^5.10.3",
     "quickchart-js": "^3.1.3",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/gapi.client.sheets-v4": "^0.0.4",

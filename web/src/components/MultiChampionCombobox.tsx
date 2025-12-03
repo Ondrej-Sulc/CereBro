@@ -1,59 +1,58 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
-import { Check, Plus, X } from "lucide-react"
+import { ChevronsUpDown, X } from "lucide-react"
 import { Virtuoso } from "react-virtuoso";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { ChampionImages } from "@/types/champion"
-import { getChampionImageUrl } from "@/lib/championHelper"
-
-interface Champion {
-  id: number;
-  name: string;
-  images: ChampionImages;
-}
+import { Champion } from "@/types/champion"
+import { getChampionImageUrl } from "@/lib/championHelper";
 
 interface MultiChampionComboboxProps {
   champions: Champion[];
-  selectedIds: string[];
-  onSelectionChange: (ids: string[]) => void;
+  values: number[]; // Array of Champion IDs
+  onSelect: (values: number[]) => void;
+  placeholder?: string;
   className?: string;
 }
 
 export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
   champions,
-  selectedIds,
-  onSelectionChange,
+  values,
+  onSelect,
+  placeholder = "Select champions...",
   className,
 }: MultiChampionComboboxProps) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
-  const handleSelect = (championId: string) => {
-    const newSelectedIds = selectedIds.includes(championId)
-      ? selectedIds.filter(id => id !== championId)
-      : [...selectedIds, championId];
-    onSelectionChange(newSelectedIds);
-  };
+  const handleSelect = React.useCallback((championId: number) => {
+    if (values.includes(championId)) {
+      onSelect(values.filter((v) => v !== championId));
+    } else {
+      onSelect([...values, championId]);
+    }
+  }, [values, onSelect]);
 
-  const selectedChampions = selectedIds.map(id => champions.find(c => String(c.id) === id)).filter(Boolean) as Champion[];
+  const handleRemove = React.useCallback((e: React.MouseEvent, championId: number) => {
+    e.stopPropagation();
+    onSelect(values.filter((v) => v !== championId));
+  }, [values, onSelect]);
 
   const filteredChampions = React.useMemo(() =>
     champions.filter(champion =>
@@ -61,83 +60,90 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
     ), [champions, search]
   );
 
+  const selectedChampions = React.useMemo(() => 
+    values.map(id => champions.find(c => c.id === id)).filter(Boolean) as Champion[],
+  [values, champions]);
+
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
-      {selectedChampions.map(champion => (
-        <Badge key={champion.id} variant="secondary" className="flex items-center gap-1.5 py-1 pl-1 pr-2 bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300">
-          <Image
-            src={getChampionImageUrl(champion.images, '32', 'primary')}
-            alt={champion.name}
-            width={32}
-            height={32}
-            className="rounded-full h-7 w-7 flex-shrink-0"
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full h-auto min-h-[40px] justify-between pr-2 pl-2 rounded-md", className)}
+        >
+          <div className="flex flex-wrap items-center gap-1.5 py-1">
+             {selectedChampions.length > 0 ? (
+                selectedChampions.map(champion => (
+                    <Badge key={champion.id} variant="secondary" className="pl-1 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
+                         <div className="relative h-5 w-5 rounded-full overflow-hidden bg-slate-900 flex-shrink-0">
+                            <Image 
+                            src={getChampionImageUrl(champion.images as any, '64')}
+                            alt={champion.name}
+                            fill
+                            className="object-cover"
+                            />
+                        </div>
+                        <span className="text-xs font-medium max-w-[80px] truncate">{champion.name}</span>
+                        <div 
+                            role="button"
+                            onClick={(e) => handleRemove(e, champion.id)}
+                            className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer"
+                        >
+                            <X className="h-3 w-3" />
+                        </div>
+                    </Badge>
+                ))
+             ) : (
+                <span className="text-slate-500 pl-1">{placeholder}</span>
+             )}
+          </div>
+
+          <div className="flex items-center ml-2 shrink-0">
+             <ChevronsUpDown className="h-4 w-4 opacity-50" />
+          </div>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent sideOffset={4} className="w-[--radix-popover-trigger-width] p-0">
+        <Command>
+          <CommandInput
+            placeholder="Search champion..."
+            value={search}
+            onValueChange={setSearch}
           />
-          <span className="text-xs">{champion.name}</span>
-          <button
-            type="button"
-            onClick={() => handleSelect(String(champion.id))}
-            className="ml-1 rounded-full hover:bg-slate-600 p-0.5 transition-colors"
-            aria-label={`Remove ${champion.name}`}
-          >
-            <X className="h-3 w-3 text-slate-400" />
-          </button>
-        </Badge>
-      ))}
-      
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7 rounded-full border-dashed border-slate-600 bg-transparent hover:bg-slate-800 hover:text-sky-400 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="sr-only">Add prefight champion</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" sideOffset={8} className="w-[250px] p-0 bg-slate-950 border-slate-800">
-          <Command className="bg-transparent">
-            <CommandInput
-                placeholder="Search champion..."
-                value={search}
-                onValueChange={setSearch}
-                className="h-9"
-            />
-            <CommandList>
-              <CommandEmpty className="py-2 text-center text-xs text-slate-500">No champion found.</CommandEmpty>
-              <CommandGroup>
-                {open && (
-                    <Virtuoso
-                        style={{ height: "200px" }}
-                        data={filteredChampions}
-                        itemContent={(index, champion) => (
-                            <CommandItem
-                                key={champion.id}
-                                value={champion.name}
-                                onSelect={() => {
-                                    handleSelect(String(champion.id));
-                                }}
-                                className="aria-selected:bg-slate-900 aria-selected:text-sky-400"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Image 
-                                        src={getChampionImageUrl(champion.images, '32', 'primary')} 
-                                        alt="" 
-                                        width={32} 
-                                        height={32} 
-                                        className="rounded-full h-7 w-7 flex-shrink-0"
-                                    />
-                                    <span className="text-sm">{champion.name}</span>
-                                </div>
-                            </CommandItem>
-                        )}
-                    />
-                )}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </div>
+          <CommandEmpty>No champion found.</CommandEmpty>
+          <CommandGroup>
+            {open && (
+                <Virtuoso
+                    style={{ height: "288px" }}
+                    data={filteredChampions}
+                    itemContent={(index, champion) => {
+                        const isSelected = values.includes(champion.id);
+                        return (
+                        <CommandItem
+                            key={champion.id}
+                            value={champion.name}
+                            onSelect={() => handleSelect(champion.id)}
+                            className={cn("flex items-center gap-2 cursor-pointer", isSelected && "bg-slate-800 text-slate-100")}
+                        >
+                            <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                              <Image 
+                                src={getChampionImageUrl(champion.images as any, '64')}
+                                alt={champion.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <span>{champion.name}</span>
+                            {isSelected && <span className="ml-auto text-xs text-blue-400 font-bold">✓</span>}
+                        </CommandItem>
+                    )}}
+                />
+            )}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 });

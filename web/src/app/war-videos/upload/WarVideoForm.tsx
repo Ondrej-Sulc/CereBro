@@ -74,7 +74,7 @@ export function WarVideoForm({
         attackerId: "",
         defenderId: "",
         prefightChampionIds: [],
-        death: false,
+        death: 0,
         videoFile: null,
       },
     ];
@@ -205,7 +205,7 @@ export function WarVideoForm({
         attackerId: "",
         defenderId: "",
         prefightChampionIds: [],
-        death: false,
+        death: 0,
         videoFile: null,
       },
     ]);
