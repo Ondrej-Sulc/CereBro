@@ -17,9 +17,6 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
     return { updated: 0, created: 0 };
   }
 
-  const alliancePlayers = await prisma.player.findMany({
-    where: { allianceId: alliance.id },
-  });
 
   const members = await guild.members.fetch();
   let updatedCount = 0;
