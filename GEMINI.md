@@ -75,12 +75,15 @@ The bot includes a robust system for managing alliance structure, including offi
 *   **Database Model:**
     *   The `Player` model contains an `isOfficer` boolean flag and a nullable `battlegroup` integer field.
     *   The `Alliance` model contains nullable string fields for `officerRole`, `battlegroup1Role`, `battlegroup2Role`, and `battlegroup3Role` to store the corresponding Discord Role IDs.
+*   **Automatic Guild Initialization:** When the bot joins a new server (`guildCreate` event), it automatically initializes an `Alliance` record and sends a welcome message with a "Start Setup" button.
+*   **Interactive Setup Wizard:** The new `/setup` command provides an interactive, step-by-step process for server administrators to configure essential alliance roles (Officer, Battlegroups).
 *   **Configuration:** The `/alliance config-roles` command allows server administrators to map their Discord roles to the bot's internal officer and battlegroup designations.
-*   **Synchronization:**
+*   **Synchronization & Auto-Registration:**
     *   The `/alliance sync-roles` command allows officers to manually trigger a sync between Discord roles and the bot's database.
     *   An automatic, hourly background job also performs this sync, ensuring the bot's data remains up-to-date with changes in Discord roles.
+    *   During synchronization, members with configured alliance roles are automatically registered with the bot. If a `Player` profile does not exist for them, one is created using their Discord display name, and they are linked to the alliance with the appropriate officer/battlegroup status.
 *   **Management & Permissions:**
-    *   A new `/alliance manage` command group provides officer-only tools to `add`, `remove`, and `list` members from the alliance roster.
+    *   A new `/alliance manage` command group provides officer-only tools to `remove` and `list` members from the alliance roster.
     *   Commands requiring elevated permissions are restricted to users with either Discord Administrator permissions or the `isOfficer` flag set to `true` in the database.
 *   **Overview:** The `/alliance view` command provides a public, read-only overview of the entire alliance, showing members organized by battlegroup and highlighting officers.
 

@@ -37,10 +37,12 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
     - **Database Integration:** Upserts the champion data into the PostgreSQL database, ensuring no duplicates are created.
 - **Alliance Management:** A comprehensive suite of commands to manage all aspects of the alliance within the bot.
     - **Role-Based Permissions:** Introduces a new "Officer" role, configurable per alliance. Officers and Discord Administrators gain access to management commands.
-    - **Battlegroup & Officer Sync:** The bot can automatically sync Battlegroup and Officer roles from Discord to the database, keeping the alliance structure up-to-date. This can be triggered manually with `/alliance sync-roles` or run automatically in the background.
+    - **Automatic Guild Initialization:** When CereBro joins a new server, it automatically initializes an `Alliance` record and sends a welcome message with a "Start Setup" button to guide administrators.
+    - **Streamlined Setup Wizard:** The new `/setup` command provides an interactive, step-by-step wizard for administrators to configure essential alliance roles (Officer, Battlegroups).
+    - **Battlegroup & Officer Sync:** The bot can automatically sync Battlegroup and Officer roles from Discord to the database, keeping the alliance structure up-to-date. This happens automatically during setup or can be triggered manually with `/alliance sync-roles`.
+    - **Automatic Player Registration:** During role synchronization, members with configured alliance roles are automatically registered with the bot, creating their `Player` profile (if it doesn't exist) using their Discord display name and linking them to the alliance.
     - **Role Configuration:** `/alliance config-roles` allows admins to map their server's Discord roles to the bot's Officer and Battlegroup (1, 2, 3) functions.
     - **Member Management:** A new `/alliance manage` command group for officers to:
-        - `add`: Manually add a player to the alliance roster.
         - `remove`: Remove a player from the alliance roster.
         - `list`: View a simple, admin-focused list of all members.
     - **Alliance Overview:** The `/alliance view` command provides a rich, detailed overview of the alliance roster, neatly organized by Battlegroup and clearly indicating who the officers are.
@@ -103,7 +105,7 @@ Currently, the Next.js configuration has `typescript: { ignoreBuildErrors: true 
 | `/glossary` | Look up MCOC effects, buffs, and debuffs. This acts as an in-game dictionary for various terms. | Public |
 | `/prestige` | Extract prestige values from an MCOC screenshot or view the leaderboard. | User |
 | `/profile` | Manage your in-game profiles. Supports multiple accounts, allowing you to switch between them easily. The main `/profile view` command provides an interactive dashboard for managing all aspects of your profile. | User |
-| `/register` | For new users to register their in-game name with the bot. This is the first step to unlock features like roster management and prestige tracking. If you are part of an alliance, use '/alliance join' instead to register and join your alliance simultaneously. | User |
+| `/register` | For individual users to create their profile or update their in-game name. Alliance members are automatically registered during role synchronization. | User |
 | `/roster` | Manage your MCOC roster. Keep track of your champions, their ranks, awakened status, and ascension levels. | User |
 | `/schedule` | Manage scheduled tasks. You can add, list, and remove scheduled messages or command executions. | Public |
 | `/search` | Powerful search for champions based on various criteria, acting as a comprehensive in-game wiki. Filters are case-insensitive. | Public |

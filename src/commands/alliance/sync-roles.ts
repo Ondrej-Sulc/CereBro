@@ -5,16 +5,16 @@ import loggerService from '../../services/loggerService';
 /**
  * Synchronizes Discord roles for officers and battlegroups with the database for a specific guild.
  * @param guild The guild to sync roles for.
- * @returns The number of players whose roles were updated.
+ * @returns An object containing the count of updated and created players.
  */
-export async function syncRolesForGuild(guild: Guild): Promise<number> {
+export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number; created: number }> {
   const alliance = await prisma.alliance.findUnique({
     where: { guildId: guild.id },
   });
 
   if (!alliance || (!alliance.officerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role)) {
     loggerService.warn({ guildId: guild.id }, 'Attempted to sync roles for an alliance with no roles configured.');
-    return 0;
+    return { updated: 0, created: 0 };
   }
 
   const alliancePlayers = await prisma.player.findMany({
@@ -22,48 +22,86 @@ export async function syncRolesForGuild(guild: Guild): Promise<number> {
   });
 
   const members = await guild.members.fetch();
-  let updatedPlayers = 0;
+  let updatedCount = 0;
+  let createdCount = 0;
 
-  for (const player of alliancePlayers) {
-    const member = members.get(player.discordId);
-    
-    let battlegroup: number | null = null;
-    let isOfficer = false;
+  for (const member of members.values()) {
+    try {
+      // 1. Determine "Target State" based on Discord roles
+      let battlegroup: number | null = null;
+      let isOfficer = false;
+      let hasRelevantRole = false;
 
-    if (member) {
       if (alliance.battlegroup1Role && member.roles.cache.has(alliance.battlegroup1Role)) {
         battlegroup = 1;
+        hasRelevantRole = true;
       } else if (alliance.battlegroup2Role && member.roles.cache.has(alliance.battlegroup2Role)) {
         battlegroup = 2;
+        hasRelevantRole = true;
       } else if (alliance.battlegroup3Role && member.roles.cache.has(alliance.battlegroup3Role)) {
         battlegroup = 3;
+        hasRelevantRole = true;
       }
 
-      isOfficer = !!(alliance.officerRole && member.roles.cache.has(alliance.officerRole));
-    }
+      if (alliance.officerRole && member.roles.cache.has(alliance.officerRole)) {
+        isOfficer = true;
+        hasRelevantRole = true;
+      }
 
-    // Determine if we should remove the player from the alliance
-    // Remove if: Not in a BG AND Not an Officer AND Not a Bot Admin
-    if (battlegroup === null && !isOfficer && !player.isBotAdmin) {
-      await prisma.player.update({
-        where: { id: player.id },
-        data: { allianceId: null, battlegroup: null, isOfficer: false },
+      if (!hasRelevantRole) {
+        // Logic could be added here to remove members who lost all roles, 
+        // but for safety we generally don't auto-kick from DB yet.
+        continue;
+      }
+
+      // 2. Find existing player by Discord ID (globally)
+      // We use findFirst because discordId is part of a composite unique key, not unique by itself in the schema
+      const existingPlayer = await prisma.player.findFirst({
+        where: { discordId: member.id },
       });
-      updatedPlayers++;
-    } else {
-      // Update roles if changed
-      if (player.battlegroup !== battlegroup || player.isOfficer !== isOfficer) {
-        await prisma.player.update({
-          where: { id: player.id },
-          data: { battlegroup, isOfficer },
+
+      if (existingPlayer) {
+        // UPDATE existing player
+        // We only update if something changed (roles or alliance link)
+        if (
+          existingPlayer.allianceId !== alliance.id ||
+          existingPlayer.battlegroup !== battlegroup ||
+          existingPlayer.isOfficer !== isOfficer
+        ) {
+          await prisma.player.update({
+            where: { id: existingPlayer.id },
+            data: {
+              allianceId: alliance.id,
+              battlegroup,
+              isOfficer,
+            },
+          });
+          updatedCount++;
+        }
+      } else {
+        // CREATE new player
+        await prisma.player.create({
+          data: {
+            ingameName: member.displayName, // Auto-use Discord display name
+            discordId: member.id,
+            allianceId: alliance.id,
+            battlegroup,
+            isOfficer,
+          },
         });
-        updatedPlayers++;
+        createdCount++;
       }
+    } catch (error) {
+      loggerService.error(
+        { error, memberId: member.id, memberTag: member.user.tag },
+        'Failed to sync roles for individual member'
+      );
+      // Continue processing other members
     }
   }
   
-  loggerService.info(`Alliance roles synced for guild ${guild.id}. ${updatedPlayers} players updated/removed.`);
-  return updatedPlayers;
+  loggerService.info(`Alliance roles synced for guild ${guild.id}. Updated: ${updatedCount}, Created: ${createdCount}.`);
+  return { updated: updatedCount, created: createdCount };
 }
 
 
@@ -75,8 +113,12 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
 
   try {
     await interaction.editReply('Starting role synchronization... This may take a moment.');
-    const updatedCount = await syncRolesForGuild(interaction.guild);
-    await interaction.followUp(`Role synchronization complete. ${updatedCount} player(s) updated.`);
+    const result = await syncRolesForGuild(interaction.guild);
+    await interaction.followUp(
+      `Role synchronization complete.\n` +
+      `✅ **${result.created}** new profiles created.\n` +
+      `🔄 **${result.updated}** existing profiles updated.`
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     loggerService.error({ error: errorMessage }, 'Error syncing alliance roles');
