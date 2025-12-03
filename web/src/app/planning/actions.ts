@@ -147,6 +147,40 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
 
   const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
 
+  // Strict Alliance Ownership Validation
+  if (id) {
+      // Case 1: Update by ID
+      const existingFight = await prisma.warFight.findUnique({
+          where: { id },
+          include: { war: true }
+      });
+
+      if (!existingFight) {
+          throw new Error("Fight not found.");
+      }
+
+      if (existingFight.war.allianceId !== player.allianceId) {
+          throw new Error("Unauthorized: Cannot edit fights from another alliance.");
+      }
+  } else {
+      // Case 2: Create/Upsert by Context
+      if (!warId) {
+          throw new Error("War ID is required for creating a fight.");
+      }
+
+      const targetWar = await prisma.war.findUnique({
+          where: { id: warId }
+      });
+
+      if (!targetWar) {
+          throw new Error("War not found.");
+      }
+
+      if (targetWar.allianceId !== player.allianceId) {
+          throw new Error("Unauthorized: Cannot edit fights from another alliance.");
+      }
+  }
+
   const updateData = {
       attackerId: rest.attackerId,
       defenderId: rest.defenderId,
@@ -359,6 +393,15 @@ export async function addExtraChampion(warId: string, battlegroup: number, playe
     throw new Error("You must be an Alliance Officer to manage extra champions.");
   }
 
+  // Verify the War belongs to the user's alliance
+  const targetWar = await prisma.war.findUnique({
+      where: { id: warId }
+  });
+
+  if (!targetWar || targetWar.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized: Cannot add extra champions to a war outside your alliance.");
+  }
+
   const newExtra = await prisma.warExtraChampion.create({
     data: {
       warId,
@@ -390,6 +433,20 @@ export async function removeExtraChampion(id: string) {
 
   if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
     throw new Error("You must be an Alliance Officer to manage extra champions.");
+  }
+
+  // Verify the WarExtraChampion belongs to the user's alliance
+  const extraChampionToDelete = await prisma.warExtraChampion.findUnique({
+      where: { id },
+      include: { war: true }
+  });
+
+  if (!extraChampionToDelete) {
+      throw new Error("Extra Champion not found.");
+  }
+
+  if (extraChampionToDelete.war.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized: Cannot delete extra champions from another alliance's war.");
   }
 
   await prisma.warExtraChampion.delete({ where: { id } });

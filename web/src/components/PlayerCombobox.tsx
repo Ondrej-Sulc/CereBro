@@ -143,7 +143,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                         const p = filteredPlayers[index];
                         let rosterInfo = "";
                         if (attackerId) {
-                            const r = p.roster.find((r: any) => r.championId === attackerId);
+                            const r = p.roster.find((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
                             if (r) {
                                 rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})`;
                             }

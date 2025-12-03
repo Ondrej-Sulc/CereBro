@@ -49,15 +49,34 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
     const debouncedSearch = useDebounce(modifierSearch, 300);
 
     useEffect(() => {
+        let isMounted = true;
+
         if (debouncedSearch) {
             setIsSearching(true);
-            searchModifiers(debouncedSearch).then(results => {
-                setSearchResults(results);
-                setIsSearching(false);
-            });
+            const fetchModifiers = async () => {
+                try {
+                    const results = await searchModifiers(debouncedSearch);
+                    if (isMounted) {
+                        setSearchResults(results);
+                    }
+                } catch (error) {
+                    console.error("Failed to search modifiers:", error);
+                    // Optionally show toast here if critical
+                } finally {
+                    if (isMounted) {
+                        setIsSearching(false);
+                    }
+                }
+            };
+            fetchModifiers();
         } else {
             setSearchResults([]);
+            setIsSearching(false);
         }
+
+        return () => {
+            isMounted = false;
+        };
     }, [debouncedSearch]);
 
     // Update selectedNode from initialNodes when it changes (due to refresh)

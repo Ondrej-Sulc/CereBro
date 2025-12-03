@@ -12,6 +12,7 @@ import { FightWithNode } from '../types';
 import { WarMapBackground } from './map-background';
 import { CanvasNode } from './canvas-node';
 import Konva from 'konva';
+import { KonvaEventObject } from 'konva/lib/Node';
 
 interface WarMapProps {
   warId: string;
@@ -34,8 +35,6 @@ interface WarMapProps {
 }
 
 const WarMap = memo(function WarMap({ 
-  warId, 
-  battlegroup, 
   onNodeClick, 
   selectedNodeId,
   currentWar,
@@ -157,7 +156,7 @@ const WarMap = memo(function WarMap({
       }
   }, []); 
 
-  const handleWheel = (e: any) => {
+  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
     const scaleBy = 1.1;
     const stage = e.target.getStage();
