@@ -57,6 +57,12 @@ USER node
 # 1. Generate Prisma Client
 RUN pnpm exec prisma generate
 
+# Accept build arguments for client-side environment variables
+ARG NEXT_PUBLIC_POSTHOG_KEY
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
+ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
+
 # 2. Build the Next.js application
 RUN pnpm --filter web run build
 

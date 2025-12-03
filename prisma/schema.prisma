@@ -107,7 +107,8 @@ model Champion {
   duels              Duel[]
   asAttacker         WarFight[]    @relation("AttackerRelation")
   asDefender         WarFight[]    @relation("DefenderRelation")
-  usedAsPrefight     WarFight[]    @relation("PrefightChampions")
+  placedPrefights    FightPrefight[]
+  extraAssignments   WarExtraChampion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -139,6 +140,9 @@ model Tag {
   category String
 
   champions Champion[]
+  
+  attackTactics  WarTactic[] @relation("AttackTactic")
+  defenseTactics WarTactic[] @relation("DefenseTactic")
 
   @@unique([name, category])
 }
@@ -238,6 +242,7 @@ model Player {
   id                 String    @id @default(cuid())
   discordId          String
   ingameName         String
+  avatar             String?
   isActive           Boolean   @default(false)
   timezone           String?
   isTrustedUploader  Boolean   @default(false)
@@ -258,6 +263,8 @@ model Player {
 
   playedInFights  WarFight[] @relation("PlayerInFight")
   submittedVideos WarVideo[] @relation("SubmittedBy")
+  placedPrefights FightPrefight[]
+  extraChampions  WarExtraChampion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -384,6 +391,7 @@ model War {
 
   // A war is comprised of many fights
   fights WarFight[]
+  extraChampions WarExtraChampion[]
 
   @@unique([allianceId, season, warNumber])
   @@index([allianceId])
@@ -403,7 +411,7 @@ model WarFight {
   nodeId     Int
   node       WarNode  @relation(fields: [nodeId], references: [id])
 
-  prefightChampions Champion[] @relation("PrefightChampions")
+  prefightChampions FightPrefight[]
 
   // --- Contextual Links ---
   // The player who performed the fight
@@ -428,6 +436,47 @@ model WarFight {
   @@index([playerId])
   @@index([warId])
   @@index([videoId])
+}
+
+model FightPrefight {
+  id String @id @default(cuid())
+  
+  warFightId String
+  warFight   WarFight @relation(fields: [warFightId], references: [id], onDelete: Cascade)
+  
+  championId Int
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  
+  playerId   String?
+  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([warFightId, championId])
+  @@index([warFightId])
+  @@index([championId])
+  @@index([playerId])
+}
+
+model WarExtraChampion {
+  id          String   @id @default(cuid())
+  
+  warId       String
+  war         War      @relation(fields: [warId], references: [id], onDelete: Cascade)
+  
+  playerId    String
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  
+  championId  Int
+  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  battlegroup Int
+
+  createdAt   DateTime @default(now())
+
+  @@index([warId])
+  @@index([playerId])
 }
 
 model WarVideo {
@@ -455,6 +504,53 @@ model WarNode {
   nodeNumber  Int        @unique
   description String?
   fights      WarFight[]
+  allocations WarNodeAllocation[]
+}
+
+model NodeModifier {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  
+  allocations WarNodeAllocation[]
+
+  @@unique([name, description])
+}
+
+model WarNodeAllocation {
+  id             String       @id @default(cuid())
+  warNodeId      Int
+  warNode        WarNode      @relation(fields: [warNodeId], references: [id], onDelete: Cascade)
+  
+  nodeModifierId String
+  nodeModifier   NodeModifier @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
+  
+  minTier        Int?
+  maxTier        Int?
+  season         Int?
+
+  @@index([warNodeId])
+  @@index([nodeModifierId])
+}
+
+model WarTactic {
+  id          String   @id @default(cuid())
+  season      Int
+  minTier     Int?
+  maxTier     Int?
+  
+  attackTagId Int?
+  attackTag   Tag?     @relation("AttackTactic", fields: [attackTagId], references: [id])
+  
+  defenseTagId Int?
+  defenseTag   Tag?    @relation("DefenseTactic", fields: [defenseTagId], references: [id])
+  
+  name        String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([season, minTier, maxTier])
 }
 
 model UploadSession {

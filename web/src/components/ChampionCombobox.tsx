@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { ChevronsUpDown, X } from "lucide-react"
-import { Virtuoso } from "react-virtuoso";
 import Image from "next/image";
 
 import { cn } from "@/lib/utils"
@@ -13,6 +12,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover"
 import { Champion } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { Virtuoso } from "react-virtuoso";
 
 interface ChampionComboboxProps {
   champions: Champion[];
@@ -28,6 +29,8 @@ interface ChampionComboboxProps {
   onSelect: (value: string) => void;
   placeholder?: string;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ChampionCombobox = React.memo(function ChampionCombobox({
@@ -36,14 +39,27 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   onSelect,
   placeholder = "Select a champion...",
   className,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: ChampionComboboxProps) {
-  const [open, setOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
+
   const [search, setSearch] = React.useState("");
+
+  React.useEffect(() => {
+    if (!open) {
+      setSearch("");
+    }
+  }, [open]);
 
   const handleSelect = React.useCallback((championId: string) => {
     onSelect(championId);
     setOpen(false);
-  }, [onSelect]);
+  }, [onSelect, setOpen]);
 
   const handleClear = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,6 +75,8 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   const selectedChampion = React.useMemo(() => 
     value ? champions.find((c) => String(c.id) === value) : null,
   [value, champions]);
+
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -102,40 +120,45 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent sideOffset={4} className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
+      <PopoverContent 
+        sideOffset={4} 
+        className="w-[--radix-popover-trigger-width] p-0"
+      >
+        <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search champion..."
             value={search}
             onValueChange={setSearch}
           />
-          <CommandEmpty>No champion found.</CommandEmpty>
-          <CommandGroup>
-            {open && (
-                <Virtuoso
-                    style={{ height: "288px" }}
-                    data={filteredChampions}
-                    itemContent={(index, champion) => (
-                        <CommandItem
-                            key={champion.id}
-                            value={champion.name}
-                            onSelect={() => handleSelect(String(champion.id))}
-                            className="flex items-center gap-2 cursor-pointer"
-                        >
-                            <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
-                              <Image 
-                                src={getChampionImageUrl(champion.images as any, '64')}
-                                alt={champion.name}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            <span>{champion.name}</span>
-                        </CommandItem>
+          <CommandList>
+            {filteredChampions.length === 0 && <CommandEmpty>No champion found.</CommandEmpty>}
+            <CommandGroup>
+                <div style={{ height: Math.min(filteredChampions.length * 46, 300) }}>
+                  <Virtuoso
+                    style={{ height: Math.min(filteredChampions.length * 46, 300) }}
+                    totalCount={filteredChampions.length}
+                    itemContent={(index) => (
+                      <CommandItem
+                        key={filteredChampions[index].id}
+                        value={filteredChampions[index].name}
+                        onSelect={() => handleSelect(String(filteredChampions[index].id))}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                            <Image 
+                            src={getChampionImageUrl(filteredChampions[index].images as any, '64')}
+                            alt={filteredChampions[index].name}
+                            fill
+                            className="object-cover"
+                            />
+                        </div>
+                        <span>{filteredChampions[index].name}</span>
+                      </CommandItem>
                     )}
-                />
-            )}
-          </CommandGroup>
+                  />
+                </div>
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
