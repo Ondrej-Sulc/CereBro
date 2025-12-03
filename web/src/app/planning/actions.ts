@@ -86,22 +86,12 @@ export async function createWar(formData: FormData) {
         status: WarStatus.PLANNING,
       },
     });
-
-    // Generate Fights (3 BGs, 50 Nodes)
-    const fightsData = [];
-    for (let bg = 1; bg <= 3; bg++) {
-      for (let node = 1; node <= 50; node++) {
-        // We need to find the node ID from WarNode table? 
-        // Or assume they exist? "nodeNumber" is unique.
-        // We should fetch the node ID for nodeNumber X.
-        // Ideally we fetch all WarNodes first.
-      }
-    }
     
     // Fetch all nodes mapping
     const warNodes = await tx.warNode.findMany();
     const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
 
+    const fightsData = [];
     for (let bg = 1; bg <= 3; bg++) {
       for (let nodeNum = 1; nodeNum <= 50; nodeNum++) {
         const nodeId = nodeMap.get(nodeNum);

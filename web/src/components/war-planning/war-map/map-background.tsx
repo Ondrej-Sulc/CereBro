@@ -3,8 +3,18 @@ import { Shape } from 'react-konva';
 import { LAYOUT, warNodesData } from '../nodes-data';
 import Konva from 'konva';
 
+interface Star {
+  id: number;
+  x: number;
+  y: number;
+  r: number;
+  opacity: number;
+  twinkleSpeed: number;
+  twinkleDir: number;
+}
+
 export const WarMapBackground = React.memo(function WarMapBackground() {
-    const [stars, setStars] = useState<any[]>([]);
+    const [stars, setStars] = useState<Star[]>([]);
     // Cache the static background (nebulas + paths)
     const staticBgCanvasRef = useRef<HTMLCanvasElement | null>(null);
 

@@ -28,11 +28,8 @@ const useIconImage = (IconComponent: React.ElementType, size: number, color: str
         // Ensure this effect only runs on the client-side
         if (typeof window === 'undefined') return; 
 
-        const fetchSvg = async () => {
-            const dataUrl = await svgToDataUrl(IconComponent, {}, size, color);
-            setImageUrl(dataUrl);
-        };
-        fetchSvg();
+        const dataUrl = svgToDataUrl(IconComponent, {}, size, color);
+        setImageUrl(dataUrl);
     }, [IconComponent, size, color]);
 
     return image;

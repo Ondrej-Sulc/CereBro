@@ -70,7 +70,7 @@ export default async function WarVideoPage(props: any) {
 
   let activeTactic = null;
   const war = warVideo.fights[0]?.war;
-  if (war) {
+  if (war?.warTier != null) {
      activeTactic = await prisma.warTactic.findFirst({
         where: {
             season: war.season,
@@ -81,5 +81,5 @@ export default async function WarVideoPage(props: any) {
      });
   }
 
-  return <WarVideoDisplay warVideo={warVideo as any} isAdmin={isAdmin} activeTactic={activeTactic} />;
+  return <WarVideoDisplay warVideo={warVideo} isAdmin={isAdmin} activeTactic={activeTactic} />;
 }

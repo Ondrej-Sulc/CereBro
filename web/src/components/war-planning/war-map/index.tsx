@@ -104,7 +104,7 @@ const WarMap = memo(function WarMap({
             minSeason: historyFilters.minSeason,
           };
 
-          const batchResults = await getBatchHistoricalCounters(requests, options as any);
+          const batchResults = await getBatchHistoricalCounters(requests, options);
           const historyMap = new Map<number, HistoricalFightStat[]>();
           Object.entries(batchResults).forEach(([nodeNumStr, stats]) => {
               historyMap.set(Number(nodeNumStr), stats);

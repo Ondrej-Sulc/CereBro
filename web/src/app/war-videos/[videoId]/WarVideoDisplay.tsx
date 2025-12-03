@@ -15,14 +15,14 @@ import { useState } from 'react';
 
 interface WarFight {
   id: string;
-  death: boolean;
+  death: number;
   battlegroup: number | null;
-  attacker: Champion & { tags: Tag[] };
-  defender: Champion & { tags: Tag[] };
-  prefightChampions: Champion[];
+  attacker: (Champion & { tags: Tag[] }) | null; // Made nullable
+  defender: (Champion & { tags: Tag[] }) | null; // Made nullable
+  prefightChampions: { champion: Champion }[]; 
   node: WarNode;
   player: Player | null;
-  war: War;
+  war: War; // Added back
 }
 
 interface WarVideo {
@@ -201,8 +201,8 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
         {/* Fights List Section */}
         <div className="lg:col-span-2 space-y-6">
           {sortedFights.map((fight) => {
-            const isAttackerTactic = activeTactic?.attackTag && fight.attacker.tags?.some(t => t.name === activeTactic.attackTag!.name);
-            const isDefenderTactic = activeTactic?.defenseTag && fight.defender.tags?.some(t => t.name === activeTactic.defenseTag!.name);
+            const isAttackerTactic = activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name);
+            const isDefenderTactic = activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name);
 
             return (
             <div key={fight.id} className="glass rounded-xl border border-slate-800/50 overflow-hidden">
@@ -230,20 +230,20 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                 {/* Attacker */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="relative shrink-0">
-                    <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
-                    <Image
+                    {fight.attacker && <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />}
+                    {fight.attacker && <Image
                       src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')}
                       alt={fight.attacker.name}
                       width={56}
                       height={56}
                       sizes="64px"
                       className={cn("relative rounded-full ring-2", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
-                    />
+                    />}
                   </div>
                   <div className="min-w-0 flex flex-col">
-                    <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
+                    {fight.attacker && <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
                       {fight.attacker.name}
-                    </span>
+                    </span>}
                     {isAttackerTactic && activeTactic?.attackTag && (
                       <Badge variant="outline" className="mt-1 border-emerald-500/50 bg-emerald-900/20 text-emerald-400 gap-1 pl-1 pr-2 w-fit">
                         <Swords className="h-3 w-3" />
@@ -261,9 +261,9 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                 {/* Defender */}
                 <div className="flex items-center justify-end gap-3 min-w-0 text-right">
                   <div className="min-w-0 flex flex-col items-end">
-                    <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
+                    {fight.defender && <span className={cn("font-bold text-sm sm:text-lg leading-tight truncate", getChampionClassColors(fight.defender.class as ChampionClass).text)}>
                       {fight.defender.name}
-                    </span>
+                    </span>}
                     {isDefenderTactic && activeTactic?.defenseTag && (
                       <Badge variant="outline" className="mt-1 border-red-500/50 bg-red-900/20 text-red-400 gap-1 pl-1 pr-2 w-fit self-end">
                         <Shield className="h-3 w-3" />
@@ -272,15 +272,15 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                     )}
                   </div>
                   <div className="relative shrink-0">
-                    <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
-                    <Image
+                    {fight.defender && <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />}
+                    {fight.defender && <Image
                       src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')}
                       alt={fight.defender.name}
                       width={56}
                       height={56}
                       sizes="64px"
                       className={cn("relative rounded-full ring-2", getChampionClassColors(fight.defender.class as ChampionClass).border)}
-                    />
+                    />}
                   </div>
                 </div>
               </div>
@@ -294,10 +294,10 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                       <span>Prefights:</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {fight.prefightChampions.map((champ) => (
-                        <div key={champ.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
-                          <Image src={getChampionImageUrl(champ.images as any, '64', 'primary')} alt={champ.name} width={24} height={24} className="rounded-full" unoptimized />
-                          <span className="text-xs font-medium text-purple-200">{champ.name}</span>
+                      {fight.prefightChampions.map((pf) => (
+                        <div key={pf.champion.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
+                          <Image src={getChampionImageUrl(pf.champion.images as any, '64', 'primary')} alt={pf.champion.name} width={24} height={24} className="rounded-full" unoptimized />
+                          <span className="text-xs font-medium text-purple-200">{pf.champion.name}</span>
                         </div>
                       ))}
                     </div>

@@ -23,7 +23,7 @@ import { PlayerWithRoster } from "./war-planning/types"; // Or import from @pris
 import { Virtuoso } from "react-virtuoso";
 
 interface PlayerComboboxProps {
-  players: any[]; // Using any for now to avoid strict type check on roster structure if it varies, but should be PlayerWithRoster
+  players: PlayerWithRoster[];
   value: string | undefined;
   onSelect: (value: string) => void;
   placeholder?: string;

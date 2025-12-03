@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic } from "@prisma/client";
+import { War, WarFight, WarStatus, WarTactic, ChampionClass } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { warNodesData } from '../nodes-data';
 import { HistoricalFightStat } from "@/app/planning/history-actions";
@@ -16,6 +16,15 @@ export interface ExtraChampion {
     championId: number;
     battlegroup: number;
     champion: { id: number; name: string; images: any };
+}
+
+interface OptimisticPrefight {
+    id: number;
+    name: string;
+    images: any;
+    class: ChampionClass;
+    fightPrefightId: string;
+    player: { id: string; ingameName: string; avatar: string | null } | null;
 }
 
 interface UseWarPlanningProps {
@@ -95,10 +104,10 @@ export function useWarPlanning({
         }
         const fetchedFights: FightWithNode[] = await fightsRes.json();
         setCurrentFights(fetchedFights);
-        setExtraChampions(extrasData as any);
-      } catch (err) {
+        setExtraChampions(extrasData);
+      } catch (err: any) {
         console.error("Failed to fetch war data:", err);
-        setFightsError("Failed to load war data.");
+        setFightsError(err.message || "Failed to load war data.");
       } finally {
         setLoadingFights(false);
       }
@@ -110,11 +119,19 @@ export function useWarPlanning({
     const playerFights = currentFights.filter(f => f.player?.id === playerId && f.node.nodeNumber !== nodeId);
     const usedChampionIds = new Set(playerFights.map(f => f.attacker?.id).filter(id => id !== undefined && id !== null));
     
+    // Also include prefight and extra champions for the 3-champion limit
+    currentFights.forEach(f => f.prefightChampions?.forEach(pf => {
+        if (pf.player?.id === playerId) usedChampionIds.add(pf.id);
+    }));
+    extraChampions.forEach(ex => {
+        if (ex.playerId === playerId && ex.battlegroup === currentBattlegroup) usedChampionIds.add(ex.championId);
+    });
+
     if (usedChampionIds.size >= 3 && !usedChampionIds.has(newChampionId)) {
         return false;
     }
     return true;
-  }, [currentFights]);
+  }, [currentFights, extraChampions, currentBattlegroup]);
 
   // Handlers
   const handleToggleStatus = useCallback(async () => {
@@ -126,6 +143,7 @@ export function useWarPlanning({
       router.refresh();
     } catch (error) {
       console.error("Failed to update war status:", error);
+      setFightsError("Failed to update war status.");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -194,11 +212,11 @@ export function useWarPlanning({
 
       try {
           const created = await addExtraChampion(warId, currentBattlegroup, playerId, championId);
-          // Update state with real ID from server
           setExtraChampions(prev => prev.map(x => x.id === tempId ? { ...x, id: created.id } : x));
-      } catch (e) {
+      } catch (e: any) {
           console.error("Failed to add extra champion", e);
           setExtraChampions(prev => prev.filter(x => x.id !== tempId));
+          setFightsError(e.message || "Failed to add extra champion.");
       }
   }, [warId, currentBattlegroup, champions]);
 
@@ -210,9 +228,10 @@ export function useWarPlanning({
 
       try {
           await removeExtraChampion(extraId);
-      } catch (e) {
+      } catch (e: any) {
           console.error("Failed to remove extra champion", e);
           setExtraChampions(prev => [...prev, toRemove]);
+          setFightsError(e.message || "Failed to remove extra champion.");
       }
   }, [extraChampions]);
 
@@ -221,6 +240,11 @@ export function useWarPlanning({
   }) => {
     setValidationError(null);
 
+    // Capture previous state for rollback
+    const previousFights = currentFights;
+    const previousSelectedFight = selectedFight;
+
+    // Validation Check (existing logic)
     const fightToUpdate = currentFights.find(f => 
         f.id === updatedFight.id || 
         (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)
@@ -239,6 +263,7 @@ export function useWarPlanning({
         }
     }
 
+    // Optimistic Update
     setCurrentFights(prev => prev.map(f => {
       if (f.id === updatedFight.id || (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)) {
         const newAttacker = updatedFight.attackerId ? champions.find(c => c.id === updatedFight.attackerId) : (updatedFight.attackerId === null ? null : f.attacker);
@@ -262,7 +287,7 @@ export function useWarPlanning({
                      fightPrefightId: 'temp-' + champ.id, 
                      player: player ? { id: player.id, ingameName: player.ingameName, avatar: player.avatar } : null
                  };
-             }).filter(Boolean) as any;
+             }).filter((x): x is OptimisticPrefight => Boolean(x));
         }
 
         const updatedNode = {
@@ -283,7 +308,17 @@ export function useWarPlanning({
       return f;
     }));
 
-    await updateWarFight(updatedFight);
+    try {
+        await updateWarFight(updatedFight);
+    } catch (error: any) {
+        console.error("Failed to save fight:", error);
+        // Rollback
+        setCurrentFights(previousFights);
+        if (previousSelectedFight) {
+            setSelectedFight(previousSelectedFight);
+        }
+        setFightsError(error.message || "Failed to save changes. Please try again.");
+    }
   }, [updateWarFight, champions, players, selectedFight, validatePlayerAssignment, currentFights]);
 
   return {

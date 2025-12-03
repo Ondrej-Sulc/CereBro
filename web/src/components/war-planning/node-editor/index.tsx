@@ -102,33 +102,36 @@ export default function NodeEditor({
   // Load initial state when fight changes
   useEffect(() => {
     const newDefenderId = currentFight?.defenderId || undefined;
-    if (newDefenderId !== defenderId) setDefenderId(newDefenderId);
+    setDefenderId(prev => prev !== newDefenderId ? newDefenderId : prev);
 
     const newAttackerId = currentFight?.attackerId || undefined;
-    if (newAttackerId !== attackerId) setAttackerId(newAttackerId);
+    setAttackerId(prev => prev !== newAttackerId ? newAttackerId : prev);
 
     const newPlayerId = currentFight?.playerId || undefined;
-    if (newPlayerId !== playerId) setPlayerId(newPlayerId);
+    setPlayerId(prev => prev !== newPlayerId ? newPlayerId : prev);
 
     const newDeaths = currentFight?.death || 0;
-    if (newDeaths !== deaths) setDeaths(newDeaths);
+    setDeaths(prev => prev !== newDeaths ? newDeaths : prev);
 
     const newNotes = currentFight?.notes || "";
-    if (newNotes !== notes) setNotes(newNotes);
+    setNotes(prev => prev !== newNotes ? newNotes : prev);
 
     const newPrefights = currentFight?.prefightChampions?.map(c => ({
         championId: c.id,
         playerId: c.player?.id || null
     })) || [];
     
-    const prefightsEqual = (a: typeof newPrefights, b: typeof newPrefights) => 
-        a.length === b.length && a.every((val, index) => 
-            val.championId === b[index].championId && val.playerId === b[index].playerId
-        );
-    
-    if (!prefightsEqual(newPrefights, prefights)) {
-        setPrefights(newPrefights);
-    }
+    setPrefights(prev => {
+        const prefightsEqual = (a: typeof newPrefights, b: typeof newPrefights) => 
+            a.length === b.length && a.every((val, index) => 
+                val.championId === b[index].championId && val.playerId === b[index].playerId
+            );
+        
+        if (!prefightsEqual(newPrefights, prev)) {
+            return newPrefights;
+        }
+        return prev;
+    });
     
     if (currentFight && !currentFight.defenderId) {
         setIsDefenderOpen(true);

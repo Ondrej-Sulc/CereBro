@@ -7,6 +7,12 @@ import { War, WarFight, WarTactic } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { RightPanelState } from "../hooks/use-war-planning";
 
+interface HistoryFilters {
+  onlyCurrentTier: boolean;
+  onlyAlliance: boolean;
+  minSeason: number | undefined;
+}
+
 interface MobileSheetProps {
   isDesktop: boolean;
   rightPanelState: RightPanelState;
@@ -17,8 +23,8 @@ interface MobileSheetProps {
   champions: Champion[];
   players: PlayerWithRoster[];
   activeTactic: WarTactic | null;
-  historyFilters: any;
-  onHistoryFiltersChange: any;
+  historyFilters: HistoryFilters;
+  onHistoryFiltersChange: React.Dispatch<React.SetStateAction<HistoryFilters>>; // Changed type
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
   onClose: () => void;
   onNavigate: (direction: number) => void;

@@ -14,6 +14,7 @@ import { searchModifiers, addAllocation, removeAllocation } from "@/app/admin/no
 import { Loader2, Plus, Trash2, Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 const MCOC_TIER_PRESETS = [
     { name: "Elite (Tier 1)", min: 1, max: 1 },
@@ -33,6 +34,7 @@ interface AdminNodeManagerClientProps {
 
 export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManagerClientProps) {
     const router = useRouter();
+    const { toast } = useToast(); // Initialize toast
     const [selectedNode, setSelectedNode] = useState<WarNodeWithAllocations | null>(null);
     const [modifierSearch, setModifierSearch] = useState("");
     const [searchResults, setSearchResults] = useState<NodeModifier[]>([]);
@@ -95,9 +97,17 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             );
             
             router.refresh();
-        } catch (error) {
+            toast({
+                title: "Modifier Added",
+                description: `Successfully added ${modifier.name} to Node ${selectedNode.nodeNumber}.`,
+            });
+        } catch (error: any) {
             console.error("Failed to add allocation:", error);
-            alert("Failed to add modifier. Please check console.");
+            toast({
+                title: "Failed to Add Modifier",
+                description: error.message || "Please check the console for details.",
+                variant: "destructive",
+            });
         }
     };
 
@@ -105,9 +115,17 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
         try {
             await removeAllocation(allocationId);
             router.refresh();
-        } catch (error) {
+            toast({
+                title: "Modifier Removed",
+                description: "Successfully removed modifier.",
+            });
+        } catch (error: any) {
             console.error("Failed to remove allocation:", error);
-            alert("Failed to remove modifier. Please check console.");
+            toast({
+                title: "Failed to Remove Modifier",
+                description: error.message || "Please check the console for details.",
+                variant: "destructive",
+            });
         }
     };
 

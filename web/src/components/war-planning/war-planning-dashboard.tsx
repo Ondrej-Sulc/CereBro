@@ -45,6 +45,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { createWar, deleteWar } from "@/app/planning/actions";
+import { useToast } from "@/hooks/use-toast";
 
 interface WarPlanningDashboardProps {
   wars: War[];
@@ -215,6 +216,7 @@ export default function WarPlanningDashboard({
 
 function WarCard({ war, isActive = false, userTimezone }: { war: War; isActive?: boolean; userTimezone?: string | null }) {
   const [dateString, setDateString] = useState<string>("");
+  const { toast } = useToast();
 
   useEffect(() => {
      const date = new Date(war.createdAt);
@@ -290,7 +292,22 @@ function WarCard({ war, isActive = false, userTimezone }: { war: War; isActive?:
             <AlertDialogFooter>
               <AlertDialogCancel className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:text-white">Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                onClick={async () => await deleteWar(war.id)}
+                onClick={async () => {
+                  try {
+                    await deleteWar(war.id);
+                    toast({
+                      title: "War Deleted",
+                      description: `War against ${war.enemyAlliance} has been deleted.`
+                    });
+                  } catch (error) {
+                    console.error("Failed to delete war:", error);
+                    toast({
+                      title: "Delete Failed",
+                      description: "Could not delete the war plan. Please try again.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 Delete War

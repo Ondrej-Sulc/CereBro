@@ -240,8 +240,8 @@ const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFi
                   <span className={cn(
                     "px-1 py-0.5 rounded text-[9px] font-mono leading-none",
                     player.battlegroup === 1 ? "bg-red-900/30 text-red-400 border border-red-900/50" :
-                      player.battlegroup === 2 ? "bg-green-900/30 text-blue-400 border border-blue-900/50" :
-                        "bg-blue-900/30 text-green-400 border border-green-900/50"
+                      player.battlegroup === 2 ? "bg-green-900/30 text-green-400 border border-green-900/50" :
+                        "bg-blue-900/30 text-blue-400 border border-blue-900/50"
                   )}>
                     BG{player.battlegroup}
                   </span>
