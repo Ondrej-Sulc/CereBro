@@ -196,7 +196,7 @@ export default function WarPlanningDashboard({
                 <div className="flex justify-end pt-4">
                     <Button type="submit" className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg shadow-sky-900/20 transition-all duration-300 transform hover:scale-[1.02]">
                     <Rocket className="mr-2 h-4 w-4" />
-                    Launch Operation
+                    Create War Plan
                     </Button>
                 </div>
                 </form>
