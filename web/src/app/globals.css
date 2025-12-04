@@ -240,3 +240,8 @@
 .no-spin-buttons {
   -moz-appearance: textfield;
 }
+
+/* Custom rule to hide footer on mobile for specific pages */
+body.hide-footer-on-mobile footer {
+  display: none;
+}

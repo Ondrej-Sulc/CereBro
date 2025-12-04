@@ -219,8 +219,6 @@ export function MobileSheet({
 
   if (isDesktop) return null; // No longer needs to return null immediately
 
-  const isOpen = rightPanelState === 'editor' || rightPanelState === 'roster';
-
   return (
     <AnimatePresence>
       {/* We only render the sheet if it's in open state, otherwise its height is 0 */}

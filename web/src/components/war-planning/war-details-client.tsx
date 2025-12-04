@@ -89,6 +89,18 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
+  // Effect to hide footer on mobile for this page
+  useEffect(() => {
+    if (!isDesktop) {
+      document.body.classList.add('hide-footer-on-mobile');
+    } else {
+      document.body.classList.remove('hide-footer-on-mobile');
+    }
+    return () => {
+      document.body.classList.remove('hide-footer-on-mobile');
+    };
+  }, [isDesktop]);
+
   useEffect(() => {
     if (isFullscreen) {
       document.body.classList.add('overflow-hidden');
@@ -103,7 +115,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   return (
     <div className={cn(
         "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
-        isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-64px)]",
+        isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-65px)]",
         isDesktop ? "flex-row" : "flex-col"
     )}>
       {/* Left Panel (Player Roster) - Desktop Only for now */}
