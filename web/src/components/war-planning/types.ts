@@ -1,4 +1,4 @@
-import { Player, WarFight, WarNode, WarNodeAllocation, NodeModifier, ChampionClass } from "@prisma/client";
+import { Player, WarFight, WarNode, WarNodeAllocation, NodeModifier, ChampionClass, SeasonBan, WarBan } from "@prisma/client";
 
 export type PlayerWithRoster = Player & {
   roster: {
@@ -8,6 +8,14 @@ export type PlayerWithRoster = Player & {
     isAscended: boolean;
     isAwakened: boolean;
   }[];
+};
+
+export type SeasonBanWithChampion = SeasonBan & {
+  champion: { id: number; name: string; images: any };
+};
+
+export type WarBanWithChampion = WarBan & {
+  champion: { id: number; name: string; images: any };
 };
 
 export interface FightWithNode extends WarFight {

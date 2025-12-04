@@ -1,30 +1,30 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { War, WarFight, WarStatus, WarTactic, ChampionClass } from "@prisma/client";
 import { Champion } from "@/types/champion";
-import { warNodesData } from '../nodes-data';
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions } from "@/app/planning/actions";
-import { FightWithNode, PlayerWithRoster } from "../types";
+import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
+import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "../types";
+import { warNodesData } from "../nodes-data";
 
 export type RightPanelState = 'closed' | 'tools' | 'editor';
 
 export interface ExtraChampion {
-    id: string;
-    warId: string;
-    playerId: string;
-    championId: number;
-    battlegroup: number;
-    champion: { id: number; name: string; images: any };
+  id: string;
+  warId: string;
+  playerId: string;
+  championId: number;
+  battlegroup: number;
+  champion: { id: number; name: string; images: any };
 }
 
 interface OptimisticPrefight {
-    id: number;
-    name: string;
-    images: any;
-    class: ChampionClass;
-    fightPrefightId: string;
-    player: { id: string; ingameName: string; avatar: string | null } | null;
+  id: number;
+  name: string;
+  images: any;
+  class: ChampionClass;
+  fightPrefightId: string;
+  player: { id: string; ingameName: string; avatar: string | null } | null;
 }
 
 interface UseWarPlanningProps {
@@ -32,10 +32,12 @@ interface UseWarPlanningProps {
   warId: string;
   champions: Champion[];
   players: PlayerWithRoster[];
-  updateWarFight: (updatedFight: Partial<WarFight> & { 
-      prefightUpdates?: { championId: number; playerId?: string | null }[] 
+  updateWarFight: (updatedFight: Partial<WarFight> & {
+    prefightUpdates?: { championId: number; playerId?: string | null }[]
   }) => Promise<void>;
   updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
+  seasonBans: SeasonBanWithChampion[];
+  warBans: WarBanWithChampion[];
 }
 
 export function useWarPlanning({
@@ -45,34 +47,37 @@ export function useWarPlanning({
   players,
   updateWarFight,
   updateWarStatus,
+  seasonBans,
+  warBans: initialWarBans,
 }: UseWarPlanningProps) {
   const router = useRouter();
-  
+
   // UI State
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
   const [activeTab, setActiveTab] = useState("bg1");
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
+
   // Selection State
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [selectedFight, setSelectedFight] = useState<FightWithNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-  
+
   // Data State
   const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
   const [extraChampions, setExtraChampions] = useState<ExtraChampion[]>([]);
+  const [warBans, setWarBans] = useState<WarBanWithChampion[]>(initialWarBans);
   const [status, setStatus] = useState<WarStatus>(war.status);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTactic | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
-  
+
   // History State
   const [historyFilters, setHistoryFilters] = useState({
-      onlyCurrentTier: true,
-      onlyAlliance: true,
-      minSeason: undefined as number | undefined,
+    onlyCurrentTier: true,
+    onlyAlliance: true,
+    minSeason: undefined as number | undefined,
   });
   const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
 
@@ -80,12 +85,12 @@ export function useWarPlanning({
 
   // Fetch Active Tactic
   useEffect(() => {
-      async function fetchTactic() {
-          if (!war.season || !war.warTier) return;
-          const tactic = await getActiveTactic(war.season, war.warTier);
-          setActiveTactic(tactic);
-      }
-      fetchTactic();
+    async function fetchTactic() {
+      if (!war.season || !war.warTier) return;
+      const tactic = await getActiveTactic(war.season, war.warTier);
+      setActiveTactic(tactic);
+    }
+    fetchTactic();
   }, [war.season, war.warTier]);
 
   // Fetch Fights & Extras
@@ -116,22 +121,34 @@ export function useWarPlanning({
   }, [warId, currentBattlegroup]);
 
   const validatePlayerAssignment = useCallback((playerId: string, newChampionId: number, nodeId: number) => {
-    const playerFights = currentFights.filter(f => f.player?.id === playerId && f.node.nodeNumber !== nodeId);
-    const usedChampionIds = new Set(playerFights.map(f => f.attacker?.id).filter(id => id !== undefined && id !== null));
-    
+    // 1. Check Bans
+    const isSeasonBanned = seasonBans.some((b: SeasonBanWithChampion) => b.championId === newChampionId);
+    if (isSeasonBanned) {
+      return { isValid: false, error: "This champion is globally banned for this season." };
+    }
+
+    const isWarBanned = warBans.some((b: WarBanWithChampion) => b.championId === newChampionId);
+    if (isWarBanned) {
+      return { isValid: false, error: "This champion is banned for this war." };
+    }
+
+    // 2. Check 3-Champion Limit
+    const playerFights = currentFights.filter((f: FightWithNode) => f.player?.id === playerId && f.node.nodeNumber !== nodeId);
+    const usedChampionIds = new Set(playerFights.map((f: FightWithNode) => f.attacker?.id).filter((id: number | undefined | null) => id !== undefined && id !== null));
+
     // Also include prefight and extra champions for the 3-champion limit
-    currentFights.forEach(f => f.prefightChampions?.forEach(pf => {
-        if (pf.player?.id === playerId) usedChampionIds.add(pf.id);
+    currentFights.forEach((f: FightWithNode) => f.prefightChampions?.forEach((pf: NonNullable<FightWithNode['prefightChampions']>[number]) => {
+      if (pf.player?.id === playerId) usedChampionIds.add(pf.id);
     }));
-    extraChampions.forEach(ex => {
-        if (ex.playerId === playerId && ex.battlegroup === currentBattlegroup) usedChampionIds.add(ex.championId);
+    extraChampions.forEach((ex: ExtraChampion) => {
+      if (ex.playerId === playerId && ex.battlegroup === currentBattlegroup) usedChampionIds.add(ex.championId);
     });
 
     if (usedChampionIds.size >= 3 && !usedChampionIds.has(newChampionId)) {
-        return false;
+      return { isValid: false, error: "Player already has 3 unique champions assigned." };
     }
-    return true;
-  }, [currentFights, extraChampions, currentBattlegroup]);
+    return { isValid: true };
+  }, [currentFights, extraChampions, currentBattlegroup, seasonBans, warBans]);
 
   // Handlers
   const handleToggleStatus = useCallback(async () => {
@@ -157,12 +174,12 @@ export function useWarPlanning({
 
   const handleNavigateNode = useCallback((direction: number) => {
     if (!selectedNodeId) return;
-    
+
     const validNodes = warNodesData.filter(n => !n.isPortal);
-    
+
     const currentIndex = validNodes.findIndex(n => {
-       const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
-       return nid === selectedNodeId;
+      const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
+      return nid === selectedNodeId;
     });
 
     if (currentIndex === -1) return;
@@ -171,16 +188,16 @@ export function useWarPlanning({
 
     const count = validNodes.length;
     if (newIndex < 0) {
-        newIndex = (newIndex % count + count) % count;
+      newIndex = (newIndex % count + count) % count;
     } else if (newIndex >= count) {
-        newIndex = newIndex % count;
+      newIndex = newIndex % count;
     }
 
     const newNode = validNodes[newIndex];
     const newNodeId = typeof newNode.id === 'string' ? parseInt(newNode.id) : newNode.id;
-    
+
     const newFight = currentFights.find(f => f.node.nodeNumber === newNodeId);
-    
+
     handleNodeClick(newNodeId, newFight);
   }, [selectedNodeId, currentFights, handleNodeClick]);
 
@@ -191,52 +208,93 @@ export function useWarPlanning({
   }, []);
 
   const toggleTools = useCallback(() => {
-    setRightPanelState(prev => prev === 'tools' ? 'closed' : 'tools');
+    setRightPanelState((prev: RightPanelState) => prev === 'tools' ? 'closed' : 'tools');
   }, []);
 
   const handleAddExtra = useCallback(async (playerId: string, championId: number) => {
-      const champ = champions.find(c => c.id === championId);
-      if (!champ) return;
+    const champ = champions.find(c => c.id === championId);
+    if (!champ) return;
 
-      const tempId = "temp-" + Date.now();
-      const newExtra: ExtraChampion = {
-          id: tempId,
-          warId,
-          battlegroup: currentBattlegroup,
-          playerId,
-          championId,
-          champion: { id: champ.id, name: champ.name, images: champ.images }
-      };
+    const tempId = "temp-" + Date.now();
+    const newExtra: ExtraChampion = {
+      id: tempId,
+      warId,
+      battlegroup: currentBattlegroup,
+      playerId,
+      championId,
+      champion: { id: champ.id, name: champ.name, images: champ.images }
+    };
 
-      setExtraChampions(prev => [...prev, newExtra]);
+    setExtraChampions((prev: ExtraChampion[]) => [...prev, newExtra]);
 
-      try {
-          const created = await addExtraChampion(warId, currentBattlegroup, playerId, championId);
-          setExtraChampions(prev => prev.map(x => x.id === tempId ? { ...x, id: created.id } : x));
-      } catch (e: any) {
-          console.error("Failed to add extra champion", e);
-          setExtraChampions(prev => prev.filter(x => x.id !== tempId));
-          setFightsError(e.message || "Failed to add extra champion.");
-      }
+    try {
+      const created = await addExtraChampion(warId, currentBattlegroup, playerId, championId);
+      setExtraChampions((prev: ExtraChampion[]) => prev.map((x: ExtraChampion) => x.id === tempId ? { ...x, id: created.id } : x));
+    } catch (e: any) {
+      console.error("Failed to add extra champion", e);
+      setExtraChampions((prev: ExtraChampion[]) => prev.filter((x: ExtraChampion) => x.id !== tempId));
+      setFightsError(e.message || "Failed to add extra champion.");
+    }
   }, [warId, currentBattlegroup, champions]);
 
   const handleRemoveExtra = useCallback(async (extraId: string) => {
-      const toRemove = extraChampions.find(x => x.id === extraId);
-      if (!toRemove) return;
+    const toRemove = extraChampions.find((x: ExtraChampion) => x.id === extraId);
+    if (!toRemove) return;
 
-      setExtraChampions(prev => prev.filter(x => x.id !== extraId));
+    setExtraChampions((prev: ExtraChampion[]) => prev.filter((x: ExtraChampion) => x.id !== extraId));
 
-      try {
-          await removeExtraChampion(extraId);
-      } catch (e: any) {
-          console.error("Failed to remove extra champion", e);
-          setExtraChampions(prev => [...prev, toRemove]);
-          setFightsError(e.message || "Failed to remove extra champion.");
-      }
+    try {
+      await removeExtraChampion(extraId);
+    } catch (e: any) {
+      console.error("Failed to remove extra champion", e);
+      setExtraChampions((prev: ExtraChampion[]) => [...prev, toRemove]);
+      setFightsError(e.message || "Failed to remove extra champion.");
+    }
   }, [extraChampions]);
 
-  const handleSaveFight = useCallback(async (updatedFight: Partial<WarFight> & { 
-      prefightUpdates?: { championId: number; playerId?: string | null }[] 
+  const handleAddWarBan = useCallback(async (championId: number) => {
+    const champ = champions.find(c => c.id === championId);
+    if (!champ) return;
+
+    // Optimistic
+    const tempId = "temp-" + Date.now();
+    const newBan: WarBanWithChampion = {
+      id: tempId,
+      warId,
+      championId,
+      createdAt: new Date(),
+      champion: { id: champ.id, name: champ.name, images: champ.images }
+    };
+
+    setWarBans((prev: WarBanWithChampion[]) => [...prev, newBan]);
+
+    try {
+      const created = await addWarBan(warId, championId);
+      setWarBans((prev: WarBanWithChampion[]) => prev.map((x: WarBanWithChampion) => x.id === tempId ? { ...x, id: created.id } : x));
+    } catch (e: any) {
+      console.error("Failed to add war ban", e);
+      setWarBans((prev: WarBanWithChampion[]) => prev.filter((x: WarBanWithChampion) => x.id !== tempId));
+      setFightsError(e.message || "Failed to add war ban.");
+    }
+  }, [warId, champions]);
+
+  const handleRemoveWarBan = useCallback(async (banId: string) => {
+    const toRemove = warBans.find((x: WarBanWithChampion) => x.id === banId);
+    if (!toRemove) return;
+
+    setWarBans((prev: WarBanWithChampion[]) => prev.filter((x: WarBanWithChampion) => x.id !== banId));
+
+    try {
+      await removeWarBan(banId);
+    } catch (e: any) {
+      console.error("Failed to remove war ban", e);
+      setWarBans((prev: WarBanWithChampion[]) => [...prev, toRemove]);
+      setFightsError(e.message || "Failed to remove war ban.");
+    }
+  }, [warBans]);
+
+  const handleSaveFight = useCallback(async (updatedFight: Partial<WarFight> & {
+    prefightUpdates?: { championId: number; playerId?: string | null }[]
   }) => {
     setValidationError(null);
 
@@ -245,62 +303,62 @@ export function useWarPlanning({
     const previousSelectedFight = selectedFight;
 
     // Validation Check (existing logic)
-    const fightToUpdate = currentFights.find(f => 
-        f.id === updatedFight.id || 
-        (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)
+    const fightToUpdate = currentFights.find((f: FightWithNode) =>
+      f.id === updatedFight.id ||
+      (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)
     );
 
     if (fightToUpdate) {
-        const targetPlayerId = updatedFight.playerId !== undefined ? updatedFight.playerId : fightToUpdate.player?.id;
-        const targetAttackerId = updatedFight.attackerId !== undefined ? updatedFight.attackerId : fightToUpdate.attacker?.id;
+      const targetPlayerId = updatedFight.playerId !== undefined ? updatedFight.playerId : fightToUpdate.player?.id;
+      const targetAttackerId = updatedFight.attackerId !== undefined ? updatedFight.attackerId : fightToUpdate.attacker?.id;
 
-        if (targetPlayerId && targetAttackerId) {
-             const isValid = validatePlayerAssignment(targetPlayerId, targetAttackerId, fightToUpdate.node.nodeNumber);
-             if (!isValid) {
-                 setValidationError("Player already has 3 unique champions assigned.");
-                 return;
-             }
+      if (targetPlayerId && targetAttackerId) {
+        const validation = validatePlayerAssignment(targetPlayerId, targetAttackerId, fightToUpdate.node.nodeNumber);
+        if (!validation.isValid) {
+          setValidationError(validation.error || "Invalid assignment");
+          return;
         }
+      }
     }
 
     // Optimistic Update
-    setCurrentFights(prev => prev.map(f => {
+    setCurrentFights((prev: FightWithNode[]) => prev.map((f: FightWithNode) => {
       if (f.id === updatedFight.id || (f.warId === updatedFight.warId && f.battlegroup === updatedFight.battlegroup && f.nodeId === updatedFight.nodeId)) {
         const newAttacker = updatedFight.attackerId ? champions.find(c => c.id === updatedFight.attackerId) : (updatedFight.attackerId === null ? null : f.attacker);
         const newDefender = updatedFight.defenderId ? champions.find(c => c.id === updatedFight.defenderId) : (updatedFight.defenderId === null ? null : f.defender);
         const newPlayer = updatedFight.playerId ? players.find(p => p.id === updatedFight.playerId) : (updatedFight.playerId === null ? null : f.player);
-        
-        let newPrefights = f.prefightChampions;
-        
-        if (updatedFight.prefightUpdates) {
-             newPrefights = updatedFight.prefightUpdates.map(update => {
-                 const champ = champions.find(c => c.id === update.championId);
-                 const player = update.playerId ? players.find(p => p.id === update.playerId) : null;
-                 
-                 if (!champ) return null;
 
-                 return {
-                     id: champ.id,
-                     name: champ.name,
-                     images: champ.images,
-                     class: champ.class,
-                     fightPrefightId: 'temp-' + champ.id, 
-                     player: player ? { id: player.id, ingameName: player.ingameName, avatar: player.avatar } : null
-                 };
-             }).filter((x): x is OptimisticPrefight => Boolean(x));
+        let newPrefights = f.prefightChampions;
+
+        if (updatedFight.prefightUpdates) {
+          newPrefights = updatedFight.prefightUpdates.map((update: { championId: number; playerId?: string | null }) => {
+            const champ = champions.find(c => c.id === update.championId);
+            const player = update.playerId ? players.find(p => p.id === update.playerId) : null;
+
+            if (!champ) return null;
+
+            return {
+              id: champ.id,
+              name: champ.name,
+              images: champ.images,
+              class: champ.class,
+              fightPrefightId: 'temp-' + champ.id,
+              player: player ? { id: player.id, ingameName: player.ingameName, avatar: player.avatar } : null
+            };
+          }).filter((x: OptimisticPrefight | null): x is OptimisticPrefight => Boolean(x));
         }
 
         const updatedNode = {
-            ...f,
-            ...updatedFight,
-            attacker: newAttacker ? { id: newAttacker.id, name: newAttacker.name, images: newAttacker.images, class: newAttacker.class } : null,
-            defender: newDefender ? { id: newDefender.id, name: newDefender.name, images: newDefender.images, class: newDefender.class } : null,
-            player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
-            prefightChampions: newPrefights
+          ...f,
+          ...updatedFight,
+          attacker: newAttacker ? { id: newAttacker.id, name: newAttacker.name, images: newAttacker.images, class: newAttacker.class } : null,
+          defender: newDefender ? { id: newDefender.id, name: newDefender.name, images: newDefender.images, class: newDefender.class } : null,
+          player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
+          prefightChampions: newPrefights
         } as FightWithNode;
 
         if (selectedFight && f.node.nodeNumber === selectedFight.node.nodeNumber) {
-            setSelectedFight(updatedNode);
+          setSelectedFight(updatedNode);
         }
 
         return updatedNode;
@@ -309,15 +367,15 @@ export function useWarPlanning({
     }));
 
     try {
-        await updateWarFight(updatedFight);
+      await updateWarFight(updatedFight);
     } catch (error: any) {
-        console.error("Failed to save fight:", error);
-        // Rollback
-        setCurrentFights(previousFights);
-        if (previousSelectedFight) {
-            setSelectedFight(previousSelectedFight);
-        }
-        setFightsError(error.message || "Failed to save changes. Please try again.");
+      console.error("Failed to save fight:", error);
+      // Rollback
+      setCurrentFights(previousFights);
+      if (previousSelectedFight) {
+        setSelectedFight(previousSelectedFight);
+      }
+      setFightsError(error.message || "Failed to save changes. Please try again.");
     }
   }, [updateWarFight, champions, players, selectedFight, validatePlayerAssignment, currentFights]);
 
@@ -331,7 +389,7 @@ export function useWarPlanning({
     setIsFullscreen,
     selectedNodeId,
     selectedFight,
-    selectedPlayerId, 
+    selectedPlayerId,
     setSelectedPlayerId,
     currentFights,
     extraChampions,
@@ -346,6 +404,9 @@ export function useWarPlanning({
     currentBattlegroup,
     validationError,
     setValidationError,
+    // Bans
+    seasonBans,
+    warBans,
 
     // Handlers
     handleToggleStatus,
@@ -356,5 +417,7 @@ export function useWarPlanning({
     handleSaveFight,
     handleAddExtra,
     handleRemoveExtra,
+    handleAddWarBan,
+    handleRemoveWarBan,
   };
 }

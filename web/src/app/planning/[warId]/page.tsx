@@ -72,6 +72,32 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
     }
   });
 
+  // Fetch Season Bans
+  const seasonBans = await prisma.seasonBan.findMany({
+    where: {
+      season: war.season,
+      OR: [
+        { minTier: null, maxTier: null },
+        { minTier: { lte: war.warTier }, maxTier: { gte: war.warTier } }
+      ]
+    },
+    include: {
+        champion: {
+            select: { id: true, name: true, images: true }
+        }
+    }
+  });
+
+  // Fetch War Bans
+  const warBans = await prisma.warBan.findMany({
+    where: { warId: warId },
+    include: {
+        champion: {
+            select: { id: true, name: true, images: true }
+        }
+    }
+  });
+
   const allianceMembers = await prisma.player.findMany({
     where: { allianceId: player.allianceId },
     orderBy: { ingameName: 'asc' },
@@ -96,6 +122,8 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       updateWarStatus={updateWarStatus}
       champions={champions}
       players={allianceMembers}
+      seasonBans={seasonBans}
+      warBans={warBans}
     />
   );
 }

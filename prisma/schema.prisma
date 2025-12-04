@@ -105,10 +105,12 @@ model Champion {
   roster             Roster[]
   synergyProviderFor ChampionAbilitySynergy[]
   duels              Duel[]
-  asAttacker         WarFight[]    @relation("AttackerRelation")
-  asDefender         WarFight[]    @relation("DefenderRelation")
+  asAttacker         WarFight[]               @relation("AttackerRelation")
+  asDefender         WarFight[]               @relation("DefenderRelation")
   placedPrefights    FightPrefight[]
   extraAssignments   WarExtraChampion[]
+  seasonBans         SeasonBan[]
+  warBans            WarBan[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -140,7 +142,7 @@ model Tag {
   category String
 
   champions Champion[]
-  
+
   attackTactics  WarTactic[] @relation("AttackTactic")
   defenseTactics WarTactic[] @relation("DefenseTactic")
 
@@ -239,19 +241,19 @@ model AQState {
 // --- Player and Prestige Logging ---
 
 model Player {
-  id                 String    @id @default(cuid())
-  discordId          String
-  ingameName         String
-  avatar             String?
-  isActive           Boolean   @default(false)
-  timezone           String?
-  isTrustedUploader  Boolean   @default(false)
+  id                String  @id @default(cuid())
+  discordId         String
+  ingameName        String
+  avatar            String?
+  isActive          Boolean @default(false)
+  timezone          String?
+  isTrustedUploader Boolean @default(false)
 
   summonerPrestige Int?
   championPrestige Int?
   relicPrestige    Int?
-  isBotAdmin       Boolean   @default(false)
-  isOfficer        Boolean   @default(false)
+  isBotAdmin       Boolean @default(false)
+  isOfficer        Boolean @default(false)
   battlegroup      Int?
 
   roster          Roster[]
@@ -261,8 +263,8 @@ model Player {
   alliance   Alliance? @relation(fields: [allianceId], references: [id], onDelete: SetNull)
   allianceId String?
 
-  playedInFights  WarFight[] @relation("PlayerInFight")
-  submittedVideos WarVideo[] @relation("SubmittedBy")
+  playedInFights  WarFight[]         @relation("PlayerInFight")
+  submittedVideos WarVideo[]         @relation("SubmittedBy")
   placedPrefights FightPrefight[]
   extraChampions  WarExtraChampion[]
 
@@ -288,20 +290,20 @@ model PrestigeLog {
 }
 
 model Alliance {
-  id               String   @id @default(cuid())
-  guildId          String   @unique
-  name             String
-  enabledFeatureCommands  String[] @default([])
-  createAqThread   Boolean  @default(false)
-  officerRole      String?
-  battlegroup1Role String?
-  battlegroup2Role String?
-  battlegroup3Role String?
+  id                     String   @id @default(cuid())
+  guildId                String   @unique
+  name                   String
+  enabledFeatureCommands String[] @default([])
+  createAqThread         Boolean  @default(false)
+  officerRole            String?
+  battlegroup1Role       String?
+  battlegroup2Role       String?
+  battlegroup3Role       String?
 
-  members Player[]
-  config  AllianceConfig?
-  aqSchedules AQSchedule[]
-  aqSkip      AQSkip?
+  members            Player[]
+  config             AllianceConfig?
+  aqSchedules        AQSchedule[]
+  aqSkip             AQSkip?
   aqReminderSettings AQReminderSettings?
   wars               War[]
 
@@ -310,9 +312,9 @@ model Alliance {
 }
 
 model AQReminderSettings {
-  id          String   @id @default(cuid())
-  alliance    Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-  allianceId  String   @unique
+  id         String   @id @default(cuid())
+  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  allianceId String   @unique
 
   section1ReminderEnabled Boolean @default(true)
   section1PingTime        String  @default("11:00")
@@ -320,13 +322,13 @@ model AQReminderSettings {
   section2ReminderEnabled Boolean @default(true)
   section2PingTime        String  @default("18:00")
 
-  finalReminderEnabled    Boolean @default(true)
-  finalPingTime           String  @default("11:00")
+  finalReminderEnabled Boolean @default(true)
+  finalPingTime        String  @default("11:00")
 }
 
 model AllianceConfig {
-  id          String  @id @default(cuid())
-  sheetId     String?
+  id      String  @id @default(cuid())
+  sheetId String?
 
   alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
   allianceId String   @unique
@@ -334,8 +336,8 @@ model AllianceConfig {
 
 model AQSchedule {
   id          String   @id @default(cuid())
-  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-  allianceId String
+  alliance    Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  allianceId  String
   battlegroup Int
   dayOfWeek   Int // 0 = Sunday, 6 = Saturday
   time        String // "HH:mm"
@@ -377,24 +379,55 @@ model Roster {
 // --- War Video Models ---
 
 model War {
-  id             String   @id @default(cuid())
-  season         Int
-  warNumber      Int?
-  warTier        Int
-  enemyAlliance  String?
-  status         WarStatus @default(PLANNING)
-  createdAt      DateTime @default(now())
+  id            String    @id @default(cuid())
+  season        Int
+  warNumber     Int?
+  warTier       Int
+  enemyAlliance String?
+  status        WarStatus @default(PLANNING)
+  createdAt     DateTime  @default(now())
 
   // A war belongs to an alliance
   allianceId String
   alliance   Alliance @relation(fields: [allianceId], references: [id])
 
   // A war is comprised of many fights
-  fights WarFight[]
+  fights         WarFight[]
   extraChampions WarExtraChampion[]
+  bans           WarBan[]
 
   @@unique([allianceId, season, warNumber])
   @@index([allianceId])
+}
+
+model SeasonBan {
+  id      String @id @default(cuid())
+  season  Int
+  minTier Int?
+  maxTier Int?
+
+  championId Int
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([season, minTier, maxTier, championId])
+}
+
+model WarBan {
+  id String @id @default(cuid())
+
+  warId String
+  war   War    @relation(fields: [warId], references: [id], onDelete: Cascade)
+
+  championId Int
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([warId])
+  @@index([championId])
 }
 
 model WarFight {
@@ -409,7 +442,7 @@ model WarFight {
   defenderId Int?
   defender   Champion? @relation("DefenderRelation", fields: [defenderId], references: [id])
   nodeId     Int
-  node       WarNode  @relation(fields: [nodeId], references: [id])
+  node       WarNode   @relation(fields: [nodeId], references: [id])
 
   prefightChampions FightPrefight[]
 
@@ -420,7 +453,7 @@ model WarFight {
 
   // The war this fight belongs to
   warId String
-  war   War @relation(fields: [warId], references: [id], onDelete: Cascade)
+  war   War    @relation(fields: [warId], references: [id], onDelete: Cascade)
 
   // Optional notes for the fight
   notes String?
@@ -440,15 +473,15 @@ model WarFight {
 
 model FightPrefight {
   id String @id @default(cuid())
-  
+
   warFightId String
   warFight   WarFight @relation(fields: [warFightId], references: [id], onDelete: Cascade)
-  
+
   championId Int
   champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-  
-  playerId   String?
-  player     Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  playerId String?
+  player   Player? @relation(fields: [playerId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -460,20 +493,20 @@ model FightPrefight {
 }
 
 model WarExtraChampion {
-  id          String   @id @default(cuid())
-  
-  warId       String
-  war         War      @relation(fields: [warId], references: [id], onDelete: Cascade)
-  
-  playerId    String
-  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  
-  championId  Int
-  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
+
+  warId String
+  war   War    @relation(fields: [warId], references: [id], onDelete: Cascade)
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  championId Int
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
 
   battlegroup Int
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([warId])
   @@index([playerId])
@@ -500,56 +533,56 @@ model WarVideo {
 }
 
 model WarNode {
-  id          Int        @id @default(autoincrement())
-  nodeNumber  Int        @unique
+  id          Int                 @id @default(autoincrement())
+  nodeNumber  Int                 @unique
   description String?
   fights      WarFight[]
   allocations WarNodeAllocation[]
 }
 
 model NodeModifier {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   name        String
   description String
-  
+
   allocations WarNodeAllocation[]
 
   @@unique([name, description])
 }
 
 model WarNodeAllocation {
-  id             String       @id @default(cuid())
-  warNodeId      Int
-  warNode        WarNode      @relation(fields: [warNodeId], references: [id], onDelete: Cascade)
-  
+  id        String  @id @default(cuid())
+  warNodeId Int
+  warNode   WarNode @relation(fields: [warNodeId], references: [id], onDelete: Cascade)
+
   nodeModifierId String
   nodeModifier   NodeModifier @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
-  
-  minTier        Int?
-  maxTier        Int?
-  season         Int?
+
+  minTier Int?
+  maxTier Int?
+  season  Int?
 
   @@index([warNodeId])
   @@index([nodeModifierId])
 }
 
 model WarTactic {
-  id          String   @id @default(cuid())
-  season      Int
-  minTier     Int?
-  maxTier     Int?
-  
+  id      String @id @default(cuid())
+  season  Int
+  minTier Int?
+  maxTier Int?
+
   attackTagId Int?
-  attackTag   Tag?     @relation("AttackTactic", fields: [attackTagId], references: [id])
-  
+  attackTag   Tag? @relation("AttackTactic", fields: [attackTagId], references: [id])
+
   defenseTagId Int?
-  defenseTag   Tag?    @relation("DefenseTactic", fields: [defenseTagId], references: [id])
-  
-  name        String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  defenseTag   Tag? @relation("DefenseTactic", fields: [defenseTagId], references: [id])
+
+  name String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([season, minTier, maxTier])
 }
 
@@ -575,18 +608,18 @@ model UploadToken {
 // --- NextAuth Models ---
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

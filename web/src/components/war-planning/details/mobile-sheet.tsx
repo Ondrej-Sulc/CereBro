@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useDragControls, useAnimation, PanInfo, useMotionValue } from "framer-motion";
 import NodeEditor from "../node-editor";
-import { PlayerWithRoster, FightWithNode } from "../types";
+import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "../types";
 import { Champion } from "@/types/champion";
 import { War, WarFight, WarTactic } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
@@ -29,6 +29,8 @@ interface MobileSheetProps {
   onClose: () => void;
   onNavigate: (direction: number) => void;
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
+  seasonBans: SeasonBanWithChampion[];
+  warBans: WarBanWithChampion[];
 }
 
 export function MobileSheet({
@@ -47,6 +49,8 @@ export function MobileSheet({
   onClose,
   onNavigate,
   onSave,
+  seasonBans,
+  warBans,
 }: MobileSheetProps) {
   const controls = useAnimation();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -206,6 +210,8 @@ export function MobileSheet({
                     onHistoryFiltersChange={onHistoryFiltersChange}
                     historyCache={historyCache}
                     activeTactic={activeTactic}
+                    seasonBans={seasonBans}
+                    warBans={warBans}
                 />
             </div>
         </motion.div>

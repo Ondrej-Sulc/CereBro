@@ -15,7 +15,8 @@ import {
   History,
   Rocket,
   Trash2,
-  Settings
+  Settings,
+  Ban
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,12 @@ export default function WarPlanningDashboard({
                         <Button variant="outline" className="border-slate-700 hover:bg-slate-800">
                             <Swords className="mr-2 h-4 w-4" />
                             Tactics
+                        </Button>
+                    </Link>
+                    <Link href="/admin/bans">
+                        <Button variant="outline" className="border-slate-700 hover:bg-slate-800">
+                            <Ban className="mr-2 h-4 w-4" />
+                            Bans
                         </Button>
                     </Link>
                 </>

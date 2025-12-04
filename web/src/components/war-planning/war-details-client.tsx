@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { WarFight, War, WarStatus } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
-import { PlayerWithRoster } from "./types";
+import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "./types";
 import { useWarPlanning } from "./hooks/use-war-planning";
 import { WarHeader } from "./details/war-header";
 import { WarTabs } from "./details/war-tabs";
@@ -19,6 +19,8 @@ interface WarDetailsClientProps {
   updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
   champions: Champion[];
   players: PlayerWithRoster[];
+  seasonBans: SeasonBanWithChampion[];
+  warBans: WarBanWithChampion[];
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
@@ -34,7 +36,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     selectedPlayerId, 
     setSelectedPlayerId, 
     currentFights,
-    extraChampions, // Added
+    extraChampions, 
     status,
     isUpdatingStatus,
     loadingFights,
@@ -45,6 +47,9 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     currentBattlegroup,
     validationError,
     setValidationError,
+    // Bans
+    seasonBans,
+    warBans,
 
     // Handlers
     handleToggleStatus,
@@ -53,15 +58,17 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     handleEditorClose,
     toggleTools,
     handleSaveFight,
-    handleAddExtra, // Added
-    handleRemoveExtra // Added
+    handleAddExtra,
+    handleRemoveExtra,
+    handleAddWarBan,
+    handleRemoveWarBan
   } = useWarPlanning(props);
 
   const [isDesktop, setIsDesktop] = useState(true);
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true); // Default open
 
   const handleToggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev);
+    setIsFullscreen((prev: boolean) => !prev);
   }, [setIsFullscreen]);
 
   // Auto-collapse left panel on fullscreen REMOVED
@@ -127,6 +134,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             isFullscreen={isFullscreen}
             onTogglePlayerPanel={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)} // Add toggle here too?
             isPlayerPanelOpen={isPlayerPanelOpen}
+            seasonBans={seasonBans}
+            warBans={warBans}
+            onAddWarBan={handleAddWarBan}
+            onRemoveWarBan={handleRemoveWarBan}
           />
           
           <WarTabs 
@@ -168,6 +179,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           onClose={handleEditorClose}
           onNavigate={handleNavigateNode}
           onSave={handleSaveFight}
+          seasonBans={seasonBans}
+          warBans={warBans}
         />
       ) : (
         // MobileSheet now rendered directly within the flex-col layout
@@ -187,6 +200,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           onClose={handleEditorClose}
           onNavigate={handleNavigateNode}
           onSave={handleSaveFight}
+          seasonBans={seasonBans}
+          warBans={warBans}
         />
       )}
     </div>

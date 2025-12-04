@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningToolsPanel from "../planning-tools-panel";
 import NodeEditor from "../node-editor";
-import { PlayerWithRoster, FightWithNode } from "../types";
+import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "../types";
 import { Champion } from "@/types/champion";
 import { War, WarFight, WarTactic } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
@@ -23,6 +23,8 @@ interface DesktopSidebarProps {
   onClose: () => void;
   onNavigate: (direction: number) => void;
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
+  seasonBans: SeasonBanWithChampion[];
+  warBans: WarBanWithChampion[];
 }
 
 export function DesktopSidebar({
@@ -41,6 +43,8 @@ export function DesktopSidebar({
   onClose,
   onNavigate,
   onSave,
+  seasonBans,
+  warBans,
 }: DesktopSidebarProps) {
   return (
     <div 
@@ -76,6 +80,8 @@ export function DesktopSidebar({
               onHistoryFiltersChange={onHistoryFiltersChange}
               historyCache={historyCache}
               activeTactic={activeTactic}
+              seasonBans={seasonBans}
+              warBans={warBans}
           />
         )}
       </div>

@@ -452,6 +452,79 @@ export async function removeExtraChampion(id: string) {
   await prisma.warExtraChampion.delete({ where: { id } });
 }
 
+export async function addWarBan(warId: string, championId: number) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const account = await prisma.account.findFirst({
+        where: { userId: session.user.id, provider: "discord" },
+    });
+    if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
+
+    const player = await prisma.player.findFirst({
+        where: { discordId: account.providerAccountId },
+        include: { alliance: true },
+    });
+
+    if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+        throw new Error("You must be an Alliance Officer to manage war bans.");
+    }
+
+    const targetWar = await prisma.war.findUnique({
+        where: { id: warId }
+    });
+
+    if (!targetWar || targetWar.allianceId !== player.allianceId) {
+        throw new Error("Unauthorized: Cannot add bans to a war outside your alliance.");
+    }
+
+    const newBan = await prisma.warBan.create({
+        data: {
+            warId,
+            championId,
+        },
+        include: {
+            champion: { select: { id: true, name: true, images: true } }
+        }
+    });
+    
+    return newBan;
+}
+
+export async function removeWarBan(id: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const account = await prisma.account.findFirst({
+        where: { userId: session.user.id, provider: "discord" },
+    });
+    if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
+
+    const player = await prisma.player.findFirst({
+        where: { discordId: account.providerAccountId },
+        include: { alliance: true },
+    });
+
+    if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+        throw new Error("You must be an Alliance Officer to manage war bans.");
+    }
+
+    const banToDelete = await prisma.warBan.findUnique({
+        where: { id },
+        include: { war: true }
+    });
+
+    if (!banToDelete) {
+        throw new Error("Ban not found.");
+    }
+
+    if (banToDelete.war.allianceId !== player.allianceId) {
+        throw new Error("Unauthorized: Cannot delete bans from another alliance's war.");
+    }
+
+    await prisma.warBan.delete({ where: { id } });
+}
+
 export async function getExtraChampions(warId: string, battlegroup: number) {
   const session = await auth();
   if (!session?.user?.id) return [];

@@ -14,7 +14,7 @@ import { PrefightSelector } from "./prefight-selector";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { PlayerWithRoster, FightWithNode } from "../types";
+import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "../types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
 
@@ -52,6 +52,8 @@ interface NodeEditorProps {
   }>>;
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
   activeTactic?: WarTacticWithTags | null;
+  seasonBans: SeasonBanWithChampion[];
+  warBans: WarBanWithChampion[];
 }
 
 export default function NodeEditor({
@@ -69,6 +71,8 @@ export default function NodeEditor({
   onHistoryFiltersChange,
   historyCache,
   activeTactic,
+  seasonBans,
+  warBans,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -212,15 +216,21 @@ export default function NodeEditor({
     });
   }, [players, attackerId, battlegroup, currentFight?.playerId]);
 
-  // 2. Display Champions (Filtered by Player + Rank Info)
+  // 2. Display Champions (Filtered by Player + Rank Info + BANS)
   const displayChampions = useMemo(() => {
-    if (!playerId) return champions;
+    // Filter out BANS first
+    const allowedChampions = champions.filter(c => 
+        !seasonBans.some(b => b.championId === c.id) &&
+        !warBans.some(b => b.championId === c.id)
+    );
+
+    if (!playerId) return allowedChampions;
     const player = players.find(p => p.id === playerId);
-    if (!player) return champions;
+    if (!player) return allowedChampions;
 
     const rosterMap = new Map(player.roster.map(r => [r.championId, r]));
     
-    return champions
+    return allowedChampions
         .filter(c => rosterMap.has(c.id))
         .map(c => {
             const r = rosterMap.get(c.id)!;
@@ -228,7 +238,7 @@ export default function NodeEditor({
             return { ...c, name: `${c.name} (${rankStr})` };
         })
         .sort((a, b) => a.name.localeCompare(b.name));
-  }, [champions, players, playerId]);
+  }, [champions, players, playerId, seasonBans, warBans]);
 
   // 3. Optimized Prefight List
   const prefightChampionsList = useMemo(() => {
