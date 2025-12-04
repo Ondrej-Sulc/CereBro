@@ -7,7 +7,7 @@ import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampio
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "../types";
 import { warNodesData } from "../nodes-data";
 
-export type RightPanelState = 'closed' | 'tools' | 'editor';
+export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster';
 
 export interface ExtraChampion {
   id: string;

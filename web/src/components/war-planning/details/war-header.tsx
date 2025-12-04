@@ -75,9 +75,9 @@ export function WarHeader({
         </div>
         
         <div className="flex items-center gap-2 shrink-0">
-          {/* Player Roster Toggle (Desktop) */}
+          {/* Player Roster Toggle */}
           {onTogglePlayerPanel && (
-              <div className="hidden md:block">
+              <div>
                   <Button 
                       variant={isPlayerPanelOpen ? "secondary" : "outline"} 
                       size="sm"
@@ -85,7 +85,7 @@ export function WarHeader({
                       className="gap-2"
                   >
                       <Users className="h-4 w-4" />
-                      Roster
+                      Players
                   </Button>
               </div>
           )}

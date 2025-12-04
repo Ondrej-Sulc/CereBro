@@ -27,6 +27,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   const {
     // State
     rightPanelState,
+    setRightPanelState,
     activeTab,
     setActiveTab,
     isFullscreen,
@@ -71,7 +72,15 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     setIsFullscreen((prev: boolean) => !prev);
   }, [setIsFullscreen]);
 
-  // Auto-collapse left panel on fullscreen REMOVED
+  const handleTogglePlayerPanel = useCallback(() => {
+    if (isDesktop) {
+        setIsPlayerPanelOpen(prev => !prev);
+    } else {
+        setRightPanelState(prev => prev === 'roster' ? 'closed' : 'roster');
+    }
+  }, [isDesktop, setRightPanelState]);
+
+  const isRosterVisible = isDesktop ? isPlayerPanelOpen : rightPanelState === 'roster';
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -100,13 +109,13 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
       {/* Left Panel (Player Roster) - Desktop Only for now */}
       <PlayerListPanel 
         isOpen={isPlayerPanelOpen}
-        onToggle={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)}
+        onToggle={handleTogglePlayerPanel}
         players={props.players}
         currentFights={currentFights}
-        extraChampions={extraChampions} // Added
-        onAddExtra={handleAddExtra} // Added
-        onRemoveExtra={handleRemoveExtra} // Added
-        champions={props.champions} // Added
+        extraChampions={extraChampions} 
+        onAddExtra={handleAddExtra} 
+        onRemoveExtra={handleRemoveExtra} 
+        champions={props.champions} 
         highlightedPlayerId={selectedPlayerId}
         onSelectPlayer={setSelectedPlayerId}
         isDesktop={isDesktop}
@@ -132,8 +141,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             champions={props.champions}
             currentBattlegroup={currentBattlegroup}
             isFullscreen={isFullscreen}
-            onTogglePlayerPanel={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)} // Add toggle here too?
-            isPlayerPanelOpen={isPlayerPanelOpen}
+            onTogglePlayerPanel={handleTogglePlayerPanel} 
+            isPlayerPanelOpen={isRosterVisible}
             seasonBans={seasonBans}
             warBans={warBans}
             onAddWarBan={handleAddWarBan}
@@ -155,8 +164,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onToggleFullscreen={handleToggleFullscreen}
             rightPanelState={rightPanelState}
             highlightedPlayerId={selectedPlayerId}
-            onTogglePlayerPanel={() => setIsPlayerPanelOpen(!isPlayerPanelOpen)}
-            isPlayerPanelOpen={isPlayerPanelOpen}
+            onTogglePlayerPanel={handleTogglePlayerPanel}
+            isPlayerPanelOpen={isRosterVisible}
           />
         </div>
       </div>
@@ -185,7 +194,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
       ) : (
         // MobileSheet now rendered directly within the flex-col layout
         <MobileSheet 
-          isDesktop={isDesktop} // This will be false here
+          isDesktop={isDesktop} 
           rightPanelState={rightPanelState}
           selectedNodeId={selectedNodeId}
           selectedFight={selectedFight}
@@ -202,6 +211,14 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           onSave={handleSaveFight}
           seasonBans={seasonBans}
           warBans={warBans}
+          // Roster props
+          currentFights={currentFights}
+          selectedPlayerId={selectedPlayerId}
+          onSelectPlayer={setSelectedPlayerId}
+          currentBattlegroup={currentBattlegroup}
+          extraChampions={extraChampions}
+          onAddExtra={handleAddExtra}
+          onRemoveExtra={handleRemoveExtra}
         />
       )}
     </div>

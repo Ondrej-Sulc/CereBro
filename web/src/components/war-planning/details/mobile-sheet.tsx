@@ -5,7 +5,8 @@ import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChamp
 import { Champion } from "@/types/champion";
 import { War, WarFight, WarTactic } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { RightPanelState } from "../hooks/use-war-planning";
+import { RightPanelState, ExtraChampion } from "../hooks/use-war-planning";
+import { PlayerListContent } from "./player-list-content";
 
 interface HistoryFilters {
   onlyCurrentTier: boolean;
@@ -24,13 +25,21 @@ interface MobileSheetProps {
   players: PlayerWithRoster[];
   activeTactic: WarTactic | null;
   historyFilters: HistoryFilters;
-  onHistoryFiltersChange: React.Dispatch<React.SetStateAction<HistoryFilters>>; // Changed type
+  onHistoryFiltersChange: React.Dispatch<React.SetStateAction<HistoryFilters>>; 
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
   onClose: () => void;
   onNavigate: (direction: number) => void;
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
+  // Roster props
+  currentFights: FightWithNode[];
+  selectedPlayerId: string | null;
+  onSelectPlayer: (id: string | null) => void;
+  currentBattlegroup: number;
+  extraChampions: ExtraChampion[];
+  onAddExtra: (playerId: string, championId: number) => void;
+  onRemoveExtra: (extraId: string) => void;
 }
 
 export function MobileSheet({
@@ -51,6 +60,13 @@ export function MobileSheet({
   onSave,
   seasonBans,
   warBans,
+  currentFights,
+  selectedPlayerId,
+  onSelectPlayer,
+  currentBattlegroup,
+  extraChampions,
+  onAddExtra,
+  onRemoveExtra
 }: MobileSheetProps) {
   const controls = useAnimation();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -86,8 +102,9 @@ export function MobileSheet({
 
 
   useEffect(() => {
-      if (rightPanelState === 'editor') {
+      if (rightPanelState === 'editor' || rightPanelState === 'roster') {
           // Default to collapsed view on open for better map visibility
+          // If roster, maybe expand more? Let's stick to collapsed first.
           controls.start({ height: collapsedHeight });
           sheetHeight.set(collapsedHeight);
       } else {
@@ -170,12 +187,14 @@ export function MobileSheet({
 
   if (isDesktop) return null; // No longer needs to return null immediately
 
+  const isOpen = rightPanelState === 'editor' || rightPanelState === 'roster';
+
   return (
     <AnimatePresence>
-      {/* We only render the sheet if it's in editor state, otherwise its height is 0 */}
-      {rightPanelState === 'editor' && (
+      {/* We only render the sheet if it's in open state, otherwise its height is 0 */}
+      {isOpen && (
         <motion.div
-            key="mobile-node-editor-sheet"
+            key="mobile-sheet"
             ref={sheetRef}
             initial={{ height: 0 }}
             animate={controls}
@@ -194,6 +213,7 @@ export function MobileSheet({
 
             {/* Content */}
             <div className="flex-1 overflow-hidden relative bg-slate-950">
+               {rightPanelState === 'editor' ? (
                  <NodeEditor
                     key={selectedNodeId}
                     onClose={onClose}
@@ -213,6 +233,20 @@ export function MobileSheet({
                     seasonBans={seasonBans}
                     warBans={warBans}
                 />
+               ) : (
+                 <PlayerListContent
+                    players={players}
+                    currentFights={currentFights}
+                    highlightedPlayerId={selectedPlayerId}
+                    onSelectPlayer={onSelectPlayer}
+                    currentBattlegroup={currentBattlegroup}
+                    extraChampions={extraChampions}
+                    onAddExtra={onAddExtra}
+                    onRemoveExtra={onRemoveExtra}
+                    champions={champions}
+                    onClose={onClose}
+                 />
+               )}
             </div>
         </motion.div>
       )}
