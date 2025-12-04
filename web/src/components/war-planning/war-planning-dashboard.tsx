@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { War, WarStatus } from "@prisma/client";
+import { War, WarStatus, WarMapType } from "@prisma/client";
 import Link from "next/link";
 import { 
   Plus, 
@@ -41,6 +41,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -66,9 +73,17 @@ export default function WarPlanningDashboard({
   isBotAdmin,
 }: WarPlanningDashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
 
   const activeWars = wars.filter((w) => w.status === WarStatus.PLANNING);
   const archivedWars = wars.filter((w) => w.status === WarStatus.FINISHED);
+
+  // Pre-fill logic based on last war if available
+  useEffect(() => {
+      if (wars.length > 0) {
+          setSelectedMapType(wars[0].mapType);
+      }
+  }, [wars]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -154,6 +169,18 @@ export default function WarPlanningDashboard({
                     defaultValue={defaultTier}
                     className="bg-slate-900 border-slate-800 no-spin-buttons"
                     />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="mapType">Map Type</Label>
+                    <Select name="mapType" defaultValue={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
+                        <SelectTrigger className="bg-slate-900 border-slate-800">
+                            <SelectValue placeholder="Select Map Type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-800">
+                            <SelectItem value={WarMapType.STANDARD}>Standard Map (50 Nodes)</SelectItem>
+                            <SelectItem value={WarMapType.BIG_THING}>Big Thing (10 Nodes)</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="opponent">Opponent Alliance</Label>

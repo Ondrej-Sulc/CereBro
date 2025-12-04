@@ -52,6 +52,11 @@ enum WarStatus {
   FINISHED
 }
 
+enum WarMapType {
+  STANDARD
+  BIG_THING
+}
+
 enum DuelStatus {
   ACTIVE
   SUGGESTED
@@ -385,6 +390,7 @@ model War {
   warTier       Int
   enemyAlliance String?
   status        WarStatus @default(PLANNING)
+  mapType       WarMapType @default(STANDARD)
   createdAt     DateTime  @default(now())
 
   // A war belongs to an alliance
@@ -561,6 +567,7 @@ model WarNodeAllocation {
   minTier Int?
   maxTier Int?
   season  Int?
+  mapType WarMapType @default(STANDARD)
 
   @@index([warNodeId])
   @@index([nodeModifierId])

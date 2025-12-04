@@ -6,8 +6,8 @@ import { Maximize2, Minimize2, History, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
-import { WarTactic, War } from '@prisma/client';
-import { LAYOUT, warNodesData } from '../nodes-data';
+import { WarTactic, War, WarMapType } from '@prisma/client';
+import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from '../nodes-data';
 import { FightWithNode } from '../types';
 import { WarMapBackground } from './map-background';
 import { CanvasNode } from './canvas-node';
@@ -34,8 +34,8 @@ interface WarMapProps {
   isPlayerPanelOpen?: boolean;
 }
 
-const WarMap = memo(function WarMap({ 
-  onNodeClick, 
+const WarMap = memo(function WarMap({
+  onNodeClick,
   selectedNodeId,
   currentWar,
   historyFilters,
@@ -55,6 +55,11 @@ const WarMap = memo(function WarMap({
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 1000, height: 800 });
+
+  // Determine Map Data based on War Type
+  const isBigThing = currentWar?.mapType === WarMapType.BIG_THING;
+  const currentNodesData = isBigThing ? warNodesDataBig : warNodesData;
+  const currentLayout = isBigThing ? LAYOUT_BIG : LAYOUT;
 
   // Responsive Stage Size via ResizeObserver
   useEffect(() => {
@@ -122,7 +127,7 @@ const WarMap = memo(function WarMap({
   // Center on selected node or init
   useEffect(() => {
     if (selectedNodeId && stageRef.current) {
-        const targetNode = warNodesData.find(n => n.id === selectedNodeId);
+        const targetNode = currentNodesData.find(n => n.id === selectedNodeId);
         if (targetNode) {
             const stage = stageRef.current;
             const scale = stage.scaleX();
@@ -140,21 +145,21 @@ const WarMap = memo(function WarMap({
             });
         }
     }
-  }, [selectedNodeId]);
+  }, [selectedNodeId, currentNodesData]);
 
-  // Initial Centering (Once)
+  // Initial Centering (Once per layout)
   useEffect(() => {
       if (stageRef.current) {
           const stage = stageRef.current;
-          const initialScale = 0.6;
+          const initialScale = isBigThing ? 0.5 : 0.6; // Slightly zoomed out for Big Thing if needed, or consistent
           const newPos = {
-              x: (stage.width() - LAYOUT.WIDTH * initialScale) / 2,
-              y: (stage.height() - LAYOUT.HEIGHT * initialScale) / 2
+              x: (stage.width() - currentLayout.WIDTH * initialScale) / 2,
+              y: (stage.height() - currentLayout.HEIGHT * initialScale) / 2
           };
           stage.scale({ x: initialScale, y: initialScale });
           stage.position(newPos);
       }
-  }, []); 
+  }, [isBigThing, currentLayout]); // Re-run if map type changes
 
   const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -244,6 +249,30 @@ const WarMap = memo(function WarMap({
           <History className="h-5 w-5" />
         </Button>
         <Button
+          variant={showHistory ? "default" : "secondary"}
+          size="icon"
+          onClick={() => setShowHistory(!showHistory)}
+          title="Toggle Historical Counters"
+          className={cn(
+            "border border-slate-700",
+            showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
+          )}
+        >
+          <History className="h-5 w-5" />
+        </Button>
+        <Button
+          variant={showHistory ? "default" : "secondary"}
+          size="icon"
+          onClick={() => setShowHistory(!showHistory)}
+          title="Toggle Historical Counters"
+          className={cn(
+            "border border-slate-700",
+            showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
+          )}
+        >
+          <History className="h-5 w-5" />
+        </Button>
+        <Button
           variant="secondary"
           size="icon"
           onClick={handleToggleFullscreen}
@@ -274,7 +303,7 @@ const WarMap = memo(function WarMap({
 
         {/* Interactive Nodes Layer */}
         <Layer>
-            {warNodesData.map(node => {
+            {currentNodesData.map(node => {
               const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
               const fight = fightsByNode.get(numericId);
               const history = showHistory && fight?.defender ? historyData.get(numericId) : null;
@@ -301,3 +330,4 @@ const WarMap = memo(function WarMap({
 });
 
 export default WarMap;
+

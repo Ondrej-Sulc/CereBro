@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
-import { WarFight } from "@prisma/client";
+import { WarFight, WarMapType } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -13,6 +13,7 @@ const createWarSchema = z.object({
   warNumber: z.number().min(1).optional(),
   tier: z.number().min(1),
   opponent: z.string().min(1),
+  mapType: z.nativeEnum(WarMapType).optional(),
 });
 
 export async function getActiveTactic(season: number, tier: number) {
@@ -69,9 +70,10 @@ export async function createWar(formData: FormData) {
   const warNumber = formData.get("warNumber") ? parseInt(formData.get("warNumber") as string) : undefined;
   const tier = parseInt(formData.get("tier") as string);
   const opponent = formData.get("opponent") as string;
+  const mapType = (formData.get("mapType") as WarMapType) || WarMapType.STANDARD;
 
   // Validate
-  const data = createWarSchema.parse({ season, warNumber, tier, opponent });
+  const data = createWarSchema.parse({ season, warNumber, tier, opponent, mapType });
 
   // 3. Create War and Fights
   const war = await prisma.$transaction(async (tx) => {
@@ -84,6 +86,7 @@ export async function createWar(formData: FormData) {
         enemyAlliance: data.opponent,
         allianceId: player.allianceId!,
         status: WarStatus.PLANNING,
+        mapType: data.mapType,
       },
     });
     
@@ -91,9 +94,12 @@ export async function createWar(formData: FormData) {
     const warNodes = await tx.warNode.findMany();
     const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
 
+    // Determine max nodes based on map type
+    const maxNodes = data.mapType === WarMapType.BIG_THING ? 10 : 50;
+
     const fightsData = [];
     for (let bg = 1; bg <= 3; bg++) {
-      for (let nodeNum = 1; nodeNum <= 50; nodeNum++) {
+      for (let nodeNum = 1; nodeNum <= maxNodes; nodeNum++) {
         const nodeId = nodeMap.get(nodeNum);
         if (nodeId) {
             fightsData.push({

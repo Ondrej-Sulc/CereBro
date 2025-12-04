@@ -76,6 +76,66 @@ const createNodeTrio = (
   }));
 };
 
+export const LAYOUT_BIG = {
+  WIDTH: 2000, 
+  HEIGHT: 2400,
+  Y_START: 1800,
+  Y_STEP: 300, // Larger step for distinct rows
+  SPACING_NODE: 150,  
+  SPACING_GROUP: 500, // Distance between islands
+  OFFSET_PORTAL: 90,
+};
+
+const CENTER_X_BIG = LAYOUT_BIG.WIDTH / 2;
+const ROW_1_Y = LAYOUT_BIG.Y_START;
+const ROW_2_Y = LAYOUT_BIG.Y_START - LAYOUT_BIG.Y_STEP;
+const ROW_3_Y = LAYOUT_BIG.Y_START - (LAYOUT_BIG.Y_STEP * 2);
+
+// Island Helper for Big Thing
+// Creates an island with a start portal (bottom), 2 nodes (left/right), and an end portal (top)
+const createIsland = (
+  startIds: [number, number],
+  centerX: number,
+  centerY: number,
+  islandIndex: number
+): WarNodePosition[] => {
+  const [id1, id2] = startIds;
+  const startPortalId = `portal-island-${islandIndex}-start`;
+  const endPortalId = `portal-island-${islandIndex}-end`;
+
+  return [
+    // Start Portal
+    createPortal(startPortalId, centerX, centerY + LAYOUT_BIG.OFFSET_PORTAL, [id1, id2]),
+    
+    // Nodes (Left and Right of center)
+    { id: id1, x: centerX - (LAYOUT_BIG.SPACING_NODE / 2), y: centerY, paths: [endPortalId] },
+    { id: id2, x: centerX + (LAYOUT_BIG.SPACING_NODE / 2), y: centerY, paths: [endPortalId] },
+
+    // End Portal
+    createPortal(endPortalId, centerX, centerY - LAYOUT_BIG.OFFSET_PORTAL)
+  ];
+};
+
+export const warNodesDataBig: WarNodePosition[] = [
+  // === Row 1 (Bottom) ===
+  // Island 1 (Nodes 1, 2) - Left
+  ...createIsland([1, 2], CENTER_X_BIG - (LAYOUT_BIG.SPACING_GROUP / 2), ROW_1_Y, 1),
+  
+  // Island 2 (Nodes 3, 4) - Right
+  ...createIsland([3, 4], CENTER_X_BIG + (LAYOUT_BIG.SPACING_GROUP / 2), ROW_1_Y, 2),
+
+  // === Row 2 (Middle) ===
+  // Island 3 (Nodes 5, 6) - Left
+  ...createIsland([5, 6], CENTER_X_BIG - (LAYOUT_BIG.SPACING_GROUP / 2), ROW_2_Y, 3),
+
+  // Island 4 (Nodes 7, 8) - Right
+  ...createIsland([7, 8], CENTER_X_BIG + (LAYOUT_BIG.SPACING_GROUP / 2), ROW_2_Y, 4),
+
+  // === Row 3 (Top) ===
+  // Island 5 (Nodes 9, 10) - Center
+  ...createIsland([9, 10], CENTER_X_BIG, ROW_3_Y, 5),
+];
+
 // --- Data Definitions ---
 
 export const warNodesData: WarNodePosition[] = [
