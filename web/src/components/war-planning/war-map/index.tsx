@@ -298,7 +298,7 @@ const WarMap = memo(function WarMap({
       >
         {/* Background Layer */}
         <Layer listening={false}>
-            <WarMapBackground />
+            <WarMapBackground isBigThing={isBigThing} />
         </Layer>
 
         {/* Interactive Nodes Layer */}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Shape } from 'react-konva';
-import { LAYOUT, warNodesData } from '../nodes-data';
+import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from '../nodes-data';
 import Konva from 'konva';
 
 interface Star {
@@ -13,18 +13,25 @@ interface Star {
   twinkleDir: number;
 }
 
-export const WarMapBackground = React.memo(function WarMapBackground() {
+interface WarMapBackgroundProps {
+    isBigThing?: boolean;
+}
+
+export const WarMapBackground = React.memo(function WarMapBackground({ isBigThing }: WarMapBackgroundProps) {
     const [stars, setStars] = useState<Star[]>([]);
     // Cache the static background (nebulas + paths)
     const staticBgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+    const currentLayout = isBigThing ? LAYOUT_BIG : LAYOUT;
+    const currentNodesData = isBigThing ? warNodesDataBig : warNodesData;
 
     // Generate stars once
     useEffect(() => {
         const starCount = 400;
         const generatedStars = Array.from({ length: starCount }).map((_, i) => ({
           id: i,
-          x: Math.random() * LAYOUT.WIDTH,
-          y: Math.random() * LAYOUT.HEIGHT,
+          x: Math.random() * currentLayout.WIDTH,
+          y: Math.random() * currentLayout.HEIGHT,
           r: Math.random() * 1.5 + 0.5,
           opacity: Math.random() * 0.7 + 0.3,
           twinkleSpeed: Math.random() * 0.02 + 0.005,
@@ -34,23 +41,27 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
 
         // Pre-render static background
         const canvas = document.createElement('canvas');
-        canvas.width = LAYOUT.WIDTH;
-        canvas.height = LAYOUT.HEIGHT;
+        canvas.width = currentLayout.WIDTH;
+        canvas.height = currentLayout.HEIGHT;
         const ctx = canvas.getContext('2d');
         if (ctx) {
              // 1. Draw Nebulas (Scaled for 2800x3200)
+             // Use simple scaling factor if BigThing has different aspect ratio
+             const scaleX = currentLayout.WIDTH / LAYOUT.WIDTH; 
+             const scaleY = currentLayout.HEIGHT / LAYOUT.HEIGHT;
+
              const nebulas = [
-                { cx: 400, cy: 1600, r: 1200, color: "rgba(76, 29, 149, 0.15)" },  // Left-Mid Violet
-                { cx: 1600, cy: 800, r: 1400, color: "rgba(30, 58, 138, 0.15)" },  // Top-Right Blue
-                { cx: 2000, cy: 2400, r: 1000, color: "rgba(190, 24, 93, 0.15)" }, // Bottom-Right Pink
-                { cx: 1200, cy: 200, r: 1200, color: "rgba(15, 118, 110, 0.15)" }, // Top-Mid Teal
+                { cx: 400 * scaleX, cy: 1600 * scaleY, r: 1200 * scaleX, color: "rgba(76, 29, 149, 0.15)" },  // Left-Mid Violet
+                { cx: 1600 * scaleX, cy: 800 * scaleY, r: 1400 * scaleX, color: "rgba(30, 58, 138, 0.15)" },  // Top-Right Blue
+                { cx: 2000 * scaleX, cy: 2400 * scaleY, r: 1000 * scaleX, color: "rgba(190, 24, 93, 0.15)" }, // Bottom-Right Pink
+                { cx: 1200 * scaleX, cy: 200 * scaleY, r: 1200 * scaleX, color: "rgba(15, 118, 110, 0.15)" }, // Top-Mid Teal
             ];
             nebulas.forEach(nebula => {
                 const gradient = ctx.createRadialGradient(nebula.cx, nebula.cy, 0, nebula.cx, nebula.cy, nebula.r);
                 gradient.addColorStop(0, nebula.color);
                 gradient.addColorStop(1, "rgba(0,0,0,0)");
                 ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, LAYOUT.WIDTH, LAYOUT.HEIGHT);
+                ctx.fillRect(0, 0, currentLayout.WIDTH, currentLayout.HEIGHT);
             });
 
             // 2. Draw Paths
@@ -67,9 +78,9 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
             ctx.shadowOffsetY = 0;
 
             ctx.beginPath();
-            warNodesData.forEach((node) => {
+            currentNodesData.forEach((node) => {
                 node.paths.forEach((pathToId) => {
-                    const targetNode = warNodesData.find((n) => n.id === pathToId);
+                    const targetNode = currentNodesData.find((n) => n.id === pathToId);
                     if (targetNode) {
                         ctx.moveTo(node.x, node.y);
                         ctx.lineTo(targetNode.x, targetNode.y);
@@ -84,31 +95,31 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
             // This reveals the solid bg-slate-950 of the parent div perfectly.
             ctx.globalCompositeOperation = 'destination-in';
             
-            const cx = LAYOUT.WIDTH / 2;
-            const cy = LAYOUT.HEIGHT / 2;
+            const cx = currentLayout.WIDTH / 2;
+            const cy = currentLayout.HEIGHT / 2;
             // Radius to cover most of the map but fade corners. 
             // Width 2800, Height 3200. Center is (1400, 1600).
             // We want to keep the center 60% fully opaque.
-            const fadeStartRadius = Math.min(LAYOUT.WIDTH, LAYOUT.HEIGHT) * 0.4; // ~1100px
-            const fadeEndRadius = Math.max(LAYOUT.WIDTH, LAYOUT.HEIGHT) * 0.8;   // ~2500px (reaches corners)
+            const fadeStartRadius = Math.min(currentLayout.WIDTH, currentLayout.HEIGHT) * 0.4; // ~1100px
+            const fadeEndRadius = Math.max(currentLayout.WIDTH, currentLayout.HEIGHT) * 0.8;   // ~2500px (reaches corners)
 
             const maskGradient = ctx.createRadialGradient(cx, cy, fadeStartRadius, cx, cy, fadeEndRadius);
             maskGradient.addColorStop(0, "rgba(0, 0, 0, 1)"); // Fully Opaque (Content kept)
             maskGradient.addColorStop(1, "rgba(0, 0, 0, 0)"); // Fully Transparent (Content removed)
             
             ctx.fillStyle = maskGradient;
-            ctx.fillRect(0, 0, LAYOUT.WIDTH, LAYOUT.HEIGHT);
+            ctx.fillRect(0, 0, currentLayout.WIDTH, currentLayout.HEIGHT);
 
             // Reset composite operation for future draws (though we don't draw more on static)
             ctx.globalCompositeOperation = 'source-over';
         }
         staticBgCanvasRef.current = canvas;
-    }, []);
+    }, [isBigThing, currentLayout, currentNodesData]);
 
     const sceneFunc = useMemo(() => {
         return (context: Konva.Context, shape: Konva.Shape) => {
             const ctx = context._context;
-            ctx.clearRect(0, 0, LAYOUT.WIDTH, LAYOUT.HEIGHT);
+            ctx.clearRect(0, 0, currentLayout.WIDTH, currentLayout.HEIGHT);
 
             // 1. Draw Cached Static Background
             if (staticBgCanvasRef.current) {
@@ -140,7 +151,7 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
             });
             ctx.globalAlpha = 1.0;
         };
-    }, [stars]);
+    }, [stars, isBigThing, currentLayout]);
 
     const shapeRef = useRef<Konva.Shape>(null);
 
@@ -164,8 +175,8 @@ export const WarMapBackground = React.memo(function WarMapBackground() {
     return (
         <Shape 
             sceneFunc={sceneFunc}
-            width={LAYOUT.WIDTH}
-            height={LAYOUT.HEIGHT}
+            width={currentLayout.WIDTH}
+            height={currentLayout.HEIGHT}
             listening={false}
             ref={shapeRef}
         />
