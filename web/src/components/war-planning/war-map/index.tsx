@@ -187,6 +187,11 @@ const WarMap = memo(function WarMap({
     stage.position(newPos);
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+      // Prevent page scrolling/zooming when interacting with the map
+      e.preventDefault();
+  };
+
   const fightsByNode = useMemo(() => {
     const map = new Map<number, FightWithNode>();
     fights.forEach(fight => {
@@ -202,6 +207,8 @@ const WarMap = memo(function WarMap({
             !onToggleFullscreen && isFull ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-full"
         )}
         ref={containerRef}
+        style={{ touchAction: 'none' }} // Critical for preventing page scroll/zoom on mobile
+        onTouchMove={handleTouchMove}
     >
       {/* Top Left: Player Panel Toggle */}
       {onTogglePlayerPanel && (

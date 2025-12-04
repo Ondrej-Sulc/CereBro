@@ -323,14 +323,9 @@ export default function NodeEditor({
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-lg">Edit Node {nodeId}</h3>
+            <h3 className="font-semibold text-lg">Node {nodeId}</h3>
             <ActiveModifiers modifiers={activeModifiers} />
           </div>
-          <p className="text-xs text-muted-foreground">
-             {currentFight?.defender?.name ? 
-              `Current: ${currentFight.defender.name}` : 
-              "No defender assigned"}
-          </p>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -385,7 +380,7 @@ export default function NodeEditor({
                     champions={displayChampions}
                     value={attackerId !== undefined ? String(attackerId) : ""}
                     onSelect={handleAttackerChange}
-                    placeholder={playerId ? "Select from roster..." : "Select generic counter..."}
+                    placeholder={playerId ? "Select from roster..." : "Select counter..."}
                   />
                   {attackerTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
