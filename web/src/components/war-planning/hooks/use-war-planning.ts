@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass } from "@prisma/client";
+import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
@@ -132,11 +132,13 @@ export function useWarPlanning({
       return { isValid: false, error: "This champion is banned for this war." };
     }
 
-    // 2. Check 3-Champion Limit
+    // 2. Check Champion Limit (2 for Big Thing, 3 for Standard)
+    const limit = war.mapType === WarMapType.BIG_THING ? 2 : 3;
+
     const playerFights = currentFights.filter((f: FightWithNode) => f.player?.id === playerId && f.node.nodeNumber !== nodeId);
     const usedChampionIds = new Set(playerFights.map((f: FightWithNode) => f.attacker?.id).filter((id: number | undefined | null) => id !== undefined && id !== null));
 
-    // Also include prefight and extra champions for the 3-champion limit
+    // Also include prefight and extra champions for the limit
     currentFights.forEach((f: FightWithNode) => f.prefightChampions?.forEach((pf: NonNullable<FightWithNode['prefightChampions']>[number]) => {
       if (pf.player?.id === playerId) usedChampionIds.add(pf.id);
     }));
@@ -144,11 +146,11 @@ export function useWarPlanning({
       if (ex.playerId === playerId && ex.battlegroup === currentBattlegroup) usedChampionIds.add(ex.championId);
     });
 
-    if (usedChampionIds.size >= 3 && !usedChampionIds.has(newChampionId)) {
-      return { isValid: false, error: "Player already has 3 unique champions assigned." };
+    if (usedChampionIds.size >= limit && !usedChampionIds.has(newChampionId)) {
+      return { isValid: false, error: `Player already has ${limit} unique champions assigned.` };
     }
     return { isValid: true };
-  }, [currentFights, extraChampions, currentBattlegroup, seasonBans, warBans]);
+  }, [currentFights, extraChampions, currentBattlegroup, seasonBans, warBans, war.mapType]);
 
   // Handlers
   const handleToggleStatus = useCallback(async () => {
