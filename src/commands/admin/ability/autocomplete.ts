@@ -98,11 +98,28 @@ export async function autocompleteSource(interaction: AutocompleteInteraction) {
 
 export async function autocompleteSynergyChampions(interaction: AutocompleteInteraction) {
     const focusedValue = interaction.options.getFocused();
+    
+    const lastCommaIndex = focusedValue.lastIndexOf(',');
+    let prefix = '';
+    let currentTerm = focusedValue;
+
+    if (lastCommaIndex !== -1) {
+        prefix = focusedValue.substring(0, lastCommaIndex + 1);
+        currentTerm = focusedValue.substring(lastCommaIndex + 1).trim();
+    }
+
     const champions = await prisma.champion.findMany({
-      where: { name: { contains: focusedValue, mode: "insensitive" } },
+      where: { name: { contains: currentTerm, mode: "insensitive" } },
       take: 25,
     });
+    
     await interaction.respond(
-      champions.map((champion) => ({ name: champion.name, value: champion.name }))
+      champions.map((champion) => {
+        let suggestion = champion.name;
+        if (prefix) {
+             suggestion = prefix + (prefix.endsWith(' ') ? '' : ' ') + champion.name;
+        }
+        return { name: suggestion, value: suggestion };
+      })
     );
 }
