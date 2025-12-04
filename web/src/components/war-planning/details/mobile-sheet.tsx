@@ -82,6 +82,17 @@ export function MobileSheet({
   const [minDragHeight, setMinDragHeight] = useState(0);
   const [collapsedHeight, setCollapsedHeight] = useState(0);
   const [expandedHeight, setExpandedHeight] = useState(0);
+  
+  // Track user preference ('collapsed' or 'expanded') to persist state across opens
+  const [preferredMode, setPreferredMode] = useState<'collapsed' | 'expanded'>('collapsed');
+
+  // Load preference on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('war-planning-sheet-mode');
+    if (saved === 'expanded') {
+        setPreferredMode('expanded');
+    }
+  }, []);
 
   // Recalculate heights on mount and resize
   useEffect(() => {
@@ -100,18 +111,22 @@ export function MobileSheet({
     return () => window.removeEventListener('resize', calculateHeights);
   }, []);
 
+  const isOpen = rightPanelState === 'editor' || rightPanelState === 'roster';
 
   useEffect(() => {
-      if (rightPanelState === 'editor' || rightPanelState === 'roster') {
-          // Default to collapsed view on open for better map visibility
-          // If roster, maybe expand more? Let's stick to collapsed first.
-          controls.start({ height: collapsedHeight });
-          sheetHeight.set(collapsedHeight);
+      if (isOpen) {
+          // Open to preferred height
+          const target = preferredMode === 'expanded' ? expandedHeight : collapsedHeight;
+          if (target > 0) {
+              controls.start({ height: target });
+              // We don't set sheetHeight here immediately to allow animation to play from 0 (if mounting)
+              // or from current position.
+          }
       } else {
           controls.start({ height: 0 }); // When closed, fully collapse
           sheetHeight.set(0);
       }
-  }, [rightPanelState, controls, sheetHeight, collapsedHeight]);
+  }, [isOpen, preferredMode, controls, expandedHeight, collapsedHeight, sheetHeight]);
 
   // Pointer Event Handlers for Resizing
   const handlePointerMove = useCallback((e: PointerEvent) => {
@@ -138,6 +153,7 @@ export function MobileSheet({
       
       // Simple snap logic based on nearest point or flick
       let targetHeight = currentHeight;
+      let newMode = preferredMode; // Default keep current
       
       // If dragged very low (near handle), close
       if (currentHeight < minDragHeight + 20) {
@@ -147,23 +163,39 @@ export function MobileSheet({
           return;
       }
       
-      // Determine target snap height based on position zones if not continuous
-      // But user requested "move it anywhere".
-      // We will only SNAP if it's close to the extremes, otherwise leave it.
-      
       const SNAP_THRESHOLD = 50;
       if (Math.abs(currentHeight - expandedHeight) < SNAP_THRESHOLD) {
            targetHeight = expandedHeight;
+           newMode = 'expanded';
       } else if (Math.abs(currentHeight - collapsedHeight) < SNAP_THRESHOLD) {
            targetHeight = collapsedHeight;
+           newMode = 'collapsed';
       } else if (Math.abs(currentHeight - minDragHeight) < SNAP_THRESHOLD) {
            targetHeight = minDragHeight;
+           // If minimized, maybe treat as collapsed preference?
+           newMode = 'collapsed';
+      } else {
+           // If released in between, snap to closest
+           const distToExpanded = Math.abs(currentHeight - expandedHeight);
+           const distToCollapsed = Math.abs(currentHeight - collapsedHeight);
+           if (distToExpanded < distToCollapsed) {
+               targetHeight = expandedHeight;
+               newMode = 'expanded';
+           } else {
+               targetHeight = collapsedHeight;
+               newMode = 'collapsed';
+           }
       }
-      // Otherwise targetHeight = currentHeight (Free movement)
+
+      // Update state and storage
+      if (newMode !== preferredMode) {
+          setPreferredMode(newMode);
+          localStorage.setItem('war-planning-sheet-mode', newMode);
+      }
 
       controls.start({ height: targetHeight });
-      sheetHeight.set(targetHeight);
-  }, [sheetHeight, minDragHeight, collapsedHeight, expandedHeight, controls, onClose, handlePointerMove]);
+      // We animate to targetHeight
+  }, [sheetHeight, minDragHeight, collapsedHeight, expandedHeight, controls, onClose, preferredMode]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
       e.preventDefault(); // Prevent text selection
