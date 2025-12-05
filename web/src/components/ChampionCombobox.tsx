@@ -165,7 +165,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList>
+          <CommandList className="overflow-hidden">
             {flatItems.length === 0 && <CommandEmpty>No champion found.</CommandEmpty>}
             <CommandGroup>
                 <div style={{ height: Math.min(flatItems.length * 46 + groupNames.length * 28, 300) }}>

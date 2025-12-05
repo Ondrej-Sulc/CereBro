@@ -150,7 +150,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList>
+          <CommandList className="overflow-hidden">
             {filteredPlayers.length === 0 && <CommandEmpty>No players found.</CommandEmpty>}
             <CommandGroup>
                 {(() => {

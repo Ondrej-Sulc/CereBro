@@ -245,3 +245,22 @@
 body.hide-footer-on-mobile footer {
   display: none;
 }
+
+/* Custom Scrollbar for WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a; /* Slate 950 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155; /* Slate 700 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569; /* Slate 600 */
+}
