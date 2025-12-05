@@ -1,13 +1,14 @@
 import React, { useMemo } from "react";
-import { Users, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { Users, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, FightWithNode } from "../types";
+import { War, WarMapType } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ExtraChampion } from "../hooks/use-war-planning";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
+import { ChampionCombobox } from "@/components/ChampionCombobox"; // Added this import
 import { Champion } from "@/types/champion";
 import { motion } from "framer-motion";
 
@@ -21,7 +22,8 @@ interface PlayerListContentProps {
   onAddExtra: (playerId: string, championId: number) => void;
   onRemoveExtra: (extraId: string) => void;
   champions: Champion[];
-  onClose?: () => void; // Optional close button for mobile header
+  onClose?: () => void; 
+  war: War; // Add war prop
 }
 
 export const PlayerListContent = ({
@@ -34,8 +36,12 @@ export const PlayerListContent = ({
   onAddExtra,
   onRemoveExtra,
   champions,
-  onClose
+  onClose,
+  war // Destructure war prop
 }: PlayerListContentProps) => {
+  // Determine champion limit based on map type
+  const championLimit = war.mapType === WarMapType.BIG_THING ? 2 : 3;
+
   // Calculate player usage stats
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
@@ -125,7 +131,7 @@ export const PlayerListContent = ({
                   const stat = playerStats.get(player.id);
                   const count = stat?.uniqueCount || 0;
                   const isSelected = highlightedPlayerId === player.id;
-                  const isFull = count >= 3;
+                  const isFull = count >= championLimit;
                   const playerExtras = extraChampions.filter(e => e.playerId === player.id && e.battlegroup === currentBattlegroup);
 
                   return (
@@ -156,10 +162,11 @@ export const PlayerListContent = ({
 
                               <div className={cn(
                                   "text-xs font-bold px-1.5 py-0.5 rounded",
+                                  count > championLimit ? "bg-red-900/50 text-red-400" :
                                   isFull ? "bg-green-900/50 text-green-400" : 
                                   count > 0 ? "bg-blue-900/50 text-blue-400" : "bg-slate-800 text-slate-500"
                               )}>
-                                  {count}/3
+                                  {count}/{championLimit}
                               </div>
                           </div>
 
@@ -221,7 +228,7 @@ export const PlayerListContent = ({
                                       <ChampionCombobox
                                           champions={champions}
                                           value=""
-                                          onSelect={(id) => onAddExtra(player.id, parseInt(id))}
+                                          onSelect={(id: string) => onAddExtra(player.id, parseInt(id))}
                                           placeholder="Add extra champion..."
                                           className="h-7 text-xs bg-slate-900/50 border-slate-800 hover:bg-slate-900"
                                       />

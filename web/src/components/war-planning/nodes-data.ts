@@ -80,10 +80,10 @@ export const LAYOUT_BIG = {
   WIDTH: 2000, 
   HEIGHT: 2400,
   Y_START: 1800,
-  Y_STEP: 250, // Larger step for distinct rows
+  Y_STEP: 210, // Larger step for distinct rows
   SPACING_NODE: 150,  
-  SPACING_GROUP: 400, // Distance between islands
-  OFFSET_PORTAL: 70,
+  SPACING_GROUP: 350, // Distance between islands
+  OFFSET_PORTAL: 60,
 };
 
 const CENTER_X_BIG = LAYOUT_BIG.WIDTH / 2;

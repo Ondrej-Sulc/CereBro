@@ -132,6 +132,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         onSelectPlayer={setSelectedPlayerId}
         isDesktop={isDesktop}
         currentBattlegroup={currentBattlegroup}
+        war={props.war}
       />
 
       {/* Main Content Area (WarHeader + WarTabs/WarMap) */}

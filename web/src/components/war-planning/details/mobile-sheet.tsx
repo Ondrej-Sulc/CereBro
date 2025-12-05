@@ -227,6 +227,7 @@ export function MobileSheet({
                     onRemoveExtra={onRemoveExtra}
                     champions={champions}
                     onClose={onClose}
+                    war={war}
                  />
                )}
             </div>

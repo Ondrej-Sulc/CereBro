@@ -1,9 +1,7 @@
-import React from "react";
-import { ChevronLeft, Users } from "lucide-react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, FightWithNode } from "../types";
+import { War } from "@prisma/client";
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { Champion } from "@/types/champion";
 import { PlayerListContent } from "./player-list-content";
@@ -21,6 +19,7 @@ interface PlayerListPanelProps {
   onAddExtra: (playerId: string, championId: number) => void;
   onRemoveExtra: (extraId: string) => void;
   champions: Champion[];
+  war: War; // Add war prop
 }
 
 export const PlayerListPanel = ({
@@ -35,7 +34,8 @@ export const PlayerListPanel = ({
   extraChampions,
   onAddExtra,
   onRemoveExtra,
-  champions
+  champions,
+  war // Destructure war prop
 }: PlayerListPanelProps) => {
 
   if (!isDesktop) return null; // Desktop only sidebar wrapper
@@ -63,6 +63,7 @@ export const PlayerListPanel = ({
                 onRemoveExtra={onRemoveExtra}
                 champions={champions}
                 onClose={onToggle}
+                war={war} // Pass war prop
              />
           </div>
       </div>
