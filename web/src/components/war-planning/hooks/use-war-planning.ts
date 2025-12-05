@@ -59,11 +59,24 @@ export function useWarPlanning({
 
   // Selection State
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
-  const [selectedFight, setSelectedFight] = useState<FightWithNode | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   // Data State
   const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
+  const currentFightsRef = useRef(currentFights);
+  const pendingSaveNodeIds = useRef<Set<number>>(new Set());
+
+  // Sync ref
+  useEffect(() => {
+    currentFightsRef.current = currentFights;
+  }, [currentFights]);
+  
+  // Derived Selection
+  const selectedFight = useMemo(() => {
+    if (!selectedNodeId) return null;
+    return currentFights.find(f => f.node.nodeNumber === selectedNodeId) || null;
+  }, [currentFights, selectedNodeId]);
+
   const [extraChampions, setExtraChampions] = useState<ExtraChampion[]>([]);
   const [warBans, setWarBans] = useState<WarBanWithChampion[]>(initialWarBans);
   const [status, setStatus] = useState<WarStatus>(war.status);
@@ -120,6 +133,57 @@ export function useWarPlanning({
     fetchData();
   }, [warId, currentBattlegroup]);
 
+  // Polling Logic
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+        try {
+            const [fightsRes, extrasData] = await Promise.all([
+                fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${currentBattlegroup}`),
+                getExtraChampions(warId, currentBattlegroup)
+            ]);
+
+            if (fightsRes.ok) {
+                const newFights: FightWithNode[] = await fightsRes.json();
+                
+                // Merge Logic: Use currentFightsRef to check for changes and respect pending saves
+                setCurrentFights(prev => {
+                    const current = prev;
+                    let hasChanges = false;
+                    
+                    // Map new fights, preserving optimistic updates for pending nodes
+                    const mergedFights = newFights.map(newFight => {
+                        const pending = pendingSaveNodeIds.current.has(newFight.node.nodeNumber);
+                        if (pending) {
+                            // Keep our local optimistic version if we are currently saving this node
+                            return current.find(f => f.id === newFight.id) || newFight; 
+                        }
+                        return newFight;
+                    });
+
+                    // Check if anything actually changed vs current state
+                    if (JSON.stringify(current) !== JSON.stringify(mergedFights)) {
+                        return mergedFights;
+                    }
+                    return prev;
+                });
+            }
+            
+            // Sync extras (less critical race condition here usually)
+            setExtraChampions(prev => {
+                 if (JSON.stringify(prev) !== JSON.stringify(extrasData)) {
+                     return extrasData;
+                 }
+                 return prev;
+            });
+
+        } catch (error) {
+            console.error("Polling failed", error);
+        }
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [warId, currentBattlegroup]);
+
   const validatePlayerAssignment = useCallback((playerId: string, newChampionId: number, nodeId: number) => {
     // 1. Check Bans
     const isSeasonBanned = seasonBans.some((b: SeasonBanWithChampion) => b.championId === newChampionId);
@@ -170,7 +234,6 @@ export function useWarPlanning({
 
   const handleNodeClick = useCallback((nodeId: number, fight?: FightWithNode) => {
     setSelectedNodeId(nodeId);
-    setSelectedFight(fight || null);
     setRightPanelState('editor');
   }, []);
 
@@ -206,7 +269,6 @@ export function useWarPlanning({
   const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');
     setSelectedNodeId(null);
-    setSelectedFight(null);
   }, []);
 
   const toggleTools = useCallback(() => {
@@ -302,7 +364,7 @@ export function useWarPlanning({
 
     // Capture previous state for rollback
     const previousFights = currentFights;
-    const previousSelectedFight = selectedFight;
+    // const previousSelectedFight = selectedFight; // No longer needed as derived
 
     // Validation Check (existing logic)
     const fightToUpdate = currentFights.find((f: FightWithNode) =>
@@ -311,6 +373,8 @@ export function useWarPlanning({
     );
 
     if (fightToUpdate) {
+      pendingSaveNodeIds.current.add(fightToUpdate.node.nodeNumber);
+      
       const targetPlayerId = updatedFight.playerId !== undefined ? updatedFight.playerId : fightToUpdate.player?.id;
       const targetAttackerId = updatedFight.attackerId !== undefined ? updatedFight.attackerId : fightToUpdate.attacker?.id;
 
@@ -318,6 +382,7 @@ export function useWarPlanning({
         const validation = validatePlayerAssignment(targetPlayerId, targetAttackerId, fightToUpdate.node.nodeNumber);
         if (!validation.isValid) {
           setValidationError(validation.error || "Invalid assignment");
+          pendingSaveNodeIds.current.delete(fightToUpdate.node.nodeNumber);
           return;
         }
       }
@@ -359,10 +424,6 @@ export function useWarPlanning({
           prefightChampions: newPrefights
         } as FightWithNode;
 
-        if (selectedFight && f.node.nodeNumber === selectedFight.node.nodeNumber) {
-          setSelectedFight(updatedNode);
-        }
-
         return updatedNode;
       }
       return f;
@@ -374,12 +435,13 @@ export function useWarPlanning({
       console.error("Failed to save fight:", error);
       // Rollback
       setCurrentFights(previousFights);
-      if (previousSelectedFight) {
-        setSelectedFight(previousSelectedFight);
-      }
       setFightsError(error.message || "Failed to save changes. Please try again.");
+    } finally {
+        if (fightToUpdate) {
+            pendingSaveNodeIds.current.delete(fightToUpdate.node.nodeNumber);
+        }
     }
-  }, [updateWarFight, champions, players, selectedFight, validatePlayerAssignment, currentFights]);
+  }, [updateWarFight, champions, players, validatePlayerAssignment, currentFights]);
 
   return {
     // State
