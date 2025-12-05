@@ -7,6 +7,7 @@ import { Champion } from "@/types/champion";
 import { PlayerWithRoster } from "../types";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import Image from "next/image";
+import { getClassColor } from "@/lib/class-colors";
 
 interface PrefightEntry {
   championId: number;
@@ -84,7 +85,8 @@ export function PrefightSelector({
                     alt={champ.name}
                     width={32}
                     height={32}
-                    className="rounded-full border border-slate-600"
+                    className="rounded-full border-2"
+                    style={{ borderColor: getClassColor(champ.class) }}
                  />
               </div>
               

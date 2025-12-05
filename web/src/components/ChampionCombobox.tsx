@@ -22,15 +22,7 @@ import {
 import { Champion } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { GroupedVirtuoso } from "react-virtuoso";
-
-const CLASS_COLORS: Record<string, string> = {
-  Science: '#4ade80',
-  Skill: '#ef4444',
-  Mutant: '#facc15',
-  Cosmic: '#22d3ee',
-  Tech: '#3b82f6',
-  Mystic: '#a855f7',
-};
+import { getClassColor } from "@/lib/class-colors";
 
 interface ChampionComboboxProps {
   champions: (Champion & { group?: string })[];
@@ -120,7 +112,10 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
           <div className="flex items-center gap-2 truncate ">
              {selectedChampion ? (
                 <>
-                    <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                    <div 
+                        className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2"
+                        style={{ borderColor: getClassColor(selectedChampion.class) }}
+                    >
                         <Image 
                         src={getChampionImageUrl(selectedChampion.images as any, '64')}
                         alt={selectedChampion.name}
@@ -129,8 +124,8 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                         />
                     </div>
                     <span 
-                        className="truncate" 
-                        style={{ color: selectedChampion.class ? CLASS_COLORS[selectedChampion.class] : undefined }}
+                        className="truncate font-medium" 
+                        style={{ color: getClassColor(selectedChampion.class) }}
                     >
                         {selectedChampion.name}
                     </span>
@@ -179,6 +174,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                     )}
                     itemContent={(index) => {
                       const item = flatItems[index];
+                      const color = getClassColor(item.class);
                       return (
                         <CommandItem
                             key={item.id}
@@ -186,7 +182,10 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                             onSelect={() => handleSelect(String(item.id))}
                             className="flex items-center gap-2 cursor-pointer"
                         >
-                            <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                            <div 
+                                className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2"
+                                style={{ borderColor: color }}
+                            >
                                 <Image 
                                     src={getChampionImageUrl(item.images as any, '64')}
                                     alt={item.name}
@@ -194,7 +193,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                                     className="object-cover"
                                 />
                             </div>
-                            <span style={{ color: item.class ? CLASS_COLORS[item.class] : undefined }}>
+                            <span style={{ color: color }} className="font-medium">
                                 {item.name}
                             </span>
                         </CommandItem>
