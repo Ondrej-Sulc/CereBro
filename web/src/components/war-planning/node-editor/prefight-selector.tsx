@@ -7,7 +7,8 @@ import { Champion } from "@/types/champion";
 import { PlayerWithRoster } from "../types";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import Image from "next/image";
-import { getClassColor } from "@/lib/class-colors";
+import { getChampionClassColors } from "@/lib/championClassHelper";
+import { cn } from "@/lib/utils"; // Explicitly added cn import
 
 interface PrefightEntry {
   championId: number;
@@ -85,14 +86,13 @@ export function PrefightSelector({
                     alt={champ.name}
                     width={32}
                     height={32}
-                    className="rounded-full border-2"
-                    style={{ borderColor: getClassColor(champ.class) }}
+                    className={cn("rounded-full border-2", getChampionClassColors(champ.class).border)}
                  />
               </div>
               
               {/* Player Selection */}
               <div className="flex-1 min-w-0">
-                 <div className="text-xs font-medium text-slate-300 mb-1 truncate">{champ.name}</div>
+                 <div className={cn("text-xs font-medium mb-1 truncate", getChampionClassColors(champ.class).text)}>{champ.name}</div>
                  <PlayerCombobox 
                     players={sortedPlayers}
                     value={p.playerId || undefined}

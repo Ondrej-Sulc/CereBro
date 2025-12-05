@@ -5,13 +5,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, FightWithNode } from "../types";
-import { War, WarMapType } from "@prisma/client";
+import { War, WarMapType, ChampionClass } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { ChampionCombobox } from "@/components/ChampionCombobox"; 
 import { Champion } from "@/types/champion";
 import { motion } from "framer-motion";
-import { getPlayerColor } from "@/lib/colors";
+import { getPlayerColor } from "@/lib/player-colors";
+import { getChampionClassColors } from "@/lib/championClassHelper";
 
 interface PlayerListContentProps {
   players: PlayerWithRoster[];
@@ -46,12 +47,12 @@ export const PlayerListContent = ({
   // Calculate player usage stats
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
-      champions: { id: number; name: string; images: any; isExtra?: boolean; extraId?: string }[],
+      champions: { id: number; name: string; images: any; class: ChampionClass; isExtra?: boolean; extraId?: string }[], // Updated type to include class
       uniqueCount: number
     }>();
 
     // Helper to add champ
-    const addChamp = (pid: string, cid: number, cname: string, cimages: any, isExtra = false, extraId?: string) => {
+    const addChamp = (pid: string, cid: number, cname: string, cimages: any, champClass: ChampionClass, isExtra = false, extraId?: string) => { // Updated signature
         if (!stats.has(pid)) {
             stats.set(pid, { champions: [], uniqueCount: 0 });
         }
@@ -61,6 +62,7 @@ export const PlayerListContent = ({
                 id: cid,
                 name: cname,
                 images: cimages,
+                class: champClass, // Include class
                 isExtra,
                 extraId
             });
@@ -71,14 +73,18 @@ export const PlayerListContent = ({
     currentFights.forEach(fight => {
         // 1. Count Attacker
         if (fight.player && fight.attacker) {
-            addChamp(fight.player.id, fight.attacker.id, fight.attacker.name, fight.attacker.images);
+            addChamp(fight.player.id, fight.attacker.id, fight.attacker.name, fight.attacker.images, fight.attacker.class);
         }
 
         // 2. Count Prefights
         if (fight.prefightChampions) {
             fight.prefightChampions.forEach(pf => {
                 if (pf.player) {
-                    addChamp(pf.player.id, pf.id, pf.name, pf.images);
+                    // Need to find class for prefight champion
+                    const fullChamp = champions.find(c => c.id === pf.id);
+                    if (fullChamp) {
+                        addChamp(pf.player.id, pf.id, pf.name, pf.images, fullChamp.class);
+                    }
                 }
             });
         }
@@ -87,12 +93,16 @@ export const PlayerListContent = ({
     // 3. Count Extras
     extraChampions.forEach(ex => {
         if (ex.battlegroup === currentBattlegroup) {
-            addChamp(ex.playerId, ex.championId, ex.champion.name, ex.champion.images, true, ex.id);
+            // Need to find class for extra champion
+            const fullChamp = champions.find(c => c.id === ex.championId);
+            if (fullChamp) {
+                addChamp(ex.playerId, ex.championId, ex.champion.name, ex.champion.images, fullChamp.class, true, ex.id);
+            }
         }
     });
 
     return stats;
-  }, [currentFights, extraChampions, currentBattlegroup]);
+  }, [currentFights, extraChampions, currentBattlegroup, champions]);
 
   // Filter players based on battlegroup
   const sortedPlayers = useMemo(() => {
@@ -188,8 +198,8 @@ export const PlayerListContent = ({
                                               src={getChampionImageUrl(champ.images, '64')} 
                                               alt={champ.name}
                                               className={cn(
-                                                  "w-6 h-6 rounded-full border",
-                                                  champ.isExtra ? "border-pink-500 ring-1 ring-pink-500/30" : "border-slate-600"
+                                                  "w-6 h-6 rounded-full border-2",
+                                                  champ.isExtra ? "border-pink-500 ring-1 ring-pink-500/30" : getChampionClassColors(champ.class).border
                                               )}
                                               title={champ.isExtra ? "Extra Assignment" : "Assigned to Fight/Prefight"}
                                           />
@@ -217,13 +227,13 @@ export const PlayerListContent = ({
                                                       <img 
                                                           src={getChampionImageUrl(champ.images, '64')} 
                                                           alt={champ.name}
-                                                          className="w-8 h-8 rounded-full border border-slate-700" 
+                                                          className={cn("w-8 h-8 rounded-full border-2", getChampionClassColors(champ.class).border)} 
                                                       />
                                                       <div className="flex-1 min-w-0">
-                                                          <div className="text-xs text-slate-200 font-medium truncate">{champ.name}</div>
+                                                          <div className="text-xs font-medium truncate" style={{ color: getChampionClassColors(champ.class).text}}>{champ.name}</div>
                                                           {roster && (
                                                               <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                                                                  <span className={cn("flex items-center", roster.isAwakened ? "text-slate-300" : "text-yellow-500")}>
+                                                                  <span className={cn("flex items-center", roster.isAwakened ? getChampionClassColors(champ.class).text : "text-yellow-500")}>
                                                                       {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
                                                                   </span>
                                                                   <span className="font-mono">R{roster.rank}</span>
@@ -245,19 +255,21 @@ export const PlayerListContent = ({
                                       <div className="space-y-1">
                                           {playerExtras.map(ex => {
                                               const roster = player.roster.find(r => r.championId === ex.championId);
+                                              const fullChamp = champions.find(c => c.id === ex.championId); // Look up full champion to get class
+                                              const classColors = getChampionClassColors(fullChamp?.class); // Use fullChamp?.class
                                               return (
                                               <div key={ex.id} className="flex items-center justify-between bg-slate-950/50 p-1.5 rounded border border-pink-900/30">
                                                   <div className="flex items-center gap-2 overflow-hidden">
                                                       <img 
                                                           src={getChampionImageUrl(ex.champion.images, '64')} 
                                                           alt={ex.champion.name}
-                                                          className="w-8 h-8 rounded-full border border-pink-500/50" 
+                                                          className={cn("w-8 h-8 rounded-full border-2", classColors.border)} 
                                                       />
                                                       <div className="flex-1 min-w-0">
-                                                          <div className="text-xs text-pink-200 font-medium truncate">{ex.champion.name}</div>
+                                                          <div className={cn("text-xs font-medium truncate", classColors.text)}>{ex.champion.name}</div>
                                                           {roster && (
                                                               <div className="flex items-center gap-2 text-[10px] text-pink-400/70">
-                                                                  <span className={cn("flex items-center", roster.isAwakened ? "text-pink-300" : "text-yellow-500")}>
+                                                                  <span className={cn("flex items-center", roster.isAwakened ? classColors.text : "text-yellow-500")}>
                                                                       {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
                                                                   </span>
                                                                   <span className="font-mono">R{roster.rank}</span>

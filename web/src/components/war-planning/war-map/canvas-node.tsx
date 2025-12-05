@@ -8,9 +8,10 @@ import { getChampionImageUrl } from '@/lib/championHelper';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons
 import { svgToDataUrl } from '@/lib/svgHelper'; // Import the SVG helper
-import { getPlayerColor } from '@/lib/colors';
+import { getPlayerColor } from '@/lib/player-colors';
+import { getChampionClassColors } from '@/lib/championClassHelper';
 
-const CLASS_COLORS: Record<ChampionClass, string> = {
+const CLASS_HEX_COLORS: Record<ChampionClass, string> = {
   SCIENCE: '#4ade80',
   SKILL: '#ef4444',
   MUTANT: '#facc15',
@@ -309,8 +310,8 @@ export const CanvasNode = memo(function CanvasNode({
                         x={0} y={0} 
                         radius={nodeRadius - 4} 
                         border={1.5}
-                        borderColor={attacker?.class ? CLASS_COLORS[attacker.class] : '#3b82f6'}
-                        glowColor={attacker?.class ? CLASS_COLORS[attacker.class] : undefined}
+                        borderColor={attacker?.class ? CLASS_HEX_COLORS[attacker.class] : CLASS_HEX_COLORS.TECH}
+                        glowColor={attacker?.class ? CLASS_HEX_COLORS[attacker.class] : undefined}
                     />
                     {isAttackerTactic && (
                         <TacticBadge type="attacker" nodeRadius={nodeRadius} />
@@ -327,8 +328,8 @@ export const CanvasNode = memo(function CanvasNode({
                             x={0} y={0} 
                             radius={nodeRadius - 4} 
                             border={1.5}
-                            borderColor={defender?.class ? CLASS_COLORS[defender.class] : '#ef4444'}
-                            glowColor={defender?.class ? CLASS_COLORS[defender.class] : undefined}
+                            borderColor={defender?.class ? CLASS_HEX_COLORS[defender.class] : CLASS_HEX_COLORS.SKILL}
+                            glowColor={defender?.class ? CLASS_HEX_COLORS[defender.class] : undefined}
                         />
                         {isDefenderTactic && (
                             <TacticBadge type="defender" nodeRadius={nodeRadius} />
