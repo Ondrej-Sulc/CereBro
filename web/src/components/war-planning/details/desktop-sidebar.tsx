@@ -25,6 +25,7 @@ interface DesktopSidebarProps {
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
+  onAddExtra: (playerId: string, championId: number) => void;
 }
 
 export function DesktopSidebar({
@@ -45,6 +46,7 @@ export function DesktopSidebar({
   onSave,
   seasonBans,
   warBans,
+  onAddExtra
 }: DesktopSidebarProps) {
   return (
     <div 
@@ -61,6 +63,7 @@ export function DesktopSidebar({
             allianceId={war.allianceId} 
             currentBattlegroup={currentBattlegroup}
             onClose={onClose} 
+            onAddExtra={onAddExtra}
           />
         )}
         {rightPanelState === 'editor' && (

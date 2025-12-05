@@ -204,6 +204,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           onSave={handleSaveFight}
           seasonBans={seasonBans}
           warBans={warBans}
+          onAddExtra={handleAddExtra}
         />
       ) : (
         // MobileSheet now rendered directly within the flex-col layout
