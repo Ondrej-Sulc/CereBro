@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Users, ChevronLeft, X } from "lucide-react";
+import { Users, ChevronLeft, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -8,7 +8,7 @@ import { PlayerWithRoster, FightWithNode } from "../types";
 import { War, WarMapType } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ExtraChampion } from "../hooks/use-war-planning";
-import { ChampionCombobox } from "@/components/ChampionCombobox"; // Added this import
+import { ChampionCombobox } from "@/components/ChampionCombobox"; 
 import { Champion } from "@/types/champion";
 import { motion } from "framer-motion";
 import { getPlayerColor } from "@/lib/colors";
@@ -136,6 +136,8 @@ export const PlayerListContent = ({
                   const playerExtras = extraChampions.filter(e => e.playerId === player.id && e.battlegroup === currentBattlegroup);
                   const playerColor = getPlayerColor(player.id);
 
+                  const assignedChampions = stat?.champions.filter(c => !c.isExtra) || [];
+
                   return (
                       <div
                           key={player.id}
@@ -177,8 +179,8 @@ export const PlayerListContent = ({
                               </div>
                           </div>
 
-                          {/* Champions Row */}
-                          {count > 0 && (
+                          {/* Champions Row (Condensed - Only when NOT selected) */}
+                          {count > 0 && !isSelected && (
                               <div className="flex gap-1 pl-11 flex-wrap">
                                   {stat?.champions.map(champ => (
                                       <div key={champ.id} className="relative group/champ">
@@ -196,49 +198,95 @@ export const PlayerListContent = ({
                               </div>
                           )}
 
-                          {/* Extra Assignments Control (Only when expanded) */}
+                          {/* Expanded Details (When selected) */}
                           {isSelected && (
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
-                                className="pl-11 pr-1 mt-2 space-y-2"
+                                className="pl-11 pr-1 space-y-3"
                                 onClick={(e) => e.stopPropagation()} // Prevent collapsing
                               >
-                                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Extra Assignments</div>
-                                  
-                                  {/* List of extras with remove button */}
-                                  <div className="space-y-1">
-                                      {playerExtras.map(ex => (
-                                          <div key={ex.id} className="flex items-center justify-between bg-slate-950/50 p-1.5 rounded border border-slate-800">
-                                              <div className="flex items-center gap-2">
-                                                  <img 
-                                                      src={getChampionImageUrl(ex.champion.images, '64')} 
-                                                      alt={ex.champion.name}
-                                                      className="w-5 h-5 rounded-full border border-pink-500/50" 
-                                                  />
-                                                  <span className="text-xs text-slate-300 truncate max-w-[120px]">{ex.champion.name}</span>
-                                              </div>
-                                              <Button 
-                                                  size="icon" 
-                                                  variant="ghost" 
-                                                  className="h-5 w-5 text-slate-500 hover:text-red-400 hover:bg-red-950/20" 
-                                                  onClick={() => onRemoveExtra(ex.id)}
-                                              >
-                                                  <X className="h-3 w-3" />
-                                              </Button>
-                                          </div>
-                                      ))}
-                                  </div>
+                                  {/* Assigned Champions List */}
+                                  {assignedChampions.length > 0 && (
+                                      <div className="space-y-1">
+                                          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assignments</div>
+                                          {assignedChampions.map(champ => {
+                                              const roster = player.roster.find(r => r.championId === champ.id);
+                                              return (
+                                                  <div key={champ.id} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
+                                                      <img 
+                                                          src={getChampionImageUrl(champ.images, '64')} 
+                                                          alt={champ.name}
+                                                          className="w-8 h-8 rounded-full border border-slate-700" 
+                                                      />
+                                                      <div className="flex-1 min-w-0">
+                                                          <div className="text-xs text-slate-200 font-medium truncate">{champ.name}</div>
+                                                          {roster && (
+                                                              <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                                                                  <span className={cn("flex items-center", roster.isAwakened ? "text-slate-300" : "text-yellow-500")}>
+                                                                      {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
+                                                                  </span>
+                                                                  <span className="font-mono">R{roster.rank}</span>
+                                                                  {roster.isAscended && <span className="text-pink-400 font-bold">ASC</span>}
+                                                              </div>
+                                                          )}
+                                                      </div>
+                                                  </div>
+                                              );
+                                          })}
+                                      </div>
+                                  )}
 
-                                  {/* Add Button */}
-                                  <div className="pt-1">
-                                      <ChampionCombobox
-                                          champions={champions}
-                                          value=""
-                                          onSelect={(id: string) => onAddExtra(player.id, parseInt(id))}
-                                          placeholder="Add extra champion..."
-                                          className="h-7 text-xs bg-slate-900/50 border-slate-800 hover:bg-slate-900"
-                                      />
+                                  {/* Extra Assignments Control */}
+                                  <div className="space-y-1">
+                                      <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Extra Assignments</div>
+                                      
+                                      {/* List of extras with remove button */}
+                                      <div className="space-y-1">
+                                          {playerExtras.map(ex => {
+                                              const roster = player.roster.find(r => r.championId === ex.championId);
+                                              return (
+                                              <div key={ex.id} className="flex items-center justify-between bg-slate-950/50 p-1.5 rounded border border-pink-900/30">
+                                                  <div className="flex items-center gap-2 overflow-hidden">
+                                                      <img 
+                                                          src={getChampionImageUrl(ex.champion.images, '64')} 
+                                                          alt={ex.champion.name}
+                                                          className="w-8 h-8 rounded-full border border-pink-500/50" 
+                                                      />
+                                                      <div className="flex-1 min-w-0">
+                                                          <div className="text-xs text-pink-200 font-medium truncate">{ex.champion.name}</div>
+                                                          {roster && (
+                                                              <div className="flex items-center gap-2 text-[10px] text-pink-400/70">
+                                                                  <span className={cn("flex items-center", roster.isAwakened ? "text-pink-300" : "text-yellow-500")}>
+                                                                      {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
+                                                                  </span>
+                                                                  <span className="font-mono">R{roster.rank}</span>
+                                                              </div>
+                                                          )}
+                                                      </div>
+                                                  </div>
+                                                  <Button 
+                                                      size="icon" 
+                                                      variant="ghost" 
+                                                      className="h-6 w-6 text-slate-500 hover:text-red-400 hover:bg-red-950/20 shrink-0" 
+                                                      onClick={() => onRemoveExtra(ex.id)}
+                                                  >
+                                                      <X className="h-3 w-3" />
+                                                  </Button>
+                                              </div>
+                                          )})}
+                                      </div>
+
+                                      {/* Add Button */}
+                                      <div className="pt-1">
+                                          <ChampionCombobox
+                                              champions={champions}
+                                              value=""
+                                              onSelect={(id: string) => onAddExtra(player.id, parseInt(id))}
+                                              placeholder="Add extra champion..."
+                                              className="h-7 text-xs bg-slate-900/50 border-slate-800 hover:bg-slate-900"
+                                          />
+                                      </div>
                                   </div>
                               </motion.div>
                           )}
