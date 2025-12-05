@@ -9,17 +9,20 @@ A modular Discord bot built with TypeScript, designed for Marvel Contest of Cham
 - **Web Interface:** A modern, visually appealing web interface built with Next.js, Tailwind CSS, and shadcn/ui. It serves as a landing page for the bot, showcasing its features, commands, and providing an FAQ section.
     - **War Archive:** A searchable database of uploaded Alliance War videos and fight logs. Features Discord OAuth2 authentication to allow users to upload videos and view alliance-restricted content. The search interface includes interactive filters for attacker, defender (with champion image display and clear functionality), player, node, and supports multi-season selection.
     - **Profile Management:** Users can view their profile summary (Prestige, Alliance, Roster stats) and update their roster by uploading screenshots directly from the web interface, leveraging the same powerful OCR technology as the bot.
-    - **War Planning:** A high-performance, interactive map-based interface for planning Alliance Wars.
-        - **High-Performance Canvas Map:** Rewritten using `react-konva` (HTML5 Canvas) for a buttery-smooth 60fps experience. Features a layered architecture (cached static background, interactive nodes) and native pan/zoom.
-        - **Optimized Node Editor:** Virtualized dropdowns (`react-virtuoso`) for champions and players eliminate UI lag. Deep equality checks prevent unnecessary re-renders.
-        - **Visual Enhancements:** Class-colored background glows for champion portraits, crisp SVG-based tactic badges (Sword/Shield) matching the application's design system, and a seamless "Picture Frame" vignette effect for the map background.
-        - **War Tactics & Node Modifiers:** A complete system for managing season-specific War Tactics and Node Modifiers.
-            - **Tactics:** Admins can define global tactics (Attack/Defense tags) for specific seasons and tiers via a new admin interface. These are visually represented on the map and editor.
-            - **Modifiers:** Node-specific modifiers can be managed and assigned to nodes based on tier and season, appearing automatically in the Node Editor for reference.
-        - **Prefight Champion Support:** Officers can assign prefight champions to individual fights, visualized as small icons on the node pills.
-        - **Historical Matchups:** Integrated historical data for each node, including suggested attackers, solos, deaths, and links to sample videos (now linking to internal `/war-videos/[id]` pages).
-        - **Tools:** Integrated search tools allow officers to quickly find which alliance members own specific champions or view a player's top roster to make informed assignment decisions.
-        - **Permissions:** Both Alliance Officers and Bot Administrators can initiate new war plans.
+*   **War Planning:** A high-performance, interactive map-based interface for planning Alliance Wars.
+    *   **Map Types (Standard & Big Thing):** Supports multiple war map configurations, including the `STANDARD` 50-node layout and the `BIG_THING` 10-node, 5-island portal layout. `BIG_THING` wars enforce a 2-champion limit per player.
+    *   **High-Performance Canvas Map:** Rewritten using `react-konva` (HTML5 Canvas) for a buttery-smooth 60fps experience, now featuring native pan/zoom and **mobile pinch-to-zoom**.
+    *   **Real-time Collaboration:** Implements 5-second polling with conflict resolution to ensure multiple officers can plan simultaneously and see each other's updates without conflicts.
+    *   **Optimized Node Editor:** Virtualized dropdowns (`react-virtuoso`) for champions and players eliminate UI lag. Deep equality checks prevent unnecessary re-renders.
+    *   **Visual Enhancements:** Class-colored background glows for champion portraits, crisp SVG-based tactic badges (Sword/Shield) matching the application's design system, and a seamless "Picture Frame" vignette effect for the map background. **Players are now color-coded on the map and roster for easy identification**, replacing initials badges. The color palette is optimized for distinguishability.
+    *   **War Tactics & Node Modifiers:** A complete system for managing season-specific War Tactics and Node Modifiers. The **Admin UI has been updated to allow configuration of node modifiers per `WarMapType`** (e.g., specific modifiers for "Big Thing" nodes).
+        *   **Tactics:** Admins can define global tactics (Attack/Defense tags) for specific seasons and tiers via a new admin interface. These are visually represented on the map and editor.
+        *   **Modifiers:** Node-specific modifiers can be managed and assigned to nodes based on tier and season, appearing automatically in the Node Editor for reference.
+    *   **Prefight Champion Support:** Officers can assign prefight champions to individual fights, visualized as small icons on the node pills.
+    *   **Historical Matchups:** Integrated historical data for each node, including suggested attackers, solos, deaths, and links to sample videos (now linking to internal `/war-videos/[id]` pages).
+    *   **Tools:** Integrated search tools allow officers to quickly find which alliance members own specific champions or view a player's top roster to make informed assignment decisions. **Champions from a player's roster can now be added directly to their "Extra Assignments" (a staging area for planning), and are automatically converted to a normal assignment when placed on the map.**
+    *   **Player Profile Management:** Users can view their profile summary (Prestige, Alliance, Roster stats) and update their roster by uploading screenshots directly from the web interface, leveraging the same powerful OCR technology as the bot. **The player overview now expands to show detailed champion names, star levels, and ranks for assigned and extra champions.**
+    *   **Permissions:** Both Alliance Officers and Bot Administrators can initiate new war plans.
 - **Dynamic Command Loading:** Commands in the `src/commands` directory are automatically registered on startup.
 - **Tiered Command Access:** The bot now implements a granular command access system, categorizing commands into different tiers:
     - **Public:** Accessible to all users by default (e.g., `/champion`, `/glossary`, `/search all`).

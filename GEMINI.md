@@ -18,7 +18,7 @@ This is a TypeScript-based Discord bot for the mobile game Marvel Contest of Cha
 The bot features a sophisticated system for tracking Alliance War performance by linking war plans to video uploads.
 
 *   **Normalized Data Model:** The system is built on a normalized, three-model schema in Prisma:
-    *   `War`: Represents a top-level war event, containing metadata like season, tier, and the enemy alliance.
+    *   `War`: Represents a top-level war event, containing metadata like season, tier, `mapType` (e.g., `STANDARD`, `BIG_THING`), and the enemy alliance.
     *   `WarFight`: The core model, representing a single fight (attacker, defender, node) and linking it to a `War`, a `Player`, and optionally, a `WarVideo`.
     *   `WarVideo`: A lean model that represents the video asset itself, containing the video URL and a link to one or more `WarFight` records.
 
@@ -29,25 +29,25 @@ The bot features a sophisticated system for tracking Alliance War performance by
     4.  When a player clicks the button, the bot generates a temporary, single-use `UploadSession` token that corresponds to that player's list of fights for that war.
     5.  The bot replies with a private link to the web UI, containing the session token.
     6.  The web UI uses the token to fetch the fight data and pre-fills the video upload form, creating a seamless user experience.
-    7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s).
+    7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s). **The war planning interface now supports real-time updates through polling to facilitate collaborative planning.**
 
 ### War Planning UI (Web)
 
 The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.
 
-*   **High-Performance Canvas Map (Konva):** The interactive Alliance War map has been completely rewritten using `react-konva` (HTML5 Canvas) to solve performance bottlenecks inherent in the previous DOM/SVG approach. This ensures a buttery-smooth 60fps experience even on low-end devices.
+*   **High-Performance Canvas Map (Konva):** The interactive Alliance War map has been completely rewritten using `react-konva` (HTML5 Canvas) to solve performance bottlenecks inherent in the previous DOM/SVG approach. This ensures a buttery-smooth 60fps experience even on low-end devices. **It now includes native mobile pinch-to-zoom and two-finger panning.**
     *   **Layered Architecture:**
-        *   **Background Layer:** Static visual elements (Nebulas, Paths, Stars) are rendered once to an offscreen canvas and cached. A "Picture Frame" linear gradient vignette is applied to fade edges seamlessly into the UI background.
+        *   **Background Layer:** Static visual elements (Nebulas, Paths, Stars) are rendered once to an offscreen canvas and cached. A "Picture Frame" linear gradient vignette is applied to fade edges seamlessly into the UI background. **The background also dynamically adjusts based on the selected `WarMapType`.**
         *   **Node Layer:** Interactive nodes are rendered on a separate layer. Heavy effects like `shadowBlur` are avoided in favor of performant alternatives (e.g., offset circles for hard shadows).
     *   **Zoom & Pan:** Native Canvas transformation logic replaces the DOM-based `react-zoom-pan-pinch` library, providing instant feedback without layout thrashing.
-    *   **Dynamic Layout:** The map structure remains configuration-driven (`nodes-data.ts`), preserving flexibility.
+    *   **Dynamic Layout:** The map structure remains configuration-driven (`nodes-data.ts`), preserving flexibility. **It now supports different layouts, including the `BIG_THING` (10-node, 5-island) layout alongside the standard map.**
 *   **Optimized Planning Workflow:**
     *   **Node Editing:** Clicking a node opens an optimized "Inspector Panel".
         *   **Virtualization:** The Champion and Player selection dropdowns (`ChampionCombobox`, `PlayerCombobox`) use `react-virtuoso` to virtualize their lists, rendering only visible items. This eliminates the massive render storms caused by mounting hundreds of DOM nodes for large rosters.
         *   **State Efficiency:** The editor uses deep equality checks to synchronize state with props, preventing unnecessary re-render cycles.
-    *   **Visual Polish:** Nodes feature class-colored background glows (using tinted fills behind transparent PNGs), crisp SVG-based tactic badges (Sword/Shield) matching the application's design system, and a cleaner, connector-free aesthetic.
+    *   **Visual Polish:** Nodes feature class-colored background glows (using tinted fills behind transparent PNGs), crisp SVG-based tactic badges (Sword/Shield) matching the application's design system, and a cleaner, connector-free aesthetic. **Players assigned to nodes are now uniquely color-coded on the map (via node borders) and in the player roster, replacing the old initials badge. The color palette is optimized for distinguishability between the maximum 10 players.**
 *   **Search Tools:** Integrated tools to assist planning:
-    *   **Player Roster:** View a specific player's top champions to find suitable attackers/defenders.
+    *   **Player Roster:** View a specific player's top champions to find suitable attackers/defenders. **This section now expands to show detailed champion names, star levels, and ranks. Additionally, champions can be added as "Extra Assignments" from this view directly to a player's war roster, and are automatically converted to a normal assignment once placed on the map.**
     *   **Find Champion:** Search for a specific champion to see which alliance members own it (and at what rank/ascension).
 *   **Historical Matchups:** The Node Editor now displays historical matchup data, including solos, deaths, and prefight champions used in sample fights. Links to sample videos now point to the internal `/war-videos/[videoId]` page for seamless playback.
 
@@ -61,7 +61,7 @@ The system now includes robust support for managing the dynamic rules of Allianc
     *   `WarNodeAllocation`: Links a `WarNode` to a `NodeModifier` with constraints on tier and season, allowing for precise mapping of node rules.
 *   **Admin Management:**
     *   **Tactics:** A dedicated admin page (`/admin/tactics`) allows Bot Admins to create and manage tactics. It features a "Tag Selector" that searches existing tags or creates new ones on the fly.
-    *   **Nodes:** The `/admin/nodes` page allows for the granular assignment of modifiers to specific nodes.
+    *   **Nodes:** The `/admin/nodes` page allows for the granular assignment of modifiers to specific nodes. **This page now supports selecting the `WarMapType` (Standard or Big Thing) to manage node allocations specific to each map configuration.**
 *   **Visual Integration:**
     *   **War Map:** Champions on the map now feature:
         *   **Class Rings:** Outer glowing rings colored by champion class (e.g., Mystic=Purple, Science=Green).
