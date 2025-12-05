@@ -83,6 +83,7 @@ export function WarVideoForm({
   const [season, setSeason] = useState<string>(() => preFilledFights?.[0]?.war?.season?.toString() || "");
   const [warNumber, setWarNumber] = useState<string>(() => preFilledFights?.[0]?.war?.warNumber?.toString() || "");
   const [warTier, setWarTier] = useState<string>(() => preFilledFights?.[0]?.war?.warTier?.toString() || "");
+  const [mapType, setMapType] = useState<string>(() => preFilledFights?.[0]?.war?.mapType || "STANDARD");
   const [battlegroup, setBattlegroup] = useState<string>(() => {
     if (preFilledFights?.[0]?.battlegroup) {
       return preFilledFights[0].battlegroup.toString();
@@ -404,6 +405,7 @@ export function WarVideoForm({
                 warNumber: isOffseason ? null : warNumber,
                 warTier: warTier,
                 battlegroup: battlegroup,
+                mapType: mapType,
               });
               toast({ title: "Success!", description: "Video has been linked to all fights." });
               if (result.videoIds && result.videoIds.length > 0) {
@@ -444,6 +446,7 @@ export function WarVideoForm({
                   warNumber: isOffseason ? null : warNumber,
                   warTier: warTier,
                   battlegroup: battlegroup,
+                  mapType: mapType,
                 });
                 if (result.videoIds && result.videoIds.length > 0) {
                   allLinkedVideoIds.push(result.videoIds[0]);
@@ -495,6 +498,7 @@ export function WarVideoForm({
               if (!isOffseason) formData.append("warNumber", warNumber);
               formData.append("warTier", warTier);
               formData.append("battlegroup", battlegroup);
+              formData.append("mapType", mapType);
             }
 
             const result = await uploadVideo(formData, fights.map(f => f.id), getTitle(fights[0]));
@@ -529,6 +533,7 @@ export function WarVideoForm({
                 if (!isOffseason) formData.append("warNumber", warNumber);
                 formData.append("warTier", warTier);
                 formData.append("battlegroup", battlegroup);
+                formData.append("mapType", mapType);
               }
 
               const result = await uploadVideo(formData, [fight.id], getTitle(fight));
@@ -794,6 +799,20 @@ export function WarVideoForm({
             {errors.warTier && (
               <p className="text-sm text-red-400 mt-2">{errors.warTier}</p>
             )}
+          </div>
+          <div>
+            <Label htmlFor="mapType" className="text-sm font-medium text-slate-300 mb-2 block">Map Type</Label>
+            <MemoizedSelect
+              value={mapType}
+              onValueChange={setMapType}
+              placeholder="Select map..."
+              options={[
+                { value: "STANDARD", label: "Standard" },
+                { value: "BIG_THING", label: "Big Thing" }
+              ]}
+              required
+              disabled={!!preFilledFights}
+            />
           </div>
           <div>
             <Label htmlFor="battlegroup" className="text-sm font-medium text-slate-300 mb-2 block">Battlegroup</Label>

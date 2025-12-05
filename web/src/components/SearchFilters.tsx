@@ -11,6 +11,13 @@ import { Champion } from "@/types/champion";
 import { useState, useTransition, useCallback } from "react";
 import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SearchFiltersProps {
   champions: Champion[];
@@ -33,6 +40,7 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
   const [player, setPlayer] = useState(searchParams.get("player") || "");
   const [alliance, setAlliance] = useState(searchParams.get("alliance") || "");
   const [battlegroup, setBattlegroup] = useState(searchParams.get("battlegroup") || "");
+  const [mapType, setMapType] = useState(searchParams.get("map") || "STANDARD");
   
   const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
   const [selectedSeasons, setSelectedSeasons] = useState<number[]>(initialSeasons);
@@ -56,6 +64,7 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
       if (player) params.set("player", player);
       if (alliance) params.set("alliance", alliance);
       if (battlegroup) params.set("battlegroup", battlegroup);
+      if (mapType) params.set("map", mapType);
       
       selectedSeasons.forEach(s => params.append("season", s.toString()));
       
@@ -95,6 +104,18 @@ export function SearchFilters({ champions, availableSeasons }: SearchFiltersProp
 
       <form onSubmit={handleSearch} className={cn("flex flex-col gap-4", isCollapsed && "hidden md:flex")}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3 p-3 bg-slate-900/30 rounded-lg border border-slate-800/50">
+          <div className="space-y-2">
+             <Label className="text-xs text-slate-400">Map</Label>
+             <Select value={mapType} onValueChange={setMapType}>
+               <SelectTrigger className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full">
+                 <SelectValue placeholder="Select Map" />
+               </SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="STANDARD">Standard</SelectItem>
+                 <SelectItem value="BIG_THING">Big Thing</SelectItem>
+               </SelectContent>
+             </Select>
+           </div>
           <div className="space-y-2 lg:col-span-2 xl:col-span-2">
             <Label className="text-xs text-slate-400">Attacker</Label>
             <ChampionCombobox 

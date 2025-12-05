@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Play, Calendar, User, Shield, Swords, CircleDot, EyeOff, Filter } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
-import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarTactic } from "@prisma/client";
+import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarTactic, WarMapType } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { redirect } from "next/navigation";
@@ -48,6 +48,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const node = getSingleParam("node") ? parseInt(getSingleParam("node") as string) : undefined;
   const warNumber = getSingleParam("war") ? parseInt(getSingleParam("war") as string) : undefined;
   const warTierFilter = getSingleParam("tier") ? parseInt(getSingleParam("tier") as string) : undefined;
+  const mapTypeParam = getSingleParam("map");
+  const mapType: WarMapType = mapTypeParam === "BIG_THING" ? "BIG_THING" : "STANDARD";
   
   const seasonParam = resolvedSearchParams.season;
   const selectedSeasons = (Array.isArray(seasonParam) ? seasonParam : [seasonParam])
@@ -99,6 +101,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
     where: {
       AND: [
         { war: { status: 'FINISHED' } },
+        { war: { mapType: mapType } },
         {
             OR: [
                 {

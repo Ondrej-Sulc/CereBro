@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
         fightIds: existingFightIdsJson, // for existing fights
         fightUpdates,                   // for updating existing fights
         fights: newFightsJson,         // for creating new fights
-        season, warNumber, warTier, battlegroup
+        season, warNumber, warTier, battlegroup, mapType
     } = body;
 
     // --- 1. Authentication & Authorization ---
@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       const parsedSeason = parseInt(season);
       const parsedWarTier = parseInt(warTier);
       const parsedBattlegroup = parseInt(battlegroup); // this battlegroup is for all fights in this submission
+      const parsedMapType = mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD';
 
       let war;
       if (parsedWarNumber !== null) {
@@ -70,12 +71,16 @@ export async function POST(req: NextRequest) {
               warNumber: parsedWarNumber,
             },
           },
-          update: { warTier: parsedWarTier },
+          update: { 
+            warTier: parsedWarTier,
+            mapType: parsedMapType
+          },
           create: {
             season: parsedSeason,
             warTier: parsedWarTier,
             warNumber: parsedWarNumber,
             allianceId: allianceId,
+            mapType: parsedMapType,
           },
         });
       } else {
@@ -85,6 +90,7 @@ export async function POST(req: NextRequest) {
             allianceId: allianceId,
             season: parsedSeason,
             warNumber: null,
+            mapType: parsedMapType,
           },
           orderBy: {
             createdAt: 'desc',
@@ -98,6 +104,7 @@ export async function POST(req: NextRequest) {
               warTier: parsedWarTier,
               warNumber: null,
               allianceId: allianceId,
+              mapType: parsedMapType,
             },
           });
         } else {
