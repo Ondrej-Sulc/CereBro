@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { WarFight, WarTactic, War } from "@prisma/client";
+import { WarFight, WarTactic, War, WarMapType } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -107,7 +107,9 @@ export default function NodeEditor({
         const tierMatch = (!alloc.minTier || alloc.minTier <= currentWar.warTier) && 
                           (!alloc.maxTier || alloc.maxTier >= currentWar.warTier);
         const seasonMatch = !alloc.season || alloc.season === currentWar.season;
-        return tierMatch && seasonMatch;
+        const mapTypeMatch = alloc.mapType === (currentWar.mapType || WarMapType.STANDARD);
+        
+        return tierMatch && seasonMatch && mapTypeMatch;
     }).map(a => a.nodeModifier);
   }, [currentFight?.node?.allocations, currentWar]);
 

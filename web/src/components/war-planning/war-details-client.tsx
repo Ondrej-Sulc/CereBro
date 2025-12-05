@@ -140,7 +140,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
       )}>
         <div className={cn(
             "flex-1 flex flex-col min-h-0",
-            !isFullscreen && "p-3 sm:px-6 border-b border-slate-800"
+            !isFullscreen && "p-3 sm:px-4 border-b border-slate-800"
         )}>
           <WarHeader 
             war={props.war}

@@ -249,30 +249,6 @@ const WarMap = memo(function WarMap({
           <History className="h-5 w-5" />
         </Button>
         <Button
-          variant={showHistory ? "default" : "secondary"}
-          size="icon"
-          onClick={() => setShowHistory(!showHistory)}
-          title="Toggle Historical Counters"
-          className={cn(
-            "border border-slate-700",
-            showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
-          )}
-        >
-          <History className="h-5 w-5" />
-        </Button>
-        <Button
-          variant={showHistory ? "default" : "secondary"}
-          size="icon"
-          onClick={() => setShowHistory(!showHistory)}
-          title="Toggle Historical Counters"
-          className={cn(
-            "border border-slate-700",
-            showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
-          )}
-        >
-          <History className="h-5 w-5" />
-        </Button>
-        <Button
           variant="secondary"
           size="icon"
           onClick={handleToggleFullscreen}
