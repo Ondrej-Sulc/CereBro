@@ -160,6 +160,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             warBans={warBans}
             onAddWarBan={handleAddWarBan}
             onRemoveWarBan={handleRemoveWarBan}
+            onAddExtra={handleAddExtra}
           />
           
           <WarTabs 

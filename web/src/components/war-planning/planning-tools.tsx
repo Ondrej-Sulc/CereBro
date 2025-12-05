@@ -10,9 +10,10 @@ interface PlanningToolsProps {
   champions: Champion[];
   allianceId: string;
   currentBattlegroup?: number;
+  onAddExtra?: (playerId: string, championId: number) => void;
 }
 
-export default function PlanningTools({ players, champions, allianceId, currentBattlegroup }: PlanningToolsProps) {
+export default function PlanningTools({ players, champions, allianceId, currentBattlegroup, onAddExtra }: PlanningToolsProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -26,7 +27,13 @@ export default function PlanningTools({ players, champions, allianceId, currentB
             <SheetTitle>Planning Tools</SheetTitle>
             <SheetDescription>Search rosters and champions</SheetDescription>
         </div>
-        <PlanningToolsPanel players={players} champions={champions} allianceId={allianceId} currentBattlegroup={currentBattlegroup} />
+        <PlanningToolsPanel 
+            players={players} 
+            champions={champions} 
+            allianceId={allianceId} 
+            currentBattlegroup={currentBattlegroup} 
+            onAddExtra={onAddExtra}
+        />
       </SheetContent>
     </Sheet>
   );

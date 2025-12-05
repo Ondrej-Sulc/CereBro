@@ -31,6 +31,7 @@ interface WarHeaderProps {
   warBans: WarBanWithChampion[];
   onAddWarBan: (championId: number) => Promise<void>;
   onRemoveWarBan: (banId: string) => Promise<void>;
+  onAddExtra: (playerId: string, championId: number) => void;
 }
 
 export function WarHeader({
@@ -49,7 +50,8 @@ export function WarHeader({
   seasonBans,
   warBans,
   onAddWarBan,
-  onRemoveWarBan
+  onRemoveWarBan,
+  onAddExtra
 }: WarHeaderProps) {
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
 
@@ -115,6 +117,7 @@ export function WarHeader({
               champions={champions} 
               allianceId={war.allianceId}
               currentBattlegroup={currentBattlegroup}
+              onAddExtra={onAddExtra}
             />
           </div>
 

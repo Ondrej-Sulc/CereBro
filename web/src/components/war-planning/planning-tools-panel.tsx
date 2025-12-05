@@ -11,6 +11,7 @@ import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlanningToolsPanelProps {
   players: Player[];
@@ -18,12 +19,14 @@ interface PlanningToolsPanelProps {
   allianceId: string;
   onClose?: () => void;
   currentBattlegroup?: number;
+  onAddExtra?: (playerId: string, championId: number) => void;
 }
 
 type RosterWithChampion = Roster & { champion: Champion };
 type RosterWithPlayer = Roster & { player: Player };
 
-export default function PlanningToolsPanel({ players, champions, allianceId, onClose, currentBattlegroup }: PlanningToolsPanelProps) {
+export default function PlanningToolsPanel({ players, champions, allianceId, onClose, currentBattlegroup, onAddExtra }: PlanningToolsPanelProps) {
+  const { toast } = useToast();
   const [rosterResults, setRosterResults] = useState<RosterWithChampion[]>([]);
   const [ownerResults, setOwnerResults] = useState<RosterWithPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +48,16 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddChampion = (champion: Champion) => {
+      if (onAddExtra && selectedPlayerId) {
+          onAddExtra(selectedPlayerId, champion.id);
+          toast({
+              title: "Champion Added",
+              description: `Added ${champion.name} to extra assignments.`,
+          });
+      }
   };
 
   const handleChampionSelect = async (championId: string) => {
@@ -124,7 +137,14 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
               ) : rosterResults.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
                   {rosterResults.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-2 rounded-md border bg-slate-900/50">
+                    <div 
+                        key={item.id} 
+                        className={cn(
+                            "flex items-center gap-3 p-2 rounded-md border bg-slate-900/50 transition-colors",
+                            onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
+                        )}
+                        onClick={() => handleAddChampion(item.champion)}
+                    >
                       <div className="relative h-10 w-10 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
                         <Image
                           src={getChampionImageUrl(item.champion.images as any, '64')}
