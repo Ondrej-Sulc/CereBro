@@ -205,6 +205,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           seasonBans={seasonBans}
           warBans={warBans}
           onAddExtra={handleAddExtra}
+          currentFights={currentFights}
+          extraChampions={extraChampions}
         />
       ) : (
         // MobileSheet now rendered directly within the flex-col layout

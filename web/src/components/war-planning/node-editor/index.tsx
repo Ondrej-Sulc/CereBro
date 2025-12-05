@@ -17,6 +17,7 @@ import Image from "next/image";
 import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "../types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
+import { ExtraChampion } from "../hooks/use-war-planning";
 
 interface WarTacticWithTags extends WarTactic {
   defenseTag?: { name: string } | null;
@@ -54,6 +55,8 @@ interface NodeEditorProps {
   activeTactic?: WarTacticWithTags | null;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
+  currentFights: FightWithNode[];
+  extraChampions: ExtraChampion[];
 }
 
 export default function NodeEditor({
@@ -73,6 +76,8 @@ export default function NodeEditor({
   activeTactic,
   seasonBans,
   warBans,
+  currentFights,
+  extraChampions,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -232,15 +237,51 @@ export default function NodeEditor({
 
     const rosterMap = new Map(player.roster.map(r => [r.championId, r]));
     
-    return allowedChampions
-        .filter(c => rosterMap.has(c.id))
-        .map(c => {
-            const r = rosterMap.get(c.id)!;
-            const rankStr = `${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}`;
-            return { ...c, name: `${c.name} (${rankStr})` };
-        })
-        .sort((a, b) => a.name.localeCompare(b.name));
-  }, [champions, players, playerId, seasonBans, warBans]);
+    // Identify War Team (Assigned or Extra for this player in this war)
+    const warTeamIds = new Set<number>();
+    currentFights.forEach(f => {
+        if (f.player?.id === playerId && f.attacker?.id) warTeamIds.add(f.attacker.id);
+        // We could include prefights too but usually attacker selection focuses on main attackers
+    });
+    extraChampions.forEach(ex => {
+        if (ex.playerId === playerId && ex.battlegroup === battlegroup) warTeamIds.add(ex.championId);
+    });
+
+    const warTeam: any[] = [];
+    const roster: any[] = [];
+    const others: any[] = [];
+
+    allowedChampions.forEach(c => {
+        const r = rosterMap.get(c.id);
+        const rankStr = r ? `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})` : "";
+        const displayName = `${c.name} ${rankStr}`.trim();
+        
+        const item = { ...c, name: displayName, originalName: c.name, rankData: r };
+
+        if (warTeamIds.has(c.id)) {
+            warTeam.push({ ...item, name: `★ ${displayName}` }); // Add star to indicate assignment
+        } else if (r) {
+            roster.push(item);
+        } else {
+            others.push(item);
+        }
+    });
+
+    // Sort Roster by Rank Desc
+    roster.sort((a, b) => {
+        if (a.rankData.stars !== b.rankData.stars) return b.rankData.stars - a.rankData.stars;
+        if (a.rankData.rank !== b.rankData.rank) return b.rankData.rank - a.rankData.rank;
+        return a.originalName.localeCompare(b.originalName);
+    });
+
+    // Sort Others A-Z
+    others.sort((a, b) => a.originalName.localeCompare(b.originalName));
+
+    // War Team should ideally be sorted by rank too or just kept at top
+    warTeam.sort((a, b) => a.originalName.localeCompare(b.originalName));
+
+    return [...warTeam, ...roster, ...others];
+  }, [champions, players, playerId, seasonBans, warBans, currentFights, extraChampions, battlegroup]);
 
   // 3. Optimized Prefight List
   const prefightChampionsList = useMemo(() => {

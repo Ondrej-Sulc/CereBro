@@ -214,6 +214,8 @@ export function MobileSheet({
                     activeTactic={activeTactic}
                     seasonBans={seasonBans}
                     warBans={warBans}
+                    currentFights={currentFights}
+                    extraChampions={extraChampions}
                 />
                ) : (
                  <PlayerListContent

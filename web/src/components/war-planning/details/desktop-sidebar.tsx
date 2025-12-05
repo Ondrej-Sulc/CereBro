@@ -6,6 +6,7 @@ import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChamp
 import { Champion } from "@/types/champion";
 import { War, WarFight, WarTactic } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
+import { ExtraChampion } from "../hooks/use-war-planning";
 
 interface DesktopSidebarProps {
   rightPanelState: RightPanelState;
@@ -26,6 +27,8 @@ interface DesktopSidebarProps {
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
   onAddExtra: (playerId: string, championId: number) => void;
+  currentFights: FightWithNode[];
+  extraChampions: ExtraChampion[];
 }
 
 export function DesktopSidebar({
@@ -46,7 +49,9 @@ export function DesktopSidebar({
   onSave,
   seasonBans,
   warBans,
-  onAddExtra
+  onAddExtra,
+  currentFights,
+  extraChampions
 }: DesktopSidebarProps) {
   return (
     <div 
@@ -85,6 +90,8 @@ export function DesktopSidebar({
               activeTactic={activeTactic}
               seasonBans={seasonBans}
               warBans={warBans}
+              currentFights={currentFights}
+              extraChampions={extraChampions}
           />
         )}
       </div>
