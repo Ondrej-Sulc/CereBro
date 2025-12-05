@@ -429,6 +429,28 @@ export function useWarPlanning({
       return f;
     }));
 
+    // Auto-convert Extra Assignment to Normal Assignment
+    if (updatedFight.attackerId && fightToUpdate) {
+        const targetPlayerId = updatedFight.playerId ?? fightToUpdate.player?.id;
+        if (targetPlayerId) {
+            const extra = extraChampions.find(e => e.playerId === targetPlayerId && e.championId === updatedFight.attackerId && e.battlegroup === currentBattlegroup);
+            if (extra) {
+                handleRemoveExtra(extra.id);
+            }
+        }
+    }
+
+    if (updatedFight.prefightUpdates && fightToUpdate) {
+        updatedFight.prefightUpdates.forEach(update => {
+            if (update.playerId) {
+                const extra = extraChampions.find(e => e.playerId === update.playerId && e.championId === update.championId && e.battlegroup === currentBattlegroup);
+                if (extra) {
+                    handleRemoveExtra(extra.id);
+                }
+            }
+        });
+    }
+
     try {
       await updateWarFight(updatedFight);
     } catch (error: any) {
