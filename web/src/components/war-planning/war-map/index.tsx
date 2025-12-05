@@ -56,6 +56,10 @@ const WarMap = memo(function WarMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 1000, height: 800 });
 
+  // Refs for touch events (pinch-to-zoom)
+  const lastTwoFingerDistance = useRef<number | null>(null);
+  const lastCenter = useRef<{ x: number; y: number } | null>(null);
+
   // Determine Map Data based on War Type
   const isBigThing = currentWar?.mapType === WarMapType.BIG_THING;
   const currentNodesData = isBigThing ? warNodesDataBig : warNodesData;
@@ -192,9 +196,86 @@ const WarMap = memo(function WarMap({
     stage.position(newPos);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-      // Prevent page scrolling/zooming when interacting with the map
-      e.preventDefault();
+  // Touch handlers for pinch-to-zoom and pan
+  const getDistance = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
+    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  };
+
+  const getCenter = (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
+    return {
+      x: (p1.x + p2.x) / 2,
+      y: (p1.y + p2.y) / 2,
+    };
+  };
+
+  const handleMultiTouchStart = (e: KonvaEventObject<TouchEvent>) => {
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    const touches = e.evt.touches;
+    if (touches.length === 2) {
+      const p1 = { x: touches[0].clientX, y: touches[0].clientY };
+      const p2 = { x: touches[1].clientX, y: touches[1].clientY };
+      lastTwoFingerDistance.current = getDistance(p1, p2);
+      lastCenter.current = getCenter(p1, p2);
+    }
+  };
+
+  const handleMultiTouchMove = (e: KonvaEventObject<TouchEvent>) => {
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    const touches = e.evt.touches;
+    if (touches.length === 2) {
+      e.evt.preventDefault(); // Prevent page scroll
+
+      const p1 = { x: touches[0].clientX, y: touches[0].clientY };
+      const p2 = { x: touches[1].clientX, y: touches[1].clientY };
+
+      const newDistance = getDistance(p1, p2);
+      const newCenter = getCenter(p1, p2);
+
+      const oldScale = stage.scaleX();
+
+      // Zoom
+      if (lastTwoFingerDistance.current) {
+        const scale = newDistance / lastTwoFingerDistance.current;
+        let newScale = oldScale * scale;
+
+        if (newScale > 4) newScale = 4;
+        if (newScale < 0.2) newScale = 0.2;
+
+        stage.scale({ x: newScale, y: newScale });
+
+        // Adjust position to zoom around the center of the pinch
+        const stagePos = stage.position();
+        const clientRect = stage.container().getBoundingClientRect();
+
+        const tx = newCenter.x - clientRect.left;
+        const ty = newCenter.y - clientRect.top;
+
+        const newX = tx - ((tx - stagePos.x) / oldScale) * newScale;
+        const newY = ty - ((ty - stagePos.y) / oldScale) * newScale;
+
+        stage.position({ x: newX, y: newY });
+      }
+
+      // Pan (single finger drag is handled by Konva draggable, this is for two-finger pan while pinching)
+      if (lastCenter.current) {
+        const dx = newCenter.x - lastCenter.current.x;
+        const dy = newCenter.y - lastCenter.current.y;
+        stage.move({ x: dx, y: dy });
+      }
+
+      lastTwoFingerDistance.current = newDistance;
+      lastCenter.current = newCenter;
+      stage.batchDraw();
+    }
+  };
+
+  const handleMultiTouchEnd = (e: KonvaEventObject<TouchEvent>) => {
+    lastTwoFingerDistance.current = null;
+    lastCenter.current = null;
   };
 
   const fightsByNode = useMemo(() => {
@@ -212,8 +293,6 @@ const WarMap = memo(function WarMap({
             !onToggleFullscreen && isFull ? "fixed inset-0 z-50 w-screen h-screen rounded-none" : "w-full h-full"
         )}
         ref={containerRef}
-        style={{ touchAction: 'none' }} // Critical for preventing page scroll/zoom on mobile
-        onTouchMove={handleTouchMove}
     >
       {/* Top Left: Player Panel Toggle */}
       {onTogglePlayerPanel && (
@@ -263,6 +342,9 @@ const WarMap = memo(function WarMap({
         height={stageSize.height} 
         draggable
         onWheel={handleWheel}
+        onTouchStart={handleMultiTouchStart}
+        onTouchMove={handleMultiTouchMove}
+        onTouchEnd={handleMultiTouchEnd}
         ref={stageRef}
         style={{ cursor: 'grab' }}
         onDragStart={() => {
