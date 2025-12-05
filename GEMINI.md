@@ -136,7 +136,7 @@ The project is well-structured, with a clear separation of concerns. Commands ar
 
 ## Hosting
 
-The production environment for both the bot and its PostgreSQL database is hosted on [Railway](https://railway.app/). This provides a seamless deployment and scaling solution.
+The entire CereBro platform, including the production environment for both the bot, its PostgreSQL database, and the web application, is hosted on [Railway](https://railway.app/). A continuous deployment pipeline is configured to automatically deploy updates from the `main` branch. This provides a seamless deployment and scaling solution.
 
 ## Guiding Principles
 

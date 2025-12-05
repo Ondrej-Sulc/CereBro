@@ -73,6 +73,12 @@ The flagship feature of the platform.
 
 ---
 
+## 🚀 Deployment
+
+CereBro is fully hosted on [Railway](https://railway.app/). This includes the PostgreSQL database, the Discord Bot service, and the Next.js Web Application. A continuous deployment pipeline is configured to automatically deploy updates to the `main` branch.
+
+---
+
 ## 💻 Local Development
 
 The project is fully containerized. You can spin up the entire stack (Bot + Web + DB) with a single command.
@@ -82,26 +88,7 @@ The project is fully containerized. You can spin up the entire stack (Bot + Web 
 *   Node.js v18+ (for local tooling)
 *   Discord Bot Token & Client Secret
 
-### Quick Start
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/cerebro.git
-    cd cerebro
-    ```
 
-2.  **Configure Environment:**
-    ```bash
-    cp .env.example .env
-    # Fill in your DISCORD_TOKEN, DATABASE_URL, etc.
-    ```
-
-3.  **Run with Docker Compose:**
-    ```bash
-    docker-compose up --build
-    ```
-    *   **Web:** `http://localhost:3000`
-    *   **Bot:** Online in your configured guild.
-    *   **DB:** Exposed on port `5432`.
 
 ### Directory Structure
 
