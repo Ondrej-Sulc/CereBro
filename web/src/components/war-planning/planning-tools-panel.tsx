@@ -30,6 +30,10 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
   const [selectedChampionId, setSelectedChampionId] = useState<string>("");
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
 
+  const filteredPlayers = currentBattlegroup 
+    ? players.filter(p => p.battlegroup === currentBattlegroup)
+    : players;
+
   const handlePlayerSelect = async (playerId: string) => {
     setSelectedPlayerId(playerId);
     setIsLoading(true);
@@ -90,7 +94,7 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                   <SelectValue placeholder="Choose a player..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {players.map((p) => (
+                  {filteredPlayers.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center gap-2">
                         {p.avatar ? (
