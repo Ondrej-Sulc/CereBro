@@ -57,8 +57,8 @@ export function PrefightSelector({
           const champ = champions.find(c => c.id === p.championId);
           if (!champ) return null;
 
-          // Filter players who own this champion
-          const potentialOwners = players.filter(player => 
+          // Filter players who own this champion vs those who don't
+          const owners = players.filter(player => 
               player.roster.some(r => r.championId === p.championId)
           ).sort((a, b) => {
               // Sort by rank
@@ -69,10 +69,11 @@ export function PrefightSelector({
               return a.ingameName.localeCompare(b.ingameName);
           });
 
-          // If current assigned player is not in list (e.g. moved BG), add them?
-          // Assuming 'players' prop is already filtered by BG, if they moved BG they won't be in 'players'.
-          // We might want to show them if they are assigned, but if we stick to BG logic, maybe not.
-          // Let's stick to the filtered list.
+          const others = players.filter(player => 
+              !player.roster.some(r => r.championId === p.championId)
+          ).sort((a, b) => a.ingameName.localeCompare(b.ingameName));
+
+          const sortedPlayers = [...owners, ...others];
 
           return (
             <div key={p.championId} className="flex items-center gap-2 bg-slate-900/50 p-2 rounded-md border border-slate-800">
@@ -91,7 +92,7 @@ export function PrefightSelector({
               <div className="flex-1 min-w-0">
                  <div className="text-xs font-medium text-slate-300 mb-1 truncate">{champ.name}</div>
                  <PlayerCombobox 
-                    players={potentialOwners}
+                    players={sortedPlayers}
                     value={p.playerId || undefined}
                     onSelect={(val) => handlePlayerChange(p.championId, val)}
                     placeholder="Assign Player..."
