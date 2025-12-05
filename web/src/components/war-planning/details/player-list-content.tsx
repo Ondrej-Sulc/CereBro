@@ -11,6 +11,7 @@ import { ExtraChampion } from "../hooks/use-war-planning";
 import { ChampionCombobox } from "@/components/ChampionCombobox"; // Added this import
 import { Champion } from "@/types/champion";
 import { motion } from "framer-motion";
+import { getPlayerColor } from "@/lib/colors";
 
 interface PlayerListContentProps {
   players: PlayerWithRoster[];
@@ -133,6 +134,7 @@ export const PlayerListContent = ({
                   const isSelected = highlightedPlayerId === player.id;
                   const isFull = count >= championLimit;
                   const playerExtras = extraChampions.filter(e => e.playerId === player.id && e.battlegroup === currentBattlegroup);
+                  const playerColor = getPlayerColor(player.id);
 
                   return (
                       <div
@@ -147,12 +149,17 @@ export const PlayerListContent = ({
                       >
                           {/* Player Row */}
                           <div className="flex items-center gap-3 mb-2">
-                              <Avatar className="h-8 w-8 border border-slate-700">
-                                  <AvatarImage src={player.avatar || undefined} />
-                                  <AvatarFallback className="bg-slate-800 text-xs">
-                                      {player.ingameName.substring(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                              </Avatar>
+                              <div className="relative">
+                                <Avatar 
+                                    className="h-8 w-8 border-2"
+                                    style={{ borderColor: playerColor }}
+                                >
+                                    <AvatarImage src={player.avatar || undefined} />
+                                    <AvatarFallback className="bg-slate-800 text-xs">
+                                        {player.ingameName.substring(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                              </div>
                               
                               <div className="flex-1 min-w-0">
                                   <div className={cn("text-sm font-medium truncate", isSelected ? "text-indigo-400" : "text-slate-200")}>

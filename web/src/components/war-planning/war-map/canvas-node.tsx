@@ -8,6 +8,7 @@ import { getChampionImageUrl } from '@/lib/championHelper';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons
 import { svgToDataUrl } from '@/lib/svgHelper'; // Import the SVG helper
+import { getPlayerColor } from '@/lib/colors';
 
 const CLASS_COLORS: Record<ChampionClass, string> = {
   SCIENCE: '#4ade80',
@@ -205,6 +206,7 @@ export const CanvasNode = memo(function CanvasNode({
     // Player Logic
     const isPlayerHighlighted = player?.id && player.id === highlightedPlayerId;
     const isPrefightHighlighted = highlightedPlayerId && fight?.prefightChampions?.some(pf => pf.player?.id === highlightedPlayerId);
+    const playerColor = player ? getPlayerColor(player.id) : null;
 
     // Dimensions
     const nodeRadius = 24; 
@@ -214,23 +216,32 @@ export const CanvasNode = memo(function CanvasNode({
     
     // Colors
     // Selection: Gold (#fbbf24)
-    // Attacker Highlight: Fuchsia (#d946ef)
     // Prefight Highlight: Cyan (#22d3ee)
-    const highlightColor = "#d946ef"; 
     const prefightHighlightColor = "#22d3ee";
 
     let borderColor = "#475569"; // Default Slate-600
     let borderWidth = 1.5;
+    let shadowColor = undefined;
+    let shadowBlur = 0;
     
     if (isSelected) {
         borderColor = "#fbbf24";
         borderWidth = 3;
-    } else if (isPlayerHighlighted) {
-        borderColor = highlightColor;
-        borderWidth = 3;
+        shadowColor = "#fbbf24";
+        shadowBlur = 10;
+    } else if (isPlayerHighlighted && playerColor) {
+        borderColor = playerColor;
+        borderWidth = 4;
+        shadowColor = playerColor;
+        shadowBlur = 15;
     } else if (isPrefightHighlighted) {
         borderColor = prefightHighlightColor;
         borderWidth = 3;
+        shadowColor = prefightHighlightColor;
+        shadowBlur = 15;
+    } else if (playerColor) {
+        borderColor = playerColor;
+        borderWidth = 2;
     }
 
     const pillFill = "rgba(15, 23, 42, 0.95)";
@@ -267,7 +278,7 @@ export const CanvasNode = memo(function CanvasNode({
                     fontSize={11}
                     fontFamily="monospace"
                     fontStyle="bold"
-                    fill={isSelected ? "#fbbf24" : (isPlayerHighlighted ? highlightColor : (isPrefightHighlighted ? prefightHighlightColor : "#cbd5e1"))}
+                    fill={isSelected ? "#fbbf24" : (isPlayerHighlighted && playerColor ? playerColor : (isPrefightHighlighted ? prefightHighlightColor : (playerColor || "#cbd5e1")))}
                     align="center"
                     width={28}
                     y={-9 + 4} // Vertical center adjustment
@@ -285,8 +296,8 @@ export const CanvasNode = memo(function CanvasNode({
                 fill={pillFill}
                 stroke={borderColor}
                 strokeWidth={borderWidth}
-                shadowColor={isPlayerHighlighted ? highlightColor : (isPrefightHighlighted ? prefightHighlightColor : undefined)}
-                shadowBlur={isPlayerHighlighted || isPrefightHighlighted ? 15 : 0}
+                shadowColor={shadowColor}
+                shadowBlur={shadowBlur}
                 shadowOpacity={0.6}
             />
 
@@ -332,29 +343,6 @@ export const CanvasNode = memo(function CanvasNode({
                     />
                 )}
             </Group>
-
-            {/* Player Initials Badge (Bottom Left or Overlapping) */}
-            {player && (
-                <Group x={-pillWidth / 2 + 8} y={pillHeight / 2 - 2}>
-                    <Circle 
-                        radius={10} 
-                        fill="#1e293b"
-                        stroke={isPlayerHighlighted ? highlightColor : "#94a3b8"}
-                        strokeWidth={1}
-                    />
-                    <Text
-                        text={player.ingameName ? player.ingameName.substring(0, 2).toUpperCase() : "??"}
-                        fontSize={9}
-                        fontFamily="sans-serif"
-                        fontStyle="bold"
-                        fill="#f8fafc"
-                        align="center"
-                        width={20}
-                        x={-10}
-                        y={-4.5}
-                    />
-                </Group>
-            )}
 
             {/* Prefights */}
             {hasPrefight && prefightChampions && (
