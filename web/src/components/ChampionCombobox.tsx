@@ -21,10 +21,19 @@ import {
 } from "@/components/ui/popover"
 import { Champion } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
-import { Virtuoso } from "react-virtuoso";
+import { GroupedVirtuoso } from "react-virtuoso";
+
+const CLASS_COLORS: Record<string, string> = {
+  Science: '#4ade80',
+  Skill: '#ef4444',
+  Mutant: '#facc15',
+  Cosmic: '#22d3ee',
+  Tech: '#3b82f6',
+  Mystic: '#a855f7',
+};
 
 interface ChampionComboboxProps {
-  champions: Champion[];
+  champions: (Champion & { group?: string })[];
   value: string;
   onSelect: (value: string) => void;
   placeholder?: string;
@@ -66,17 +75,38 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     onSelect("");
   }, [onSelect]);
 
-  const filteredChampions = React.useMemo(() =>
-    champions.filter(champion =>
-      champion.name.toLowerCase().includes(search.toLowerCase())
-    ), [champions, search]
-  );
+  const { flatItems, groupCounts, groupNames } = React.useMemo(() => {
+    const searchLower = search.toLowerCase();
+    const filtered = champions.filter(champion =>
+      champion.name.toLowerCase().includes(searchLower)
+    );
+
+    const groups: Record<string, typeof champions> = {};
+    const groupOrder: string[] = [];
+
+    filtered.forEach(c => {
+        const g = c.group || "Champions";
+        if (!groups[g]) {
+            groups[g] = [];
+            groupOrder.push(g);
+        }
+        groups[g].push(c);
+    });
+
+    const flat: typeof champions = [];
+    const counts: number[] = [];
+
+    groupOrder.forEach(g => {
+        flat.push(...groups[g]);
+        counts.push(groups[g].length);
+    });
+
+    return { flatItems: flat, groupCounts: counts, groupNames: groupOrder };
+  }, [champions, search]);
 
   const selectedChampion = React.useMemo(() => 
     value ? champions.find((c) => String(c.id) === value) : null,
   [value, champions]);
-
-
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -98,7 +128,12 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                         className="object-cover"
                         />
                     </div>
-                    <span className="truncate">{selectedChampion.name}</span>
+                    <span 
+                        className="truncate" 
+                        style={{ color: selectedChampion.class ? CLASS_COLORS[selectedChampion.class] : undefined }}
+                    >
+                        {selectedChampion.name}
+                    </span>
                 </>
              ) : (
                 <span className="pl-2 text-slate-500">{placeholder}</span>
@@ -131,30 +166,40 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
             onValueChange={setSearch}
           />
           <CommandList>
-            {filteredChampions.length === 0 && <CommandEmpty>No champion found.</CommandEmpty>}
+            {flatItems.length === 0 && <CommandEmpty>No champion found.</CommandEmpty>}
             <CommandGroup>
-                <div style={{ height: Math.min(filteredChampions.length * 46, 300) }}>
-                  <Virtuoso
-                    style={{ height: Math.min(filteredChampions.length * 46, 300) }}
-                    totalCount={filteredChampions.length}
-                    itemContent={(index) => (
-                      <CommandItem
-                        key={filteredChampions[index].id}
-                        value={filteredChampions[index].name}
-                        onSelect={() => handleSelect(String(filteredChampions[index].id))}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
-                            <Image 
-                            src={getChampionImageUrl(filteredChampions[index].images as any, '64')}
-                            alt={filteredChampions[index].name}
-                            fill
-                            className="object-cover"
-                            />
+                <div style={{ height: Math.min(flatItems.length * 46 + groupNames.length * 28, 300) }}>
+                  <GroupedVirtuoso
+                    style={{ height: Math.min(flatItems.length * 46 + groupNames.length * 28, 300) }}
+                    groupCounts={groupCounts}
+                    groupContent={(index) => (
+                        <div className="bg-slate-950/95 backdrop-blur text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1.5 border-b border-slate-800 sticky top-0 z-10">
+                            {groupNames[index]}
                         </div>
-                        <span>{filteredChampions[index].name}</span>
-                      </CommandItem>
                     )}
+                    itemContent={(index) => {
+                      const item = flatItems[index];
+                      return (
+                        <CommandItem
+                            key={item.id}
+                            value={item.name}
+                            onSelect={() => handleSelect(String(item.id))}
+                            className="flex items-center gap-2 cursor-pointer"
+                        >
+                            <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                                <Image 
+                                    src={getChampionImageUrl(item.images as any, '64')}
+                                    alt={item.name}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                            <span style={{ color: item.class ? CLASS_COLORS[item.class] : undefined }}>
+                                {item.name}
+                            </span>
+                        </CommandItem>
+                      );
+                    }}
                   />
                 </div>
             </CommandGroup>

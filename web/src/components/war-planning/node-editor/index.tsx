@@ -259,11 +259,11 @@ export default function NodeEditor({
         const item = { ...c, name: displayName, originalName: c.name, rankData: r };
 
         if (warTeamIds.has(c.id)) {
-            warTeam.push({ ...item, name: `★ ${displayName}` }); // Add star to indicate assignment
+            warTeam.push({ ...item, group: "War Team" });
         } else if (r) {
-            roster.push(item);
+            roster.push({ ...item, group: "Player Roster" });
         } else {
-            others.push(item);
+            others.push({ ...item, group: "All Champions" });
         }
     });
 
