@@ -4,14 +4,21 @@ This document provides context for the Gemini code assistant to understand the C
 
 ## Project Overview
 
-This is a TypeScript-based Discord bot for the mobile game Marvel Contest of Champions (MCOC). It provides a variety of features to server members, including:
+CereBro is a full-stack platform, "The Operating System for MCOC Alliances," combining a powerful Discord bot and a high-performance Next.js web application. It is designed to streamline Alliance War management, roster tracking, and knowledge sharing for the mobile game Marvel Contest of Champions (MCOC).
 
-*   **Champion Information:** Users can query for information about champions, including their abilities, attacks, and immunities.
-*   **Champion Administration:** A powerful admin command to add or update champions in the database.
-*   **Prestige Tracking:** Users can update and view their prestige values.
-*   **Roster Management:** Users can manage their MCOC rosters.
-*   **Scheduling:** The bot can be used to schedule reminders and other events.
-*   **AQ Management:** The bot has features to help with Alliance Quest (AQ) management.
+The platform provides a variety of features, including:
+
+*   **Discord Bot Features:**
+    *   **Champion Information:** Users can query for information about champions, including their abilities, attacks, and immunities.
+    *   **Champion Administration:** A powerful admin command to add or update champions in the database.
+    *   **Prestige Tracking:** Users can update and view their prestige values.
+    *   **Roster Management:** Users can manage their MCOC rosters.
+    *   **Scheduling:** The bot can be used to schedule reminders and other events.
+    *   **AQ Management:** The bot has features to help with Alliance Quest (AQ) management.
+*   **Web Application Features:**
+    *   **War Planning UI:** An interactive, high-performance web interface for managing Alliance War plans.
+    *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
+    *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI.
 
 ### War Videos Database & Planning
 
@@ -117,11 +124,13 @@ The `/champion duel` command has been enhanced to allow for community contributi
 The bot is built with a modern tech stack, including:
 
 *   **Language:** TypeScript
-*   **Framework:** Discord.js v14
+*   **Framework:** Discord.js v14, Next.js (App Router)
 *   **Database:** PostgreSQL with Prisma ORM
+*   **Frontend:** React, Tailwind CSS, shadcn/ui
 *   **APIs:** Google Sheets, OpenRouter, Google Cloud Storage, PostHog
 *   **Authentication:** NextAuth.js (Discord OAuth2) for the web interface
 *   **Containerization:** Docker and Docker Compose
+*   **Caching:** Redis
 
 The project is well-structured, with a clear separation of concerns. Commands are organized into their own directories, each containing sub-files for subcommands, handlers, and other related logic. This modular approach is demonstrated in the `roster`, `search`, and `aq` commands. The bot also includes a robust error handling system and a dynamic command loading mechanism.
 

@@ -24,4 +24,3 @@
   - alternative way to upload roster through web UI. 
 - In the AQ tracker, disable buttons after they are clicked.
 - [DONE] possibly another source for duels - cockpit.org
-- do you want to join alliance dialog after using /register
