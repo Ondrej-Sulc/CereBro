@@ -73,7 +73,8 @@ export async function POST(req: NextRequest) {
           },
           update: { 
             warTier: parsedWarTier,
-            mapType: parsedMapType
+            mapType: parsedMapType,
+            status: 'FINISHED',
           },
           create: {
             season: parsedSeason,
@@ -81,6 +82,7 @@ export async function POST(req: NextRequest) {
             warNumber: parsedWarNumber,
             allianceId: allianceId,
             mapType: parsedMapType,
+            status: 'FINISHED',
           },
         });
       } else {
@@ -105,13 +107,14 @@ export async function POST(req: NextRequest) {
               warNumber: null,
               allianceId: allianceId,
               mapType: parsedMapType,
+              status: 'FINISHED',
             },
           });
         } else {
-          // Update the tier if needed
+          // Update the tier and status if needed
           war = await prisma.war.update({
             where: { id: war.id },
-            data: { warTier: parsedWarTier },
+            data: { warTier: parsedWarTier, status: 'FINISHED' },
           });
         }
       }

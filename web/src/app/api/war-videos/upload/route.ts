@@ -67,64 +67,66 @@ export async function POST(req: NextRequest) {
     
           // For offseason wars (warNumber is null), we need to find or create differently
           let war;
-          if (parsedWarNumber === null) {
-            // For offseason, find the most recent offseason war or create a new one
-            war = await prisma.war.findFirst({
-              where: {
-                allianceId: allianceId,
-                season: parsedSeason,
-                warNumber: null,
-                mapType: parsedMapType,
-              },
-              orderBy: {
-                createdAt: 'desc',
-              },
-            });
-    
-            if (!war) {
-              war = await prisma.war.create({
-                data: {
-                  season: parsedSeason,
-                  warTier: parsedWarTier,
-                  warNumber: null,
-                  allianceId: allianceId,
-                  mapType: parsedMapType,
-                },
-              });
-            } else {
-              // Update the tier if needed
-              war = await prisma.war.update({
-                where: { id: war.id },
-                data: { warTier: parsedWarTier },
-              });
-            }
-          } else {
-            // For regular wars, use upsert with the unique constraint
-            // NOTE: The unique constraint is @@unique([allianceId, season, warNumber])
-            // So mapType cannot distinguish different wars with the same number.
-            // This assumes an alliance only runs ONE map type per war number.
-            war = await prisma.war.upsert({
-              where: {
-                allianceId_season_warNumber: {
-                  allianceId: allianceId,
-                  season: parsedSeason,
-                  warNumber: parsedWarNumber,
-                },
-              },
-              update: { 
-                warTier: parsedWarTier,
-                mapType: parsedMapType // Allow updating map type
-              },
-              create: {
-                season: parsedSeason,
-                warTier: parsedWarTier,
-                warNumber: parsedWarNumber,
-                allianceId: allianceId,
-                mapType: parsedMapType,
-              },
-            });
-          }
-      // 3.4. Create WarFights
+                    if (parsedWarNumber === null) {
+                      // For offseason, find the most recent offseason war or create a new one
+                      war = await prisma.war.findFirst({
+                        where: {
+                          allianceId: allianceId,
+                          season: parsedSeason,
+                          warNumber: null,
+                          mapType: parsedMapType,
+                        },
+                        orderBy: {
+                          createdAt: 'desc',
+                        },
+                      });
+          
+                      if (!war) {
+                        war = await prisma.war.create({
+                          data: {
+                            season: parsedSeason,
+                            warTier: parsedWarTier,
+                            warNumber: null,
+                            allianceId: allianceId,
+                            mapType: parsedMapType,
+                            status: 'FINISHED',
+                          },
+                        });
+                      } else {
+                        // Update the tier and status if needed
+                        war = await prisma.war.update({
+                          where: { id: war.id },
+                          data: { warTier: parsedWarTier, status: 'FINISHED' },
+                        });
+                      }
+                    } else {
+                      // For regular wars, use upsert with the unique constraint
+                      // NOTE: The unique constraint is @@unique([allianceId, season, warNumber])
+                      // So mapType cannot distinguish different wars with the same number.
+                      // This assumes an alliance only runs ONE map type per war number.
+                      war = await prisma.war.upsert({
+                        where: {
+                          allianceId_season_warNumber: {
+                            allianceId: allianceId,
+                            season: parsedSeason,
+                            warNumber: parsedWarNumber,
+                          },
+                        },
+                        update: { 
+                          warTier: parsedWarTier,
+                          mapType: parsedMapType, // Allow updating map type
+                          status: 'FINISHED',
+                        },
+                        create: {
+                          season: parsedSeason,
+                          warTier: parsedWarTier,
+                          warNumber: parsedWarNumber,
+                          allianceId: allianceId,
+                          mapType: parsedMapType,
+                          status: 'FINISHED',
+                        },
+                      });
+                    }      // 3.4. Create WarFights
       const createdFights = await Promise.all(newFights.map(async (fight: any) => {
         return prisma.warFight.upsert({
           where: {

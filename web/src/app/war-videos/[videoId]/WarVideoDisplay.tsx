@@ -77,6 +77,27 @@ function getYouTubeVideoId(url: string | null): string | null {
   return videoId;
 }
 
+const VideoThumbnail = ({ videoId }: { videoId: string }) => {
+  const [src, setSrc] = useState(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`);
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <Image 
+      src={src}
+      alt="Video thumbnail"
+      fill
+      className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+      priority
+      onError={() => {
+        if (!hasError) {
+            setSrc(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
+            setHasError(true);
+        }
+      }}
+    />
+  );
+};
+
 export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: WarVideoDisplayProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -168,13 +189,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
           <div className="aspect-video relative group cursor-pointer" onClick={() => setIsPlaying(true)}>
             {!isPlaying ? (
               <>
-                <Image 
-                  src={`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`}
-                  alt="Video thumbnail"
-                  fill
-                  className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-                  priority
-                />
+                <VideoThumbnail videoId={videoId} />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-red-600/90 text-white rounded-full p-4 shadow-lg scale-90 group-hover:scale-100 transition-transform duration-300">
                     <Play className="h-8 w-8 fill-white" />
@@ -343,7 +358,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                     </Badge>
                   )}
                 </div>
-                <p className="font-bold text-white text-lg truncate">{warVideo.submittedBy.ingameName}</p>
+                <p className="font-bold text-white text-lg truncate">{warVideo.fights[0]?.player?.ingameName || warVideo.submittedBy.ingameName}</p>
               </div>
 
               {/* Video Status */}
