@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import fs from 'fs';
 import loggerService from './loggerService';
+import { prisma } from './prismaService';
 
 /**
  * @fileoverview
@@ -11,7 +12,7 @@ import loggerService from './loggerService';
  *
  * @requires Google Cloud Project with YouTube Data API v3 enabled.
  * @requires OAuth 2.0 Credentials (client_id, client_secret).
- * @requires An OAuth 2.0 Refresh Token obtained from an initial authorization flow.
+ * @requires An OAuth 2.0 Refresh Token stored in the database.
  */
 
 // --- CONFIGURATION ---
@@ -20,18 +21,6 @@ import loggerService from './loggerService';
 const CLIENT_ID = process.env.YOUTUBE_CLIENT_ID || 'YOUR_CLIENT_ID';
 const CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET || 'YOUR_CLIENT_SECRET';
 const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
-
-// TODO: This is a critical piece of information that you must obtain once.
-// It allows the application to generate new access tokens without user interaction.
-// 1. Go to https://developers.google.com/oauthplayground
-// 2. In the top-right settings gear, check "Use your own OAuth credentials" and provide your CLIENT_ID and CLIENT_SECRET.
-// 3. On the left, find "YouTube Data API v3" and select both scopes:
-//    - "https://www.googleapis.com/auth/youtube.upload"
-//    - "https://www.googleapis.com/auth/youtube" (This is required for deleting videos)
-// 4. Click "Authorize APIs".
-// 5. Exchange authorization code for tokens.
-// 6. Copy the "Refresh token" and paste it here or in your .env file.
-const REFRESH_TOKEN = process.env.YOUTUBE_REFRESH_TOKEN || 'YOUR_REFRESH_TOKEN';
 
 class YouTubeService {
   private oauth2Client;
@@ -44,27 +33,32 @@ class YouTubeService {
       REDIRECT_URI
     );
 
-    // Set the refresh token so we can get new access tokens
-    this.oauth2Client.setCredentials({
-      refresh_token: REFRESH_TOKEN,
-    });
-
     this.youtube = google.youtube({
       version: 'v3',
       auth: this.oauth2Client,
     });
 
+    // Verify authentication on startup (optional, but good for logging)
     this.testAuthentication();
   }
 
-  private async testAuthentication() {
-    if (REFRESH_TOKEN === 'YOUR_REFRESH_TOKEN') {
-      loggerService.warn(
-        'YouTubeService is not configured. Please provide credentials in .env or youtubeService.ts'
-      );
-      return;
+  private async ensureAuthenticated() {
+    const config = await prisma.systemConfig.findUnique({
+      where: { key: 'YOUTUBE_REFRESH_TOKEN' },
+    });
+
+    if (!config?.value) {
+      throw new Error('YouTube refresh token not found in database. Please configure it via the Admin Dashboard.');
     }
+
+    this.oauth2Client.setCredentials({
+      refresh_token: config.value,
+    });
+  }
+
+  private async testAuthentication() {
     try {
+      await this.ensureAuthenticated();
       // The getAccessToken method will automatically use the refresh token to get a new access token.
       const tokenInfo = await this.oauth2Client.getAccessToken();
       if (tokenInfo.token) {
@@ -72,11 +66,11 @@ class YouTubeService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      loggerService.error({
+      loggerService.warn({
         error: errorMessage,
         suggestion:
-          'Ensure your YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and YOUTUBE_REFRESH_TOKEN are correct.',
-      }, 'Failed to authenticate with YouTube API.');
+          'Please log in via the Admin Dashboard to configure YouTube access.',
+      }, 'YouTube API authentication check failed (non-critical until upload attempted).');
     }
   }
 
@@ -96,6 +90,8 @@ class YouTubeService {
     loggerService.info({ title, privacyStatus }, 'Starting YouTube video upload.');
 
     try {
+      await this.ensureAuthenticated();
+
       const response = await this.youtube.videos.insert({
         part: ['snippet', 'status'],
         requestBody: {
@@ -148,6 +144,8 @@ class YouTubeService {
   ): Promise<void> {
     loggerService.info({ videoId, privacyStatus }, 'Updating YouTube video privacy.');
     try {
+      await this.ensureAuthenticated();
+      
       await this.youtube.videos.update({
         part: ['status'],
         requestBody: {
@@ -173,6 +171,8 @@ class YouTubeService {
   public async deleteVideo(videoId: string): Promise<void> {
     loggerService.info({ videoId }, 'Deleting YouTube video.');
     try {
+      await this.ensureAuthenticated();
+      
       await this.youtube.videos.delete({
         id: videoId,
       });

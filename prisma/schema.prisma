@@ -614,6 +614,12 @@ model UploadToken {
 
 // --- NextAuth Models ---
 
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String

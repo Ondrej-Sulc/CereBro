@@ -40,6 +40,7 @@
     "fuse.js": "^7.1.0",
     "google-auth-library": "^10.5.0",
     "google-spreadsheet": "^5.0.2",
+    "googleapis": "^152.0.0",
     "konva": "^10.0.12",
     "lucide-react": "^0.552.0",
     "next": "16.0.1",

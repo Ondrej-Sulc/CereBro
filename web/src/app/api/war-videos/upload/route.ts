@@ -126,10 +126,28 @@ export async function POST(req: NextRequest) {
           }
       // 3.4. Create WarFights
       const createdFights = await Promise.all(newFights.map(async (fight: any) => {
-        return prisma.warFight.create({
-          data: {
+        return prisma.warFight.upsert({
+          where: {
+            warId_battlegroup_nodeId: {
+              warId: war.id,
+              battlegroup: parsedBattlegroup,
+              nodeId: parseInt(fight.nodeId),
+            }
+          },
+          update: {
+            playerId: playerId, // Use playerId from form
+            attackerId: parseInt(fight.attackerId),
+            defenderId: parseInt(fight.defenderId),
+            death: fight.death,
+            prefightChampions: {
+              set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
+                   ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) 
+                   : []
+            }
+          },
+          create: {
             warId: war.id,
-            playerId: uploadToken.playerId, // Submitting player
+            playerId: playerId, // Use playerId from form
             nodeId: parseInt(fight.nodeId),
             attackerId: parseInt(fight.attackerId),
             defenderId: parseInt(fight.defenderId),

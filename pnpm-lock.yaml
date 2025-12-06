@@ -216,6 +216,9 @@ importers:
       google-spreadsheet:
         specifier: ^5.0.2
         version: 5.0.2(google-auth-library@10.5.0)
+      googleapis:
+        specifier: ^152.0.0
+        version: 152.0.0
       konva:
         specifier: ^10.0.12
         version: 10.0.12
