@@ -18,7 +18,11 @@ import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { War, WarFight, Player as PrismaPlayer, WarNode as PrismaWarNode } from '@prisma/client';
 
-
+interface PlayerWithAlliance extends PrismaPlayer {
+  alliance?: {
+    canUploadFiles: boolean;
+  } | null;
+}
 
 interface PreFilledFight extends WarFight {
   war: War;
@@ -33,7 +37,7 @@ interface WarVideoFormProps {
   token: string;
   initialChampions: Champion[];
   initialNodes: PrismaWarNode[];
-  initialPlayers: PrismaPlayer[];
+  initialPlayers: PlayerWithAlliance[];
   initialUserId: string;
   preFilledFights: PreFilledFight[] | null;
 }
@@ -103,10 +107,23 @@ export function WarVideoForm({
   const [currentUpload, setCurrentUpload] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const currentUser = useMemo(() => 
+    initialPlayers.find(p => p.id === initialUserId), 
+    [initialPlayers, initialUserId]
+  );
+  const canUploadFiles = !!currentUser?.alliance?.canUploadFiles;
+
   // Effect to update offseason state if warNumber changes
   useEffect(() => {
     setIsOffseason(warNumber === "0" || warNumber === "");
   }, [warNumber]);
+
+  // Effect to force link mode if not allowed to upload
+  useEffect(() => {
+    if (!canUploadFiles && sourceMode === 'upload') {
+      setSourceMode('link');
+    }
+  }, [canUploadFiles, sourceMode]);
 
   // Effect to update battlegroup if playerInVideoId changes and not pre-filled
   useEffect(() => {
@@ -627,14 +644,19 @@ export function WarVideoForm({
               className="flex space-x-4"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="upload" id="upload" />
-                <Label htmlFor="upload" className="text-sm text-slate-300">Upload File</Label>
+                <RadioGroupItem value="upload" id="upload" disabled={!canUploadFiles} />
+                <Label htmlFor="upload" className={cn("text-sm text-slate-300", !canUploadFiles && "opacity-50 cursor-not-allowed")}>Upload File</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="link" id="link" />
                 <Label htmlFor="link" className="text-sm text-slate-300">Use Link</Label>
               </div>
             </RadioGroup>
+            {!canUploadFiles && (
+              <p className="text-xs text-amber-500/80 mt-2">
+                Direct file uploads are currently restricted to authorized alliances due to quota limits. Please use a YouTube link.
+              </p>
+            )}
           </div>
           <div>
             <Label className="text-sm font-medium text-slate-300 mb-2 block">Upload Mode</Label>

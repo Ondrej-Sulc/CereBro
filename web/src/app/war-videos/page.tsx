@@ -334,7 +334,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         <div className="hidden md:block overflow-hidden rounded-xl border border-slate-800/60 bg-slate-900/20">
             <table className="w-full text-left text-sm text-slate-400">
                 <thead className="bg-slate-900/80 text-xs uppercase font-semibold text-slate-500 border-b border-slate-800/60">
-                    <tr><th className="px-4 py-3 w-[160px]">War Info</th><th className="px-4 py-3">Alliance</th><th className="px-4 py-3 w-[100px]">Node</th><th className="px-4 py-3">Attacker</th><th className="px-4 py-3">Defender</th><th className="px-4 py-3 w-[120px]">Prefights</th> {/* Added Prefights column header */}<th className="px-4 py-3">Player</th><th className="px-4 py-3 text-right">View</th></tr>
+                    <tr><th className="px-4 py-3 w-[160px]">War Info</th><th className="px-4 py-3">Alliance</th><th className="px-4 py-3 w-[100px]">Node</th><th className="px-4 py-3">Attacker</th><th className="px-4 py-3">Defender</th><th className="px-4 py-3 w-[120px]">Prefights</th><th className="px-4 py-3">Player</th><th className="px-4 py-3 text-right">View</th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                     {fights.map((fight) => {

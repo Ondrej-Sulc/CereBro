@@ -21,24 +21,34 @@ export async function POST(req: NextRequest) {
         if (!token) {
           return NextResponse.json({ error: 'Missing upload token' }, { status: 400 });
         }
-        const uploadToken = await prisma.uploadToken.findUnique({
-          where: { token },
-          include: { player: true },
-        });
-        if (!uploadToken || uploadToken.expiresAt < new Date()) {
-          if (uploadToken) await prisma.uploadToken.delete({ where: { id: uploadToken.id } });
-          return NextResponse.json({ error: 'Invalid or expired upload token' }, { status: 401 });
-        }
-        const { player } = uploadToken;
-        const isTrusted = player.isTrustedUploader;
-    
-        // --- 2. File Validation ---
-        if (!tempFilePath || !existsSync(tempFilePath)) {
-          return NextResponse.json({ error: 'No video file uploaded or file not found' }, { status: 400 });
-        }
-    
-        // --- 3. Determine fight processing strategy ---
-        let fightIdsToLink: string[];
+                const uploadToken = await prisma.uploadToken.findUnique({
+                  where: { token },
+                  include: { 
+                    player: {
+                      include: { alliance: true }
+                    } 
+                  },
+                });
+                if (!uploadToken || uploadToken.expiresAt < new Date()) {
+                  if (uploadToken) await prisma.uploadToken.delete({ where: { id: uploadToken.id } });
+                  return NextResponse.json({ error: 'Invalid or expired upload token' }, { status: 401 });
+                }
+                const { player } = uploadToken;
+                const isTrusted = player.isTrustedUploader;
+            
+                // --- 2. File Validation ---
+                if (!tempFilePath || !existsSync(tempFilePath)) {
+                  return NextResponse.json({ error: 'No video file uploaded or file not found' }, { status: 400 });
+                }
+            
+                // --- 2.1 Alliance Restriction Check ---
+                if (!player.alliance?.canUploadFiles) {
+                   if (tempFilePath && existsSync(tempFilePath)) {
+                      await fs.unlink(tempFilePath);
+                   }
+                   return NextResponse.json({ error: 'Direct video upload is restricted to authorized alliances only.' }, { status: 403 });
+                }        
+            // --- 3. Determine fight processing strategy ---        let fightIdsToLink: string[];
     
         if (newFightsJson) {
           // Logic for new fight creation (manual upload without pre-filled fights)

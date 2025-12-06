@@ -300,6 +300,7 @@ model Alliance {
   name                   String
   enabledFeatureCommands String[] @default([])
   createAqThread         Boolean  @default(false)
+  canUploadFiles         Boolean  @default(false)
   officerRole            String?
   battlegroup1Role       String?
   battlegroup2Role       String?

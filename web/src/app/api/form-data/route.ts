@@ -13,7 +13,11 @@ export async function GET(request: Request) {
     // 1. Validate the token and find the user
     const uploadToken = await prisma.uploadToken.findUnique({
       where: { token },
-      include: { player: true },
+      include: { 
+        player: {
+          include: { alliance: true }
+        } 
+      },
     });
 
     if (!uploadToken || uploadToken.expiresAt < new Date()) {
@@ -52,6 +56,7 @@ export async function GET(request: Request) {
         ? prisma.player.findMany({
             where: { allianceId: user.allianceId },
             orderBy: { ingameName: 'asc' },
+            include: { alliance: true },
           })
         : Promise.resolve([user]), // If user has no alliance, only return the user themselves
     ]);

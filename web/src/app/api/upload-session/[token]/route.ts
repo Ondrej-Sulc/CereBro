@@ -32,7 +32,9 @@ export async function GET(
       where: { id: { in: session.fightIds } },
       include: {
         war: true,
-        player: true,
+        player: {
+          include: { alliance: true }
+        },
         attacker: true,
         defender: true,
         node: true,
@@ -88,6 +90,7 @@ export async function GET(
         ? prisma.player.findMany({
             where: { allianceId: user.allianceId },
             orderBy: { ingameName: 'asc' },
+            include: { alliance: true },
           })
         : Promise.resolve([user]), // If user has no alliance, only return the user
     ]);
