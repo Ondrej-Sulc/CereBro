@@ -2,6 +2,7 @@ import { Client } from 'discord.js';
 import { prisma } from './prismaService';
 import logger from './loggerService';
 import { handleWarVideoNotification } from './jobHandlers/warVideoNotification';
+import { handleDistributeWarPlan } from './jobHandlers/distributeWarPlan';
 // @ts-ignore - Types might be stale until regen
 import { BotJobType, BotJobStatus } from '@prisma/client';
 
@@ -37,7 +38,9 @@ export function startJobProcessor(client: Client) {
           case 'NOTIFY_WAR_VIDEO':
             await handleWarVideoNotification(client, job.payload);
             break;
-          // Future cases here
+          case 'DISTRIBUTE_WAR_PLAN':
+            await handleDistributeWarPlan(client, job.payload);
+            break;
           default:
             logger.warn(`Unknown job type: ${job.type}`);
         }

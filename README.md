@@ -44,7 +44,7 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 ### ⚔️ Alliance War Command Center
 The flagship feature of the platform.
 *   **Planning:** Supports multiple map layouts (`Standard` & `Big Thing`). Features pinch-to-zoom, node-specific tactic visualizers, and drag-and-drop assignments.
-*   **Execution:** Automated distribution of assignments to Discord private threads.
+*   **Execution:** Now database-driven. Plans generated in the Web UI or via the `/aw plan` command can be distributed to players' private Discord threads, containing personalized assignments, team compositions (including prefights), and notes.
 *   **Analysis:** "Plan-to-Upload" workflow generates unique tokens for players to upload war videos, automatically linking them to their specific node assignment.
 *   **Smart Notifications:** Automatically posts rich embeds to a configured Discord channel whenever a new war video is uploaded or linked, keeping the alliance in the loop.
 
@@ -58,6 +58,7 @@ The flagship feature of the platform.
 
 ### 🛡️ Alliance Operations
 *   **Role Sync:** Automatically maps Discord Roles to Database permissions (Officer, Battlegroup 1-3).
+*   **Channel Configuration:** Customizable Discord channels for specific battlegroup plans and general war video notifications.
 *   **AQ Management:** Scheduling and tracking for Alliance Quest timers.
 
 ---

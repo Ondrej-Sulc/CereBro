@@ -42,16 +42,17 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
     // Fights List
     if (fights && Array.isArray(fights) && fights.length > 0) {
         const fightLines = await Promise.all(fights.map(async (f: any) => {
-            const attackerEmoji = await getEmoji(f.attackerName);
-            const defenderEmoji = await getEmoji(f.defenderName);
+            const attackerEmoji = await getEmoji(f.attackerName, client);
+            const defenderEmoji = await getEmoji(f.defenderName, client);
             
-            return `- Node ${f.nodeNumber}: ${attackerEmoji} **${f.attackerName}** vs ${defenderEmoji} **${f.defenderName}** ${(f.playerInVideo !== uploaderName ? ` by **${f.playerInVideo}**` : '')}`;
+            return `- ${attackerEmoji} **${f.attackerName}** vs ${defenderEmoji} **${f.defenderName}** (Node ${f.nodeNumber})` + 
+            (f.playerInVideo !== uploaderName ? ` by *${f.playerInVideo}*` : '');
         }));
         
         const fightsList = fightLines.join('\n');
         
         container.addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`**Fights in this video:**\n${fightsList}`)
+            new TextDisplayBuilder().setContent(`**Fights:**\n${fightsList}`)
         );
     }
 

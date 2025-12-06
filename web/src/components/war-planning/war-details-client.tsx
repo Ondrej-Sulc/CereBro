@@ -11,6 +11,8 @@ import { WarTabs } from "./details/war-tabs";
 import { DesktopSidebar } from "./details/desktop-sidebar";
 import { PlayerListPanel } from "./details/player-list-panel";
 import { MobileSheet } from "./details/mobile-sheet";
+import { useToast } from "@/hooks/use-toast";
+import { distributePlan } from "@/app/planning/actions";
 
 interface WarDetailsClientProps {
   war: War;
@@ -24,6 +26,7 @@ interface WarDetailsClientProps {
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
+  const { toast } = useToast();
   const {
     // State
     rightPanelState,
@@ -79,6 +82,22 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         setRightPanelState(prev => prev === 'roster' ? 'closed' : 'roster');
     }
   }, [isDesktop, setRightPanelState]);
+
+  const handleDistribute = useCallback(async (battlegroup?: number) => {
+    try {
+        await distributePlan(props.warId, battlegroup);
+        toast({
+            title: "Plan Distribution Started",
+            description: `Distribution job queued for ${battlegroup ? `Battlegroup ${battlegroup}` : 'all battlegroups'}.`,
+        });
+    } catch (e: any) {
+        toast({
+            title: "Distribution Failed",
+            description: e.message,
+            variant: "destructive",
+        });
+    }
+  }, [props.warId, toast]);
 
   const isRosterVisible = isDesktop ? isPlayerPanelOpen : rightPanelState === 'roster';
 
@@ -161,6 +180,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onAddWarBan={handleAddWarBan}
             onRemoveWarBan={handleRemoveWarBan}
             onAddExtra={handleAddExtra}
+            onDistribute={handleDistribute}
           />
           
           <WarTabs 

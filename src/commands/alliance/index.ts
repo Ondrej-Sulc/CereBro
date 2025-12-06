@@ -66,6 +66,24 @@ export const command: Command = {
                 .setDescription('The channel to post new war video notifications to.')
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         )
+        .addChannelOption(option => 
+            option
+                .setName('bg1-channel')
+                .setDescription('The channel for Battlegroup 1.')
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        )
+        .addChannelOption(option => 
+            option
+                .setName('bg2-channel')
+                .setDescription('The channel for Battlegroup 2.')
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        )
+        .addChannelOption(option => 
+            option
+                .setName('bg3-channel')
+                .setDescription('The channel for Battlegroup 3.')
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        )
     )
     .addSubcommand((subcommand) =>
       subcommand

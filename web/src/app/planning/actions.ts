@@ -589,3 +589,44 @@ export async function getExtraChampions(warId: string, battlegroup: number) {
       }
     });
   }
+
+export async function distributePlan(warId: string, battlegroup?: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+  if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true },
+  });
+
+  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer to distribute plans.");
+  }
+
+  // Verify War belongs to alliance
+  const war = await prisma.war.findUnique({
+      where: { id: warId }
+  });
+
+  if (!war || war.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized: Cannot distribute plans for another alliance.");
+  }
+
+  await prisma.botJob.create({
+    data: {
+      type: 'DISTRIBUTE_WAR_PLAN',
+      payload: {
+        allianceId: player.allianceId,
+        warId,
+        battlegroup
+      }
+    }
+  });
+
+  return { success: true };
+}

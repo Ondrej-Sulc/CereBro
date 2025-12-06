@@ -8,25 +8,42 @@ export async function handleAllianceConfigChannels(interaction: ChatInputCommand
   }
 
   const warVideosChannel = interaction.options.getChannel('war-videos');
+  const bg1Channel = interaction.options.getChannel('bg1-channel');
+  const bg2Channel = interaction.options.getChannel('bg2-channel');
+  const bg3Channel = interaction.options.getChannel('bg3-channel');
 
-  if (!warVideosChannel) {
-    await interaction.editReply('Please specify a channel to configure.');
+  if (!warVideosChannel && !bg1Channel && !bg2Channel && !bg3Channel) {
+    await interaction.editReply('Please specify at least one channel to configure.');
     return;
   }
 
-  // Validate channel type (Text or Announcement)
-  // Note: addChannelTypes in builder should handle this, but good to be safe
-  if (warVideosChannel.type !== ChannelType.GuildText && warVideosChannel.type !== ChannelType.GuildAnnouncement) {
-      await interaction.editReply('The specified channel must be a Text Channel or Announcement Channel.');
+  const data: any = {};
+  let summary = 'Successfully updated alliance channel configuration:\n';
+
+  const validateAndAdd = async (channel: any, key: string, label: string) => {
+    if (channel) {
+        if (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement) {
+            throw new Error(`The ${label} channel must be a Text Channel or Announcement Channel.`);
+        }
+        data[key] = channel.id;
+        summary += `- **${label}:** <#${channel.id}>\n`;
+    }
+  };
+
+  try {
+      await validateAndAdd(warVideosChannel, 'warVideosChannelId', 'War Videos');
+      await validateAndAdd(bg1Channel, 'battlegroup1ChannelId', 'Battlegroup 1');
+      await validateAndAdd(bg2Channel, 'battlegroup2ChannelId', 'Battlegroup 2');
+      await validateAndAdd(bg3Channel, 'battlegroup3ChannelId', 'Battlegroup 3');
+  } catch (e: any) {
+      await interaction.editReply(e.message);
       return;
   }
 
   await prisma.alliance.update({
     where: { guildId: interaction.guildId },
-    data: {
-      warVideosChannelId: warVideosChannel.id,
-    },
+    data,
   });
 
-  await interaction.editReply(`Successfully updated alliance channel configuration:\n- **War Videos:** <#${warVideosChannel.id}>`);
+  await interaction.editReply(summary);
 }

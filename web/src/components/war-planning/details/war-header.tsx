@@ -1,7 +1,7 @@
 import { War, WarStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen, Users, Ban, Plus, X } from "lucide-react";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Users, Ban, Plus, X, Share } from "lucide-react";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
@@ -13,6 +13,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface WarHeaderProps {
   war: War;
@@ -32,6 +38,7 @@ interface WarHeaderProps {
   onAddWarBan: (championId: number) => Promise<void>;
   onRemoveWarBan: (banId: string) => Promise<void>;
   onAddExtra: (playerId: string, championId: number) => void;
+  onDistribute: (battlegroup?: number) => void;
 }
 
 export function WarHeader({
@@ -51,7 +58,8 @@ export function WarHeader({
   warBans,
   onAddWarBan,
   onRemoveWarBan,
-  onAddExtra
+  onAddExtra,
+  onDistribute
 }: WarHeaderProps) {
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
 
@@ -91,6 +99,28 @@ export function WarHeader({
                   </Button>
               </div>
           )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                    <Share className="h-4 w-4" /> Distribute
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onDistribute()}>
+                    Distribute All
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDistribute(1)}>
+                    Distribute BG1
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDistribute(2)}>
+                    Distribute BG2
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDistribute(3)}>
+                    Distribute BG3
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Button 
             variant={status === 'PLANNING' ? "destructive" : "outline"} 

@@ -55,6 +55,26 @@ To reliably handle communication between the Web App and the Discord Bot (e.g., 
 *   **Authorized Uploads:** Direct file uploads are restricted to alliances with the `canUploadFiles` flag enabled (to manage server costs). Other users can still link YouTube videos.
 *   **Archive Integration:** The War Archive now includes an "Upload Video" button (`+`) for fights without videos, allowing users to easily backfill content for existing records.
 
+### War Plan Distribution
+
+The system now supports distributing detailed Alliance War plans directly from the Web UI or via the `/aw plan` command. This is achieved through the asynchronous `BotJob` queue with a `DISTRIBUTE_WAR_PLAN` job type.
+
+*   **Workflow:**
+    1.  Officers create/edit war plans in the Web UI.
+    2.  They can click "Distribute Plan" (for all BGs or specific ones) in the Web UI, or use the `/aw plan` Discord command.
+    3.  A `DISTRIBUTE_WAR_PLAN` job is created, containing `warId`, `allianceId`, and optional `battlegroup`.
+    4.  The Bot's `JobProcessor` picks up the job, fetches all relevant fight data for the specified war from the database.
+    5.  It then constructs highly personalized Discord messages for each player, sent to their private threads.
+*   **Message Content:** Messages utilize Discord V2 components (`ContainerBuilder`) and include:
+    *   Player's assigned fights (Attacker vs Defender on Node X).
+    *   Champion emojis for easy identification.
+    *   A consolidated "Your Team" section, listing all champions involved in their attacks and prefights.
+    *   A "Pre-Fights to Place" section, clearly outlining any prefights they need to execute, with dynamic wording ("for my [Defender]" vs "for [Player]'s [Defender]").
+    *   Notes associated with specific fights.
+    *   An "Upload Video(s)" button to streamline the plan-to-upload workflow.
+*   **Dynamic Channel Configuration:** The `/alliance config-channels` command has been extended to allow server administrators to configure specific Discord channels for each battlegroup, ensuring plans are sent to the correct locations.
+*   **Consistent Emojis:** The system now uses a robust emoji resolution mechanism (`createEmojiResolver`) to ensure champion emojis display correctly across different Discord environments (e.g., development vs. production bots).
+
 ### War Planning UI (Web)
 
 The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.
