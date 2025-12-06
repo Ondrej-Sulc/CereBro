@@ -1,5 +1,6 @@
-import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SeparatorBuilder } from 'discord.js';
 import { config } from '../../config';
+import { getEmoji } from '../../commands/aw/utils';
 
 export async function handleWarVideoNotification(client: Client, payload: any) {
     const { channelId, videoId, title, description, uploaderName, season, warNumber, fights } = payload;
@@ -28,7 +29,7 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
     // Header and Title
     container.addTextDisplayComponents(
         new TextDisplayBuilder()
-            .setContent(`# 🎥 New War Video Uploaded\n### ${title || 'Untitled Video'}`)
+            .setContent(`## 🎥 New War Video\n**${title || 'Untitled Video'}**`)
     );
 
     // Description (if present)
@@ -37,23 +38,29 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
             new TextDisplayBuilder().setContent(`> ${description}`)
         );
     }
-
+    
     // Fights List
     if (fights && Array.isArray(fights) && fights.length > 0) {
-        const fightsList = fights.map((f: any) => 
-            `- **${f.attackerName}** vs **${f.defenderName}** (Node ${f.nodeNumber})` + 
-            (f.playerInVideo !== uploaderName ? ` by *${f.playerInVideo}*` : '')
-        ).join('\n');
+        const fightLines = await Promise.all(fights.map(async (f: any) => {
+            const attackerEmoji = await getEmoji(f.attackerName);
+            const defenderEmoji = await getEmoji(f.defenderName);
+            
+            return `- Node: ${f.nodeNumber} ${attackerEmoji} **${f.attackerName}** vs ${defenderEmoji} **${f.defenderName}** by **${f.playerName}**`;
+        }));
+        
+        const fightsList = fightLines.join('\n');
         
         container.addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`**Fights:**\n${fightsList}`)
+            new TextDisplayBuilder().setContent(`**Fights in this video:**\n${fightsList}`)
         );
     }
+
+    container.addSeparatorComponents(new SeparatorBuilder());
 
     // Metadata
     container.addTextDisplayComponents(
         new TextDisplayBuilder()
-            .setContent(`**👤 Uploader:** ${uploaderName}\n**📅 War:** ${warDisplay}`)
+            .setContent(`**👤 Submitted by:** ${uploaderName}\n**📅 War:** ${warDisplay}`)
     );
 
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -64,8 +71,11 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
             .setEmoji('▶️')
     );
 
-    await channel.send({
-        components: [container, actionRow],
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addActionRowComponents(actionRow);
+
+    await channel.send({ 
+        components: [container],
         flags: [MessageFlags.IsComponentsV2] 
     });
 }

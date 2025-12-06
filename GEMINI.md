@@ -38,6 +38,23 @@ The bot features a sophisticated system for tracking Alliance War performance by
     6.  The web UI uses the token to fetch the fight data and pre-fills the video upload form, creating a seamless user experience.
     7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s). **The war planning interface now supports real-time updates through polling to facilitate collaborative planning.**
 
+### Cross-Service Communication (Async Job Queue)
+
+To reliably handle communication between the Web App and the Discord Bot (e.g., for notifications or future complex tasks like plan distribution) without direct HTTP coupling, the system implements a **Database-backed Job Queue**.
+
+*   **Architecture:**
+    *   **Model:** `BotJob` (id, type, status, payload, error).
+    *   **Producer (Web):** The Next.js app creates a `BotJob` record (e.g., type `NOTIFY_WAR_VIDEO`) instead of trying to contact the bot directly.
+    *   **Consumer (Bot):** The Discord Bot runs a `JobProcessor` service that polls the database for `PENDING` jobs. It processes them (executing Discord API calls via `discord.js`) and updates the status to `COMPLETED` or `FAILED`.
+*   **Benefits:** This decouples the services, ensuring that if the bot is restarting, notifications are not lost but simply queued. It also avoids timeout issues for long-running tasks.
+*   **Submission Helpers:** A shared library `web/src/lib/api/submission-helpers.ts` centralizes the logic for validating tokens, handling War/Fight creation (including Offseason logic), and queuing these notifications.
+
+### War Video Notifications & Uploads
+
+*   **Smart Notifications:** When a video is uploaded or linked, the system checks if the uploader's alliance has a configured `warVideosChannelId`. If so, it queues a `NOTIFY_WAR_VIDEO` job. The bot then posts a rich Embed to that channel with video details and a "Watch Video" button.
+*   **Authorized Uploads:** Direct file uploads are restricted to alliances with the `canUploadFiles` flag enabled (to manage server costs). Other users can still link YouTube videos.
+*   **Archive Integration:** The War Archive now includes an "Upload Video" button (`+`) for fights without videos, allowing users to easily backfill content for existing records.
+
 ### War Planning UI (Web)
 
 The project now includes a dedicated "War Planning" feature within the web interface (`/web/src/app/planning`), replacing the reliance on Google Sheets.

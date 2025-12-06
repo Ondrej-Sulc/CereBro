@@ -32,6 +32,7 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 
 ### 3. Shared Services & Infrastructure
 *   **Database:** PostgreSQL managed via **Prisma ORM**.
+*   **Async Job Queue:** A database-backed task system (`BotJob`) that decouples the Web App from the Bot. This allows the Web App to trigger complex Discord actions (like notifications or distributing war plans) reliability without direct network coupling.
 *   **OCR Pipeline:** Google Vision API integration for extracting champion data from user-uploaded screenshots.
 *   **AI Integration:** OpenRouter (LLMs) used for drafting glossary terms and parsing complex abilities.
 *   **Analytics:** Deep integration with **PostHog** for feature usage tracking and error analysis.
@@ -45,6 +46,7 @@ The flagship feature of the platform.
 *   **Planning:** Supports multiple map layouts (`Standard` & `Big Thing`). Features pinch-to-zoom, node-specific tactic visualizers, and drag-and-drop assignments.
 *   **Execution:** Automated distribution of assignments to Discord private threads.
 *   **Analysis:** "Plan-to-Upload" workflow generates unique tokens for players to upload war videos, automatically linking them to their specific node assignment.
+*   **Smart Notifications:** Automatically posts rich embeds to a configured Discord channel whenever a new war video is uploaded or linked, keeping the alliance in the loop.
 
 ### 👤 Roster & Identity
 *   **Smart Import:** Users can upload screenshots of their game roster. The system uses OCR to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
