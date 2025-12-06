@@ -489,7 +489,7 @@ export function WarVideoForm({
             const defenderName = selectedDefender?.name || "Unknown";
             const nodeNumber = selectedNode?.nodeNumber || "??";
             const playerName = selectedPlayer?.ingameName || "Unknown";
-            return `MCOC AW: S${season} W${isOffseason ? "Offseason" : warNumber} T${warTier} - ${attackerName} vs ${defenderName} on Node ${nodeNumber} by ${playerName}`;
+            return `MCOC AW: S${season} ${isOffseason ? "Offseason" : "W" + warNumber} T${warTier} - ${attackerName} vs ${defenderName} on Node ${nodeNumber} by ${playerName}`;
           };
 
           if (useBackgroundFetch) {
