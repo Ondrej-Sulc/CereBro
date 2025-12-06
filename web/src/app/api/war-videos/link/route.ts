@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendDiscordMessage } from '@/lib/discord';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { 
+    const {
         token, playerId, videoUrl, description, visibility,
         fightIds: existingFightIdsJson, // for existing fights
         fightUpdates,                   // for updating existing fights
@@ -18,7 +19,11 @@ export async function POST(req: NextRequest) {
     }
     const uploadToken = await prisma.uploadToken.findUnique({
       where: { token },
-      include: { player: true },
+      include: { 
+        player: {
+          include: { alliance: true }
+        } 
+      },
     });
     if (!uploadToken || uploadToken.expiresAt < new Date()) {
       if (uploadToken) await prisma.uploadToken.delete({ where: { id: uploadToken.id } });
@@ -71,7 +76,7 @@ export async function POST(req: NextRequest) {
               warNumber: parsedWarNumber,
             },
           },
-          update: { 
+          update: {
             warTier: parsedWarTier,
             mapType: parsedMapType,
             status: 'FINISHED',
@@ -156,8 +161,8 @@ export async function POST(req: NextRequest) {
                         defenderId: parseInt(fight.defenderId),
                         death: fight.death,
                         prefightChampions: {
-                            set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
-                                ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) 
+                            set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0
+                                ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) }))
                                 : []
                         }
                     }
@@ -233,8 +238,35 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({ message: 'Video linked successfully', videoIds: [warVideo.id] }, { status: 200 });
+    // --- 5. Notification ---
+    if (uploadToken.player.alliance?.warVideosChannelId) {
+        const channelId = uploadToken.player.alliance.warVideosChannelId;
+        const uploaderName = uploadToken.player.ingameName;
+        const webUrl = process.env.BOT_BASE_URL || 'https://cerebro-bot.com';
+        const videoPageUrl = `${webUrl}/war-videos/${warVideo.id}`;
 
+        let warDisplay = `S${season}`;
+        if (warNumber && warNumber !== '0') {
+            warDisplay += ` W${warNumber}`;
+        } else {
+            warDisplay += ` (Offseason)`;
+        }
+
+        await sendDiscordMessage(channelId, {
+            embeds: [{
+                title: '🎥 New War Video Linked',
+                description: `**[Watch Video](${videoPageUrl})**\n\n${description || ''}`,
+                color: 0x0ea5e9,
+                fields: [
+                    { name: 'Uploader', value: uploaderName, inline: true },
+                    { name: 'War', value: warDisplay, inline: true },
+                ],
+                footer: { text: 'Click the link to watch and view fight details.' }
+            }]
+        });
+    }
+
+    return NextResponse.json({ message: 'Video linked successfully', videoIds: [warVideo.id] }, { status: 200 });
   } catch (error: any) {
     console.error('War video link error:', error);
     return NextResponse.json({ error: 'Failed to link war video', details: error.message }, { status: 500 });

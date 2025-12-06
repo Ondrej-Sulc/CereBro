@@ -59,15 +59,44 @@ client.commands = commands;
 client.once(Events.ClientReady, async (readyClient) => {
   logger.info(`✅ Bot connected as ${readyClient.user.username}`);
 
-  // We start a minimal HTTP server just for health checks.
+  // We start a minimal HTTP server just for health checks and internal notifications.
   const port = process.env.PORT || 8080;
   http
-    .createServer((req, res) => {
-      res.writeHead(200, { "Content-Type": "text/plain" });
-      res.end("Bot is healthy and running!\n");
+    .createServer(async (req, res) => {
+      if (req.method === 'POST' && req.url === '/notify/war-video') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', async () => {
+          try {
+            const data = JSON.parse(body);
+            const { channelId, embeds } = data;
+            
+            if (channelId && embeds) {
+                const channel = await client.channels.fetch(channelId) as TextChannel;
+                if (channel && channel.isTextBased()) {
+                    await channel.send({ embeds });
+                    res.writeHead(200, { "Content-Type": "application/json" });
+                    res.end(JSON.stringify({ success: true }));
+                    return;
+                }
+            }
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Invalid channel or payload" }));
+          } catch (e) {
+            logger.error({ error: String(e) }, "Failed to process notification");
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Internal Error" }));
+          }
+        });
+      } else {
+        res.writeHead(200, { "Content-Type": "text/plain" });
+        res.end("Bot is healthy and running!\n");
+      }
     })
     .listen(port, () => {
-      logger.info(`HTTP health check server listening on port ${port}`);
+      logger.info(`HTTP server listening on port ${port}`);
     });
 
   await loadCommands();

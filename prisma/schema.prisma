@@ -305,6 +305,7 @@ model Alliance {
   battlegroup1Role       String?
   battlegroup2Role       String?
   battlegroup3Role       String?
+  warVideosChannelId     String?
 
   members            Player[]
   config             AllianceConfig?

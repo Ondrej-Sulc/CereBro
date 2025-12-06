@@ -1,9 +1,10 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, MessageFlags, AutocompleteInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, MessageFlags, AutocompleteInteraction, ChannelType } from 'discord.js';
 import { Command, CommandAccess } from '../../types/command';
 import { handleAllianceToggleFeature } from './toggle-feature';
 import { handleAllianceJoin } from './join';
 import { handleAllianceName } from './name';
 import { handleAllianceConfigRoles } from './config-roles';
+import { handleAllianceConfigChannels } from './config-channels';
 import { handleAllianceSyncRoles } from './sync-roles';
 import { handleAllianceView } from './view';
 import { handleAllianceManageRemove } from './manage/remove';
@@ -57,6 +58,17 @@ export const command: Command = {
     )
     .addSubcommand((subcommand) =>
       subcommand
+        .setName('config-channels')
+        .setDescription('Configure notification channels for your alliance.')
+        .addChannelOption(option => 
+            option
+                .setName('war-videos')
+                .setDescription('The channel to post new war video notifications to.')
+                .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
         .setName('sync-roles')
         .setDescription('Sync officer and battlegroup roles from Discord to the bot.')
     )
@@ -92,7 +104,7 @@ export const command: Command = {
     const subcommand = interaction.options.getSubcommand(true);
     const subcommandGroup = interaction.options.getSubcommandGroup();
 
-    if (subcommand === 'toggle-feature' || subcommand === 'name' || subcommand === 'config-roles' || subcommand === 'sync-roles' || subcommandGroup === 'manage') {
+    if (subcommand === 'toggle-feature' || subcommand === 'name' || subcommand === 'config-roles' || subcommand === 'config-channels' || subcommand === 'sync-roles' || subcommandGroup === 'manage') {
       const member = interaction.member;
       if (!member || typeof member.permissions === 'string' || !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
         // Also check for officer role
@@ -129,6 +141,9 @@ export const command: Command = {
           break;
         case 'config-roles':
           await handleAllianceConfigRoles(interaction);
+          break;
+        case 'config-channels':
+          await handleAllianceConfigChannels(interaction);
           break;
         case 'sync-roles':
           await handleAllianceSyncRoles(interaction);
