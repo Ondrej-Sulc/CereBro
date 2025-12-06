@@ -4,241 +4,74 @@ import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { parseFormData } from '@/lib/parseFormData';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
+import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification } from '@/lib/api/submission-helpers';
 
 export async function POST(req: NextRequest) {
   const { fields, tempFilePath } = await parseFormData(req);
 
   try {
     const {
-      token, playerId, visibility, title, description, mode,
-      fightIds: existingFightIdsJson, // For linking to existing fights
-      fightUpdates: fightUpdatesJson, // For updating existing fights
-      fights: newFightsJson,         // For creating new fights
+      token, playerId, visibility, title, description,
+      fightIds: existingFightIdsJson,
+      fightUpdates: fightUpdatesJson,
+      fights: newFightsJson,
       season, warNumber, warTier, battlegroup, mapType
     } = fields;
 
-    // --- 1. Authentication & Authorization ---
-    if (!token) {
-      return NextResponse.json({ error: 'Missing upload token' }, { status: 400 });
+    const parsedSeason = parseInt(season);
+    const parsedWarNumber = warNumber ? parseInt(warNumber) : null;
+
+    // 1. Validation
+    const auth = await validateUploadToken(prisma, token, true);
+    if (!auth.success) {
+       if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
+       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const uploadToken = await prisma.uploadToken.findUnique({
-      where: { token },
-      include: { 
-        player: {
-          include: { alliance: true }
-        } 
-      },
-    });
-    
-    if (!uploadToken || uploadToken.expiresAt < new Date()) {
-      if (uploadToken) await prisma.uploadToken.delete({ where: { id: uploadToken.id } });
-      return NextResponse.json({ error: 'Invalid or expired upload token' }, { status: 401 });
-    }
-    const { player } = uploadToken;
+    const { player, uploadToken } = auth;
     const isTrusted = player.isTrustedUploader;
 
-    // --- 2. File Validation ---
     if (!tempFilePath || !existsSync(tempFilePath)) {
-      return NextResponse.json({ error: 'No video file uploaded or file not found' }, { status: 400 });
+      return NextResponse.json({ error: 'No video file found' }, { status: 400 });
     }
 
-    // --- 2.1 Alliance Restriction Check ---
-    if (!player.alliance?.canUploadFiles) {
-        if (tempFilePath && existsSync(tempFilePath)) {
-          await fs.unlink(tempFilePath);
-        }
-        return NextResponse.json({ error: 'Direct video upload is restricted to authorized alliances only.' }, { status: 403 });
-    }
-
-    // --- 3. Determine fight processing strategy ---
+    // 2. Process Fights
     let fightIdsToLink: string[] = [];
 
     if (newFightsJson) {
-      // Logic for new fight creation (manual upload without pre-filled fights)
-      const newFights = JSON.parse(newFightsJson);
-      if (!Array.isArray(newFights) || newFights.length === 0) {
-        return NextResponse.json({ error: 'Invalid or empty fights data for new creation.' }, { status: 400 });
-      }
-
-      // 3.2. Validate war details
-      if (!season || !warTier || !battlegroup) {
-        return NextResponse.json({ error: 'Missing war details for new fight creation.' }, { status: 400 });
-      }
-
-      // 3.3. Find/Create Alliance War
-      const allianceId = uploadToken.player.allianceId;
-      if (!allianceId) {
-        return NextResponse.json({ error: 'Player submitting new fights is not in an alliance.' }, { status: 400 });
-      }
-
-      const parsedWarNumber = warNumber ? parseInt(warNumber) : null;
-      const parsedSeason = parseInt(season);
-      const parsedWarTier = parseInt(warTier);
-      const parsedBattlegroup = parseInt(battlegroup); 
-      const parsedMapType = mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD';
-
-      // For offseason wars (warNumber is null), we need to find or create differently
-      let war;
-      if (parsedWarNumber === null) {
-        // For offseason, find the most recent offseason war or create a new one
-        war = await prisma.war.findFirst({
-          where: {
-            allianceId: allianceId,
+        const newFights = JSON.parse(newFightsJson);
+        if (!Array.isArray(newFights) || newFights.length === 0) throw new Error("Invalid new fights data");
+        
+        fightIdsToLink = await processNewFights(prisma, {
+            allianceId: player.allianceId!,
             season: parsedSeason,
-            warNumber: null,
-            mapType: parsedMapType,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
-
-        if (!war) {
-          war = await prisma.war.create({
-            data: {
-              season: parsedSeason,
-              warTier: parsedWarTier,
-              warNumber: null,
-              allianceId: allianceId,
-              mapType: parsedMapType,
-              status: 'FINISHED',
-            },
-          });
-        } else {
-          // Update the tier and status if needed
-          war = await prisma.war.update({
-            where: { id: war.id },
-            data: { warTier: parsedWarTier, status: 'FINISHED' },
-          });
-        }
-      } else {
-        // For regular wars, use upsert with the unique constraint
-        war = await prisma.war.upsert({
-          where: {
-            allianceId_season_warNumber: {
-              allianceId: allianceId,
-              season: parsedSeason,
-              warNumber: parsedWarNumber,
-            },
-          },
-          update: { 
-            warTier: parsedWarTier,
-            mapType: parsedMapType,
-            status: 'FINISHED',
-          },
-          create: {
-            season: parsedSeason,
-            warTier: parsedWarTier,
             warNumber: parsedWarNumber,
-            allianceId: allianceId,
-            mapType: parsedMapType,
-            status: 'FINISHED',
-          },
+            warTier: parseInt(warTier),
+            battlegroup: parseInt(battlegroup),
+            mapType: mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD',
+            fights: newFights,
+            playerId: playerId || player.id
         });
-      }
-
-      // 3.4. Create WarFights
-      const createdFights = await Promise.all(newFights.map(async (fight: any) => {
-        const fightCreateData = {
-            warId: war.id,
-            playerId: playerId,
-            nodeId: parseInt(fight.nodeId),
-            attackerId: parseInt(fight.attackerId),
-            defenderId: parseInt(fight.defenderId),
-            death: fight.death,
-            battlegroup: parsedBattlegroup,
-            prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
-              connect: fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) }))
-            } : undefined,
-        };
-
-        // For offseason (warNumber is null), ALWAYS create new fights to allow duplicates
-        if (parsedWarNumber === null) {
-            return prisma.warFight.create({ data: fightCreateData });
-        }
-
-        // For regular wars, manually enforce uniqueness (simulate upsert)
-        const existingFight = await prisma.warFight.findFirst({
-            where: {
-                warId: war.id,
-                battlegroup: parsedBattlegroup,
-                nodeId: parseInt(fight.nodeId),
-            }
-        });
-
-        if (existingFight) {
-            return prisma.warFight.update({
-                where: { id: existingFight.id },
-                data: {
-                    playerId: playerId,
-                    attackerId: parseInt(fight.attackerId),
-                    defenderId: parseInt(fight.defenderId),
-                    death: fight.death,
-                    prefightChampions: {
-                        set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
-                            ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) 
-                            : []
-                    }
-                }
-            });
-        } else {
-            return prisma.warFight.create({ data: fightCreateData });
-        }
-      }));
-      fightIdsToLink = createdFights.map(f => f.id);
-
     } else if (fightUpdatesJson) {
-      // Logic for updating existing fights (from pre-filled plans with edits)
-      const updates = JSON.parse(fightUpdatesJson);
-      if (!Array.isArray(updates) || updates.length === 0) {
-        return NextResponse.json({ error: 'fightUpdates must be a non-empty array.' }, { status: 400 });
-      }
-
-      fightIdsToLink = [];
-      await Promise.all(updates.map(async (update: any) => {
-          await prisma.warFight.update({
-            where: { id: update.id },
-            data: {
-              nodeId: parseInt(update.nodeId),
-              attackerId: parseInt(update.attackerId),
-              defenderId: parseInt(update.defenderId),
-              death: update.death,
-              battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
-              prefightChampions: {
-                set: update.prefightChampionIds ? update.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) : []
-              }
-            }
-          });
-          fightIdsToLink.push(update.id);
-      }));
-
+        const updates = JSON.parse(fightUpdatesJson);
+        if (!Array.isArray(updates) || updates.length === 0) throw new Error("Invalid fight updates data");
+        fightIdsToLink = await processFightUpdates(prisma, updates);
     } else if (existingFightIdsJson) {
-      // Logic for linking to existing fights (from pre-filled plans)
-      try {
-        fightIdsToLink = JSON.parse(existingFightIdsJson);
-      } catch (e) {
-        return NextResponse.json({ error: 'Invalid existingFightIds data format.' }, { status: 400 });
-      }
-      if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) {
-        return NextResponse.json({ error: 'existingFightIds must be a non-empty array.' }, { status: 400 });
-      }
+        try {
+            fightIdsToLink = JSON.parse(existingFightIdsJson);
+        } catch (e) { throw new Error("Invalid existing fight IDs"); }
+        if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) throw new Error("Existing fight IDs must be an array");
     } else {
-      // Clean up if no fight data
-      if (tempFilePath && existsSync(tempFilePath)) {
-        await fs.unlink(tempFilePath);
-      }
-      return NextResponse.json({ error: 'No fight data provided.' }, { status: 400 });
+        if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
+        return NextResponse.json({ error: "No fight data provided" }, { status: 400 });
     }
 
-    // --- 4. Upload to YouTube ---
+    // 3. Upload Video
     const youTubeService = getYouTubeService();
     const youtubeVideoId = await youTubeService.uploadVideo(tempFilePath, title, description, 'unlisted');
-    if (!youtubeVideoId) throw new Error('YouTube upload failed to return an ID.');
+    if (!youtubeVideoId) throw new Error('YouTube upload failed');
     const youtubeUrl = youTubeService.getVideoUrl(youtubeVideoId);
 
-    const createdVideoIds: string[] = [];
-
-    // --- 5. Create WarVideo and link to WarFights ---
+    // 4. Create WarVideo & Link
     const newWarVideo = await prisma.warVideo.create({
       data: {
         url: youtubeUrl,
@@ -250,34 +83,38 @@ export async function POST(req: NextRequest) {
     });
 
     await prisma.warFight.updateMany({
-      where: {
-        id: { in: fightIdsToLink },
-      },
-      data: {
-        videoId: newWarVideo.id,
-      },
+      where: { id: { in: fightIdsToLink } },
+      data: { videoId: newWarVideo.id },
     });
-    createdVideoIds.push(newWarVideo.id);
 
-    // --- 6. Cleanup ---
+    // 5. Notification
+    await queueVideoNotification(prisma, {
+        alliance: player.alliance!,
+        uploaderName: player.ingameName,
+        videoId: newWarVideo.id,
+        title,
+        description,
+        season: parsedSeason,
+        warNumber: parsedWarNumber
+    });
+
+    // 6. Cleanup
     await fs.unlink(tempFilePath);
 
-    return NextResponse.json({ message: 'Videos uploaded successfully', videoIds: createdVideoIds }, { status: 200 });
-  } catch (error: any) {
-    console.error('War video upload error:', error);
-    // Ensure the temporary file is deleted even if an error occurs
-    if (tempFilePath && existsSync(tempFilePath)) {
-      await fs.unlink(tempFilePath);
-    }
+    return NextResponse.json({ message: 'Videos uploaded successfully', videoIds: [newWarVideo.id] }, { status: 200 });
 
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
+    
     // Check for specific YouTube API quota error
     if (error.errors && Array.isArray(error.errors) && error.errors.length > 0) {
       const youtubeError = error.errors[0];
       if (youtubeError.reason === 'uploadLimitExceeded' || youtubeError.reason === 'quotaExceeded') {
-        return NextResponse.json({ error: 'YouTube Upload Quota Exceeded', details: youtubeError.message }, { status: 429 }); // 429 Too Many Requests
+        return NextResponse.json({ error: 'YouTube Upload Quota Exceeded', details: youtubeError.message }, { status: 429 });
       }
     }
 
-    return NextResponse.json({ error: 'Failed to upload war video', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
   }
 }

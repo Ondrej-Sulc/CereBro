@@ -70,6 +70,18 @@ enum DuelSource {
   COCPIT
 }
 
+enum BotJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum BotJobType {
+  NOTIFY_WAR_VIDEO
+  DISTRIBUTE_WAR_PLAN
+}
+
 // --- Models ---
 
 // RENAMED from GlossaryCategory and re-linked
@@ -664,4 +676,14 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model BotJob {
+  id        String       @id @default(cuid())
+  type      BotJobType
+  status    BotJobStatus @default(PENDING)
+  payload   Json
+  error     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
