@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { 
-        token, videoUrl, description, visibility,
+        token, playerId, videoUrl, description, visibility,
         fightIds: existingFightIdsJson, // for existing fights
         fightUpdates,                   // for updating existing fights
         fights: newFightsJson,         // for creating new fights
