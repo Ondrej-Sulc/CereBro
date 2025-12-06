@@ -137,30 +137,11 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // 3.4. Create WarFights using upsert
+      // 3.4. Create WarFights
       const createdFights = await Promise.all(newFights.map(async (fight: any) => {
-        return prisma.warFight.upsert({
-          where: {
-            warId_battlegroup_nodeId: {
-              warId: war.id,
-              battlegroup: parsedBattlegroup,
-              nodeId: parseInt(fight.nodeId),
-            }
-          },
-          update: {
-            playerId: playerId, // Use playerId from form
-            attackerId: parseInt(fight.attackerId),
-            defenderId: parseInt(fight.defenderId),
-            death: fight.death,
-            prefightChampions: {
-              set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
-                   ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) 
-                   : []
-            }
-          },
-          create: {
+        const fightCreateData = {
             warId: war.id,
-            playerId: playerId, // Use playerId from form
+            playerId: playerId,
             nodeId: parseInt(fight.nodeId),
             attackerId: parseInt(fight.attackerId),
             defenderId: parseInt(fight.defenderId),
@@ -169,8 +150,40 @@ export async function POST(req: NextRequest) {
             prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
               connect: fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) }))
             } : undefined,
-          }
+        };
+
+        // For offseason (warNumber is null), ALWAYS create new fights to allow duplicates
+        if (parsedWarNumber === null) {
+            return prisma.warFight.create({ data: fightCreateData });
+        }
+
+        // For regular wars, manually enforce uniqueness (simulate upsert)
+        const existingFight = await prisma.warFight.findFirst({
+            where: {
+                warId: war.id,
+                battlegroup: parsedBattlegroup,
+                nodeId: parseInt(fight.nodeId),
+            }
         });
+
+        if (existingFight) {
+            return prisma.warFight.update({
+                where: { id: existingFight.id },
+                data: {
+                    playerId: playerId,
+                    attackerId: parseInt(fight.attackerId),
+                    defenderId: parseInt(fight.defenderId),
+                    death: fight.death,
+                    prefightChampions: {
+                        set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
+                            ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) 
+                            : []
+                    }
+                }
+            });
+        } else {
+            return prisma.warFight.create({ data: fightCreateData });
+        }
       }));
       fightIdsToLink = createdFights.map(f => f.id);
 

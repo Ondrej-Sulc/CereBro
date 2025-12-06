@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
-import { WarFight, WarMapType } from "@prisma/client";
+import { WarFight, WarMapType, War, Alliance } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -153,36 +153,41 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
 
   const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
 
+  let targetWar: (War & { alliance: Alliance }) | null = null; // Declare targetWar here
+
   // Strict Alliance Ownership Validation
   if (id) {
       // Case 1: Update by ID
       const existingFight = await prisma.warFight.findUnique({
           where: { id },
-          include: { war: true }
+          include: { war: { include: { alliance: true } } } // Include alliance for type safety
       });
 
       if (!existingFight) {
           throw new Error("Fight not found.");
       }
 
-      if (existingFight.war.allianceId !== player.allianceId) {
+      if (existingFight.war.alliance.id !== player.allianceId) { // Check alliance.id
           throw new Error("Unauthorized: Cannot edit fights from another alliance.");
       }
+      targetWar = existingFight.war;
+      updatedFight.warId = existingFight.war.id; // Ensure warId is set for later use
   } else {
       // Case 2: Create/Upsert by Context
       if (!warId) {
           throw new Error("War ID is required for creating a fight.");
       }
 
-      const targetWar = await prisma.war.findUnique({
-          where: { id: warId }
+      targetWar = await prisma.war.findUnique({
+          where: { id: warId },
+          include: { alliance: true } // Include alliance for type safety
       });
 
       if (!targetWar) {
           throw new Error("War not found.");
       }
 
-      if (targetWar.allianceId !== player.allianceId) {
+      if (targetWar.alliance.id !== player.allianceId) { // Check alliance.id
           throw new Error("Unauthorized: Cannot edit fights from another alliance.");
       }
   }
@@ -208,35 +213,62 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
           data: updateData,
       });
   } else {
-      if (!warId || !battlegroup || !nodeId) {
+      if (!updatedFight.warId || !battlegroup || !nodeId) { // Use updatedFight.warId
           throw new Error("WarFight ID is missing, and WarID/BG/NodeID are not sufficient to create it.");
       }
+      
+      if (targetWar.warNumber === null) {
+        // Offseason: Always create new fights to allow duplicates
+        await prisma.warFight.create({
+            data: {
+                warId: updatedFight.warId, // Use updatedFight.warId
+                battlegroup,
+                nodeId,
+                attackerId: rest.attackerId,
+                defenderId: rest.defenderId,
+                playerId: rest.playerId,
+                death: rest.death ?? 0,
+                notes: rest.notes,
+                prefightChampions: prefightUpdates ? {
+                    create: prefightUpdates.map(p => ({
+                        championId: p.championId,
+                        playerId: p.playerId
+                    }))
+                } : undefined
+            }
+        });
+      } else {
+        // Regular War: Check for existing fight to enforce uniqueness
+        const existingFight = await prisma.warFight.findFirst({
+            where: { warId: updatedFight.warId, battlegroup, nodeId } // Use updatedFight.warId
+        });
 
-      // For upsert, we first check if it exists to get the ID?
-      // upsert with explicit relations is tricky if we want to "replace" existing.
-      // But wait, if it creates, it works. If it updates, it runs updateData logic above.
-      await prisma.warFight.upsert({
-          where: {
-              warId_battlegroup_nodeId: { warId, battlegroup, nodeId }
-          },
-          create: {
-              warId,
-              battlegroup,
-              nodeId,
-              attackerId: rest.attackerId,
-              defenderId: rest.defenderId,
-              playerId: rest.playerId,
-              death: rest.death ?? 0,
-              notes: rest.notes,
-              prefightChampions: prefightUpdates ? {
-                  create: prefightUpdates.map(p => ({
-                      championId: p.championId,
-                      playerId: p.playerId
-                  }))
-              } : undefined
-          },
-          update: updateData
-      });
+        if (existingFight) {
+            await prisma.warFight.update({
+                where: { id: existingFight.id },
+                data: updateData
+            });
+        } else {
+            await prisma.warFight.create({
+                data: {
+                    warId: updatedFight.warId, // Use updatedFight.warId
+                    battlegroup,
+                    nodeId,
+                    attackerId: rest.attackerId,
+                    defenderId: rest.defenderId,
+                    playerId: rest.playerId,
+                    death: rest.death ?? 0,
+                    notes: rest.notes,
+                    prefightChampions: prefightUpdates ? {
+                        create: prefightUpdates.map(p => ({
+                            championId: p.championId,
+                            playerId: p.playerId
+                        }))
+                    } : undefined
+                }
+            });
+        }
+      }
   }
 }
 

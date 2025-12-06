@@ -254,25 +254,7 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
         
         const uniquePrefightIds = [...new Set(prefightIds)];
 
-        await prisma.warFight.upsert({
-          where: {
-            warId_battlegroup_nodeId: {
-              warId: war.id,
-              battlegroup: battlegroup,
-              nodeId: node.id,
-            },
-          },
-          update: {
-            attackerId: attacker.id,
-            defenderId: defender.id,
-            death: assignments.some((a) => a.raw.deaths === "1") ? 1 : 0,
-            battlegroup,
-            prefightChampions: {
-              deleteMany: {},
-              create: uniquePrefightIds.map((id) => ({ championId: id })),
-            },
-          },
-          create: {
+        const fightData = {
             warId: war.id,
             playerId: dbPlayer.id,
             nodeId: node.id,
@@ -283,8 +265,39 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
             prefightChampions: {
               create: uniquePrefightIds.map((id) => ({ championId: id })),
             },
-          },
-        });
+        };
+
+        if (war.warNumber === null) {
+            // Offseason: Always create new fights to allow duplicates
+            await prisma.warFight.create({ data: fightData });
+        } else {
+            // Regular War: Enforce uniqueness
+            const existingFight = await prisma.warFight.findFirst({
+                where: {
+                    warId: war.id,
+                    battlegroup: battlegroup,
+                    nodeId: node.id,
+                },
+            });
+
+            if (existingFight) {
+                await prisma.warFight.update({
+                    where: { id: existingFight.id },
+                    data: {
+                        attackerId: attacker.id,
+                        defenderId: defender.id,
+                        death: assignments.some((a) => a.raw.deaths === "1") ? 1 : 0,
+                        battlegroup,
+                        prefightChampions: {
+                            deleteMany: {},
+                            create: uniquePrefightIds.map((id) => ({ championId: id })),
+                        },
+                    },
+                });
+            } else {
+                await prisma.warFight.create({ data: fightData });
+            }
+        }
       }
     }
 

@@ -95,8 +95,8 @@ export async function GET(
         : Promise.resolve([user]), // If user has no alliance, only return the user
     ]);
 
-    // 6. Clean up the single-use session token
-    await prisma.uploadSession.delete({ where: { token } });
+    // 6. Clean up - REMOVED: Session should persist until expiry to allow refreshes
+    // await prisma.uploadSession.delete({ where: { token } });
 
     // 7. Return the combined data payload
     return NextResponse.json({
@@ -108,8 +108,8 @@ export async function GET(
       token: uploadToken.token,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching upload session:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

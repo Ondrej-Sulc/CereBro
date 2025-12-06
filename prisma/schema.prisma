@@ -469,7 +469,6 @@ model WarFight {
   videoId String?
   video   WarVideo? @relation(fields: [videoId], references: [id], onDelete: SetNull)
 
-  @@unique([warId, battlegroup, nodeId])
   @@index([attackerId])
   @@index([defenderId])
   @@index([nodeId])

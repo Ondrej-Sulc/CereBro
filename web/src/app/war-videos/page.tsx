@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 
 import { SearchFilters } from "@/components/SearchFilters";
+import { UploadFightButton } from "@/components/UploadFightButton";
 
 export const dynamic = 'force-dynamic';
 
@@ -81,19 +82,19 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
     include: { attackTag: true, defenseTag: true }
   });
 
-  // Authentication & Alliance Check
+  // Authentication & Current User Check
   const session = await auth();
-  let userAllianceId: string | null = null;
+  let currentUser: (Player & { alliance: Alliance | null }) | null = null;
 
   if (session?.user?.id) {
     const account = await prisma.account.findFirst({
       where: { userId: session.user.id, provider: 'discord' }
     });
     if (account?.providerAccountId) {
-      const dbPlayer = await prisma.player.findFirst({
-        where: { discordId: account.providerAccountId }
+      currentUser = await prisma.player.findFirst({
+        where: { discordId: account.providerAccountId },
+        include: { alliance: true }
       });
-      userAllianceId = dbPlayer?.allianceId || null;
     }
   }
 
@@ -110,8 +111,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                         visibility: "public"
                     }
                 },
-                ...(userAllianceId ? [{
-                    war: { allianceId: userAllianceId }
+                ...(currentUser?.allianceId ? [{
+                    war: { allianceId: currentUser.allianceId }
                 }] : [])
             ]
         },
@@ -321,9 +322,17 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             <Play className="h-3 w-3 mr-1.5" /> Video
                         </div>
                     ) : (
-                        <span className="text-[10px] text-slate-600 flex items-center gap-1">
-                            <EyeOff className="h-3 w-3" /> Log Only
-                        </span>
+                        (currentUser && (
+                            fight.playerId === currentUser.id ||
+                            (currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId) ||
+                            currentUser.isBotAdmin
+                        )) ? (
+                            <UploadFightButton fightId={fight.id} />
+                        ) : (
+                            <span className="text-[10px] text-slate-600 flex items-center gap-1">
+                                <EyeOff className="h-3 w-3" /> Log Only
+                            </span>
+                        )
                     )}
                 </div>
             </Link>
@@ -493,11 +502,19 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                         </Button>
                                     </Link>
                                 ) : (
-                                    <div className="flex justify-end">
-                                        <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-slate-800/50 text-slate-600">
-                                            <EyeOff className="h-4 w-4" />
-                                        </span>
-                                    </div>
+                                    (currentUser && (
+                                        fight.playerId === currentUser.id ||
+                                        (currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId) ||
+                                        currentUser.isBotAdmin
+                                    )) ? (
+                                        <UploadFightButton fightId={fight.id} />
+                                    ) : (
+                                        <div className="flex justify-end">
+                                            <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-slate-800/50 text-slate-600">
+                                                <EyeOff className="h-4 w-4" />
+                                            </span>
+                                        </div>
+                                    )
                                 )}
                             </td>
                         </tr>
