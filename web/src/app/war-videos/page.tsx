@@ -188,7 +188,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       {/* Fights Content */}
       <div className="space-y-6">
         {/* Mobile View (Cards) - Hidden on md+ */}
-        <div className="grid grid-cols-1 gap-6 md:hidden">
+        <div className="grid grid-cols-1 gap-4 md:hidden">
             {fights.map((fight) => {
                 const activeTactic = allTactics.find(t => 
                     t.season === fight.war.season && 
@@ -199,143 +199,149 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                 const isDefenderTactic = activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name);
                 
                 return (
-            <Link 
-                href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
+            <div 
                 key={fight.id} 
                 className={cn(
-                    "group relative flex flex-col bg-slate-900/40 border border-slate-800/60 rounded-xl overflow-hidden transition-all duration-300",
-                    fight.video ? "hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10 cursor-pointer" : "cursor-default opacity-80"
+                    "group relative flex flex-col bg-slate-900/40 border border-slate-800/60 rounded-lg overflow-hidden transition-all duration-300",
+                    fight.video ? "hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10" : "opacity-90"
                 )}
             >
-                {/* Header / Meta */}
-                <div className="px-4 py-3 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
-                    <div className="flex gap-2 items-center">
-                        <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] h-5">
-                            S{fight.war.season}
-                        </Badge>
-                        <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] h-5">
-                            W{fight.war.warNumber || '-'}
-                        </Badge>
-                        <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] h-5">
-                            T{fight.war.warTier}
-                        </Badge>
-                        <span className="text-[10px] text-slate-400 font-mono truncate max-w-[80px]" title={fight.war.alliance.name}>
-                            {fight.war.alliance.name}
+                <Link 
+                    href={fight.video ? `/war-videos/${fight.video.id}` : '#'}
+                    className={cn("flex-1 flex flex-col", !fight.video && "pointer-events-none")}
+                >
+                    {/* Header / Meta */}
+                    <div className="px-3 py-2 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                        <div className="flex gap-1.5 items-center">
+                            <Badge variant="outline" className="border-slate-700 text-slate-400 text-[9px] h-4.5 px-1.5">
+                                S{fight.war.season}
+                            </Badge>
+                            <Badge variant="outline" className="border-slate-700 text-slate-400 text-[9px] h-4.5 px-1.5">
+                                W{fight.war.warNumber || '-'}
+                            </Badge>
+                            <Badge variant="outline" className="border-slate-700 text-slate-400 text-[9px] h-4.5 px-1.5">
+                                T{fight.war.warTier}
+                            </Badge>
+                            <span className="text-[9px] text-slate-400 font-mono truncate max-w-[70px]" title={fight.war.alliance.name}>
+                                {fight.war.alliance.name}
+                            </span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                            {new Date(fight.createdAt).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
                         </span>
                     </div>
-                    <span className="text-xs text-slate-500 font-mono">
-                        {new Date(fight.createdAt).toLocaleDateString()}
-                    </span>
-                </div>
 
-                {/* Matchup Content */}
-                <div className="p-4 flex-1 flex flex-col gap-4 items-center justify-center relative">
-                {/* Video Indicator Background */}
-                {fight.video && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-slate-950/60 z-10">
-                        <Play className="h-12 w-12 text-sky-400" fill="currentColor" />
-                    </div>
-                )}
+                    {/* Matchup Content */}
+                    <div className="p-2.5 flex-1 flex flex-col gap-2 items-center justify-center relative">
+                    {/* Video Indicator Background */}
+                    {fight.video && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-slate-950/60 z-10">
+                            <Play className="h-10 w-10 text-sky-400" fill="currentColor" />
+                        </div>
+                    )}
 
-                <div className="flex items-center justify-between w-full gap-4">
-                        {/* Attacker */}
-                        <div className="flex flex-col items-center gap-2 flex-1">
-                            {fight.attacker ? (
-                            <div className="relative">
-                                <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
-                                <Image 
-                                    src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
-                                    alt={fight.attacker.name}
-                                    width={56} height={56}
-                                    sizes="64px"
-                                    className={cn("relative rounded-full ring-2", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
-                                />
-                                {isAttackerTactic && (
-                                    <div className="absolute -top-1 -left-1 bg-emerald-950/90 rounded-full border border-emerald-500 flex items-center justify-center w-5 h-5 shadow-lg shadow-black z-10">
-                                        <Swords className="w-3 h-3 text-emerald-400" />
-                                    </div>
-                                )}
+                    <div className="flex items-center justify-between w-full gap-3">
+                            {/* Attacker */}
+                            <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+                                {fight.attacker ? (
+                                <div className="relative">
+                                    <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
+                                    <Image 
+                                        src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
+                                        alt={fight.attacker.name}
+                                        width={44} height={44}
+                                        sizes="48px"
+                                        className={cn("relative rounded-full ring-1.5", getChampionClassColors(fight.attacker.class as ChampionClass).border)}
+                                    />
+                                    {isAttackerTactic && (
+                                        <div className="absolute -top-1 -left-1 bg-emerald-950/90 rounded-full border border-emerald-500 flex items-center justify-center w-4 h-4 shadow-md shadow-black z-10">
+                                            <Swords className="w-2.5 h-2.5 text-emerald-400" />
+                                        </div>
+                                    )}
+                                </div>
+                                ) : <div className="w-11 h-11 bg-slate-800 rounded-full" />}
+                                <span className={cn("text-xs font-bold text-center leading-tight truncate w-full px-1", fight.attacker ? getChampionClassColors(fight.attacker.class as ChampionClass).text : "")}>{fight.attacker?.name || '?'}</span>
                             </div>
-                            ) : <div className="w-14 h-14 bg-slate-800 rounded-full" />}
-                            <span className={cn("text-sm font-bold text-center leading-tight truncate w-full", fight.attacker ? getChampionClassColors(fight.attacker.class as ChampionClass).text : "")}>{fight.attacker?.name || '?'}</span>
-                        </div>
 
-                        {/* VS / Node */}
-                        <div className="flex flex-col items-center gap-1">
-                            <div className="h-8 w-px bg-slate-700/50" />
-                            <Badge variant="secondary" className="bg-amber-900/20 text-amber-500 border-amber-500/20 font-mono text-xs whitespace-nowrap">
-                                Node {fight.node.nodeNumber}
-                            </Badge>
-                            <div className="h-8 w-px bg-slate-700/50" />
-                        </div>
-
-                        {/* Defender */}
-                        <div className="flex flex-col items-center gap-2 flex-1">
-                            {fight.defender ? (
-                            <div className="relative">
-                                <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
-                                <Image 
-                                    src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
-                                    alt={fight.defender.name}
-                                    width={56} height={56}
-                                    sizes="64px"
-                                    className={cn("relative rounded-full ring-2", getChampionClassColors(fight.defender.class as ChampionClass).border)}
-                                />
-                                {isDefenderTactic && (
-                                    <div className="absolute -top-1 -left-1 bg-red-950/90 rounded-full border border-red-500 flex items-center justify-center w-5 h-5 shadow-lg shadow-black z-10">
-                                        <Shield className="w-3 h-3 text-red-400" />
-                                    </div>
-                                )}
+                            {/* VS / Node */}
+                            <div className="flex flex-col items-center gap-0.5 shrink-0">
+                                <div className="h-5 w-px bg-slate-700/30" />
+                                <Badge variant="secondary" className="bg-amber-900/10 text-amber-500 border-amber-500/20 font-mono text-[10px] px-1.5 h-5 whitespace-nowrap">
+                                    Node {fight.node.nodeNumber}
+                                </Badge>
+                                <div className="h-5 w-px bg-slate-700/30" />
                             </div>
-                            ) : <div className="w-14 h-14 bg-slate-800 rounded-full" />}
-                            <span className={cn("text-sm font-bold text-center leading-tight truncate w-full", fight.defender ? getChampionClassColors(fight.defender.class as ChampionClass).text : "")}>{fight.defender?.name || '?'}</span>
-                        </div>
-                </div>
-                {fight.prefightChampions.length > 0 && (
-                    <div className="flex items-center justify-center gap-2 mt-2 px-2 py-1 bg-slate-950/40 rounded-full border border-purple-500/30 shadow-inner shadow-purple-900/20">
-                        <span className="text-xs text-purple-300 font-medium">Prefights:</span>
-                        <div className="flex -space-x-1 overflow-hidden">
-                            {fight.prefightChampions.map((champ) => (
-                                <Image
-                                    key={champ.id}
-                                    src={getChampionImageUrl(champ.images as any, '64', 'primary')}
-                                    alt={champ.name}
-                                    width={20}
-                                    height={20}
-                                    unoptimized
-                                    className="relative inline-block h-5 w-5 rounded-full ring-1 ring-purple-400/50"
-                                />
-                            ))}
-                        </div>
+
+                            {/* Defender */}
+                            <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+                                {fight.defender ? (
+                                <div className="relative">
+                                    <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
+                                    <Image 
+                                        src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
+                                        alt={fight.defender.name}
+                                        width={44} height={44}
+                                        sizes="48px"
+                                        className={cn("relative rounded-full ring-1.5", getChampionClassColors(fight.defender.class as ChampionClass).border)}
+                                    />
+                                    {isDefenderTactic && (
+                                        <div className="absolute -top-1 -left-1 bg-red-950/90 rounded-full border border-red-500 flex items-center justify-center w-4 h-4 shadow-md shadow-black z-10">
+                                            <Shield className="w-2.5 h-2.5 text-red-400" />
+                                        </div>
+                                    )}
+                                </div>
+                                ) : <div className="w-11 h-11 bg-slate-800 rounded-full" />}
+                                <span className={cn("text-xs font-bold text-center leading-tight truncate w-full px-1", fight.defender ? getChampionClassColors(fight.defender.class as ChampionClass).text : "")}>{fight.defender?.name || '?'}</span>
+                            </div>
                     </div>
-                )}
-                </div>
+                    {fight.prefightChampions.length > 0 && (
+                        <div className="flex items-center justify-center gap-1.5 mt-1.5 px-2 py-0.5 bg-slate-950/40 rounded-full border border-purple-500/30">
+                            <span className="text-[10px] text-purple-300 font-medium">Prefights:</span>
+                            <div className="flex -space-x-1 overflow-hidden">
+                                {fight.prefightChampions.map((champ) => (
+                                    <Image
+                                        key={champ.id}
+                                        src={getChampionImageUrl(champ.images as any, '64', 'primary')}
+                                        alt={champ.name}
+                                        width={16}
+                                        height={16}
+                                        unoptimized
+                                        className="relative inline-block h-4 w-4 rounded-full ring-1 ring-purple-400/50"
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    </div>
+                </Link>
 
                 {/* Footer */}
-                <div className="px-4 py-3 bg-slate-950/30 border-t border-slate-800/60 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-slate-400">
-                        <User className="h-3.5 w-3.5" />
-                        <span className="text-xs font-medium truncate max-w-[120px]">{fight.player?.ingameName || 'Unknown'}</span>
+                <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800/60 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-slate-400 min-w-0">
+                        <User className="h-3 w-3 shrink-0" />
+                        <span className="text-[11px] font-medium truncate">{fight.player?.ingameName || 'Unknown'}</span>
                     </div>
-                    {fight.video ? (
-                        <div className="inline-flex items-center justify-center rounded-md h-7 px-3 text-xs bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200 shadow-md shadow-sky-500/10 hover:shadow-sky-500/30">
-                            <Play className="h-3 w-3 mr-1.5" /> Video
-                        </div>
-                    ) : (
-                        (currentUser && (
-                            fight.playerId === currentUser.id ||
-                            (currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId) ||
-                            currentUser.isBotAdmin
-                        )) ? (
-                            <UploadFightButton fightId={fight.id} />
+                    <div className="shrink-0 ml-2">
+                        {fight.video ? (
+                            <div className="inline-flex items-center justify-center rounded-md h-6 px-2.5 text-[10px] bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200">
+                                <Play className="h-2.5 w-2.5 mr-1" /> Video
+                            </div>
                         ) : (
-                            <span className="text-[10px] text-slate-600 flex items-center gap-1">
-                                <EyeOff className="h-3 w-3" /> Log Only
-                            </span>
-                        )
-                    )}
+                            (currentUser && (
+                                fight.playerId === currentUser.id ||
+                                (currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId) ||
+                                currentUser.isBotAdmin
+                            )) ? (
+                                <UploadFightButton fightId={fight.id} />
+                            ) : (
+                                <span className="text-[10px] text-slate-600 flex items-center gap-1">
+                                    <EyeOff className="h-3 w-3" /> Log Only
+                                </span>
+                            )
+                        )}
+                    </div>
                 </div>
-            </Link>
+            </div>
             ); })}
         </div>
 
