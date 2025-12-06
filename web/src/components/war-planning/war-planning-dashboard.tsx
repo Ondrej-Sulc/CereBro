@@ -98,7 +98,7 @@ export default function WarPlanningDashboard({
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex flex-row items-center gap-2">
             {isBotAdmin && (
                 <>
                     <Link href="/admin/nodes">

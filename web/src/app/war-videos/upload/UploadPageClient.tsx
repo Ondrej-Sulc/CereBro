@@ -134,7 +134,7 @@ export default function UploadWarVideoPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-4 sm:py-8 px-2 sm:px-4">
-      <div className="container mx-auto max-w-5xl">
+      <div className="container mx-auto max-w-5xl px-0">
         <div className="glass rounded-xl sm:rounded-2xl border border-slate-800/50 overflow-hidden">
           <div className="bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border-b border-slate-800/50 p-4 sm:p-6">
             <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">Upload Alliance War Video</h1>

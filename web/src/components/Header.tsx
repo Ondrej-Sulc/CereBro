@@ -54,12 +54,6 @@ export default function Header({ userButton, isOfficer }: { userButton: React.Re
             <div className="hidden md:block">
               {userButton}
             </div>
-            <Link href="https://discord.com/api/oauth2/authorize?client_id=1259256672314130545&permissions=8&scope=bot%20applications.commands" target="_blank" className="hidden sm:inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold btn-primary text-slate-50 shadow-lg shadow-cyan-500/40">
-              <span>Invite CereBro</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M5 10a1 1 0 0 1 1-1h6.586L9.293 5.707a1 1 0 0 1 1.414-1.414l5 5a1 1 0 0 1 .083.094l.007.01a1 1 0 0 1 .182.573v.06a1 1 0 0 1-.272.628l-5 5a1 1 0 0 1-1.414-1.414L12.586 11H6a1 1 0 0 1-1-1z"/>
-              </svg>
-            </Link>
 
             {/* Mobile menu button */}
             <Sheet>
@@ -95,17 +89,6 @@ export default function Header({ userButton, isOfficer }: { userButton: React.Re
                   <div>
                     {userButton}
                   </div>
-
-                  <Link 
-                    href="https://discord.com/api/oauth2/authorize?client_id=1259256672314130545&permissions=8&scope=bot%20applications.commands" 
-                    target="_blank" 
-                    className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold btn-primary text-slate-50 shadow-lg shadow-cyan-500/40 w-full"
-                  >
-                    <span>Invite CereBro</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M5 10a1 1 0 0 1 1-1h6.586L9.293 5.707a1 1 0 0 1 1.414-1.414l5 5a1 1 0 0 1 .083.094l.007.01a1 1 0 0 1 .182.573v.06a1 1 0 0 1-.272.628l-5 5a1 1 0 0 1-1.414-1.414L12.586 11H6a1 1 0 0 1-1-1z"/>
-                    </svg>
-                  </Link>
                 </nav>
               </SheetContent>
             </Sheet>

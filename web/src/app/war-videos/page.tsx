@@ -188,7 +188,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       {/* Fights Content */}
       <div className="space-y-6">
         {/* Mobile View (Cards) - Hidden on md+ */}
-        <div className="grid grid-cols-1 gap-4 md:hidden">
+        <div className="grid grid-cols-1 gap-2 md:hidden">
             {fights.map((fight) => {
                 const activeTactic = allTactics.find(t => 
                     t.season === fight.war.season && 
@@ -222,7 +222,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             <Badge variant="outline" className="border-slate-700 text-slate-400 text-[9px] h-4.5 px-1.5">
                                 T{fight.war.warTier}
                             </Badge>
-                            <span className="text-[9px] text-slate-400 font-mono truncate max-w-[70px]" title={fight.war.alliance.name}>
+                            <span className="text-[9px] text-slate-400 font-mono truncate max-w-[100px]" title={fight.war.alliance.name}>
                                 {fight.war.alliance.name}
                             </span>
                         </div>
@@ -266,8 +266,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             {/* VS / Node */}
                             <div className="flex flex-col items-center gap-0.5 shrink-0">
                                 <div className="h-5 w-px bg-slate-700/30" />
-                                <Badge variant="secondary" className="bg-amber-900/10 text-amber-500 border-amber-500/20 font-mono text-[10px] px-1.5 h-5 whitespace-nowrap">
-                                    Node {fight.node.nodeNumber}
+                                <Badge variant="secondary" className="bg-amber-900/10 text-amber-500 border-amber-500/20 font-mono text-sm px-1.5 h-5 whitespace-nowrap">
+                                    {fight.node.nodeNumber}
                                 </Badge>
                                 <div className="h-5 w-px bg-slate-700/30" />
                             </div>
