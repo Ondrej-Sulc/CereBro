@@ -1,7 +1,7 @@
-import { Client, TextChannel, EmbedBuilder } from 'discord.js';
+import { Client } from 'discord.js';
 import { prisma } from './prismaService';
 import logger from './loggerService';
-import { config } from '../config';
+import { handleWarVideoNotification } from './jobHandlers/warVideoNotification';
 // @ts-ignore - Types might be stale until regen
 import { BotJobType, BotJobStatus } from '@prisma/client';
 
@@ -35,7 +35,7 @@ export function startJobProcessor(client: Client) {
       try {
         switch (job.type) {
           case 'NOTIFY_WAR_VIDEO':
-            await processNotifyWarVideo(client, job.payload);
+            await handleWarVideoNotification(client, job.payload);
             break;
           // Future cases here
           default:
@@ -61,48 +61,4 @@ export function startJobProcessor(client: Client) {
       logger.error({ error: String(error) }, 'Error in Job Processor loop');
     }
   }, 5000); // Poll every 5 seconds
-}
-
-async function processNotifyWarVideo(client: Client, payload: any) {
-    const { channelId, videoId, title, description, uploaderName, season, warNumber } = payload;
-    
-    if (!channelId || !videoId || !title || !uploaderName) {
-        throw new Error("Invalid payload: Missing required fields");
-    }
-
-    try {
-        const channel = await client.channels.fetch(channelId) as TextChannel;
-        if (!channel) {
-             throw new Error(`Channel ${channelId} not found`);
-        }
-        if (!channel.isTextBased()) {
-            throw new Error(`Channel ${channelId} is not text-based`);
-        }
-
-        const videoPageUrl = `${config.botBaseUrl}/war-videos/${videoId}`;
-        
-        let warDisplay = `S${season}`;
-        if (warNumber && warNumber !== 0) {
-            warDisplay += ` W${warNumber}`;
-        } else {
-            warDisplay += ` (Offseason)`;
-        }
-
-        const embed = new EmbedBuilder()
-            .setTitle('🎥 New War Video Uploaded')
-            .setDescription(`**[${title}](${videoPageUrl})**\n\n${description || ''}`)
-            .setColor(0x0ea5e9) // Sky 500
-            .addFields(
-                { name: 'Uploader', value: uploaderName, inline: true },
-                { name: 'War', value: warDisplay, inline: true }
-            )
-            .setFooter({ text: 'Click the title to watch and view fight details.' });
-
-        await channel.send({ embeds: [embed] });
-    } catch (e: any) {
-        if (e.code === 50001) { // Missing Access
-             throw new Error(`Bot missing access to channel ${channelId}`);
-        }
-        throw e;
-    }
 }

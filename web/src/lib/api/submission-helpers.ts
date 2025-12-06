@@ -186,30 +186,51 @@ export async function processFightUpdates(prisma: PrismaClient, updates: any[]):
 
 export async function queueVideoNotification(
     prisma: PrismaClient, 
-    params: {
-        alliance: { warVideosChannelId: string | null };
-        uploaderName: string;
-        videoId: string;
-        title: string;
-        description: string;
-        season: number;
-        warNumber: number | null;
-    }
+    params: { videoId: string }
 ) {
-    if (params.alliance?.warVideosChannelId) {
-        await prisma.botJob.create({
-            data: {
-                type: 'NOTIFY_WAR_VIDEO',
-                payload: {
-                    channelId: params.alliance.warVideosChannelId,
-                    videoId: params.videoId,
-                    title: params.title,
-                    description: params.description,
-                    uploaderName: params.uploaderName,
-                    season: params.season,
-                    warNumber: params.warNumber
+    const video = await prisma.warVideo.findUnique({
+        where: { id: params.videoId },
+        include: {
+            submittedBy: { include: { alliance: true } },
+            fights: {
+                include: {
+                    attacker: true,
+                    defender: true,
+                    node: true,
+                    player: true,
+                    war: true
                 }
             }
-        });
-    }
+        }
+    });
+
+    if (!video || !video.submittedBy.alliance?.warVideosChannelId) return;
+
+    const fights = video.fights;
+    // Fallback for season/warNumber if no fights attached (unlikely but possible)
+    const season = fights.length > 0 ? fights[0].war.season : 0;
+    const warNumber = fights.length > 0 ? fights[0].war.warNumber : null;
+
+    const payload = {
+        channelId: video.submittedBy.alliance.warVideosChannelId,
+        videoId: video.id,
+        title: 'New War Video',
+        description: video.description,
+        uploaderName: video.submittedBy.ingameName,
+        season: season,
+        warNumber: warNumber,
+        fights: fights.map(f => ({
+            attackerName: f.attacker?.name || 'Unknown',
+            defenderName: f.defender?.name || 'Unknown',
+            nodeNumber: f.node.nodeNumber,
+            playerInVideo: f.player?.ingameName || 'Unknown'
+        }))
+    };
+
+    await prisma.botJob.create({
+        data: {
+            type: 'NOTIFY_WAR_VIDEO',
+            payload
+        }
+    });
 }

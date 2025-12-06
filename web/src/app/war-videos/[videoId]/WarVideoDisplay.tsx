@@ -159,7 +159,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
       <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-xl sm:text-2xl font-bold text-white">
-            {`MCOC AW: S${war.season} ${'W' + war.warNumber || 'Offseason'} T${war.warTier}${war.enemyAlliance ? ` vs ${war.enemyAlliance}` : ''}`}
+            {`MCOC AW: S${war.season}${war.warNumber ? ` W${war.warNumber}` : ' Offseason'} T${war.warTier}${war.enemyAlliance ? ` vs ${war.enemyAlliance}` : ''}`}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
             <span>Submitted by <span className="text-sky-400 font-medium">{warVideo.submittedBy.ingameName}</span></span>

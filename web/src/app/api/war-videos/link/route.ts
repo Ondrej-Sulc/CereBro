@@ -85,15 +85,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 4. Notification
-    await queueVideoNotification(prisma, {
-        alliance: player.alliance!,
-        uploaderName: player.ingameName,
-        videoId: warVideo.id,
-        title: 'New War Video Linked',
-        description,
-        season: parsedSeason,
-        warNumber: parsedWarNumber
-    });
+    await queueVideoNotification(prisma, { videoId: warVideo.id });
 
     return NextResponse.json({ message: 'Video linked successfully', videoIds: [warVideo.id] }, { status: 200 });
 

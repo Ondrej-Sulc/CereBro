@@ -88,15 +88,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 5. Notification
-    await queueVideoNotification(prisma, {
-        alliance: player.alliance!,
-        uploaderName: player.ingameName,
-        videoId: newWarVideo.id,
-        title,
-        description,
-        season: parsedSeason,
-        warNumber: parsedWarNumber
-    });
+    await queueVideoNotification(prisma, { videoId: newWarVideo.id });
 
     // 6. Cleanup
     await fs.unlink(tempFilePath);
