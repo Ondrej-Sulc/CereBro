@@ -18,9 +18,9 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
     
     let warDisplay = `Season ${season}`;
     if (warNumber && warNumber !== 0) {
-        warDisplay += ` • War ${warNumber}`;
+        warDisplay += ` War ${warNumber}`;
     } else {
-        warDisplay += ` • Offseason`;
+        warDisplay += ` Offseason`;
     }
 
     const container = new ContainerBuilder()
@@ -45,7 +45,7 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
             const attackerEmoji = await getEmoji(f.attackerName);
             const defenderEmoji = await getEmoji(f.defenderName);
             
-            return `- Node: ${f.nodeNumber} ${attackerEmoji} **${f.attackerName}** vs ${defenderEmoji} **${f.defenderName}** by **${f.playerName}**`;
+            return `- Node ${f.nodeNumber}: ${attackerEmoji} **${f.attackerName}** vs ${defenderEmoji} **${f.defenderName}** ${(f.playerInVideo !== uploaderName ? ` by **${f.playerInVideo}**` : '')}`;
         }));
         
         const fightsList = fightLines.join('\n');
