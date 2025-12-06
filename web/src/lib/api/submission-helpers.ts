@@ -186,7 +186,7 @@ export async function processFightUpdates(prisma: PrismaClient, updates: any[]):
 
 export async function queueVideoNotification(
     prisma: PrismaClient, 
-    params: { videoId: string }
+    params: { videoId: string; title: string; }
 ) {
     const video = await prisma.warVideo.findUnique({
         where: { id: params.videoId },
@@ -214,7 +214,7 @@ export async function queueVideoNotification(
     const payload = {
         channelId: video.submittedBy.alliance.warVideosChannelId,
         videoId: video.id,
-        title: 'New War Video',
+        title: params.title, // Use title from parameters
         description: video.description,
         uploaderName: video.submittedBy.ingameName,
         season: season,

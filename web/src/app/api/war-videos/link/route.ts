@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 4. Notification
-    await queueVideoNotification(prisma, { videoId: warVideo.id });
+    await queueVideoNotification(prisma, { videoId: warVideo.id, title: 'New War Video Linked' });
 
     return NextResponse.json({ message: 'Video linked successfully', videoIds: [warVideo.id] }, { status: 200 });
 

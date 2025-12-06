@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 5. Notification
-    await queueVideoNotification(prisma, { videoId: newWarVideo.id });
+    await queueVideoNotification(prisma, { videoId: newWarVideo.id, title });
 
     // 6. Cleanup
     await fs.unlink(tempFilePath);
