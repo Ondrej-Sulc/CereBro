@@ -214,6 +214,7 @@ export async function queueVideoNotification(
     const payload = {
         channelId: video.submittedBy.alliance.warVideosChannelId,
         videoId: video.id,
+        mediaUrl: video.url || video.gcsUrl,
         title: params.title, // Use title from parameters
         description: video.description,
         uploaderName: video.submittedBy.ingameName,

@@ -1,9 +1,9 @@
-import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SeparatorBuilder } from 'discord.js';
+import { Client, TextChannel, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { config } from '../../config';
 import { getEmoji } from '../../commands/aw/utils';
 
 export async function handleWarVideoNotification(client: Client, payload: any) {
-    const { channelId, videoId, title, description, uploaderName, season, warNumber, fights } = payload;
+    const { channelId, videoId, mediaUrl, title, description, uploaderName, season, warNumber, fights } = payload;
 
     if (!channelId || !videoId || !uploaderName) {
         throw new Error("Invalid payload: Missing required fields for war video notification");
@@ -23,22 +23,15 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
         warDisplay += ` Offseason`;
     }
 
-    const container = new ContainerBuilder()
-        .setAccentColor(0x0ea5e9); // Sky 500
+    const embed = new EmbedBuilder()
+        .setColor(0x0ea5e9) // Sky 500
+        .setTitle(`🎥 ${title || 'Untitled Video'}`)
+        .setURL(mediaUrl || videoPageUrl);
 
-    // Header and Title
-    container.addTextDisplayComponents(
-        new TextDisplayBuilder()
-            .setContent(`## 🎥 New War Video\n**${title || 'Untitled Video'}**`)
-    );
-
-    // Description (if present)
     if (description) {
-        container.addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`> ${description}`)
-        );
+        embed.setDescription(description);
     }
-    
+
     // Fights List
     if (fights && Array.isArray(fights) && fights.length > 0) {
         const fightLines = await Promise.all(fights.map(async (f: any) => {
@@ -50,33 +43,26 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
         }));
         
         const fightsList = fightLines.join('\n');
-        
-        container.addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`**Fights:**\n${fightsList}`)
-        );
+        embed.addFields({ name: 'Fights', value: fightsList });
     }
 
-    container.addSeparatorComponents(new SeparatorBuilder());
-
     // Metadata
-    container.addTextDisplayComponents(
-        new TextDisplayBuilder()
-            .setContent(`**👤 Submitted by:** ${uploaderName}\n**📅 War:** ${warDisplay}`)
+    embed.addFields(
+        { name: '👤 Submitted by', value: uploaderName, inline: true },
+        { name: '📅 War', value: warDisplay, inline: true }
     );
 
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-            .setLabel('Watch Video')
+            .setLabel('View on CereBro')
             .setStyle(ButtonStyle.Link)
             .setURL(videoPageUrl)
-            .setEmoji('▶️')
+            .setEmoji('🔗')
     );
 
-    container.addSeparatorComponents(new SeparatorBuilder());
-    container.addActionRowComponents(actionRow);
-
     await channel.send({ 
-        components: [container],
-        flags: [MessageFlags.IsComponentsV2] 
+        content: mediaUrl || undefined,
+        embeds: [embed],
+        components: [actionRow]
     });
 }
