@@ -103,37 +103,36 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full justify-between pr-2 pl-0 rounded-full", className)}
-        >
-          <div className="flex items-center gap-2 truncate ">
-             {selectedChampion ? (
-                <>
-                    <div 
-                        className={cn("relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2", getChampionClassColors(selectedChampion.class).border)}
-                    >
-                        <Image 
-                        src={getChampionImageUrl(selectedChampion.images as any, '64')}
-                        alt={selectedChampion.name}
-                        fill
-                        className="object-cover"
-                        />
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className={cn("w-full justify-between pr-2 pl-2 rounded-full", className)}
+                  >
+                    <div className="flex items-center gap-2 truncate ">
+                       {selectedChampion ? (
+                          <>
+                              <div 
+                                  className={cn("relative h-9 w-9 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2", getChampionClassColors(selectedChampion.class).border)}
+                              >
+                                  <Image 
+                                  src={getChampionImageUrl(selectedChampion.images as any, '64')}
+                                  alt={selectedChampion.name}
+                                  fill
+                                  className="object-cover"
+                                  />
+                              </div>
+                              <span 
+                                  className={cn("truncate font-bold", getChampionClassColors(selectedChampion.class).text)}
+                              >
+                                  {selectedChampion.name}
+                              </span>
+                          </>
+                       ) : (
+                          <span className="text-slate-500">{placeholder}</span>
+                       )}
                     </div>
-                    <span 
-                        className={cn("truncate font-medium", getChampionClassColors(selectedChampion.class).text)}
-                    >
-                        {selectedChampion.name}
-                    </span>
-                </>
-             ) : (
-                <span className="pl-2 text-slate-500">{placeholder}</span>
-             )}
-          </div>
-
           <div className="flex items-center ml-2">
             {value ? (
               <div 

@@ -6,17 +6,16 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
 import { MemoizedSelect } from "@/components/MemoizedSelect";
 import { FightBlock, FightData } from "@/components/FightBlock";
-import { UploadCloud, Plus, Swords } from "lucide-react";
+import { UploadCloud, Plus, Swords, Video, Map, Eye, Users, CalendarDays, Hash, Medal, Flag } from "lucide-react";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { War, WarFight, Player as PrismaPlayer, WarNode as PrismaWarNode } from '@prisma/client';
+import { FlipToggle } from "@/components/ui/flip-toggle";
 
 interface PlayerWithAlliance extends PrismaPlayer {
   alliance?: {
@@ -611,6 +610,7 @@ export function WarVideoForm({
       uploadVideo,
       linkVideo,
       battlegroup,
+      mapType,
     ]
   );
 
@@ -629,72 +629,94 @@ export function WarVideoForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 relative">
-      {/* Video Configuration Section */}
-      <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <UploadCloud className="h-5 w-5 text-sky-400" />
-          Video Configuration
+      {/* Video Configuration Header */}
+      <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 flex flex-col gap-4">
+        <h3 className="text-xl font-bold text-white flex items-center gap-3">
+          <UploadCloud className="h-6 w-6 text-sky-400" />
+          Upload War Video
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label className="text-sm font-medium text-slate-300 mb-2 block">Video Source</Label>
-            <RadioGroup
-              value={sourceMode}
-              onValueChange={handleSourceModeChange}
-              className="flex space-x-4"
+
+        {/* Source Mode Toggle (Upload/Link) */}
+        <div>
+          <Label className="text-sm font-medium text-slate-300 mb-2 block">Video Source</Label>
+          <div className="flex bg-slate-950/50 rounded-lg p-1 border border-slate-800/50">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleSourceModeChange("upload")}
+              disabled={!canUploadFiles}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-medium rounded-md transition-all",
+                sourceMode === "upload" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50",
+                !canUploadFiles && "opacity-50 cursor-not-allowed"
+              )}
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="upload" id="upload" disabled={!canUploadFiles} />
-                <Label htmlFor="upload" className={cn("text-sm text-slate-300", !canUploadFiles && "opacity-50 cursor-not-allowed")}>Upload File</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="link" id="link" />
-                <Label htmlFor="link" className="text-sm text-slate-300">Use Link</Label>
-              </div>
-            </RadioGroup>
-            {!canUploadFiles && (
-              <p className="text-xs text-amber-500/80 mt-2">
-                Direct file uploads are currently restricted to authorized alliances due to quota limits. Please use a YouTube link.
-              </p>
-            )}
+              <UploadCloud className="h-4 w-4" /> Upload File
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleSourceModeChange("link")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-medium rounded-md transition-all",
+                sourceMode === "link" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+              )}
+            >
+              <Video className="h-4 w-4" /> Use Link
+            </Button>
           </div>
-          <div>
-            <Label className="text-sm font-medium text-slate-300 mb-2 block">Upload Mode</Label>
-            <RadioGroup
-              value={uploadMode}
-              onValueChange={handleUploadModeChange}
-              className="flex space-x-4"
+          {!canUploadFiles && (
+            <p className="text-xs text-amber-500/80 mt-2">
+              Direct file uploads are currently restricted to authorized alliances due to quota limits. Please use a YouTube link.
+            </p>
+          )}
+        </div>
+
+        {/* Upload Mode Toggle (Single/Multiple) */}
+        <div>
+          <Label className="text-sm font-medium text-slate-300 mb-2 block">Upload Mode</Label>
+          <div className="flex bg-slate-950/50 rounded-lg p-1 border border-slate-800/50">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleUploadModeChange("single")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-medium rounded-md transition-all",
+                uploadMode === "single" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+              )}
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="single" id="single" />
-                <Label htmlFor="single" className="text-sm text-slate-300">Single Video (for all fights)</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="multiple" id="multiple" />
-                <Label htmlFor="multiple" className="text-sm text-slate-300">Separate Video (for each fight)</Label>
-              </div>
-            </RadioGroup>
+              Single Video (all fights)
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleUploadModeChange("multiple")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-1.5 px-3 text-xs font-medium rounded-md transition-all",
+                uploadMode === "multiple" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+              )}
+            >
+              Separate Videos (per fight)
+            </Button>
           </div>
         </div>
       </div>
 
+      {/* Primary Video Input */}
       {uploadMode === "single" && (
         <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6">
           {sourceMode === 'upload' ? (
             <>
-              <Label className="text-sm font-medium text-slate-300 mb-3 block">Video File</Label>
-              <div className="flex items-center gap-4">
-                <Label htmlFor="videoFile" className="cursor-pointer">
-                  <div
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors"
-                    )}
-                  >
-                    <UploadCloud className="h-5 w-5" />
-                    <span>Choose Video</span>
-                  </div>
-                </Label>
+              <Label htmlFor="videoFile" className="text-sm font-medium text-slate-300 mb-3 block">Video File</Label>
+              <Label htmlFor="videoFile" className={cn(
+                "flex flex-col items-center justify-center p-8 border border-dashed rounded-lg cursor-pointer",
+                "bg-slate-900/50 border-slate-700/50 hover:border-sky-500/50 transition-colors",
+                videoFile ? "border-sky-500/50 text-sky-400" : "text-slate-400"
+              )}>
+                <UploadCloud className="h-10 w-10 mb-2" />
+                <span className="text-lg font-semibold mb-1">
+                  {videoFile ? videoFile.name : "Drag & drop video here, or click to select"}
+                </span>
                 <Input
                   id="videoFile"
                   type="file"
@@ -705,10 +727,7 @@ export function WarVideoForm({
                   required
                   className="hidden"
                 />
-                {videoFile && (
-                  <p className="text-sm text-slate-300">{videoFile.name}</p>
-                )}
-              </div>
+              </Label>
               {errors.videoFile && (
                 <p className="text-sm text-red-400 mt-2">{errors.videoFile}</p>
               )}
@@ -723,7 +742,7 @@ export function WarVideoForm({
                 onChange={(e) => setVideoUrl(e.target.value)}
                 placeholder="https://www.youtube.com/watch?v=..."
                 required
-                className="bg-slate-900/50 border-slate-700/50"
+                className="bg-slate-900/50 border-slate-700/50 h-12 text-base placeholder:text-slate-600"
               />
               {errors.videoUrl && (
                 <p className="text-sm text-red-400 mt-2">{errors.videoUrl}</p>
@@ -760,21 +779,73 @@ export function WarVideoForm({
         </Button>
       </div>
 
-      {/* War Details Section */}
+      {/* War Context Strip */}
       <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-white">War Details</h3>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="isOffseason"
-              checked={isOffseason}
-              onCheckedChange={(checked) => setIsOffseason(Boolean(checked))}
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Map className="h-5 w-5 text-sky-400" />
+          War Context
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Map Type Flip Toggle */}
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium text-slate-300 mb-2">Map Type</Label>
+            <FlipToggle
+              value={mapType === "BIG_THING"}
+              onChange={(value) => setMapType(value ? "BIG_THING" : "STANDARD")}
+              leftLabel="Standard"
+              rightLabel="Big Thing"
+              leftIcon={<Map className="h-4 w-4" />}
+              rightIcon={<Flag className="h-4 w-4" />}
+              className="flex-1"
             />
-            <Label htmlFor="isOffseason" className="text-sm text-slate-300">Offseason</Label>
+          </div>
+
+          {/* Offseason Toggle */}
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium text-slate-300 mb-2">War Status</Label>
+            <FlipToggle
+              value={isOffseason}
+              onChange={setIsOffseason}
+              leftLabel="Active War"
+              rightLabel="Offseason"
+              leftIcon={<CalendarDays className="h-4 w-4" />}
+              rightIcon={<Hash className="h-4 w-4" />}
+              className="flex-1"
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Player In Video */}
+          <div>
+            <Label htmlFor="playerInVideo" className="text-sm font-medium text-slate-300 mb-2 block">Player in Video</Label>
+            <MemoizedSelect
+              value={playerInVideoId}
+              onValueChange={setPlayerInVideoId}
+              placeholder="Select player..."
+              options={playerOptions}
+              disabled={!!preFilledFights}
+            />
+          </div>
+
+          {/* Battlegroup */}
+          <div>
+            <Label htmlFor="battlegroup" className="text-sm font-medium text-slate-300 mb-2 block">Battlegroup</Label>
+            <MemoizedSelect
+              value={battlegroup}
+              onValueChange={setBattlegroup}
+              placeholder="Select BG..."
+              options={battlegroupOptions}
+              required
+              disabled={!!preFilledFights}
+            />
+            {errors.battlegroup && (
+              <p className="text-sm text-red-400 mt-2">{errors.battlegroup}</p>
+            )}
+          </div>
+
+          {/* Season */}
           <div>
             <Label htmlFor="season" className="text-sm font-medium text-slate-300 mb-2 block">Season</Label>
             <Input
@@ -786,12 +857,14 @@ export function WarVideoForm({
               onChange={(e) => setSeason(e.target.value)}
               required
               className="bg-slate-900/50 border-slate-700/50"
+              disabled={!!preFilledFights}
             />
             {errors.season && (
               <p className="text-sm text-red-400 mt-2">{errors.season}</p>
             )}
           </div>
 
+          {/* War Number */}
           <div>
             <Label htmlFor="warNumber" className="text-sm font-medium text-slate-300 mb-2 block">War Number</Label>
             <MemoizedSelect
@@ -800,7 +873,7 @@ export function WarVideoForm({
               placeholder="Select number..."
               options={warNumberOptions}
               required={!isOffseason}
-              disabled={isOffseason}
+              disabled={isOffseason || !!preFilledFights}
               contentClassName="max-h-60 overflow-y-auto"
             />
             {errors.warNumber && (
@@ -808,6 +881,7 @@ export function WarVideoForm({
             )}
           </div>
 
+          {/* War Tier */}
           <div>
             <Label htmlFor="warTier" className="text-sm font-medium text-slate-300 mb-2 block">War Tier</Label>
             <MemoizedSelect
@@ -817,72 +891,29 @@ export function WarVideoForm({
               options={warTierOptions}
               required
               contentClassName="max-h-60 overflow-y-auto"
+              disabled={!!preFilledFights}
             />
             {errors.warTier && (
               <p className="text-sm text-red-400 mt-2">{errors.warTier}</p>
             )}
           </div>
+
+          {/* Visibility */}
           <div>
-            <Label htmlFor="mapType" className="text-sm font-medium text-slate-300 mb-2 block">Map Type</Label>
-            <MemoizedSelect
-              value={mapType}
-              onValueChange={setMapType}
-              placeholder="Select map..."
-              options={[
-                { value: "STANDARD", label: "Standard" },
-                { value: "BIG_THING", label: "Big Thing" }
-              ]}
-              required
-              disabled={!!preFilledFights}
+            <Label className="text-sm font-medium text-slate-300 mb-2 block">Visibility</Label>
+            <FlipToggle
+              value={visibility === "alliance"}
+              onChange={(value) => setVisibility(value ? "alliance" : "public")}
+              leftLabel="Public"
+              rightLabel="Alliance Only"
+              leftIcon={<Eye className="h-4 w-4" />}
+              rightIcon={<Users className="h-4 w-4" />}
+              className="flex-1"
             />
           </div>
-          <div>
-            <Label htmlFor="battlegroup" className="text-sm font-medium text-slate-300 mb-2 block">Battlegroup</Label>
-            <MemoizedSelect
-              value={battlegroup}
-              onValueChange={setBattlegroup}
-              placeholder="Select battlegroup..."
-              options={battlegroupOptions}
-              required
-              disabled={!!preFilledFights}
-            />
-            {errors.battlegroup && (
-              <p className="text-sm text-red-400 mt-2">{errors.battlegroup}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Additional Details Section */}
-      <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 space-y-6">
-        <div>
-          <Label htmlFor="playerInVideo" className="text-sm font-medium text-slate-300 mb-2 block">Player in Video</Label>
-          <MemoizedSelect
-            value={playerInVideoId}
-            onValueChange={setPlayerInVideoId}
-            placeholder="Select player..."
-            options={playerOptions}
-          />
         </div>
 
-        <div>
-          <Label className="text-sm font-medium text-slate-300 mb-2 block">Visibility</Label>
-          <RadioGroup
-            value={visibility}
-            onValueChange={handleVisibilityChange}
-            className="flex space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="public" id="public" />
-              <Label htmlFor="public" className="text-sm text-slate-300">Public</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="alliance" id="alliance" />
-              <Label htmlFor="alliance" className="text-sm text-slate-300">Alliance Only</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
+        {/* Video Description */}
         <div>
           <Label htmlFor="description" className="text-sm font-medium text-slate-300 mb-2 block">Video Description (Optional)</Label>
           <Textarea
@@ -890,7 +921,7 @@ export function WarVideoForm({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Add any relevant details about the fight, prefights used, etc."
-            className="bg-slate-900/50 border-slate-700/50 min-h-[100px]"
+            className="bg-slate-900/50 border-slate-700/50 min-h-[80px]"
           />
         </div>
       </div>

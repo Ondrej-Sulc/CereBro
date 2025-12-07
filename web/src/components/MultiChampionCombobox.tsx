@@ -85,7 +85,7 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                             className="object-cover"
                             />
                         </div>
-                        <span className="text-xs font-medium max-w-[80px] truncate">{champion.name}</span>
+                        <span className="text-xs font-bold max-w-[80px] truncate">{champion.name}</span>
                         <div 
                             role="button"
                             onClick={(e) => handleRemove(e, champion.id)}
@@ -135,7 +135,7 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                                 className="object-cover"
                               />
                             </div>
-                            <span>{champion.name}</span>
+                            <span className={cn(isSelected && "font-bold")}>{champion.name}</span>
                             {isSelected && <span className="ml-auto text-xs text-blue-400 font-bold">✓</span>}
                         </CommandItem>
                     )}}

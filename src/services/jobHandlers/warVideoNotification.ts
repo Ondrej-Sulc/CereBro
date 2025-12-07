@@ -54,15 +54,19 @@ export async function handleWarVideoNotification(client: Client, payload: any) {
 
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-            .setLabel('View on CereBro')
+            .setLabel('View in CereBro')
             .setStyle(ButtonStyle.Link)
             .setURL(videoPageUrl)
             .setEmoji('🔗')
     );
+    
+    if (mediaUrl) {
+        await channel.send({ content: mediaUrl });
+    }
 
     await channel.send({ 
-        content: mediaUrl || undefined,
         embeds: [embed],
         components: [actionRow]
     });
+
 }
