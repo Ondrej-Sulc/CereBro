@@ -25,7 +25,7 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
 
   // Find the active War (latest one)
   const war = await prisma.war.findFirst({
-    where: { allianceId: alliance.id },
+    where: { allianceId: alliance.id, status: "PLANNING" },
     orderBy: { createdAt: 'desc' }
   });
 
