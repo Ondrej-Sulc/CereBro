@@ -1,31 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getFromCache } from '@/lib/cache';
+import { getCachedChampions } from '@/lib/data/champions';
 import loggerService from '@cerebro/core/services/loggerService';
 
 export async function GET() {
   try {
-    const champions = await getFromCache('championsWithImages', 3600, () => {
-      return prisma.champion.findMany({
-    select: {
-      id: true,
-      name: true,
-      images: true,
-      abilities: {
-        select: {
-          ability: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-        orderBy: {
-          name: 'asc',
-        },
-      });
-    });
+    const champions = await getCachedChampions();
     return NextResponse.json(champions, { status: 200 });
   } catch (error) {
     loggerService.error({ err: error }, 'Error fetching champions');

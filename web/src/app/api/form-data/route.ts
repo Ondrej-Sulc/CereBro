@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCachedChampions } from '@/lib/data/champions';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -31,24 +32,7 @@ export async function GET(request: Request) {
 
     // 2. Fetch all data in parallel
     const [champions, nodes, alliancePlayers] = await Promise.all([
-      prisma.champion.findMany({
-        orderBy: { name: 'asc' },
-        select: {
-          id: true,
-          name: true,
-          class: true,
-          images: true,
-          abilities: {
-            select: {
-              ability: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      }),
+      getCachedChampions(),
       prisma.warNode.findMany({
         orderBy: { nodeNumber: 'asc' },
       }),

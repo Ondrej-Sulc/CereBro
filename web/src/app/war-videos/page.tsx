@@ -16,6 +16,7 @@ import { auth } from "@/auth";
 
 import { SearchFilters } from "@/components/SearchFilters";
 import { UploadFightButton } from "@/components/UploadFightButton";
+import { getCachedChampions } from "@/lib/data/champions";
 
 export const dynamic = 'force-dynamic';
 
@@ -64,10 +65,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const hasVideo = getSingleParam("hasVideo") === 'true';
 
   // Fetch champions for filters
-  const champions = await prisma.champion.findMany({
-    orderBy: { name: 'asc' },
-    select: { id: true, name: true, images: true }
-  });
+  const champions = await getCachedChampions();
   
   // Fetch available seasons
   const rawSeasons = await prisma.war.findMany({

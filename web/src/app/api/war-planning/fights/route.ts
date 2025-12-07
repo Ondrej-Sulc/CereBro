@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import { getCachedChampions } from '@/lib/data/champions';
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -69,46 +70,53 @@ export async function GET(request: Request) {
                 }
             }
         }, // Include WarNode details with modifiers
-        attacker: { 
-            select: { 
-                id: true,
-                name: true, 
-                images: true, 
-                class: true,
-                tags: { select: { name: true } }
-            } 
-        }, 
-        defender: { 
-            select: { 
-                id: true,
-                name: true, 
-                images: true, 
-                class: true,
-                tags: { select: { name: true } }
-            } 
-        }, 
         player: { select: { id: true, ingameName: true, avatar: true } }, // Include player details
         prefightChampions: { 
             select: { 
-                id: true, 
-                champion: { select: { id: true, name: true, images: true } },
+                id: true, // This is the WarFightPrefight ID
+                championId: true,
                 player: { select: { id: true, ingameName: true, avatar: true } }
             } 
         },
       },
     });
 
+    const champions = await getCachedChampions();
+    const championMap = new Map(champions.map(c => [c.id, c]));
+
     // Map the result to match the interface
-    const mappedFights = fights.map(f => ({
-        ...f,
-        prefightChampions: f.prefightChampions.map(pf => ({
-            id: pf.champion.id,
-            name: pf.champion.name,
-            images: pf.champion.images,
-            fightPrefightId: pf.id,
-            player: pf.player
-        }))
-    }));
+    const mappedFights = fights.map(f => {
+        const attacker = f.attackerId ? championMap.get(f.attackerId) : null;
+        const defender = f.defenderId ? championMap.get(f.defenderId) : null;
+
+        return {
+            ...f,
+            attacker: attacker ? {
+                id: attacker.id,
+                name: attacker.name,
+                images: attacker.images,
+                class: attacker.class,
+                tags: attacker.tags
+            } : null,
+            defender: defender ? {
+                id: defender.id,
+                name: defender.name,
+                images: defender.images,
+                class: defender.class,
+                tags: defender.tags
+            } : null,
+            prefightChampions: f.prefightChampions.map(pf => {
+                const champ = championMap.get(pf.championId);
+                return {
+                    id: pf.championId,
+                    name: champ?.name,
+                    images: champ?.images,
+                    fightPrefightId: pf.id,
+                    player: pf.player
+                }
+            })
+        };
+    });
 
     return NextResponse.json(mappedFights);
   } catch (error) {

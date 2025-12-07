@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import WarDetailsClient from "@/components/war-planning/war-details-client";
 import { updateWarFight, updateWarStatus } from "../actions";
+import { getFromCache } from "@/lib/cache";
+import { getCachedChampions } from "@/lib/data/champions";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
@@ -44,74 +46,54 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
     return <p>War not found or you do not have permission to view it.</p>;
   }
 
-  const champions = await prisma.champion.findMany({
-    orderBy: { name: 'asc' },
-    select: {
-      id: true,
-      name: true,
-      images: true,
-      class: true,
-      shortName: true,
-      releaseDate: true,
-      obtainable: true,
-      prestige: true,
-      discordEmoji: true,
-      fullAbilities: true,
-      createdAt: true,
-      updatedAt: true,
-      abilities: {
-        select: {
-          ability: {
-            select: { name: true }
-          }
-        }
-      },
-      tags: {
-        select: { name: true }
-      }
-    }
-  });
+  const champions = await getCachedChampions();
 
   // Fetch Season Bans
-  const seasonBans = await prisma.seasonBan.findMany({
-    where: {
-      season: war.season,
-      OR: [
-        { minTier: null, maxTier: null },
-        { minTier: { lte: war.warTier }, maxTier: { gte: war.warTier } }
-      ]
-    },
-    include: {
-        champion: {
-            select: { id: true, name: true, images: true }
-        }
-    }
+  const seasonBans = await getFromCache(`season-bans-${war.season}-${war.warTier}`, 300, async () => {
+    return await prisma.seasonBan.findMany({
+      where: {
+        season: war.season,
+        OR: [
+          { minTier: null, maxTier: null },
+          { minTier: { lte: war.warTier }, maxTier: { gte: war.warTier } }
+        ]
+      },
+      include: {
+          champion: {
+              select: { id: true, name: true, images: true }
+          }
+      }
+    });
   });
 
   // Fetch War Bans
-  const warBans = await prisma.warBan.findMany({
-    where: { warId: warId },
-    include: {
-        champion: {
-            select: { id: true, name: true, images: true }
-        }
-    }
+  const warBans = await getFromCache(`war-bans-${warId}`, 60, async () => {
+    return await prisma.warBan.findMany({
+      where: { warId: warId },
+      include: {
+          champion: {
+              select: { id: true, name: true, images: true }
+          }
+      }
+    });
   });
 
-  const allianceMembers = await prisma.player.findMany({
-    where: { allianceId: player.allianceId },
-    orderBy: { ingameName: 'asc' },
-    include: {
-      roster: {
-        select: {
-          championId: true,
-          stars: true,
-          rank: true,
-          isAscended: true,
-          isAwakened: true,
+  const allianceMembers = await getFromCache(`alliance-members-${player.allianceId}`, 300, async () => {
+    return await prisma.player.findMany({
+      where: { allianceId: player.allianceId },
+      orderBy: { ingameName: 'asc' },
+      include: {
+        roster: {
+          select: {
+            championId: true,
+            stars: true,
+            rank: true,
+            isAscended: true,
+            isAwakened: true,
+          }
         }
       }
-    }
+    });
   });
 
   return (

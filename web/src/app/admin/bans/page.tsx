@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminBansManagerClient from "@/components/admin/admin-bans-manager-client";
+import { getCachedChampions } from "@/lib/data/champions";
 
 export default async function AdminBansPage() {
   const session = await auth();
@@ -41,24 +42,7 @@ export default async function AdminBansPage() {
     }
   });
 
-  const champions = await prisma.champion.findMany({
-    select: {
-        id: true,
-        name: true,
-        images: true,
-        // Include other fields required by Champion type or cast it
-        shortName: true,
-        class: true,
-        releaseDate: true,
-        obtainable: true,
-        prestige: true,
-        discordEmoji: true,
-        fullAbilities: true,
-        createdAt: true,
-        updatedAt: true
-    },
-    orderBy: { name: 'asc' }
-  });
+  const champions = await getCachedChampions();
 
   return (
     <AdminBansManagerClient initialBans={bans} champions={champions} />
