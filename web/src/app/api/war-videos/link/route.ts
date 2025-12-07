@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification } from '@/lib/api/submission-helpers';
 
 export async function POST(req: NextRequest) {
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Video linked successfully', videoIds: [warVideo.id] }, { status: 200 });
 
   } catch (error: any) {
-    console.error('Link error:', error);
+    logger.error({ error }, 'Link error');
     return NextResponse.json({ error: error.message || 'Link failed' }, { status: 500 });
   }
 }

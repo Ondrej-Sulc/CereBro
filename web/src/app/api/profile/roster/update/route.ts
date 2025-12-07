@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import logger from "@cerebro/core/services/loggerService";
 import { NextRequest, NextResponse } from "next/server";
 import { processRosterScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
@@ -67,11 +68,11 @@ export async function POST(req: NextRequest) {
             totalCount += added.length;
         } else if ('message' in result) {
             // Should not happen if debugMode is false, but just in case
-            console.log("Roster process returned message:", result.message);
+            logger.info({ message: result.message }, "Roster process returned message");
         }
 
       } catch (err: any) {
-        console.error(`Error processing file ${file.name}:`, err);
+        logger.error({ error: err, fileName: file.name }, "Error processing file");
         errors.push(`File ${file.name}: ${err.message || "Unknown error"}`);
       }
     }
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ count: totalCount, errors });
 
   } catch (err: any) {
-    console.error("API Error:", err);
+    logger.error({ error: err }, "API Error");
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

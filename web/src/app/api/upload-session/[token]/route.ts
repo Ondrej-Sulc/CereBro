@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { add } from 'date-fns';
 import crypto from 'crypto';
 
@@ -109,7 +110,7 @@ export async function GET(
     });
 
   } catch (error: any) {
-    console.error('Error fetching upload session:', error);
+    logger.error({ error }, 'Error fetching upload session');
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

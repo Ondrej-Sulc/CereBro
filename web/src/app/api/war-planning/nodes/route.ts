@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { getFromCache } from '@/lib/cache';
 
 // Cache node data for 1 hour as it's structurally static
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(nodes);
   } catch (error) {
-    console.error("Error fetching war nodes:", error);
+    logger.error({ error }, "Error fetching war nodes");
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

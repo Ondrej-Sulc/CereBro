@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { auth } from '@/auth';
 
 export async function GET(req: Request) {
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
             return NextResponse.redirect(`${process.env.BOT_BASE_URL}/admin/youtube?error=no_refresh_token`);
         }
     } catch (error) {
-        console.error('Error exchanging code for token', error);
+        logger.error({ error }, 'Error exchanging code for token');
         return NextResponse.redirect(`${process.env.BOT_BASE_URL}/admin/youtube?error=exchange_failed`);
     }
 }

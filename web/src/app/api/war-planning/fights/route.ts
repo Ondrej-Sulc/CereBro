@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { getCachedChampions } from '@/lib/data/champions';
 
 export async function GET(request: Request) {
@@ -116,7 +117,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(mappedFights);
   } catch (error) {
-    console.error("Error fetching war fights:", error);
+    logger.error({ error }, "Error fetching war fights");
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 }

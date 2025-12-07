@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { isUserBotAdmin } from "@/lib/auth-helpers";
 
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Video rejected successfully' });
   } catch (error) {
-    console.error('Error rejecting war video:', error);
+    logger.error({ error }, 'Error rejecting war video');
     return NextResponse.json({ error: 'Failed to reject video' }, { status: 500 });
   }
 }

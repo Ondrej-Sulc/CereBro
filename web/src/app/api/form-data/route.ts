@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { getCachedChampions } from '@/lib/data/champions';
 
 export async function GET(request: Request) {
@@ -54,7 +55,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Error fetching form data:', error);
+    logger.error({ error }, 'Error fetching form data');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

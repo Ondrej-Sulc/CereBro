@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@cerebro/core/services/loggerService';
 import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { parseFormData } from '@/lib/parseFormData';
 import { existsSync } from 'fs';
@@ -96,12 +97,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Videos uploaded successfully', videoIds: [newWarVideo.id] }, { status: 200 });
 
   } catch (error: any) {
-    console.error('Upload error:', error);
+    logger.error({ error }, 'Upload error');
     if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
     
     // Check for specific YouTube API quota error
-    if (error.errors && Array.isArray(error.errors) && error.errors.length > 0) {
-      const youtubeError = error.errors[0];
+    const errors = error.errors || error.response?.data?.error?.errors;
+    if (errors && Array.isArray(errors) && errors.length > 0) {
+      const youtubeError = errors[0];
       if (youtubeError.reason === 'uploadLimitExceeded' || youtubeError.reason === 'quotaExceeded') {
         return NextResponse.json({ error: 'YouTube Upload Quota Exceeded', details: youtubeError.message }, { status: 429 });
       }
