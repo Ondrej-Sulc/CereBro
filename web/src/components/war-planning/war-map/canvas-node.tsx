@@ -2,8 +2,8 @@ import React, { memo, useState, useEffect } from 'react';
 import { Group, Rect, Circle, Text, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 import { WarTactic, ChampionClass } from '@prisma/client';
-import { WarNodePosition } from '../nodes-data';
-import { FightWithNode } from '../types';
+import { WarNodePosition } from "@cerebro/core/data/war-planning/nodes-data";
+import { FightWithNode } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from '@/lib/championHelper';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons

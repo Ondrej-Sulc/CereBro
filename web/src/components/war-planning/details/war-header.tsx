@@ -5,7 +5,7 @@ import { Lock, Unlock, PanelRightClose, PanelRightOpen, Users, Ban, Plus, X, Sha
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
-import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "../types";
+import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChampionCombobox } from "@/components/ChampionCombobox";

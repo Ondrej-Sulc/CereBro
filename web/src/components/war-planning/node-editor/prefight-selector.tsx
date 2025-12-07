@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChampionCombobox } from "@/components/ChampionCombobox";
 import { PlayerCombobox } from "@/components/PlayerCombobox";
 import { Champion } from "@/types/champion";
-import { PlayerWithRoster } from "../types";
+import { PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";

@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningToolsPanel from "../planning-tools-panel";
 import NodeEditor from "../node-editor";
-import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "../types";
+import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { Champion } from "@/types/champion";
 import { War, WarFight, WarTactic } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";

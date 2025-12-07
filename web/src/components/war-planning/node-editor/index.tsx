@@ -14,7 +14,7 @@ import { PrefightSelector } from "./prefight-selector";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "../types";
+import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
 import { ExtraChampion } from "../hooks/use-war-planning";

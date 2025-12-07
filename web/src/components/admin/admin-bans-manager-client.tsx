@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { SeasonBanWithChampion } from "@/components/war-planning/types";
+import { SeasonBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { Champion } from "@/types/champion";
 import { addSeasonBan, deleteSeasonBan } from "@/app/admin/bans/actions";
 import { Button } from "@/components/ui/button";

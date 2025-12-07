@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { PlayerWithRoster, FightWithNode } from "../types";
+import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning/types";
 import { War } from "@prisma/client";
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { Champion } from "@/types/champion";

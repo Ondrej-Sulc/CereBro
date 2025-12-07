@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { PlayerWithRoster } from "./war-planning/types"; // Or import from @prisma/client if simpler, but we need the type with roster
+import { PlayerWithRoster } from "@cerebro/core/data/war-planning/types"; // Or import from @prisma/client if simpler, but we need the type with roster
 import { Virtuoso } from "react-virtuoso";
 
 interface PlayerComboboxProps {

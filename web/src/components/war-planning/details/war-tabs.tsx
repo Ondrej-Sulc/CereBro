@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import WarMap from "../war-map";
-import { FightWithNode } from "../types";
+import { FightWithNode } from "@cerebro/core/data/war-planning/types";
 import { War, WarTactic } from "@prisma/client";
 import { RightPanelState } from "../hooks/use-war-planning";
 

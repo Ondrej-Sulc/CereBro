@@ -81,12 +81,16 @@ The system now supports distributing detailed Alliance War plans directly from t
     4.  The Bot's `JobProcessor` picks up the job, fetches all relevant fight data for the specified war from the database.
     5.  It then constructs highly personalized Discord messages for each player, sent to their private threads.
 *   **Message Content:** Messages utilize Discord V2 components (`ContainerBuilder`) and include:
-    *   Player's assigned fights (Attacker vs Defender on Node X).
-    *   Champion emojis for easy identification.
-    *   A consolidated "Your Team" section, listing all champions involved in their attacks and prefights.
-    *   A "Pre-Fights to Place" section, clearly outlining any prefights they need to execute, with dynamic wording ("for my [Defender]" vs "for [Player]'s [Defender]").
-    *   Notes associated with specific fights.
-    *   An "Upload Video(s)" button to streamline the plan-to-upload workflow.
+    *   **Rich Header:** Displays detailed war context including Season, War Number, Tier, Opponent, and Map Type with appropriate emojis.
+    *   **Visual Map:** A dynamically generated high-quality PNG map (using `sharp`) attached to the message.
+        *   **Pill Style:** Main fights are rendered as wide "Pills" displaying both the Attacker and Defender portraits.
+        *   **Prefight Visualization:** Nodes where the player places a prefight are highlighted with a **Purple** border and display the Prefight Champion vs the Defender.
+        *   **Standard Targets:** Regular attack targets are highlighted with a **Blue** border.
+    *   **Assignments List:** Textual list of assigned fights (Attacker vs Defender on Node X).
+    *   **Your Team:** A consolidated section listing all champions involved in attacks and prefights.
+    *   **Pre-Fights to Place:** Clearly outlines prefight duties with dynamic wording.
+    *   **Notes:** Specific notes for fights.
+    *   **Upload Button:** An "Upload Video(s)" button to streamline the plan-to-upload workflow.
 *   **Dynamic Channel Configuration:** The `/alliance config-channels` command has been extended to allow server administrators to configure specific Discord channels for each battlegroup, ensuring plans are sent to the correct locations.
 *   **Consistent Emojis:** The system now uses a robust emoji resolution mechanism (`createEmojiResolver`) to ensure champion emojis display correctly across different Discord environments (e.g., development vs. production bots).
 

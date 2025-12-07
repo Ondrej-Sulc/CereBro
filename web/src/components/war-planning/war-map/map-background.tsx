@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Shape } from 'react-konva';
-import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from '../nodes-data';
+import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 import Konva from 'konva';
 
 interface Star {

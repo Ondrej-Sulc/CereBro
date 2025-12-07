@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Circle, Rect, Line, Group } from 'react-konva';
-import { LAYOUT, warNodesData } from '../nodes-data';
+import { LAYOUT, warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
 
 export const CanvasBackground = React.memo(function CanvasBackground() {
     // Generate static stars

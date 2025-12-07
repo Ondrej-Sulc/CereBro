@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { WarFight, War, WarStatus } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
-import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "./types";
+import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { useWarPlanning } from "./hooks/use-war-planning";
 import { WarHeader } from "./details/war-header";
 import { WarTabs } from "./details/war-tabs";

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { PlayerWithRoster, FightWithNode } from "../types";
+import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning/types";
 import { War, WarMapType, ChampionClass } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ExtraChampion } from "../hooks/use-war-planning";

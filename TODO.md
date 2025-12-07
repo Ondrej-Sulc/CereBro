@@ -23,5 +23,5 @@
     - [DONE] limit zoom out maybe? (currently it lets me zoom out a lot so the map is just a very tiny part of the screen)
     - implement generating images from the map for sending with war plans, map version for each player with their highlighted fights on the map
     - when sending plans, create player threads if they dont exist
-    - while planning, optimize data fetching from db with caching (stuff that is persistent, like champion data), I see too many db queries in the background.
+    - [DONE] while planning, optimize data fetching from db with caching (stuff that is persistent, like champion data), I see too many db queries in the background.
 - Create discord support server
