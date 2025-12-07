@@ -1,14 +1,17 @@
 import sharp from 'sharp';
 import { WarNodePosition, LAYOUT, LAYOUT_BIG } from '../data/war-planning/nodes-data';
-import { WarMapType } from '@prisma/client';
+import { WarMapType, ChampionClass } from '@prisma/client';
 import logger from './loggerService';
 
 export interface NodeAssignment {
     defenderName?: string;
     defenderImage?: string;
+    defenderClass?: ChampionClass;
     attackerImage?: string;
+    attackerClass?: ChampionClass;
     isTarget: boolean; // True if assigned to the player receiving the plan
     prefightImage?: string; // Image of the prefight champion placed by the player
+    prefightClass?: ChampionClass;
 }
 
 export class MapImageService {
@@ -19,9 +22,19 @@ export class MapImageService {
     private static readonly TEXT_COLOR = '#94a3b8'; // slate-400
     
     private static readonly HIGHLIGHT_GLOW = '#0ea5e9'; // sky-500
-    private static readonly HIGHLIGHT_BORDER = '#38bdf8'; // sky-400
-    private static readonly HIGHLIGHT_PREFIGHT = '#38bdf8'; // purple-400
+    private static readonly HIGHLIGHT_BORDER = '#ffffff'; // sky-400
+    private static readonly HIGHLIGHT_PREFIGHT = '#ffffff'; // purple-400
     private static readonly HIGHLIGHT_TEXT = '#ffffff'; // white
+
+    private static readonly CLASS_COLORS: Record<string, string> = {
+        [ChampionClass.SCIENCE]: '#4ade80', // green-400
+        [ChampionClass.SKILL]: '#ef4444',   // red-500
+        [ChampionClass.MUTANT]: '#facc15',  // yellow-400
+        [ChampionClass.COSMIC]: '#22d3ee',  // cyan-400
+        [ChampionClass.TECH]: '#3b82f6',    // blue-500
+        [ChampionClass.MYSTIC]: '#a855f7',  // purple-500
+        [ChampionClass.SUPERIOR]: '#d946ef',// fuchsia-500
+    };
 
     static async preloadImages(urls: string[]): Promise<Map<string, string>> {
         const cache = new Map<string, string>();
@@ -173,7 +186,7 @@ export class MapImageService {
                     fill: none; 
                     stroke-dasharray: 12, 12; 
                     opacity: 0.8; 
-                    filter: url(#blue-glow);
+                    filter: url(#path-glow);
                 }
                 .node-fill { fill: rgba(15, 23, 42, 0.95); }
                 .badge-text { 
@@ -195,8 +208,9 @@ export class MapImageService {
                     <feGaussianBlur stdDeviation="4" result="blur" />
                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
-                <filter id="blue-glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#0891b2" flood-opacity="0.8"/>
+                <filter id="path-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
             </defs>
         `;
@@ -205,6 +219,8 @@ export class MapImageService {
         const nodeMap = new Map(nodes.map(n => [n.id, n]));
         let pathsSvg = '';
         const drawnPaths = new Set<string>();
+
+        // Removed Logging
 
         nodes.forEach(node => {
             if (!node.paths) return;
@@ -253,55 +269,65 @@ export class MapImageService {
             const badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
             const badgeStroke = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
 
+            // Class Colors
+            const attColor = assignment?.attackerClass ? MapImageService.CLASS_COLORS[assignment.attackerClass] : '#94a3b8';
+            const defColor = assignment?.defenderClass ? MapImageService.CLASS_COLORS[assignment.defenderClass] : '#94a3b8';
+            const pfColor = assignment?.prefightClass ? MapImageService.CLASS_COLORS[assignment.prefightClass] : '#94a3b8';
+
             const r = 32; 
             const pillH = r * 2;
             let innerContent = '';
-            let isPill = false;
-            let pillW = 0;
-
+            
             // --- A. Main Node (Pill or Circle) ---
             if (assignment?.attackerImage && assignment?.defenderImage && 
                 imageCache.has(assignment.attackerImage) && imageCache.has(assignment.defenderImage)) {
                 
                 // PILL
-                isPill = true;
                 const attImg = imageCache.get(assignment.attackerImage);
                 const defImg = imageCache.get(assignment.defenderImage);
-                pillW = r * 4;
+                const pillW = r * 4;
                 
                 innerContent += `
                     <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${r}" class="node-fill ${borderColorClass}" />
+                    
+                    <!-- Attacker -->
+                    <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="${attColor}" opacity="0.4" />
                     <g clip-path="url(#clip-${node.id}-L)">
                         <image href="${attImg}" x="${-pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
                     <defs><clipPath id="clip-${node.id}-L"><circle cx="${-pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
-                    <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+                    <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="none" stroke="${attColor}" stroke-width="1.5" />
 
+                    <!-- Defender -->
+                    <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
                     <g clip-path="url(#clip-${node.id}-R)">
                         <image href="${defImg}" x="${pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
                     <defs><clipPath id="clip-${node.id}-R"><circle cx="${pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
-                    <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+                    <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
                 `;
 
             } else {
-                // CIRCLE
+                // CIRCLE (Defender Only)
                 if (assignment?.defenderImage && imageCache.has(assignment.defenderImage)) {
                     const base64 = imageCache.get(assignment.defenderImage);
                     innerContent += `
                         <circle r="${r}" class="node-fill ${borderColorClass}" />
+                        
+                        <circle cx="0" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
                         <g clip-path="url(#clip-${node.id})">
                             <image href="${base64}" x="${-(r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                         </g>
                         <defs><clipPath id="clip-${node.id}"><circle cx="0" cy="0" r="${r-4}" /></clipPath></defs>
-                        <circle cx="0" cy="0" r="${r-4}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+                        <circle cx="0" cy="0" r="${r-4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
                     `;
                 } else {
+                    // Empty node
                     innerContent += `<circle r="${r}" class="node-fill ${borderColorClass}" />`;
                 }
             }
 
-            // --- B. Node Number Badge ---
+            // --- B. Node Number Badge (Top) ---
             const badgeW = 28;
             const badgeH = 18;
             const badgeY = -r - 12; 
@@ -316,18 +342,19 @@ export class MapImageService {
             // --- C. Prefight Badge (Bottom) ---
             if (prefightImg && imageCache.has(prefightImg)) {
                 const pfBase64 = imageCache.get(prefightImg);
-                const pfR = 16; // Small badge
-                // Position: Bottom center. 
-                // If Pill: y = +r + padding.
+                const pfR = 18; 
                 const pfY = r;
                 
                 innerContent += `
                     <g transform="translate(0, ${pfY})">
                         <circle r="${pfR}" class="node-fill border-prefight" />
+                        
+                        <circle cx="0" cy="0" r="${pfR-2}" fill="${pfColor}" opacity="0.4" />
                         <g clip-path="url(#clip-${node.id}-PF)">
                             <image href="${pfBase64}" x="${-pfR+2}" y="${-pfR+2}" width="${(pfR-2)*2}" height="${(pfR-2)*2}" preserveAspectRatio="xMidYMid slice" />
                         </g>
                         <defs><clipPath id="clip-${node.id}-PF"><circle cx="0" cy="0" r="${pfR-2}" /></clipPath></defs>
+                        <circle cx="0" cy="0" r="${pfR-2}" fill="none" stroke="${pfColor}" stroke-width="1.5" />
                     </g>
                 `;
             }

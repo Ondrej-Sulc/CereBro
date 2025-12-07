@@ -84,7 +84,9 @@ export async function distributeWarPlan(
         bgNodeMaps.get(fight.battlegroup)!.set(fight.node.nodeNumber, {
             defenderName: fight.defender?.name,
             defenderImage,
+            defenderClass: fight.defender?.class,
             attackerImage,
+            attackerClass: fight.attacker?.class,
             isTarget: false // Default
         });
     }
@@ -123,6 +125,7 @@ export async function distributeWarPlan(
                     if (!playerPrefightTasks.has(placerId)) playerPrefightTasks.set(placerId, []);
                     playerPrefightTasks.get(placerId)!.push({
                         championName: pf.champion.name,
+                        championClass: pf.champion.class,
                         championImage,
                         targetNode: fight.node.nodeNumber,
                         targetDefender: fight.defender?.name || 'Unknown',
@@ -251,7 +254,8 @@ export async function distributeWarPlan(
             if (existing) {
                 assignments.set(pf.targetNode, {
                     ...existing,
-                    prefightImage: pf.championImage
+                    prefightImage: pf.championImage,
+                    prefightClass: pf.championClass
                 });
             }
         });
