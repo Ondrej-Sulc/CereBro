@@ -38,6 +38,17 @@ The bot features a sophisticated system for tracking Alliance War performance by
     6.  The web UI uses the token to fetch the fight data and pre-fills the video upload form, creating a seamless user experience.
     7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s). **The war planning interface now supports real-time updates through polling to facilitate collaborative planning.**
 
+### Caching Strategy (Web Application)
+
+To optimize database queries and reduce load, especially for frequently accessed, relatively static data, the web application employs a server-side, in-memory caching mechanism:
+
+*   **`web/src/lib/cache.ts`**: Provides a generic `getFromCache<T>(key: string, ttl: number, fetchData: () => Promise<T>)` utility for simple time-to-live (TTL) based caching.
+*   **`web/src/lib/data/champions.ts`**: Implements `getCachedChampions()`, a specialized function that leverages `getFromCache` to provide a cached, comprehensive list of all champion data (including images, abilities, tags, etc.). This function is cached for 1 hour.
+*   **Usage Pattern:**
+    *   For global, static data like the complete champion list, `getCachedChampions()` is used across various server components and API routes.
+    *   For semi-static data tied to user sessions or specific contexts (e.g., alliance rosters, season bans, war bans), `getFromCache` is directly used with appropriate keys and shorter TTLs.
+    *   **Polling Endpoint Optimization:** For frequently polled endpoints (e.g., `/api/war-planning/fights`), instead of performing expensive database `JOIN` operations, lightweight IDs are fetched, and full entity details are "hydrated" in memory from the `getCachedChampions()` cache. This significantly reduces database load and response times.
+
 ### Cross-Service Communication (Async Job Queue)
 
 To reliably handle communication between the Web App and the Discord Bot (e.g., for notifications or future complex tasks like plan distribution) without direct HTTP coupling, the system implements a **Database-backed Job Queue**.

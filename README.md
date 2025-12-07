@@ -18,7 +18,7 @@ A modern interface built for complex visualization and management tasks.
 *   **Authentication:** NextAuth.js (Discord OAuth2) with role-based access control linked to in-game alliance hierarchy.
 *   **Key Engineering Features:**
     *   **Interactive War Planner:** A **Canvas-based map (react-konva)** capable of rendering 60fps animations on mobile devices.
-    *   **Performance:** Implements **virtualized lists (react-virtuoso)** to handle heavy roster rendering without DOM thrashing.
+    *   **Performance:** Implements **virtualized lists (react-virtuoso)** to handle heavy roster rendering without DOM thrashing. **Utilizes server-side in-memory caching for static data (like champions) to significantly reduce database load and improve response times.**
     *   **Real-time Collab:** Optimistic UI updates with polling synchronization to allow multiple officers to plan wars simultaneously.
     *   **Video Archive:** A searchable media library for Alliance War videos, linked directly to specific fights and nodes.
 
