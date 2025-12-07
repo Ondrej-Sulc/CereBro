@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+'use client';
+
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Shape } from 'react-konva';
 import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from '../nodes-data';
 import Konva from 'konva';
 
 interface Star {
-  id: number;
-  x: number;
-  y: number;
-  r: number;
-  opacity: number;
-  twinkleSpeed: number;
-  twinkleDir: number;
+    id: number;
+    x: number;
+    y: number;
+    r: number;
+    opacity: number;
 }
 
 interface WarMapBackgroundProps {
@@ -18,162 +18,145 @@ interface WarMapBackgroundProps {
 }
 
 export const WarMapBackground = React.memo(function WarMapBackground({ isBigThing }: WarMapBackgroundProps) {
-    const [stars, setStars] = useState<Star[]>([]);
-    // Cache the static background (nebulas + paths)
-    const staticBgCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const shapeRef = useRef<Konva.Shape>(null);
 
     const currentLayout = isBigThing ? LAYOUT_BIG : LAYOUT;
     const currentNodesData = isBigThing ? warNodesDataBig : warNodesData;
 
-    // Generate stars once
-    useEffect(() => {
-        const starCount = 400;
-        const generatedStars = Array.from({ length: starCount }).map((_, i) => ({
-          id: i,
-          x: Math.random() * currentLayout.WIDTH,
-          y: Math.random() * currentLayout.HEIGHT,
-          r: Math.random() * 1.5 + 0.5,
-          opacity: Math.random() * 0.7 + 0.3,
-          twinkleSpeed: Math.random() * 0.02 + 0.005,
-          twinkleDir: Math.random() > 0.5 ? 1 : -1
-        }));
-        setStars(generatedStars);
+    // Calculate the bounding box of all nodes with padding
+    const contentBounds = useMemo(() => {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        currentNodesData.forEach(node => {
+            minX = Math.min(minX, node.x);
+            maxX = Math.max(maxX, node.x);
+            minY = Math.min(minY, node.y);
+            maxY = Math.max(maxY, node.y);
+        });
+        // Add padding around nodes
+        const padding = 250;
+        return {
+            minX: minX - padding,
+            maxX: maxX + padding,
+            minY: minY - padding,
+            maxY: maxY + padding,
+            centerX: (minX + maxX) / 2,
+            centerY: (minY + maxY) / 2,
+            width: maxX - minX + padding * 2,
+            height: maxY - minY + padding * 2,
+        };
+    }, [currentNodesData]);
 
-        // Pre-render static background
+    // Pre-render static background for performance
+    const staticCanvas = useMemo(() => {
         const canvas = document.createElement('canvas');
         canvas.width = currentLayout.WIDTH;
         canvas.height = currentLayout.HEIGHT;
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-             // 1. Draw Nebulas (Scaled for 2800x3200)
-             // Use simple scaling factor if BigThing has different aspect ratio
-             const scaleX = currentLayout.WIDTH / LAYOUT.WIDTH; 
-             const scaleY = currentLayout.HEIGHT / LAYOUT.HEIGHT;
 
-             const nebulas = [
-                { cx: 400 * scaleX, cy: 1600 * scaleY, r: 1200 * scaleX, color: "rgba(76, 29, 149, 0.15)" },  // Left-Mid Violet
-                { cx: 1600 * scaleX, cy: 800 * scaleY, r: 1400 * scaleX, color: "rgba(30, 58, 138, 0.15)" },  // Top-Right Blue
-                { cx: 2000 * scaleX, cy: 2400 * scaleY, r: 1000 * scaleX, color: "rgba(190, 24, 93, 0.15)" }, // Bottom-Right Pink
-                { cx: 1200 * scaleX, cy: 200 * scaleY, r: 1200 * scaleX, color: "rgba(15, 118, 110, 0.15)" }, // Top-Mid Teal
-            ];
-            nebulas.forEach(nebula => {
-                const gradient = ctx.createRadialGradient(nebula.cx, nebula.cy, 0, nebula.cx, nebula.cy, nebula.r);
-                gradient.addColorStop(0, nebula.color);
-                gradient.addColorStop(1, "rgba(0,0,0,0)");
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, currentLayout.WIDTH, currentLayout.HEIGHT);
-            });
+        if (!ctx) return canvas;
 
-            // 2. Draw Paths
-            ctx.save(); // Save state to isolate shadow/glow effects
-            ctx.strokeStyle = "#22d3ee"; // Cyan-400
-            ctx.lineWidth = 2;
-            ctx.setLineDash([10, 10]);
-            ctx.globalAlpha = 0.6;
-            
-            // Add Energy Glow
-            ctx.shadowColor = "#0891b2"; // Cyan-600
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
+        const W = currentLayout.WIDTH;
+        const H = currentLayout.HEIGHT;
+        const { centerX, centerY, width: boundW, height: boundH } = contentBounds;
 
-            ctx.beginPath();
-            currentNodesData.forEach((node) => {
-                node.paths.forEach((pathToId) => {
-                    const targetNode = currentNodesData.find((n) => n.id === pathToId);
-                    if (targetNode) {
-                        ctx.moveTo(node.x, node.y);
-                        ctx.lineTo(targetNode.x, targetNode.y);
-                    }
-                });
-            });
-            ctx.stroke();
-            ctx.restore(); // Restore state (removes shadow, resets alpha/color)
-            
-            // 3. Vignette Mask (Alpha Fade)
-            // Use destination-in to fade the canvas content to transparent at the edges.
-            // This reveals the solid bg-slate-950 of the parent div perfectly.
-            ctx.globalCompositeOperation = 'destination-in';
-            
-            const cx = currentLayout.WIDTH / 2;
-            const cy = currentLayout.HEIGHT / 2;
-            // Radius to cover most of the map but fade corners. 
-            // Width 2800, Height 3200. Center is (1400, 1600).
-            // We want to keep the center 60% fully opaque.
-            const fadeStartRadius = Math.min(currentLayout.WIDTH, currentLayout.HEIGHT) * 0.4; // ~1100px
-            const fadeEndRadius = Math.max(currentLayout.WIDTH, currentLayout.HEIGHT) * 0.8;   // ~2500px (reaches corners)
+        // === 1. Draw Nebulas ===
+        // Scale nebulas relative to content center
+        const nebulas = [
+            { cx: centerX - boundW * 0.3, cy: centerY + boundH * 0.2, r: boundW * 0.5, color: "rgba(76, 29, 149, 0.15)" },   // Violet
+            { cx: centerX + boundW * 0.2, cy: centerY - boundH * 0.3, r: boundW * 0.5, color: "rgba(30, 58, 138, 0.15)" },   // Blue
+            { cx: centerX + boundW * 0.3, cy: centerY + boundH * 0.3, r: boundW * 0.4, color: "rgba(190, 24, 93, 0.15)" },   // Pink
+            { cx: centerX, cy: centerY - boundH * 0.4, r: boundW * 0.4, color: "rgba(15, 118, 110, 0.15)" },                  // Teal
+        ];
 
-            const maskGradient = ctx.createRadialGradient(cx, cy, fadeStartRadius, cx, cy, fadeEndRadius);
-            maskGradient.addColorStop(0, "rgba(0, 0, 0, 1)"); // Fully Opaque (Content kept)
-            maskGradient.addColorStop(1, "rgba(0, 0, 0, 0)"); // Fully Transparent (Content removed)
-            
-            ctx.fillStyle = maskGradient;
-            ctx.fillRect(0, 0, currentLayout.WIDTH, currentLayout.HEIGHT);
+        nebulas.forEach(nebula => {
+            const gradient = ctx.createRadialGradient(nebula.cx, nebula.cy, 0, nebula.cx, nebula.cy, nebula.r);
+            gradient.addColorStop(0, nebula.color);
+            gradient.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, W, H);
+        });
 
-            // Reset composite operation for future draws (though we don't draw more on static)
-            ctx.globalCompositeOperation = 'source-over';
-        }
-        staticBgCanvasRef.current = canvas;
-    }, [isBigThing, currentLayout, currentNodesData]);
+        // === 2. Draw Paths ===
+        ctx.save();
+        ctx.strokeStyle = "#22d3ee";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.globalAlpha = 0.6;
+        ctx.shadowColor = "#0891b2";
+        ctx.shadowBlur = 15;
 
-    const sceneFunc = useMemo(() => {
-        return (context: Konva.Context, shape: Konva.Shape) => {
-            const ctx = context._context;
-            ctx.clearRect(0, 0, currentLayout.WIDTH, currentLayout.HEIGHT);
-
-            // 1. Draw Cached Static Background
-            if (staticBgCanvasRef.current) {
-                ctx.drawImage(staticBgCanvasRef.current, 0, 0);
-            }
-
-            // 2. Draw Stars (Dynamic)
-            ctx.fillStyle = "white";
-            ctx.globalAlpha = 1.0; // Reset alpha
-            
-            stars.forEach(star => {
-                // Update state for animation (mutation is okay inside render loop for visual effects)
-                /*
-                star.opacity += star.twinkleSpeed * star.twinkleDir;
-                if (star.opacity > 1) {
-                    star.opacity = 1;
-                    star.twinkleDir = -1;
-                } else if (star.opacity < 0.2) {
-                    star.opacity = 0.2;
-                    star.twinkleDir = 1;
+        ctx.beginPath();
+        currentNodesData.forEach((node) => {
+            node.paths.forEach((pathToId) => {
+                const targetNode = currentNodesData.find((n) => n.id === pathToId);
+                if (targetNode) {
+                    ctx.moveTo(node.x, node.y);
+                    ctx.lineTo(targetNode.x, targetNode.y);
                 }
-
-                ctx.globalAlpha = star.opacity;
-                */
-                ctx.globalAlpha = star.opacity; // Use initial random opacity
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-                ctx.fill();
             });
-            ctx.globalAlpha = 1.0;
+        });
+        ctx.stroke();
+        ctx.restore();
+
+        // === 3. Draw Stars (only within content bounds + fade zone) ===
+        const starPadding = 400; // Stars extend a bit past content
+        const starCount = 300;
+        ctx.fillStyle = "white";
+
+        for (let i = 0; i < starCount; i++) {
+            const x = contentBounds.minX - starPadding + Math.random() * (contentBounds.width + starPadding * 2);
+            const y = contentBounds.minY - starPadding + Math.random() * (contentBounds.height + starPadding * 2);
+            const r = Math.random() * 1.5 + 0.5;
+            const opacity = Math.random() * 0.7 + 0.3;
+
+            ctx.globalAlpha = opacity;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+
+        // === 4. Vignette - Fade content to transparent at edges ===
+        ctx.globalCompositeOperation = 'destination-in';
+
+        // Use an elliptical vignette centered on content
+        // Draw it as a radial gradient scaled to fit content bounds
+        const fadeRadius = Math.max(boundW, boundH) * 0.7;
+        const fadeEndRadius = Math.max(boundW, boundH) * 0.9;
+
+        const vignetteGrad = ctx.createRadialGradient(
+            centerX, centerY, fadeRadius * 0.5,
+            centerX, centerY, fadeEndRadius
+        );
+        vignetteGrad.addColorStop(0, "rgba(0,0,0,1)");
+        vignetteGrad.addColorStop(0.7, "rgba(0,0,0,0.8)");
+        vignetteGrad.addColorStop(1, "rgba(0,0,0,0)");
+
+        ctx.fillStyle = vignetteGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.globalCompositeOperation = 'source-over';
+
+        return canvas;
+    }, [currentLayout, currentNodesData, contentBounds]);
+
+    // Scene function just draws the pre-rendered canvas
+    const sceneFunc = useMemo(() => {
+        return (context: Konva.Context, _shape: Konva.Shape) => {
+            const ctx = context._context;
+            ctx.drawImage(staticCanvas, 0, 0);
         };
-    }, [stars, isBigThing, currentLayout]);
+    }, [staticCanvas]);
 
-    const shapeRef = useRef<Konva.Shape>(null);
-
+    // Force redraw when canvas is ready
     useEffect(() => {
-        if (!shapeRef.current) return;
-        
-        // const anim = new Konva.Animation(() => {
-        //      // Trigger redraw
-        // }, shapeRef.current.getLayer());
-
-        // anim.start();
-        // return () => {
-        //     anim.stop();
-        // };
-        
-        // Just draw once?
-        // The sceneFunc is called automatically by Konva on first render.
-        // If we want to re-draw when stars change (initial load), it happens via React prop update -> Konva update.
-    }, []);
+        if (shapeRef.current) {
+            shapeRef.current.getLayer()?.batchDraw();
+        }
+    }, [staticCanvas]);
 
     return (
-        <Shape 
+        <Shape
             sceneFunc={sceneFunc}
             width={currentLayout.WIDTH}
             height={currentLayout.HEIGHT}
