@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType } from "@prisma/client";
+import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
@@ -25,6 +25,10 @@ interface OptimisticPrefight {
   class: ChampionClass;
   fightPrefightId: string;
   player: { id: string; ingameName: string; avatar: string | null } | null;
+}
+
+interface WarNodeWithAllocations extends WarNode {
+    allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
 }
 
 interface UseWarPlanningProps {
@@ -63,6 +67,7 @@ export function useWarPlanning({
 
   // Data State
   const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
+  const [nodesMap, setNodesMap] = useState<Map<number, WarNodeWithAllocations>>(new Map());
   const currentFightsRef = useRef(currentFights);
   const pendingSaveNodeIds = useRef<Set<number>>(new Set());
 
@@ -106,9 +111,29 @@ export function useWarPlanning({
     fetchTactic();
   }, [war.season, war.warTier]);
 
+  // Fetch Static Node Data ONCE
+  useEffect(() => {
+    async function fetchNodes() {
+        try {
+            const res = await fetch(`/api/war-planning/nodes?warId=${warId}`);
+            if (res.ok) {
+                const nodes: WarNodeWithAllocations[] = await res.json();
+                const map = new Map(nodes.map(n => [n.nodeNumber, n]));
+                setNodesMap(map);
+            }
+        } catch (e) {
+            console.error("Failed to fetch node data", e);
+        }
+    }
+    fetchNodes();
+  }, [warId]);
+
   // Fetch Fights & Extras
   useEffect(() => {
     async function fetchData() {
+      // Don't fetch fights until we have the nodes map to hydrate them
+      if (nodesMap.size === 0) return;
+
       setLoadingFights(true);
       setFightsError(null);
       try {
@@ -120,8 +145,18 @@ export function useWarPlanning({
         if (!fightsRes.ok) {
           throw new Error(`HTTP error! status: ${fightsRes.status}`);
         }
-        const fetchedFights: FightWithNode[] = await fightsRes.json();
-        setCurrentFights(fetchedFights);
+        const rawFights: any[] = await fightsRes.json();
+        
+        // Merge static node data into fights
+        const hydratedFights: FightWithNode[] = rawFights.map(f => {
+            const nodeData = nodesMap.get(f.node.nodeNumber);
+            return {
+                ...f,
+                node: nodeData || { ...f.node, allocations: [] } // Fallback if missing (shouldn't happen)
+            };
+        });
+
+        setCurrentFights(hydratedFights);
         setExtraChampions(extrasData);
       } catch (err: any) {
         console.error("Failed to fetch war data:", err);
@@ -131,10 +166,12 @@ export function useWarPlanning({
       }
     }
     fetchData();
-  }, [warId, currentBattlegroup]);
+  }, [warId, currentBattlegroup, nodesMap]); // Added nodesMap dependency
 
   // Polling Logic
   useEffect(() => {
+    if (nodesMap.size === 0) return;
+
     const pollInterval = setInterval(async () => {
         try {
             const [fightsRes, extrasData] = await Promise.all([
@@ -143,12 +180,20 @@ export function useWarPlanning({
             ]);
 
             if (fightsRes.ok) {
-                const newFights: FightWithNode[] = await fightsRes.json();
+                const rawFights: any[] = await fightsRes.json();
+                
+                 // Merge static node data into fights
+                const newFights: FightWithNode[] = rawFights.map(f => {
+                    const nodeData = nodesMap.get(f.node.nodeNumber);
+                    return {
+                        ...f,
+                        node: nodeData || { ...f.node, allocations: [] }
+                    };
+                });
                 
                 // Merge Logic: Use currentFightsRef to check for changes and respect pending saves
                 setCurrentFights(prev => {
                     const current = prev;
-                    let hasChanges = false;
                     
                     // Map new fights, preserving optimistic updates for pending nodes
                     const mergedFights = newFights.map(newFight => {
@@ -182,7 +227,7 @@ export function useWarPlanning({
     }, 5000);
 
     return () => clearInterval(pollInterval);
-  }, [warId, currentBattlegroup]);
+  }, [warId, currentBattlegroup, nodesMap]); // Added nodesMap dependency
 
   const validatePlayerAssignment = useCallback((playerId: string, newChampionId: number, nodeId: number) => {
     // 1. Check Bans

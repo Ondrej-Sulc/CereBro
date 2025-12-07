@@ -44,6 +44,10 @@ To optimize database queries and reduce load, especially for frequently accessed
 
 *   **`web/src/lib/cache.ts`**: Provides a generic `getFromCache<T>(key: string, ttl: number, fetchData: () => Promise<T>)` utility for simple time-to-live (TTL) based caching.
 *   **`web/src/lib/data/champions.ts`**: Implements `getCachedChampions()`, a specialized function that leverages `getFromCache` to provide a cached, comprehensive list of all champion data (including images, abilities, tags, etc.). This function is cached for 1 hour.
+*   **War Planning Optimization (Static vs Dynamic):** The War Planner (`/web/src/app/planning`) uses a hybrid approach to minimize database load during frequent polling:
+    *   **Static Data (`/api/war-planning/nodes`):** Heavy, non-changing structural data (Nodes, Allocations, Modifiers) is fetched *once* on component mount and cached server-side for 1 hour.
+    *   **Dynamic Data (`/api/war-planning/fights`):** The polling endpoint returns *only* the lightweight fight data (ids, assignments) without joining the heavy node relations.
+    *   **Client-Side Hydration:** The React hook (`useWarPlanning`) merges the static node map with the dynamic fight updates in real-time, creating a seamless experience with minimal bandwidth and DB usage.
 *   **Usage Pattern:**
     *   For global, static data like the complete champion list, `getCachedChampions()` is used across various server components and API routes.
     *   For semi-static data tied to user sessions or specific contexts (e.g., alliance rosters, season bans, war bans), `getFromCache` is directly used with appropriate keys and shorter TTLs.

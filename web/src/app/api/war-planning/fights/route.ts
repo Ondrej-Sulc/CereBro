@@ -62,14 +62,10 @@ export async function GET(request: Request) {
       },
       include: {
         node: {
-            include: {
-                allocations: {
-                    include: {
-                        nodeModifier: true
-                    }
-                }
+            select: {
+                nodeNumber: true
             }
-        }, // Include WarNode details with modifiers
+        }, // Only fetch nodeNumber, client handles static data
         player: { select: { id: true, ingameName: true, avatar: true } }, // Include player details
         prefightChampions: { 
             select: { 
