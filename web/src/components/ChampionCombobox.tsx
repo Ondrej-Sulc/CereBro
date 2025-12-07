@@ -108,16 +108,16 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={cn("w-full justify-between pr-2 pl-2 rounded-full", className)}
+                    className={cn("w-full justify-between pr-2 pl-0 rounded-full", className)}
                   >
                     <div className="flex items-center gap-2 truncate ">
                        {selectedChampion ? (
                           <>
                               <div 
-                                  className={cn("relative h-9 w-9 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2", getChampionClassColors(selectedChampion.class).border)}
+                                  className={cn("relative h-11 w-11 rounded-full overflow-hidden flex-shrink-0 bg-slate-800", getChampionClassColors(selectedChampion.class).border)}
                               >
                                   <Image 
-                                  src={getChampionImageUrl(selectedChampion.images as any, '64')}
+                                  src={getChampionImageUrl(selectedChampion.images as any, '128')}
                                   alt={selectedChampion.name}
                                   fill
                                   className="object-cover"
@@ -130,7 +130,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                               </span>
                           </>
                        ) : (
-                          <span className="text-slate-500">{placeholder}</span>
+                          <span className="text-slate-500 text-sm pl-3">{placeholder}</span>
                        )}
                     </div>
           <div className="flex items-center ml-2">

@@ -124,7 +124,7 @@ export function FightBlock({
               champions={initialChampions}
               value={fight.attackerId}
               onSelect={(val) => updateFight({ attackerId: val })}
-              placeholder="Select..."
+              placeholder="Select Attacker..."
               className={cn(
                 "w-full bg-slate-950/50 border-white/5 hover:border-white/10 transition-colors h-10 sm:h-12 text-sm sm:text-base",
                 selectedAttacker && getChampionClassColors(selectedAttacker.class).text,
@@ -151,7 +151,7 @@ export function FightBlock({
               champions={initialChampions}
               value={fight.defenderId}
               onSelect={(val) => updateFight({ defenderId: val })}
-              placeholder="Select..."
+              placeholder="Select Defender..."
               className={cn(
                 "w-full bg-slate-950/50 border-white/5 hover:border-white/10 transition-colors h-10 sm:h-12 text-sm sm:text-base text-right",
                 selectedDefender && getChampionClassColors(selectedDefender.class).text,
