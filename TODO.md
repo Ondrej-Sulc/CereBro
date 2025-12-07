@@ -1,26 +1,26 @@
 # TODO
 
-- [DONE] Way to manage discord emojis for glossary stuff, upload and add to a specific effect in glossary (via /admin glossary emoji-set/emoji-remove)
-    - Note: Adding new glossary effects is handled by /admin glossary update-ability (upsert functionality).
-- [DONE] add interactive buttons to champions commands to be able to switch between abilities/immunities/attacks and others
-- [DONE] improve /champion duel command, add two interactive buttons for suggesting a new duel target as well as reporting a duel as outdated. both actions should be logged somewhere possibly notify me.
-- [DONE] on glossary detail page add button to trigger search for that category
-- [DONE] on glossary effect and category pages if user has roster also add buttons to search through players roster
-- [DONE] Fix glossary search bugs and improve UI (search emoji, separators, empty results handling).
 - possibly add buttons in the /help command to go try some of the commands
-- [Almost done] war videos database (attacker, defender, node number, season, war tier?, player?, death?, prefight?, anything else?)
-    - commands to look up videos
-    - process existing videos from google drive / discord links other sources possibly and add to database (upload to YT from drive)
-    - command for video upload, general one, second as part of /aw plan feature in each plan we already know about player/matchups and everything (should also include war, season), redirect to a page with UI (part of bot page) to upload videos for each matchup. then gets automatically uploaded to YT through their API and added to war db
 - Alliance management, players etc
-    - [DONE] remove old players
-    - [DONE] list alliance players
     - search for a champion across alliance roster
-- propper dev enviroment with dev DB
-- possibly using admin / debug commands only in dev version of bot
+- propper dev enviroment with dev DB, will have to duplicate db I guess
+    - separate some tables into a different database. seperate tables that are environment dependent and static data (champions data thats same for both ?)
+    - using admin / debug commands only in dev version of bot
 - schedule view handle pagination for 40+ components
-- reduce /profile commands, add interactive stuff
+- reduce /profile commands, add interactive stuff (halfway done)
 - improve ux with the roster update command (maybe a clickable link to prefill the command to add more champions)
-  - alternative way to upload roster through web UI. 
+  - alternative way to upload roster through web UI. (implemented but UX needs to be improved, copy paste images, not just drag and drop. Visual feedback of what was detected).
+  - alternate screenshot roster processing (different view in game, from the battlegrouds roster, which also includes sig levels. generaly includes more details but doesnt have champion names, we would rely only on image processing to diferentiate champions)
 - In the AQ tracker, disable buttons after they are clicked.
-- [DONE] possibly another source for duels - cockpit.org
+    - investigate AQ tracker sending, it not working properly.
+- Website upgrades, add a propper showcase for the main features.
+- Alliance War statistics in web UI.
+    - per season.
+- Your Roster view on website?
+- Prestige history graph
+- AW planning
+    - rework the background on the map
+    - implement generating images from the map for sending with war plans, custom image for each player with their highlighted fights on the map
+    - in when sending plans, create player threads if they dont exist
+    - Optimize data fetching from db with caching (stuff that is persistent, like champion data)
+- Create discord support server

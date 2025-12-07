@@ -530,7 +530,7 @@ export default async function Home() {
               </div>
 
               {/* Action Buttons */}
-              <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              <div className="grid sm:grid-cols-1 gap-4 max-w-xl mx-auto">
                 {/* Ko-fi */}
                 <Link
                   href="https://ko-fi.com/cerebrobot"
@@ -552,7 +552,7 @@ export default async function Home() {
                   </div>
                 </Link>
 
-                {/* PayPal */}
+                {/* PayPal
                 <Link
                   href="#"
                   target="_blank"
@@ -571,7 +571,7 @@ export default async function Home() {
                       </div>
                     </div>
                   </div>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>
