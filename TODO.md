@@ -19,9 +19,9 @@
 - Your Roster view on website?
 - Prestige history graph
 - AW planning
-    - rework the background on the map, improve it visually, there should be no visible edge of the map background
-    - limit zoom out maybe? (currently it lets me zoom out a lot so the map is just a very tiny part of the screen)
-    - implement generating images from the map for sending with war plans, custom image for each player with their highlighted fights on the map
+    - [DONE] rework the background on the map, improve it visually, there should be no visible edge of the map background
+    - [DONE] limit zoom out maybe? (currently it lets me zoom out a lot so the map is just a very tiny part of the screen)
+    - implement generating images from the map for sending with war plans, map version for each player with their highlighted fights on the map
     - when sending plans, create player threads if they dont exist
-    - while planning, optimize data fetching from db with caching (stuff that is persistent, like champion data), I see too many queries in the background.
+    - while planning, optimize data fetching from db with caching (stuff that is persistent, like champion data), I see too many db queries in the background.
 - Create discord support server
