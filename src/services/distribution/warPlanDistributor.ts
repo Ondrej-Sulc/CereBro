@@ -239,22 +239,19 @@ export async function distributeWarPlan(
             bgMap.forEach((val, key) => assignments.set(key, { ...val }));
         }
 
-        // Mark player targets (Attacks)
+        // Mark player targets
         fights.forEach((f: any) => {
             const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
-            assignments.set(f.node.nodeNumber, { ...existing, isTarget: true, type: 'attack' });
+            assignments.set(f.node.nodeNumber, { ...existing, isTarget: true });
         });
 
-        // Mark player Prefights (only if not already an attack)
+        // Mark player Prefights
         myPrefights.forEach((pf: any) => {
             const existing = assignments.get(pf.targetNode);
-            if (existing && !existing.isTarget) {
-                // Modify to show Prefight placement
+            if (existing) {
                 assignments.set(pf.targetNode, {
                     ...existing,
-                    isTarget: true,
-                    type: 'prefight',
-                    attackerImage: pf.championImage // Show prefight champ as "Attacker"
+                    prefightImage: pf.championImage
                 });
             }
         });

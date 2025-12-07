@@ -8,7 +8,7 @@ export interface NodeAssignment {
     defenderImage?: string;
     attackerImage?: string;
     isTarget: boolean; // True if assigned to the player receiving the plan
-    type?: 'attack' | 'prefight';
+    prefightImage?: string; // Image of the prefight champion placed by the player
 }
 
 export class MapImageService {
@@ -20,7 +20,7 @@ export class MapImageService {
     
     private static readonly HIGHLIGHT_GLOW = '#0ea5e9'; // sky-500
     private static readonly HIGHLIGHT_BORDER = '#38bdf8'; // sky-400
-    private static readonly HIGHLIGHT_PREFIGHT = '#c084fc'; // purple-400
+    private static readonly HIGHLIGHT_PREFIGHT = '#38bdf8'; // purple-400
     private static readonly HIGHLIGHT_TEXT = '#ffffff'; // white
 
     static async preloadImages(urls: string[]): Promise<Map<string, string>> {
@@ -128,34 +128,80 @@ export class MapImageService {
         imageCache: Map<string, string>
     ): string {
         
-        // Define styles
+        // --- 1. Background Elements (Nebulas & Stars) ---
+        let starsSvg = '';
+        const starCount = 200;
+        for (let i = 0; i < starCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = Math.random() * 1.5 + 0.5;
+            const op = Math.random() * 0.7 + 0.3;
+            starsSvg += `<circle cx="${x}" cy="${y}" r="${r}" fill="white" opacity="${op}" />`;
+        }
+
+        const nebDefs = `
+            <radialGradient id="nebula-violet" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="rgba(76, 29, 149, 0.25)" />
+                <stop offset="100%" stop-color="rgba(76, 29, 149, 0)" />
+            </radialGradient>
+            <radialGradient id="nebula-blue" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="rgba(30, 58, 138, 0.25)" />
+                <stop offset="100%" stop-color="rgba(30, 58, 138, 0)" />
+            </radialGradient>
+            <radialGradient id="nebula-pink" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="rgba(190, 24, 93, 0.25)" />
+                <stop offset="100%" stop-color="rgba(190, 24, 93, 0)" />
+            </radialGradient>
+            <radialGradient id="nebula-teal" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" stop-color="rgba(15, 118, 110, 0.25)" />
+                <stop offset="100%" stop-color="rgba(15, 118, 110, 0)" />
+            </radialGradient>
+        `;
+
+        const nebulasSvg = `
+            <circle cx="${width * 0.2}" cy="${height * 0.8}" r="${width * 0.4}" fill="url(#nebula-violet)" />
+            <circle cx="${width * 0.8}" cy="${height * 0.2}" r="${width * 0.4}" fill="url(#nebula-blue)" />
+            <circle cx="${width * 0.7}" cy="${height * 0.8}" r="${width * 0.3}" fill="url(#nebula-pink)" />
+            <circle cx="${width * 0.3}" cy="${height * 0.3}" r="${width * 0.4}" fill="url(#nebula-teal)" />
+        `;
+
         const styles = `
             <style>
-                .path { stroke: ${this.LINE_COLOR}; stroke-width: 8; fill: none; opacity: 0.5; stroke-linecap: round; }
-                .node-base { fill: ${this.NODE_COLOR}; stroke: ${this.LINE_COLOR}; stroke-width: 4; }
-                .node-text { font-family: sans-serif; font-weight: bold; font-size: 32px; fill: ${this.TEXT_COLOR}; text-anchor: middle; text-shadow: 0px 2px 4px rgba(0,0,0,0.8); }
-                
-                .highlight-path { stroke: ${this.HIGHLIGHT_GLOW}; stroke-width: 12; opacity: 0.9; }
-                .highlight-node { stroke: ${this.HIGHLIGHT_BORDER}; stroke-width: 6; filter: url(#glow); }
-                .highlight-prefight { stroke: ${this.HIGHLIGHT_PREFIGHT}; stroke-width: 6; filter: url(#glow); }
-                .highlight-text { fill: ${this.HIGHLIGHT_TEXT}; font-size: 36px; }
-                
-                /* Portal Text Styling */
-                .portal-text { font-family: monospace; font-size: 24px; fill: #64748b; text-anchor: middle; opacity: 0.8; }
+                .path { 
+                    stroke: #22d3ee; 
+                    stroke-width: 3; 
+                    fill: none; 
+                    stroke-dasharray: 12, 12; 
+                    opacity: 0.8; 
+                    filter: url(#blue-glow);
+                }
+                .node-fill { fill: rgba(15, 23, 42, 0.95); }
+                .badge-text { 
+                    font-family: monospace; 
+                    font-weight: bold; 
+                    font-size: 11px; 
+                    fill: #cbd5e1; 
+                    text-anchor: middle; 
+                    dominant-baseline: central;
+                }
+                .badge-text-highlight { fill: ${this.HIGHLIGHT_TEXT}; }
+                .border-default { stroke: ${this.LINE_COLOR}; stroke-width: 2; }
+                .border-highlight { stroke: ${this.HIGHLIGHT_BORDER}; stroke-width: 4; filter: url(#glow); }
+                .border-prefight { stroke: ${this.HIGHLIGHT_PREFIGHT}; stroke-width: 3; filter: url(#glow); }
             </style>
             <defs>
+                ${nebDefs}
                 <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="8" result="blur" />
+                    <feGaussianBlur stdDeviation="4" result="blur" />
                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
-                <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                    <stop offset="0%" stop-color="${this.BACKGROUND_COLOR_START}" />
-                    <stop offset="100%" stop-color="${this.BACKGROUND_COLOR_END}" />
-                </radialGradient>
+                <filter id="blue-glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="#0891b2" flood-opacity="0.8"/>
+                </filter>
             </defs>
         `;
 
-        // Build Paths (Connections)
+        // --- 2. Build Paths ---
         const nodeMap = new Map(nodes.map(n => [n.id, n]));
         let pathsSvg = '';
         const drawnPaths = new Set<string>();
@@ -167,119 +213,123 @@ export class MapImageService {
                 if (target) {
                     const key = [node.id, target.id].sort().join('-');
                     if (!drawnPaths.has(key)) {
-                        // Adjust coordinates relative to bounding box
                         const x1 = node.x - offsetX;
                         const y1 = node.y - offsetY;
                         const x2 = target.x - offsetX;
                         const y2 = target.y - offsetY;
-
-                        // Heuristic for highlighting path: if both ends are assigned to player (and represent a path they might travel)
-                        // Only highlight path for 'attack' types, not prefights (usually you don't "travel" to a prefight in the same way, or maybe you do?)
-                        // For simplicity, let's keep it based on 'isTarget'.
-                        const startAssigned = assignments.get(Number(node.id))?.isTarget;
-                        const endAssigned = assignments.get(Number(target.id))?.isTarget;
                         
-                        const isHighlighted = startAssigned && endAssigned;
-                        const className = isHighlighted ? "path highlight-path" : "path";
-                        
-                        pathsSvg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${className}" />\n`;
+                        pathsSvg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="path" />\n`;
                         drawnPaths.add(key);
                     }
                 }
             });
         });
 
-        // Build Nodes
+        // --- 3. Build Nodes ---
         let nodesSvg = '';
         
         nodes.forEach(node => {
             const x = node.x - offsetX;
             const y = node.y - offsetY;
             
-            if (node.isPortal) return; 
+            // Render Portals
+            if (node.isPortal) {
+                nodesSvg += `
+                    <g transform="translate(${x}, ${y})">
+                         <circle r="12" fill="#10B981" opacity="0.3" />
+                         <circle r="7" fill="#10B981" stroke="#064e3b" stroke-width="1" />
+                         <circle r="3" fill="#ecfdf5" />
+                    </g>
+                `;
+                return;
+            }
 
             const assignment = assignments.get(Number(node.id));
-            const isHighlighted = assignment?.isTarget;
-            const borderColor = assignment?.type === 'prefight' ? this.HIGHLIGHT_PREFIGHT : this.HIGHLIGHT_BORDER;
+            const isTarget = assignment?.isTarget;
+            const prefightImg = assignment?.prefightImage;
             
-            const circleClass = isHighlighted 
-                ? (assignment?.type === 'prefight' ? "node-base highlight-prefight" : "node-base highlight-node") 
-                : "node-base";
-                
-            const textClass = isHighlighted ? "node-text highlight-text" : "node-text";
-            const radius = 40; // Smaller radius
+            // Colors
+            const borderColorClass = isTarget ? "border-highlight" : "border-default";
+            const badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
+            const badgeStroke = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
 
+            const r = 32; 
+            const pillH = r * 2;
             let innerContent = '';
-            
-            // Case 1: Pill (Attacker + Defender)
+            let isPill = false;
+            let pillW = 0;
+
+            // --- A. Main Node (Pill or Circle) ---
             if (assignment?.attackerImage && assignment?.defenderImage && 
                 imageCache.has(assignment.attackerImage) && imageCache.has(assignment.defenderImage)) {
                 
+                // PILL
+                isPill = true;
                 const attImg = imageCache.get(assignment.attackerImage);
                 const defImg = imageCache.get(assignment.defenderImage);
-                const pillW = 160; 
-                const pillH = 80;
+                pillW = r * 4;
                 
-                // 1. Pill Background & Border
                 innerContent += `
-                    <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${pillH/2}" class="${circleClass}" />
-                `;
-                
-                // 2. Images
-                // Attacker (Left)
-                innerContent += `
-                    <defs>
-                        <clipPath id="clip-${node.id}-L">
-                            <circle cx="${-pillW/4}" cy="0" r="${radius-4}" />
-                        </clipPath>
-                    </defs>
+                    <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${r}" class="node-fill ${borderColorClass}" />
                     <g clip-path="url(#clip-${node.id}-L)">
-                        <image href="${attImg}" x="${-pillW/4 - radius}" y="${-radius}" width="${radius*2}" height="${radius*2}" preserveAspectRatio="xMidYMid slice" />
+                        <image href="${attImg}" x="${-pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
-                `;
+                    <defs><clipPath id="clip-${node.id}-L"><circle cx="${-pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
+                    <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
 
-                // Defender (Right)
-                innerContent += `
-                    <defs>
-                        <clipPath id="clip-${node.id}-R">
-                            <circle cx="${pillW/4}" cy="0" r="${radius-4}" />
-                        </clipPath>
-                    </defs>
                     <g clip-path="url(#clip-${node.id}-R)">
-                        <image href="${defImg}" x="${pillW/4 - radius}" y="${-radius}" width="${radius*2}" height="${radius*2}" preserveAspectRatio="xMidYMid slice" />
+                        <image href="${defImg}" x="${pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
+                    <defs><clipPath id="clip-${node.id}-R"><circle cx="${pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
+                    <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
                 `;
 
-                // 3. Pill Border (Stroke only) - Drawn ON TOP
-                const borderStyle = isHighlighted 
-                    ? `stroke="${borderColor}" stroke-width="8" filter="url(#glow)" fill="none"`
-                    : `stroke="${this.LINE_COLOR}" stroke-width="4" fill="none"`;
-
-                innerContent += `
-                    <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${pillH/2}" ${borderStyle} />
-                `;
-
-            } 
-            // Case 2: Circle (Defender only or empty)
-            else {
+            } else {
+                // CIRCLE
                 if (assignment?.defenderImage && imageCache.has(assignment.defenderImage)) {
                     const base64 = imageCache.get(assignment.defenderImage);
-                    innerContent = `
-                        <defs>
-                            <clipPath id="clip-${node.id}">
-                                <circle cx="0" cy="0" r="${radius-4}" />
-                            </clipPath>
-                        </defs>
+                    innerContent += `
+                        <circle r="${r}" class="node-fill ${borderColorClass}" />
                         <g clip-path="url(#clip-${node.id})">
-                            <image href="${base64}" x="${-radius}" y="${-radius}" width="${radius*2}" height="${radius*2}" preserveAspectRatio="xMidYMid slice" opacity="0.9" />
+                            <image href="${base64}" x="${-(r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                         </g>
-                        <circle r="${radius}" fill="none" stroke="${isHighlighted ? borderColor : this.LINE_COLOR}" stroke-width="${isHighlighted ? 6 : 4}" />
+                        <defs><clipPath id="clip-${node.id}"><circle cx="0" cy="0" r="${r-4}" /></clipPath></defs>
+                        <circle cx="0" cy="0" r="${r-4}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
                     `;
                 } else {
-                    innerContent = `<circle r="${radius}" class="${circleClass}" />`;
+                    innerContent += `<circle r="${r}" class="node-fill ${borderColorClass}" />`;
                 }
-                // Text CENTERED
-                innerContent += `<text x="0" y="10" class="${textClass}">${node.id}</text>`;
+            }
+
+            // --- B. Node Number Badge ---
+            const badgeW = 28;
+            const badgeH = 18;
+            const badgeY = -r - 12; 
+
+            innerContent += `
+                <g transform="translate(0, ${badgeY})">
+                    <rect x="${-badgeW/2}" y="${-badgeH/2}" width="${badgeW}" height="${badgeH}" rx="4" class="node-fill" stroke="${badgeStroke}" stroke-width="2" />
+                    <text x="0" y="0" class="${badgeTextColorClass}">${node.id}</text>
+                </g>
+            `;
+
+            // --- C. Prefight Badge (Bottom) ---
+            if (prefightImg && imageCache.has(prefightImg)) {
+                const pfBase64 = imageCache.get(prefightImg);
+                const pfR = 16; // Small badge
+                // Position: Bottom center. 
+                // If Pill: y = +r + padding.
+                const pfY = r;
+                
+                innerContent += `
+                    <g transform="translate(0, ${pfY})">
+                        <circle r="${pfR}" class="node-fill border-prefight" />
+                        <g clip-path="url(#clip-${node.id}-PF)">
+                            <image href="${pfBase64}" x="${-pfR+2}" y="${-pfR+2}" width="${(pfR-2)*2}" height="${(pfR-2)*2}" preserveAspectRatio="xMidYMid slice" />
+                        </g>
+                        <defs><clipPath id="clip-${node.id}-PF"><circle cx="0" cy="0" r="${pfR-2}" /></clipPath></defs>
+                    </g>
+                `;
             }
 
             nodesSvg += `
@@ -292,7 +342,9 @@ export class MapImageService {
         return `
             <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
                 ${styles}
-                <rect width="100%" height="100%" fill="url(#bgGradient)" />
+                <rect width="100%" height="100%" fill="#020617" />
+                ${nebulasSvg}
+                ${starsSvg}
                 ${pathsSvg}
                 ${nodesSvg}
             </svg>
