@@ -41,6 +41,13 @@ export async function distributeWarPlan(
                     player: true,
                     prefightChampions: { include: { champion: true } }
                 }
+            },
+            extraChampions: {
+                where: targetBattlegroup ? { battlegroup: targetBattlegroup } : undefined,
+                include: {
+                    champion: true,
+                    player: true
+                }
             }
         }
     });
@@ -102,6 +109,17 @@ export async function distributeWarPlan(
         const name = fight.player.ingameName.toLowerCase();
         if (!playerFights.has(name)) playerFights.set(name, []);
         playerFights.get(name)!.push(fight);
+    }
+
+    // Group Extra Champions by Player
+    const playerExtras = new Map<string, any[]>();
+    for (const extra of war.extraChampions) {
+        if (!extra.playerId || !extra.player) continue;
+        if (targetPlayerId && extra.playerId !== targetPlayerId) continue;
+
+        const name = extra.player.ingameName.toLowerCase();
+        if (!playerExtras.has(name)) playerExtras.set(name, []);
+        playerExtras.get(name)!.push(extra);
     }
 
     if (playerFights.size === 0) {
@@ -232,6 +250,7 @@ export async function distributeWarPlan(
         }
 
         const myPrefights = playerPrefightTasks.get(playerObj.id) || [];
+        const myExtras = playerExtras.get(playerName) || [];
 
         // --- Generate Map Image ---
         const bgMap = bgNodeMaps.get(bg);
@@ -299,12 +318,15 @@ export async function distributeWarPlan(
         );
         container.addSeparatorComponents(new SeparatorBuilder());
 
-        // 2. Team (Unique Attackers + Prefight Champs)
+        // 2. Team (Unique Attackers + Prefight Champs + Extra Champs)
         const attackers = new Set<string>();
         fights.forEach((f: any) => {
             if (f.attacker?.name) attackers.add(f.attacker.name);
         });
         myPrefights.forEach((p: any) => attackers.add(p.championName));
+        myExtras.forEach((e: any) => {
+            if (e.champion?.name) attackers.add(e.champion.name);
+        });
 
         if (attackers.size > 0) {
             const attackerNames = Array.from(attackers);

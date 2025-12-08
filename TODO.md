@@ -22,3 +22,4 @@
 - Clean up enable feature command, not used anymore
 - update AW details command to take data from DB if not already
 - show tactics in the war plan image thats getting sent
+- Implement explicit rarity (star level) tracking for War Assignments to support assigning lower-ranked champions and ensure accurate War Plan messages.

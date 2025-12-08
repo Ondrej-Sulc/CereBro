@@ -219,7 +219,15 @@ export const PlayerListContent = ({
                                       <div className="space-y-1">
                                           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assignments</div>
                                           {assignedChampions.map(champ => {
-                                              const roster = player.roster.find(r => r.championId === champ.id);
+                                              // Find the BEST roster entry (highest stars > rank > ascended)
+                                              const roster = player.roster
+                                                  .filter(r => r.championId === champ.id)
+                                                  .sort((a, b) => {
+                                                      if (a.stars !== b.stars) return b.stars - a.stars;
+                                                      if (a.rank !== b.rank) return b.rank - a.rank;
+                                                      return (a.isAscended === b.isAscended) ? 0 : (a.isAscended ? -1 : 1);
+                                                  })[0];
+
                                               const classColors = getChampionClassColors(champ.class);
                                               return (
                                                   <div key={champ.id} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
@@ -253,7 +261,15 @@ export const PlayerListContent = ({
                                       {/* List of extras with remove button */}
                                       <div className="space-y-1">
                                           {playerExtras.map(ex => {
-                                              const roster = player.roster.find(r => r.championId === ex.championId);
+                                              // Find the BEST roster entry (highest stars > rank > ascended)
+                                              const roster = player.roster
+                                                  .filter(r => r.championId === ex.championId)
+                                                  .sort((a, b) => {
+                                                      if (a.stars !== b.stars) return b.stars - a.stars;
+                                                      if (a.rank !== b.rank) return b.rank - a.rank;
+                                                      return (a.isAscended === b.isAscended) ? 0 : (a.isAscended ? -1 : 1);
+                                                  })[0];
+
                                               const fullChamp = champions.find(c => c.id === ex.championId); // Look up full champion to get class
                                               const classColors = getChampionClassColors(fullChamp?.class); // Use fullChamp?.class
                                               return (
