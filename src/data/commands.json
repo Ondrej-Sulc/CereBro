@@ -523,6 +523,53 @@
       },
       {
         "type": 1,
+        "name": "config-channels",
+        "description": "Configure notification channels for your alliance.",
+        "options": [
+          {
+            "channel_types": [
+              0,
+              5
+            ],
+            "name": "war-videos",
+            "description": "The channel to post new war video notifications to.",
+            "required": false,
+            "type": 7
+          },
+          {
+            "channel_types": [
+              0,
+              5
+            ],
+            "name": "bg1-channel",
+            "description": "The channel for Battlegroup 1.",
+            "required": false,
+            "type": 7
+          },
+          {
+            "channel_types": [
+              0,
+              5
+            ],
+            "name": "bg2-channel",
+            "description": "The channel for Battlegroup 2.",
+            "required": false,
+            "type": 7
+          },
+          {
+            "channel_types": [
+              0,
+              5
+            ],
+            "name": "bg3-channel",
+            "description": "The channel for Battlegroup 3.",
+            "required": false,
+            "type": 7
+          }
+        ]
+      },
+      {
+        "type": 1,
         "name": "sync-roles",
         "description": "Sync officer and battlegroup roles from Discord to the bot.",
         "options": []
@@ -1484,6 +1531,15 @@
         "image": "https://storage.googleapis.com/champion-images/feature-showcase/search_roster_complex.png"
       }
     }
+  },
+  {
+    "name": "setup",
+    "description": "Interactive setup wizard for CereBro configuration",
+    "access": 2,
+    "group": "Alliance Tools",
+    "color": "blue",
+    "options": [],
+    "subcommands": {}
   },
   {
     "name": "schedule",
