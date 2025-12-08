@@ -1,15 +1,15 @@
-// Tailored Palette: Distinct, suitable for dark theme (400/500 shades)
-const PALETTE = [
-    '#ef4444', // Red 500
-    '#f97316', // Orange 500
-    '#eab308', // Yellow 500
-    '#22c55e', // Green 500
-    '#10b981', // Emerald 500
-    '#06b6d4', // Cyan 500
-    '#3b82f6', // Blue 500
-    '#8b5cf6', // Violet 500
-    '#d946ef', // Fuchsia 500
-    '#f43f5e', // Rose 500
+// Tailored Palette: Distinct, suitable for dark theme (Kelly's Max Contrast adapted to Tailwind 400s)
+export const PALETTE = [
+    '#4ade80', // Green 400
+    '#60a5fa', // Blue 400
+    '#c084fc', // Purple 400
+    '#e879f9', // Fuchsia 400
+    '#f472b6', // Pink 400
+    '#f87171', // Red 400
+    '#facc15', // Yellow 400
+    '#fb923c', // Orange 400
+    '#22d3ee', // Cyan 400
+    '#a3e635', // Lime 400
 ];
 
 // Simple hash function (djb2) to map string to integer

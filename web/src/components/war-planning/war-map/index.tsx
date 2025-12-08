@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef, memo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, memo, useContext } from 'react';
 import { Stage, Layer } from 'react-konva';
 import { Maximize2, Minimize2, History, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { WarMapBackground } from './map-background';
 import { CanvasNode } from './canvas-node';
 import Konva from 'konva';
 import { KonvaEventObject } from 'konva/lib/Node';
+import { PlayerColorContext } from '../player-color-context';
 
 interface WarMapProps {
   warId: string;
@@ -47,6 +48,7 @@ const WarMap = memo(function WarMap({
   onTogglePlayerPanel,
   isPlayerPanelOpen
 }: WarMapProps) {
+  const playerColorContextValue = useContext(PlayerColorContext);
   const [internalFullscreen, setInternalFullscreen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
@@ -415,34 +417,36 @@ const WarMap = memo(function WarMap({
           if (stageRef.current) stageRef.current.container().style.cursor = 'grab';
         }}
       >
-        {/* Background Layer */}
-        <Layer listening={false}>
-          <WarMapBackground isBigThing={isBigThing} />
-        </Layer>
+        <PlayerColorContext.Provider value={playerColorContextValue}>
+          {/* Background Layer */}
+          <Layer listening={false}>
+            <WarMapBackground isBigThing={isBigThing} />
+          </Layer>
 
-        {/* Interactive Nodes Layer */}
-        <Layer>
-          {currentNodesData.map(node => {
-            const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
-            const fight = fightsByNode.get(numericId);
-            const history = showHistory && fight?.defender ? historyData.get(numericId) : null;
-            const isSelected = selectedNodeId === numericId;
+          {/* Interactive Nodes Layer */}
+          <Layer>
+            {currentNodesData.map(node => {
+              const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
+              const fight = fightsByNode.get(numericId);
+              const history = showHistory && fight?.defender ? historyData.get(numericId) : null;
+              const isSelected = selectedNodeId === numericId;
 
-            return (
-              <CanvasNode
-                key={node.id}
-                node={node}
-                fight={fight}
-                isSelected={isSelected}
-                onNodeClick={onNodeClick}
-                showHistory={showHistory}
-                history={history}
-                activeTactic={activeTactic}
-                highlightedPlayerId={highlightedPlayerId}
-              />
-            );
-          })}
-        </Layer>
+              return (
+                <CanvasNode
+                  key={node.id}
+                  node={node}
+                  fight={fight}
+                  isSelected={isSelected}
+                  onNodeClick={onNodeClick}
+                  showHistory={showHistory}
+                  history={history}
+                  activeTactic={activeTactic}
+                  highlightedPlayerId={highlightedPlayerId}
+                />
+              );
+            })}
+          </Layer>
+        </PlayerColorContext.Provider>
       </Stage>
     </div>
   );

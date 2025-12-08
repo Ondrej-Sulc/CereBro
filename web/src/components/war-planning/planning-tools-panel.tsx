@@ -12,6 +12,8 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { usePlayerColor } from "./player-color-context"; // Corrected Import
+import { getChampionClassColors } from "@/lib/championClassHelper"; // Import getChampionClassColors
 
 interface PlanningToolsPanelProps {
   players: Player[];
@@ -27,11 +29,14 @@ type RosterWithPlayer = Roster & { player: Player };
 
 export default function PlanningToolsPanel({ players, champions, allianceId, onClose, currentBattlegroup, onAddExtra }: PlanningToolsPanelProps) {
   const { toast } = useToast();
+  const { getPlayerColor } = usePlayerColor(); // Initialize usePlayerColor
   const [rosterResults, setRosterResults] = useState<RosterWithChampion[]>([]);
   const [ownerResults, setOwnerResults] = useState<RosterWithPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedChampionId, setSelectedChampionId] = useState<string>("");
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+
+  const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
   const filteredPlayers = currentBattlegroup 
     ? players.filter(p => p.battlegroup === currentBattlegroup)
@@ -78,6 +83,19 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
     }
   };
 
+  const handleAddOwner = (player: Player) => {
+    // Need to find the full champion object from props.champions based on selectedChampionId
+    const champion = champions.find(c => c.id === parseInt(selectedChampionId));
+    
+    if (onAddExtra && champion) {
+        onAddExtra(player.id, champion.id);
+        toast({
+            title: "Champion Added",
+            description: `Added ${champion.name} to ${player.ingameName}'s extra assignments.`,
+        });
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-slate-950 border-l border-slate-800">
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
@@ -103,25 +121,60 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Player</label>
               <Select value={selectedPlayerId} onValueChange={handlePlayerSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a player..." />
+                <SelectTrigger className="rounded-full">
+                  {selectedPlayer ? (
+                    <div className="flex items-center gap-2">
+                        {selectedPlayer.avatar ? (
+                          <div 
+                            className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-800 border ml-[-10px]"
+                            style={{ borderColor: getPlayerColor(selectedPlayer.id) }}
+                          >
+                            <Image 
+                              src={selectedPlayer.avatar} 
+                              alt={selectedPlayer.ingameName} 
+                              fill 
+                              sizes="32px"
+                              className="object-cover" 
+                            />
+                          </div>
+                        ) : (
+                           <div 
+                             className="relative w-8 h-8 rounded-full flex items-center justify-center border"
+                             style={{ borderColor: getPlayerColor(selectedPlayer.id) }}
+                           >
+                             <Users className="w-5 h-5 text-slate-400" />
+                           </div>
+                        )}
+                        <span className="truncate font-bold">{selectedPlayer.ingameName}</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Choose a player..." />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {filteredPlayers.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center gap-2">
                         {p.avatar ? (
-                          <div className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800">
+                          <div 
+                            className="relative w-6 h-6 rounded-full overflow-hidden bg-slate-800 border"
+                            style={{ borderColor: getPlayerColor(p.id) }}
+                          >
                             <Image 
                               src={p.avatar} 
                               alt={p.ingameName} 
                               fill 
-                              sizes="20px"
+                              sizes="32px"
                               className="object-cover" 
                             />
                           </div>
                         ) : (
-                           <Users className="w-5 h-5 text-slate-400 p-0.5" />
+                           <div 
+                             className="relative w-6 h-6 rounded-full flex items-center justify-center border"
+                             style={{ borderColor: getPlayerColor(p.id) }}
+                           >
+                             <Users className="w-4 h-4 text-slate-400" />
+                           </div>
                         )}
                         <span className="truncate">{p.ingameName}</span>
                       </div>
@@ -136,7 +189,9 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                 <p className="text-sm text-muted-foreground">Loading roster...</p>
               ) : rosterResults.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
-                  {rosterResults.map((item) => (
+                  {rosterResults.map((item) => {
+                    const classColors = getChampionClassColors(item.champion.class);
+                    return (
                     <div 
                         key={item.id} 
                         className={cn(
@@ -145,7 +200,7 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                         )}
                         onClick={() => handleAddChampion(item.champion)}
                     >
-                      <div className="relative h-10 w-10 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+                      <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
                           src={getChampionImageUrl(item.champion.images as any, '64')}
                           alt={item.champion.name}
@@ -154,7 +209,7 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-sm">{item.champion.name}</p>
+                        <p className={cn("font-bold text-sm", classColors.text)}>{item.champion.name}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span className={cn("flex items-center font-bold", item.isAwakened ? "text-slate-300" : "text-yellow-500")}>
                             {item.stars}<Star className="h-3 w-3 fill-current ml-0.5" />
@@ -164,7 +219,7 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                         </div>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">
@@ -191,18 +246,32 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
               ) : ownerResults.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
                   {ownerResults.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 rounded-md border bg-slate-900/50">
+                    <div 
+                        key={item.id} 
+                        className={cn(
+                          "flex items-center justify-between p-2 rounded-md border border-slate-800/50 bg-slate-900/50 border-l-[2px] transition-colors",
+                          onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
+                        )}
+                        style={{ borderLeftColor: getPlayerColor(item.player.id) }}
+                        onClick={() => handleAddOwner(item.player)}
+                    >
                       <div className="flex items-center gap-3">
                         {item.player.avatar ? (
                           <Image
                             src={item.player.avatar}
                             alt={item.player.ingameName ?? "Player Avatar"}
-                            width={24}
-                            height={24}
-                            className="rounded-full"
+                            width={32}
+                            height={32}
+                            className="rounded-full border"
+                            style={{ borderColor: getPlayerColor(item.player.id) }}
                           />
                         ) : (
-                          <Users className="h-5 w-5 text-slate-400" />
+                          <div 
+                             className="relative h-6 w-6 rounded-full flex items-center justify-center border"
+                             style={{ borderColor: getPlayerColor(item.player.id) }}
+                           >
+                            <Users className="h-5 w-5 text-slate-400" />
+                          </div>
                         )}
                         <p className="font-bold text-sm">{item.player.ingameName}</p>
                       </div>

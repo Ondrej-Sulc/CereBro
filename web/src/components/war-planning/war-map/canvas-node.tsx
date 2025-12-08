@@ -8,7 +8,7 @@ import { getChampionImageUrl } from '@/lib/championHelper';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons
 import { svgToDataUrl } from '@/lib/svgHelper'; // Import the SVG helper
-import { getPlayerColor } from '@/lib/player-colors';
+import { usePlayerColor } from '../player-color-context';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 
 const CLASS_HEX_COLORS: Record<ChampionClass, string> = {
@@ -171,6 +171,7 @@ export const CanvasNode = memo(function CanvasNode({
     activeTactic,
     highlightedPlayerId
 }: CanvasNodeProps) {
+    const { getPlayerColor } = usePlayerColor();
     const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
 
     // --- PORTAL RENDERING ---
@@ -216,7 +217,7 @@ export const CanvasNode = memo(function CanvasNode({
     const pillHeight = nodeRadius * 2;
     
     // Colors
-    // Selection: Gold (#fbbf24)
+    // Selection: White (#ffffff)
     // Prefight Highlight: Cyan (#22d3ee)
     const prefightHighlightColor = "#22d3ee";
 
@@ -226,9 +227,9 @@ export const CanvasNode = memo(function CanvasNode({
     let shadowBlur = 0;
     
     if (isSelected) {
-        borderColor = "#fbbf24";
+        borderColor = "#ffffff";
         borderWidth = 3;
-        shadowColor = "#fbbf24";
+        shadowColor = "#ffffff";
         shadowBlur = 10;
     } else if (isPlayerHighlighted && playerColor) {
         borderColor = playerColor;
@@ -279,7 +280,7 @@ export const CanvasNode = memo(function CanvasNode({
                     fontSize={11}
                     fontFamily="monospace"
                     fontStyle="bold"
-                    fill={isSelected ? "#fbbf24" : (isPlayerHighlighted && playerColor ? playerColor : (isPrefightHighlighted ? prefightHighlightColor : (playerColor || "#cbd5e1")))}
+                    fill={isSelected ? "#ffffff" : (isPlayerHighlighted && playerColor ? playerColor : (isPrefightHighlighted ? prefightHighlightColor : (playerColor || "#cbd5e1")))}
                     align="center"
                     width={28}
                     y={-9 + 4} // Vertical center adjustment
