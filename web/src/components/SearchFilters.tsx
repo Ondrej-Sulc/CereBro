@@ -1,233 +1,410 @@
 "use client";
 
+import { Search, Filter, ChevronDown, ChevronUp, Video, X, ArrowRightLeft, User, Shield } from "lucide-react";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
+import { Champion } from "@/types/champion";
+import { useState, useTransition, useCallback, useEffect, useRef, useMemo } from "react";
+import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
+import { cn } from "@/lib/utils";
+import { FlipToggle } from "@/components/ui/flip-toggle";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Badge } from "@/components/ui/badge";
+import { AsyncPlayerCombobox } from "@/components/comboboxes/AsyncPlayerCombobox";
+import { AsyncAllianceCombobox } from "@/components/comboboxes/AsyncAllianceCombobox";
+import { MemoizedSelect } from "@/components/MemoizedSelect";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, Filter, ChevronDown } from "lucide-react";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
-import { Champion } from "@/types/champion";
-import { useState, useTransition, useCallback } from "react";
-import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
-import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Player, Alliance } from "@prisma/client";
 
 interface SearchFiltersProps {
   champions: Champion[];
   availableSeasons: number[];
+  currentUser?: (Player & { alliance: Alliance | null }) | null;
 }
 
-export function SearchFilters({ champions, availableSeasons }: SearchFiltersProps) {
+export function SearchFilters({ champions, availableSeasons, currentUser }: SearchFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [isCollapsed, setIsCollapsed] = useState(true); // Default to collapsed
-
-  // Local state for controlled inputs
-  const [query, setQuery] = useState(searchParams.get("q") || "");
-  const [attacker, setAttacker] = useState(searchParams.get("attacker") || "");
-  const [defender, setDefender] = useState(searchParams.get("defender") || "");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // -- State Initialization --
+  
+  // Main Filters
+  const [mapType, setMapType] = useState(searchParams.get("map") || "STANDARD");
+  const [attackerId, setAttackerId] = useState(
+      champions.find(c => c.name.toLowerCase() === (searchParams.get("attacker") || "").toLowerCase())?.id.toString() || ""
+  );
+  const [defenderId, setDefenderId] = useState(
+      champions.find(c => c.name.toLowerCase() === (searchParams.get("defender") || "").toLowerCase())?.id.toString() || ""
+  );
   const [node, setNode] = useState(searchParams.get("node") || "");
+  const [hasVideo, setHasVideo] = useState(searchParams.get("hasVideo") === "true");
+
+  // Secondary Filters
+  const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
+  const [selectedSeasons, setSelectedSeasons] = useState<number[]>(initialSeasons);
   const [war, setWar] = useState(searchParams.get("war") || "");
   const [tier, setTier] = useState(searchParams.get("tier") || "");
   const [player, setPlayer] = useState(searchParams.get("player") || "");
   const [alliance, setAlliance] = useState(searchParams.get("alliance") || "");
   const [battlegroup, setBattlegroup] = useState(searchParams.get("battlegroup") || "");
-  const [mapType, setMapType] = useState(searchParams.get("map") || "STANDARD");
+
+  // Debounce Text Inputs
+  const debouncedNode = useDebounce(node, 500);
+  const debouncedBattlegroup = useDebounce(battlegroup, 500);
   
-  const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
-  const [selectedSeasons, setSelectedSeasons] = useState<number[]>(initialSeasons);
-  
-  const [hasVideo, setHasVideo] = useState(searchParams.get("hasVideo") === "true");
+  // Handlers
+  const handleSwap = useCallback(() => {
+      setAttackerId(prev => {
+          setDefenderId(attackerId);
+          return defenderId;
+      });
+  }, [attackerId, defenderId]);
 
-  const handleSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    startTransition(() => {
-      const params = new URLSearchParams();
-      if (query) params.set("q", query);
-      
-      const attackerName = champions.find(c => String(c.id) === attacker)?.name || attacker;
-      const defenderName = champions.find(c => String(c.id) === defender)?.name || defender;
+  // Options
+  const warOptions = useMemo(() => [
+      { value: "0", label: "Offseason" },
+      ...Array.from({ length: 12 }, (_, i) => ({
+          value: String(i + 1),
+          label: `War ${i + 1}`,
+      }))
+  ], []);
 
-      if (attackerName) params.set("attacker", attackerName);
-      if (defenderName) params.set("defender", defenderName);
-      if (node) params.set("node", node);
-      if (war) params.set("war", war);
-      if (tier) params.set("tier", tier);
-      if (player) params.set("player", player);
-      if (alliance) params.set("alliance", alliance);
-      if (battlegroup) params.set("battlegroup", battlegroup);
-      if (mapType) params.set("map", mapType);
-      
-      selectedSeasons.forEach(s => params.append("season", s.toString()));
-      
-      if (hasVideo) params.set("hasVideo", "true");
+  const tierOptions = useMemo(() => 
+      Array.from({ length: 22 }, (_, i) => ({
+          value: String(i + 1),
+          label: `Tier ${i + 1}`,
+      }))
+  , []);
 
-      router.push(`/war-videos?${params.toString()}`);
-    });
-  };
+  // Ref for champions to access in effect without dependency
+  const championsRef = useRef(champions);
+  useEffect(() => {
+    championsRef.current = champions;
+  }, [champions]);
 
-  const getIdByName = (name: string) => champions.find(c => c.name.toLowerCase() === name.toLowerCase())?.id.toString() || "";
+  // Effect to update URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    // Map
+    if (mapType) params.set("map", mapType);
+    
+    // Champions
+    const attackerName = championsRef.current.find(c => String(c.id) === attackerId)?.name;
+    const defenderName = championsRef.current.find(c => String(c.id) === defenderId)?.name;
+    if (attackerName) params.set("attacker", attackerName);
+    if (defenderName) params.set("defender", defenderName);
+    
+    // Node
+    if (debouncedNode) params.set("node", debouncedNode);
+    
+    // Video
+    if (hasVideo) params.set("hasVideo", "true");
+    
+    // Advanced
+    selectedSeasons.forEach(s => params.append("season", s.toString()));
+    if (war) params.set("war", war);
+    if (tier) params.set("tier", tier);
+    if (player) params.set("player", player);
+    if (alliance) params.set("alliance", alliance);
+    if (debouncedBattlegroup) params.set("battlegroup", debouncedBattlegroup);
 
-  const [attackerId, setAttackerId] = useState(getIdByName(attacker));
-  const [defenderId, setDefenderId] = useState(getIdByName(defender));
+    const newQueryString = params.toString();
+    const currentQueryString = searchParams.toString();
 
-  const handleAttackerSelect = useCallback((id: string) => {
-      setAttackerId(id);
-      setAttacker(id); 
-  }, []);
+    // Only push if changed to prevent loops
+    if (newQueryString !== currentQueryString) {
+        startTransition(() => {
+            router.push(`/war-videos?${newQueryString}`, { scroll: false });
+        });
+    }
+  }, [
+    mapType, 
+    attackerId, 
+    defenderId, 
+    debouncedNode, 
+    hasVideo, 
+    selectedSeasons, 
+    war, 
+    tier, 
+    player, 
+    alliance, 
+    debouncedBattlegroup,
+    // Router and SearchParams are stable or handled by the check
+    searchParams
+  ]);
 
-  const handleDefenderSelect = useCallback((id: string) => {
-      setDefenderId(id);
-      setDefender(id);
-  }, []);
+  const activeAdvancedCount = [
+      selectedSeasons.length > 0,
+      war,
+      tier,
+      player,
+      alliance,
+      debouncedBattlegroup
+  ].filter(Boolean).length;
+
+  // Active Filter Chips
+  const activeFilters = useMemo(() => {
+    const filters = [];
+    if (selectedSeasons.length > 0) {
+        selectedSeasons.forEach(s => {
+            filters.push({ id: `season-${s}`, label: `Season ${s}`, onRemove: () => setSelectedSeasons(prev => prev.filter(i => i !== s)) });
+        });
+    }
+    if (war) filters.push({ id: 'war', label: `War ${war}`, onRemove: () => setWar("") });
+    if (tier) filters.push({ id: 'tier', label: `Tier ${tier}`, onRemove: () => setTier("") });
+    if (player) filters.push({ id: 'player', label: `Player: ${player}`, onRemove: () => setPlayer("") });
+    if (alliance) filters.push({ id: 'alliance', label: `Alliance: ${alliance}`, onRemove: () => setAlliance("") });
+    if (battlegroup) filters.push({ id: 'battlegroup', label: `BG ${battlegroup}`, onRemove: () => setBattlegroup("") });
+    
+    return filters;
+  }, [selectedSeasons, war, tier, player, alliance, battlegroup]);
+
 
   return (
-    <div className="flex flex-col gap-4 max-w-7xl w-full">
-      {/* Mobile Filter Toggle Header */}
-      <div 
-        className="md:hidden flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-slate-800/50 cursor-pointer"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-      >
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          <Filter className="h-4 w-4 text-sky-400" /> Filters
-        </h3>
-        <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", !isCollapsed && "rotate-180")} />
-      </div>
+    <div className="flex flex-col gap-2 w-full max-w-[1600px] mx-auto">
+        {/* Main Active Toolbar */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 p-2 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl shadow-sm">
+            
+            {/* Top Row / Left Side: Map & Node */}
+            <div className="flex items-center gap-1 w-full lg:w-auto">
+                <FlipToggle 
+                    value={mapType === "BIG_THING"}
+                    onChange={(v) => setMapType(v ? "BIG_THING" : "STANDARD")}
+                    leftLabel="Standard"
+                    rightLabel="Big Thing"
+                    className="h-10 w-36 shrink-0"
+                />
+                
+                <div className="relative w-20 lg:w-24 shrink-0">
+                    <Input 
+                        placeholder="#" 
+                        value={node}
+                        onChange={e => setNode(e.target.value)}
+                        className="h-10 bg-slate-950/50 border-slate-800 text-center font-mono placeholder:text-slate-600 pl-8"
+                    />
+                     <span className="absolute top-1/2 left-2 -translate-y-1/2 text-[9px] font-bold text-slate-500 pointer-events-none uppercase tracking-wider">
+                        NODE
+                    </span>
+                </div>
 
-      <form onSubmit={handleSearch} className={cn("flex flex-col gap-4", isCollapsed && "hidden md:flex")}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3 p-3 bg-slate-900/30 rounded-lg border border-slate-800/50">
-          <div className="space-y-2">
-             <Label className="text-xs text-slate-400">Map</Label>
-             <Select value={mapType} onValueChange={setMapType}>
-               <SelectTrigger className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full">
-                 <SelectValue placeholder="Select Map" />
-               </SelectTrigger>
-               <SelectContent>
-                 <SelectItem value="STANDARD">Standard</SelectItem>
-                 <SelectItem value="BIG_THING">Big Thing</SelectItem>
-               </SelectContent>
-             </Select>
-           </div>
-          <div className="space-y-2 lg:col-span-2 xl:col-span-2">
-            <Label className="text-xs text-slate-400">Attacker</Label>
-            <ChampionCombobox 
-              champions={champions}
-              value={attackerId}
-              onSelect={handleAttackerSelect}
-              placeholder="Select Attacker"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
-            />
-          </div>
-          <div className="space-y-2 lg:col-span-2 xl:col-span-2">
-            <Label className="text-xs text-slate-400">Defender</Label>
-            <ChampionCombobox 
-              champions={champions}
-              value={defenderId}
-              onSelect={handleDefenderSelect}
-              placeholder="Select Defender"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="node" className="text-xs text-slate-400">Node</Label>
-            <Input
-              id="node"
-              type="number"
-              value={node}
-              onChange={(e) => setNode(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="player" className="text-xs text-slate-400">Player</Label>
-            <Input
-              id="player"
-              value={player}
-              onChange={(e) => setPlayer(e.target.value)}
-              placeholder="Name"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="alliance" className="text-xs text-slate-400">Alliance</Label>
-            <Input
-              id="alliance"
-              value={alliance}
-              onChange={(e) => setAlliance(e.target.value)}
-              placeholder="Tag or Name"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Seasons</Label>
-            <SeasonMultiSelect 
-              seasons={availableSeasons}
-              selected={selectedSeasons}
-              onChange={setSelectedSeasons}
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="war" className="text-xs text-slate-400">War</Label>
-            <Input
-              id="war"
-              type="number"
-              value={war}
-              onChange={(e) => setWar(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tier" className="text-xs text-slate-400">Tier</Label>
-            <Input
-              id="tier"
-              type="number"
-              value={tier}
-              onChange={(e) => setTier(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="battlegroup" className="text-xs text-slate-400">BG</Label>
-            <Input
-              id="battlegroup"
-              type="number"
-              min={1}
-              max={3}
-              value={battlegroup}
-              onChange={(e) => setBattlegroup(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="flex items-end pb-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="hasVideo"
-                checked={hasVideo}
-                onCheckedChange={(checked) => setHasVideo(Boolean(checked))}
-              />
-              <Label htmlFor="hasVideo" className="text-sm cursor-pointer text-slate-300">Has Video</Label>
+                 <Button
+                    variant={hasVideo ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setHasVideo(!hasVideo)}
+                    className={cn(
+                        "h-10 w-10 shrink-0 lg:order-last",
+                        hasVideo ? "bg-red-600 hover:bg-red-700 text-white border-red-500" : "bg-slate-950/50 border-slate-800 text-slate-400 hover:text-white"
+                    )}
+                    title="Toggle Video Only"
+                >
+                    <Video className={cn("h-4 w-4", hasVideo && "fill-current")} />
+                </Button>
             </div>
-          </div>
-          <div className="flex items-end">
-            <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white w-full h-8" disabled={isPending}>
-              {isPending ? "..." : "Search"}
-            </Button>
-          </div>
+
+            {/* Middle: Champions */}
+             <div className="flex flex-1 items-center gap-2 w-full">
+                <div className="flex-1 min-w-[140px]">
+                    <ChampionCombobox 
+                        champions={champions}
+                        value={attackerId}
+                        onSelect={setAttackerId}
+                        placeholder="Attacker..."
+                        className="h-10 bg-slate-950/50 border-slate-800 w-full rounded-full"
+                    />
+                </div>
+                 
+                 <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleSwap}
+                    className="h-8 w-8 rounded-full text-slate-500 hover:text-sky-400 shrink-0"
+                    title="Swap Attacker & Defender"
+                 >
+                     <ArrowRightLeft className="h-4 w-4" />
+                 </Button>
+
+                <div className="flex-1 min-w-[140px]">
+                    <ChampionCombobox 
+                        champions={champions}
+                        value={defenderId}
+                        onSelect={setDefenderId}
+                        placeholder="Defender..."
+                        className="h-10 bg-slate-950/50 border-slate-800 w-full rounded-full"
+                    />
+                </div>
+            </div>
+
+             {/* Right: Expand & Clear */}
+            <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
+               
+                 {/* Clear Filters (Only show if any filter is active) */}
+                 {(attackerId || defenderId || node || hasVideo || activeAdvancedCount > 0) && (
+                     <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                            setAttackerId("");
+                            setDefenderId("");
+                            setNode("");
+                            setHasVideo(false);
+                            setMapType("STANDARD");
+                            // Reset Advanced
+                            setSelectedSeasons([]);
+                            setWar("");
+                            setTier("");
+                            setPlayer("");
+                            setAlliance("");
+                            setBattlegroup("");
+                        }}
+                        className="h-10 px-2 text-slate-400 hover:text-red-400"
+                     >
+                        <X className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Clear</span>
+                     </Button>
+                 )}
+
+                <Button
+                    variant={showAdvanced || activeAdvancedCount > 0 ? "secondary" : "ghost"}
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className={cn(
+                        "h-10 gap-2 min-w-[100px] transition-all",
+                        showAdvanced ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" : "text-slate-400 hover:text-white"
+                    )}
+                >
+                    <Filter className="h-4 w-4" />
+                    <span>Filters</span>
+                    {activeAdvancedCount > 0 && (
+                        <Badge variant="secondary" className="h-5 px-1.5 min-w-[1.25rem] bg-sky-500/20 text-sky-300 border-0 pointer-events-none">
+                            {activeAdvancedCount}
+                        </Badge>
+                    )}
+                    {showAdvanced ? <ChevronUp className="h-3 w-3 ml-auto" /> : <ChevronDown className="h-3 w-3 ml-auto" />}
+                </Button>
+            </div>
         </div>
-      </form>
+        
+        {/* Active Filters List */}
+        {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2 px-1">
+                {activeFilters.map(filter => (
+                    <Badge 
+                        key={filter.id} 
+                        variant="secondary" 
+                        className="bg-slate-900/40 border border-slate-800 hover:bg-slate-800 pl-2 pr-1 py-1 gap-1 text-slate-300 font-normal transition-colors"
+                    >
+                        {filter.label}
+                        <div 
+                            role="button" 
+                            onClick={filter.onRemove}
+                            className="p-0.5 rounded-full hover:bg-slate-700 hover:text-white cursor-pointer"
+                        >
+                            <X className="h-3 w-3" />
+                        </div>
+                    </Badge>
+                ))}
+            </div>
+        )}
+
+        {/* Secondary / Advanced Filters */}
+        {showAdvanced && (
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 bg-slate-900/40 border border-slate-800/50 rounded-xl animate-in slide-in-from-top-2 fade-in duration-200">
+                <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Seasons</Label>
+                    <SeasonMultiSelect 
+                        seasons={availableSeasons}
+                        selected={selectedSeasons}
+                        onChange={setSelectedSeasons}
+                        className="h-9 bg-slate-950/30 border-slate-800"
+                    />
+                </div>
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">War #</Label>
+                    <MemoizedSelect
+                        value={war}
+                        onValueChange={setWar}
+                        options={warOptions}
+                        placeholder="Any"
+                        className="h-9 bg-slate-950/30 border-slate-800"
+                        contentClassName="max-h-60"
+                    />
+                </div>
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Tier</Label>
+                    <MemoizedSelect
+                        value={tier}
+                        onValueChange={setTier}
+                        options={tierOptions}
+                        placeholder="Any"
+                        className="h-9 bg-slate-950/30 border-slate-800"
+                        contentClassName="max-h-60"
+                    />
+                </div>
+                 <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                        <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Player</Label>
+                        {currentUser && (
+                            <Button 
+                                variant={player === currentUser.ingameName ? "secondary" : "ghost"}
+                                size="sm" 
+                                className="h-4 px-1.5 text-[9px]"
+                                onClick={() => setPlayer(player === currentUser.ingameName ? "" : currentUser.ingameName || "")}
+                            >
+                                <User className="h-2.5 w-2.5 mr-1" /> Me
+                            </Button>
+                        )}
+                    </div>
+                    <AsyncPlayerCombobox
+                        value={player}
+                        onSelect={setPlayer}
+                        className="h-9 bg-slate-950/30 border-slate-800"
+                    />
+                </div>
+                 <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                        <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Alliance</Label>
+                        {currentUser?.alliance && (
+                            <Button 
+                                variant={alliance === currentUser.alliance.name ? "secondary" : "ghost"}
+                                size="sm" 
+                                className="h-4 px-1.5 text-[9px]"
+                                onClick={() => setAlliance(alliance === currentUser.alliance!.name ? "" : currentUser.alliance!.name)}
+                            >
+                                <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
+                            </Button>
+                        )}
+                    </div>
+                    <AsyncAllianceCombobox
+                        value={alliance}
+                        onSelect={setAlliance}
+                        className="h-9 bg-slate-950/30 border-slate-800"
+                    />
+                </div>
+                 <div className="space-y-1.5">
+                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Battlegroup</Label>
+                    <div className="flex items-center gap-1 bg-slate-950/30 border border-slate-800 rounded-md p-1 h-9">
+                        {[1, 2, 3].map((bg) => (
+                            <button
+                                key={bg}
+                                onClick={() => setBattlegroup(battlegroup === bg.toString() ? "" : bg.toString())}
+                                className={cn(
+                                    "flex-1 h-full rounded text-xs font-medium transition-colors hover:bg-slate-800",
+                                    battlegroup === bg.toString() 
+                                        ? "bg-sky-600 text-white shadow-sm" 
+                                        : "text-slate-400"
+                                )}
+                            >
+                                {bg}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+             </div>
+        )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { Champion } from "@/types/champion";
 import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { useState } from "react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";

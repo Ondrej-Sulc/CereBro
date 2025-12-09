@@ -22,7 +22,7 @@ import {
 import { Champion } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { GroupedVirtuoso } from "react-virtuoso";
-import { getChampionClassColors } from "../lib/championClassHelper";
+import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionClass } from "@prisma/client";
 
 interface ChampionComboboxProps {
@@ -33,6 +33,7 @@ interface ChampionComboboxProps {
   className?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  activeChampionIds?: Set<string>;
 }
 
 export const ChampionCombobox = React.memo(function ChampionCombobox({
@@ -43,6 +44,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   className,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  activeChampionIds,
 }: ChampionComboboxProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
 
@@ -51,6 +53,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
 
   const [search, setSearch] = React.useState("");
+  const [showOnlyActive, setShowOnlyActive] = React.useState(false);
 
   React.useEffect(() => {
     if (!open) {
@@ -70,7 +73,13 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
 
   const { flatItems, groupCounts, groupNames } = React.useMemo(() => {
     const searchLower = search.toLowerCase();
-    const filtered = champions.filter(champion =>
+    let filtered = champions;
+
+    if (showOnlyActive && activeChampionIds) {
+        filtered = filtered.filter(c => activeChampionIds.has(String(c.id)));
+    }
+
+    filtered = filtered.filter(champion =>
       champion.name.toLowerCase().includes(searchLower)
     );
 
@@ -95,7 +104,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     });
 
     return { flatItems: flat, groupCounts: counts, groupNames: groupOrder };
-  }, [champions, search]);
+  }, [champions, search, showOnlyActive, activeChampionIds]);
 
   const selectedChampion = React.useMemo(() => 
     value ? champions.find((c) => String(c.id) === value) : null,
@@ -159,6 +168,20 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
             onValueChange={setSearch}
           />
           <CommandList className="overflow-hidden">
+             {activeChampionIds && activeChampionIds.size > 0 && (
+                <div className="px-2 py-2 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Filter</span>
+                    <Button
+                        variant={showOnlyActive ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setShowOnlyActive(!showOnlyActive)}
+                        className="h-6 text-[10px] px-2"
+                    >
+                        {showOnlyActive ? "Showing Active" : "Show All"}
+                    </Button>
+                </div>
+            )}
+            
             {flatItems.length === 0 && <CommandEmpty>No champion found.</CommandEmpty>}
             <CommandGroup>
                 <div style={{ height: Math.min(flatItems.length * 46 + groupNames.length * 28, 300) }}>

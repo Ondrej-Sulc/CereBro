@@ -23,7 +23,7 @@ export function FlipToggle({
   return (
     <div
       className={cn(
-        "relative flex items-center bg-slate-900/50 rounded-lg p-1 cursor-pointer select-none border border-slate-800/50",
+        "relative flex items-center bg-slate-900/50 rounded-lg p-1 cursor-pointer select-none border border-slate-800/50 hover:border-slate-700 hover:bg-slate-900/60 transition-all duration-200",
         className
       )}
       onClick={() => onChange(!value)}

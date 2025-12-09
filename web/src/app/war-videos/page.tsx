@@ -67,6 +67,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   // Fetch champions for filters
   const champions = await getCachedChampions();
   
+  // TODO: Fetch a Set of champion IDs that have associated WarFight records (as attacker or defender) to pass to SearchFilters as `activeChampionIds` for smarter filtering.
+  
   // Fetch available seasons
   const rawSeasons = await prisma.war.findMany({
     distinct: ['season'],
@@ -180,7 +182,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
           </div>
         </div>
 
-        <SearchFilters champions={champions as any} availableSeasons={availableSeasons} />
+        <SearchFilters champions={champions as any} availableSeasons={availableSeasons} currentUser={currentUser} />
       </div>
 
       {/* Fights Content */}

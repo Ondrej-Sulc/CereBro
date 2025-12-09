@@ -1,8 +1,8 @@
 import React from "react";
 import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
-import { PlayerCombobox } from "@/components/PlayerCombobox";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
+import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
 import { Champion } from "@/types/champion";
 import { PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from "@/lib/championHelper";

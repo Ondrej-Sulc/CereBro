@@ -5,7 +5,7 @@ import { Champion, Player, Roster } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { getPlayerRoster, getOwnersOfChampion } from "@/app/planning/actions";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
