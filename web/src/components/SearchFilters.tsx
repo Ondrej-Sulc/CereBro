@@ -1,6 +1,4 @@
-"use client";
-
-import { Search, Filter, ChevronDown, ChevronUp, Video, X, ArrowRightLeft, User, Shield } from "lucide-react";
+import { Search, Filter, ChevronDown, ChevronUp, Video, X, User, Shield } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@/types/champion";
 import { useState, useTransition, useCallback, useEffect, useRef, useMemo } from "react";
@@ -56,14 +54,8 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
   const debouncedNode = useDebounce(node, 500);
   const debouncedBattlegroup = useDebounce(battlegroup, 500);
   
-  // Handlers
-  const handleSwap = useCallback(() => {
-      setAttackerId(prev => {
-          setDefenderId(attackerId);
-          return defenderId;
-      });
-  }, [attackerId, defenderId]);
-
+  // Handlers - Removed handleSwap
+  
   // Options
   const warOptions = useMemo(() => [
       { value: "0", label: "Offseason" },
@@ -218,15 +210,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     />
                 </div>
                  
-                 <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handleSwap}
-                    className="h-8 w-8 rounded-full text-slate-500 hover:text-sky-400 shrink-0"
-                    title="Swap Attacker & Defender"
-                 >
-                     <ArrowRightLeft className="h-4 w-4" />
-                 </Button>
+                 <span className="text-slate-600 font-bold text-xs">VS</span>
 
                 <div className="flex-1 min-w-[140px]">
                     <ChampionCombobox 

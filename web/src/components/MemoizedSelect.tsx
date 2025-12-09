@@ -31,7 +31,7 @@ export const MemoizedSelect = React.memo(function MemoizedSelect({
 }: MemoizedSelectProps) {
   return (
     <Select onValueChange={onValueChange} value={value} required={required} disabled={disabled}>
-      <SelectTrigger className={className}>
+      <SelectTrigger className={cn("min-h-[2.25rem]", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className={contentClassName}>
