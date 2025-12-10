@@ -1,3 +1,5 @@
+"use client";
+
 import { Search, Filter, ChevronDown, ChevronUp, Video, X, User, Shield } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@/types/champion";
@@ -257,13 +259,17 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className={cn(
                         "h-10 gap-2 min-w-[100px] transition-all",
-                        showAdvanced ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" : "text-slate-400 hover:text-white"
+                        activeAdvancedCount > 0 
+                            ? "bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:text-purple-300" 
+                            : showAdvanced 
+                                ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" 
+                                : "text-slate-400 hover:text-white"
                     )}
                 >
                     <Filter className="h-4 w-4" />
                     <span>Filters</span>
                     {activeAdvancedCount > 0 && (
-                        <Badge variant="secondary" className="h-5 px-1.5 min-w-[1.25rem] bg-sky-500/20 text-sky-300 border-0 pointer-events-none">
+                        <Badge variant="secondary" className="h-5 px-1.5 min-w-[1.25rem] bg-purple-500/20 text-purple-300 border-0 pointer-events-none">
                             {activeAdvancedCount}
                         </Badge>
                     )}
@@ -296,41 +302,47 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
 
         {/* Secondary / Advanced Filters */}
         {showAdvanced && (
-             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 bg-slate-900/40 border border-slate-800/50 rounded-xl animate-in slide-in-from-top-2 fade-in duration-200">
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 bg-slate-900/90 border border-slate-800 rounded-xl shadow-lg animate-in slide-in-from-top-2 fade-in duration-200">
                 <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Seasons</Label>
+                    <div className="h-5 flex items-center">
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", selectedSeasons.length > 0 ? "text-purple-400" : "text-slate-500")}>Seasons</Label>
+                    </div>
                     <SeasonMultiSelect 
                         seasons={availableSeasons}
                         selected={selectedSeasons}
                         onChange={setSelectedSeasons}
-                        className="h-9 bg-slate-950/30 border-slate-800"
+                        className="h-9 bg-slate-950/60 border-slate-800"
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">War #</Label>
+                    <div className="h-5 flex items-center">
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", war ? "text-purple-400" : "text-slate-500")}>War #</Label>
+                    </div>
                     <MemoizedSelect
                         value={war}
                         onValueChange={setWar}
                         options={warOptions}
                         placeholder="Any"
-                        className="h-9 bg-slate-950/30 border-slate-800"
+                        className="h-9 bg-slate-950/60 border-slate-800"
                         contentClassName="max-h-60"
                     />
                 </div>
                 <div className="space-y-1.5">
-                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Tier</Label>
+                    <div className="h-5 flex items-center">
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", tier ? "text-purple-400" : "text-slate-500")}>Tier</Label>
+                    </div>
                     <MemoizedSelect
                         value={tier}
                         onValueChange={setTier}
                         options={tierOptions}
                         placeholder="Any"
-                        className="h-9 bg-slate-950/30 border-slate-800"
+                        className="h-9 bg-slate-950/60 border-slate-800"
                         contentClassName="max-h-60"
                     />
                 </div>
                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                        <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Player</Label>
+                    <div className="flex justify-between items-center h-5">
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-purple-400" : "text-slate-500")}>Player</Label>
                         {currentUser && (
                             <Button 
                                 variant={player === currentUser.ingameName ? "secondary" : "ghost"}
@@ -345,12 +357,12 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     <AsyncPlayerCombobox
                         value={player}
                         onSelect={setPlayer}
-                        className="h-9 bg-slate-950/30 border-slate-800"
+                        className="h-9 bg-slate-950/60 border-slate-800"
                     />
                 </div>
                  <div className="space-y-1.5">
-                    <div className="flex justify-between items-center">
-                        <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Alliance</Label>
+                    <div className="flex justify-between items-center h-5">
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-purple-400" : "text-slate-500")}>Alliance</Label>
                         {currentUser?.alliance && (
                             <Button 
                                 variant={alliance === currentUser.alliance.name ? "secondary" : "ghost"}
@@ -365,12 +377,14 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     <AsyncAllianceCombobox
                         value={alliance}
                         onSelect={setAlliance}
-                        className="h-9 bg-slate-950/30 border-slate-800"
+                        className="h-9 bg-slate-950/60 border-slate-800"
                     />
                 </div>
                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Battlegroup</Label>
-                    <div className="flex items-center gap-1 bg-slate-950/30 border border-slate-800 rounded-md p-1 h-9">
+                    <div className="h-5 flex items-center">
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", battlegroup ? "text-purple-400" : "text-slate-500")}>Battlegroup</Label>
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-950/60 border border-slate-800 rounded-md p-1 h-9">
                         {[1, 2, 3].map((bg) => (
                             <button
                                 key={bg}

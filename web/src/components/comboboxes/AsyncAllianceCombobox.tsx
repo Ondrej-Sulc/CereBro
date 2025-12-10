@@ -98,7 +98,7 @@ export function AsyncAllianceCombobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-              "w-full justify-between pr-2 pl-3 rounded-md min-h-[2.25rem]", 
+              "w-full justify-between pr-2 pl-3 rounded-md min-h-[2.25rem] items-center", 
               className
           )}
         >
