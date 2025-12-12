@@ -50,6 +50,8 @@ export function AdvancedFilters({
   tierOptions,
   currentUser,
 }: AdvancedFiltersProps) {
+  const allyName = currentUser?.alliance?.name; // Hoisted from IIFE
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 bg-slate-900/90 border border-slate-800 rounded-xl shadow-lg animate-in slide-in-from-top-2 fade-in duration-200">
       <div className="space-y-1.5 col-span-2 sm:col-span-1">
@@ -155,21 +157,18 @@ export function AdvancedFilters({
           >
             Alliance
           </Label>
-          {currentUser?.alliance && (() => {
-            const allyName = currentUser.alliance.name;
-            return (
-              <Button
-                variant={alliance === allyName ? "secondary" : "ghost"}
-                size="sm"
-                className="h-4 px-1.5 text-[9px]"
-                onClick={() =>
-                  setAlliance(alliance === allyName ? "" : allyName)
-                }
-              >
-                <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
-              </Button>
-            );
-          })()}{" "}
+          {allyName && (
+            <Button
+              variant={alliance === allyName ? "secondary" : "ghost"}
+              size="sm"
+              className="h-4 px-1.5 text-[9px]"
+              onClick={() =>
+                setAlliance(alliance === allyName ? "" : allyName)
+              }
+            >
+              <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
+            </Button>
+          )}
         </div>{" "}
         <AsyncAllianceCombobox
           value={alliance}
