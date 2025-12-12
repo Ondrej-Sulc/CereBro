@@ -6,7 +6,6 @@ import { Champion } from "@/types/champion";
 import { useState, useTransition, useCallback, useEffect, useRef, useMemo } from "react";
 import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
 import { cn } from "@/lib/utils";
-import { FlipToggle } from "@/components/ui/flip-toggle";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Badge } from "@/components/ui/badge";
 import { AsyncPlayerCombobox } from "@/components/comboboxes/AsyncPlayerCombobox";
@@ -166,13 +165,26 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
             
             {/* Top Row / Left Side: Map & Node */}
             <div className="flex items-center gap-1 w-full lg:w-auto">
-                <FlipToggle 
-                    value={mapType === "BIG_THING"}
-                    onChange={(v) => setMapType(v ? "BIG_THING" : "STANDARD")}
-                    leftLabel="Standard"
-                    rightLabel="Big Thing"
-                    className="h-10 w-36 shrink-0"
-                />
+                <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800 h-10 w-36 shrink-0 relative">
+                    <button
+                        onClick={() => setMapType("STANDARD")}
+                        className={cn(
+                            "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
+                            mapType !== "BIG_THING" ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50" : "text-slate-500 hover:text-slate-300"
+                        )}
+                    >
+                        Standard
+                    </button>
+                    <button
+                        onClick={() => setMapType("BIG_THING")}
+                        className={cn(
+                            "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
+                            mapType === "BIG_THING" ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50" : "text-slate-500 hover:text-slate-300"
+                        )}
+                    >
+                        Big Thing
+                    </button>
+                </div>
                 
                 <div className="relative w-20 lg:w-24 shrink-0">
                     <Input 
@@ -191,8 +203,8 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     size="icon"
                     onClick={() => setHasVideo(!hasVideo)}
                     className={cn(
-                        "h-10 w-10 shrink-0 lg:order-last",
-                        hasVideo ? "bg-red-600 hover:bg-red-700 text-white border-red-500" : "bg-slate-950/50 border-slate-800 text-slate-400 hover:text-white"
+                        "h-10 w-10 shrink-0 lg:order-last transition-all duration-200",
+                        hasVideo ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50 border-transparent" : "bg-slate-950/50 border-slate-800 text-slate-400 hover:text-white"
                     )}
                     title="Toggle Video Only"
                 >
@@ -259,17 +271,15 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className={cn(
                         "h-10 gap-2 min-w-[100px] transition-all",
-                        activeAdvancedCount > 0 
-                            ? "bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 hover:text-purple-300" 
-                            : showAdvanced 
-                                ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" 
-                                : "text-slate-400 hover:text-white"
+                        showAdvanced || activeAdvancedCount > 0
+                            ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:text-cyan-300" 
+                            : "text-slate-400 hover:text-white"
                     )}
                 >
                     <Filter className="h-4 w-4" />
                     <span>Filters</span>
                     {activeAdvancedCount > 0 && (
-                        <Badge variant="secondary" className="h-5 px-1.5 min-w-[1.25rem] bg-purple-500/20 text-purple-300 border-0 pointer-events-none">
+                        <Badge variant="secondary" className="h-5 px-1.5 min-w-[1.25rem] bg-cyan-500/20 text-cyan-300 border-0 pointer-events-none">
                             {activeAdvancedCount}
                         </Badge>
                     )}
@@ -285,13 +295,13 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     <Badge 
                         key={filter.id} 
                         variant="secondary" 
-                        className="bg-slate-900/40 border border-slate-800 hover:bg-slate-800 pl-2 pr-1 py-1 gap-1 text-slate-300 font-normal transition-colors"
+                        className="bg-cyan-950/40 border border-cyan-500/30 hover:bg-cyan-900/50 pl-2 pr-1 py-1 gap-1 text-cyan-200 font-normal transition-colors"
                     >
                         {filter.label}
                         <div 
                             role="button" 
                             onClick={filter.onRemove}
-                            className="p-0.5 rounded-full hover:bg-slate-700 hover:text-white cursor-pointer"
+                            className="p-0.5 rounded-full hover:bg-cyan-800 hover:text-white cursor-pointer"
                         >
                             <X className="h-3 w-3" />
                         </div>
@@ -305,7 +315,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-4 bg-slate-900/90 border border-slate-800 rounded-xl shadow-lg animate-in slide-in-from-top-2 fade-in duration-200">
                 <div className="space-y-1.5 col-span-2 sm:col-span-1">
                     <div className="h-5 flex items-center">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", selectedSeasons.length > 0 ? "text-purple-400" : "text-slate-500")}>Seasons</Label>
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", selectedSeasons.length > 0 ? "text-cyan-400" : "text-slate-500")}>Seasons</Label>
                     </div>
                     <SeasonMultiSelect 
                         seasons={availableSeasons}
@@ -316,7 +326,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                 <div className="space-y-1.5">
                     <div className="h-5 flex items-center">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", war ? "text-purple-400" : "text-slate-500")}>War #</Label>
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", war ? "text-cyan-400" : "text-slate-500")}>War #</Label>
                     </div>
                     <MemoizedSelect
                         value={war}
@@ -329,7 +339,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                 <div className="space-y-1.5">
                     <div className="h-5 flex items-center">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", tier ? "text-purple-400" : "text-slate-500")}>Tier</Label>
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", tier ? "text-cyan-400" : "text-slate-500")}>Tier</Label>
                     </div>
                     <MemoizedSelect
                         value={tier}
@@ -342,7 +352,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                  <div className="space-y-1.5">
                     <div className="flex justify-between items-center h-5">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-purple-400" : "text-slate-500")}>Player</Label>
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-cyan-400" : "text-slate-500")}>Player</Label>
                         {currentUser && (
                             <Button 
                                 variant={player === currentUser.ingameName ? "secondary" : "ghost"}
@@ -362,7 +372,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                  <div className="space-y-1.5">
                     <div className="flex justify-between items-center h-5">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-purple-400" : "text-slate-500")}>Alliance</Label>
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-cyan-400" : "text-slate-500")}>Alliance</Label>
                         {currentUser?.alliance && (
                             <Button 
                                 variant={alliance === currentUser.alliance.name ? "secondary" : "ghost"}
@@ -382,7 +392,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                  <div className="space-y-1.5">
                     <div className="h-5 flex items-center">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", battlegroup ? "text-purple-400" : "text-slate-500")}>Battlegroup</Label>
+                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", battlegroup ? "text-cyan-400" : "text-slate-500")}>Battlegroup</Label>
                     </div>
                     <div className="flex items-center gap-1 bg-slate-950/60 border border-slate-800 rounded-md p-1 h-9">
                         {[1, 2, 3].map((bg) => (
@@ -392,7 +402,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                                 className={cn(
                                     "flex-1 h-full rounded text-xs font-medium transition-colors hover:bg-slate-800",
                                     battlegroup === bg.toString() 
-                                        ? "bg-sky-600 text-white shadow-sm" 
+                                        ? "bg-cyan-600 text-white shadow-sm" 
                                         : "text-slate-400"
                                 )}
                             >
