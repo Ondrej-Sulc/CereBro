@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AsyncPlayerCombobox } from "@/components/comboboxes/AsyncPlayerCombobox";
 import { AsyncAllianceCombobox } from "@/components/comboboxes/AsyncAllianceCombobox";
 import { MemoizedSelect } from "@/components/MemoizedSelect";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ interface SearchFiltersProps {
 
 export function SearchFilters({ champions, availableSeasons, currentUser }: SearchFiltersProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -111,10 +112,9 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
 
     // Only push if changed to prevent loops
     if (newQueryString !== currentQueryString) {
-        startTransition(() => {
-            router.push(`/war-videos?${newQueryString}`, { scroll: false });
-        });
-    }
+            startTransition(() => {
+                router.push(`${pathname}?${newQueryString}`, { scroll: false });
+            });    }
   }, [
     mapType, 
     attackerId, 
@@ -166,19 +166,19 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
             {/* Top Row / Left Side: Map & Node */}
             <div className="grid grid-cols-[1fr_auto_auto] gap-2 w-full lg:flex lg:w-auto lg:gap-1">
                 <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800 h-10 w-full lg:w-36 shrink-0 relative">
-                    <button
-                        onClick={() => setMapType("STANDARD")}
-                        className={cn(
-                            "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
+                                <button
+                                  onClick={() => setMapType("STANDARD")}
+                                  aria-pressed={mapType !== "BIG_THING"}
+                                  className={cn(                            "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
                             mapType !== "BIG_THING" ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50" : "text-slate-500 hover:text-slate-300"
                         )}
                     >
                         Standard
                     </button>
-                    <button
-                        onClick={() => setMapType("BIG_THING")}
-                        className={cn(
-                            "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
+                                <button
+                                  onClick={() => setMapType("BIG_THING")}
+                                  aria-pressed={mapType === "BIG_THING"}
+                                  className={cn(                            "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
                             mapType === "BIG_THING" ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50" : "text-slate-500 hover:text-slate-300"
                         )}
                     >
@@ -352,24 +352,17 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                                   <div className="space-y-1.5">
                                      <div className="flex justify-between items-center h-5">
-                                         <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-cyan-400" : "text-slate-500")}>Player</Label>
-                                         {currentUser && (
-                                             (() => {
-                                                 const userName = currentUser.ingameName;
-                                                 if (!userName) return null;
-                                                 return (
-                                                     <Button
-                                                         variant={player === userName ? "secondary" : "ghost"}
-                                                         size="sm"
-                                                         className="h-4 px-1.5 text-[9px]"
-                                                         onClick={() => setPlayer(player === userName ? "" : userName)}
-                                                     >
-                                                         <User className="h-2.5 w-2.5 mr-1" /> Me
-                                                     </Button>
-                                                 );
-                                             })()
-                                         )}
-                                     </div>                    <AsyncPlayerCombobox
+                                                                     <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-cyan-400" : "text-slate-500")}>Player</Label>
+                                                                     {currentUser?.ingameName && (
+                                                                         <Button
+                                                                             variant={player === currentUser.ingameName ? "secondary" : "ghost"}
+                                                                             size="sm"
+                                                                             className="h-4 px-1.5 text-[9px]"
+                                                                             onClick={() => setPlayer(player === currentUser.ingameName ? "" : currentUser.ingameName)}
+                                                                         >
+                                                                             <User className="h-2.5 w-2.5 mr-1" /> Me
+                                                                         </Button>
+                                                                     )}                                     </div>                    <AsyncPlayerCombobox
                         value={player}
                         onSelect={setPlayer}
                         className="h-9 bg-slate-950/60 border-slate-800"
@@ -377,21 +370,17 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                 </div>
                                   <div className="space-y-1.5">
                                      <div className="flex justify-between items-center h-5">
-                                         <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-cyan-400" : "text-slate-500")}>Alliance</Label>
-                                         {currentUser?.alliance && (() => {
-                                             const allyName = currentUser.alliance.name;
-                                             return (
-                                                 <Button
-                                                     variant={alliance === allyName ? "secondary" : "ghost"}
-                                                     size="sm"
-                                                     className="h-4 px-1.5 text-[9px]"
-                                                     onClick={() => setAlliance(alliance === allyName ? "" : allyName)}
-                                                 >
-                                                     <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
-                                                 </Button>
-                                             );
-                                         })()}
-                                     </div>                    <AsyncAllianceCombobox
+                                                                     <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-cyan-400" : "text-slate-500")}>Alliance</Label>
+                                                                     {currentUser?.alliance && (
+                                                                         <Button
+                                                                             variant={alliance === currentUser.alliance.name ? "secondary" : "ghost"}
+                                                                             size="sm"
+                                                                             className="h-4 px-1.5 text-[9px]"
+                                                                             onClick={() => setAlliance(alliance === currentUser.alliance.name ? "" : currentUser.alliance.name)}
+                                                                         >
+                                                                             <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
+                                                                         </Button>
+                                                                     )}                                     </div>                    <AsyncAllianceCombobox
                         value={alliance}
                         onSelect={setAlliance}
                         className="h-9 bg-slate-950/60 border-slate-800"
@@ -406,6 +395,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                             <button
                                 key={bg}
                                 onClick={() => setBattlegroup(battlegroup === bg.toString() ? "" : bg.toString())}
+                                aria-pressed={battlegroup === bg.toString()}
                                 className={cn(
                                     "flex-1 h-full rounded text-xs font-medium transition-colors hover:bg-slate-800",
                                     battlegroup === bg.toString() 
