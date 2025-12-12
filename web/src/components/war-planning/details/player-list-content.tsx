@@ -8,7 +8,7 @@ import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning
 import { War, WarMapType, ChampionClass } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ExtraChampion } from "../hooks/use-war-planning";
-import { ChampionCombobox } from "@/components/ChampionCombobox"; 
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox"; 
 import { Champion } from "@/types/champion";
 import { motion } from "framer-motion";
 import { usePlayerColor } from "../player-color-context";

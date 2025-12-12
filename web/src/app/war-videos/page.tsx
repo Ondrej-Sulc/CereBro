@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Search, Play, Calendar, User, Shield, Swords, CircleDot, EyeOff, Filter } from "lucide-react";
+import { Search, Play, Calendar, User, Shield, Swords, CircleDot, EyeOff, Filter, Skull } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarTactic, WarMapType } from "@prisma/client";
@@ -67,6 +67,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   // Fetch champions for filters
   const champions = await getCachedChampions();
   
+  // TODO: Fetch a Set of champion IDs that have associated WarFight records (as attacker or defender) to pass to SearchFilters as `activeChampionIds` for smarter filtering.
+  
   // Fetch available seasons
   const rawSeasons = await prisma.war.findMany({
     distinct: ['season'],
@@ -101,6 +103,9 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       AND: [
         { war: { status: 'FINISHED' } },
         { war: { mapType: mapType } },
+        { attacker: { isNot: null } },
+        { defender: { isNot: null } },
+        { player: { isNot: null } },
         {
             OR: [
                 {
@@ -180,7 +185,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
           </div>
         </div>
 
-        <SearchFilters champions={champions as any} availableSeasons={availableSeasons} />
+        <SearchFilters champions={champions as any} availableSeasons={availableSeasons} currentUser={currentUser} />
       </div>
 
       {/* Fights Content */}
@@ -200,7 +205,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
             <div 
                 key={fight.id} 
                 className={cn(
-                    "group relative flex flex-col bg-slate-900/40 border border-slate-800/60 rounded-lg overflow-hidden transition-all duration-300",
+                    "group relative flex flex-col rounded-lg overflow-hidden transition-all duration-300",
+                    fight.death > 0 ? "bg-red-950/20 border border-red-900/30" : "bg-slate-900/40 border border-slate-800/60",
                     fight.video ? "hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10" : "opacity-90"
                 )}
             >
@@ -209,7 +215,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                     className={cn("flex-1 flex flex-col", !fight.video && "pointer-events-none")}
                 >
                     {/* Header / Meta */}
-                    <div className="px-3 py-2 border-b border-slate-800/60 flex justify-between items-center bg-slate-950/30">
+                    <div className={cn("px-3 py-2 border-b flex justify-between items-center", fight.death > 0 ? "border-red-900/30 bg-red-950/30" : "border-slate-800/60 bg-slate-950/30")}>
                         <div className="flex gap-1.5 items-center">
                             <Badge variant="outline" className="border-slate-700 text-slate-400 text-[9px] h-4.5 px-1.5">
                                 S{fight.war.season}
@@ -258,7 +264,12 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                     )}
                                 </div>
                                 ) : <div className="w-11 h-11 bg-slate-800 rounded-full" />}
-                                <span className={cn("text-xs font-bold text-center leading-tight truncate w-full px-1", fight.attacker ? getChampionClassColors(fight.attacker.class as ChampionClass).text : "")}>{fight.attacker?.name || '?'}</span>
+                                <div className="flex items-center gap-1 justify-center w-full">
+                                    <span className={cn("text-xs font-bold text-center leading-tight truncate px-1 max-w-[85%]", fight.attacker ? getChampionClassColors(fight.attacker.class as ChampionClass).text : "")}>{fight.attacker?.name || '?'}</span>
+                                    {fight.death > 0 && (
+                                        <Skull className="w-3 h-3 text-red-500 shrink-0" />
+                                    )}
+                                </div>
                             </div>
 
                             {/* VS / Node */}
@@ -363,7 +374,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                         <tr 
                             key={fight.id} 
                             className={cn(
-                                "group transition-colors hover:bg-slate-800/30",
+                                "group transition-colors",
+                                fight.death > 0 ? "bg-red-950/10 hover:bg-red-900/20" : "hover:bg-slate-800/30",
                                 fight.video ? "cursor-pointer" : "cursor-default"
                             )}
                         >
@@ -427,9 +439,17 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={cn("font-bold truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
-                                                {fight.attacker.name}
-                                            </span>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className={cn("font-bold truncate", getChampionClassColors(fight.attacker.class as ChampionClass).text)}>
+                                                    {fight.attacker.name}
+                                                </span>
+                                                {fight.death > 0 && (
+                                                    <span className="text-[10px] text-red-400 flex items-center gap-1 font-medium">
+                                                        <Skull className="w-3 h-3" /> 
+                                                        Death {fight.death > 1 ? `(${fight.death})` : ''}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </>
                                         ) : <span className="text-slate-500">?</span>}
                                     </div>

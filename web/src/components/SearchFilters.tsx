@@ -1,233 +1,240 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { Filter, ChevronDown, ChevronUp, Video, X } from "lucide-react";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
+import { Champion } from "@/types/champion";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Search, Filter, ChevronDown } from "lucide-react";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
-import { Champion } from "@/types/champion";
-import { useState, useTransition, useCallback } from "react";
-import { SeasonMultiSelect } from "@/components/SeasonMultiSelect";
-import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Player, Alliance } from "@prisma/client";
+import { useSearchFilters } from "@/hooks/use-search-filters";
+import { ActiveFilterChips } from "@/components/search-filters/ActiveFilterChips";
+import { AdvancedFilters } from "@/components/search-filters/AdvancedFilters";
 
 interface SearchFiltersProps {
   champions: Champion[];
   availableSeasons: number[];
+  currentUser?: (Player & { alliance: Alliance | null }) | null;
 }
 
-export function SearchFilters({ champions, availableSeasons }: SearchFiltersProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
-  const [isCollapsed, setIsCollapsed] = useState(true); // Default to collapsed
+export function SearchFilters({
+  champions,
+  availableSeasons,
+  currentUser,
+}: SearchFiltersProps) {
+  const { state, setters, computed } = useSearchFilters({
+    champions,
+    availableSeasons,
+  });
 
-  // Local state for controlled inputs
-  const [query, setQuery] = useState(searchParams.get("q") || "");
-  const [attacker, setAttacker] = useState(searchParams.get("attacker") || "");
-  const [defender, setDefender] = useState(searchParams.get("defender") || "");
-  const [node, setNode] = useState(searchParams.get("node") || "");
-  const [war, setWar] = useState(searchParams.get("war") || "");
-  const [tier, setTier] = useState(searchParams.get("tier") || "");
-  const [player, setPlayer] = useState(searchParams.get("player") || "");
-  const [alliance, setAlliance] = useState(searchParams.get("alliance") || "");
-  const [battlegroup, setBattlegroup] = useState(searchParams.get("battlegroup") || "");
-  const [mapType, setMapType] = useState(searchParams.get("map") || "STANDARD");
-  
-  const initialSeasons = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
-  const [selectedSeasons, setSelectedSeasons] = useState<number[]>(initialSeasons);
-  
-  const [hasVideo, setHasVideo] = useState(searchParams.get("hasVideo") === "true");
+  const {
+    mapType,
+    attackerId,
+    defenderId,
+    node,
+    hasVideo,
+    showAdvanced,
+    selectedSeasons,
+    war,
+    tier,
+    player,
+    alliance,
+    battlegroup,
+  } = state;
 
-  const handleSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    startTransition(() => {
-      const params = new URLSearchParams();
-      if (query) params.set("q", query);
-      
-      const attackerName = champions.find(c => String(c.id) === attacker)?.name || attacker;
-      const defenderName = champions.find(c => String(c.id) === defender)?.name || defender;
+  const {
+    setMapType,
+    setAttackerId,
+    setDefenderId,
+    setNode,
+    setHasVideo,
+    setShowAdvanced,
+    clearAll,
+    setSelectedSeasons,
+    setWar,
+    setTier,
+    setPlayer,
+    setAlliance,
+    setBattlegroup,
+  } = setters;
 
-      if (attackerName) params.set("attacker", attackerName);
-      if (defenderName) params.set("defender", defenderName);
-      if (node) params.set("node", node);
-      if (war) params.set("war", war);
-      if (tier) params.set("tier", tier);
-      if (player) params.set("player", player);
-      if (alliance) params.set("alliance", alliance);
-      if (battlegroup) params.set("battlegroup", battlegroup);
-      if (mapType) params.set("map", mapType);
-      
-      selectedSeasons.forEach(s => params.append("season", s.toString()));
-      
-      if (hasVideo) params.set("hasVideo", "true");
+  const {
+    isPending,
+    activeAdvancedCount,
+    activeFilters,
+    warOptions,
+    tierOptions,
+  } = computed;
 
-      router.push(`/war-videos?${params.toString()}`);
-    });
-  };
-
-  const getIdByName = (name: string) => champions.find(c => c.name.toLowerCase() === name.toLowerCase())?.id.toString() || "";
-
-  const [attackerId, setAttackerId] = useState(getIdByName(attacker));
-  const [defenderId, setDefenderId] = useState(getIdByName(defender));
-
-  const handleAttackerSelect = useCallback((id: string) => {
-      setAttackerId(id);
-      setAttacker(id); 
-  }, []);
-
-  const handleDefenderSelect = useCallback((id: string) => {
-      setDefenderId(id);
-      setDefender(id);
-  }, []);
+  const hasAnyMainFilter = attackerId || defenderId || node || hasVideo || activeAdvancedCount > 0;
 
   return (
-    <div className="flex flex-col gap-4 max-w-7xl w-full">
-      {/* Mobile Filter Toggle Header */}
-      <div 
-        className="md:hidden flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-slate-800/50 cursor-pointer"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-      >
-        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-          <Filter className="h-4 w-4 text-sky-400" /> Filters
-        </h3>
-        <ChevronDown className={cn("h-4 w-4 text-slate-400 transition-transform", !isCollapsed && "rotate-180")} />
-      </div>
+    <div
+      className={cn(
+        "flex flex-col gap-2 w-full max-w-[1600px] mx-auto transition-opacity duration-200",
+        isPending && "opacity-70 pointer-events-none"
+      )}
+    >
+      {/* Main Active Toolbar */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 p-2 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl shadow-sm">
+        {/* Top Row / Left Side: Map & Node */}
+        <div className="grid grid-cols-[1fr_auto_auto] gap-2 w-full lg:flex lg:w-auto lg:gap-1">
+          <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800 h-10 w-full lg:w-36 shrink-0 relative">
+            <button
+              onClick={() => setMapType("STANDARD")}
+              aria-pressed={mapType !== "BIG_THING"}
+              className={cn(
+                "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
+                mapType !== "BIG_THING"
+                  ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50"
+                  : "text-slate-500 hover:text-slate-300"
+              )}
+            >
+              Standard
+            </button>
+            <button
+              onClick={() => setMapType("BIG_THING")}
+              aria-pressed={mapType === "BIG_THING"}
+              className={cn(
+                "flex-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 z-10",
+                mapType === "BIG_THING"
+                  ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50"
+                  : "text-slate-500 hover:text-slate-300"
+              )}
+            >
+              Big Thing
+            </button>
+          </div>
 
-      <form onSubmit={handleSearch} className={cn("flex flex-col gap-4", isCollapsed && "hidden md:flex")}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3 p-3 bg-slate-900/30 rounded-lg border border-slate-800/50">
-          <div className="space-y-2">
-             <Label className="text-xs text-slate-400">Map</Label>
-             <Select value={mapType} onValueChange={setMapType}>
-               <SelectTrigger className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full">
-                 <SelectValue placeholder="Select Map" />
-               </SelectTrigger>
-               <SelectContent>
-                 <SelectItem value="STANDARD">Standard</SelectItem>
-                 <SelectItem value="BIG_THING">Big Thing</SelectItem>
-               </SelectContent>
-             </Select>
-           </div>
-          <div className="space-y-2 lg:col-span-2 xl:col-span-2">
-            <Label className="text-xs text-slate-400">Attacker</Label>
-            <ChampionCombobox 
-              champions={champions}
-              value={attackerId}
-              onSelect={handleAttackerSelect}
-              placeholder="Select Attacker"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
-            />
-          </div>
-          <div className="space-y-2 lg:col-span-2 xl:col-span-2">
-            <Label className="text-xs text-slate-400">Defender</Label>
-            <ChampionCombobox 
-              champions={champions}
-              value={defenderId}
-              onSelect={handleDefenderSelect}
-              placeholder="Select Defender"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="node" className="text-xs text-slate-400">Node</Label>
+          <div className="relative w-20 lg:w-24 shrink-0">
             <Input
-              id="node"
-              type="number"
+              placeholder="#"
               value={node}
               onChange={(e) => setNode(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="h-10 bg-slate-950/50 border-slate-800 text-center font-mono placeholder:text-slate-600 pl-8"
+            />
+            <span className="absolute top-1/2 left-2 -translate-y-1/2 text-[9px] font-bold text-slate-500 pointer-events-none uppercase tracking-wider">
+              NODE
+            </span>
+          </div>
+
+          <Button
+            variant={hasVideo ? "default" : "outline"}
+            size="icon"
+            onClick={() => setHasVideo(!hasVideo)}
+            className={cn(
+              "h-10 w-10 shrink-0 lg:order-last transition-all duration-200",
+              hasVideo
+                ? "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/50 border-transparent"
+                : "bg-slate-950/50 border-slate-800 text-slate-400 hover:text-white"
+            )}
+            title="Toggle Video Only"
+          >
+            <Video className={cn("h-4 w-4", hasVideo && "fill-current")} />
+          </Button>
+        </div>
+
+        {/* Middle: Champions */}
+        <div className="flex flex-1 items-center gap-2 w-full">
+          <div className="flex-1 min-w-[140px]">
+            <ChampionCombobox
+              champions={champions}
+              value={attackerId}
+              onSelect={setAttackerId}
+              placeholder="Attacker..."
+              className="h-10 bg-slate-950/50 border-slate-800 w-full rounded-full"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="player" className="text-xs text-slate-400">Player</Label>
-            <Input
-              id="player"
-              value={player}
-              onChange={(e) => setPlayer(e.target.value)}
-              placeholder="Name"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm"
+
+          <span className="text-slate-600 font-bold text-xs">VS</span>
+
+          <div className="flex-1 min-w-[140px]">
+            <ChampionCombobox
+              champions={champions}
+              value={defenderId}
+              onSelect={setDefenderId}
+              placeholder="Defender..."
+              className="h-10 bg-slate-950/50 border-slate-800 w-full rounded-full"
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="alliance" className="text-xs text-slate-400">Alliance</Label>
-            <Input
-              id="alliance"
-              value={alliance}
-              onChange={(e) => setAlliance(e.target.value)}
-              placeholder="Tag or Name"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-slate-400">Seasons</Label>
-            <SeasonMultiSelect 
-              seasons={availableSeasons}
-              selected={selectedSeasons}
-              onChange={setSelectedSeasons}
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="war" className="text-xs text-slate-400">War</Label>
-            <Input
-              id="war"
-              type="number"
-              value={war}
-              onChange={(e) => setWar(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tier" className="text-xs text-slate-400">Tier</Label>
-            <Input
-              id="tier"
-              type="number"
-              value={tier}
-              onChange={(e) => setTier(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="battlegroup" className="text-xs text-slate-400">BG</Label>
-            <Input
-              id="battlegroup"
-              type="number"
-              min={1}
-              max={3}
-              value={battlegroup}
-              onChange={(e) => setBattlegroup(e.target.value)}
-              placeholder="#"
-              className="h-8 bg-slate-950/50 border-slate-800 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-          </div>
-          <div className="flex items-end pb-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="hasVideo"
-                checked={hasVideo}
-                onCheckedChange={(checked) => setHasVideo(Boolean(checked))}
-              />
-              <Label htmlFor="hasVideo" className="text-sm cursor-pointer text-slate-300">Has Video</Label>
-            </div>
-          </div>
-          <div className="flex items-end">
-            <Button type="submit" className="bg-sky-600 hover:bg-sky-700 text-white w-full h-8" disabled={isPending}>
-              {isPending ? "..." : "Search"}
-            </Button>
           </div>
         </div>
-      </form>
+
+        {/* Right: Expand & Clear */}
+        <div
+          className={cn(
+            "grid gap-2 w-full lg:flex lg:w-auto lg:justify-end",
+            hasAnyMainFilter ? "grid-cols-2" : "grid-cols-1"
+          )}
+        >
+          {/* Clear Filters (Only show if any filter is active) */}
+          {hasAnyMainFilter && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAll}
+              className="h-10 px-2 text-slate-400 hover:text-red-400 w-full lg:w-auto"
+            >
+              <X className="h-4 w-4 mr-1" />
+              <span className="inline">Clear</span>
+            </Button>
+          )}
+
+          <Button
+            variant={
+              showAdvanced || activeAdvancedCount > 0 ? "secondary" : "ghost"
+            }
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className={cn(
+              "h-10 gap-2 min-w-[100px] transition-all w-full lg:w-auto",
+              showAdvanced || activeAdvancedCount > 0
+                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:text-cyan-300"
+                : "text-slate-400 hover:text-white"
+            )}
+          >
+            <Filter className="h-4 w-4" />
+            <span>Filters</span>
+            {activeAdvancedCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="h-5 px-1.5 min-w-[1.25rem] bg-cyan-500/20 text-cyan-300 border-0 pointer-events-none"
+              >
+                {activeAdvancedCount}
+              </Badge>
+            )}
+            {showAdvanced ? (
+              <ChevronUp className="h-3 w-3 ml-auto" />
+            ) : (
+              <ChevronDown className="h-3 w-3 ml-auto" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Active Filters List */}
+      <ActiveFilterChips activeFilters={activeFilters} />
+
+      {/* Secondary / Advanced Filters */}
+      {showAdvanced && (
+        <AdvancedFilters
+          selectedSeasons={selectedSeasons}
+          war={war}
+          tier={tier}
+          player={player}
+          alliance={alliance}
+          battlegroup={battlegroup}
+          setSelectedSeasons={setSelectedSeasons}
+          setWar={setWar}
+          setTier={setTier}
+          setPlayer={setPlayer}
+          setAlliance={setAlliance}
+          setBattlegroup={setBattlegroup}
+          availableSeasons={availableSeasons}
+          warOptions={warOptions}
+          tierOptions={tierOptions}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }

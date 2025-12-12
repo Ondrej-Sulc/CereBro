@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from "@/lib/utils";
 
 interface Option {
   value: string;
@@ -31,7 +32,7 @@ export const MemoizedSelect = React.memo(function MemoizedSelect({
 }: MemoizedSelectProps) {
   return (
     <Select onValueChange={onValueChange} value={value} required={required} disabled={disabled}>
-      <SelectTrigger className={className}>
+      <SelectTrigger className={cn("min-h-[2.25rem] items-center", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className={contentClassName}>

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { Label } from "@/components/ui/label";
-import { ChampionCombobox } from "@/components/ChampionCombobox";
-import { MultiChampionCombobox } from "@/components/MultiChampionCombobox";
-import { NodeCombobox } from "@/components/NodeCombobox";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
+import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
+import { NodeCombobox } from "@/components/comboboxes/NodeCombobox";
 import {
   Swords,
   Shield,
