@@ -52,6 +52,7 @@ export function AsyncPlayerCombobox({
       if (!open && value !== search) {
           setSearch(value);
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, open]);
 
 
@@ -62,15 +63,20 @@ export function AsyncPlayerCombobox({
         return;
     }
 
+    const controller = new AbortController();
+
     const fetchPlayers = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/search/players?q=${encodeURIComponent(debouncedSearch)}`);
+            const res = await fetch(`/api/search/players?q=${encodeURIComponent(debouncedSearch)}`, {
+                signal: controller.signal
+            });
             if (res.ok) {
                 const data = await res.json();
                 setResults(data.players || []);
             }
         } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') return;
             console.error("Failed to fetch players", error);
         } finally {
             setLoading(false);
@@ -78,6 +84,7 @@ export function AsyncPlayerCombobox({
     };
 
     fetchPlayers();
+    return () => controller.abort();
   }, [debouncedSearch, open]);
 
   const handleSelect = React.useCallback((name: string) => {

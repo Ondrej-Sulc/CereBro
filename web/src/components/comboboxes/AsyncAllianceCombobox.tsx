@@ -50,7 +50,7 @@ export function AsyncAllianceCombobox({
       if (!open && value !== search) {
           setSearch(value);
       }
-  }, [value, open]);
+  }, [value, open, search]);
 
 
   React.useEffect(() => {

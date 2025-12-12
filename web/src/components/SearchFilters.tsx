@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Filter, ChevronDown, ChevronUp, Video, X, User, Shield } from "lucide-react";
+import { Filter, ChevronDown, ChevronUp, Video, X, User, Shield } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@/types/champion";
 import { useState, useTransition, useCallback, useEffect, useRef, useMemo } from "react";
@@ -152,14 +152,14 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
     if (tier) filters.push({ id: 'tier', label: `Tier ${tier}`, onRemove: () => setTier("") });
     if (player) filters.push({ id: 'player', label: `Player: ${player}`, onRemove: () => setPlayer("") });
     if (alliance) filters.push({ id: 'alliance', label: `Alliance: ${alliance}`, onRemove: () => setAlliance("") });
-    if (battlegroup) filters.push({ id: 'battlegroup', label: `BG ${battlegroup}`, onRemove: () => setBattlegroup("") });
+    if (debouncedBattlegroup) filters.push({ id: 'battlegroup', label: `BG ${debouncedBattlegroup}`, onRemove: () => setBattlegroup("") });
     
     return filters;
-  }, [selectedSeasons, war, tier, player, alliance, battlegroup]);
+  }, [selectedSeasons, war, tier, player, alliance, debouncedBattlegroup]);
 
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-[1600px] mx-auto">
+    <div className={cn("flex flex-col gap-2 w-full max-w-[1600px] mx-auto transition-opacity duration-200", isPending && "opacity-70 pointer-events-none")}>
         {/* Main Active Toolbar */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 p-2 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl shadow-sm">
             
@@ -298,14 +298,14 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                         className="bg-cyan-950/40 border border-cyan-500/30 hover:bg-cyan-900/50 pl-2 pr-1 py-1 gap-1 text-cyan-200 font-normal transition-colors"
                     >
                         {filter.label}
-                        <div 
-                            role="button" 
-                            onClick={filter.onRemove}
-                            className="p-0.5 rounded-full hover:bg-cyan-800 hover:text-white cursor-pointer"
-                        >
-                            <X className="h-3 w-3" />
-                        </div>
-                    </Badge>
+                                                <button
+                                                    type="button"
+                                                    onClick={filter.onRemove}
+                                                    className="p-0.5 rounded-full hover:bg-cyan-800 hover:text-white cursor-pointer"
+                                                    aria-label="Remove filter"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>                    </Badge>
                 ))}
             </div>
         )}

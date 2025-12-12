@@ -444,7 +444,10 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                     {fight.attacker.name}
                                                 </span>
                                                 {fight.death > 0 && (
-                                                    <span className="text-[10px] text-red-400 flex items-center gap-1 font-medium"><Skull className="w-3 h-3" /> Death</span>
+                                                    <span className="text-[10px] text-red-400 flex items-center gap-1 font-medium">
+                                                        <Skull className="w-3 h-3" /> 
+                                                        Death {fight.death > 1 ? `(${fight.death})` : ''}
+                                                    </span>
                                                 )}
                                             </div>
                                         </>

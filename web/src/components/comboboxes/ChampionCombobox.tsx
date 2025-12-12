@@ -177,7 +177,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                         onClick={() => setShowOnlyActive(!showOnlyActive)}
                         className="h-6 text-[10px] px-2"
                     >
-                        {showOnlyActive ? "Showing Active" : "Show All"}
+                        {showOnlyActive ? "All Champions" : "Active Only"}
                     </Button>
                 </div>
             )}
