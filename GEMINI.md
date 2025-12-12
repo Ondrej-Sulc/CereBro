@@ -20,7 +20,7 @@ The platform provides a variety of features, including:
     *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
     *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI.
 
-### War Videos Database & Planning
+*   **War Videos Database & Planning**
 
 The bot features a sophisticated system for tracking Alliance War performance by linking war plans to video uploads.
 
@@ -37,6 +37,7 @@ The bot features a sophisticated system for tracking Alliance War performance by
     5.  The bot replies with a private link to the web UI, containing the session token.
     6.  The web UI uses the token to fetch the fight data and pre-fills the video upload form, creating a seamless user experience.
     7.  The user can then upload a single video for all their fights or one video per fight. The backend API handles the creation of the `WarVideo` record(s) and links them to the correct `WarFight`(s). **The war planning interface now supports real-time updates through polling to facilitate collaborative planning.**
+*   **Fight Result Visualization:** The video list UI visually distinguishes fight outcomes, displaying a skull icon and death count for failed attempts, replacing the previous "Solo" text indicators for a cleaner look.
 
 ### Caching Strategy (Web Application)
 
@@ -215,7 +216,7 @@ The project includes a modern, visually appealing web interface built with Next.
 The web interface features a "War Archive" that allows users to browse and search for uploaded Alliance War videos and fight logs.
 *   **Authentication:** It uses `next-auth` with Discord OAuth2 provider. Users can log in with their Discord account.
 *   **Access Control:** The system checks the user's Discord ID against the `Player` database to resolve their `allianceId`. Users can see public videos and videos restricted to their specific alliance. Visibility is now tied to the `War` entity's `allianceId`, ensuring historic alliance context is preserved for fight logs and alliance-private videos.
-*   **Enhanced Search Filters:** The web search interface now includes advanced filters for `Attacker`, `Defender`, `Player`, `Node`, `Season` (multi-select), and `Has Video`. The champion comboboxes display selected champion images and allow clearing the selection.
+*   **Enhanced Search Filters & Deep Linking:** The web search interface includes advanced filters for `Attacker`, `Defender`, `Player`, `Node`, `Season` (multi-select), and `Has Video`. All filters are bi-directionally synchronized with the URL query parameters, allowing users to share deep links to specific search views.
 *   **Uploads:** Authenticated users can generate upload tokens and submit new war videos directly from the web interface.
 
 ### Profile & Roster Management
