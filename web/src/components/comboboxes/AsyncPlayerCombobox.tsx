@@ -46,6 +46,7 @@ export function AsyncPlayerCombobox({
   const [loading, setLoading] = React.useState(false);
   
   const debouncedSearch = useDebounce(search, 300);
+  const requestSeqRef = React.useRef(0);
 
   // Sync search state if external value changes (and popover is closed)
   React.useEffect(() => {
@@ -63,6 +64,7 @@ export function AsyncPlayerCombobox({
     }
 
     const controller = new AbortController();
+    const seq = ++requestSeqRef.current;
 
     const fetchPlayers = async () => {
         setLoading(true);
@@ -72,15 +74,19 @@ export function AsyncPlayerCombobox({
             });
             if (res.ok) {
                 const data = await res.json();
-                setResults(data.players || []);
+                if (seq === requestSeqRef.current && !controller.signal.aborted) {
+                    setResults(data.players || []);
+                }
             } else {
-                setResults([]);
+                if (seq === requestSeqRef.current && !controller.signal.aborted) {
+                    setResults([]);
+                }
             }
         } catch (error) {
-            if (error instanceof Error && error.name === 'AbortError') return;
+            if (controller.signal.aborted) return;
             console.error("Failed to fetch players", error);
         } finally {
-            setLoading(false);
+            if (seq === requestSeqRef.current) setLoading(false);
         }
     };
 
@@ -107,6 +113,12 @@ export function AsyncPlayerCombobox({
           role="combobox"
           aria-expanded={open}
           tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setOpen((v) => !v);
+            }
+          }}
           className={cn(
               buttonVariants({ variant: "outline" }),
               "w-full justify-between pr-2 pl-3 rounded-md min-h-[2.25rem] items-center cursor-pointer", 

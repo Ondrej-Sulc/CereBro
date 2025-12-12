@@ -80,6 +80,63 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
     championsRef.current = champions;
   }, [champions]);
 
+  // Sync state from URL on navigation
+  useEffect(() => {
+    // Map
+    const mapParam = searchParams.get("map") || "STANDARD";
+    if (mapParam !== mapType) setMapType(mapParam);
+
+    // Champions
+    const attackerParam = searchParams.get("attacker") || "";
+    const currentAttackerName = championsRef.current.find(c => String(c.id) === attackerId)?.name || "";
+    if (attackerParam.toLowerCase() !== currentAttackerName.toLowerCase()) {
+        const found = championsRef.current.find(c => c.name.toLowerCase() === attackerParam.toLowerCase());
+        setAttackerId(found ? String(found.id) : "");
+    }
+
+    const defenderParam = searchParams.get("defender") || "";
+    const currentDefenderName = championsRef.current.find(c => String(c.id) === defenderId)?.name || "";
+    if (defenderParam.toLowerCase() !== currentDefenderName.toLowerCase()) {
+        const found = championsRef.current.find(c => c.name.toLowerCase() === defenderParam.toLowerCase());
+        setDefenderId(found ? String(found.id) : "");
+    }
+
+    // Node
+    const nodeParam = searchParams.get("node") || "";
+    if (nodeParam !== node) setNode(nodeParam);
+
+    // Video
+    const videoParam = searchParams.get("hasVideo") === "true";
+    if (videoParam !== hasVideo) setHasVideo(videoParam);
+
+    // Advanced - Seasons
+    const seasonParams = searchParams.getAll("season").map(s => parseInt(s)).filter(n => !isNaN(n));
+    // Simple array comparison
+    const sortedParams = [...seasonParams].sort();
+    const sortedState = [...selectedSeasons].sort();
+    const isDifferent = sortedParams.length !== sortedState.length || sortedParams.some((val, idx) => val !== sortedState[idx]);
+    
+    if (isDifferent) setSelectedSeasons(seasonParams);
+
+    // Advanced - Other
+    const warParam = searchParams.get("war") || "";
+    if (warParam !== war) setWar(warParam);
+
+    const tierParam = searchParams.get("tier") || "";
+    if (tierParam !== tier) setTier(tierParam);
+
+    const playerParam = searchParams.get("player") || "";
+    if (playerParam !== player) setPlayer(playerParam);
+
+    const allianceParam = searchParams.get("alliance") || "";
+    if (allianceParam !== alliance) setAlliance(allianceParam);
+
+    const battlegroupParam = searchParams.get("battlegroup") || "";
+    if (battlegroupParam !== battlegroup) setBattlegroup(battlegroupParam);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); // Depend ONLY on searchParams to avoid loops with local state changes
+
   // Effect to update URL
   useEffect(() => {
     const params = new URLSearchParams();
@@ -93,8 +150,9 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
     if (attackerName) params.set("attacker", attackerName);
     if (defenderName) params.set("defender", defenderName);
     
-    // Node
-    if (debouncedNode) params.set("node", debouncedNode);
+    // Node - bypass debounce if cleared
+    const effectiveNode = node === "" ? "" : debouncedNode;
+    if (effectiveNode) params.set("node", effectiveNode);
     
     // Video
     if (hasVideo) params.set("hasVideo", "true");
@@ -105,7 +163,9 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
     if (tier) params.set("tier", tier);
     if (player) params.set("player", player);
     if (alliance) params.set("alliance", alliance);
-    if (debouncedBattlegroup) params.set("battlegroup", debouncedBattlegroup);
+
+    const effectiveBattlegroup = battlegroup === "" ? "" : debouncedBattlegroup;
+    if (effectiveBattlegroup) params.set("battlegroup", effectiveBattlegroup);
 
     const newQueryString = params.toString();
     const currentQueryString = searchParams.toString();
@@ -127,8 +187,9 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
     player, 
     alliance, 
     debouncedBattlegroup,
-    // Router and SearchParams are stable or handled by the check
-    searchParams
+    pathname,
+    router
+    // searchParams removed to prevent loop with the sync effect above
   ]);
 
   const activeAdvancedCount = [
@@ -137,7 +198,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
       tier,
       player,
       alliance,
-      debouncedBattlegroup
+      battlegroup
   ].filter(Boolean).length;
 
   // Active Filter Chips
@@ -152,10 +213,10 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
     if (tier) filters.push({ id: 'tier', label: `Tier ${tier}`, onRemove: () => setTier("") });
     if (player) filters.push({ id: 'player', label: `Player: ${player}`, onRemove: () => setPlayer("") });
     if (alliance) filters.push({ id: 'alliance', label: `Alliance: ${alliance}`, onRemove: () => setAlliance("") });
-    if (debouncedBattlegroup) filters.push({ id: 'battlegroup', label: `BG ${debouncedBattlegroup}`, onRemove: () => setBattlegroup("") });
+    if (battlegroup) filters.push({ id: 'battlegroup', label: `BG ${battlegroup}`, onRemove: () => setBattlegroup("") });
     
     return filters;
-  }, [selectedSeasons, war, tier, player, alliance, debouncedBattlegroup]);
+  }, [selectedSeasons, war, tier, player, alliance, battlegroup]);
 
 
   return (
