@@ -164,8 +164,8 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 p-2 bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl shadow-sm">
             
             {/* Top Row / Left Side: Map & Node */}
-            <div className="flex items-center gap-1 w-full lg:w-auto">
-                <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800 h-10 w-36 shrink-0 relative">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-2 w-full lg:flex lg:w-auto lg:gap-1">
+                <div className="flex bg-slate-950/50 p-1 rounded-lg border border-slate-800 h-10 w-full lg:w-36 shrink-0 relative">
                     <button
                         onClick={() => setMapType("STANDARD")}
                         className={cn(
@@ -238,7 +238,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
             </div>
 
              {/* Right: Expand & Clear */}
-            <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
+            <div className={cn("grid gap-2 w-full lg:flex lg:w-auto lg:justify-end", (attackerId || defenderId || node || hasVideo || activeAdvancedCount > 0) ? "grid-cols-2" : "grid-cols-1")}>
                
                  {/* Clear Filters (Only show if any filter is active) */}
                  {(attackerId || defenderId || node || hasVideo || activeAdvancedCount > 0) && (
@@ -259,10 +259,10 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                             setAlliance("");
                             setBattlegroup("");
                         }}
-                        className="h-10 px-2 text-slate-400 hover:text-red-400"
+                        className="h-10 px-2 text-slate-400 hover:text-red-400 w-full lg:w-auto"
                      >
                         <X className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Clear</span>
+                        <span className="inline">Clear</span>
                      </Button>
                  )}
 
@@ -270,7 +270,7 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                     variant={showAdvanced || activeAdvancedCount > 0 ? "secondary" : "ghost"}
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className={cn(
-                        "h-10 gap-2 min-w-[100px] transition-all",
+                        "h-10 gap-2 min-w-[100px] transition-all w-full lg:w-auto",
                         showAdvanced || activeAdvancedCount > 0
                             ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:text-cyan-300" 
                             : "text-slate-400 hover:text-white"
