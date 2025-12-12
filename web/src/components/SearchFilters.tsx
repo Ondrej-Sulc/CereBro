@@ -350,41 +350,48 @@ export function SearchFilters({ champions, availableSeasons, currentUser }: Sear
                         contentClassName="max-h-60"
                     />
                 </div>
-                 <div className="space-y-1.5">
-                    <div className="flex justify-between items-center h-5">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-cyan-400" : "text-slate-500")}>Player</Label>
-                        {currentUser && (
-                            <Button 
-                                variant={player === currentUser.ingameName ? "secondary" : "ghost"}
-                                size="sm" 
-                                className="h-4 px-1.5 text-[9px]"
-                                onClick={() => setPlayer(player === currentUser.ingameName ? "" : currentUser.ingameName || "")}
-                            >
-                                <User className="h-2.5 w-2.5 mr-1" /> Me
-                            </Button>
-                        )}
-                    </div>
-                    <AsyncPlayerCombobox
+                                  <div className="space-y-1.5">
+                                     <div className="flex justify-between items-center h-5">
+                                         <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", player ? "text-cyan-400" : "text-slate-500")}>Player</Label>
+                                         {currentUser && (
+                                             (() => {
+                                                 const userName = currentUser.ingameName;
+                                                 if (!userName) return null;
+                                                 return (
+                                                     <Button
+                                                         variant={player === userName ? "secondary" : "ghost"}
+                                                         size="sm"
+                                                         className="h-4 px-1.5 text-[9px]"
+                                                         onClick={() => setPlayer(player === userName ? "" : userName)}
+                                                     >
+                                                         <User className="h-2.5 w-2.5 mr-1" /> Me
+                                                     </Button>
+                                                 );
+                                             })()
+                                         )}
+                                     </div>                    <AsyncPlayerCombobox
                         value={player}
                         onSelect={setPlayer}
                         className="h-9 bg-slate-950/60 border-slate-800"
                     />
                 </div>
-                 <div className="space-y-1.5">
-                    <div className="flex justify-between items-center h-5">
-                        <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-cyan-400" : "text-slate-500")}>Alliance</Label>
-                        {currentUser?.alliance && (
-                            <Button 
-                                variant={alliance === currentUser.alliance.name ? "secondary" : "ghost"}
-                                size="sm" 
-                                className="h-4 px-1.5 text-[9px]"
-                                onClick={() => setAlliance(alliance === currentUser.alliance!.name ? "" : currentUser.alliance!.name)}
-                            >
-                                <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
-                            </Button>
-                        )}
-                    </div>
-                    <AsyncAllianceCombobox
+                                  <div className="space-y-1.5">
+                                     <div className="flex justify-between items-center h-5">
+                                         <Label className={cn("text-[10px] font-medium uppercase tracking-wider transition-colors", alliance ? "text-cyan-400" : "text-slate-500")}>Alliance</Label>
+                                         {currentUser?.alliance && (() => {
+                                             const allyName = currentUser.alliance.name;
+                                             return (
+                                                 <Button
+                                                     variant={alliance === allyName ? "secondary" : "ghost"}
+                                                     size="sm"
+                                                     className="h-4 px-1.5 text-[9px]"
+                                                     onClick={() => setAlliance(alliance === allyName ? "" : allyName)}
+                                                 >
+                                                     <Shield className="h-2.5 w-2.5 mr-1" /> My Ally
+                                                 </Button>
+                                             );
+                                         })()}
+                                     </div>                    <AsyncAllianceCombobox
                         value={alliance}
                         onSelect={setAlliance}
                         className="h-9 bg-slate-950/60 border-slate-800"

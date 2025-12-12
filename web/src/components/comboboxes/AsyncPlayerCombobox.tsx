@@ -121,26 +121,26 @@ export function AsyncPlayerCombobox({
 
           <div className="flex items-center ml-2">
             {value ? (
-              <div 
-                role="button"
+              <button
+                type="button"
                 onClick={handleClear}
-                className="p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-200"
+                className="p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700"
+                aria-label="Clear player selection"
               >
                 <X className="h-4 w-4" />
-              </div>
+              </button>
             ) : (
                 <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
             )}
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        sideOffset={4} 
-        className="w-[200px] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        align="start"
-      >
-        <Command shouldFilter={false}>
+            <PopoverContent
+              sideOffset={4}
+              className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-0"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              align="start"
+            >        <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search player..."
             value={search}
