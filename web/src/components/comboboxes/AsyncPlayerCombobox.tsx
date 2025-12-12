@@ -5,7 +5,7 @@ import { ChevronsUpDown, X, Users, Loader2 } from "lucide-react"
 import Image from "next/image";
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -52,8 +52,7 @@ export function AsyncPlayerCombobox({
       if (!open && value !== search) {
           setSearch(value);
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, open]);
+  }, [value, open, search]);
 
 
   React.useEffect(() => {
@@ -74,6 +73,8 @@ export function AsyncPlayerCombobox({
             if (res.ok) {
                 const data = await res.json();
                 setResults(data.players || []);
+            } else {
+                setResults([]);
             }
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') return;
@@ -102,12 +103,13 @@ export function AsyncPlayerCombobox({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <div
           role="combobox"
           aria-expanded={open}
+          tabIndex={0}
           className={cn(
-              "w-full justify-between pr-2 pl-3 rounded-md min-h-[2.25rem] items-center", 
+              buttonVariants({ variant: "outline" }),
+              "w-full justify-between pr-2 pl-3 rounded-md min-h-[2.25rem] items-center cursor-pointer", 
               className
           )}
         >
@@ -133,14 +135,15 @@ export function AsyncPlayerCombobox({
                 <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
             )}
           </div>
-        </Button>
+        </div>
       </PopoverTrigger>
-            <PopoverContent
-              sideOffset={4}
-              className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-0"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-              align="start"
-            >        <Command shouldFilter={false}>
+      <PopoverContent
+        sideOffset={4}
+        className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        align="start"
+      >
+        <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search player..."
             value={search}
