@@ -5,6 +5,7 @@ import DefenseDetailsClient from "@/components/war-planning/defense-details-clie
 import { updateDefensePlacement } from "../../defense-actions";
 import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
+import FormPageBackground from "@/components/FormPageBackground";
 
 interface DefenseDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -80,13 +81,16 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   });
 
   return (
-    <DefenseDetailsClient
-      plan={plan}
-      planId={id}
-      updatePlacement={updateDefensePlacement}
-      champions={champions}
-      players={allianceMembers}
-      availableTags={tags}
-    />
+    <>
+      <FormPageBackground />
+      <DefenseDetailsClient
+        plan={plan}
+        planId={id}
+        updatePlacement={updateDefensePlacement}
+        champions={champions}
+        players={allianceMembers}
+        availableTags={tags}
+      />
+    </>
   );
 }

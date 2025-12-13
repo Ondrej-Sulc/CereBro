@@ -43,7 +43,7 @@ export default async function DefensePlanningPage() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-slate-200 font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen text-slate-200 font-sans selection:bg-indigo-500/30 relative">
         <FormPageBackground />
         <main className="container mx-auto py-8 px-4 relative z-10">
             <DefenseDashboard 

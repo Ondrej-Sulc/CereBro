@@ -217,8 +217,8 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   return (
     <PlayerColorProvider players={props.players}>
       <div className={cn(
-          "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
-          isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-65px)]",
+          "flex w-full overflow-hidden bg-transparent transition-all duration-300",
+          isFullscreen ? "fixed inset-0 z-[100] h-screen bg-slate-950" : "h-[calc(100dvh-65px)]", // Keep solid bg in fullscreen
           isDesktop ? "flex-row" : "flex-col"
       )}>
         

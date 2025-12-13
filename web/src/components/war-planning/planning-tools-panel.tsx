@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Champion, Player, Roster, ChampionClass } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Users, Shield, Star, X, Filter, CircleOff } from "lucide-react";
+import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { getPlayerRoster, getOwnersOfChampion } from "@/app/planning/actions";
@@ -231,21 +231,34 @@ export default function PlanningToolsPanel({
                     {CLASSES.map(c => {
                         const colors = getChampionClassColors(c);
                         const isSelected = selectedClass === c;
+                        // Determine icon path - simple mapping based on capitalisation
+                        // Actually I can just title case it: Science, Skill, etc.
+                        const iconName = c.charAt(0) + c.slice(1).toLowerCase();
+                        const iconPath = `/icons/${iconName}.png`;
+
                         return (
                             <Button
                                 key={c}
                                 variant="ghost"
                                 size="sm"
                                 className={cn(
-                                    "h-7 w-7 p-0 rounded-full font-bold text-[10px] transition-all border",
+                                    "h-7 w-7 p-1 rounded-full transition-all border",
                                     isSelected 
-                                        ? cn(colors.bg, colors.text, colors.border) 
-                                        : "bg-transparent border-transparent text-slate-500 hover:bg-slate-800"
+                                        ? cn(colors.bg, colors.border) 
+                                        : "bg-transparent border-transparent hover:bg-slate-800"
                                 )}
                                 onClick={() => setSelectedClass(isSelected ? null : c)}
                                 title={c}
                             >
-                                {c.substring(0, 2)}
+                                <div className="relative w-full h-full">
+                                    <Image 
+                                        src={iconPath} 
+                                        alt={c} 
+                                        fill 
+                                        sizes="20px"
+                                        className="object-contain"
+                                    />
+                                </div>
                             </Button>
                         );
                     })}
@@ -301,6 +314,9 @@ export default function PlanningToolsPanel({
                           {item.isAscended && <span className="text-pink-400 font-bold">Ascended</span>}
                         </div>
                       </div>
+                      {isAssigned && (
+                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      )}
                     </div>
                   );})}
                 </div>
