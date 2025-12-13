@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Champion, Player, Roster } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X } from "lucide-react";
@@ -22,19 +22,20 @@ interface PlanningToolsPanelProps {
   onClose?: () => void;
   currentBattlegroup?: number;
   onAddExtra?: (playerId: string, championId: number) => void;
+  initialPlayerId?: string | null;
 }
 
 type RosterWithChampion = Roster & { champion: Champion };
 type RosterWithPlayer = Roster & { player: Player };
 
-export default function PlanningToolsPanel({ players, champions, allianceId, onClose, currentBattlegroup, onAddExtra }: PlanningToolsPanelProps) {
+export default function PlanningToolsPanel({ players, champions, allianceId, onClose, currentBattlegroup, onAddExtra, initialPlayerId }: PlanningToolsPanelProps) {
   const { toast } = useToast();
   const { getPlayerColor } = usePlayerColor(); // Initialize usePlayerColor
   const [rosterResults, setRosterResults] = useState<RosterWithChampion[]>([]);
   const [ownerResults, setOwnerResults] = useState<RosterWithPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedChampionId, setSelectedChampionId] = useState<string>("");
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(initialPlayerId || "");
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
@@ -54,6 +55,13 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
       setIsLoading(false);
     }
   };
+
+  // Effect to update when prop changes
+  useEffect(() => {
+      if (initialPlayerId) {
+          handlePlayerSelect(initialPlayerId);
+      }
+  }, [initialPlayerId]);
 
   const handleAddChampion = (champion: Champion) => {
       if (onAddExtra && selectedPlayerId) {

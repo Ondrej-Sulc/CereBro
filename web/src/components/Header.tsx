@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Swords, Menu, Book } from "lucide-react";
+import { Swords, Menu, Book, Shield } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-export default function Header({ userButton, isOfficer }: { userButton: React.ReactNode; isOfficer: boolean }) {
+export default function Header({ userButton, isOfficer, isInAlliance }: { userButton: React.ReactNode; isOfficer: boolean; isInAlliance: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -48,6 +48,12 @@ export default function Header({ userButton, isOfficer }: { userButton: React.Re
                 War Planning
               </Link>
             )}
+            {isInAlliance && (
+              <Link href="/planning/defense" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                <Shield className="w-4 h-4" />
+                War Defense
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -80,6 +86,12 @@ export default function Header({ userButton, isOfficer }: { userButton: React.Re
                       <Link href="/planning" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
                         <Swords className="w-5 h-5" />
                         War Planning
+                      </Link>
+                    )}
+                    {isInAlliance && (
+                      <Link href="/planning/defense" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                        <Shield className="w-5 h-5" />
+                        War Defense
                       </Link>
                     )}
                   </div>

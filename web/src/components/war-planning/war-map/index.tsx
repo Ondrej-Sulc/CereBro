@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { getBatchHistoricalCounters, HistoricalFightStat } from '@/app/planning/history-actions';
 import { WarTactic, War, WarMapType } from '@prisma/client';
 import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
-import { FightWithNode } from "@cerebro/core/data/war-planning/types";
+import { WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { WarMapBackground } from './map-background';
 import { CanvasNode } from './canvas-node';
 import Konva from 'konva';
@@ -16,17 +16,18 @@ import { KonvaEventObject } from 'konva/lib/Node';
 import { PlayerColorContext } from '../player-color-context';
 
 interface WarMapProps {
-  warId: string;
-  battlegroup: number;
-  onNodeClick: (nodeId: number, fight?: FightWithNode) => void;
+  warId?: string;
+  battlegroup?: number;
+  onNodeClick: (nodeId: number, fight?: WarPlacement) => void;
   selectedNodeId?: number | null;
+  mapType: WarMapType;
   currentWar?: War;
   historyFilters: {
     onlyCurrentTier: boolean;
     onlyAlliance: boolean;
     minSeason: number | undefined;
   };
-  fights: FightWithNode[];
+  fights: WarPlacement[];
   activeTactic?: WarTactic | null;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
@@ -38,6 +39,7 @@ interface WarMapProps {
 const WarMap = memo(function WarMap({
   onNodeClick,
   selectedNodeId,
+  mapType,
   currentWar,
   historyFilters,
   fights,
@@ -63,7 +65,7 @@ const WarMap = memo(function WarMap({
   const lastCenter = useRef<{ x: number; y: number } | null>(null);
 
   // Determine Map Data based on War Type
-  const isBigThing = currentWar?.mapType === WarMapType.BIG_THING;
+  const isBigThing = mapType === WarMapType.BIG_THING;
   const currentNodesData = isBigThing ? warNodesDataBig : warNodesData;
   const currentLayout = isBigThing ? LAYOUT_BIG : LAYOUT;
 
@@ -341,7 +343,7 @@ const WarMap = memo(function WarMap({
   };
 
   const fightsByNode = useMemo(() => {
-    const map = new Map<number, FightWithNode>();
+    const map = new Map<number, WarPlacement>();
     fights.forEach(fight => {
       map.set(fight.node.nodeNumber, fight);
     });
