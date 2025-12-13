@@ -295,7 +295,11 @@ export async function getPlayerRoster(playerId: string) {
 
   return await prisma.roster.findMany({
     where: { playerId },
-    include: { champion: true },
+    include: { 
+      champion: {
+        include: { tags: true }
+      } 
+    },
     orderBy: [
       { stars: 'desc' },
       { rank: 'desc' },

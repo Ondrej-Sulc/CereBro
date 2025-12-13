@@ -17,6 +17,7 @@ The platform provides a variety of features, including:
     *   **AQ Management:** The bot has features to help with Alliance Quest (AQ) management.
 *   **Web Application Features:**
     *   **War Planning UI:** An interactive, high-performance web interface for managing Alliance War plans.
+    *   **War Defense Planner:** A specialized interface for strategizing alliance defense placements, supporting multiple battlegroups, map types (Standard/Big Thing), and player roster management.
     *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
     *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI.
 

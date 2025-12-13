@@ -16,9 +16,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const warId = searchParams.get('warId');
+  const planId = searchParams.get('planId');
 
-  if (!warId) {
-    return NextResponse.json({ message: 'Missing warId' }, { status: 400 });
+  if (!warId && !planId) {
+    return NextResponse.json({ message: 'Missing warId or planId' }, { status: 400 });
   }
 
   try {
@@ -35,21 +36,37 @@ export async function GET(request: Request) {
       include: { alliance: true },
     });
   
-    if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-      return NextResponse.json({ message: 'You must be an Alliance Officer to access this resource.' }, { status: 403 });
+    if (!player || !player.allianceId) {
+        // Basic check for alliance membership
+        return NextResponse.json({ message: 'You must be in an alliance.' }, { status: 403 });
     }
 
-    const war = await prisma.war.findUnique({
-        where: { id: warId },
-        select: { allianceId: true, mapType: true },
-    });
+    let mapType = 'STANDARD';
 
-    if (!war || war.allianceId !== player.allianceId) {
-        return NextResponse.json({ message: 'War not found or not part of your alliance.' }, { status: 404 });
+    if (warId) {
+        const war = await prisma.war.findUnique({
+            where: { id: warId },
+            select: { allianceId: true, mapType: true },
+        });
+
+        if (!war || war.allianceId !== player.allianceId) {
+            return NextResponse.json({ message: 'War not found or not part of your alliance.' }, { status: 404 });
+        }
+        mapType = war.mapType;
+    } else if (planId) {
+         const plan = await prisma.warDefensePlan.findUnique({
+            where: { id: planId },
+            select: { allianceId: true, mapType: true },
+         });
+
+         if (!plan || plan.allianceId !== player.allianceId) {
+            return NextResponse.json({ message: 'Defense plan not found or not part of your alliance.' }, { status: 404 });
+         }
+         mapType = plan.mapType;
     }
 
     // Fetch nodes with allocations, cached
-    const nodes = await getFromCache(`war-nodes-${war.mapType}`, NODES_CACHE_TTL, async () => {
+    const nodes = await getFromCache(`war-nodes-${mapType}`, NODES_CACHE_TTL, async () => {
         return await prisma.warNode.findMany({
             orderBy: { nodeNumber: 'asc' },
             include: {

@@ -4,7 +4,7 @@ import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode
 import { Champion } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
-import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
+import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion, WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
 
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster';
@@ -277,7 +277,7 @@ export function useWarPlanning({
     }
   }, [status, warId, updateWarStatus, router]);
 
-  const handleNodeClick = useCallback((nodeId: number, fight?: FightWithNode) => {
+  const handleNodeClick = useCallback((nodeId: number, fight?: WarPlacement) => {
     setSelectedNodeId(nodeId);
     setRightPanelState('editor');
   }, []);

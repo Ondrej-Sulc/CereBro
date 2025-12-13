@@ -193,6 +193,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               currentFights={currentFights}
               warId={props.warId}
               war={props.war}
+              mapType={props.war.mapType}
               selectedNodeId={selectedNodeId}
               historyFilters={historyFilters}
               activeTactic={activeTactic}

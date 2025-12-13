@@ -34,6 +34,7 @@ interface ChampionComboboxProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   activeChampionIds?: Set<string>;
+  disabled?: boolean;
 }
 
 export const ChampionCombobox = React.memo(function ChampionCombobox({
@@ -45,6 +46,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   activeChampionIds,
+  disabled,
 }: ChampionComboboxProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
 
@@ -118,6 +120,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                     role="combobox"
                     aria-expanded={open}
                     className={cn("w-full justify-between pr-2 pl-0 rounded-full", className)}
+                    disabled={disabled}
                   >
                     <div className="flex items-center gap-2 truncate ">
                        {selectedChampion ? (

@@ -1,0 +1,274 @@
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { WarDefensePlan, WarDefensePlacement, WarMapType, WarNode, WarNodeAllocation, NodeModifier, ChampionClass } from "@prisma/client";
+import { Champion } from "@/types/champion";
+import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
+import { warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
+
+export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster';
+
+interface WarNodeWithAllocations extends WarNode {
+    allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
+}
+
+interface UseDefensePlanningProps {
+  plan: WarDefensePlan;
+  planId: string;
+  champions: (Champion & { tags?: { name: string }[] })[];
+  players: PlayerWithRoster[];
+  updatePlacement: (updatedPlacement: Partial<WarDefensePlacement>) => Promise<void>;
+}
+
+export function useDefensePlanning({
+  plan,
+  planId,
+  champions,
+  players,
+  updatePlacement,
+}: UseDefensePlanningProps) {
+  const router = useRouter();
+
+  // UI State
+  const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
+  const [activeTab, setActiveTab] = useState("bg1");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Selection State
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+
+  // Data State
+  const [currentPlacements, setCurrentPlacements] = useState<PlacementWithNode[]>([]);
+  const [nodesMap, setNodesMap] = useState<Map<number, WarNodeWithAllocations>>(new Map());
+  const pendingSaveNodeIds = useRef<Set<number>>(new Set());
+
+  const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
+
+  // Derived: Filtered Placements for current BG
+  const filteredPlacements = useMemo(() => {
+      return currentPlacements.filter(p => p.battlegroup === currentBattlegroup);
+  }, [currentPlacements, currentBattlegroup]);
+
+  // Derived Selection
+  const selectedPlacement = useMemo(() => {
+    if (!selectedNodeId) return null;
+    return filteredPlacements.find(p => p.node.nodeNumber === selectedNodeId) || null;
+  }, [filteredPlacements, selectedNodeId]);
+
+  const [loadingPlacements, setLoadingPlacements] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Fetch Static Node Data ONCE
+  useEffect(() => {
+    async function fetchNodes() {
+        try {
+            const res = await fetch(`/api/war-planning/nodes?planId=${planId}`);
+            if (!res.ok) throw new Error("Failed to load map data");
+            const data: WarNodeWithAllocations[] = await res.json();
+            
+            const map = new Map<number, WarNodeWithAllocations>();
+            data.forEach(n => map.set(n.nodeNumber, n));
+            setNodesMap(map);
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load map configuration.");
+        }
+    }
+    fetchNodes();
+  }, [planId]);
+
+  // Initial Data Fetch
+  useEffect(() => {
+    async function fetchData() {
+        setLoadingPlacements(true);
+        try {
+            const res = await fetch(`/api/war-planning/placements?planId=${planId}`);
+            if (!res.ok) throw new Error("Failed to load placements");
+            const data: PlacementWithNode[] = await res.json();
+            setCurrentPlacements(data);
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load placements.");
+        } finally {
+            setLoadingPlacements(false);
+        }
+    }
+    fetchData();
+  }, [planId]);
+
+  // Polling (every 5s)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+        if (document.hidden) return; // Don't poll if tab hidden
+        
+        try {
+             const res = await fetch(`/api/war-planning/placements?planId=${planId}`);
+             if (!res.ok) return;
+             const data: PlacementWithNode[] = await res.json();
+
+             setCurrentPlacements(prev => {
+                 // If data length differs significantly, simpler to just replace (unless partial update logic)
+                 // Here we just map to preserve local optimistic updates
+                 if (prev.length === 0) return data;
+
+                 const newMap = new Map(data.map(d => [d.id, d]));
+                 
+                 // If we have local optimistic updates, we want to keep them if the server hasn't confirmed them yet?
+                 // Actually, usually we trust the server unless we are *currently* editing/saving.
+                 // pendingSaveNodeIds tracks nodes we are saving.
+
+                 return data.map(serverItem => {
+                    const nodeNum = serverItem.node.nodeNumber;
+                    if (pendingSaveNodeIds.current.has(nodeNum)) {
+                         // We are saving this node, keep local version to avoid jitter
+                         const local = prev.find(p => p.node.nodeNumber === nodeNum);
+                         return local || serverItem;
+                    }
+                    return serverItem;
+                 });
+             });
+        } catch (e) {
+            console.error("Polling error", e);
+        }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [planId]);
+
+  // Handlers
+  const handleNodeClick = useCallback((nodeId: number) => {
+    setSelectedNodeId(nodeId);
+    setRightPanelState('editor');
+  }, []);
+
+  const handleNavigateNode = useCallback((direction: number) => {
+    if (!selectedNodeId) return;
+
+    const validNodes = warNodesData.filter(n => !n.isPortal);
+
+    const currentIndex = validNodes.findIndex(n => {
+      const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
+      return nid === selectedNodeId;
+    });
+
+    if (currentIndex === -1) return;
+
+    let newIndex = currentIndex + direction;
+
+    const count = validNodes.length;
+    if (newIndex < 0) {
+      newIndex = (newIndex % count + count) % count;
+    } else if (newIndex >= count) {
+      newIndex = newIndex % count;
+    }
+
+    const newNode = validNodes[newIndex];
+    const newNodeId = typeof newNode.id === 'string' ? parseInt(newNode.id) : newNode.id;
+
+    handleNodeClick(newNodeId);
+  }, [selectedNodeId, handleNodeClick]);
+
+  const handleEditorClose = useCallback(() => {
+    setRightPanelState('closed');
+    setSelectedNodeId(null);
+  }, []);
+
+  const toggleTools = useCallback(() => {
+    setRightPanelState((prev: RightPanelState) => prev === 'tools' ? 'closed' : 'tools');
+  }, []);
+
+  const handleSavePlacement = useCallback(async (updatedPlacement: Partial<WarDefensePlacement>) => {
+    const previousPlacements = currentPlacements;
+
+    // Identify target for optimistic update
+    let placementToUpdate: PlacementWithNode | undefined;
+    
+    // Logic to find the placement in the current list
+    // If updatedPlacement has ID, use it.
+    if (updatedPlacement.id) {
+        placementToUpdate = currentPlacements.find(p => p.id === updatedPlacement.id);
+    } else if (updatedPlacement.nodeId) {
+        // Find by DB Node ID + Plan + BG
+        // But currentPlacements contains PlacementWithNode which has nodeId.
+        // We need to ensure we match the right one.
+        placementToUpdate = currentPlacements.find(p => 
+            p.nodeId === updatedPlacement.nodeId && 
+            p.planId === planId && 
+            p.battlegroup === currentBattlegroup
+        );
+    }
+
+    if (placementToUpdate) {
+      pendingSaveNodeIds.current.add(placementToUpdate.node.nodeNumber);
+    }
+
+    const payload = {
+        ...updatedPlacement,
+        battlegroup: currentBattlegroup,
+        planId // Ensure planId is sent
+    };
+
+    // Optimistic Update
+    setCurrentPlacements((prev: PlacementWithNode[]) => prev.map((p: PlacementWithNode) => {
+      const isMatch = (updatedPlacement.id && p.id === updatedPlacement.id) || 
+                      (updatedPlacement.nodeId && p.nodeId === updatedPlacement.nodeId && p.battlegroup === currentBattlegroup);
+
+      if (isMatch) {
+        const newDefender = updatedPlacement.defenderId ? champions.find(c => c.id === updatedPlacement.defenderId) : (updatedPlacement.defenderId === null ? null : p.defender);
+        const newPlayer = updatedPlacement.playerId ? players.find(player => player.id === updatedPlacement.playerId) : (updatedPlacement.playerId === null ? null : p.player);
+
+        return {
+          ...p,
+          ...updatedPlacement,
+          defender: newDefender ? { 
+              id: newDefender.id, 
+              name: newDefender.name, 
+              images: newDefender.images, 
+              class: newDefender.class,
+              tags: newDefender.tags 
+          } : null,
+          player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
+        } as PlacementWithNode;
+      }
+      return p;
+    }));
+
+    try {
+      await updatePlacement(payload);
+    } catch (error: any) {
+      console.error("Failed to save placement:", error);
+      setCurrentPlacements(previousPlacements);
+      setError(error.message || "Failed to save changes.");
+    } finally {
+        if (placementToUpdate) {
+            pendingSaveNodeIds.current.delete(placementToUpdate.node.nodeNumber);
+        }
+    }
+  }, [updatePlacement, champions, players, currentPlacements, currentBattlegroup, planId]);
+
+  const selectedDbNodeId = selectedNodeId ? nodesMap.get(selectedNodeId)?.id : undefined;
+
+  return {
+    rightPanelState,
+    setRightPanelState,
+    activeTab,
+    setActiveTab,
+    isFullscreen,
+    setIsFullscreen,
+    selectedNodeId,
+    selectedDbNodeId,
+    selectedPlacement,
+    selectedPlayerId,
+    setSelectedPlayerId,
+    currentPlacements: filteredPlacements, // Return filtered placements for Map
+    allPlacements: currentPlacements, // Expose all for roster stats
+    currentBattlegroup,
+    loadingPlacements,
+    error,
+    
+    handleNodeClick,
+    handleNavigateNode,
+    handleEditorClose,
+    toggleTools,
+    handleSavePlacement,
+  };
+}
