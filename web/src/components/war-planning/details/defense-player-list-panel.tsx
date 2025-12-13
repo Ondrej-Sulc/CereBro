@@ -21,6 +21,8 @@ interface DefensePlayerListPanelProps {
   isDesktop: boolean;
   currentBattlegroup: number;
   mapType: WarMapType;
+  selectedNodeId?: number | null;
+  onMoveDefender?: (placementId: string, targetNodeId: number) => void;
 }
 
 export const DefensePlayerListPanel = ({
@@ -32,7 +34,9 @@ export const DefensePlayerListPanel = ({
   onSelectPlayer,
   isDesktop,
   currentBattlegroup,
-  mapType
+  mapType,
+  selectedNodeId,
+  onMoveDefender
 }: DefensePlayerListPanelProps) => {
   const { getPlayerColor } = usePlayerColor();
   const championLimit = mapType === "BIG_THING" ? 1 : 5;
@@ -42,7 +46,7 @@ export const DefensePlayerListPanel = ({
   // Calculate player usage stats (filtered by BG)
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
-      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number }[],
+      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string }[],
       uniqueCount: number
     }>();
 
@@ -63,7 +67,8 @@ export const DefensePlayerListPanel = ({
                 name: p.defender.name,
                 images: p.defender.images,
                 class: p.defender.class,
-                nodeId: p.node.nodeNumber
+                nodeId: p.node.nodeNumber,
+                placementId: p.id
             });
             stat.uniqueCount++;
         }
@@ -186,9 +191,23 @@ export const DefensePlayerListPanel = ({
                                     {stat?.champions.sort((a,b) => a.nodeId - b.nodeId).map((champ, idx) => {
                                         const roster = player.roster.find(r => r.championId === champ.id); // Simple find, assume best match logic elsewhere or ok for now
                                         const classColors = getChampionClassColors(champ.class);
+                                        const isMoveMode = !!selectedNodeId && onMoveDefender && champ.nodeId !== selectedNodeId;
+
                                         return (
-                                            <div key={`${champ.id}-${idx}`} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
-                                                <div className="w-5 flex justify-center text-[10px] font-mono text-slate-500">
+                                            <div 
+                                                key={`${champ.id}-${idx}`} 
+                                                className={cn(
+                                                    "relative group/row flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800 transition-all",
+                                                    isMoveMode && "cursor-pointer hover:bg-indigo-950/30 hover:border-indigo-500/50"
+                                                )}
+                                                onClick={(e) => {
+                                                    if (isMoveMode) {
+                                                        e.stopPropagation();
+                                                        onMoveDefender(champ.placementId, selectedNodeId!);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="w-5 flex justify-center text-[10px] font-mono text-slate-500 group-hover/row:text-slate-300">
                                                     #{champ.nodeId}
                                                 </div>
                                                 <img 
@@ -197,7 +216,7 @@ export const DefensePlayerListPanel = ({
                                                     className={cn("w-8 h-8 rounded-full border-2", classColors.border)} 
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                    <div className={cn("text-xs font-bold truncate", classColors.text)}>{champ.name}</div>
+                                                    <div className={cn("text-xs font-bold truncate transition-colors", classColors.text, isMoveMode && "group-hover/row:text-indigo-300")}>{champ.name}</div>
                                                     {roster && (
                                                         <div className="flex items-center gap-2 text-[11px] text-slate-400">
                                                             <span className={cn("flex items-center", roster.isAwakened ? "text-slate-300" : "text-yellow-500")}>
@@ -208,6 +227,12 @@ export const DefensePlayerListPanel = ({
                                                         </div>
                                                     )}
                                                 </div>
+                                                
+                                                {isMoveMode && (
+                                                    <div className="absolute right-2 opacity-0 group-hover/row:opacity-100 transition-opacity bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">
+                                                        Move
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}

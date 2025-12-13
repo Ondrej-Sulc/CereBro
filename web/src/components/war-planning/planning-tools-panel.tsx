@@ -21,7 +21,7 @@ interface PlanningToolsPanelProps {
   allianceId: string;
   onClose?: () => void;
   currentBattlegroup?: number;
-  onAddExtra?: (playerId: string, championId: number) => void;
+  onAddExtra?: (playerId: string, championId: number, starLevel?: number) => void;
   initialPlayerId?: string | null;
   currentPlacements: PlacementWithNode[];
   activeTag?: Tag | null;
@@ -83,12 +83,12 @@ export default function PlanningToolsPanel({
       }
   }, [initialPlayerId]);
 
-  const handleAddChampion = (champion: Champion) => {
+  const handleAddChampion = (item: RosterWithChampion) => {
       if (onAddExtra && selectedPlayerId) {
-          onAddExtra(selectedPlayerId, champion.id);
+          onAddExtra(selectedPlayerId, item.champion.id, item.stars);
           toast({
               title: "Champion Added",
-              description: `Added ${champion.name} to extra assignments.`,
+              description: `Added ${item.champion.name} to extra assignments.`,
           });
       }
   };
@@ -111,18 +111,18 @@ export default function PlanningToolsPanel({
     }
   };
 
-  const handleAddOwner = (player: Player) => {
-    // Need to find the full champion object from props.champions based on selectedChampionId
+  const handleAddOwner = (item: RosterWithPlayer) => {
     const champion = champions.find(c => c.id === parseInt(selectedChampionId));
     
     if (onAddExtra && champion) {
-        onAddExtra(player.id, champion.id);
+        onAddExtra(item.player.id, champion.id, item.stars);
         toast({
             title: "Champion Added",
-            description: `Added ${champion.name} to ${player.ingameName}'s extra assignments.`,
+            description: `Added ${champion.name} to ${item.player.ingameName}'s extra assignments.`,
         });
     }
   };
+
 
   return (
     <div className="h-full flex flex-col bg-slate-950 border-l border-slate-800">
@@ -291,7 +291,7 @@ export default function PlanningToolsPanel({
                           backgroundImage: isAssigned ? `linear-gradient(to right, ${classColors.color}20, transparent)` : undefined,
                           borderWidth: isTacticChampion ? '1px' : undefined, // Explicit 1px border for tactic champion
                         }}
-                        onClick={() => handleAddChampion(item.champion)}
+                        onClick={() => handleAddChampion(item)}
                     >
                       <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
@@ -352,7 +352,7 @@ export default function PlanningToolsPanel({
                           onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
                         )}
                         style={{ borderLeftColor: getPlayerColor(item.player.id) }}
-                        onClick={() => handleAddOwner(item.player)}
+                        onClick={() => handleAddOwner(item)}
                     >
                       <div className="flex items-center gap-3">
                         {item.player.avatar ? (

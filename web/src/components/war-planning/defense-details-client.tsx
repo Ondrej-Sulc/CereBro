@@ -119,7 +119,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       setRightPanelState('tools');
   }, [setSelectedPlayerId, setRightPanelState]);
 
-  const handleAddFromTool = useCallback(async (playerId: string, championId: number) => {
+  const handleAddFromTool = useCallback(async (playerId: string, championId: number, starLevel?: number) => {
     // Determine Target Player: Explicitly passed playerId (from dropdown) OR currently selected player (from Roster View context)
     const targetPlayerId = playerId || selectedPlayerId;
     const championLimit = props.plan.mapType === WarMapType.BIG_THING ? 1 : 5;
@@ -191,11 +191,14 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     const champ = props.champions.find(c => c.id === championId);
     const champName = champ ? champ.name : "Champion";
 
-    // Detect star level from roster
-    // We check the player passed in arguments (the owner of the champ)
-    const owner = props.players.find(p => p.id === playerId);
-    const rosterEntry = owner?.roster.find(r => r.championId === championId);
-    const starLevel = rosterEntry ? rosterEntry.stars : undefined;
+    // Detect star level if not provided
+    let finalStarLevel = starLevel;
+    if (finalStarLevel === undefined) {
+        // We check the player passed in arguments (the owner of the champ)
+        const owner = props.players.find(p => p.id === playerId);
+        const rosterEntry = owner?.roster.find(r => r.championId === championId);
+        finalStarLevel = rosterEntry ? rosterEntry.stars : undefined;
+    }
 
     await handleSavePlacement({
         id: targetPlacementId,
@@ -204,7 +207,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         nodeId: targetNodeId,
         playerId: targetPlayerId || playerId, // Ensure we assign to the correct player
         defenderId: championId,
-        starLevel
+        starLevel: finalStarLevel
     });
 
     toast({
@@ -213,6 +216,65 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     });
 
   }, [selectedPlacement, selectedPlayerId, currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, props.champions, props.players, props.plan.mapType, toast]);
+
+  const handleMoveDefender = useCallback(async (placementId: string, targetNodeId: number) => {
+    if (!placementId || !targetNodeId) return;
+
+    // 1. Get Source Data
+    const sourcePlacement = currentPlacements.find(p => p.id === placementId);
+    if (!sourcePlacement) return;
+
+    // 2. Get Target Placement
+    const targetPlacement = currentPlacements.find(p => 
+        p.nodeId === targetNodeId && p.battlegroup === currentBattlegroup
+    );
+
+    // 3. Prepare Data for Swap
+    const sourceData = {
+        defenderId: sourcePlacement.defenderId,
+        playerId: sourcePlacement.playerId,
+        starLevel: sourcePlacement.starLevel
+    };
+
+    const targetData = targetPlacement ? {
+        defenderId: targetPlacement.defenderId,
+        playerId: targetPlacement.playerId,
+        starLevel: targetPlacement.starLevel
+    } : { defenderId: null, playerId: null, starLevel: null };
+
+    // 4. Update Target with Source Data
+    if (targetPlacement) {
+        await handleSavePlacement({
+            id: targetPlacement.id,
+            planId: props.planId,
+            battlegroup: currentBattlegroup,
+            nodeId: targetNodeId,
+            ...sourceData
+        });
+    } else {
+        // Fallback: Create target placement if it doesn't exist
+        await handleSavePlacement({
+            planId: props.planId,
+            battlegroup: currentBattlegroup,
+            nodeId: targetNodeId,
+            ...sourceData
+        });
+    }
+
+    // 5. Update Source with Target Data (Swap)
+    await handleSavePlacement({
+        id: sourcePlacement.id,
+        planId: props.planId,
+        battlegroup: currentBattlegroup,
+        nodeId: sourcePlacement.nodeId,
+        ...targetData
+    });
+
+    toast({
+        title: "Defenders Swapped",
+        description: `Swapped placement between Node ${sourcePlacement.node.nodeNumber} and Node ${targetPlacement?.node.nodeNumber ?? 'Target'}.`
+    });
+  }, [currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, toast]);
 
   return (
     <PlayerColorProvider players={props.players}>
@@ -234,6 +296,8 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                 isDesktop={isDesktop}
                 currentBattlegroup={currentBattlegroup}
                 mapType={props.plan.mapType}
+                selectedNodeId={selectedNodeId}
+                onMoveDefender={handleMoveDefender}
             />
         )}
 
