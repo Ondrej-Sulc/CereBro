@@ -445,6 +445,8 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     currentBattlegroup={currentBattlegroup}
                     onAddExtra={handleAddFromTool}
                     initialPlayerId={selectedPlayerId}
+                    currentPlacements={currentPlacements}
+                    activeTag={activeTag || null}
                  />
              )}
         </div>
