@@ -14,10 +14,13 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const planId = searchParams.get('planId');
+  const battlegroupParam = searchParams.get('battlegroup');
 
   if (!planId) {
     return NextResponse.json({ message: 'Missing planId' }, { status: 400 });
   }
+
+  const battlegroup = battlegroupParam ? parseInt(battlegroupParam) : undefined;
 
   try {
     const account = await prisma.account.findFirst({
@@ -48,7 +51,10 @@ export async function GET(request: Request) {
 
     // Fetch placements (lightweight)
     const placements = await prisma.warDefensePlacement.findMany({
-        where: { planId },
+        where: { 
+            planId,
+            ...(battlegroup && { battlegroup })
+        },
         select: {
             id: true,
             planId: true,

@@ -64,7 +64,9 @@ export default function DefenseDashboard({
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
   
   // Sort plans by updated date desc
-  const sortedPlans = [...plans].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const sortedPlans = useMemo(() => {
+    return [...plans].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  }, [plans]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
