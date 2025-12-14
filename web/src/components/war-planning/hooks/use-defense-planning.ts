@@ -114,9 +114,12 @@ export function useDefensePlanning({
 
   // Polling (every 5s)
   useEffect(() => {
+    let inFlight = false;
     const interval = setInterval(async () => {
+        if (inFlight) return;
         if (document.hidden) return; // Don't poll if tab hidden
         
+        inFlight = true;
         try {
              const res = await fetch(`/api/war-planning/placements?planId=${planId}`);
              if (!res.ok) return;
@@ -145,6 +148,8 @@ export function useDefensePlanning({
              });
         } catch (e) {
             console.error("Polling error", e);
+        } finally {
+            inFlight = false;
         }
     }, 5000);
     return () => clearInterval(interval);

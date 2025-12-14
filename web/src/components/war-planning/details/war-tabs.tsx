@@ -18,7 +18,7 @@ interface WarTabsProps {
   selectedNodeId: number | null;
   historyFilters: any;
   activeTactic: WarTactic | null;
-  onNodeClick: (nodeId: number, fight?: WarPlacement) => void; // Relax type to allow WarPlacement
+  onNodeClick: (nodeId: number, fight?: WarPlacement) => void;
   onToggleFullscreen: () => void;
   rightPanelState: RightPanelState;
   highlightedPlayerId: string | null;
