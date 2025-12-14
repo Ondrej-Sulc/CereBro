@@ -84,6 +84,30 @@ export default function PlanningToolsPanel({
       }
   }, [initialPlayerId, handlePlayerSelect]);
 
+  const handleChampionSelect = async (championId: string) => {
+    setSelectedChampionId(championId);
+    if (!championId) {
+      setOwnerResults([]);
+      return;
+    }
+    
+    const parsedChampionId = Number.parseInt(championId, 10);
+    if (!Number.isFinite(parsedChampionId)) {
+        setOwnerResults([]);
+        return;
+    }
+
+    setIsLoading(true);
+    try {
+      const results = await getOwnersOfChampion(parsedChampionId, allianceId, currentBattlegroup);
+      setOwnerResults(results as RosterWithPlayer[]);
+    } catch (error) {
+      console.error("Failed to fetch owners", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleAddChampion = (item: RosterWithChampion) => {
       console.log("[PlanningToolsPanel] handleAddChampion clicked", { 
           itemChampion: item.champion.id, 
