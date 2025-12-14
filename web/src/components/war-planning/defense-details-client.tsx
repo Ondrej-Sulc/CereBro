@@ -38,7 +38,7 @@ interface WarNodeWithAllocations {
 function findTargetNode(
   targetPlayerId: string | undefined,
   currentPlacements: PlacementWithNode[],
-  nodesMap: Map<number, any>, // Using any or specific type if imported
+  nodesMap: Map<number, WarNodeWithAllocations>, // Using any or specific type if imported
   currentBattlegroup: number
 ): { nodeId: number; nodeNumber: number; placementId?: string } | null {
   const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
