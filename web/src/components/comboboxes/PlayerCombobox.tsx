@@ -30,6 +30,7 @@ interface PlayerComboboxProps {
   className?: string;
   attackerId?: number; // To show rank info
   compact?: boolean;
+  disabled?: boolean;
 }
 
 export const PlayerCombobox = React.memo(function PlayerCombobox({
@@ -39,7 +40,8 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
   placeholder = "Select player...",
   className,
   attackerId,
-  compact
+  compact,
+  disabled
 }: PlayerComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -100,6 +102,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
               compact ? "h-8 text-xs" : "",
               className
           )}
+          disabled={disabled}
         >
           <div className="flex items-center gap-2 truncate ">
              {selectedPlayer ? (

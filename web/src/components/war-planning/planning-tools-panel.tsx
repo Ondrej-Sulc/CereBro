@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Champion, Player, Roster } from "@prisma/client";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import type { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Users, Shield, Star, X } from "lucide-react";
+import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { getPlayerRoster, getOwnersOfChampion } from "@/app/planning/actions";
@@ -12,8 +12,9 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { usePlayerColor } from "./player-color-context"; // Corrected Import
-import { getChampionClassColors } from "@/lib/championClassHelper"; // Import getChampionClassColors
+import { usePlayerColor } from "./player-color-context"; 
+import { getChampionClassColors } from "@/lib/championClassHelper"; 
+import { ChampionImages } from "@/types/champion";
 
 interface PlanningToolsPanelProps {
   players: Player[];
@@ -21,20 +22,55 @@ interface PlanningToolsPanelProps {
   allianceId: string;
   onClose?: () => void;
   currentBattlegroup?: number;
-  onAddExtra?: (playerId: string, championId: number) => void;
+  onAddExtra?: (playerId: string, championId: number, starLevel?: number) => void;
+  initialPlayerId?: string | null;
+  assignedChampions: { playerId: string; championId: number }[];
+  activeTag?: Tag | null;
 }
 
-type RosterWithChampion = Roster & { champion: Champion };
+type ChampionWithTags = Champion & { tags?: { name: string }[] };
+type RosterWithChampion = Roster & { champion: ChampionWithTags };
 type RosterWithPlayer = Roster & { player: Player };
 
-export default function PlanningToolsPanel({ players, champions, allianceId, onClose, currentBattlegroup, onAddExtra }: PlanningToolsPanelProps) {
+const CLASS_ICONS: Record<ChampionClass, string> = {
+    SCIENCE: "/icons/Science.png",
+    SKILL: "/icons/Skill.png",
+    MYSTIC: "/icons/Mystic.png",
+    COSMIC: "/icons/Cosmic.png",
+    TECH: "/icons/Tech.png",
+    MUTANT: "/icons/Mutant.png",
+    SUPERIOR: "/icons/Superior.png" // Fallback if needed, though likely not in filter list
+};
+
+const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
+
+export default function PlanningToolsPanel({
+  players, 
+  champions, 
+  allianceId, 
+  onClose, 
+  currentBattlegroup, 
+  onAddExtra, 
+  initialPlayerId,
+  assignedChampions,
+  activeTag
+}: PlanningToolsPanelProps) {
   const { toast } = useToast();
   const { getPlayerColor } = usePlayerColor(); // Initialize usePlayerColor
   const [rosterResults, setRosterResults] = useState<RosterWithChampion[]>([]);
   const [ownerResults, setOwnerResults] = useState<RosterWithPlayer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedChampionId, setSelectedChampionId] = useState<string>("");
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>("");
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>(initialPlayerId || "");
+  const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
+
+  const rosterReqSeq = useRef(0);
+
+  const assignedSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of assignedChampions) s.add(`${a.playerId}:${a.championId}`);
+    return s;
+  }, [assignedChampions]);
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
@@ -42,28 +78,34 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
     ? players.filter(p => p.battlegroup === currentBattlegroup)
     : players;
 
-  const handlePlayerSelect = async (playerId: string) => {
+  const filteredRoster = rosterResults.filter(item => 
+    !selectedClass || item.champion.class === selectedClass
+  );
+
+  const handlePlayerSelect = useCallback(async (playerId: string) => {
     setSelectedPlayerId(playerId);
     setIsLoading(true);
+    setSelectedClass(null); // Reset filter on player change
+    const reqId = ++rosterReqSeq.current;
+
     try {
       const results = await getPlayerRoster(playerId);
-      setRosterResults(results as RosterWithChampion[]);
+      if (reqId === rosterReqSeq.current) {
+        setRosterResults(results as RosterWithChampion[]);
+      }
     } catch (error) {
       console.error("Failed to fetch roster", error);
     } finally {
-      setIsLoading(false);
+      if (reqId === rosterReqSeq.current) setIsLoading(false);
     }
-  };
+  }, []); // Dependencies removed
 
-  const handleAddChampion = (champion: Champion) => {
-      if (onAddExtra && selectedPlayerId) {
-          onAddExtra(selectedPlayerId, champion.id);
-          toast({
-              title: "Champion Added",
-              description: `Added ${champion.name} to extra assignments.`,
-          });
+  // Effect to update when prop changes
+  useEffect(() => {
+      if (initialPlayerId) {
+          handlePlayerSelect(initialPlayerId);
       }
-  };
+  }, [initialPlayerId, handlePlayerSelect]);
 
   const handleChampionSelect = async (championId: string) => {
     setSelectedChampionId(championId);
@@ -72,9 +114,15 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
       return;
     }
     
+    const parsedChampionId = Number.parseInt(championId, 10);
+    if (!Number.isFinite(parsedChampionId)) {
+        setOwnerResults([]);
+        return;
+    }
+
     setIsLoading(true);
     try {
-      const results = await getOwnersOfChampion(parseInt(championId), allianceId, currentBattlegroup);
+      const results = await getOwnersOfChampion(parsedChampionId, allianceId, currentBattlegroup);
       setOwnerResults(results as RosterWithPlayer[]);
     } catch (error) {
       console.error("Failed to fetch owners", error);
@@ -83,18 +131,31 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
     }
   };
 
-  const handleAddOwner = (player: Player) => {
-    // Need to find the full champion object from props.champions based on selectedChampionId
-    const champion = champions.find(c => c.id === parseInt(selectedChampionId));
+  const handleAddChampion = (item: RosterWithChampion) => {
+      if (onAddExtra && selectedPlayerId) {
+          onAddExtra(selectedPlayerId, item.champion.id, item.stars);
+          toast({
+              title: "Champion Added",
+              description: `Added ${item.champion.name} to extra assignments.`,
+          });
+      }
+  };
+
+  const handleAddOwner = (item: RosterWithPlayer) => {
+    const parsedId = Number.parseInt(selectedChampionId, 10);
+    if (!Number.isFinite(parsedId)) return;
+
+    const champion = champions.find(c => c.id === parsedId);
     
     if (onAddExtra && champion) {
-        onAddExtra(player.id, champion.id);
+        onAddExtra(item.player.id, champion.id, item.stars);
         toast({
             title: "Champion Added",
-            description: `Added ${champion.name} to ${player.ingameName}'s extra assignments.`,
+            description: `Added ${champion.name} to ${item.player.ingameName}'s extra assignments.`,
         });
     }
   };
+
 
   return (
     <div className="h-full flex flex-col bg-slate-950 border-l border-slate-800">
@@ -184,32 +245,94 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
               </Select>
             </div>
 
-            <div className="space-y-2 mt-4">
+            {/* Class Filter Bar */}
+            {rosterResults.length > 0 && (
+                <div className="flex items-center gap-1.5 justify-between bg-slate-900/50 p-1.5 rounded-lg border border-slate-800">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                            "h-7 w-7 rounded-full transition-all",
+                            !selectedClass ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
+                        )}
+                        onClick={() => setSelectedClass(null)}
+                        title="All Classes"
+                    >
+                        <CircleOff className="h-4 w-4" />
+                    </Button>
+                    <div className="h-4 w-px bg-slate-800" />
+                    {CLASSES.map(c => {
+                        const colors = getChampionClassColors(c);
+                        const isSelected = selectedClass === c;
+                        
+                        return (
+                            <Button
+                                key={c}
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                    "h-7 w-7 p-1 rounded-full transition-all border",
+                                    isSelected 
+                                        ? cn(colors.bg, colors.border) 
+                                        : "bg-transparent border-transparent hover:bg-slate-800"
+                                )}
+                                onClick={() => setSelectedClass(isSelected ? null : c)}
+                                title={c}
+                            >
+                                <div className="relative w-full h-full">
+                                    <Image 
+                                        src={CLASS_ICONS[c]} 
+                                        alt={c} 
+                                        fill 
+                                        sizes="20px"
+                                        className="object-contain"
+                                    />
+                                </div>
+                            </Button>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="space-y-2 mt-2">
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">Loading roster...</p>
-              ) : rosterResults.length > 0 ? (
+              ) : filteredRoster.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
-                  {rosterResults.map((item) => {
+                  {filteredRoster.map((item) => {
                     const classColors = getChampionClassColors(item.champion.class);
+                    const isAssigned = assignedSet.has(`${selectedPlayerId}:${item.champion.id}`);
+                    const isTacticChampion = 
+                      activeTag && 
+                      item.champion.tags?.some(t => t.name === activeTag.name);
                     return (
                     <div 
                         key={item.id} 
                         className={cn(
                             "flex items-center gap-3 p-2 rounded-md border bg-slate-900/50 transition-colors",
-                            onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
+                            onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700",
+                            isAssigned && "border-transparent", // Border is handled by gradient now
+                            isTacticChampion && "border-teal-500"
                         )}
-                        onClick={() => handleAddChampion(item.champion)}
+                        style={{
+                          backgroundImage: isAssigned ? `linear-gradient(to right, ${classColors.color}20, transparent)` : undefined,
+                          borderWidth: isTacticChampion ? '1px' : undefined, // Explicit 1px border for tactic champion
+                        }}
+                        onClick={onAddExtra ? () => handleAddChampion(item) : undefined}
                     >
                       <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
-                          src={getChampionImageUrl(item.champion.images as any, '64')}
+                          src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64')}
                           alt={item.champion.name}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div className="flex-1">
-                        <p className={cn("font-bold text-sm", classColors.text)}>{item.champion.name}</p>
+                        <div className="flex items-center gap-1.5">
+                            <p className={cn("font-bold text-sm", classColors.text)}>{item.champion.name}</p>
+                            {isTacticChampion && <Shield className="h-3 w-3 text-teal-400 flex-shrink-0" />}
+                        </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span className={cn("flex items-center font-bold", item.isAwakened ? "text-slate-300" : "text-yellow-500")}>
                             {item.stars}<Star className="h-3 w-3 fill-current ml-0.5" />
@@ -218,8 +341,12 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                           {item.isAscended && <span className="text-pink-400 font-bold">Ascended</span>}
                         </div>
                       </div>
+                      {isAssigned && (
+                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      )}
                     </div>
-                  );})}
+                  );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">
@@ -253,7 +380,7 @@ export default function PlanningToolsPanel({ players, champions, allianceId, onC
                           onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
                         )}
                         style={{ borderLeftColor: getPlayerColor(item.player.id) }}
-                        onClick={() => handleAddOwner(item.player)}
+                        onClick={onAddExtra ? () => handleAddOwner(item) : undefined}
                     >
                       <div className="flex items-center gap-3">
                         {item.player.avatar ? (

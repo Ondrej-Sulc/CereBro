@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
-import { RightPanelState } from "../hooks/use-war-planning";
+import { RightPanelState, WarTacticWithTags } from "../hooks/use-war-planning";
 import PlanningToolsPanel from "../planning-tools-panel";
 import NodeEditor from "../node-editor";
 import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { Champion } from "@/types/champion";
-import { War, WarFight, WarTactic } from "@prisma/client";
+import { War, WarFight } from "@prisma/client";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { ExtraChampion } from "../hooks/use-war-planning";
 
@@ -17,7 +17,7 @@ interface DesktopSidebarProps {
   currentBattlegroup: number;
   selectedNodeId: number | null;
   selectedFight: FightWithNode | null;
-  activeTactic: WarTactic | null;
+  activeTactic: WarTacticWithTags | null;
   historyFilters: any;
   onHistoryFiltersChange: any;
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
@@ -69,6 +69,13 @@ export function DesktopSidebar({
             currentBattlegroup={currentBattlegroup}
             onClose={onClose} 
             onAddExtra={onAddExtra}
+            assignedChampions={currentFights
+                .flatMap(f => f.player?.id && f.attackerId 
+                    ? [{ playerId: f.player.id, championId: f.attackerId }] 
+                    : []
+                )
+            }
+            activeTag={activeTactic?.attackTag}
           />
         )}
         {rightPanelState === 'editor' && (

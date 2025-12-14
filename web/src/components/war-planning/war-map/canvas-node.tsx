@@ -3,13 +3,13 @@ import { Group, Rect, Circle, Text, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 import { WarTactic, ChampionClass } from '@prisma/client';
 import { WarNodePosition } from "@cerebro/core/data/war-planning/nodes-data";
-import { FightWithNode } from "@cerebro/core/data/war-planning/types";
+import { WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from '@/lib/championHelper';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons
 import { svgToDataUrl } from '@/lib/svgHelper'; // Import the SVG helper
 import { usePlayerColor } from '../player-color-context';
-import { getChampionClassColors } from '@/lib/championClassHelper';
+// Removed redundant import: import { getChampionClassColors } from '@/lib/championClassHelper'; // Not directly used here
 
 const CLASS_HEX_COLORS: Record<ChampionClass, string> = {
   SCIENCE: '#4ade80',
@@ -37,7 +37,7 @@ const useIconImage = (IconComponent: React.ElementType, size: number, color: str
     return image;
 };
 
-// TacticBadge Component (defined outside CanvasNode)
+// TacticBadge Component
 interface TacticBadgeProps {
     type: "attacker" | "defender";
     nodeRadius: number; // Passed as prop
@@ -46,10 +46,6 @@ interface TacticBadgeProps {
 const TacticBadge = memo(function TacticBadge({ type, nodeRadius }: TacticBadgeProps) {
     const iconSize = 10; // Smaller icon
     const circleRadius = 8;
-    
-    // Style matches War Archive:
-    // Attacker: bg-emerald-950/90, border-emerald-500, text-emerald-400
-    // Defender: bg-red-950/90, border-red-500, text-red-400
     
     const isAttacker = type === "attacker";
     
@@ -60,10 +56,6 @@ const TacticBadge = memo(function TacticBadge({ type, nodeRadius }: TacticBadgeP
     const IconComponent = isAttacker ? Swords : Shield;
     const iconImage = useIconImage(IconComponent, iconSize, iconColor);
     
-    // Position: Top-Left of the image ring.
-    // nodeRadius is ~24. We want it at -45 degrees or just top-left offset.
-    // The previous offset was -nodeRadius + 4. 
-    // Let's nudge it slightly more "out" to overlap the border nicely.
     const offset = Math.floor(nodeRadius * 0.7); // approx 45 deg coordinate
     
     const xPos = isAttacker ? -offset - 6 : offset + 6; 
@@ -97,8 +89,19 @@ const TacticBadge = memo(function TacticBadge({ type, nodeRadius }: TacticBadgeP
 });
 
 
-// Use Group + Clip for reliable circular masking
-const CircularImage = ({ src, x, y, radius, border, borderColor, opacity = 1, glowColor }: any) => {
+// CircularImage Component
+interface CircularImageProps {
+    src: string;
+    x: number;
+    y: number;
+    radius: number;
+    border?: number;
+    borderColor?: string;
+    opacity?: number;
+    glowColor?: string;
+}
+
+const CircularImage = ({ src, x, y, radius, border, borderColor, opacity = 1, glowColor }: CircularImageProps) => {
     const [image] = useImage(src, 'anonymous');
     
     return (
@@ -152,9 +155,9 @@ const CircularImage = ({ src, x, y, radius, border, borderColor, opacity = 1, gl
 
 interface CanvasNodeProps {
     node: WarNodePosition;
-    fight: FightWithNode | undefined;
+    fight: WarPlacement | undefined;
     isSelected: boolean;
-    onNodeClick: (nodeId: number, fight?: FightWithNode) => void;
+    onNodeClick: (nodeId: number, fight?: WarPlacement) => void;
     showHistory: boolean;
     history: HistoricalFightStat[] | undefined | null;
     activeTactic: WarTactic | null | undefined;
@@ -197,17 +200,29 @@ export const CanvasNode = memo(function CanvasNode({
     const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, '128') : null;
     const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, '128') : null;
     
-    const prefightChampions = fight?.prefightChampions;
+    // Type guard for fight
+    const prefightChampions = fight?.type === 'attack' ? fight.prefightChampions : undefined; 
     const hasPrefight = prefightChampions && prefightChampions.length > 0;
 
     // Tactic Logic
-    const activeTacticAny = activeTactic as any;
-    const isAttackerTactic = activeTacticAny?.attackTag && attacker?.tags?.some((t: any) => t.name === activeTacticAny.attackTag.name);
-    const isDefenderTactic = activeTacticAny?.defenseTag && defender?.tags?.some((t: any) => t.name === activeTacticAny.defenseTag.name);
+    interface WarTacticWithTags extends WarTactic {
+        defenseTag?: { name: string } | null;
+        attackTag?: { name: string } | null;
+    }
+    const activeTacticWithTags: WarTacticWithTags | null | undefined = activeTactic;
+    
+    // Ensure tags are correctly typed
+    interface ChampionWithTagsForTactic { id: number; name: string; images: any; class: ChampionClass; tags?: { name: string }[] }
+
+    const attackerChampionForTactic = attacker as ChampionWithTagsForTactic | undefined;
+    const defenderChampionForTactic = defender as ChampionWithTagsForTactic | undefined;
+
+    const isAttackerTactic = activeTacticWithTags?.attackTag && attackerChampionForTactic?.tags?.some((t: { name: string }) => t.name === activeTacticWithTags.attackTag!.name);
+    const isDefenderTactic = activeTacticWithTags?.defenseTag && defenderChampionForTactic?.tags?.some((t: { name: string }) => t.name === activeTacticWithTags.defenseTag!.name);
     
     // Player Logic
     const isPlayerHighlighted = player?.id && player.id === highlightedPlayerId;
-    const isPrefightHighlighted = highlightedPlayerId && fight?.prefightChampions?.some(pf => pf.player?.id === highlightedPlayerId);
+    const isPrefightHighlighted = highlightedPlayerId && fight?.type === 'attack' && fight.prefightChampions?.some((pf: { player?: { id: string | null } | null }) => pf.player?.id === highlightedPlayerId);
     const playerColor = player ? getPlayerColor(player.id) : null;
 
     // Dimensions
@@ -349,7 +364,7 @@ export const CanvasNode = memo(function CanvasNode({
             {/* Prefights */}
             {hasPrefight && prefightChampions && (
                 <Group y={nodeRadius + 8} x={-(prefightChampions.length * 10) + 10}>
-                    {prefightChampions.map((champ, i) => {
+                    {prefightChampions.map((champ, i: number) => {
                         const isPlacedByHighlight = champ.player?.id === highlightedPlayerId;
                         return (
                         <CircularImage
@@ -371,7 +386,7 @@ export const CanvasNode = memo(function CanvasNode({
                     x={(pillWidth / 2) + 14} 
                     y={-((Math.min(history.length, 3) * 24) / 2) + 10} // Vertically center the stack
                 >
-                    {history.slice(0, 3).map((stat, i) => {
+                    {history.slice(0, 3).map((stat: HistoricalFightStat, i: number) => {
                         const hasSolos = stat.solos > 0;
                         const hasDeaths = stat.deaths > 0;
                         const isSplit = hasSolos && hasDeaths;

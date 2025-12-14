@@ -54,11 +54,11 @@ export async function addTactic(season: number, minTier: number | undefined, max
                 where: { 
                     name_category: {
                         name: attackTag,
-                        category: 'Alliance War'
+                        category: 'Alliance Wars'
                     }
                 },
                 update: {},
-                create: { name: attackTag, category: 'Alliance War' }
+                create: { name: attackTag, category: 'Alliance Wars' }
             });
             attackTagId = tag.id;
         }
@@ -69,11 +69,11 @@ export async function addTactic(season: number, minTier: number | undefined, max
                 where: { 
                     name_category: {
                         name: defenseTag,
-                        category: 'Alliance War'
+                        category: 'Alliance Wars'
                     }
                 },
                 update: {},
-                create: { name: defenseTag, category: 'Alliance War' }
+                create: { name: defenseTag, category: 'Alliance Wars' }
             });
             defenseTagId = tag.id;
         }

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier } from "@prisma/client";
+import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
-import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
+import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion, WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
 
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster';
@@ -17,6 +17,11 @@ export interface ExtraChampion {
   battlegroup: number;
   champion: { id: number; name: string; images: any };
 }
+
+export type WarTacticWithTags = WarTactic & {
+    attackTag?: Tag | null;
+    defenseTag?: Tag | null;
+};
 
 interface OptimisticPrefight {
   id: number;
@@ -88,7 +93,7 @@ export function useWarPlanning({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
-  const [activeTactic, setActiveTactic] = useState<WarTactic | null>(null);
+  const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // History State
@@ -277,39 +282,35 @@ export function useWarPlanning({
     }
   }, [status, warId, updateWarStatus, router]);
 
-  const handleNodeClick = useCallback((nodeId: number, fight?: FightWithNode) => {
+  const handleNodeClick = useCallback((nodeId: number) => {
     setSelectedNodeId(nodeId);
     setRightPanelState('editor');
   }, []);
 
+  const validNodeNumbers = useMemo(() => Array.from(nodesMap.keys()).sort((a, b) => a - b), [nodesMap]);
+
   const handleNavigateNode = useCallback((direction: number) => {
     if (!selectedNodeId) return;
 
-    const validNodes = warNodesData.filter(n => !n.isPortal);
+    if (validNodeNumbers.length === 0) return;
 
-    const currentIndex = validNodes.findIndex(n => {
-      const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
-      return nid === selectedNodeId;
-    });
+    const currentIndex = validNodeNumbers.indexOf(selectedNodeId);
 
     if (currentIndex === -1) return;
 
     let newIndex = currentIndex + direction;
 
-    const count = validNodes.length;
+    const count = validNodeNumbers.length;
     if (newIndex < 0) {
       newIndex = (newIndex % count + count) % count;
     } else if (newIndex >= count) {
       newIndex = newIndex % count;
     }
 
-    const newNode = validNodes[newIndex];
-    const newNodeId = typeof newNode.id === 'string' ? parseInt(newNode.id) : newNode.id;
-
-    const newFight = currentFights.find(f => f.node.nodeNumber === newNodeId);
-
-    handleNodeClick(newNodeId, newFight);
-  }, [selectedNodeId, currentFights, handleNodeClick]);
+    const newNodeId = validNodeNumbers[newIndex];
+    
+    handleNodeClick(newNodeId);
+  }, [selectedNodeId, handleNodeClick, validNodeNumbers]);
 
   const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');
@@ -508,7 +509,16 @@ export function useWarPlanning({
             pendingSaveNodeIds.current.delete(fightToUpdate.node.nodeNumber);
         }
     }
-  }, [updateWarFight, champions, players, validatePlayerAssignment, currentFights]);
+  }, [
+    updateWarFight, 
+    champions, 
+    players, 
+    validatePlayerAssignment, 
+    currentFights,
+    extraChampions, // Added
+    currentBattlegroup, // Added
+    handleRemoveExtra, // Added
+  ]);
 
   return {
     // State

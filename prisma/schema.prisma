@@ -124,6 +124,7 @@ model Champion {
   duels              Duel[]
   asAttacker         WarFight[]               @relation("AttackerRelation")
   asDefender         WarFight[]               @relation("DefenderRelation")
+  defensePlacements  WarDefensePlacement[]
   placedPrefights    FightPrefight[]
   extraAssignments   WarExtraChampion[]
   seasonBans         SeasonBan[]
@@ -162,6 +163,8 @@ model Tag {
 
   attackTactics  WarTactic[] @relation("AttackTactic")
   defenseTactics WarTactic[] @relation("DefenseTactic")
+
+  highlightedInPlans WarDefensePlan[]
 
   @@unique([name, category])
 }
@@ -281,6 +284,7 @@ model Player {
   allianceId String?
 
   playedInFights  WarFight[]         @relation("PlayerInFight")
+  defensePlacements WarDefensePlacement[]
   submittedVideos WarVideo[]         @relation("SubmittedBy")
   placedPrefights FightPrefight[]
   extraChampions  WarExtraChampion[]
@@ -328,6 +332,7 @@ model Alliance {
   aqSkip             AQSkip?
   aqReminderSettings AQReminderSettings?
   wars               War[]
+  defensePlans       WarDefensePlan[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -421,6 +426,53 @@ model War {
 
   @@unique([allianceId, season, warNumber])
   @@index([allianceId])
+}
+
+model WarDefensePlan {
+  id          String     @id @default(cuid())
+  name        String
+  mapType     WarMapType @default(STANDARD)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  allianceId  String
+  alliance    Alliance   @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+
+  placements  WarDefensePlacement[]
+  
+  // Optional: Link to a specific tactic for visualization
+  tacticId    String?
+  tactic      WarTactic? @relation(fields: [tacticId], references: [id])
+
+  highlightTagId Int?
+  highlightTag   Tag? @relation(fields: [highlightTagId], references: [id])
+
+  @@index([allianceId])
+}
+
+model WarDefensePlacement {
+  id          String   @id @default(cuid())
+  
+  nodeId      Int
+  node        WarNode  @relation(fields: [nodeId], references: [id])
+
+  defenderId  Int?
+  defender    Champion? @relation(fields: [defenderId], references: [id])
+
+  playerId    String?
+  player      Player?   @relation(fields: [playerId], references: [id])
+
+  planId      String
+  plan        WarDefensePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  battlegroup Int @default(1)
+  starLevel   Int? // New: Star level of the champion placed
+
+  @@unique([planId, battlegroup, nodeId])
+  @@index([planId])
+  @@index([playerId])
+  @@index([defenderId])
+  @@index([nodeId])
 }
 
 model SeasonBan {
@@ -560,6 +612,7 @@ model WarNode {
   description String?
   fights      WarFight[]
   allocations WarNodeAllocation[]
+  placements  WarDefensePlacement[]
 }
 
 model NodeModifier {
@@ -602,6 +655,8 @@ model WarTactic {
   defenseTag   Tag? @relation("DefenseTactic", fields: [defenseTagId], references: [id])
 
   name String?
+
+  defensePlans WarDefensePlan[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,4 +1,4 @@
-import { War, WarStatus } from "@prisma/client";
+import { War, WarStatus, Tag } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lock, Unlock, PanelRightClose, PanelRightOpen, Users, Ban, Plus, X, Share } from "lucide-react";
@@ -39,6 +39,8 @@ interface WarHeaderProps {
   onRemoveWarBan: (banId: string) => Promise<void>;
   onAddExtra: (playerId: string, championId: number) => void;
   onDistribute: (battlegroup?: number) => void;
+  assignedChampions?: { playerId: string; championId: number }[];
+  activeTag?: Tag | null;
 }
 
 export function WarHeader({
@@ -59,7 +61,9 @@ export function WarHeader({
   onAddWarBan,
   onRemoveWarBan,
   onAddExtra,
-  onDistribute
+  onDistribute,
+  assignedChampions = [],
+  activeTag
 }: WarHeaderProps) {
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
 
@@ -148,6 +152,8 @@ export function WarHeader({
               allianceId={war.allianceId}
               currentBattlegroup={currentBattlegroup}
               onAddExtra={onAddExtra}
+              assignedChampions={assignedChampions}
+              activeTag={activeTag}
             />
           </div>
 

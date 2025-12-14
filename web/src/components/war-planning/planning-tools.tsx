@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"; // Import SheetTitle and SheetDescription
 import { PanelRightOpen } from "lucide-react";
 import PlanningToolsPanel from "./planning-tools-panel";
-import { Champion, Player } from "@prisma/client";
+import { Champion, Player, Tag } from "@prisma/client";
 
 
 interface PlanningToolsProps {
@@ -11,9 +11,19 @@ interface PlanningToolsProps {
   allianceId: string;
   currentBattlegroup?: number;
   onAddExtra?: (playerId: string, championId: number) => void;
+  assignedChampions?: { playerId: string; championId: number }[];
+  activeTag?: Tag | null;
 }
 
-export default function PlanningTools({ players, champions, allianceId, currentBattlegroup, onAddExtra }: PlanningToolsProps) {
+export default function PlanningTools({ 
+  players, 
+  champions, 
+  allianceId, 
+  currentBattlegroup, 
+  onAddExtra,
+  assignedChampions = [],
+  activeTag
+}: PlanningToolsProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -33,6 +43,8 @@ export default function PlanningTools({ players, champions, allianceId, currentB
             allianceId={allianceId} 
             currentBattlegroup={currentBattlegroup} 
             onAddExtra={onAddExtra}
+            assignedChampions={assignedChampions}
+            activeTag={activeTag}
         />
       </SheetContent>
     </Sheet>

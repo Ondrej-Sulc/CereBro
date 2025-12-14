@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 export async function MainLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   let isOfficer = false;
+  let isInAlliance = false;
 
   if (session?.user?.id) {
     const account = await prisma.account.findFirst({
@@ -18,12 +19,13 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
             where: { discordId: account.providerAccountId }
         });
         isOfficer = player?.isOfficer || player?.isBotAdmin || false;
+        isInAlliance = !!player?.allianceId;
     }
   }
 
   return (
     <div className="relative z-10 min-h-screen flex flex-col">
-      <Header userButton={<UserButton />} isOfficer={isOfficer} />
+      <Header userButton={<UserButton />} isOfficer={isOfficer} isInAlliance={isInAlliance} />
       <main className="flex-grow">
         {children}
       </main>
