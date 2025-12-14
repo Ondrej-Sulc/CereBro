@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
@@ -31,6 +31,16 @@ type ChampionWithTags = Champion & { tags?: { name: string }[] };
 type RosterWithChampion = Roster & { champion: ChampionWithTags };
 type RosterWithPlayer = Roster & { player: Player };
 
+const CLASS_ICONS: Record<ChampionClass, string> = {
+    SCIENCE: "/icons/Science.png",
+    SKILL: "/icons/Skill.png",
+    MYSTIC: "/icons/Mystic.png",
+    COSMIC: "/icons/Cosmic.png",
+    TECH: "/icons/Tech.png",
+    MUTANT: "/icons/Mutant.png",
+    SUPERIOR: "/icons/Superior.png" // Fallback if needed, though likely not in filter list
+};
+
 export default function PlanningToolsPanel({
   players, 
   champions, 
@@ -52,6 +62,12 @@ export default function PlanningToolsPanel({
   const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
 
   const rosterReqSeq = useRef(0);
+
+  const assignedSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of assignedChampions) s.add(`${a.playerId}:${a.championId}`);
+    return s;
+  }, [assignedChampions]);
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
@@ -247,11 +263,7 @@ export default function PlanningToolsPanel({
                     {CLASSES.map(c => {
                         const colors = getChampionClassColors(c);
                         const isSelected = selectedClass === c;
-                        // Determine icon path - simple mapping based on capitalisation
-                        // Actually I can just title case it: Science, Skill, etc.
-                        const iconName = c.charAt(0) + c.slice(1).toLowerCase();
-                        const iconPath = `/icons/${iconName}.png`;
-
+                        
                         return (
                             <Button
                                 key={c}
@@ -268,7 +280,7 @@ export default function PlanningToolsPanel({
                             >
                                 <div className="relative w-full h-full">
                                     <Image 
-                                        src={iconPath} 
+                                        src={CLASS_ICONS[c]} 
                                         alt={c} 
                                         fill 
                                         sizes="20px"
@@ -288,9 +300,7 @@ export default function PlanningToolsPanel({
                 <div className="grid grid-cols-1 gap-2">
                   {filteredRoster.map((item) => {
                     const classColors = getChampionClassColors(item.champion.class);
-                    const isAssigned = assignedChampions.some(
-                      (p) => p.playerId === selectedPlayerId && p.championId === item.champion.id
-                    );
+                    const isAssigned = assignedSet.has(`${selectedPlayerId}:${item.champion.id}`);
                     const isTacticChampion = 
                       activeTag && 
                       item.champion.tags?.some(t => t.name === activeTag.name);
@@ -307,7 +317,7 @@ export default function PlanningToolsPanel({
                           backgroundImage: isAssigned ? `linear-gradient(to right, ${classColors.color}20, transparent)` : undefined,
                           borderWidth: isTacticChampion ? '1px' : undefined, // Explicit 1px border for tactic champion
                         }}
-                        onClick={() => handleAddChampion(item)}
+                        onClick={onAddExtra ? () => handleAddChampion(item) : undefined}
                     >
                       <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
@@ -368,7 +378,7 @@ export default function PlanningToolsPanel({
                           onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
                         )}
                         style={{ borderLeftColor: getPlayerColor(item.player.id) }}
-                        onClick={() => handleAddOwner(item)}
+                        onClick={onAddExtra ? () => handleAddOwner(item) : undefined}
                     >
                       <div className="flex items-center gap-3">
                         {item.player.avatar ? (
