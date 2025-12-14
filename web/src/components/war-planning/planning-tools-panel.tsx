@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
@@ -51,6 +51,8 @@ export default function PlanningToolsPanel({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(initialPlayerId || "");
   const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
 
+  const rosterReqSeq = useRef(0);
+
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
   const filteredPlayers = currentBattlegroup 
@@ -67,13 +69,17 @@ export default function PlanningToolsPanel({
     setSelectedPlayerId(playerId);
     setIsLoading(true);
     setSelectedClass(null); // Reset filter on player change
+    const reqId = ++rosterReqSeq.current;
+
     try {
       const results = await getPlayerRoster(playerId);
-      setRosterResults(results as RosterWithChampion[]);
+      if (reqId === rosterReqSeq.current) {
+        setRosterResults(results as RosterWithChampion[]);
+      }
     } catch (error) {
       console.error("Failed to fetch roster", error);
     } finally {
-      setIsLoading(false);
+      if (reqId === rosterReqSeq.current) setIsLoading(false);
     }
   }, []); // Dependencies removed
 
