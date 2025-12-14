@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
-import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning/types";
+import { PlayerWithRoster, FightWithNode, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
 import { useDefensePlanning } from "./hooks/use-defense-planning";
 import { WarTabs } from "./details/war-tabs";
 import DefenseEditor from "./node-editor/defense-editor";
