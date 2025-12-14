@@ -85,6 +85,12 @@ export default function PlanningToolsPanel({
   }, [initialPlayerId, handlePlayerSelect]);
 
   const handleAddChampion = (item: RosterWithChampion) => {
+      console.log("[PlanningToolsPanel] handleAddChampion clicked", { 
+          itemChampion: item.champion.id, 
+          selectedPlayerId, 
+          hasOnAddExtra: !!onAddExtra 
+      });
+
       if (onAddExtra && selectedPlayerId) {
           onAddExtra(selectedPlayerId, item.champion.id, item.stars);
           toast({
@@ -94,32 +100,14 @@ export default function PlanningToolsPanel({
       }
   };
 
-  const handleChampionSelect = async (championId: string) => {
-    setSelectedChampionId(championId);
-    if (!championId) {
-      setOwnerResults([]);
-      return;
-    }
-    
-    const parsedChampionId = Number.parseInt(championId, 10);
-    if (!Number.isFinite(parsedChampionId)) {
-        setOwnerResults([]);
-        return;
-    }
-
-    setIsLoading(true);
-    try {
-      const results = await getOwnersOfChampion(parsedChampionId, allianceId, currentBattlegroup);
-      setOwnerResults(results as RosterWithPlayer[]);
-    } catch (error) {
-      console.error("Failed to fetch owners", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleAddOwner = (item: RosterWithPlayer) => {
     const parsedId = Number.parseInt(selectedChampionId, 10);
+    console.log("[PlanningToolsPanel] handleAddOwner clicked", { 
+        rawId: selectedChampionId, 
+        parsedId, 
+        hasOnAddExtra: !!onAddExtra 
+    });
+
     if (!Number.isFinite(parsedId)) return;
 
     const champion = champions.find(c => c.id === parsedId);
