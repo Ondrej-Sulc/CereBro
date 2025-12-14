@@ -119,7 +119,10 @@ export default function PlanningToolsPanel({
   };
 
   const handleAddOwner = (item: RosterWithPlayer) => {
-    const champion = champions.find(c => c.id === parseInt(selectedChampionId));
+    const parsedId = Number.parseInt(selectedChampionId, 10);
+    if (!Number.isFinite(parsedId)) return;
+
+    const champion = champions.find(c => c.id === parsedId);
     
     if (onAddExtra && champion) {
         onAddExtra(item.player.id, champion.id, item.stars);

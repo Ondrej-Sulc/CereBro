@@ -511,6 +511,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
              )}
              {rightPanelState === 'tools' && (
                  <PlanningToolsPanel
+                    key={currentBattlegroup}
                     players={props.players}
                     champions={props.champions}
                     allianceId={props.plan.allianceId}
