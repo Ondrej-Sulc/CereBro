@@ -148,42 +148,32 @@ export async function updateDefensePlacement(updatedPlacement: Partial<WarDefens
       starLevel: rest.starLevel,
   };
 
-  if (id) {
-      await prisma.warDefensePlacement.update({
-          where: { id },
-          data: updateData,
-      });
-  } else {
-      // Upsert logic with new constraint
-      if (!planId || !nodeId || !battlegroup) {
-          throw new Error("PlanID, NodeID and Battlegroup required.");
-      }
-      
-      const existing = await prisma.warDefensePlacement.findUnique({
-          where: {
-              planId_battlegroup_nodeId: { planId, battlegroup, nodeId }
-          }
-      });
-
-      if (existing) {
-          await prisma.warDefensePlacement.update({
-              where: { id: existing.id },
-              data: updateData
-          });
-      } else {
-         await prisma.warDefensePlacement.create({
-            data: {
-                planId,
-                battlegroup,
-                nodeId,
-                defenderId: rest.defenderId,
-                playerId: rest.playerId,
-                starLevel: rest.starLevel
+        if (id) {
+            await prisma.warDefensePlacement.update({
+                where: { id },
+                data: updateData,
+            });
+        } else {
+            // Upsert logic with new constraint
+            if (!planId || !nodeId || !battlegroup) {
+                throw new Error("PlanID, NodeID and Battlegroup required.");
             }
-         });
-      }
-  }
-}
+            
+            await prisma.warDefensePlacement.upsert({
+                where: {
+                    planId_battlegroup_nodeId: { planId, battlegroup, nodeId }
+                },
+                update: updateData,
+                create: {
+                    planId,
+                    battlegroup,
+                    nodeId,
+                    defenderId: rest.defenderId,
+                    playerId: rest.playerId,
+                    starLevel: rest.starLevel
+                }
+            });
+        }}
 
 export async function deleteDefensePlan(planId: string) {
   const session = await auth();

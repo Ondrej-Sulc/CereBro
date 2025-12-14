@@ -45,7 +45,7 @@ export const DefensePlayerListPanel = ({
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
       champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string }[],
-      uniqueCount: number
+      placementCount: number
     }>();
 
     // Only consider placements for the current battlegroup
@@ -55,11 +55,11 @@ export const DefensePlayerListPanel = ({
         if (p.player && p.defender) {
             const pid = p.player.id;
             if (!stats.has(pid)) {
-                stats.set(pid, { champions: [], uniqueCount: 0 });
+                stats.set(pid, { champions: [], placementCount: 0 });
             }
             const stat = stats.get(pid)!;
             // A player can place the same champ twice? Usually not in defense, but technically possible.
-            // But usually uniqueCount refers to placed nodes.
+            // But usually placementCount refers to placed nodes.
             stat.champions.push({
                 id: p.defender.id,
                 name: p.defender.name,
@@ -68,7 +68,7 @@ export const DefensePlayerListPanel = ({
                 nodeId: p.node.nodeNumber,
                 placementId: p.id
             });
-            stat.uniqueCount++;
+            stat.placementCount++;
         }
     });
 
@@ -112,7 +112,7 @@ export const DefensePlayerListPanel = ({
             <div className="p-2 space-y-1">
                 {sortedPlayers.map(player => {
                     const stat = playerStats.get(player.id);
-                    const count = stat?.uniqueCount || 0;
+                    const count = stat?.placementCount || 0;
                     const isSelected = highlightedPlayerId === player.id;
                     const isFull = count >= championLimit;
                     const playerColor = getPlayerColor(player.id);

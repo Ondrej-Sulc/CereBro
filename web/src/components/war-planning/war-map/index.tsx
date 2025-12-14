@@ -113,21 +113,6 @@ const WarMap = memo(function WarMap({
       y: Math.min(maxY, Math.max(minY, pos.y)),
     };
 
-    // Debug
-    if (pos.y !== result.y) {
-      console.log('Y CONSTRAINED:', {
-        input: pos.y.toFixed(0),
-        output: result.y.toFixed(0),
-        minY: minY.toFixed(0),
-        maxY: maxY.toFixed(0),
-        contentTop: contentTop.toFixed(0),
-        contentBottom: contentBottom.toFixed(0),
-        minNodeY,
-        maxNodeY,
-        which: pos.y < minY ? '🔺 UP (hit minY)' : '🔻 DOWN (hit maxY)'
-      });
-    }
-
     return result;
   };
   // Responsive Stage Size via ResizeObserver

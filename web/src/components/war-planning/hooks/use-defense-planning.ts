@@ -4,8 +4,7 @@ import { WarDefensePlan, WarDefensePlacement, WarMapType, WarNode, WarNodeAlloca
 import { Champion } from "@/types/champion";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
-
-export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster';
+import { RightPanelState } from "./use-war-planning";
 
 interface WarNodeWithAllocations extends WarNode {
     allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
@@ -84,9 +83,13 @@ export function useDefensePlanning({
   
   // Fetch Static Node Data ONCE
   useEffect(() => {
+    const controller = new AbortController();
+    
     async function fetchNodes() {
         try {
-            const res = await fetch(`/api/war-planning/nodes?planId=${planId}`);
+            const res = await fetch(`/api/war-planning/nodes?planId=${planId}`, {
+                signal: controller.signal
+            });
             if (!res.ok) throw new Error("Failed to load map data");
             const data: WarNodeWithAllocations[] = await res.json();
             
@@ -94,11 +97,14 @@ export function useDefensePlanning({
             data.forEach(n => map.set(n.nodeNumber, n));
             setNodesMap(map);
         } catch (err) {
+            if (err instanceof Error && err.name === 'AbortError') return;
             console.error(err);
             setError("Failed to load map configuration.");
         }
     }
     fetchNodes();
+    
+    return () => controller.abort();
   }, [planId]);
 
   // Initial Data Fetch

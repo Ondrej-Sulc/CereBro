@@ -105,21 +105,23 @@ export default function DefenseEditor({
             return;
         }
 
+        const COLUMNS = mapType === WarMapType.BIG_THING ? 5 : 9;
+
         if (e.key === 'ArrowRight') {
             onNavigate?.(1);
         } else if (e.key === 'ArrowLeft') {
             onNavigate?.(-1);
         } else if (e.key === 'ArrowUp') {
-            onNavigate?.(9);
+            onNavigate?.(COLUMNS);
         } else if (e.key === 'ArrowDown') {
-            onNavigate?.(-9);
+            onNavigate?.(-COLUMNS);
         }
 
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onNavigate]);
+  }, [onNavigate, mapType]);
 
   // Sort Players: Alphabetical, filtered by BG
   const availablePlayers = useMemo(() => {
@@ -137,7 +139,7 @@ export default function DefenseEditor({
   }, [players, currentBattlegroup, playerId]);
 
   // Helper to trigger save
-  const triggerSave = useCallback((updates: Partial<any>) => {
+  const triggerSave = useCallback((updates: Pick<WarDefensePlacement, 'defenderId' | 'playerId' | 'starLevel'>) => {
     if (nodeId === null) return;
     
     // Use the actual DB Node ID from currentPlacement OR the prop dbNodeId
@@ -235,7 +237,7 @@ export default function DefenseEditor({
                   {defenderTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
                           <Badge variant="outline" className="border-indigo-500 text-indigo-400 bg-indigo-500/10 text-[10px] px-1.5 py-0 h-5">
-                              Tactic: {(activeTactic as any)?.defenseTag?.name}
+                              Tactic: {activeTactic?.defenseTag?.name}
                           </Badge>
                       </div>
                   )}

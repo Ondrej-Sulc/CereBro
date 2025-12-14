@@ -472,6 +472,7 @@ model WarDefensePlacement {
   @@index([planId])
   @@index([playerId])
   @@index([defenderId])
+  @@index([nodeId])
 }
 
 model SeasonBan {

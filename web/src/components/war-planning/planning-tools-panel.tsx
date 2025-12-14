@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
@@ -63,7 +63,7 @@ export default function PlanningToolsPanel({
     !selectedClass || item.champion.class === selectedClass
   );
 
-  const handlePlayerSelect = async (playerId: string) => {
+  const handlePlayerSelect = useCallback(async (playerId: string) => {
     setSelectedPlayerId(playerId);
     setIsLoading(true);
     setSelectedClass(null); // Reset filter on player change
@@ -75,14 +75,14 @@ export default function PlanningToolsPanel({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setSelectedPlayerId, setIsLoading, setSelectedClass, setRosterResults]);
 
   // Effect to update when prop changes
   useEffect(() => {
       if (initialPlayerId) {
           handlePlayerSelect(initialPlayerId);
       }
-  }, [initialPlayerId]);
+  }, [initialPlayerId, handlePlayerSelect]);
 
   const handleAddChampion = (item: RosterWithChampion) => {
       if (onAddExtra && selectedPlayerId) {
@@ -278,7 +278,7 @@ export default function PlanningToolsPanel({
                     );
                     const isTacticChampion = 
                       activeTag && 
-                      item.champion.tags?.some((t: any) => t.name === activeTag.name);
+                      item.champion.tags?.some(t => t.name === activeTag.name);
                     return (
                     <div 
                         key={item.id} 

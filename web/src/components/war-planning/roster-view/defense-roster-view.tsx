@@ -30,7 +30,7 @@ export const DefenseRosterView = ({
   activeTag
 }: DefenseRosterViewProps) => {
   
-  const championLimit = mapType === "BIG_THING" ? 1 : 5;
+  const championLimit = mapType === WarMapType.BIG_THING ? 1 : 5;
 
   // Filter players for this BG
   const bgPlayers = useMemo(() => {
