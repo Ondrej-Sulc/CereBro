@@ -288,5 +288,6 @@ export function useDefensePlanning({
     handleEditorClose,
     toggleTools,
     handleSavePlacement,
+    nodesMap, // Expose nodesMap for robustness
   };
 }

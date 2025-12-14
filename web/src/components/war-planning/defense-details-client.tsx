@@ -156,17 +156,61 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                 }
             }
         
-            // Priority B: Find first completely empty node
-            if (!targetNodeId) {
-                 const empty = sorted.find(p => !p.playerId && !p.defenderId);
-                 console.log("[handleAddFromTool] Empty Node Check", { emptyNodeId: empty?.id });
-                 if (empty) {
-                    targetNodeId = empty.nodeId;
-                    targetNodeNumber = empty.node.nodeNumber;
-                    targetPlacementId = empty.id;
-                    console.log("[handleAddFromTool] Found Empty Node", { targetNodeId });
-                 }
-            }    }
+                // Priority B: Find first completely empty node
+        
+                if (!targetNodeId) {
+        
+                     const empty = sorted.find(p => !p.playerId && !p.defenderId);
+        
+                     console.log("[handleAddFromTool] Empty Node Check", { emptyNodeId: empty?.id });
+        
+                     if (empty) {
+        
+                        targetNodeId = empty.nodeId;
+        
+                        targetNodeNumber = empty.node.nodeNumber;
+        
+                        targetPlacementId = empty.id;
+        
+                        console.log("[handleAddFromTool] Found Empty Node", { targetNodeId });
+        
+                     } else if (sorted.length === 0 || sorted.length < nodesMap.size) {
+        
+                         // Fallback: If placements are missing (e.g. not created yet for this BG), pick from nodesMap
+        
+                         // Find a node number that is NOT in sorted
+        
+                         const occupiedNodeNumbers = new Set(sorted.map(p => p.node.nodeNumber));
+        
+                         const allNodeNumbers = Array.from(nodesMap.keys()).sort((a, b) => a - b);
+        
+                         
+        
+                         const freeNodeNumber = allNodeNumbers.find(n => !occupiedNodeNumbers.has(n));
+        
+                         
+        
+                         if (freeNodeNumber) {
+        
+                             const node = nodesMap.get(freeNodeNumber);
+        
+                             if (node) {
+        
+                                 targetNodeId = node.id;
+        
+                                 targetNodeNumber = freeNodeNumber;
+        
+                                 // targetPlacementId is undefined, which signals upsert
+        
+                                 console.log("[handleAddFromTool] Found Free Node from Map (Fallback)", { targetNodeId, freeNodeNumber });
+        
+                             }
+        
+                         }
+        
+                     }
+        
+                }    }
 
     if (!targetNodeId) {
         console.warn("[handleAddFromTool] No available node found in placements", { count: currentPlacements.length });
