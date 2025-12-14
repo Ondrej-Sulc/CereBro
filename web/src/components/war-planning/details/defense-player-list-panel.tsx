@@ -44,7 +44,7 @@ export const DefensePlayerListPanel = ({
   // Calculate player usage stats (filtered by BG)
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
-      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string }[],
+      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string; starLevel: number | undefined }[],
       placementCount: number
     }>();
 
@@ -66,7 +66,8 @@ export const DefensePlayerListPanel = ({
                 images: p.defender.images,
                 class: p.defender.class,
                 nodeId: p.node.nodeNumber,
-                placementId: p.id
+                placementId: p.id,
+                starLevel: p.starLevel
             });
             stat.placementCount++;
         }
@@ -189,7 +190,7 @@ export const DefensePlayerListPanel = ({
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     {stat?.champions.sort((a,b) => a.nodeId - b.nodeId).map((champ, idx) => {
-                                        const roster = player.roster.find(r => r.championId === champ.id); // Simple find, assume best match logic elsewhere or ok for now
+                                        const roster = player.roster.find(r => r.championId === champ.id && r.stars === champ.starLevel); // Match by starLevel
                                         const classColors = getChampionClassColors(champ.class);
                                         const isMoveMode = !!selectedNodeId && onMoveDefender && champ.nodeId !== selectedNodeId;
 

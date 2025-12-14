@@ -313,7 +313,7 @@ export function useWarPlanning({
     // Find the corresponding fight object
     const newFight = currentFights.find(f => f.node.nodeNumber === newNodeId);
 
-    handleNodeClick(newNodeId, newFight);
+    handleNodeClick(newNodeId);
   }, [selectedNodeId, currentFights, handleNodeClick, nodesMap]);
 
   const handleEditorClose = useCallback(() => {

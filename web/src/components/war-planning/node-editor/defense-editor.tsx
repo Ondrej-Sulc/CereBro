@@ -139,7 +139,7 @@ export default function DefenseEditor({
   }, [players, currentBattlegroup, playerId]);
 
   // Helper to trigger save
-  const triggerSave = useCallback((updates: Pick<WarDefensePlacement, 'defenderId' | 'playerId' | 'starLevel'>) => {
+  const triggerSave = useCallback((updates: Partial<Pick<WarDefensePlacement, 'defenderId' | 'playerId' | 'starLevel'>>) => {
     if (nodeId === null) return;
     
     // Use the actual DB Node ID from currentPlacement OR the prop dbNodeId
@@ -175,7 +175,7 @@ export default function DefenseEditor({
         }
     }
 
-    triggerSave({ defenderId: val === undefined ? null : val, starLevel: newStarLevel });
+    triggerSave({ defenderId: val === undefined ? null : val, starLevel: newStarLevel ?? null });
   }, [triggerSave, playerId, players, starLevel]);
 
   const handlePlayerChange = useCallback((val: string | undefined) => {
@@ -192,7 +192,7 @@ export default function DefenseEditor({
         }
     }
 
-    triggerSave({ playerId: val === undefined ? null : val, starLevel: newStarLevel });
+    triggerSave({ playerId: val === undefined ? null : val, starLevel: newStarLevel ?? null });
   }, [triggerSave, defenderId, players, starLevel]);
 
   const handleStarLevelChange = useCallback((val: string) => {
