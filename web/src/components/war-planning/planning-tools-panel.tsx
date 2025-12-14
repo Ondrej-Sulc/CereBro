@@ -305,7 +305,7 @@ export default function PlanningToolsPanel({
                     >
                       <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
-                          src={getChampionImageUrl(item.champion.images as any, '64')}
+                          src={getChampionImageUrl(item.champion.images, '64')}
                           alt={item.champion.name}
                           fill
                           className="object-cover"
