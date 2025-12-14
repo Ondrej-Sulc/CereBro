@@ -12,7 +12,7 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Users, Wrench, LayoutGrid, Map as MapIcon, Target } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Users, Wrench, LayoutGrid, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
@@ -145,7 +145,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   }, [isDesktop, setRightPanelState]);
 
   const handleTagChange = async (val: string) => {
-      const tagId = val === "none" ? null : parseInt(val);
+      const tagId = val === "none" ? null : parseInt(val, 10);
       setActiveTagId(tagId);
       try {
           await updateDefensePlanHighlightTag(props.planId, tagId);
@@ -507,11 +507,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                   mapType={props.plan.mapType}
                   selectedNodeId={selectedNodeId}
                   historyFilters={{ onlyCurrentTier: false, onlyAlliance: false, minSeason: undefined }}
-                  // activeTactic={activeTactic || null} // WarTabs expects Tactic object. We have Tag. 
-                  // WarTabs highlighting logic needs update if we want map highlighting.
-                  // For now, pass null or update WarTabs later.
-                  activeTactic={null} 
-                  onNodeClick={handleNodeClick}
+                                    // activeTactic={activeTactic || null} // WarTabs expects Tactic object. We have Tag. 
+                                    // WarTabs highlighting logic needs update if we want map highlighting.
+                                    // For now, pass null or update WarTabs later.
+                                    // TODO: Align WarTabs/DefenseEditor to support Tag-based highlighting or map Tag to Tactic type.
+                                    activeTactic={null}                    onNodeClick={handleNodeClick}
                   onToggleFullscreen={handleToggleFullscreen}
                   rightPanelState={rightPanelState}
                   highlightedPlayerId={selectedPlayerId}

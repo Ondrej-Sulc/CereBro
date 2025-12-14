@@ -42,6 +42,8 @@ const CLASS_ICONS: Record<ChampionClass, string> = {
     SUPERIOR: "/icons/Superior.png" // Fallback if needed, though likely not in filter list
 };
 
+const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
+
 export default function PlanningToolsPanel({
   players, 
   champions, 
@@ -75,8 +77,6 @@ export default function PlanningToolsPanel({
   const filteredPlayers = currentBattlegroup 
     ? players.filter(p => p.battlegroup === currentBattlegroup)
     : players;
-
-  const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
   const filteredRoster = rosterResults.filter(item => 
     !selectedClass || item.champion.class === selectedClass
@@ -345,7 +345,8 @@ export default function PlanningToolsPanel({
                         <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
                       )}
                     </div>
-                  );})}
+                  );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-8">

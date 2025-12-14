@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -42,9 +42,10 @@ export const PlayerDefenseCard = ({
   const { getPlayerColor } = usePlayerColor();
   const playerColor = getPlayerColor(player.id);
 
-  const filledSlots = placements.filter(p => p.defender);
-  // Sort by node number
-  const sortedPlacements = [...filledSlots].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+  const sortedPlacements = useMemo(() => {
+    const filledSlots = placements.filter((p) => p.defender != null);
+    return filledSlots.slice().sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+  }, [placements]);
 
   return (
     <Card 
@@ -126,7 +127,7 @@ export const PlayerDefenseCard = ({
                 {sortedPlacements.map(placement => {
                     const champ = placement.defender!;
                     const colors = getChampionClassColors(champ.class);
-                    const hasTactic = activeTag && champ.tags.some(t => t.name === activeTag.name);
+                    const hasTactic = Boolean(activeTag && champ.tags.some((t) => t.name === activeTag.name));
                     
                     // Find Roster Entry
                     const rosterEntry = player.roster.find(r => 
