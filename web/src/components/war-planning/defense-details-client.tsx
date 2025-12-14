@@ -53,7 +53,8 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     handleNavigateNode,
     handleEditorClose,
     handleSavePlacement,
-    toggleTools
+    toggleTools,
+    nodesMap, // Destructure nodesMap
   } = useDefensePlanning(props);
 
   const [isDesktop, setIsDesktop] = useState(true);
@@ -280,7 +281,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         description: `Assigned ${champName} to Node ${targetNodeNumber}.`
     });
 
-  }, [selectedPlacement, selectedPlayerId, currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, props.champions, props.players, props.plan.mapType, toast]);
+  }, [selectedPlacement, selectedPlayerId, currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, props.champions, props.players, props.plan.mapType, toast, nodesMap]);
 
   const handleMoveDefender = useCallback(async (placementId: string, targetNodeId: number) => {
     if (!placementId || !targetNodeId) return;
