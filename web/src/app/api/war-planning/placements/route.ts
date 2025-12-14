@@ -20,7 +20,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: 'Missing planId' }, { status: 400 });
   }
 
-  const battlegroup = battlegroupParam ? parseInt(battlegroupParam) : undefined;
+  let battlegroup: number | undefined;
+  if (battlegroupParam) {
+      const parsed = parseInt(battlegroupParam, 10);
+      if (!Number.isFinite(parsed)) {
+          return NextResponse.json({ message: 'Invalid battlegroup parameter' }, { status: 400 });
+      }
+      battlegroup = parsed;
+  }
 
   try {
     const account = await prisma.account.findFirst({
