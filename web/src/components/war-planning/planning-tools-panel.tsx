@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { usePlayerColor } from "./player-color-context"; 
 import { getChampionClassColors } from "@/lib/championClassHelper"; 
+import { ChampionImages } from "@/types/champion";
 
 interface PlanningToolsPanelProps {
   players: Player[];
@@ -321,7 +322,7 @@ export default function PlanningToolsPanel({
                     >
                       <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
-                          src={getChampionImageUrl(item.champion.images as any, '64')}
+                          src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64')}
                           alt={item.champion.name}
                           fill
                           className="object-cover"
