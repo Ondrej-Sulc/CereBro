@@ -264,27 +264,27 @@ export function useDefensePlanning({
             const nodeEntry = Array.from(nodesMap.values()).find(n => n.id === updatedPlacement.nodeId);
             if (!nodeEntry) return prev; // Node not found in config
   
-            const newPlacement: PlacementWithNode = {
-                id: updatedPlacement.id || `temp-${Date.now()}`,
-                planId,
-                battlegroup: currentBattlegroup,
-                nodeId: updatedPlacement.nodeId,
-                node: { ...nodeEntry }, // Assuming WarNodeWithAllocations matches WarNode shape required
-                defenderId: updatedPlacement.defenderId || null,
-                playerId: updatedPlacement.playerId || null,
-                starLevel: updatedPlacement.starLevel || null,
-                defender: newDefender ? { 
-                  id: newDefender.id, 
-                  name: newDefender.name, 
-                  images: newDefender.images, 
-                  class: newDefender.class, 
-                  tags: newDefender.tags 
-                } : null,
-                player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            } as PlacementWithNode;
-  
+                      const newPlacement: PlacementWithNode = {
+                          id: updatedPlacement.id || `temp-${Date.now()}`,
+                          planId,
+                          battlegroup: currentBattlegroup,
+                          nodeId: updatedPlacement.nodeId,
+                          node: { ...nodeEntry }, // Assuming WarNodeWithAllocations matches WarNode shape required
+                          defenderId: updatedPlacement.defenderId || null,
+                          playerId: updatedPlacement.playerId || null,
+                          starLevel: updatedPlacement.starLevel || null,
+                          defender: newDefender ? { 
+                            id: newDefender.id, 
+                            name: newDefender.name, 
+                            images: newDefender.images, 
+                            class: newDefender.class, 
+                            tags: newDefender.tags 
+                          } : null,
+                          player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
+                          createdAt: new Date(),
+                          updatedAt: new Date(),
+                          type: "defense", // Add the missing discriminator property
+                      } as PlacementWithNode;  
             return [...prev, newPlacement];
         }
       });
