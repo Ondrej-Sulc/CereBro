@@ -15,7 +15,7 @@ interface PlayerDefenseCardProps {
   player: PlayerWithRoster;
   placements: PlacementWithNode[];
   onRemove: (placementId: string) => void;
-  onEdit: (nodeId: number) => void;
+  onEdit: (nodeNumber: number) => void;
   onAdd: (playerId: string) => void;
   limit: number;
   isSelected: boolean;
