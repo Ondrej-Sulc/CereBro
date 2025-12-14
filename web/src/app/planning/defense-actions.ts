@@ -53,9 +53,15 @@ export async function createDefensePlan(formData: FormData) {
     });
     
     // Create empty placements for all nodes
-    const warNodes = await tx.warNode.findMany();
-    const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
     const maxNodes = data.mapType === WarMapType.BIG_THING ? 10 : 50;
+    const warNodes = await tx.warNode.findMany({
+      where: {
+        nodeNumber: {
+          lte: maxNodes
+        }
+      }
+    });
+    const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
 
     const placementsData = [];
     for (let bg = 1; bg <= 3; bg++) {

@@ -70,8 +70,10 @@ export function DesktopSidebar({
             onClose={onClose} 
             onAddExtra={onAddExtra}
             assignedChampions={currentFights
-                .filter(f => f.player?.id && f.attackerId)
-                .map(f => ({ playerId: f.player!.id, championId: f.attackerId! }))
+                .flatMap(f => f.player?.id && f.attackerId 
+                    ? [{ playerId: f.player.id, championId: f.attackerId }] 
+                    : []
+                )
             }
             activeTag={activeTactic?.attackTag}
           />

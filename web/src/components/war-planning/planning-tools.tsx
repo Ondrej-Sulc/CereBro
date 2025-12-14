@@ -11,7 +11,7 @@ interface PlanningToolsProps {
   allianceId: string;
   currentBattlegroup?: number;
   onAddExtra?: (playerId: string, championId: number) => void;
-  assignedChampions: { playerId: string; championId: number }[];
+  assignedChampions?: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
 }
 
@@ -21,7 +21,7 @@ export default function PlanningTools({
   allianceId, 
   currentBattlegroup, 
   onAddExtra,
-  assignedChampions,
+  assignedChampions = [],
   activeTag
 }: PlanningToolsProps) {
   return (

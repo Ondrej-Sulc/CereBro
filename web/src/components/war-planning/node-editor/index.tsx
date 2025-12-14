@@ -86,17 +86,15 @@ export default function NodeEditor({
 
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
-      const tactic = activeTactic;
-      if (!defenderId || !tactic?.defenseTag?.name) return false;
+      if (!defenderId || !activeTactic?.defenseTag?.name) return false;
       const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
-      return def?.tags?.some(t => t.name === tactic.defenseTag!.name) ?? false;
+      return def?.tags?.some(t => t.name === activeTactic.defenseTag!.name) ?? false;
   }, [defenderId, activeTactic, champions]);
 
   const attackerTacticMatch = useMemo(() => {
-      const tactic = activeTactic;
-      if (!attackerId || !tactic?.attackTag?.name) return false;
+      if (!attackerId || !activeTactic?.attackTag?.name) return false;
       const atk = champions.find(c => c.id === attackerId) as ChampionWithTags | undefined;
-      return atk?.tags?.some(t => t.name === tactic.attackTag!.name) ?? false;
+      return atk?.tags?.some(t => t.name === activeTactic.attackTag!.name) ?? false;
   }, [attackerId, activeTactic, champions]);
 
   // Filter active modifiers
@@ -388,7 +386,7 @@ export default function NodeEditor({
                   {defenderTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
                           <Badge variant="outline" className="border-indigo-500 text-indigo-400 bg-indigo-500/10 text-[10px] px-1.5 py-0 h-5">
-                              Tactic: {(activeTactic as any)?.defenseTag?.name}
+                              Tactic: {activeTactic?.defenseTag?.name}
                           </Badge>
                       </div>
                   )}
@@ -423,7 +421,7 @@ export default function NodeEditor({
                   {attackerTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
                           <Badge variant="outline" className="border-orange-500 text-orange-400 bg-orange-500/10 text-[10px] px-1.5 py-0 h-5">
-                              Tactic: {(activeTactic as any)?.attackTag?.name}
+                              Tactic: {activeTactic?.attackTag?.name}
                           </Badge>
                       </div>
                   )}

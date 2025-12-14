@@ -75,7 +75,7 @@ export default function PlanningToolsPanel({
     } finally {
       setIsLoading(false);
     }
-  }, [setSelectedPlayerId, setIsLoading, setSelectedClass, setRosterResults]);
+  }, []); // Dependencies removed
 
   // Effect to update when prop changes
   useEffect(() => {

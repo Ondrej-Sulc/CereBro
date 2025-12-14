@@ -48,11 +48,32 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { createDefensePlan, deleteDefensePlan } from "@/app/planning/defense-actions";
 import { useToast } from "@/hooks/use-toast";
+import { useFormStatus } from "react-dom";
 
 interface DefenseDashboardProps {
   plans: WarDefensePlan[];
   userTimezone?: string | null;
   isOfficer?: boolean;
+}
+
+// Separate component for submit button to use useFormStatus
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button 
+      type="submit" 
+      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-900/20 transition-all duration-300 transform hover:scale-[1.02]"
+      disabled={pending}
+    >
+      {pending ? "Creating..." : (
+        <>
+          <Rocket className="mr-2 h-4 w-4" />
+          Create Plan
+        </>
+      )}
+    </Button>
+  );
 }
 
 export default function DefenseDashboard({
@@ -128,10 +149,7 @@ export default function DefenseDashboard({
                     </Select>
                 </div>
                 <div className="flex justify-end pt-4">
-                    <Button type="submit" className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-900/20 transition-all duration-300 transform hover:scale-[1.02]">
-                    <Rocket className="mr-2 h-4 w-4" />
-                    Create Plan
-                    </Button>
+                    <SubmitButton />
                 </div>
                 </form>
             </DialogContent>

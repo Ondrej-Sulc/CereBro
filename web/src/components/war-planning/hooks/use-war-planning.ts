@@ -282,7 +282,7 @@ export function useWarPlanning({
     }
   }, [status, warId, updateWarStatus, router]);
 
-  const handleNodeClick = useCallback((nodeId: number, fight?: WarPlacement) => {
+  const handleNodeClick = useCallback((nodeId: number) => {
     setSelectedNodeId(nodeId);
     setRightPanelState('editor');
   }, []);
