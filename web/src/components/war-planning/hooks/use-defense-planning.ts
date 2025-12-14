@@ -194,75 +194,118 @@ export function useDefensePlanning({
     setRightPanelState((prev: RightPanelState) => prev === 'tools' ? 'closed' : 'tools');
   }, []);
 
-  const handleSavePlacement = useCallback(async (updatedPlacement: Partial<WarDefensePlacement>) => {
-    // Identify target for optimistic update
-    let placementToUpdate: PlacementWithNode | undefined;
-    
-    // Logic to find the placement in the current list
-    // If updatedPlacement has ID, use it.
-    if (updatedPlacement.id) {
-        placementToUpdate = currentPlacements.find(p => p.id === updatedPlacement.id);
-    } else if (updatedPlacement.nodeId) {
-        // Find by DB Node ID + Plan + BG
-        // But currentPlacements contains PlacementWithNode which has nodeId.
-        // We need to ensure we match the right one.
-        placementToUpdate = currentPlacements.find(p => 
-            p.nodeId === updatedPlacement.nodeId && 
-            p.planId === planId && 
-            p.battlegroup === currentBattlegroup
-        );
-    }
-
-    if (placementToUpdate) {
-      pendingSaveNodeIds.current.add(placementToUpdate.node.nodeNumber);
-    }
-
-    const payload = {
-        ...updatedPlacement,
-        battlegroup: currentBattlegroup,
-        planId // Ensure planId is sent
-    };
-
-    // Optimistic Update
-    setCurrentPlacements((prev: PlacementWithNode[]) => prev.map((p: PlacementWithNode) => {
-      const isMatch = (updatedPlacement.id && p.id === updatedPlacement.id) || 
-                      (updatedPlacement.nodeId && p.nodeId === updatedPlacement.nodeId && p.battlegroup === currentBattlegroup);
-
-      if (isMatch) {
-        const newDefender = updatedPlacement.defenderId ? champions.find(c => c.id === updatedPlacement.defenderId) : (updatedPlacement.defenderId === null ? null : p.defender);
-        const newPlayer = updatedPlacement.playerId ? players.find(player => player.id === updatedPlacement.playerId) : (updatedPlacement.playerId === null ? null : p.player);
-
-        return {
-          ...p,
-          ...updatedPlacement,
-          defender: newDefender ? { 
-              id: newDefender.id, 
-              name: newDefender.name, 
-              images: newDefender.images, 
-              class: newDefender.class,
-              tags: newDefender.tags 
-          } : null,
-          player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
-        } as PlacementWithNode;
+    const handleSavePlacement = useCallback(async (updatedPlacement: Partial<WarDefensePlacement>) => {
+      // Identify target for optimistic update
+      let placementToUpdate: PlacementWithNode | undefined;
+      
+      // Logic to find the placement in the current list
+      if (updatedPlacement.id) {
+          placementToUpdate = currentPlacements.find(p => p.id === updatedPlacement.id);
+      } else if (updatedPlacement.nodeId) {
+          placementToUpdate = currentPlacements.find(p => 
+              p.nodeId === updatedPlacement.nodeId && 
+              p.planId === planId && 
+              p.battlegroup === currentBattlegroup
+          );
       }
-      return p;
-    }));
-
-    try {
-      await updatePlacement(payload);
-    } catch (error: unknown) {
-      console.error("Failed to save placement:", error);
-      const msg = error instanceof Error ? error.message : String(error);
-      setError("Failed to save changes: " + msg);
-      // Re-fetch placements to ensure UI is in sync with server state after error
-      fetchPlacements();
-    } finally {
-        if (placementToUpdate) {
-            pendingSaveNodeIds.current.delete(placementToUpdate.node.nodeNumber);
+  
+      if (placementToUpdate) {
+        pendingSaveNodeIds.current.add(placementToUpdate.node.nodeNumber);
+      } else if (updatedPlacement.nodeId) {
+          // If creating new, find the node number from map to track it
+          const node = Array.from(nodesMap.values()).find(n => n.id === updatedPlacement.nodeId);
+          if (node) pendingSaveNodeIds.current.add(node.nodeNumber);
+      }
+  
+      const payload = {
+          ...updatedPlacement,
+          battlegroup: currentBattlegroup,
+          planId // Ensure planId is sent
+      };
+  
+      // Optimistic Update
+      setCurrentPlacements((prev: PlacementWithNode[]) => {
+        const existingIndex = prev.findIndex(p => 
+          (updatedPlacement.id && p.id === updatedPlacement.id) || 
+          (updatedPlacement.nodeId && p.nodeId === updatedPlacement.nodeId && p.battlegroup === currentBattlegroup)
+        );
+  
+        const newDefender = updatedPlacement.defenderId ? champions.find(c => c.id === updatedPlacement.defenderId) : null;
+        // If setting to null explicit, use null. If undefined, keep existing (for updates), but for new it's null.
+        // Logic: if updatedPlacement.defenderId is undefined, it means "no change". But if it is null, it means "remove".
+        
+        const newPlayer = updatedPlacement.playerId ? players.find(player => player.id === updatedPlacement.playerId) : null;
+  
+        if (existingIndex !== -1) {
+            // Update Existing
+            const p = prev[existingIndex];
+            const updatedDefender = updatedPlacement.defenderId === undefined ? p.defender : (newDefender ? { 
+                id: newDefender.id, 
+                name: newDefender.name, 
+                images: newDefender.images, 
+                class: newDefender.class, 
+                tags: newDefender.tags 
+            } : null);
+            
+            const updatedPlayer = updatedPlacement.playerId === undefined ? p.player : (newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null);
+  
+            const newArr = [...prev];
+            newArr[existingIndex] = {
+                ...p,
+                ...updatedPlacement,
+                defender: updatedDefender,
+                player: updatedPlayer
+            } as PlacementWithNode;
+            return newArr;
+        } else {
+            // Create New
+            if (!updatedPlacement.nodeId) return prev; // Should not happen for creation
+  
+            const nodeEntry = Array.from(nodesMap.values()).find(n => n.id === updatedPlacement.nodeId);
+            if (!nodeEntry) return prev; // Node not found in config
+  
+            const newPlacement: PlacementWithNode = {
+                id: updatedPlacement.id || `temp-${Date.now()}`,
+                planId,
+                battlegroup: currentBattlegroup,
+                nodeId: updatedPlacement.nodeId,
+                node: { ...nodeEntry }, // Assuming WarNodeWithAllocations matches WarNode shape required
+                defenderId: updatedPlacement.defenderId || null,
+                playerId: updatedPlacement.playerId || null,
+                starLevel: updatedPlacement.starLevel || null,
+                defender: newDefender ? { 
+                  id: newDefender.id, 
+                  name: newDefender.name, 
+                  images: newDefender.images, 
+                  class: newDefender.class, 
+                  tags: newDefender.tags 
+                } : null,
+                player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            } as PlacementWithNode;
+  
+            return [...prev, newPlacement];
         }
-    }
-  }, [updatePlacement, champions, players, currentPlacements, currentBattlegroup, planId, fetchPlacements]);
-
+      });
+  
+      try {
+        await updatePlacement(payload);
+      } catch (error: unknown) {
+        console.error("Failed to save placement:", error);
+        const msg = error instanceof Error ? error.message : String(error);
+        setError("Failed to save changes: " + msg);
+        // Re-fetch placements to ensure UI is in sync with server state after error
+        fetchPlacements();
+      } finally {
+          if (placementToUpdate) {
+              pendingSaveNodeIds.current.delete(placementToUpdate.node.nodeNumber);
+          } else if (updatedPlacement.nodeId) {
+               const node = Array.from(nodesMap.values()).find(n => n.id === updatedPlacement.nodeId);
+               if (node) pendingSaveNodeIds.current.delete(node.nodeNumber);
+          }
+      }
+    }, [updatePlacement, champions, players, currentPlacements, currentBattlegroup, planId, fetchPlacements, nodesMap]);
   const selectedDbNodeId = selectedNodeId ? nodesMap.get(selectedNodeId)?.id : undefined;
 
   return {
