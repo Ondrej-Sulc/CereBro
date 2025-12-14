@@ -44,7 +44,7 @@ export const DefensePlayerListPanel = ({
   // Calculate player usage stats (filtered by BG)
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
-      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string; starLevel: number | undefined }[],
+      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string; starLevel: number | null | undefined }[],
       placementCount: number
     }>();
 
