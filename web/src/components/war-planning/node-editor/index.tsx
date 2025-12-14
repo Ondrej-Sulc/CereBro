@@ -17,12 +17,7 @@ import Image from "next/image";
 import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
-import { ExtraChampion } from "../hooks/use-war-planning";
-
-interface WarTacticWithTags extends WarTactic {
-  defenseTag?: { name: string } | null;
-  attackTag?: { name: string } | null;
-}
+import { ExtraChampion, WarTacticWithTags } from "../hooks/use-war-planning";
 
 interface ChampionWithTags extends Champion {
   tags?: { name: string }[];
@@ -91,14 +86,14 @@ export default function NodeEditor({
 
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
-      const tactic = activeTactic as WarTacticWithTags | null | undefined;
+      const tactic = activeTactic;
       if (!defenderId || !tactic?.defenseTag?.name) return false;
       const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
       return def?.tags?.some(t => t.name === tactic.defenseTag!.name) ?? false;
   }, [defenderId, activeTactic, champions]);
 
   const attackerTacticMatch = useMemo(() => {
-      const tactic = activeTactic as WarTacticWithTags | null | undefined;
+      const tactic = activeTactic;
       if (!attackerId || !tactic?.attackTag?.name) return false;
       const atk = champions.find(c => c.id === attackerId) as ChampionWithTags | undefined;
       return atk?.tags?.some(t => t.name === tactic.attackTag!.name) ?? false;

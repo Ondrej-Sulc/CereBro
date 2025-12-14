@@ -39,7 +39,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
     return <p>You must be an Alliance Officer to access War Defense Planning.</p>;
   }
 
-  const plan = await prisma.warDefensePlan.findUnique({
+  const plan = await prisma.warDefensePlan.findFirst({
     where: { id: id, allianceId: player.allianceId },
     include: {
         highlightTag: true

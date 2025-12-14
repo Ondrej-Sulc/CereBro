@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier } from "@prisma/client";
+import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
@@ -17,6 +17,11 @@ export interface ExtraChampion {
   battlegroup: number;
   champion: { id: number; name: string; images: any };
 }
+
+export type WarTacticWithTags = WarTactic & {
+    attackTag?: Tag | null;
+    defenseTag?: Tag | null;
+};
 
 interface OptimisticPrefight {
   id: number;
@@ -88,7 +93,7 @@ export function useWarPlanning({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
-  const [activeTactic, setActiveTactic] = useState<WarTactic | null>(null);
+  const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // History State
@@ -285,31 +290,31 @@ export function useWarPlanning({
   const handleNavigateNode = useCallback((direction: number) => {
     if (!selectedNodeId) return;
 
-    const validNodes = warNodesData.filter(n => !n.isPortal);
+    // Use nodesMap to determine valid nodes for the current map configuration
+    const validNodeNumbers = Array.from(nodesMap.keys()).sort((a, b) => a - b);
 
-    const currentIndex = validNodes.findIndex(n => {
-      const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
-      return nid === selectedNodeId;
-    });
+    if (validNodeNumbers.length === 0) return;
+
+    const currentIndex = validNodeNumbers.indexOf(selectedNodeId);
 
     if (currentIndex === -1) return;
 
     let newIndex = currentIndex + direction;
 
-    const count = validNodes.length;
+    const count = validNodeNumbers.length;
     if (newIndex < 0) {
       newIndex = (newIndex % count + count) % count;
     } else if (newIndex >= count) {
       newIndex = newIndex % count;
     }
 
-    const newNode = validNodes[newIndex];
-    const newNodeId = typeof newNode.id === 'string' ? parseInt(newNode.id) : newNode.id;
-
+    const newNodeId = validNodeNumbers[newIndex];
+    
+    // Find the corresponding fight object
     const newFight = currentFights.find(f => f.node.nodeNumber === newNodeId);
 
     handleNodeClick(newNodeId, newFight);
-  }, [selectedNodeId, currentFights, handleNodeClick]);
+  }, [selectedNodeId, currentFights, handleNodeClick, nodesMap]);
 
   const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');

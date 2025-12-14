@@ -183,6 +183,11 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               onRemoveWarBan={handleRemoveWarBan}
               onAddExtra={handleAddExtra}
               onDistribute={handleDistribute}
+              assignedChampions={currentFights
+                  .filter(f => f.player?.id && f.attackerId)
+                  .map(f => ({ playerId: f.player!.id, championId: f.attackerId! }))
+              }
+              activeTag={activeTactic?.attackTag}
             />
             
             <WarTabs 

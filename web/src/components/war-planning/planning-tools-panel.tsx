@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Champion, Player, Roster, ChampionClass } from "@prisma/client";
+import { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,11 +23,12 @@ interface PlanningToolsPanelProps {
   currentBattlegroup?: number;
   onAddExtra?: (playerId: string, championId: number, starLevel?: number) => void;
   initialPlayerId?: string | null;
-  currentPlacements: PlacementWithNode[];
+  assignedChampions: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
 }
 
-type RosterWithChampion = Roster & { champion: Champion };
+type ChampionWithTags = Champion & { tags?: { name: string }[] };
+type RosterWithChampion = Roster & { champion: ChampionWithTags };
 type RosterWithPlayer = Roster & { player: Player };
 
 export default function PlanningToolsPanel({
@@ -38,7 +39,7 @@ export default function PlanningToolsPanel({
   currentBattlegroup, 
   onAddExtra, 
   initialPlayerId,
-  currentPlacements,
+  assignedChampions,
   activeTag
 }: PlanningToolsPanelProps) {
   const { toast } = useToast();
@@ -272,8 +273,8 @@ export default function PlanningToolsPanel({
                 <div className="grid grid-cols-1 gap-2">
                   {filteredRoster.map((item) => {
                     const classColors = getChampionClassColors(item.champion.class);
-                    const isAssigned = currentPlacements.some(
-                      (p) => p.playerId === selectedPlayerId && p.defenderId === item.champion.id
+                    const isAssigned = assignedChampions.some(
+                      (p) => p.playerId === selectedPlayerId && p.championId === item.champion.id
                     );
                     const isTacticChampion = 
                       activeTag && 

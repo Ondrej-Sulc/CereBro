@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import WarMap from "../war-map";
-import { FightWithNode, WarPlacement } from "@cerebro/core/data/war-planning/types";
+import { WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { War, WarTactic, WarMapType } from "@prisma/client";
 import { RightPanelState } from "../hooks/use-war-planning";
 
@@ -11,14 +11,14 @@ interface WarTabsProps {
   onTabChange: (value: string) => void;
   isFullscreen: boolean;
   loadingFights: boolean;
-  currentFights: FightWithNode[];
+  currentFights: WarPlacement[];
   warId?: string; // Optional for Defense
   war?: War; // Optional for Defense
   mapType: WarMapType; // Required
   selectedNodeId: number | null;
   historyFilters: any;
   activeTactic: WarTactic | null;
-  onNodeClick: (nodeId: number, fight?: any) => void; // Relax type to allow WarPlacement
+  onNodeClick: (nodeId: number, fight?: WarPlacement) => void; // Relax type to allow WarPlacement
   onToggleFullscreen: () => void;
   rightPanelState: RightPanelState;
   highlightedPlayerId: string | null;
@@ -94,7 +94,7 @@ export const WarTabs = memo(function WarTabs({
                     mapType={mapType}
                     currentWar={war}
                     historyFilters={historyFilters}
-                    fights={currentFights as WarPlacement[]} 
+                    fights={currentFights} 
                     activeTactic={activeTactic}
                     isFullscreen={isFullscreen}
                     onToggleFullscreen={onToggleFullscreen}

@@ -242,38 +242,47 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         starLevel: targetPlacement.starLevel
     } : { defenderId: null, playerId: null, starLevel: null };
 
-    // 4. Update Target with Source Data
-    if (targetPlacement) {
+    try {
+        // 4. Update Target with Source Data
+        if (targetPlacement) {
+            await handleSavePlacement({
+                id: targetPlacement.id,
+                planId: props.planId,
+                battlegroup: currentBattlegroup,
+                nodeId: targetNodeId,
+                ...sourceData
+            });
+        } else {
+            // Fallback: Create target placement if it doesn't exist
+            await handleSavePlacement({
+                planId: props.planId,
+                battlegroup: currentBattlegroup,
+                nodeId: targetNodeId,
+                ...sourceData
+            });
+        }
+
+        // 5. Update Source with Target Data (Swap)
         await handleSavePlacement({
-            id: targetPlacement.id,
+            id: sourcePlacement.id,
             planId: props.planId,
             battlegroup: currentBattlegroup,
-            nodeId: targetNodeId,
-            ...sourceData
+            nodeId: sourcePlacement.nodeId,
+            ...targetData
         });
-    } else {
-        // Fallback: Create target placement if it doesn't exist
-        await handleSavePlacement({
-            planId: props.planId,
-            battlegroup: currentBattlegroup,
-            nodeId: targetNodeId,
-            ...sourceData
+
+        toast({
+            title: "Defenders Swapped",
+            description: `Swapped placement between Node ${sourcePlacement.node.nodeNumber} and Node ${targetPlacement?.node.nodeNumber ?? 'Target'}.`
         });
+    } catch (error) {
+        toast({
+            title: "Swap Failed",
+            description: "Could not complete the swap. Please refresh and try again.",
+            variant: "destructive"
+        });
+        throw error; // Re-throw to prevent misleading success toast
     }
-
-    // 5. Update Source with Target Data (Swap)
-    await handleSavePlacement({
-        id: sourcePlacement.id,
-        planId: props.planId,
-        battlegroup: currentBattlegroup,
-        nodeId: sourcePlacement.nodeId,
-        ...targetData
-    });
-
-    toast({
-        title: "Defenders Swapped",
-        description: `Swapped placement between Node ${sourcePlacement.node.nodeNumber} and Node ${targetPlacement?.node.nodeNumber ?? 'Target'}.`
-    });
   }, [currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, toast]);
 
   return (
@@ -443,7 +452,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                   onTabChange={setActiveTab}
                   isFullscreen={isFullscreen}
                   loadingFights={loadingPlacements}
-                  currentFights={currentPlacements as unknown as FightWithNode[]}
+                  currentFights={currentPlacements}
                   warId={props.planId}
                   mapType={props.plan.mapType}
                   selectedNodeId={selectedNodeId}
@@ -509,7 +518,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     currentBattlegroup={currentBattlegroup}
                     onAddExtra={handleAddFromTool}
                     initialPlayerId={selectedPlayerId}
-                    currentPlacements={currentPlacements}
+                    assignedChampions={currentPlacements
+                        .filter(p => p.playerId && p.defenderId)
+                        .map(p => ({ playerId: p.playerId!, championId: p.defenderId! }))
+                    }
                     activeTag={activeTag || null}
                  />
              )}

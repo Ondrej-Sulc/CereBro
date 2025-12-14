@@ -41,8 +41,6 @@ export const DefensePlayerListPanel = ({
   const { getPlayerColor } = usePlayerColor();
   const championLimit = mapType === "BIG_THING" ? 1 : 5;
 
-  if (!isDesktop) return null;
-
   // Calculate player usage stats (filtered by BG)
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
@@ -84,6 +82,8 @@ export const DefensePlayerListPanel = ({
             return a.ingameName.localeCompare(b.ingameName);
         });
   }, [players, currentBattlegroup]);
+
+  if (!isDesktop) return null;
 
   return (
     <motion.div

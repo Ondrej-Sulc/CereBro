@@ -42,7 +42,14 @@ export function useDefensePlanning({
   const [nodesMap, setNodesMap] = useState<Map<number, WarNodeWithAllocations>>(new Map());
   const pendingSaveNodeIds = useRef<Set<number>>(new Set());
 
-  const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
+  const currentBattlegroup = useMemo(() => {
+      const match = activeTab.match(/^bg(\d+)$/);
+      if (match && match[1]) {
+          const num = parseInt(match[1], 10);
+          if (Number.isFinite(num)) return num;
+      }
+      return 1; // Safe default
+  }, [activeTab]);
 
   // Derived: Filtered Placements for current BG
   const filteredPlacements = useMemo(() => {
@@ -143,29 +150,27 @@ export function useDefensePlanning({
   const handleNavigateNode = useCallback((direction: number) => {
     if (!selectedNodeId) return;
 
-    const validNodes = warNodesData.filter(n => !n.isPortal);
+    // Use nodesMap to determine valid nodes for the current map configuration
+    const validNodeNumbers = Array.from(nodesMap.keys()).sort((a, b) => a - b);
 
-    const currentIndex = validNodes.findIndex(n => {
-      const nid = typeof n.id === 'string' ? parseInt(n.id) : n.id;
-      return nid === selectedNodeId;
-    });
+    if (validNodeNumbers.length === 0) return;
+
+    const currentIndex = validNodeNumbers.indexOf(selectedNodeId);
 
     if (currentIndex === -1) return;
 
     let newIndex = currentIndex + direction;
 
-    const count = validNodes.length;
+    const count = validNodeNumbers.length;
     if (newIndex < 0) {
       newIndex = (newIndex % count + count) % count;
     } else if (newIndex >= count) {
       newIndex = newIndex % count;
     }
 
-    const newNode = validNodes[newIndex];
-    const newNodeId = typeof newNode.id === 'string' ? parseInt(newNode.id) : newNode.id;
-
+    const newNodeId = validNodeNumbers[newIndex];
     handleNodeClick(newNodeId);
-  }, [selectedNodeId, handleNodeClick]);
+  }, [selectedNodeId, handleNodeClick, nodesMap]);
 
   const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');

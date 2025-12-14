@@ -13,10 +13,7 @@ import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-plan
 import { ActiveModifiers } from "./active-modifiers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-
-interface WarTacticWithTags extends WarTactic {
-  defenseTag?: { name: string } | null;
-}
+import { WarTacticWithTags } from "../hooks/use-war-planning";
 
 interface ChampionWithTags extends Champion {
   tags?: { name: string }[];
@@ -61,7 +58,7 @@ export default function DefenseEditor({
 
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
-      const tactic = activeTactic as WarTacticWithTags | null | undefined;
+      const tactic = activeTactic;
       if (!defenderId || !tactic?.defenseTag?.name) return false;
       const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
       return def?.tags?.some(t => t.name === tactic.defenseTag!.name) ?? false;

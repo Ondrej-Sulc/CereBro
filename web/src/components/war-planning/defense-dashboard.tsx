@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { WarDefensePlan, WarMapType } from "@prisma/client";
 import Link from "next/link";
 import { 
@@ -108,7 +108,14 @@ export default function DefenseDashboard({
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="mapType">Map Type</Label>
-                    <Select name="mapType" defaultValue={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
+                    <Select name="mapType" defaultValue={selectedMapType} onValueChange={(val) => {
+                        if (Object.values(WarMapType).includes(val as WarMapType)) {
+                            setSelectedMapType(val as WarMapType);
+                        } else {
+                            // Optionally handle invalid value, e.g., set to a default or log error
+                            console.warn("Invalid WarMapType selected:", val);
+                        }
+                    }}>
                         <SelectTrigger className="bg-slate-900 border-slate-800">
                             <SelectValue placeholder="Select Map Type" />
                         </SelectTrigger>
@@ -156,14 +163,18 @@ export default function DefenseDashboard({
 }
 
 function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; userTimezone?: string | null; isOfficer?: boolean }) {
-  const [dateString, setDateString] = useState<string>("");
   const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-     const date = new Date(plan.updatedAt);
-     setDateString(date.toLocaleDateString(undefined, { 
-       timeZone: userTimezone || undefined 
-     }));
+  const dateString = useMemo(() => {
+    try {
+        return new Date(plan.updatedAt).toLocaleDateString(undefined, {
+            timeZone: userTimezone || undefined
+        });
+    } catch (e) {
+        // Fallback if timezone is invalid
+        return new Date(plan.updatedAt).toLocaleDateString();
+    }
   }, [plan.updatedAt, userTimezone]);
 
   return (
@@ -185,7 +196,7 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
         <div className="flex items-center gap-4 text-sm text-slate-400">
           <div className="flex items-center gap-1.5">
              <Calendar className="h-3.5 w-3.5" />
-             <span>Updated: {dateString || "Loading..."}</span>
+             <span>Updated: {dateString}</span>
           </div>
         </div>
       </CardContent>
@@ -215,6 +226,8 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
                 <AlertDialogCancel className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:text-white">Cancel</AlertDialogCancel>
                 <AlertDialogAction 
                     onClick={async () => {
+                    if (isDeleting) return;
+                    setIsDeleting(true);
                     try {
                         await deleteDefensePlan(plan.id);
                         toast({
@@ -228,11 +241,14 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
                         description: "Could not delete the plan. Please try again.",
                         variant: "destructive"
                         });
+                    } finally {
+                        setIsDeleting(false);
                     }
                     }}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    disabled={isDeleting}
+                    className="bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Delete Plan
+                    {isDeleting ? "Deleting..." : "Delete Plan"}
                 </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
