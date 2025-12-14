@@ -386,6 +386,7 @@ const WarMap = memo(function WarMap({
         </Button>
       </div>
 
+      {stageSize.width > 0 && stageSize.height > 0 && (
       <Stage
         width={stageSize.width}
         height={stageSize.height}
@@ -435,6 +436,7 @@ const WarMap = memo(function WarMap({
           </Layer>
         </PlayerColorContext.Provider>
       </Stage>
+      )}
     </div>
   );
 });
