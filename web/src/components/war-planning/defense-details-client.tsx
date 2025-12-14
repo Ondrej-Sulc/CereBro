@@ -139,32 +139,34 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         targetPlacementId = selectedPlacement.id;
         console.log("[handleAddFromTool] Using Selected Placement", { targetNodeId });
     } else {
-        // 2. Auto-Targeting (Roster Mode / No Node Selected)
-        const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
-        
-        // Priority A: Find a node ALREADY assigned to this targetPlayer but has NO defender
-        // We prioritize the specific player we are adding for.
-        if (targetPlayerId) {
-            const playerOpenSlot = sorted.find(p => p.playerId === targetPlayerId && !p.defenderId);
-            if (playerOpenSlot) {
-                targetNodeId = playerOpenSlot.nodeId;
-                targetNodeNumber = playerOpenSlot.node.nodeNumber;
-                targetPlacementId = playerOpenSlot.id;
-                console.log("[handleAddFromTool] Found Open Slot", { targetNodeId });
+            // 2. Auto-Targeting (Roster Mode / No Node Selected)
+            const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+            console.log("[handleAddFromTool] Sorted Placements for current BG", { count: sorted.length, sortedPlacements: sorted.map(p => ({ nodeId: p.node.nodeNumber, playerId: p.playerId, defenderId: p.defenderId })) });
+            
+            // Priority A: Find a node ALREADY assigned to this targetPlayer but has NO defender
+            // We prioritize the specific player we are adding for.
+            if (targetPlayerId) {
+                const playerOpenSlot = sorted.find(p => p.playerId === targetPlayerId && !p.defenderId);
+                console.log("[handleAddFromTool] Player Open Slot Check", { playerOpenSlotId: playerOpenSlot?.id, targetPlayerId });
+                if (playerOpenSlot) {
+                    targetNodeId = playerOpenSlot.nodeId;
+                    targetNodeNumber = playerOpenSlot.node.nodeNumber;
+                    targetPlacementId = playerOpenSlot.id;
+                    console.log("[handleAddFromTool] Found Open Slot", { targetNodeId });
+                }
             }
-        }
-
-        // Priority B: Find first completely empty node
-        if (!targetNodeId) {
-             const empty = sorted.find(p => !p.playerId && !p.defenderId);
-             if (empty) {
-                targetNodeId = empty.nodeId;
-                targetNodeNumber = empty.node.nodeNumber;
-                targetPlacementId = empty.id;
-                console.log("[handleAddFromTool] Found Empty Node", { targetNodeId });
-             }
-        }
-    }
+        
+            // Priority B: Find first completely empty node
+            if (!targetNodeId) {
+                 const empty = sorted.find(p => !p.playerId && !p.defenderId);
+                 console.log("[handleAddFromTool] Empty Node Check", { emptyNodeId: empty?.id });
+                 if (empty) {
+                    targetNodeId = empty.nodeId;
+                    targetNodeNumber = empty.node.nodeNumber;
+                    targetPlacementId = empty.id;
+                    console.log("[handleAddFromTool] Found Empty Node", { targetNodeId });
+                 }
+            }    }
 
     if (!targetNodeId) {
         console.warn("[handleAddFromTool] No available node found in placements", { count: currentPlacements.length });
