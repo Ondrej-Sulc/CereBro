@@ -52,7 +52,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
 
   const champions = await getCachedChampions();
 
-  const allianceMembers = await getFromCache(`alliance-members-${player.allianceId}`, 300, async () => {
+  const allianceMembers = await getFromCache(`alliance-members-${player.allianceId}`, 3600, async () => {
     return await prisma.player.findMany({
       where: { allianceId: player.allianceId },
       orderBy: { ingameName: 'asc' },
