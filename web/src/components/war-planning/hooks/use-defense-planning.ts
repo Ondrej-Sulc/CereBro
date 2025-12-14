@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, WarNode, WarNodeAllocation, NodeModifier, ChampionClass } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
-import { warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
 import { RightPanelState } from "./use-war-planning";
 
 interface WarNodeWithAllocations extends WarNode {
