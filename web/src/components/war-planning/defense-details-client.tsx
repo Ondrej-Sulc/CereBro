@@ -326,6 +326,15 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     }
   }, [currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, toast]);
 
+  const handleMoveNode = useCallback(async (placementId: string, targetNodeNumber: number) => {
+      const targetNode = nodesMap.get(targetNodeNumber);
+      if (!targetNode) {
+          toast({ title: "Invalid Node", description: `Node ${targetNodeNumber} does not exist.`, variant: "destructive" });
+          return;
+      }
+      await handleMoveDefender(placementId, targetNode.id);
+  }, [nodesMap, handleMoveDefender, toast]);
+
   return (
     <PlayerColorProvider players={props.players}>
       <div className={cn(
@@ -523,6 +532,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                      selectedPlayerId={selectedPlayerId}
                      onSelectPlayer={setSelectedPlayerId}
                      activeTag={activeTag || null} // Pass Tag instead of Tactic
+                     onMove={handleMoveNode}
                   />
               </div>
           )}

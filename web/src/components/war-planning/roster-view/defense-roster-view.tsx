@@ -15,6 +15,7 @@ interface DefenseRosterViewProps {
   selectedPlayerId: string | null;
   onSelectPlayer: (playerId: string) => void;
   activeTag?: Tag | null;
+  onMove: (placementId: string, targetNodeNumber: number) => void;
 }
 
 export const DefenseRosterView = ({
@@ -27,7 +28,8 @@ export const DefenseRosterView = ({
   mapType,
   selectedPlayerId,
   onSelectPlayer,
-  activeTag
+  activeTag,
+  onMove
 }: DefenseRosterViewProps) => {
   
   const championLimit = mapType === WarMapType.BIG_THING ? 1 : 5;
@@ -66,6 +68,7 @@ export const DefenseRosterView = ({
                     isSelected={selectedPlayerId === player.id}
                     onSelect={onSelectPlayer}
                     activeTag={activeTag}
+                    onMove={onMove}
                 />
             ))}
         </div>

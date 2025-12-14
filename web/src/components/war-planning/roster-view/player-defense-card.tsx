@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { Tag } from "@prisma/client";
 import { usePlayerColor } from "../player-color-context";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface PlayerDefenseCardProps {
   player: PlayerWithRoster;
@@ -21,6 +24,7 @@ interface PlayerDefenseCardProps {
   isSelected: boolean;
   onSelect: (playerId: string) => void;
   activeTag?: Tag | null;
+  onMove?: (placementId: string, targetNodeNumber: number) => void;
 }
 
 export const PlayerDefenseCard = ({
@@ -32,7 +36,8 @@ export const PlayerDefenseCard = ({
   limit,
   isSelected,
   onSelect,
-  activeTag
+  activeTag,
+  onMove
 }: PlayerDefenseCardProps) => {
   const { getPlayerColor } = usePlayerColor();
   const playerColor = getPlayerColor(player.id);
@@ -137,17 +142,75 @@ export const PlayerDefenseCard = ({
                                 hasTactic ? "bg-teal-950/20 border-teal-500/40" : "bg-slate-950 border-slate-800 hover:border-slate-700"
                             )}
                         >
-                            {/* Node Badge */}
-                            <div 
-                                className="h-8 w-8 flex items-center justify-center rounded bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-400 cursor-pointer hover:bg-slate-800 hover:text-white"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit(placement.node.nodeNumber);
-                                }}
-                                title="Edit Node"
-                            >
-                                {placement.node.nodeNumber}
-                            </div>
+                            {/* Node Badge (Interactive) */}
+                            {onMove ? (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="h-8 w-8 flex items-center justify-center rounded bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-400 cursor-pointer hover:bg-slate-800 hover:text-white hover:border-slate-500 transition-colors"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title="Click to Move/Swap"
+                                        >
+                                            {placement.node.nodeNumber}
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-40 p-2" onClick={(e) => e.stopPropagation()}>
+                                        <div className="grid gap-2">
+                                            <div className="grid grid-cols-3 items-center gap-2">
+                                                <Label htmlFor={`node-${placement.id}`} className="text-xs">Node</Label>
+                                                <Input
+                                                    id={`node-${placement.id}`}
+                                                    defaultValue={placement.node.nodeNumber}
+                                                    className="col-span-2 h-7 text-xs"
+                                                    type="number"
+                                                    min={1}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            const val = parseInt(e.currentTarget.value);
+                                                            if (!isNaN(val) && onMove) {
+                                                                onMove(placement.id, val);
+                                                                // Close popover logic via simulating Escape or similar?
+                                                                // For uncontrolled popover, simpler to just let it be.
+                                                                // Ideally we'd use state, but this is a lightweight implementation.
+                                                                // We can blur the input.
+                                                                e.currentTarget.blur(); 
+                                                                // Trigger a click on body to close popover
+                                                                document.body.click();
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                            <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                                                <span>Enter to save</span>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-4 w-4" 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onEdit(placement.node.nodeNumber);
+                                                    }}
+                                                    title="Open Editor"
+                                                >
+                                                    <Shield className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            ) : (
+                                <div 
+                                    className="h-8 w-8 flex items-center justify-center rounded bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-400 cursor-pointer hover:bg-slate-800 hover:text-white"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(placement.node.nodeNumber);
+                                    }}
+                                    title="Edit Node"
+                                >
+                                    {placement.node.nodeNumber}
+                                </div>
+                            )}
 
                             {/* Champion Info */}
                             <div className="flex-1 flex items-center gap-2 min-w-0">
