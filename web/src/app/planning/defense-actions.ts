@@ -179,7 +179,8 @@ export async function updateDefensePlacement(updatedPlacement: Partial<WarDefens
                     starLevel: rest.starLevel
                 }
             });
-        }}
+        }
+}
 
 export async function deleteDefensePlan(planId: string) {
   const session = await auth();
