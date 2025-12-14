@@ -43,6 +43,8 @@ export const PlayerDefenseCard = ({
 
   return (
     <Card 
+        role="button"
+        tabIndex={0}
         className={cn(
             "relative transition-all",
             "bg-slate-900", // Default background
@@ -62,6 +64,11 @@ export const PlayerDefenseCard = ({
             borderRight: isSelected ? `1px solid transparent` : undefined,
         }}
         onClick={() => onSelect(player.id)}
+        onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                onSelect(player.id);
+            }
+        }}
     >
       <CardHeader 
         className={cn(
@@ -98,8 +105,9 @@ export const PlayerDefenseCard = ({
       </CardHeader>
       <CardContent className="p-2 space-y-2">
          {sortedPlacements.length === 0 ? (
-            <div 
-                className="h-20 flex flex-col items-center justify-center text-slate-600 text-xs border border-dashed border-slate-800 rounded cursor-pointer hover:bg-slate-800/50 hover:text-slate-400"
+            <Button 
+                variant="outline"
+                className="h-20 flex flex-col items-center justify-center text-slate-600 hover:text-slate-400 text-xs border border-dashed border-slate-800 rounded cursor-pointer hover:bg-slate-800/50 w-full"
                 onClick={(e) => {
                     e.stopPropagation();
                     onAdd(player.id);
@@ -107,7 +115,7 @@ export const PlayerDefenseCard = ({
             >
                 <Shield className="h-6 w-6 mb-1 opacity-50" />
                 <span>Add Defender</span>
-            </div>
+            </Button>
          ) : (
              <div className="space-y-1.5">
                 {sortedPlacements.map(placement => {
