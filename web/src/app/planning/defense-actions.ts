@@ -235,7 +235,7 @@ export async function updateDefensePlanHighlightTag(planId: string, tagId: numbe
     include: { alliance: true }
   });
 
-  if (!player?.allianceId || !player.isOfficer) {
+  if (!player?.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
       throw new Error("Unauthorized");
   }
 
