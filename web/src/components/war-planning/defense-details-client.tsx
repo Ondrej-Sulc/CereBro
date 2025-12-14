@@ -29,6 +29,63 @@ interface DefenseDetailsClientProps {
   availableTags: Tag[];
 }
 
+interface WarNodeWithAllocations {
+    id: number;
+    nodeNumber: number;
+    // ... other props if needed
+}
+
+function findTargetNode(
+  targetPlayerId: string | undefined,
+  currentPlacements: PlacementWithNode[],
+  nodesMap: Map<number, any>, // Using any or specific type if imported
+  currentBattlegroup: number
+): { nodeId: number; nodeNumber: number; placementId?: string } | null {
+  const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+  
+  // Priority A: Player's open slot
+  if (targetPlayerId) {
+    const playerOpenSlot = sorted.find(p => p.playerId === targetPlayerId && !p.defenderId);
+    if (playerOpenSlot) {
+      return {
+        nodeId: playerOpenSlot.nodeId,
+        nodeNumber: playerOpenSlot.node.nodeNumber,
+        placementId: playerOpenSlot.id
+      };
+    }
+  }
+  
+  // Priority B: First empty node
+  const empty = sorted.find(p => !p.playerId && !p.defenderId);
+  if (empty) {
+    return {
+      nodeId: empty.nodeId,
+      nodeNumber: empty.node.nodeNumber,
+      placementId: empty.id
+    };
+  }
+  
+  // Priority C: Unoccupied node from map (Fallback for empty/incomplete placements)
+  if (sorted.length < nodesMap.size) {
+    const occupiedNodeNumbers = new Set(sorted.map(p => p.node.nodeNumber));
+    const freeNodeNumber = Array.from(nodesMap.keys())
+      .sort((a, b) => a - b)
+      .find(n => !occupiedNodeNumbers.has(n));
+    
+    if (freeNodeNumber) {
+      const node = nodesMap.get(freeNodeNumber);
+      if (node) {
+        return {
+          nodeId: node.id,
+          nodeNumber: freeNodeNumber
+        };
+      }
+    }
+  }
+  
+  return null;
+}
+
 export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const { toast } = useToast();
   const {
@@ -63,6 +120,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [activeTagId, setActiveTagId] = useState<number | null>(props.plan.highlightTagId);
 
   const activeTag = props.availableTags.find(t => t.id === activeTagId);
+
+  useEffect(() => {
+    setActiveTagId(props.plan.highlightTagId);
+  }, [props.plan.highlightTagId]);
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -125,81 +186,21 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     const targetPlayerId = playerId || selectedPlayerId;
     const championLimit = props.plan.mapType === WarMapType.BIG_THING ? 1 : 5;
 
-    let targetNodeId: number | undefined;
-    let targetNodeNumber: number | undefined;
-    let targetPlacementId: string | undefined;
+    let target: { nodeId: number; nodeNumber: number; placementId?: string } | null;
 
     // 1. Explicit Node Selection (Map Mode)
     if (selectedPlacement) {
-        targetNodeId = selectedPlacement.nodeId;
-        targetNodeNumber = selectedPlacement.node.nodeNumber;
-        targetPlacementId = selectedPlacement.id;
+        target = {
+            nodeId: selectedPlacement.nodeId,
+            nodeNumber: selectedPlacement.node.nodeNumber,
+            placementId: selectedPlacement.id
+        };
     } else {
-            // 2. Auto-Targeting (Roster Mode / No Node Selected)
-            const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
-            
-            // Priority A: Find a node ALREADY assigned to this targetPlayer but has NO defender
-            // We prioritize the specific player we are adding for.
-            if (targetPlayerId) {
-                const playerOpenSlot = sorted.find(p => p.playerId === targetPlayerId && !p.defenderId);
-                if (playerOpenSlot) {
-                    targetNodeId = playerOpenSlot.nodeId;
-                    targetNodeNumber = playerOpenSlot.node.nodeNumber;
-                    targetPlacementId = playerOpenSlot.id;
-                }
-            }
-        
-                // Priority B: Find first completely empty node
-        
-                if (!targetNodeId) {
-        
-                     const empty = sorted.find(p => !p.playerId && !p.defenderId);
-        
-                     if (empty) {
-        
-                        targetNodeId = empty.nodeId;
-        
-                        targetNodeNumber = empty.node.nodeNumber;
-        
-                        targetPlacementId = empty.id;
-        
-                     } else if (sorted.length === 0 || sorted.length < nodesMap.size) {
-        
-                         // Fallback: If placements are missing (e.g. not created yet for this BG), pick from nodesMap
-        
-                         // Find a node number that is NOT in sorted
-        
-                         const occupiedNodeNumbers = new Set(sorted.map(p => p.node.nodeNumber));
-        
-                         const allNodeNumbers = Array.from(nodesMap.keys()).sort((a, b) => a - b);
-        
-                         
-        
-                         const freeNodeNumber = allNodeNumbers.find(n => !occupiedNodeNumbers.has(n));
-        
-                         
-        
-                         if (freeNodeNumber) {
-        
-                             const node = nodesMap.get(freeNodeNumber);
-        
-                             if (node) {
-        
-                                 targetNodeId = node.id;
-        
-                                 targetNodeNumber = freeNodeNumber;
-        
-                                 // targetPlacementId is undefined, which signals upsert
-        
-                             }
-        
-                         }
-        
-                     }
-        
-                }    }
+        // 2. Auto-Targeting
+        target = findTargetNode(targetPlayerId ?? undefined, currentPlacements, nodesMap, currentBattlegroup);
+    }
 
-    if (!targetNodeId) {
+    if (!target) {
         toast({ 
             title: "No available node", 
             description: "Could not find an empty slot for this player or an empty node in this battlegroup.",
@@ -214,7 +215,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
             p.battlegroup === currentBattlegroup && 
             p.playerId === targetPlayerId && 
             p.defenderId &&
-            p.nodeId !== targetNodeId 
+            p.nodeId !== target.nodeId 
         ).length;
 
         if (otherDefendersCount >= championLimit) {
@@ -241,10 +242,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     }
 
     await handleSavePlacement({
-        id: targetPlacementId,
+        id: target.placementId,
         planId: props.planId,
         battlegroup: currentBattlegroup,
-        nodeId: targetNodeId,
+        nodeId: target.nodeId,
         playerId: targetPlayerId || playerId, // Ensure we assign to the correct player
         defenderId: championId,
         starLevel: finalStarLevel
@@ -252,7 +253,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
 
     toast({
         title: "Defender Assigned",
-        description: `Assigned ${champName} to Node ${targetNodeNumber}.`
+        description: `Assigned ${champName} to Node ${target.nodeNumber}.`
     });
 
   }, [selectedPlacement, selectedPlayerId, currentPlacements, handleSavePlacement, props.planId, currentBattlegroup, props.champions, props.players, props.plan.mapType, toast, nodesMap]);
