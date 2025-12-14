@@ -287,11 +287,10 @@ export function useWarPlanning({
     setRightPanelState('editor');
   }, []);
 
+  const validNodeNumbers = useMemo(() => Array.from(nodesMap.keys()).sort((a, b) => a - b), [nodesMap]);
+
   const handleNavigateNode = useCallback((direction: number) => {
     if (!selectedNodeId) return;
-
-    // Use nodesMap to determine valid nodes for the current map configuration
-    const validNodeNumbers = Array.from(nodesMap.keys()).sort((a, b) => a - b);
 
     if (validNodeNumbers.length === 0) return;
 
@@ -310,11 +309,8 @@ export function useWarPlanning({
 
     const newNodeId = validNodeNumbers[newIndex];
     
-    // Find the corresponding fight object
-    const newFight = currentFights.find(f => f.node.nodeNumber === newNodeId);
-
     handleNodeClick(newNodeId);
-  }, [selectedNodeId, currentFights, handleNodeClick, nodesMap]);
+  }, [selectedNodeId, handleNodeClick, validNodeNumbers]);
 
   const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');
