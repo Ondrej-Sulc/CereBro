@@ -109,12 +109,6 @@ export default function PlanningToolsPanel({
   };
 
   const handleAddChampion = (item: RosterWithChampion) => {
-      console.log("[PlanningToolsPanel] handleAddChampion clicked", { 
-          itemChampion: item.champion.id, 
-          selectedPlayerId, 
-          hasOnAddExtra: !!onAddExtra 
-      });
-
       if (onAddExtra && selectedPlayerId) {
           onAddExtra(selectedPlayerId, item.champion.id, item.stars);
           toast({
@@ -126,12 +120,6 @@ export default function PlanningToolsPanel({
 
   const handleAddOwner = (item: RosterWithPlayer) => {
     const parsedId = Number.parseInt(selectedChampionId, 10);
-    console.log("[PlanningToolsPanel] handleAddOwner clicked", { 
-        rawId: selectedChampionId, 
-        parsedId, 
-        hasOnAddExtra: !!onAddExtra 
-    });
-
     if (!Number.isFinite(parsedId)) return;
 
     const champion = champions.find(c => c.id === parsedId);

@@ -121,13 +121,9 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   }, [setSelectedPlayerId, setRightPanelState]);
 
   const handleAddFromTool = useCallback(async (playerId: string, championId: number, starLevel?: number) => {
-    console.log("[handleAddFromTool] Triggered", { playerId, championId, starLevel, currentBattlegroup });
-
     // Determine Target Player: Explicitly passed playerId (from dropdown) OR currently selected player (from Roster View context)
     const targetPlayerId = playerId || selectedPlayerId;
     const championLimit = props.plan.mapType === WarMapType.BIG_THING ? 1 : 5;
-
-    console.log("[handleAddFromTool] Target Player", { targetPlayerId });
 
     let targetNodeId: number | undefined;
     let targetNodeNumber: number | undefined;
@@ -138,22 +134,18 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         targetNodeId = selectedPlacement.nodeId;
         targetNodeNumber = selectedPlacement.node.nodeNumber;
         targetPlacementId = selectedPlacement.id;
-        console.log("[handleAddFromTool] Using Selected Placement", { targetNodeId });
     } else {
             // 2. Auto-Targeting (Roster Mode / No Node Selected)
             const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
-            console.log("[handleAddFromTool] Sorted Placements for current BG", { count: sorted.length, sortedPlacements: sorted.map(p => ({ nodeId: p.node.nodeNumber, playerId: p.playerId, defenderId: p.defenderId })) });
             
             // Priority A: Find a node ALREADY assigned to this targetPlayer but has NO defender
             // We prioritize the specific player we are adding for.
             if (targetPlayerId) {
                 const playerOpenSlot = sorted.find(p => p.playerId === targetPlayerId && !p.defenderId);
-                console.log("[handleAddFromTool] Player Open Slot Check", { playerOpenSlotId: playerOpenSlot?.id, targetPlayerId });
                 if (playerOpenSlot) {
                     targetNodeId = playerOpenSlot.nodeId;
                     targetNodeNumber = playerOpenSlot.node.nodeNumber;
                     targetPlacementId = playerOpenSlot.id;
-                    console.log("[handleAddFromTool] Found Open Slot", { targetNodeId });
                 }
             }
         
@@ -163,8 +155,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         
                      const empty = sorted.find(p => !p.playerId && !p.defenderId);
         
-                     console.log("[handleAddFromTool] Empty Node Check", { emptyNodeId: empty?.id });
-        
                      if (empty) {
         
                         targetNodeId = empty.nodeId;
@@ -172,8 +162,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                         targetNodeNumber = empty.node.nodeNumber;
         
                         targetPlacementId = empty.id;
-        
-                        console.log("[handleAddFromTool] Found Empty Node", { targetNodeId });
         
                      } else if (sorted.length === 0 || sorted.length < nodesMap.size) {
         
@@ -203,8 +191,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         
                                  // targetPlacementId is undefined, which signals upsert
         
-                                 console.log("[handleAddFromTool] Found Free Node from Map (Fallback)", { targetNodeId, freeNodeNumber });
-        
                              }
         
                          }
@@ -214,7 +200,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                 }    }
 
     if (!targetNodeId) {
-        console.warn("[handleAddFromTool] No available node found in placements", { count: currentPlacements.length });
         toast({ 
             title: "No available node", 
             description: "Could not find an empty slot for this player or an empty node in this battlegroup.",
@@ -233,7 +218,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         ).length;
 
         if (otherDefendersCount >= championLimit) {
-             console.warn("[handleAddFromTool] Limit Reached", { otherDefendersCount, championLimit });
              toast({
                 title: "Limit Reached",
                 description: `Player already has ${championLimit} defenders assigned.`,
@@ -255,16 +239,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         const rosterEntry = owner?.roster.find(r => r.championId === championId);
         finalStarLevel = rosterEntry ? rosterEntry.stars : undefined;
     }
-
-    console.log("[handleAddFromTool] Saving Placement", { 
-        id: targetPlacementId,
-        planId: props.planId,
-        battlegroup: currentBattlegroup,
-        nodeId: targetNodeId,
-        playerId: targetPlayerId || playerId,
-        defenderId: championId,
-        starLevel: finalStarLevel
-    });
 
     await handleSavePlacement({
         id: targetPlacementId,
