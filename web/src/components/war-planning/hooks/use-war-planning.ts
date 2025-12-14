@@ -513,7 +513,16 @@ export function useWarPlanning({
             pendingSaveNodeIds.current.delete(fightToUpdate.node.nodeNumber);
         }
     }
-  }, [updateWarFight, champions, players, validatePlayerAssignment, currentFights]);
+  }, [
+    updateWarFight, 
+    champions, 
+    players, 
+    validatePlayerAssignment, 
+    currentFights,
+    extraChampions, // Added
+    currentBattlegroup, // Added
+    handleRemoveExtra, // Added
+  ]);
 
   return {
     // State

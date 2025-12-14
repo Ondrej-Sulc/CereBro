@@ -226,8 +226,12 @@ export async function updateDefensePlanHighlightTag(planId: string, tagId: numbe
     where: { userId: session.user.id, provider: "discord" },
   });
 
+  if (!account?.providerAccountId) {
+    throw new Error("No linked Discord account found.");
+  }
+
   const player = await prisma.player.findFirst({
-    where: { discordId: account?.providerAccountId },
+    where: { discordId: account.providerAccountId },
     include: { alliance: true }
   });
 

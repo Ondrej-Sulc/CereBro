@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
+import type { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,9 +101,15 @@ export default function PlanningToolsPanel({
       return;
     }
     
+    const parsedChampionId = Number.parseInt(championId, 10);
+    if (!Number.isFinite(parsedChampionId)) {
+        setOwnerResults([]);
+        return;
+    }
+
     setIsLoading(true);
     try {
-      const results = await getOwnersOfChampion(parseInt(championId), allianceId, currentBattlegroup);
+      const results = await getOwnersOfChampion(parsedChampionId, allianceId, currentBattlegroup);
       setOwnerResults(results as RosterWithPlayer[]);
     } catch (error) {
       console.error("Failed to fetch owners", error);
