@@ -38,7 +38,7 @@ export const PlayerDefenseCard = ({
   const { getPlayerColor } = usePlayerColor();
   const playerColor = getPlayerColor(player.id);
 
-  const filledSlots = placements.filter(p => p.defenderId);
+  const filledSlots = placements.filter(p => p.defender);
   // Sort by node number
   const sortedPlacements = [...filledSlots].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
 

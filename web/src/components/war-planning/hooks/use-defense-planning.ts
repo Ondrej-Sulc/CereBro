@@ -64,6 +64,23 @@ export function useDefensePlanning({
 
   const [loadingPlacements, setLoadingPlacements] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Memoized function to fetch placements
+  const fetchPlacements = useCallback(async () => {
+    setLoadingPlacements(true);
+    try {
+      const res = await fetch(`/api/war-planning/placements?planId=${planId}`);
+      if (!res.ok) throw new Error("Failed to load placements");
+      const data: PlacementWithNode[] = await res.json();
+      setCurrentPlacements(data);
+    } catch (err: unknown) {
+      console.error(err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError("Failed to load placements: " + msg);
+    } finally {
+      setLoadingPlacements(false);
+    }
+  }, [planId]);
   
   // Fetch Static Node Data ONCE
   useEffect(() => {
@@ -86,22 +103,8 @@ export function useDefensePlanning({
 
   // Initial Data Fetch
   useEffect(() => {
-    async function fetchData() {
-        setLoadingPlacements(true);
-        try {
-            const res = await fetch(`/api/war-planning/placements?planId=${planId}`);
-            if (!res.ok) throw new Error("Failed to load placements");
-            const data: PlacementWithNode[] = await res.json();
-            setCurrentPlacements(data);
-        } catch (err) {
-            console.error(err);
-            setError("Failed to load placements.");
-        } finally {
-            setLoadingPlacements(false);
-        }
-    }
-    fetchData();
-  }, [planId]);
+    fetchPlacements();
+  }, [fetchPlacements]);
 
   // Polling (every 5s)
   useEffect(() => {
@@ -182,8 +185,6 @@ export function useDefensePlanning({
   }, []);
 
   const handleSavePlacement = useCallback(async (updatedPlacement: Partial<WarDefensePlacement>) => {
-    const previousPlacements = currentPlacements;
-
     // Identify target for optimistic update
     let placementToUpdate: PlacementWithNode | undefined;
     
@@ -239,16 +240,18 @@ export function useDefensePlanning({
 
     try {
       await updatePlacement(payload);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to save placement:", error);
-      setCurrentPlacements(previousPlacements);
-      setError(error.message || "Failed to save changes.");
+      const msg = error instanceof Error ? error.message : String(error);
+      setError("Failed to save changes: " + msg);
+      // Re-fetch placements to ensure UI is in sync with server state after error
+      fetchPlacements();
     } finally {
         if (placementToUpdate) {
             pendingSaveNodeIds.current.delete(placementToUpdate.node.nodeNumber);
         }
     }
-  }, [updatePlacement, champions, players, currentPlacements, currentBattlegroup, planId]);
+  }, [updatePlacement, champions, players, currentPlacements, currentBattlegroup, planId, fetchPlacements]);
 
   const selectedDbNodeId = selectedNodeId ? nodesMap.get(selectedNodeId)?.id : undefined;
 
