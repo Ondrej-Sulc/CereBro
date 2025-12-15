@@ -41,6 +41,12 @@ interface WarVideoFormProps {
   preFilledFights: PreFilledFight[] | null;
 }
 
+function isBackgroundFetch(
+  result: BackgroundFetchRegistration | { videoIds: string[] }
+): result is BackgroundFetchRegistration {
+  return (result as BackgroundFetchRegistration).match !== undefined;
+}
+
 export function WarVideoForm({
   token,
   initialChampions,
@@ -275,9 +281,14 @@ export function WarVideoForm({
         const sw = await navigator.serviceWorker.ready;
         const fetchId = `upload-${fightIds.join('-')}-${Date.now()}`;
 
+        const request = new Request('/api/war-videos/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
         const bgFetch = await sw.backgroundFetch.fetch(
           fetchId,
-          ['/api/war-videos/upload'],
+          request,
           {
             title: title,
             icons: [
@@ -287,27 +298,27 @@ export function WarVideoForm({
                 type: 'image/png',
               },
             ],
-            downloadTotal:
+            uploadTotal:
               uploadMode === 'single'
                 ? videoFile?.size ?? 0
                 : fights.find((f) => fightIds.includes(f.id))?.videoFile?.size ?? 0,
+            downloadTotal: 1024, // Expect small JSON response
           }
         );
 
-        const response = await fetch('/api/war-videos/upload', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-Background-Fetch-Id': bgFetch.id,
-          },
+        // Attach progress listener
+        bgFetch.addEventListener('progress', () => {
+           // Prefer upload progress
+          if (bgFetch.uploadTotal > 0) {
+             const percent = Math.round((bgFetch.uploaded / bgFetch.uploadTotal) * 100);
+             setUploadProgress(percent);
+          } else if (bgFetch.downloadTotal > 0) {
+             const percent = Math.round((bgFetch.downloaded / bgFetch.downloadTotal) * 100);
+             setUploadProgress(percent);
+          }
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Upload failed for fights ${fightIds.join(', ')}`);
-        }
-
-        return response.json();
+        return bgFetch;
 
       } else {
         // Fallback to XMLHttpRequest
@@ -518,7 +529,47 @@ export function WarVideoForm({
             }
 
             const result = await uploadVideo(formData, fights.map(f => f.id), getTitle(fights[0]));
-            if (!useBackgroundFetch) {
+            
+            // Handle Background Fetch Result
+            if (isBackgroundFetch(result)) {
+               const bgFetch = result;
+               // We can wait for it here or just let the user go.
+               // If we want to redirect, we need to wait.
+               // But the point of BG fetch is non-blocking. 
+               // However, if the user STAYS, we should update UI.
+               
+               // The progress listener in uploadVideo already updates state.
+               // Let's loop until complete to get the response for redirection.
+               const checkStatus = async () => {
+                 if (bgFetch.result === 'success') {
+                    const record = await bgFetch.match('/api/war-videos/upload');
+                    if (record) {
+                        const response = await record.responseReady;
+                        if (response.ok) {
+                            const data = await response.json();
+                            toast({ title: "Success!", description: "Upload complete." });
+                            if (data.videoIds && data.videoIds.length > 0) {
+                                router.push(`/war-videos/${data.videoIds[0]}`);
+                            } else {
+                                router.push("/war-videos");
+                            }
+                        }
+                    }
+                    return true; // Done
+                 } else if (bgFetch.result === 'failure') {
+                    toast({ title: "Upload Failed", description: "Background upload failed.", variant: "destructive" });
+                    return true; // Done
+                 }
+                 return false; // Not done
+               };
+
+               // Poll for completion every second if the user is still here
+               const pollInterval = setInterval(async () => {
+                  const done = await checkStatus();
+                  if (done) clearInterval(pollInterval);
+               }, 1000);
+
+            } else if (!useBackgroundFetch) {
               toast({ title: "Success!", description: "All fights have been submitted." });
               if (result.videoIds && result.videoIds.length > 0) {
                 router.push(`/war-videos/${result.videoIds[0]}`);
@@ -527,7 +578,10 @@ export function WarVideoForm({
               }
             }
           } else { // 'multiple' mode
-            const allUploadedVideoIds = [];
+            const allUploadedVideoIds: string[] = [];
+            // Note: Multiple background fetches might be tricky to orchestrate sequentially if we await them.
+            // But let's keep the loop.
+            
             for (let i = 0; i < fights.length; i++) {
               const fight = fights[i];
               setCurrentUpload(`Uploading fight ${i + 1} of ${fights.length}...`);
@@ -553,10 +607,22 @@ export function WarVideoForm({
               }
 
               const result = await uploadVideo(formData, [fight.id], getTitle(fight));
-              if (result.videoIds && result.videoIds.length > 0) {
-                allUploadedVideoIds.push(result.videoIds[0]);
+              
+              if (isBackgroundFetch(result)) {
+                  // Background fetch for multiple files... 
+                  // We probably shouldn't block on each one if we want "background" behavior.
+                  // But the loop awaits uploadVideo.
+                  // If uploadVideo returns the registration, it means it STARTED.
+                  // We can collect the registrations.
+                  // For now, let's just let them run.
+                  toast({ title: "Queued", description: `Video ${i+1} queued for background upload.` });
+              } else {
+                  if (result.videoIds && result.videoIds.length > 0) {
+                    allUploadedVideoIds.push(result.videoIds[0]);
+                  }
               }
             }
+            
             if (!useBackgroundFetch) {
               toast({ title: "Success!", description: "All videos have been uploaded." });
               if (allUploadedVideoIds.length > 0) {
@@ -564,10 +630,10 @@ export function WarVideoForm({
               } else {
                 router.push("/war-videos");
               }
+            } else {
+                // If multiple bg fetches, we might just redirect to list
+                router.push("/war-videos");
             }
-          }
-          if (useBackgroundFetch) {
-            router.push("/war-videos");
           }
         }
       } catch (error: any) {
