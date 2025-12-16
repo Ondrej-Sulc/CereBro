@@ -1,4 +1,5 @@
 import { PrismaClient, WarMapType } from '@prisma/client';
+import logger from '@cerebro/core/services/loggerService';
 
 export type ValidationResult = 
   | { success: true; player: any; uploadToken: any }
@@ -10,6 +11,7 @@ export async function validateUploadToken(
   requireFileUploadPermission: boolean
 ): Promise<ValidationResult> {
   if (!token) {
+    logger.warn("Upload token validation failed: Missing token");
     return { success: false, error: 'Missing upload token', status: 400 };
   }
 
@@ -23,6 +25,7 @@ export async function validateUploadToken(
   });
   
   if (!uploadToken || uploadToken.expiresAt < new Date()) {
+    logger.warn({ token }, "Upload token validation failed: Invalid or expired");
     if (uploadToken) await prisma.uploadToken.delete({ where: { id: uploadToken.id } });
     return { success: false, error: 'Invalid or expired upload token', status: 401 };
   }
@@ -31,10 +34,12 @@ export async function validateUploadToken(
 
   if (requireFileUploadPermission) {
     if (!player.alliance?.canUploadFiles) {
+        logger.warn({ playerId: player.id, allianceId: player.allianceId }, "Upload restricted: Alliance permission denied");
         return { success: false, error: 'Direct video upload is restricted to authorized alliances only.', status: 403 };
     }
   }
 
+  logger.info({ playerId: player.id, token }, "Upload token validated successfully");
   return { success: true, player, uploadToken };
 }
 
@@ -53,6 +58,8 @@ export async function processNewFights(
 ): Promise<string[]> {
     const { allianceId, season, warNumber, warTier, battlegroup, mapType, fights, playerId } = params;
 
+    logger.info({ allianceId, season, warNumber, warTier, battlegroup, mapType }, "Processing new fights");
+
     // 1. Find or Create War
     let war;
     if (warNumber === null) {
@@ -68,6 +75,7 @@ export async function processNewFights(
         });
 
         if (!war) {
+            logger.info("Creating new Offseason war");
             war = await prisma.war.create({
                 data: {
                     season,
@@ -80,6 +88,7 @@ export async function processNewFights(
                 },
             });
         } else {
+            logger.info({ warId: war.id }, "Updating existing Offseason war");
             war = await prisma.war.update({
                 where: { id: war.id },
                 data: { warTier, status: 'FINISHED' }, // Update tier just in case
@@ -87,6 +96,7 @@ export async function processNewFights(
         }
     } else {
         // Regular War
+        logger.info("Upserting Regular War");
         war = await prisma.war.upsert({
             where: {
                 allianceId_season_warNumber: {
@@ -125,6 +135,8 @@ export async function processNewFights(
               connect: fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) }))
             } : undefined,
         };
+        
+        logger.debug({ nodeId: fightData.nodeId, attackerId: fightData.attackerId }, "Processing fight entry");
 
         if (warNumber === null) {
             // Offseason: Always create
@@ -140,6 +152,7 @@ export async function processNewFights(
             });
 
             if (existingFight) {
+                logger.info({ fightId: existingFight.id }, "Updating existing fight");
                 return prisma.warFight.update({
                     where: { id: existingFight.id },
                     data: {
@@ -155,6 +168,7 @@ export async function processNewFights(
                     }
                 });
             } else {
+                logger.info("Creating new fight");
                 return prisma.warFight.create({ data: fightData });
             }
         }
@@ -165,6 +179,7 @@ export async function processNewFights(
 
 export async function processFightUpdates(prisma: PrismaClient, updates: any[]): Promise<string[]> {
     const ids: string[] = [];
+    logger.info({ count: updates.length }, "Processing fight updates");
     await Promise.all(updates.map(async (update: any) => {
         await prisma.warFight.update({
             where: { id: update.id },
@@ -204,7 +219,10 @@ export async function queueVideoNotification(
         }
     });
 
-    if (!video || !video.submittedBy.alliance?.warVideosChannelId) return;
+    if (!video || !video.submittedBy.alliance?.warVideosChannelId) {
+        logger.info({ videoId: params.videoId }, "Skipping notification: No channel ID or video not found");
+        return;
+    }
 
     const fights = video.fights;
     // Fallback for season/warNumber if no fights attached (unlikely but possible)
@@ -228,6 +246,7 @@ export async function queueVideoNotification(
         }))
     };
 
+    logger.info({ videoId: video.id, channelId: payload.channelId }, "Queuing video notification job");
     await prisma.botJob.create({
         data: {
             type: 'NOTIFY_WAR_VIDEO',

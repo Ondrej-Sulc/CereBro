@@ -21,6 +21,13 @@ export async function POST(req: NextRequest) {
 
     const parsedSeason = parseInt(season);
     const parsedWarNumber = warNumber ? parseInt(warNumber) : null;
+    const parsedWarTier = parseInt(warTier);
+    const parsedBattlegroup = parseInt(battlegroup);
+
+    logger.info({
+        parsedSeason, parsedWarNumber, parsedWarTier, parsedBattlegroup, mapType,
+        newFightsCount: newFightsJson ? JSON.parse(newFightsJson).length : 0
+    }, "Processing upload request");
 
     // 1. Validation
     const auth = await validateUploadToken(prisma, token, true);
@@ -46,8 +53,8 @@ export async function POST(req: NextRequest) {
             allianceId: player.allianceId!,
             season: parsedSeason,
             warNumber: parsedWarNumber,
-            warTier: parseInt(warTier),
-            battlegroup: parseInt(battlegroup),
+            warTier: parsedWarTier,
+            battlegroup: parsedBattlegroup,
             mapType: mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD',
             fights: newFights,
             playerId: playerId || player.id
@@ -97,7 +104,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Videos uploaded successfully', videoIds: [newWarVideo.id] }, { status: 200 });
 
   } catch (error: any) {
-    logger.error({ error }, 'Upload error');
+    logger.error({ 
+      error,
+      message: error.message,
+      meta: error.meta,
+      stack: error.stack 
+    }, 'Upload error detail');
+    
     if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
     
     // Check for specific YouTube API quota error
