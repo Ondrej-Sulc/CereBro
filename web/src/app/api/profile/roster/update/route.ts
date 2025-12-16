@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
     let totalCount = 0;
     const errors: string[] = [];
 
+    const allAdded = [];
+
     for (const file of files) {
       try {
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
             const updateResult = result as RosterUpdateResult;
             const added = updateResult.champions.flat();
             totalCount += added.length;
+            allAdded.push(...added);
         } else if ('message' in result) {
             // Should not happen if debugMode is false, but just in case
             logger.info({ message: result.message }, "Roster process returned message");
@@ -77,7 +80,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ count: totalCount, errors });
+    return NextResponse.json({ count: totalCount, added: allAdded, errors });
 
   } catch (err: any) {
     logger.error({ error: err }, "API Error");

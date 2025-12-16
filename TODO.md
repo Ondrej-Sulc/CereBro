@@ -18,7 +18,6 @@
     - per season.
 - Your Roster view on website?
 - Prestige history graph
-- Create discord support server
 - Clean up enable feature command, not used anymore
 - update AW details command to take data from DB if not already
 - show tactics in the war plan image thats getting sent

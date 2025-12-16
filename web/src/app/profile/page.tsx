@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getChampionImageUrl } from "@/lib/championHelper";
+import Image from "next/image";
+
+const getClassIcon = (className: string) => {
+  return `/icons/${className}.png`;
+};
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -163,7 +168,8 @@ export default async function ProfilePage() {
                                     {Object.entries(byClass)
                                         .sort(([, c1], [, c2]) => c2 - c1)
                                         .map(([className, count]) => (
-                                            <Badge key={className} variant="outline" className="border-slate-700 bg-slate-950/50">
+                                            <Badge key={className} variant="outline" className="border-slate-700 bg-slate-950/50 flex items-center gap-1">
+                                                <Image src={getClassIcon(className)} alt={className} width={16} height={16} className="h-4 w-4" />
                                                 <span className="capitalize">{className.toLowerCase()}</span>
                                                 <span className="ml-1.5 text-slate-400 border-l border-slate-700 pl-1.5">{count}</span>
                                             </Badge>

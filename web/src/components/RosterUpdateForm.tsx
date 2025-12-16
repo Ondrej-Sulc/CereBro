@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,23 +13,100 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Upload, X, Check, ImagePlus, Sparkles, Star } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { getChampionImageUrl } from "@/lib/championHelper";
+import { ChampionImages } from "@/types/champion";
+
+// Define local types matching what the API returns
+interface ChampionData {
+    id: number;
+    name: string;
+    images: ChampionImages;
+}
+
+interface RosterWithChampion {
+    stars: number;
+    rank: number;
+    isAwakened: boolean;
+    powerRating?: number | null; // Add this line
+    champion: ChampionData;
+}
+
+interface UpdateResult {
+    success: number;
+    added: RosterWithChampion[];
+    errors: string[];
+}
 
 export function RosterUpdateForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ success: number; errors: string[] } | null>(null);
+  const [result, setResult] = useState<UpdateResult | null>(null);
   
   const [stars, setStars] = useState("6");
   const [rank, setRank] = useState("3");
   const [isAscended, setIsAscended] = useState(false);
-  const [files, setFiles] = useState<FileList | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  // Cleanup object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      previews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
+
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const newFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) {
+            newFiles.push(blob);
+        }
+      }
+    }
+
+    if (newFiles.length > 0) {
+        addFiles(newFiles);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("paste", handlePaste);
+    return () => {
+        window.removeEventListener("paste", handlePaste);
+    };
+  }, [handlePaste]);
+
+  const addFiles = (newFiles: File[]) => {
+      setFiles(prev => [...prev, ...newFiles]);
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeFile = (index: number) => {
+      setFiles(prev => prev.filter((_, i) => i !== index));
+      URL.revokeObjectURL(previews[index]);
+      setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+          addFiles(Array.from(e.target.files));
+      }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!files || files.length === 0) return;
+    if (files.length === 0) return;
 
     setLoading(true);
     setResult(null);
@@ -57,18 +134,20 @@ export function RosterUpdateForm() {
 
       setResult({
         success: data.count,
+        added: data.added || [],
         errors: data.errors || [],
       });
       
       // Clear files on success
       if (data.count > 0) {
-        setFiles(null);
-        // Reset file input value manually if needed, or rely on key change
+        setFiles([]);
+        setPreviews([]);
       }
       
     } catch (err: any) {
       setResult({
         success: 0,
+        added: [],
         errors: [err.message],
       });
     } finally {
@@ -77,64 +156,71 @@ export function RosterUpdateForm() {
   };
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-8">
       <Card className="border-slate-800 bg-slate-900/50">
         <CardHeader>
-          <CardTitle>Upload Roster Screenshots</CardTitle>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <ImagePlus className="w-6 h-6 text-sky-400" />
+            Upload Roster Screenshots
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="stars">Star Level</Label>
-                <Select value={stars} onValueChange={setStars}>
-                  <SelectTrigger id="stars">
-                    <SelectValue placeholder="Select Stars" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7].map((s) => (
-                      <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="rank">Rank</Label>
-                <Select value={rank} onValueChange={setRank}>
-                  <SelectTrigger id="rank">
-                    <SelectValue placeholder="Select Rank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6].map((r) => (
-                      <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Configuration Row */}
+            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-slate-950/30 rounded-lg border border-slate-800/50">
+                <div className="flex-1 space-y-2">
+                    <Label htmlFor="stars">Star Level</Label>
+                    <Select value={stars} onValueChange={setStars}>
+                    <SelectTrigger id="stars" className="bg-slate-900 border-slate-700">
+                        <SelectValue placeholder="Select Stars" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+                        <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex-1 space-y-2">
+                    <Label htmlFor="rank">Rank</Label>
+                    <Select value={rank} onValueChange={setRank}>
+                    <SelectTrigger id="rank" className="bg-slate-900 border-slate-700">
+                        <SelectValue placeholder="Select Rank" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {[1, 2, 3, 4, 5, 6].map((r) => (
+                        <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
+                </div>
+                <div className="flex items-center space-x-2 pt-8 sm:pt-0">
+                    <Checkbox 
+                        id="ascended" 
+                        checked={isAscended} 
+                        onCheckedChange={(c) => setIsAscended(!!c)} 
+                        className="border-slate-600 data-[state=checked]:bg-sky-600"
+                    />
+                    <Label htmlFor="ascended" className="cursor-pointer font-normal text-slate-300">Is Ascended?</Label>
+                </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="ascended" 
-                checked={isAscended} 
-                onCheckedChange={(c) => setIsAscended(!!c)} 
-              />
-              <Label htmlFor="ascended" className="cursor-pointer font-normal">Is Ascended?</Label>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="images">Screenshots</Label>
-              <div className="flex items-center justify-center w-full">
+            {/* Dropzone & Preview Area */}
+            <div className="space-y-4">
+              <Label>Screenshots</Label>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Upload Button/Dropzone */}
                 <label
                   htmlFor="dropzone-file"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-700 border-dashed rounded-lg cursor-pointer bg-slate-950/50 hover:bg-slate-900/80 transition-colors"
+                  className="col-span-2 md:col-span-2 flex flex-col items-center justify-center w-full h-48 border-2 border-slate-700 border-dashed rounded-lg cursor-pointer bg-slate-950/30 hover:bg-slate-900/50 hover:border-sky-500/50 transition-all group"
                 >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-3 text-slate-400" />
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                    <Upload className="w-10 h-10 mb-3 text-slate-500 group-hover:text-sky-400 transition-colors" />
                     <p className="mb-2 text-sm text-slate-400">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
+                      <span className="font-semibold text-sky-400">Click to upload</span> or paste (Ctrl+V)
                     </p>
-                    <p className="text-xs text-slate-500">PNG, JPG (MAX. 5 files)</p>
+                    <p className="text-xs text-slate-500">Supported formats: PNG, JPG</p>
                   </div>
                   <Input 
                     id="dropzone-file" 
@@ -142,62 +228,161 @@ export function RosterUpdateForm() {
                     className="hidden" 
                     multiple 
                     accept="image/*"
-                    onChange={(e) => setFiles(e.target.files)}
+                    onChange={handleFileChange}
                   />
                 </label>
+
+                {/* Image Previews */}
+                <AnimatePresence>
+                    {previews.map((src, index) => (
+                        <motion.div 
+                            key={src}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            className="relative aspect-video rounded-lg overflow-hidden border border-slate-700 group"
+                        >
+                            <img src={src} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                            <button
+                                type="button"
+                                onClick={() => removeFile(index)}
+                                className="absolute top-1 right-1 p-1 bg-black/60 hover:bg-red-500/80 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
               </div>
-              {files && files.length > 0 && (
-                <div className="text-sm text-slate-300">
-                  {files.length} file(s) selected
-                </div>
+
+              {files.length > 0 && (
+                <p className="text-sm text-slate-400 text-right">
+                  {files.length} image{files.length !== 1 ? 's' : ''} selected
+                </p>
               )}
             </div>
 
-            {result && (
-              <div className="space-y-4">
-                 {result.success > 0 && (
-                    <Alert className="border-green-900 bg-green-950/30 text-green-400">
-                        <CheckCircle2 className="h-4 w-4" />
-                        <AlertTitle>Success</AlertTitle>
-                        <AlertDescription>
-                            Successfully updated {result.success} champions!
-                        </AlertDescription>
-                    </Alert>
-                 )}
-                 {result.errors.length > 0 && (
-                    <Alert variant="destructive" className="border-red-900 bg-red-950/30">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Errors</AlertTitle>
-                        <AlertDescription>
-                            <ul className="list-disc pl-4 space-y-1">
-                                {result.errors.map((err, i) => (
-                                    <li key={i}>{err}</li>
-                                ))}
-                            </ul>
-                        </AlertDescription>
-                    </Alert>
-                 )}
-              </div>
-            )}
-
-            <div className="flex justify-end gap-3">
-               <Button type="button" variant="outline" onClick={() => router.push('/profile')}>
+            <div className="flex justify-end gap-3 pt-4">
+               <Button type="button" variant="ghost" onClick={() => router.push('/profile')}>
                  Cancel
                </Button>
-               <Button type="submit" className="bg-sky-600 hover:bg-sky-700" disabled={loading || !files || files.length === 0}>
+               <Button type="submit" className="bg-sky-600 hover:bg-sky-700 min-w-[140px]" disabled={loading || files.length === 0}>
                   {loading ? (
-                    <>
+                    <div className="flex items-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Processing...
-                    </>
+                    </div>
                   ) : (
-                    "Upload & Update"
+                    "Upload & Process"
                   )}
                </Button>
             </div>
           </form>
         </CardContent>
       </Card>
+
+      {/* Processing Animation / Results */}
+      <AnimatePresence>
+        {loading && (
+             <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+             >
+                <div className="relative w-24 h-24 mb-8">
+                    <motion.div 
+                        className="absolute inset-0 border-4 border-sky-500 rounded-lg"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    />
+                     <motion.div 
+                        className="absolute inset-0 border-4 border-sky-500/30 rounded-lg rotate-45"
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Upload className="w-10 h-10 text-sky-400 animate-pulse" />
+                    </div>
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Analyzing Roster...</h3>
+                <p className="text-slate-400">Scanning for champions and stats</p>
+             </motion.div>
+        )}
+
+        {result && (
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+            >
+                {/* Success Summary */}
+                {result.success > 0 && (
+                     <Card className="border-green-900/50 bg-green-950/10">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-green-400 flex items-center gap-2">
+                                <Check className="w-5 h-5" />
+                                Updated {result.success} Champions
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                                {result.added.map((item, i) => (
+                                    <motion.div 
+                                        key={`${item.champion.id}-${i}`}
+                                        initial={{ opacity: 0, scale: 0.5 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        className="relative aspect-square rounded-md overflow-hidden border border-slate-700 bg-slate-900 group"
+                                    >
+                                        <Image 
+                                            src={getChampionImageUrl(item.champion.images, '128')}
+                                            alt={item.champion.name}
+                                            width={128}
+                                            height={128}
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute top-0.5 left-0.5 z-10">
+                                            {item.isAwakened ? (
+                                                <Sparkles className="w-3.5 h-3.5 text-slate-100 fill-slate-300 drop-shadow-md" />
+                                            ) : (
+                                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-500 drop-shadow-md" />
+                                            )}
+                                        </div>
+                                        {item.powerRating && (
+                                            <span className="absolute bottom-0 left-0 z-10 text-[9px] text-slate-300 bg-black/70 px-1 py-0.5 rounded-tr-md">
+                                                PR: {item.powerRating}
+                                            </span>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end p-1">
+                                            <span className="text-[10px] text-white font-medium truncate w-full text-center">
+                                                {item.champion.name}
+                                            </span>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </CardContent>
+                     </Card>
+                )}
+
+                {/* Error Summary */}
+                {result.errors.length > 0 && (
+                    <Alert variant="destructive" className="border-red-900 bg-red-950/20">
+                        <AlertTitle>Issues Found</AlertTitle>
+                        <AlertDescription>
+                            <ul className="list-disc pl-4 space-y-1 mt-2 text-sm text-red-200/80">
+                                {result.errors.map((err, i) => (
+                                    <li key={i}>{err}</li>
+                                ))}
+                            </ul>
+                        </AlertDescription>
+                    </Alert>
+                )}
+            </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+
