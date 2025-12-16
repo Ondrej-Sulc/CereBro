@@ -48,10 +48,13 @@ const WarMap = memo(function WarMap({
   onToggleFullscreen,
   highlightedPlayerId,
   onTogglePlayerPanel,
-  isPlayerPanelOpen
+  isPlayerPanelOpen,
+  warId // Destructure warId here to use in conditional logic
 }: WarMapProps) {
   const playerColorContextValue = useContext(PlayerColorContext);
   const [internalFullscreen, setInternalFullscreen] = useState(false);
+  
+  // Conditionally define history states and effects
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
 
@@ -141,10 +144,10 @@ const WarMap = memo(function WarMap({
     }
   };
 
-  // Fetch history
+  // Fetch history - only if warId is present
   useEffect(() => {
     async function fetchAllHistory() {
-      if (!showHistory || fights.length === 0) return;
+      if (!warId || !showHistory || fights.length === 0) return; // Add warId check here
 
       const nodesWithDefenders = fights.filter(f => f.defenderId);
       if (nodesWithDefenders.length === 0) return;
@@ -173,10 +176,12 @@ const WarMap = memo(function WarMap({
       }
     }
 
-    if (showHistory) {
+    if (warId && showHistory) { // Only fetch history if warId is present and showHistory is true
       fetchAllHistory();
     }
-  }, [showHistory, fights, historyFilters, currentWar]);
+  }, [warId, showHistory, fights, historyFilters, currentWar]); // Add warId to dependency array
+
+
 
   // Center on selected node or init
   useEffect(() => {
@@ -364,18 +369,20 @@ const WarMap = memo(function WarMap({
       )}
 
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        <Button
-          variant={showHistory ? "default" : "secondary"}
-          size="icon"
-          onClick={() => setShowHistory(!showHistory)}
-          title="Toggle Historical Counters"
-          className={cn(
-            "border border-slate-700",
-            showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
-          )}
-        >
-          <History className="h-5 w-5" />
-        </Button>
+        {warId && ( // Only show history button for attack planning
+            <Button
+              variant={showHistory ? "default" : "secondary"}
+              size="icon"
+              onClick={() => setShowHistory(!showHistory)}
+              title="Toggle Historical Counters"
+              className={cn(
+                "border border-slate-700",
+                showHistory ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-900/80 hover:bg-slate-800 text-slate-200"
+              )}
+            >
+              <History className="h-5 w-5" />
+            </Button>
+        )}
         <Button
           variant="secondary"
           size="icon"

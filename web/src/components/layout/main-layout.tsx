@@ -1,6 +1,6 @@
 import React from 'react';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import ConditionalFooter from '@/components/layout/conditional-footer';
 import { UserButton } from '@/components/UserButton';
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -32,7 +32,8 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-grow">
         {children}
       </main>
-      <Footer />
+      <ConditionalFooter />
     </div>
   );
 }
+

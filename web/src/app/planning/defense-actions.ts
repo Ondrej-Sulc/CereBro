@@ -246,3 +246,32 @@ export async function updateDefensePlanHighlightTag(planId: string, tagId: numbe
   
   revalidatePath(`/planning/defense/${planId}`);
 }
+
+export async function updateDefensePlanTier(planId: string, tier: number | null) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+
+  if (!account?.providerAccountId) {
+    throw new Error("No linked Discord account found.");
+  }
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true }
+  });
+
+  if (!player?.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
+  }
+
+  await prisma.warDefensePlan.update({
+      where: { id: planId, allianceId: player.allianceId },
+      data: { tier: tier }
+  });
+  
+  revalidatePath(`/planning/defense/${planId}`);
+}

@@ -39,13 +39,21 @@ export async function GET(
         attacker: true,
         defender: true,
         node: true,
-        prefightChampions: true,
+        prefightChampions: {
+            include: { champion: true }
+        },
       },
     });
 
     if (warFights.length === 0) {
       return NextResponse.json({ error: 'No fights found for this session' }, { status: 404 });
     }
+
+    // Transform to match frontend expectation (prefightChampions as Champion[])
+    const formattedFights = warFights.map(fight => ({
+        ...fight,
+        prefightChampions: fight.prefightChampions.map(pf => pf.champion)
+    }));
 
     // 3. All fights belong to the same player; get the user from the first one.
     const user = warFights[0].player;
@@ -101,7 +109,7 @@ export async function GET(
 
     // 7. Return the combined data payload
     return NextResponse.json({
-      fights: warFights,
+      fights: formattedFights,
       user,
       champions,
       nodes,

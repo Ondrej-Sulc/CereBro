@@ -5,10 +5,12 @@ import { Plus } from "lucide-react";
 import { createUploadSession } from "@/app/actions/createUploadSession";
 import { useTransition } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 export function UploadFightButton({ fightId }: { fightId: string }) {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
+    const router = useRouter();
 
     return (
         <Button 
@@ -18,7 +20,8 @@ export function UploadFightButton({ fightId }: { fightId: string }) {
             disabled={isPending}
             onClick={() => startTransition(async () => {
                 try {
-                    await createUploadSession(fightId);
+                    const url = await createUploadSession(fightId);
+                    router.push(url);
                 } catch (e) {
                     toast({ title: "Error", description: "Failed to start upload session", variant: "destructive" });
                 }

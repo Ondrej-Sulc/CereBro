@@ -432,6 +432,7 @@ model WarDefensePlan {
   id          String     @id @default(cuid())
   name        String
   mapType     WarMapType @default(STANDARD)
+  tier        Int?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 

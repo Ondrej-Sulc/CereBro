@@ -132,7 +132,10 @@ export async function processNewFights(
             death: fight.death,
             battlegroup: battlegroup,
             prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
-              connect: fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) }))
+              connect: fight.prefightChampionIds
+                  .map((id: string) => parseInt(id))
+                  .filter((id: number) => !isNaN(id))
+                  .map((id: number) => ({ id }))
             } : undefined,
         };
         
@@ -162,7 +165,10 @@ export async function processNewFights(
                         death: fight.death,
                         prefightChampions: {
                             set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
-                                ? fight.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) 
+                                ? fight.prefightChampionIds
+                                    .map((id: string) => parseInt(id))
+                                    .filter((id: number) => !isNaN(id))
+                                    .map((id: number) => ({ id })) 
                                 : []
                         }
                     }
@@ -190,7 +196,12 @@ export async function processFightUpdates(prisma: PrismaClient, updates: any[]):
                 death: update.death,
                 battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
                 prefightChampions: {
-                    set: update.prefightChampionIds ? update.prefightChampionIds.map((id: string) => ({ id: parseInt(id) })) : []
+                    set: update.prefightChampionIds 
+                        ? update.prefightChampionIds
+                            .map((id: string) => parseInt(id))
+                            .filter((id: number) => !isNaN(id))
+                            .map((id: number) => ({ id })) 
+                        : []
                 }
             }
         });

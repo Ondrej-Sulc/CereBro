@@ -16,7 +16,7 @@ import { ArrowLeft, Loader2, Shield, Users, Wrench, LayoutGrid, Map as MapIcon }
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
-import { updateDefensePlanHighlightTag } from "@/app/planning/defense-actions";
+import { updateDefensePlanHighlightTag, updateDefensePlanTier } from "@/app/planning/defense-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getBattlegroupColor } from "@/lib/battlegroup-colors";
 
@@ -118,12 +118,17 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true);
   const [viewMode, setViewMode] = useState<'roster' | 'map'>('roster');
   const [activeTagId, setActiveTagId] = useState<number | null>(props.plan.highlightTagId);
+  const [activeTier, setActiveTier] = useState<number | null>(props.plan.tier ?? null);
 
   const activeTag = props.availableTags.find(t => t.id === activeTagId);
 
   useEffect(() => {
     setActiveTagId(props.plan.highlightTagId);
   }, [props.plan.highlightTagId]);
+
+  useEffect(() => {
+    setActiveTier(props.plan.tier ?? null);
+  }, [props.plan.tier]);
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -153,6 +158,18 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       } catch (e) {
           console.error(e);
           toast({ title: "Failed to update tag", variant: "destructive" });
+      }
+  };
+
+  const handleTierChange = async (val: string) => {
+      const tier = val === "none" ? null : parseInt(val, 10);
+      setActiveTier(tier);
+      try {
+          await updateDefensePlanTier(props.planId, tier);
+          toast({ title: "Tier Updated" });
+      } catch (e) {
+          console.error(e);
+          toast({ title: "Failed to update tier", variant: "destructive" });
       }
   };
 
@@ -366,41 +383,50 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         )}>
           {/* Header */}
           <div className={cn(
-              "flex-none flex items-center justify-between p-3 sm:px-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10",
+              "flex-none flex items-center justify-between p-3 sm:px-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10 gap-4",
               isFullscreen && "hidden"
           )}>
-             <div className="flex items-center gap-4 overflow-hidden">
-                <Link href="/planning/defense">
+             {/* LEFT: Context & Metadata */}
+             <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                <Link href="/planning/defense" className="flex-none">
                   <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                 </Link>
-                <div className="flex flex-col overflow-hidden">
+                <div className="flex flex-col overflow-hidden min-w-0">
                   <div className="flex items-center gap-2">
-                     <Shield className="h-5 w-5 text-indigo-500" />
-                     <h1 className="text-lg font-bold text-slate-100 truncate">{props.plan.name}</h1>
+                     <Shield className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                     <h1 className="text-base sm:text-lg font-bold text-slate-100 truncate">{props.plan.name}</h1>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap overflow-x-auto no-scrollbar mask-linear-fade">
                      <span>{props.plan.mapType === WarMapType.BIG_THING ? 'Big Thing' : 'Standard'}</span>
-                  </div>
-                </div>
-             </div>
+                     
+                     <span className="text-slate-700">•</span>
 
-             {/* Center Controls */}
-             <div className="flex items-center gap-2 md:gap-4">
-                 {/* Tactic Selector */}
-                 <div className="w-32 md:w-48 hidden md:block">
-                     <Select value={activeTagId ? String(activeTagId) : "none"} onValueChange={handleTagChange}>
-                        <SelectTrigger 
-                            className={cn(
-                                "h-7 text-xs border-slate-700",
-                                activeTagId ? "bg-teal-950/30 border-teal-500/50 text-teal-100" : "bg-slate-900"
-                            )}
-                        >
-                            <SelectValue placeholder="Highlight Tag" />
+                     {/* Compact Tier Selector */}
+                     <Select value={activeTier ? String(activeTier) : "none"} onValueChange={handleTierChange}>
+                        <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-indigo-300 focus:ring-0 gap-1">
+                            <span className="truncate">Tier: <span className={activeTier ? "text-indigo-400 font-medium" : ""}>{activeTier ?? '-'}</span></span>
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="none">No Highlight</SelectItem>
+                            <SelectItem value="none">No Tier</SelectItem>
+                            {[1, 2, 3, 4, 5, 6].map(t => (
+                                <SelectItem key={t} value={String(t)}>
+                                    Tier {t}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                     </Select>
+
+                     <span className="text-slate-700">•</span>
+
+                     {/* Compact Tactic Selector */}
+                     <Select value={activeTagId ? String(activeTagId) : "none"} onValueChange={handleTagChange}>
+                        <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-teal-300 focus:ring-0 gap-1 max-w-[150px]">
+                             <span className="truncate">Tag: <span className={activeTagId ? "text-teal-400 font-medium" : ""}>{activeTag?.name ?? '-'}</span></span>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">No Tag</SelectItem>
                             {props.availableTags.map(t => (
                                 <SelectItem key={t.id} value={String(t.id)}>
                                     <span className="truncate">{t.name}</span>
@@ -408,89 +434,85 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                             ))}
                         </SelectContent>
                      </Select>
-                 </div>
+                  </div>
+                </div>
+             </div>
 
-                 {/* BG Toggle (Header Integrated) */}
-                 <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800">
-                    <button
-                        onClick={() => setActiveTab('bg1')}
-                        className={cn(
-                            "px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-all border border-transparent",
-                            activeTab === 'bg1' 
-                                ? "bg-red-500/10 text-red-400 border-red-500/20 ring-1 ring-red-500/20 shadow-sm"
-                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
-                        )}
-                    >
-                        BG 1
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('bg2')}
-                        className={cn(
-                            "px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-all border border-transparent",
-                            activeTab === 'bg2' 
-                                ? "bg-blue-500/10 text-blue-400 border-blue-500/20 ring-1 ring-blue-500/20 shadow-sm"
-                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
-                        )}
-                    >
-                        BG 2
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('bg3')}
-                        className={cn(
-                            "px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded transition-all border border-transparent",
-                            activeTab === 'bg3' 
-                                ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 ring-1 ring-yellow-500/20 shadow-sm"
-                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
-                        )}
-                    >
-                        BG 3
-                    </button>
-                 </div>
+             {/* CENTER: BG Navigation */}
+             <div className="hidden md:flex items-center p-1 rounded-lg bg-slate-900 border border-slate-800 absolute left-1/2 -translate-x-1/2">
+                <button
+                    onClick={() => setActiveTab('bg1')}
+                    className={cn(
+                        "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
+                        activeTab === 'bg1' 
+                            ? "bg-red-500/10 text-red-400 border-red-500/20 shadow-sm"
+                            : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                    )}
+                >
+                    BG 1
+                </button>
+                <button
+                    onClick={() => setActiveTab('bg2')}
+                    className={cn(
+                        "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
+                        activeTab === 'bg2' 
+                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-sm"
+                            : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                    )}
+                >
+                    BG 2
+                </button>
+                <button
+                    onClick={() => setActiveTab('bg3')}
+                    className={cn(
+                        "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
+                        activeTab === 'bg3' 
+                            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 shadow-sm"
+                            : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
+                    )}
+                >
+                    BG 3
+                </button>
+             </div>
 
-                 {/* View Toggle */}
+             {/* RIGHT: View & Actions */}
+             <div className="flex items-center gap-2">
+                 {/* Mobile BG Toggle (Simple dropdown or condensed) - For now keeping desktop focus, but ensuring flex structure works */}
+                 
                  <div className="flex items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800">
                     <Button
                         variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
                         size="sm"
                         onClick={() => setViewMode('roster')}
-                        className="h-7 px-3 gap-2 text-xs"
+                        className="h-7 px-2.5 gap-2 text-xs"
+                        title="Roster View"
                     >
                         <LayoutGrid className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Roster</span>
+                        <span className="hidden xl:inline">Roster</span>
                     </Button>
                     <Button
                         variant={viewMode === 'map' ? 'secondary' : 'ghost'}
                         size="sm"
                         onClick={() => setViewMode('map')}
-                        className="h-7 px-3 gap-2 text-xs"
+                        className="h-7 px-2.5 gap-2 text-xs"
+                        title="Map View"
                     >
                         <MapIcon className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Map</span>
+                        <span className="hidden xl:inline">Map</span>
                     </Button>
                  </div>
-             </div>
 
-             <div className="flex items-center gap-2">
+                 <div className="h-4 w-px bg-slate-800 mx-1 hidden sm:block" />
+
                  <Button
                     variant={rightPanelState === 'tools' ? "secondary" : "outline"}
                     size="sm"
                     onClick={toggleTools}
-                    className="hidden md:flex gap-2"
+                    className="hidden md:flex gap-2 h-8"
                  >
-                    <Wrench className="h-4 w-4" />
-                    <span className="hidden md:inline">Tools</span>
+                    <Wrench className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">Tools</span>
                  </Button>
-                 {viewMode === 'map' && (
-                     <Button
-                        variant={isPlayerPanelOpen ? "secondary" : "outline"}
-                        size="sm"
-                        onClick={handleTogglePlayerPanel}
-                        className="hidden md:flex gap-2"
-                     >
-                        <Users className="h-4 w-4" />
-                        {isPlayerPanelOpen ? "Hide" : "Show"}
-                     </Button>
-                 )}
                  {loadingPlacements && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
              </div>
           </div>
@@ -503,7 +525,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                   isFullscreen={isFullscreen}
                   loadingFights={loadingPlacements}
                   currentFights={currentPlacements}
-                  warId={props.planId}
                   mapType={props.plan.mapType}
                   selectedNodeId={selectedNodeId}
                   historyFilters={{ onlyCurrentTier: false, onlyAlliance: false, minSeason: undefined }}
@@ -555,9 +576,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     players={props.players}
                     onNavigate={handleNavigateNode}
                     mapType={props.plan.mapType}
-                    // activeTactic={activeTactic || null} // DefenseEditor expects Tactic. Pass null for now.
                     activeTactic={null}
+                    tier={activeTier}
                     currentBattlegroup={currentBattlegroup}
+                    nodeData={selectedNodeId ? nodesMap.get(selectedNodeId) : undefined}
                  />
              )}
              {rightPanelState === 'tools' && (

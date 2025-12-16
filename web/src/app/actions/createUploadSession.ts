@@ -45,5 +45,5 @@ export async function createUploadSession(fightId: string) {
       }
   });
 
-  redirect(`/war-videos/upload?session_token=${token}`);
+  return `/war-videos/upload?session_token=${token}`;
 }

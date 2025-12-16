@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { WarDefensePlacement, WarTactic, WarMapType } from "@prisma/client";
+import { WarDefensePlacement, WarTactic, WarMapType, WarNodeAllocation, NodeModifier } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,10 @@ interface ChampionWithTags extends Champion {
   tags?: { name: string }[];
 }
 
+export interface WarNodeWithAllocations {
+  allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
+}
+
 interface DefenseEditorProps {
   onClose: () => void;
   planId: string;
@@ -32,6 +36,8 @@ interface DefenseEditorProps {
   activeTactic?: WarTacticWithTags | null;
   mapType: WarMapType;
   currentBattlegroup: number;
+  tier?: number | null;
+  nodeData?: WarNodeWithAllocations;
 }
 
 export default function DefenseEditor({
@@ -47,6 +53,8 @@ export default function DefenseEditor({
   activeTactic,
   mapType,
   currentBattlegroup,
+  tier,
+  nodeData,
 }: DefenseEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentPlacement?.defenderId || undefined);
   const [playerId, setPlayerId] = useState<string | undefined>(currentPlacement?.playerId || undefined);
@@ -66,19 +74,22 @@ export default function DefenseEditor({
 
   // Filter active modifiers
   const activeModifiers = useMemo(() => {
-    if (!currentPlacement?.node?.allocations) return [];
+    if (!nodeData?.allocations) return [];
     
-    // For defense plans, we show ALL possible modifiers for this map type or filter loosely?
-    // Since plans are not tied to a season/tier, we probably should show everything valid for the map.
-    // Or maybe just show nothing for now as that logic is tied to Season/Tier.
-    // Actually, allocations store minTier/maxTier. 
-    // Maybe we just show all modifiers that match the MapType?
-    
-    return currentPlacement.node.allocations.filter(alloc => {
-        // Only filter by MapType as Plan doesn't enforce Tier/Season yet
-        return alloc.mapType === mapType;
+    return nodeData.allocations.filter(alloc => {
+        // 1. Map Type Check
+        if (alloc.mapType !== mapType) return false;
+
+        // 2. Tier Check (if selected)
+        if (tier) {
+             const satisfiesMin = alloc.minTier ? tier >= alloc.minTier : true;
+             const satisfiesMax = alloc.maxTier ? tier <= alloc.maxTier : true;
+             return satisfiesMin && satisfiesMax;
+        }
+
+        return true;
     }).map(a => a.nodeModifier);
-  }, [currentPlacement?.node?.allocations, mapType]);
+  }, [nodeData?.allocations, mapType, tier]);
 
   // Load initial state when placement changes
   useEffect(() => {
@@ -202,6 +213,13 @@ export default function DefenseEditor({
   }, [triggerSave]);
 
 
+  // Get relevant roster entries
+  const rosterEntries = useMemo(() => {
+      if (!playerId || !defenderId) return [];
+      const player = players.find(p => p.id === playerId);
+      return player?.roster.filter(r => r.championId === defenderId).sort((a, b) => b.stars - a.stars) || [];
+  }, [playerId, defenderId, players]);
+
   if (nodeId === null) return null;
 
   return (
@@ -245,27 +263,6 @@ export default function DefenseEditor({
             </div>
           </div>
 
-          {/* Star Level */}
-          <div className="grid grid-cols-4 items-center gap-4">
-             <Label htmlFor="starLevel" className="text-right">Stars</Label>
-             <div className="col-span-3">
-                 <Select 
-                    value={starLevel ? String(starLevel) : undefined} 
-                    onValueChange={handleStarLevelChange} 
-                    disabled={!isReady || !defenderId}
-                 >
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select stars..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="7">7 <Star className="h-3 w-3 inline text-yellow-500" /></SelectItem>
-                        <SelectItem value="6">6 <Star className="h-3 w-3 inline text-yellow-500" /></SelectItem>
-                        <SelectItem value="5">5 <Star className="h-3 w-3 inline text-yellow-500" /></SelectItem>
-                    </SelectContent>
-                 </Select>
-             </div>
-          </div>
-
           {/* Player */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="player" className="text-right">Player</Label>
@@ -275,8 +272,62 @@ export default function DefenseEditor({
                 value={playerId}
                 onSelect={handlePlayerChange}
                 disabled={!isReady}
+                attackerId={defenderId} 
               />
             </div>
+          </div>
+
+          {/* Star Level & Rank Info */}
+          <div className="grid grid-cols-4 items-start gap-4">
+             <Label htmlFor="starLevel" className="text-right pt-2">Stats</Label>
+             <div className="col-span-3 flex flex-col gap-3">
+                 {/* Roster-based Options */}
+                 {rosterEntries.length > 0 && (
+                     <div className="flex flex-wrap gap-2">
+                         {rosterEntries.map(entry => (
+                             <Button
+                                key={entry.stars}
+                                variant={starLevel === entry.stars ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => handleStarLevelChange(String(entry.stars))}
+                                className={cn(
+                                    "h-auto py-2 px-3 flex flex-col items-start gap-0.5",
+                                    starLevel === entry.stars ? "border-indigo-500 bg-indigo-500/20 text-white hover:bg-indigo-500/30" : "bg-slate-900 border-slate-700"
+                                )}
+                             >
+                                 <div className="flex items-center gap-1 text-xs font-bold">
+                                    {entry.stars}<Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                                    <span className="text-slate-300 font-normal ml-1">R{entry.rank}</span>
+                                 </div>
+                                 {(entry.isAscended || entry.isAwakened) && (
+                                    <div className="flex gap-1 text-[10px] text-slate-400">
+                                        {entry.isAwakened && <span className="text-slate-200">Awakened</span>}
+                                        {entry.isAscended && <span className="text-amber-400">Ascended</span>}
+                                    </div>
+                                 )}
+                             </Button>
+                         ))}
+                     </div>
+                 )}
+
+                 {/* Manual Fallback */}
+                 {rosterEntries.length === 0 && (
+                     <Select 
+                        value={starLevel ? String(starLevel) : undefined} 
+                        onValueChange={handleStarLevelChange} 
+                        disabled={!isReady || !defenderId}
+                     >
+                        <SelectTrigger className="w-full h-8 text-xs bg-slate-900 border-slate-800">
+                            <SelectValue placeholder="Manual Star Level..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="7">7-Star</SelectItem>
+                            <SelectItem value="6">6-Star</SelectItem>
+                            <SelectItem value="5">5-Star</SelectItem>
+                        </SelectContent>
+                     </Select>
+                 )}
+             </div>
           </div>
         </div>
       </div>
