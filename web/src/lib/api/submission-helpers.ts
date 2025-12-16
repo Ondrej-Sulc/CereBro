@@ -132,10 +132,10 @@ export async function processNewFights(
             death: fight.death,
             battlegroup: battlegroup,
             prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
-              connect: fight.prefightChampionIds
+              create: fight.prefightChampionIds
                   .map((id: string) => parseInt(id))
                   .filter((id: number) => !isNaN(id))
-                  .map((id: number) => ({ id }))
+                  .map((id: number) => ({ championId: id, playerId }))
             } : undefined,
         };
         
@@ -164,11 +164,12 @@ export async function processNewFights(
                         defenderId: parseInt(fight.defenderId),
                         death: fight.death,
                         prefightChampions: {
-                            set: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
+                            deleteMany: {},
+                            create: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
                                 ? fight.prefightChampionIds
                                     .map((id: string) => parseInt(id))
                                     .filter((id: number) => !isNaN(id))
-                                    .map((id: number) => ({ id })) 
+                                    .map((id: number) => ({ championId: id, playerId })) 
                                 : []
                         }
                     }
@@ -196,11 +197,12 @@ export async function processFightUpdates(prisma: PrismaClient, updates: any[]):
                 death: update.death,
                 battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
                 prefightChampions: {
-                    set: update.prefightChampionIds 
+                    deleteMany: {},
+                    create: update.prefightChampionIds 
                         ? update.prefightChampionIds
                             .map((id: string) => parseInt(id))
                             .filter((id: number) => !isNaN(id))
-                            .map((id: number) => ({ id })) 
+                            .map((id: number) => ({ championId: id })) 
                         : []
                 }
             }
