@@ -163,6 +163,7 @@ const WarMap = memo(function WarMap({
           maxTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
           allianceId: historyFilters.onlyAlliance && currentWar?.allianceId ? currentWar.allianceId : undefined,
           minSeason: historyFilters.minSeason,
+          mapType: currentWar?.mapType,
         };
 
         const batchResults = await getBatchHistoricalCounters(requests, options);

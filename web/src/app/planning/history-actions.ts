@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, WarMapType } from "@prisma/client";
 
 export type HistoricalFightStat = {
   attackerId: number;
@@ -35,12 +35,13 @@ export async function getBatchHistoricalCounters(
       minTier?: number;
       seasons?: number[];
       allianceId?: string;
+      mapType?: WarMapType;
   } = {}
 ): Promise<Record<number, HistoricalFightStat[]>> {
   const session = await auth();
   if (!session?.user?.id || requests.length === 0) return {};
 
-  const { minSeason, maxTier, minTier, seasons, allianceId } = options;
+  const { minSeason, maxTier, minTier, seasons, allianceId, mapType } = options;
 
   // Create tuple list for the IN clause: ((1, 101), (2, 202), ...)
   const valueTuples = Prisma.join(
@@ -92,6 +93,7 @@ export async function getBatchHistoricalCounters(
       ${minTier ? Prisma.sql`AND "w"."warTier" >= ${minTier}` : Prisma.empty}
       ${seasons && seasons.length > 0 ? Prisma.sql`AND "w"."season" IN (${Prisma.join(seasons)})` : Prisma.empty}
       ${allianceId ? Prisma.sql`AND "w"."allianceId" = ${allianceId}` : Prisma.empty}
+      ${mapType ? Prisma.sql`AND "w"."mapType" = ${mapType}::"WarMapType"` : Prisma.empty}
     GROUP BY "wn"."nodeNumber", "wf"."defenderId", "wf"."attackerId", "wf"."nodeId"
   `;
 
@@ -170,12 +172,13 @@ export async function getHistoricalCounters(
       minTier?: number;
       seasons?: number[];
       allianceId?: string;
+      mapType?: WarMapType;
   } = {}
 ): Promise<HistoricalFightStat[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  const { minSeason, maxTier, minTier, seasons, allianceId } = options;
+  const { minSeason, maxTier, minTier, seasons, allianceId, mapType } = options;
 
   // 1. Fetch detailed fight records
   const fights = await prisma.warFight.findMany({
@@ -191,6 +194,7 @@ export async function getHistoricalCounters(
           minTier ? { warTier: { gte: minTier } } : {},
           seasons && seasons.length > 0 ? { season: { in: seasons } } : {},
           allianceId ? { allianceId } : {},
+          mapType ? { mapType } : {},
         ]
       }
     },

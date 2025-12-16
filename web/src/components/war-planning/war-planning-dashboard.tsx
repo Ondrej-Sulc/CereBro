@@ -51,6 +51,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { createWar, deleteWar } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
@@ -74,6 +75,7 @@ export default function WarPlanningDashboard({
 }: WarPlanningDashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
+  const [isOffSeason, setIsOffSeason] = useState(false);
 
   const activeWars = wars.filter((w) => w.status === WarStatus.PLANNING);
   const archivedWars = wars.filter((w) => w.status === WarStatus.FINISHED);
@@ -136,6 +138,7 @@ export default function WarPlanningDashboard({
                 </DialogDescription>
                 </DialogHeader>
                 <form action={createWar} className="grid gap-4 py-4">
+                <input type="hidden" name="isOffSeason" value={isOffSeason ? "true" : "false"} />
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                     <Label htmlFor="season">Season</Label>
@@ -154,11 +157,27 @@ export default function WarPlanningDashboard({
                         id="warNumber"
                         name="warNumber"
                         type="number"
+                        disabled={isOffSeason}
                         defaultValue={defaultWarNumber}
-                        className="bg-slate-900 border-slate-800 no-spin-buttons"
+                        className="bg-slate-900 border-slate-800 no-spin-buttons disabled:opacity-50"
                     />
                     </div>
                 </div>
+                
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox 
+                    id="isOffSeason" 
+                    checked={isOffSeason}
+                    onCheckedChange={(checked) => setIsOffSeason(checked as boolean)}
+                  />
+                  <Label 
+                    htmlFor="isOffSeason" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Off Season War
+                  </Label>
+                </div>
+
                 <div className="space-y-2">
                     <Label htmlFor="tier">Tier</Label>
                     <Input

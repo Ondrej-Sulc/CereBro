@@ -174,6 +174,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               players={props.players}
               champions={props.champions}
               currentBattlegroup={currentBattlegroup}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
               isFullscreen={isFullscreen}
               onTogglePlayerPanel={handleTogglePlayerPanel} 
               isPlayerPanelOpen={isRosterVisible}
@@ -208,6 +210,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               highlightedPlayerId={selectedPlayerId}
               onTogglePlayerPanel={handleTogglePlayerPanel}
               isPlayerPanelOpen={isRosterVisible}
+              hideTabsList={true}
             />
           </div>
         </div>

@@ -62,6 +62,7 @@ export function NodeHistory({
           maxTier: filters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
           allianceId: filters.onlyAlliance && currentWar?.allianceId ? currentWar.allianceId : undefined,
           minSeason: filters.minSeason,
+          mapType: currentWar?.mapType,
         });
         cache.current.set(cacheKey, stats);
         setHistory(stats);

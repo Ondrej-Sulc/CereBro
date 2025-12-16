@@ -76,7 +76,7 @@ export const WarTabs = memo(function WarTabs({
       
       <div className={cn(
           "relative overflow-hidden flex-1 min-h-0",
-          !isFullscreen && "mt-4 rounded-md border border-slate-800",
+          !isFullscreen && "rounded-md border border-slate-800",
           rightPanelState === 'editor' && "rounded-b-none" // Remove bottom rounded corners when editor is open
       )}>
         {['bg1', 'bg2', 'bg3'].map((bgValue, index) => (

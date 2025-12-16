@@ -67,7 +67,8 @@ export async function createWar(formData: FormData) {
   }
 
   const season = parseInt(formData.get("season") as string);
-  const warNumber = formData.get("warNumber") ? parseInt(formData.get("warNumber") as string) : undefined;
+  const isOffSeason = formData.get("isOffSeason") === "true";
+  const warNumber = !isOffSeason && formData.get("warNumber") ? parseInt(formData.get("warNumber") as string) : undefined;
   const tier = parseInt(formData.get("tier") as string);
   const opponent = formData.get("opponent") as string;
   const mapType = (formData.get("mapType") as WarMapType) || WarMapType.STANDARD;
