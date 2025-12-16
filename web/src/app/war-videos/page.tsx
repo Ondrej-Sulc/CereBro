@@ -175,13 +175,6 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
               <h1 className="text-3xl font-bold text-white tracking-tight">War Archive</h1>
               <p className="text-slate-400">Browse and search community uploaded war videos and fight logs.</p>
             </div>
-            {session?.user && (
-              <Link href="/war-videos/upload/init">
-                <Button className="bg-sky-600 hover:bg-sky-700 text-white gap-2">
-                  <Play className="h-4 w-4" /> Upload Video
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
 

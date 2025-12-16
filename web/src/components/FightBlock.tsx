@@ -229,7 +229,7 @@ export function FightBlock({
         {uploadMode === "multiple" && (
           <div className="pt-1">
             {sourceMode === "upload" ? (
-              <div className="relative group/upload">
+              <div className="relative group/upload shadow-lg shadow-fuchsia-950/50">
                 <Label
                   htmlFor={`videoFile-${fight.id}`}
                   className={cn(
@@ -266,7 +266,7 @@ export function FightBlock({
                   onChange={(e) => updateFight({ videoUrl: e.target.value })}
                   placeholder="Paste YouTube URL..."
                   className={cn(
-                    "h-9 pl-9 bg-slate-950/30 border-white/5 text-xs focus:border-sky-500/50 placeholder:text-slate-600 rounded-md",
+                    "h-9 pl-9 bg-slate-950/30 border-white/5 text-xs focus:border-fuchsia-500/50 placeholder:text-slate-600 rounded-md shadow-lg shadow-fuchsia-950/50",
                     errors?.[`videoUrl-${fight.id}`] && "border-red-500"
                   )}
                 />

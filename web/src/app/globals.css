@@ -94,7 +94,6 @@
 }
 
 .glass {
-  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(14px);
   border: 1px solid rgba(148, 163, 184, 0.1);
 }
