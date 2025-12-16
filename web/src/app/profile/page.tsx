@@ -9,9 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import Image from "next/image";
+import { ChampionClass } from "@prisma/client"; // Import ChampionClass
+import { getChampionClassColors } from "@/lib/championClassHelper"; // Import class colors helper
+import { cn } from "@/lib/utils"; // Import cn
 
-const getClassIcon = (className: string) => {
-  return `/icons/${className}.png`;
+const CLASS_ICONS: Record<ChampionClass, string> = {
+    SCIENCE: "/icons/Science.png",
+    SKILL: "/icons/Skill.png",
+    MYSTIC: "/icons/Mystic.png",
+    COSMIC: "/icons/Cosmic.png",
+    TECH: "/icons/Tech.png",
+    MUTANT: "/icons/Mutant.png",
+    SUPERIOR: "/icons/Superior.png"
 };
 
 export default async function ProfilePage() {
@@ -167,13 +176,18 @@ export default async function ProfilePage() {
                                 <div className="flex flex-wrap gap-2">
                                     {Object.entries(byClass)
                                         .sort(([, c1], [, c2]) => c2 - c1)
-                                        .map(([className, count]) => (
-                                            <Badge key={className} variant="outline" className="border-slate-700 bg-slate-950/50 flex items-center gap-1">
-                                                <Image src={getClassIcon(className)} alt={className} width={16} height={16} className="h-4 w-4" />
-                                                <span className="capitalize">{className.toLowerCase()}</span>
-                                                <span className="ml-1.5 text-slate-400 border-l border-slate-700 pl-1.5">{count}</span>
-                                            </Badge>
-                                        ))
+                                        .map(([className, count]) => {
+                                            const classColors = getChampionClassColors(className as ChampionClass);
+                                            return (
+                                                <Badge key={className} variant="outline" className={cn("flex items-center gap-1", classColors.border, "bg-slate-950/50")}>
+                                                    <div className="relative w-4 h-4">
+                                                        <Image src={CLASS_ICONS[className as ChampionClass]} alt={className} fill className="object-contain" />
+                                                    </div>
+                                                    <span className={cn("capitalize", classColors.text)}>{className.toLowerCase()}</span>
+                                                    <span className="ml-1.5 text-slate-400 border-l border-slate-700 pl-1.5">{count}</span>
+                                                </Badge>
+                                            );
+                                        })
                                     }
                                 </div>
                             </div>
