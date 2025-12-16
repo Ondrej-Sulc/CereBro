@@ -4,6 +4,7 @@ import "./globals.css";
 import { PHProvider, PostHogPageview } from "@/components/PostHogProvider";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Suspense } from "react";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,7 @@ export default function RootLayout({
           <MainLayout>
             {children}
           </MainLayout>
+          <Toaster />
         </body>
       </PHProvider>
     </html>
