@@ -581,6 +581,40 @@
         "options": []
       },
       {
+        "type": 1,
+        "name": "find-champion",
+        "description": "Search for alliance members who have a specific champion.",
+        "options": [
+          {
+            "autocomplete": true,
+            "type": 3,
+            "name": "champion",
+            "description": "The name of the champion.",
+            "required": true
+          },
+          {
+            "type": 4,
+            "choices": [
+              {
+                "name": "Battlegroup 1",
+                "value": 1
+              },
+              {
+                "name": "Battlegroup 2",
+                "value": 2
+              },
+              {
+                "name": "Battlegroup 3",
+                "value": 3
+              }
+            ],
+            "name": "battlegroup",
+            "description": "Filter by Battlegroup.",
+            "required": false
+          }
+        ]
+      },
+      {
         "type": 2,
         "name": "manage",
         "description": "Manage alliance members.",

@@ -9,6 +9,8 @@ import { handleAllianceSyncRoles } from './sync-roles';
 import { handleAllianceView } from './view';
 import { handleAllianceManageRemove } from './manage/remove';
 import { handleAllianceManageList } from './manage/list';
+import { handleAllianceFindChampion } from './find-champion';
+import { championList } from '../../services/championService';
 
 export const command: Command = {
   data: new SlashCommandBuilder()
@@ -95,6 +97,28 @@ export const command: Command = {
         .setName('view')
         .setDescription('Display an overview of the alliance.')
     )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('find-champion')
+        .setDescription('Search for alliance members who have a specific champion.')
+        .addStringOption((option) =>
+          option
+            .setName('champion')
+            .setDescription('The name of the champion.')
+            .setRequired(true)
+            .setAutocomplete(true)
+        )
+        .addIntegerOption((option) =>
+          option
+             .setName('battlegroup')
+             .setDescription('Filter by Battlegroup.')
+             .addChoices(
+                 { name: 'Battlegroup 1', value: 1 },
+                 { name: 'Battlegroup 2', value: 2 },
+                 { name: 'Battlegroup 3', value: 3 }
+             )
+        )
+    )
     .addSubcommandGroup(group =>
       group
         .setName('manage')
@@ -169,6 +193,9 @@ export const command: Command = {
         case 'view':
           await handleAllianceView(interaction);
           break;
+        case 'find-champion':
+          await handleAllianceFindChampion(interaction);
+          break;
       }
     }
   },
@@ -176,7 +203,18 @@ export const command: Command = {
   async autocomplete(interaction: AutocompleteInteraction) {
     const focused = interaction.options.getFocused(true);
 
-    if (focused.name === 'role') {
+    if (focused.name === 'champion') {
+      const value = focused.value.toLowerCase();
+      const filtered = championList.filter((champion) =>
+        champion.name.toLowerCase().includes(value)
+      );
+      await interaction.respond(
+        filtered.slice(0, 25).map((champion) => ({
+          name: champion.name,
+          value: champion.name,
+        }))
+      );
+    } else if (focused.name === 'role') {
       const guild = interaction.guild;
       if (!guild) {
         await interaction.respond([]);
