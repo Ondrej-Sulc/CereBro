@@ -92,29 +92,29 @@ export async function handleAllianceFindChampion(interaction: ChatInputCommandIn
       return `- **${player.ingameName}**: ${awakenedStr}${starStr}* ${rankStr}${ascendedStr}`;
   };
 
-  let content = `## ${championEmoji} **${championData.name}** - Roster Search\n`;
+  let headerContent = `## ${championEmoji} **${championData.name}** - Roster Search\n`;
   if (battlegroupFilter) {
-      content += `*Filtering by Battlegroup ${battlegroupFilter}*\n`;
+      headerContent += `*Filtering by Battlegroup ${battlegroupFilter}*\n`;
   }
-  content += '\n';
   
+  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(headerContent));
+
   const bgs = [1, 2, 3, 0];
-  let hasContent = false;
 
   bgs.forEach(bg => {
       const entries = groupedByBg[bg.toString()];
       if (entries && entries.length > 0) {
+          container.addSeparatorComponents(new SeparatorBuilder());
+
           const bgTitle = bg === 0 ? 'No Battlegroup' : `Battlegroup ${bg}`;
-          content += `### ${bgTitle}\n`;
+          let bgContent = `### ${bgTitle}\n`;
           entries.forEach(entry => {
-              content += `${formatEntry(entry)}\n`;
+              bgContent += `${formatEntry(entry)}\n`;
           });
-          content += '\n';
-          hasContent = true;
+          
+          container.addTextDisplayComponents(new TextDisplayBuilder().setContent(bgContent));
       }
   });
-
-  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
 
   await interaction.editReply({
       components: [container],
