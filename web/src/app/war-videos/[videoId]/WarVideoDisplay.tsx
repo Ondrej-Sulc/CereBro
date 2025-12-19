@@ -28,6 +28,7 @@ interface WarFight {
 interface WarVideo {
   id: string;
   url: string | null;
+  description: string | null;
   status: string;
   visibility: string;
   submittedBy: Player;
@@ -215,6 +216,17 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Fights List Section */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Description Section */}
+          {warVideo.description && (
+            <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                <Info className="h-5 w-5 text-sky-400" />
+                Description
+              </h3>
+              <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">{warVideo.description}</p>
+            </div>
+          )}
+
           {sortedFights.map((fight) => {
             const isAttackerTactic = activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name);
             const isDefenderTactic = activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name);
