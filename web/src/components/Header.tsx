@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Swords, Menu, Book, Shield, UploadCloud } from "lucide-react";
+import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,39 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const WAR_ROOM_ITEMS = [
+  {
+    href: "/analysis/season-overview",
+    label: "Season Overview",
+    icon: Trophy,
+    iconColor: "text-yellow-500",
+    requiresOfficer: false,
+  },
+  {
+    href: "/planning/defense",
+    label: "Defense Strategy",
+    icon: Shield,
+    iconColor: "text-sky-400",
+    requiresOfficer: false,
+  },
+  {
+    href: "/planning",
+    label: "Attack Planning",
+    icon: Swords,
+    iconColor: "text-red-400",
+    requiresOfficer: true,
+  },
+] as const;
 
 export default function Header({ userButton, isOfficer, isInAlliance, canUploadFiles }: { userButton: React.ReactNode; isOfficer: boolean; isInAlliance: boolean; canUploadFiles: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -32,7 +64,7 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
             <Image src="/CereBro_logo_256.png" alt="CereBro Logo" width={36} height={36} className="rounded-2xl" />
             <div className="hidden sm:block">
               <p className="font-semibold tracking-tight text-sm">CereBro</p>
-              <p className="text-[11px] text-slate-400 leading-none">The tactical advantage for MCOC</p>
+              <p className="hidden lg:block text-[11px] text-slate-400 leading-none">The tactical advantage for MCOC</p>
             </div>
           </Link>
 
@@ -42,23 +74,45 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
               <Book className="w-4 h-4" />
               War Archive
             </Link>
-            {isOfficer && (
-              <Link href="/planning" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                <Swords className="w-4 h-4" />
-                War Planning
-              </Link>
-            )}
+
+            {/* War Room Dropdown */}
             {isInAlliance && (
-              <Link href="/planning/defense" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                <Shield className="w-4 h-4" />
-                War Defense
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/50 h-auto py-2 px-3 data-[state=open]:text-white data-[state=open]:bg-slate-800/50"
+                  >
+                    <Swords className="w-4 h-4" />
+                    War Room
+                    <ChevronDown className="w-3 h-3 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-slate-950 border-slate-800 text-slate-300">
+                  {WAR_ROOM_ITEMS.map((item, index) => {
+                    if (item.requiresOfficer && !isOfficer) return null;
+                    
+                    return (
+                      <div key={item.href}>
+                        {index === 1 && <DropdownMenuSeparator className="bg-slate-800" />}
+                        <DropdownMenuItem asChild>
+                          <Link href={item.href} className="cursor-pointer flex items-center gap-2 w-full">
+                            <item.icon className={cn("w-4 h-4", item.iconColor)} />
+                            <span>{item.label}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      </div>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
+
             {isInAlliance && (
               <Link href="/war-videos/upload/init">
-                <Button variant="outline" className="flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors">
+                <Button variant="outline" className="flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors h-9 px-3">
                   <UploadCloud className="w-4 h-4" />
-                  {canUploadFiles ? "Upload Video" : "Add Video"}
+                  <span className="hidden lg:inline">{canUploadFiles ? "Upload Video" : "Add Video"}</span>
                 </Button>
               </Link>
             )}
@@ -90,18 +144,31 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                       <Book className="w-5 h-5" />
                       War Archive
                     </Link>
-                    {isOfficer && (
-                      <Link href="/planning" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
-                        <Swords className="w-5 h-5" />
-                        War Planning
-                      </Link>
-                    )}
+                    
                     {isInAlliance && (
-                      <Link href="/planning/defense" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
-                        <Shield className="w-5 h-5" />
-                        War Defense
-                      </Link>
+                      <>
+                        <div className="h-px bg-slate-800/50 my-1" />
+                        <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold pl-1">War Room</span>
+                        
+                        {WAR_ROOM_ITEMS.map((item) => {
+                          if (item.requiresOfficer && !isOfficer) return null;
+                          
+                          return (
+                            <Link 
+                              key={item.href}
+                              href={item.href} 
+                              className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                            >
+                              <item.icon className={cn("w-5 h-5", item.iconColor)} />
+                              {item.label}
+                            </Link>
+                          );
+                        })}
+                        
+                        <div className="h-px bg-slate-800/50 my-1" />
+                      </>
                     )}
+
                     {isInAlliance && (
                       <Link href="/war-videos/upload/init" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
                         <UploadCloud className="w-5 h-5" />
