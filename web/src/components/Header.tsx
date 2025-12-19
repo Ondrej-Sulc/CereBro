@@ -19,6 +19,31 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const WAR_ROOM_ITEMS = [
+  {
+    href: "/analysis/season-overview",
+    label: "Season Overview",
+    icon: Trophy,
+    iconColor: "text-yellow-500",
+    requiresOfficer: false,
+  },
+  {
+    href: "/planning/defense",
+    label: "Defense Strategy",
+    icon: Shield,
+    iconColor: "text-sky-400",
+    requiresOfficer: false,
+  },
+  {
+    href: "/planning",
+    label: "Attack Planning",
+    icon: Swords,
+    iconColor: "text-red-400",
+    requiresOfficer: true,
+  },
+] as const;
 
 export default function Header({ userButton, isOfficer, isInAlliance, canUploadFiles }: { userButton: React.ReactNode; isOfficer: boolean; isInAlliance: boolean; canUploadFiles: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -64,30 +89,21 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-slate-950 border-slate-800 text-slate-300">
-                  <DropdownMenuItem asChild>
-                    <Link href="/analysis/season-overview" className="cursor-pointer flex items-center gap-2 w-full">
-                      <Trophy className="w-4 h-4 text-yellow-500" />
-                      <span>Season Overview</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuSeparator className="bg-slate-800" />
-                  
-                  <DropdownMenuItem asChild>
-                    <Link href="/planning/defense" className="cursor-pointer flex items-center gap-2 w-full">
-                      <Shield className="w-4 h-4 text-sky-400" />
-                      <span>Defense Strategy</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  {isOfficer && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/planning" className="cursor-pointer flex items-center gap-2 w-full">
-                        <Swords className="w-4 h-4 text-red-400" />
-                        <span>Attack Planning</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
+                  {WAR_ROOM_ITEMS.map((item, index) => {
+                    if (item.requiresOfficer && !isOfficer) return null;
+                    
+                    return (
+                      <div key={item.href}>
+                        {index === 1 && <DropdownMenuSeparator className="bg-slate-800" />}
+                        <DropdownMenuItem asChild>
+                          <Link href={item.href} className="cursor-pointer flex items-center gap-2 w-full">
+                            <item.icon className={cn("w-4 h-4", item.iconColor)} />
+                            <span>{item.label}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      </div>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -134,22 +150,20 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                         <div className="h-px bg-slate-800/50 my-1" />
                         <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold pl-1">War Room</span>
                         
-                        <Link href="/analysis/season-overview" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
-                          <Trophy className="w-5 h-5 text-yellow-500" />
-                          Season Overview
-                        </Link>
-                        
-                        <Link href="/planning/defense" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
-                          <Shield className="w-5 h-5 text-sky-400" />
-                          Defense Strategy
-                        </Link>
-                        
-                        {isOfficer && (
-                          <Link href="/planning" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
-                            <Swords className="w-5 h-5 text-red-400" />
-                            Attack Planning
-                          </Link>
-                        )}
+                        {WAR_ROOM_ITEMS.map((item) => {
+                          if (item.requiresOfficer && !isOfficer) return null;
+                          
+                          return (
+                            <Link 
+                              key={item.href}
+                              href={item.href} 
+                              className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                            >
+                              <item.icon className={cn("w-5 h-5", item.iconColor)} />
+                              {item.label}
+                            </Link>
+                          );
+                        })}
                         
                         <div className="h-px bg-slate-800/50 my-1" />
                       </>
