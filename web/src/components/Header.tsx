@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown, BarChart2 } from "lucide-react";
+import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,

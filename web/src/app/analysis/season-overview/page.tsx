@@ -9,6 +9,7 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionClass } from "@prisma/client";
+import { getFromCache } from "@/lib/cache";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -45,41 +46,83 @@ interface NodeStat {
 export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   const awaitedSearchParams = await searchParams;
 
-  // 1. Fetch available seasons
-  const distinctSeasons = await prisma.war.findMany({
-    distinct: ['season'],
-    select: { season: true },
-    orderBy: { season: 'desc' }
+  // 1. Fetch available seasons (Cached for 1 hour)
+  const seasons = await getFromCache('distinct-seasons', 3600, async () => {
+    const distinctSeasons = await prisma.war.findMany({
+        distinct: ['season'],
+        select: { season: true },
+        orderBy: { season: 'desc' }
+    });
+    return distinctSeasons.map(s => s.season).filter(s => s !== 0);
   });
 
-  const seasons = distinctSeasons.map(s => s.season).filter(s => s !== 0);
+  // Early return if no seasons found
+  if (!seasons || seasons.length === 0) {
+    return (
+        <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                    <Trophy className="h-6 w-6 text-yellow-500" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    Season Overview
+                </h1>
+            </div>
+            <Card className="bg-slate-950/50 border-slate-800/60 p-12 flex flex-col items-center justify-center text-center gap-4">
+                <BarChart2 className="w-12 h-12 text-slate-700" />
+                <div className="space-y-2">
+                    <h2 className="text-xl font-semibold text-slate-300">No Season Data Found</h2>
+                    <p className="text-slate-500 max-w-md">
+                        There are no recorded alliance war seasons in the database yet. 
+                        Complete some wars to see performance analysis here.
+                    </p>
+                </div>
+            </Card>
+        </div>
+    );
+  }
+
   const latestSeason = seasons[0];
 
-  const selectedSeason = awaitedSearchParams.season
-    ? parseInt(awaitedSearchParams.season as string)
-    : latestSeason;
+  // Parse and validate the selected season
+  let selectedSeason: number;
+  const seasonParam = awaitedSearchParams.season;
+  
+  if (typeof seasonParam === 'string') {
+      const parsed = parseInt(seasonParam, 10);
+      selectedSeason = !isNaN(parsed) && Number.isInteger(parsed) ? parsed : latestSeason;
+  } else {
+      selectedSeason = latestSeason;
+  }
 
-    // 2. Fetch War Data
-    const wars = await prisma.war.findMany({
-      where: { 
-        season: selectedSeason,
-        status: { not: 'PLANNING' },
-        warNumber: { not: null } // Exclude Offseason wars
-      },
-      include: {
-        fights: {
-          where: {
-            player: { isNot: null }
-          },
-          include: {
-            player: true,
-            attacker: true,
-            defender: true,
-            node: true
-          }
-        }
-      }
-    });
+  // Ensure selectedSeason is actually in the seasons list or fallback to latest
+  if (!seasons.includes(selectedSeason)) {
+      selectedSeason = latestSeason;
+  }
+
+    // 2. Fetch War Data (Cached for 5 minutes)
+    const wars = await getFromCache(`season-wars-${selectedSeason}`, 300, () => 
+        prisma.war.findMany({
+            where: { 
+                season: selectedSeason,
+                status: { not: 'PLANNING' },
+                warNumber: { not: null } // Exclude Offseason wars
+            },
+            include: {
+                fights: {
+                    where: {
+                        player: { isNot: null }
+                    },
+                    include: {
+                        player: true,
+                        attacker: true,
+                        defender: true,
+                        node: true
+                    }
+                }
+            }
+        })
+    );
   
     // 3. Process Data
     const bgStats: Record<number, Record<string, PlayerStats>> = {
@@ -99,8 +142,8 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
     const attackerStats = new Map<number, ChampionStat>();
     const nodeStats = new Map<number, NodeStat>();
   
-    let totalWars = wars.length;
-    let mapTypes = new Set<string>();
+    const totalWars = wars.length;
+    const mapTypes = new Set<string>();
   
     for (const war of wars) {
       mapTypes.add(war.mapType);
@@ -221,7 +264,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
           </div>
 
           {/* Stats Overview Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
                  <span className="text-xs text-slate-500 uppercase font-medium">Season</span>
                  <span className="text-xl font-mono font-bold text-slate-200">{selectedSeason}</span>
@@ -394,7 +437,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                     </CardHeader>
                     <CardContent className="p-0">
                         <table className="w-full text-sm">
-                            <tbody className="divide-y divide-slate-800/40">
+                            <tbody className="divide-y divide-slate-800/40 text-sm">
                                 {topDefenders.map((champ, i) => {
                                     const classColors = getChampionClassColors(champ.class);
                                     return (
@@ -423,6 +466,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                                         </td>
                                     </tr>
                                 )})}
+                                {topDefenders.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">
+                                            No defender data recorded.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </CardContent>
@@ -438,7 +488,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                     </CardHeader>
                     <CardContent className="p-0">
                         <table className="w-full text-sm">
-                            <tbody className="divide-y divide-slate-800/40">
+                            <tbody className="divide-y divide-slate-800/40 text-sm">
                                 {topAttackers.map((champ, i) => {
                                     const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
                                     const classColors = getChampionClassColors(champ.class);
@@ -469,6 +519,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                                         </td>
                                     </tr>
                                 )})}
+                                {topAttackers.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">
+                                            No attacker data recorded.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </CardContent>
@@ -484,7 +541,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                     </CardHeader>
                     <CardContent className="p-0">
                         <table className="w-full text-sm">
-                            <tbody className="divide-y divide-slate-800/40">
+                            <tbody className="divide-y divide-slate-800/40 text-sm">
                                 {hardestNodes.map((node, i) => (
                                     <tr key={node.nodeNumber} className="hover:bg-slate-800/20 transition-colors">
                                         <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
@@ -505,6 +562,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                                         </td>
                                     </tr>
                                 ))}
+                                {hardestNodes.length === 0 && (
+                                    <tr>
+                                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">
+                                            No node data recorded.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </CardContent>
