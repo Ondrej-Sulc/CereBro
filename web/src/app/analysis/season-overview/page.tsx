@@ -2,9 +2,13 @@ import { prisma } from "@/lib/prisma";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skull, Trophy, AlertTriangle } from "lucide-react";
+import { Skull, Trophy, AlertTriangle, Shield, Swords, Target, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeasonSelector } from "./season-selector";
+import { getChampionImageUrl } from "@/lib/championHelper";
+import { ChampionImages } from "@/types/champion";
+import { getChampionClassColors } from "@/lib/championClassHelper";
+import { ChampionClass } from "@prisma/client";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -20,6 +24,22 @@ interface PlayerStats {
   fights: number;
   deaths: number;
   battlegroup: number;
+}
+
+interface ChampionStat {
+    id: number;
+    name: string;
+    class: ChampionClass;
+    images: ChampionImages;
+    count: number; // Usage count
+    deaths: number; // Deaths caused (for defenders) or suffered (for attackers)
+    fights: number; // Total fights involved in
+}
+
+interface NodeStat {
+    nodeNumber: number;
+    deaths: number;
+    fights: number;
 }
 
 export default async function SeasonOverviewPage({ searchParams }: PageProps) {
@@ -52,7 +72,10 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             player: { isNot: null }
           },
           include: {
-            player: true
+            player: true,
+            attacker: true,
+            defender: true,
+            node: true
           }
         }
       }
@@ -70,6 +93,11 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
       2: { fights: 0, deaths: 0 },
       3: { fights: 0, deaths: 0 }
     };
+
+    // Insight Aggregators
+    const defenderStats = new Map<number, ChampionStat>();
+    const attackerStats = new Map<number, ChampionStat>();
+    const nodeStats = new Map<number, NodeStat>();
   
     let totalWars = wars.length;
     let mapTypes = new Set<string>();
@@ -82,8 +110,8 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         const bg = fight.battlegroup;
         if (!bg || bg < 1 || bg > 3) continue;
   
+        // Player Stats
         const pid = fight.player.id;
-  
         if (!bgStats[bg][pid]) {
           bgStats[bg][pid] = {
             playerId: pid,
@@ -94,19 +122,65 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             battlegroup: bg
           };
         }
-  
         bgStats[bg][pid].fights += 1;
         bgStats[bg][pid].deaths += fight.death;
         
-        // Update totals
         bgTotals[bg].fights += 1;
         bgTotals[bg].deaths += fight.death;
+
+        // Defender Stats
+        if (fight.defender) {
+            const defId = fight.defender.id;
+            const existing = defenderStats.get(defId) || {
+                id: defId,
+                name: fight.defender.name,
+                class: fight.defender.class,
+                images: fight.defender.images as unknown as ChampionImages,
+                count: 0,
+                deaths: 0,
+                fights: 0
+            };
+            existing.count += 1;
+            existing.fights += 1;
+            existing.deaths += fight.death;
+            defenderStats.set(defId, existing);
+        }
+
+        // Attacker Stats
+        if (fight.attacker) {
+            const attId = fight.attacker.id;
+            const existing = attackerStats.get(attId) || {
+                id: attId,
+                name: fight.attacker.name,
+                class: fight.attacker.class,
+                images: fight.attacker.images as unknown as ChampionImages,
+                count: 0,
+                deaths: 0,
+                fights: 0
+            };
+            existing.count += 1; // Used
+            existing.fights += 1;
+            existing.deaths += fight.death; // Died while attacking
+            attackerStats.set(attId, existing);
+        }
+
+        // Node Stats
+        if (fight.node) {
+            const nNum = fight.node.nodeNumber;
+            const existing = nodeStats.get(nNum) || {
+                nodeNumber: nNum,
+                deaths: 0,
+                fights: 0
+            };
+            existing.fights += 1;
+            existing.deaths += fight.death;
+            nodeStats.set(nNum, existing);
+        }
       }
     }
   
-    // Convert to arrays and sort
+    // Convert to arrays and sort for BG Tables
     const sortedBgs: Record<number, PlayerStats[]> = {};
-    
     [1, 2, 3].forEach(bg => {
       const players = Object.values(bgStats[bg]);
       players.sort((a, b) => {
@@ -115,6 +189,19 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
       });
       sortedBgs[bg] = players;
     });
+
+    // Sort Insights
+    const topDefenders = Array.from(defenderStats.values())
+        .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights)
+        .slice(0, 5);
+    
+    const topAttackers = Array.from(attackerStats.values())
+        .sort((a, b) => b.count - a.count || a.deaths - b.deaths)
+        .slice(0, 5);
+
+    const hardestNodes = Array.from(nodeStats.values())
+        .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights)
+        .slice(0, 5);
   
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
@@ -161,7 +248,6 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                      )}
                  </div>
               </Card>
-              {/* Placeholder for 4th stat if needed, or remove md:grid-cols-4 */}
           </div>
         </div>
   
@@ -203,11 +289,11 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                     <table className="w-full text-left">
                       <thead className="text-xs text-slate-500 uppercase bg-slate-900/40 font-medium">
                         <tr>
-                          <th className="px-4 py-3 w-10 text-center">#</th>
-                          <th className="px-4 py-3">Player</th>
-                          <th className="px-3 py-3 text-center">Fights</th>
-                          <th className="px-3 py-3 text-center">Solo %</th>
-                          <th className="px-3 py-3 text-center">Deaths</th>
+                          <th className="px-2 py-3 w-8 text-center">#</th>
+                          <th className="px-2 py-3">Player</th>
+                          <th className="px-2 py-3 text-center">Fights</th>
+                          <th className="px-2 py-3 text-center">Solo %</th>
+                          <th className="px-2 py-3 text-center">Deaths</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/40 text-sm">
@@ -226,7 +312,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   
                           return (
                             <tr key={player.playerId} className="group hover:bg-slate-800/20 transition-colors">
-                              <td className="px-4 py-3 text-center font-mono text-slate-500">
+                              <td className="px-2 py-3 text-center font-mono text-slate-500">
                                 {isTop3 ? (
                                     <span className={cn(
                                         "inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
@@ -240,25 +326,25 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                                     <span>{rank}</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-3">
+                              <td className="px-2 py-3">
+                                <div className="flex items-center gap-2">
                                   <Avatar className="h-8 w-8 border border-slate-700">
                                     <AvatarImage src={player.avatar || undefined} />
                                     <AvatarFallback className="text-[10px] bg-slate-800 text-slate-400">
                                       {player.playerName.substring(0, 2).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <span className={cn("font-medium truncate max-w-[100px]", isTop3 ? "text-slate-200" : "text-slate-400")}>
+                                  <span className={cn("font-medium truncate max-w-[90px] sm:max-w-[120px]", isTop3 ? "text-slate-200" : "text-slate-400")}>
                                     {player.playerName}
                                   </span>
                                 </div>
                               </td>
-                              <td className="px-3 py-3 text-center">
+                              <td className="px-2 py-3 text-center">
                                 <span className="font-mono font-bold text-lg text-slate-200">
                                     {player.fights}
                                 </span>
                               </td>
-                              <td className="px-3 py-3 text-center">
+                              <td className="px-2 py-3 text-center">
                                 <span className={cn(
                                     "font-mono font-bold text-sm",
                                     soloRate >= 95 ? "text-emerald-400" : soloRate >= 80 ? "text-slate-300" : "text-amber-500"
@@ -266,7 +352,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                                     {soloRate.toFixed(0)}%
                                 </span>
                               </td>
-                              <td className="px-3 py-3 text-center">
+                              <td className="px-2 py-3 text-center">
                                 <span className={cn("inline-flex items-center gap-1 font-mono font-bold px-2 py-0.5 rounded text-sm", deathColor, player.deaths > 0 && "bg-red-950/20 border border-red-900/30")}>
                                     {player.deaths > 0 && <Skull className="w-3.5 h-3.5" />}
                                     {player.deaths}
@@ -277,7 +363,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                         })}
                         {sortedBgs[bg].length === 0 && (
                           <tr>
-                            <td colSpan={4} className="px-4 py-8 text-center text-slate-500 italic">
+                            <td colSpan={5} className="px-4 py-8 text-center text-slate-500 italic">
                               No stats recorded for this battlegroup.
                             </td>
                           </tr>
@@ -289,6 +375,141 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
               </Card>
             );
           })}
+        </div>
+
+        {/* Season Insights */}
+        <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                <BarChart2 className="w-6 h-6 text-sky-400" />
+                Season Insights
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Deadly Defenders */}
+                <Card className="bg-slate-950/50 border-slate-800/60">
+                    <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
+                        <CardTitle className="text-lg font-mono text-slate-200 flex items-center gap-2">
+                            <Shield className="w-5 h-5 text-red-400" />
+                            Deadliest Defenders
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <table className="w-full text-sm">
+                            <tbody className="divide-y divide-slate-800/40">
+                                {topDefenders.map((champ, i) => {
+                                    const classColors = getChampionClassColors(champ.class);
+                                    return (
+                                    <tr key={champ.id} className="hover:bg-slate-800/20 transition-colors">
+                                        <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className={cn("h-8 w-8 border-none ring-1.5", classColors.border)}>
+                                                    <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
+                                                    <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
+                                                </Avatar>
+                                                <span className={cn("font-bold truncate", classColors.text)}>
+                                                    {champ.name}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-red-400 font-bold font-mono flex items-center gap-1 text-sm">
+                                                    <Skull className="w-3.5 h-3.5" /> {champ.deaths}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 font-mono">
+                                                    {(champ.deaths / (champ.fights || 1)).toFixed(2)} / fight
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )})}
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
+
+                {/* Top Attackers */}
+                <Card className="bg-slate-950/50 border-slate-800/60">
+                    <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
+                        <CardTitle className="text-lg font-mono text-slate-200 flex items-center gap-2">
+                            <Swords className="w-5 h-5 text-emerald-400" />
+                            Top Attackers
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <table className="w-full text-sm">
+                            <tbody className="divide-y divide-slate-800/40">
+                                {topAttackers.map((champ, i) => {
+                                    const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
+                                    const classColors = getChampionClassColors(champ.class);
+                                    return (
+                                    <tr key={champ.id} className="hover:bg-slate-800/20 transition-colors">
+                                        <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar className={cn("h-8 w-8 border-none ring-1.5", classColors.border)}>
+                                                    <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
+                                                    <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex flex-col">
+                                                    <span className={cn("font-bold truncate", classColors.text)}>
+                                                        {champ.name}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-500 font-mono">{champ.count} uses</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <span className={cn(
+                                                "font-mono font-bold text-sm",
+                                                soloRate >= 95 ? "text-emerald-400" : "text-amber-500"
+                                            )}>
+                                                {soloRate.toFixed(0)}% Solo
+                                            </span>
+                                        </td>
+                                    </tr>
+                                )})}
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
+
+                {/* Hardest Nodes */}
+                <Card className="bg-slate-950/50 border-slate-800/60">
+                    <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
+                        <CardTitle className="text-lg font-mono text-slate-200 flex items-center gap-2">
+                            <Target className="w-5 h-5 text-amber-500" />
+                            Hardest Nodes
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <table className="w-full text-sm">
+                            <tbody className="divide-y divide-slate-800/40">
+                                {hardestNodes.map((node, i) => (
+                                    <tr key={node.nodeNumber} className="hover:bg-slate-800/20 transition-colors">
+                                        <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant="outline" className="bg-slate-900 text-amber-500 border-amber-500/30 font-mono text-sm">
+                                                Node {node.nodeNumber}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-red-400 font-bold font-mono flex items-center gap-1 text-sm">
+                                                    <Skull className="w-3.5 h-3.5" /> {node.deaths}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 font-mono">
+                                                    {node.fights} fights
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
       </div>
     );
