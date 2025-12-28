@@ -46,7 +46,9 @@ The flagship feature of the platform.
 *   **Planning:** Supports multiple map layouts (`Standard` & `Big Thing`). Features pinch-to-zoom, node-specific tactic visualizers, and drag-and-drop assignments.
 *   **Defense Strategy:** Dedicated planner for managing season-long defense placements across multiple battlegroups. Features **Tier-aware Node Modifiers** and **Smart Roster Integration** that automatically suggests the correct champion version (Rank/Ascension) from the assigned player's profile.
 *   **Execution:** Now database-driven. Plans generated in the Web UI or via the `/aw plan` command can be distributed to players' private Discord threads. Messages feature rich header context (Season, Tier, Opponent) and **dynamically generated high-fidelity maps** that visually highlight player assignments (Attacks & Prefights) using specific champion portraits.
-*   **Analysis:** "Plan-to-Upload" workflow generates unique tokens for players to upload war videos, automatically linking them to their specific node assignment.
+*   **Analysis:** 
+    *   **Season Overview:** A new dashboard (`/analysis/season-overview`) aggregating performance metrics across entire war seasons. Features "Deadliest Defenders", "Top Attackers", and "Hardest Nodes" leaderboards with class-aware highlighting.
+    *   **Video Archive:** "Plan-to-Upload" workflow generates unique tokens for players to upload war videos, automatically linking them to their specific node assignment.
 *   **Smart Notifications:** Automatically posts rich embeds to a configured Discord channel whenever a new war video is uploaded or linked, keeping the alliance in the loop.
 
 ### 👤 Roster & Identity

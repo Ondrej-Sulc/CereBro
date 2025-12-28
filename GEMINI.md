@@ -18,6 +18,7 @@ The platform provides a variety of features, including:
 *   **Web Application Features:**
     *   **War Planning UI:** An interactive, high-performance web interface for managing Alliance War plans.
     *   **War Defense Planner:** A specialized interface for strategizing alliance defense placements, supporting multiple battlegroups, map types (Standard/Big Thing), and player roster management.
+    *   **Season Overview:** A comprehensive analytics dashboard for tracking player and alliance performance across entire war seasons.
     *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
     *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI.
 
@@ -46,6 +47,9 @@ To optimize database queries and reduce load, especially for frequently accessed
 
 *   **`web/src/lib/cache.ts`**: Provides a generic `getFromCache<T>(key: string, ttl: number, fetchData: () => Promise<T>)` utility for simple time-to-live (TTL) based caching.
 *   **`web/src/lib/data/champions.ts`**: Implements `getCachedChampions()`, a specialized function that leverages `getFromCache` to provide a cached, comprehensive list of all champion data (including images, abilities, tags, etc.). This function is cached for 1 hour.
+*   **Seasonal Analysis Optimization:** The Season Overview page uses `getFromCache` to optimize high-volume data processing:
+    *   **Season List:** The distinct list of historical seasons is cached for 1 hour.
+    *   **War Statistics:** Seasonal war and fight data is cached for 5 minutes, ensuring high performance while allowing for near real-time updates as wars finish.
 *   **War Planning Optimization (Static vs Dynamic):** The War Planner (`/web/src/app/planning`) uses a hybrid approach to minimize database load during frequent polling:
     *   **Static Data (`/api/war-planning/nodes`):** Heavy, non-changing structural data (Nodes, Allocations, Modifiers) is fetched *once* on component mount and cached server-side for 1 hour.
     *   **Dynamic Data (`/api/war-planning/fights`):** The polling endpoint returns *only* the lightweight fight data (ids, assignments) without joining the heavy node relations.
@@ -135,6 +139,22 @@ The system now includes robust support for managing the dynamic rules of Allianc
         *   **Class Rings:** Outer glowing rings colored by champion class (e.g., Mystic=Purple, Science=Green).
         *   **Tactic Icons:** Champions matching the active tactic display a green Sword (Attacker) or red Shield (Defender) icon.
     *   **Node Editor:** Automatically highlights active tactics with badges and lists all active node modifiers in a popover for easy reference.
+
+### Season Overview & Performance Analysis
+
+The platform now features a dedicated analytics dashboard at `/analysis/season-overview` for deep-diving into Alliance War performance metrics over time.
+
+*   **War Room Navigation:** To address UI crowding, all war-related tools (Season Overview, Defense Strategy, and Attack Planning) are consolidated into a unified **"War Room" dropdown menu** in the main site header.
+*   **Player Performance Tracking:**
+    *   **Battlegroup Ranking:** Players are organized by battlegroup and ranked primarily by **least deaths**, with total fights used as a tie-breaker.
+    *   **Solo % Calculation:** A success rate metric is displayed for every player, providing critical context for performance on "Big Thing" maps where fight counts are restricted.
+    *   **Group Totals:** Each battlegroup card displays aggregate statistics (Total Solo % and Total Deaths) for easy inter-BG comparison.
+*   **Season Insights:** A specialized analytics section at the bottom of the dashboard highlights:
+    *   **Deadliest Defenders:** Top 5 champions causing the most deaths, with "deaths per fight" metrics.
+    *   **Top Attackers:** Most frequently used attackers and their success rates.
+    *   **Hardest Nodes:** Node numbers with the highest lethality across the alliance.
+*   **Visual Polish:** Insights utilize **champion class-colored names and avatar rings**, maintaining visual consistency with the rest of the application.
+*   **Robustness:** The dashboard includes strict URL parameter validation, whitelist-based season selection, and a professional empty-state UI for alliances with no recorded data.
 
 ### Alliance Structure & Role Management
 
