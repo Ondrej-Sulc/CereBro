@@ -12,6 +12,13 @@ export interface NodeAssignment {
     isTarget: boolean; // True if assigned to the player receiving the plan
     prefightImage?: string; // Image of the prefight champion placed by the player
     prefightClass?: ChampionClass;
+    assignedColor?: string; // Color for the node border (for overview map)
+}
+
+export interface LegendItem {
+    name: string;
+    color: string;
+    championImage?: string; // Optional avatar
 }
 
 export class MapImageService {
@@ -35,6 +42,20 @@ export class MapImageService {
         [ChampionClass.MYSTIC]: '#a855f7',  // purple-500
         [ChampionClass.SUPERIOR]: '#d946ef',// fuchsia-500
     };
+
+    // 10 Distinct colors for players (matches web/src/lib/player-colors.ts PALETTE)
+    public static readonly PLAYER_COLORS = [
+        '#4ade80', // Green 400
+        '#60a5fa', // Blue 400
+        '#c084fc', // Purple 400
+        '#e879f9', // Fuchsia 400
+        '#f472b6', // Pink 400
+        '#f87171', // Red 400
+        '#facc15', // Yellow 400
+        '#fb923c', // Orange 400
+        '#22d3ee', // Cyan 400
+        '#a3e635', // Lime 400
+    ];
 
     static async preloadImages(urls: string[]): Promise<Map<string, string>> {
         const cache = new Map<string, string>();
@@ -60,7 +81,8 @@ export class MapImageService {
         mapType: WarMapType,
         nodes: WarNodePosition[],
         assignments: Map<number, NodeAssignment>,
-        preloadedImageCache?: Map<string, string>
+        preloadedImageCache?: Map<string, string>,
+        legend?: LegendItem[]
     ): Promise<Buffer> {
         
         // 1. Calculate Bounding Box
@@ -80,8 +102,14 @@ export class MapImageService {
         minY -= padding;
         maxY += padding;
 
-        const width = Math.ceil(maxX - minX);
+        let width = Math.ceil(maxX - minX);
         const height = Math.ceil(maxY - minY);
+
+        // Adjust for Legend
+        const legendWidth = 350;
+        if (legend && legend.length > 0) {
+            width += legendWidth;
+        }
 
         // 2. Fetch Images (in parallel) and convert to Base64
         const imageCache = new Map<string, string>(preloadedImageCache);
@@ -95,6 +123,14 @@ export class MapImageService {
                 uniqueUrls.add(assignment.attackerImage);
             }
         });
+
+        if (legend) {
+            legend.forEach(item => {
+                if (item.championImage && !imageCache.has(item.championImage)) {
+                    uniqueUrls.add(item.championImage);
+                }
+            });
+        }
 
         await Promise.all(Array.from(uniqueUrls).map(async (url) => {
             try {
@@ -120,7 +156,9 @@ export class MapImageService {
             minY, 
             nodes, 
             assignments, 
-            imageCache
+            imageCache,
+            legend,
+            legendWidth
         );
 
         // 4. Convert to PNG
@@ -138,7 +176,9 @@ export class MapImageService {
         offsetY: number,
         nodes: WarNodePosition[], 
         assignments: Map<number, NodeAssignment>,
-        imageCache: Map<string, string>
+        imageCache: Map<string, string>,
+        legend?: LegendItem[],
+        legendWidth: number = 0
     ): string {
         
         // --- 1. Background Elements (Nebulas & Stars) ---
@@ -220,8 +260,6 @@ export class MapImageService {
         let pathsSvg = '';
         const drawnPaths = new Set<string>();
 
-        // Removed Logging
-
         nodes.forEach(node => {
             if (!node.paths) return;
             node.paths.forEach(targetId => {
@@ -265,9 +303,18 @@ export class MapImageService {
             const prefightImg = assignment?.prefightImage;
             
             // Colors
-            const borderColorClass = isTarget ? "border-highlight" : "border-default";
-            const badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
-            const badgeStroke = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
+            let borderProps = isTarget ? `class="node-fill border-highlight"` : `class="node-fill border-default"`;
+            let badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
+            let badgeStrokeVal = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
+
+            if (assignment?.assignedColor) {
+                borderProps = `class="node-fill" style="stroke: ${assignment.assignedColor}; stroke-width: 3"`;
+                badgeStrokeVal = assignment.assignedColor;
+                // Keep text color default unless target, or maybe make it white?
+                if (!isTarget) {
+                     badgeTextColorClass = "badge-text"; // Keep default
+                }
+            }
 
             // Class Colors
             const attColor = assignment?.attackerClass ? MapImageService.CLASS_COLORS[assignment.attackerClass] : '#94a3b8';
@@ -288,7 +335,7 @@ export class MapImageService {
                 const pillW = r * 4;
                 
                 innerContent += `
-                    <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${r}" class="node-fill ${borderColorClass}" />
+                    <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${r}" ${borderProps} />
                     
                     <!-- Attacker -->
                     <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="${attColor}" opacity="0.4" />
@@ -312,7 +359,7 @@ export class MapImageService {
                 if (assignment?.defenderImage && imageCache.has(assignment.defenderImage)) {
                     const base64 = imageCache.get(assignment.defenderImage);
                     innerContent += `
-                        <circle r="${r}" class="node-fill ${borderColorClass}" />
+                        <circle r="${r}" ${borderProps} />
                         
                         <circle cx="0" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
                         <g clip-path="url(#clip-${node.id})">
@@ -323,7 +370,7 @@ export class MapImageService {
                     `;
                 } else {
                     // Empty node
-                    innerContent += `<circle r="${r}" class="node-fill ${borderColorClass}" />`;
+                    innerContent += `<circle r="${r}" ${borderProps} />`;
                 }
             }
 
@@ -334,7 +381,7 @@ export class MapImageService {
 
             innerContent += `
                 <g transform="translate(0, ${badgeY})">
-                    <rect x="${-badgeW/2}" y="${-badgeH/2}" width="${badgeW}" height="${badgeH}" rx="4" class="node-fill" stroke="${badgeStroke}" stroke-width="2" />
+                    <rect x="${-badgeW/2}" y="${-badgeH/2}" width="${badgeW}" height="${badgeH}" rx="4" class="node-fill" stroke="${badgeStrokeVal}" stroke-width="2" />
                     <text x="0" y="0" class="${badgeTextColorClass}">${node.id}</text>
                 </g>
             `;
@@ -366,6 +413,50 @@ export class MapImageService {
             `;
         });
 
+        // --- 4. Build Legend ---
+        let legendSvg = '';
+        if (legend && legend.length > 0) {
+            const legendX = width - legendWidth + 40; // Start inside the new area
+            let legendY = 100;
+
+            // Title
+            legendSvg += `
+                <text x="${legendX}" y="${legendY}" font-family="sans-serif" font-weight="bold" font-size="24" fill="#e2e8f0">
+                    Battlegroup Plan
+                </text>
+            `;
+            legendY += 50;
+
+            legend.forEach((item, index) => {
+                // Color Circle
+                legendSvg += `
+                    <circle cx="${legendX + 12}" cy="${legendY}" r="12" fill="${item.color}" />
+                `;
+
+                // Avatar (if available)
+                if (item.championImage && imageCache.has(item.championImage)) {
+                    const img = imageCache.get(item.championImage);
+                    legendSvg += `
+                        <g clip-path="url(#clip-legend-${index})">
+                             <image href="${img}" x="${legendX + 35}" y="${legendY - 20}" width="40" height="40" preserveAspectRatio="xMidYMid slice" />
+                        </g>
+                        <defs><clipPath id="clip-legend-${index}"><circle cx="${legendX + 55}" cy="${legendY}" r="20" /></clipPath></defs>
+                    `;
+                    // Name
+                    legendSvg += `
+                        <text x="${legendX + 85}" y="${legendY + 6}" font-family="sans-serif" font-size="18" fill="#cbd5e1">${item.name}</text>
+                    `;
+                } else {
+                    // Name without avatar
+                     legendSvg += `
+                        <text x="${legendX + 35}" y="${legendY + 6}" font-family="sans-serif" font-size="18" fill="#cbd5e1">${item.name}</text>
+                    `;
+                }
+                
+                legendY += 60;
+            });
+        }
+
         return `
             <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
                 ${styles}
@@ -374,6 +465,7 @@ export class MapImageService {
                 ${starsSvg}
                 ${pathsSvg}
                 ${nodesSvg}
+                ${legendSvg}
             </svg>
         `;
     }

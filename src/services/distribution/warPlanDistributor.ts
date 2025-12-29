@@ -1,7 +1,7 @@
 import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ThreadChannel, AttachmentBuilder, ChannelType, MediaGalleryBuilder, MediaGalleryItemBuilder, SeparatorBuilder } from 'discord.js';
 import { prisma } from '../prismaService';
 import { getEmoji, capitalize } from '../../commands/aw/utils';
-import { MapImageService, NodeAssignment } from '../mapImageService';
+import { MapImageService, NodeAssignment, LegendItem } from '../mapImageService';
 import { warNodesData, warNodesDataBig } from '../../data/war-planning/nodes-data';
 import { WarMapType } from '@prisma/client';
 import logger from '../loggerService';
@@ -301,6 +301,117 @@ export async function distributeWarPlan(
     // Prepare Map Data
     const mapType = war.mapType || WarMapType.STANDARD;
     const nodesData = mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
+
+    // --- Global Color Assignment (Mirrors Web UI) ---
+    // 1. Collect all unique players involved in the war
+    const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
+    war.fights.forEach(f => {
+        if (f.player) {
+            allPlayers.set(f.player.id, { 
+                id: f.player.id, 
+                name: f.player.ingameName, 
+                bg: f.battlegroup 
+            });
+        }
+    });
+
+    // 2. Sort them: BG (asc), then Name (asc)
+    const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => {
+        if (a.bg !== b.bg) return a.bg - b.bg;
+        return a.name.localeCompare(b.name);
+    });
+
+    // 3. Assign Colors
+    const globalColorMap = new Map<string, string>(); // PlayerID -> Color
+    sortedPlayers.forEach((p, index) => {
+        const color = MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length];
+        globalColorMap.set(p.id, color);
+    });
+
+    // --- Overview Map Distribution ---
+    if (!targetPlayerId) {
+        // Iterate over unique BGs in the current scope
+        const distinctBgs = new Set<number>();
+        if (targetBattlegroup) distinctBgs.add(targetBattlegroup);
+        else {
+            war.fights.forEach(f => distinctBgs.add(f.battlegroup));
+        }
+
+        for (const bg of distinctBgs) {
+            try {
+                const channel = await getChannel(bg);
+                if (!channel) continue;
+
+                // Gather players and fights for this BG
+                const bgFights = war.fights.filter(f => f.battlegroup === bg);
+                if (bgFights.length === 0) continue;
+
+                // Build Legend & Assignments using Global Colors
+                const legend: LegendItem[] = [];
+                const distinctPlayers = Array.from(new Set(bgFights.map(f => f.player?.ingameName))).filter(Boolean);
+                
+                // Sort for legend display (alphabetical is fine for legend, color is already fixed)
+                distinctPlayers.sort().forEach((name) => {
+                    const pObj = bgFights.find(f => f.player?.ingameName === name)?.player;
+                    if (pObj && globalColorMap.has(pObj.id)) {
+                        legend.push({
+                            name: name!,
+                            color: globalColorMap.get(pObj.id)!,
+                            championImage: pObj.avatar || undefined
+                        });
+                    }
+                });
+
+                // Build assignments with colors
+                const bgMap = bgNodeMaps.get(bg);
+                const assignments = new Map<number, NodeAssignment>();
+                if (bgMap) bgMap.forEach((v, k) => assignments.set(k, { ...v }));
+
+                bgFights.forEach(f => {
+                    if (f.player && globalColorMap.has(f.player.id)) {
+                         const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
+                         assignments.set(f.node.nodeNumber, {
+                             ...existing,
+                             assignedColor: globalColorMap.get(f.player.id)
+                         });
+                    }
+                });
+
+                // Generate Image
+                const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend);
+                const mapFileName = `war-overview-bg${bg}.png`;
+                const mapAttachment = new AttachmentBuilder(mapBuffer, { name: mapFileName });
+
+                // Send to Channel
+                const mapName = war.mapType === WarMapType.BIG_THING ? "Big Thing" : "Standard";
+                const seasonInfo = `📅 Season ${war.season} | War ${war.warNumber || '?'} | Tier ${war.warTier}`;
+                const matchInfo = `⚔️ ${alliance.name} vs ${war.enemyAlliance || 'Unknown Opponent'}`;
+                
+                const container = new ContainerBuilder().setAccentColor(0x0ea5e9);
+                container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
+                     `## 🗺️ Battlegroup ${bg} War Plan\n` +
+                     `**${matchInfo}**\n` +
+                     `${seasonInfo} (🗺️ ${mapName})`
+                ));
+                 container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(
+                    new MediaGalleryItemBuilder()
+                        .setDescription(`**Battlegroup ${bg} Overview**`)
+                        .setURL(`attachment://${mapFileName}`)
+                ));
+
+                 await channel.send({
+                    components: [container],
+                    flags: [MessageFlags.IsComponentsV2],
+                    files: [mapAttachment]
+                });
+                
+                logger.info(`Sent overview map to BG ${bg} channel`);
+
+            } catch (e) {
+                logger.error({ err: e, bg }, "Failed to distribute overview map");
+            }
+        }
+    }
 
     // Process each player
     for (const [playerName, fights] of playerFights) {
