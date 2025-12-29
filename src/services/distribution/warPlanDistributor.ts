@@ -6,6 +6,7 @@ import { warNodesData, warNodesDataBig } from '../../data/war-planning/nodes-dat
 import { WarMapType } from '@prisma/client';
 import logger from '../loggerService';
 import { getChampionImageUrl } from '../../utils/championHelper';
+import { config } from '../../config';
 
 export interface DistributeResult {
     sent: string[];
@@ -99,6 +100,68 @@ export async function distributeWarPlan(
     }
 
     const globalImageCache = await MapImageService.preloadImages(Array.from(uniqueImageUrls));
+
+    // --- Fetch Historical Videos ---
+    // 1. Gather keys
+    const fightKeys = new Set<string>();
+    const keyMap = new Map<string, { nodeId: number, defenderId: number, attackerId: number }>();
+
+    for (const fight of war.fights) {
+        if (fight.attackerId && fight.defenderId) {
+            const key = `${fight.nodeId}-${fight.defenderId}-${fight.attackerId}`;
+            fightKeys.add(key);
+            keyMap.set(key, { 
+                nodeId: fight.nodeId, 
+                defenderId: fight.defenderId, 
+                attackerId: fight.attackerId 
+            });
+        }
+    }
+
+    // 2. Batch Query
+    const videoMap = new Map<string, { url: string, videoId: string, death: number, playerId: string }[]>();
+    
+    if (fightKeys.size > 0) {
+        const criterias = Array.from(keyMap.values());
+        // Prisma doesn't support tuple IN natively in findMany without raw where, 
+        // but given the size, we can construct an OR array.
+        // To avoid massive OR clauses, we can fetch by Node+Defender and then filter in memory if needed, 
+        // or just use OR if size is reasonable.
+        // Let's assume < 200 items in OR is fine.
+        
+        // Chunking the query if necessary, but for now simple OR.
+        const historicalFights = await prisma.warFight.findMany({
+            where: {
+                OR: criterias,
+                videoId: { not: null },
+                war: { status: 'FINISHED' }
+            },
+            select: {
+                nodeId: true,
+                defenderId: true,
+                attackerId: true,
+                death: true,
+                video: { select: { id: true, url: true } },
+                player: { select: { id: true } }
+            },
+            orderBy: [
+                { death: 'asc' },
+                { createdAt: 'desc' }
+            ]
+        });
+
+        for (const hf of historicalFights) {
+            if (!hf.video?.url || !hf.defenderId || !hf.attackerId || !hf.player) continue;
+            const key = `${hf.nodeId}-${hf.defenderId}-${hf.attackerId}`;
+            if (!videoMap.has(key)) videoMap.set(key, []);
+            videoMap.get(key)!.push({
+                url: hf.video.url,
+                videoId: hf.video.id,
+                death: hf.death,
+                playerId: hf.player.id
+            });
+        }
+    }
 
     // Group fights by Player
     const playerFights = new Map<string, any[]>();
@@ -348,6 +411,21 @@ export async function distributeWarPlan(
              if (f.prefightChampions.length > 0) {
                  const prefightEmojis = await Promise.all(f.prefightChampions.map((p: any) => getEmoji(p.champion.name, client)));
                  line += ` (Prefight: ${prefightEmojis.join(' ')})`;
+             }
+
+             // Video Link Logic
+             if (f.attackerId && f.defenderId) {
+                 const key = `${f.nodeId}-${f.defenderId}-${f.attackerId}`;
+                 const videos = videoMap.get(key);
+                 if (videos) {
+                     // Find first video not by this player
+                     const validVideo = videos.find(v => v.playerId !== playerObj.id);
+                     if (validVideo) {
+                         const deathNote = validVideo.death > 0 ? ` (💀 ${validVideo.death})` : '';
+                         const videoLink = `${config.botBaseUrl}/war-videos/${validVideo.videoId}`;
+                         line += ` | [Watch Video${deathNote}](${videoLink})`;
+                     }
+                 }
              }
              
              if (f.notes) line += `\n  > *${f.notes}*`;
