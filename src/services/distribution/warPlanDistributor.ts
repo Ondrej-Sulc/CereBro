@@ -119,7 +119,7 @@ export async function distributeWarPlan(
     }
 
     // 2. Batch Query
-    const videoMap = new Map<string, { url: string, videoId: string, death: number, playerId: string }[]>();
+    const videoMap = new Map<string, { url: string, videoId: string, death: number, playerId: string, playerName: string }[]>();
     
     if (fightKeys.size > 0) {
         const criterias = Array.from(keyMap.values());
@@ -142,7 +142,7 @@ export async function distributeWarPlan(
                 attackerId: true,
                 death: true,
                 video: { select: { id: true, url: true } },
-                player: { select: { id: true } }
+                player: { select: { id: true, ingameName: true } }
             },
             orderBy: [
                 { death: 'asc' },
@@ -158,7 +158,8 @@ export async function distributeWarPlan(
                 url: hf.video.url,
                 videoId: hf.video.id,
                 death: hf.death,
-                playerId: hf.player.id
+                playerId: hf.player.id,
+                playerName: hf.player.ingameName
             });
         }
     }
@@ -418,12 +419,18 @@ export async function distributeWarPlan(
                  const key = `${f.nodeId}-${f.defenderId}-${f.attackerId}`;
                  const videos = videoMap.get(key);
                  if (videos) {
-                     // Find first video not by this player
-                     const validVideo = videos.find(v => v.playerId !== playerObj.id);
-                     if (validVideo) {
-                         const deathNote = validVideo.death > 0 ? ` (💀 ${validVideo.death})` : '';
-                         const videoLink = `${config.botBaseUrl}/war-videos/${validVideo.videoId}`;
-                         line += ` | [Watch Video${deathNote}](${videoLink})`;
+                     // Filter out this player's own videos, take top 3
+                     const validVideos = videos
+                        .filter(v => v.playerId !== playerObj.id)
+                        .slice(0, 3);
+                     
+                     if (validVideos.length > 0) {
+                         const videoLinks = validVideos.map(v => {
+                             const deathNote = v.death > 0 ? ` (💀 ${v.death})` : '';
+                             const videoLink = `${config.botBaseUrl}/war-videos/${v.videoId}`;
+                             return `🎥 [${v.playerName}${deathNote}](${videoLink})`;
+                         });
+                         line += ` | ${videoLinks.join(' ')}`;
                      }
                  }
              }
