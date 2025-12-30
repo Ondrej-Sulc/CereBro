@@ -80,19 +80,33 @@ function getYouTubeVideoId(url: string | null): string | null {
 
 const VideoThumbnail = ({ videoId }: { videoId: string }) => {
   const [src, setSrc] = useState(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`);
-  const [hasError, setHasError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   return (
     <Image 
       src={src}
       alt="Video thumbnail"
       fill
-      className="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+      className={cn(
+        "object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300",
+        // If we are on the final fallback (attempt 3), apply specific styling if needed (e.g. contain)
+        attempt >= 3 && "object-contain p-8 bg-slate-900"
+      )}
       priority
+      unoptimized // Prevent Next.js from failing on upstream 404s
       onError={() => {
-        if (!hasError) {
+        if (attempt === 0) {
+            // Try HQ
             setSrc(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
-            setHasError(true);
+            setAttempt(1);
+        } else if (attempt === 1) {
+            // Try MQ (almost always exists if video exists)
+            setSrc(`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`);
+            setAttempt(2);
+        } else if (attempt === 2) {
+            // Fallback to logo
+            setSrc('/CereBro_logo_512.png');
+            setAttempt(3);
         }
       }}
     />
