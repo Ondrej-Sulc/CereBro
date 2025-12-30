@@ -13,6 +13,8 @@ export interface NodeAssignment {
     prefightImage?: string; // Image of the prefight champion placed by the player
     prefightClass?: ChampionClass;
     assignedColor?: string; // Color for the node border (for overview map)
+    isAttackerTactic?: boolean;
+    isDefenderTactic?: boolean;
 }
 
 export interface LegendItem {
@@ -32,6 +34,9 @@ export class MapImageService {
     private static readonly HIGHLIGHT_BORDER = '#ffffff'; // sky-400
     private static readonly HIGHLIGHT_PREFIGHT = '#ffffff'; // purple-400
     private static readonly HIGHLIGHT_TEXT = '#ffffff'; // white
+
+    private static readonly SWORD_PATH = "M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2";
+    private static readonly SHIELD_PATH = "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z";
 
     private static readonly CLASS_COLORS: Record<string, string> = {
         [ChampionClass.SCIENCE]: '#4ade80', // green-400
@@ -402,6 +407,71 @@ export class MapImageService {
                         </g>
                         <defs><clipPath id="clip-${node.id}-PF"><circle cx="0" cy="0" r="${pfR-2}" /></clipPath></defs>
                         <circle cx="0" cy="0" r="${pfR-2}" fill="none" stroke="${pfColor}" stroke-width="1.5" />
+                    </g>
+                `;
+            }
+
+            // --- D. Tactic Badges (Attack/Defense) ---
+            const badgeOffset = Math.floor(r * 0.7); // 45 deg approx
+            const badgeR = 8;
+            const iconSize = 10;
+            
+            // Attacker Badge (Left-Top relative to node center, or shifted if pill)
+            if (assignment?.isAttackerTactic) {
+                // If pill, shift further left. If circle, standard offset.
+                // The pill center is at 0,0. Left side is at -pillW/4 = -32.
+                // Attacker img center is -32. 
+                // In canvas-node, xPos = -offset - 6. Here we need to account for pill layout.
+                
+                let badgeX = -badgeOffset - 6;
+                // If Attacker Image exists (Pill layout), attacker is at x = -r*4/4 = -r = -32.
+                if (assignment.attackerImage && assignment.defenderImage) {
+                    badgeX = (-r * 4 / 4) - badgeOffset - 6 + 32; // -32 - 22 - 6 = -60 relative to center... wait.
+                    // Actually, let's stick to the visual logic: Top-Left of the Attacker Image.
+                    // Attacker Circle center is (-32, 0).
+                    // Badge should be at (-32 - offset, -offset).
+                    badgeX = -32 - badgeOffset;
+                }
+                
+                const badgeY = -badgeOffset - 6;
+
+                innerContent += `
+                    <g transform="translate(${badgeX}, ${badgeY})">
+                        <!-- Shadow -->
+                        <circle cx="1" cy="1" r="${badgeR}" fill="rgba(0,0,0,0.6)" />
+                        <!-- Background -->
+                        <circle r="${badgeR}" fill="#022c22" stroke="#10b981" stroke-width="1" />
+                        <!-- Icon -->
+                        <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
+                             <path d="${MapImageService.SWORD_PATH}" fill="#34d399" />
+                        </g>
+                    </g>
+                `;
+            }
+
+            // Defender Badge (Right-Top)
+            if (assignment?.isDefenderTactic) {
+                let badgeX = badgeOffset + 6;
+                // If Pill layout, Defender is at x = 32.
+                if (assignment.attackerImage && assignment.defenderImage) {
+                    badgeX = 32 + badgeOffset;
+                } else if (assignment.defenderImage) {
+                    // Standard Circle (Defender only) -> Center 0,0.
+                    // Badge at offset.
+                }
+
+                const badgeY = -badgeOffset - 6;
+
+                innerContent += `
+                    <g transform="translate(${badgeX}, ${badgeY})">
+                        <!-- Shadow -->
+                        <circle cx="1" cy="1" r="${badgeR}" fill="rgba(0,0,0,0.6)" />
+                        <!-- Background -->
+                        <circle r="${badgeR}" fill="#450a0a" stroke="#ef4444" stroke-width="1" />
+                        <!-- Icon -->
+                        <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
+                             <path d="${MapImageService.SHIELD_PATH}" fill="#f87171" />
+                        </g>
                     </g>
                 `;
             }

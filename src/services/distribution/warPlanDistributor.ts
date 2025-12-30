@@ -36,8 +36,8 @@ export async function distributeWarPlan(
             fights: {
                 where: targetBattlegroup ? { battlegroup: targetBattlegroup } : undefined,
                 include: {
-                    attacker: true,
-                    defender: true,
+                    attacker: { include: { tags: true } },
+                    defender: { include: { tags: true } },
                     node: true,
                     player: true,
                     prefightChampions: { include: { champion: true } }
@@ -57,6 +57,31 @@ export async function distributeWarPlan(
         result.errors.push("War not found");
         return result;
     }
+
+    // --- Fetch Active Tactic ---
+    const activeTactic = await prisma.warTactic.findFirst({
+        where: {
+            season: war.season,
+            AND: [
+                {
+                    OR: [
+                        { minTier: null },
+                        { minTier: { lte: war.warTier } }
+                    ]
+                },
+                {
+                    OR: [
+                        { maxTier: null },
+                        { maxTier: { gte: war.warTier } }
+                    ]
+                }
+            ]
+        },
+        include: {
+            attackTag: true,
+            defenseTag: true
+        }
+    });
 
     // 1. Prepare Global Node & Image Data
     const bgNodeMaps = new Map<number, Map<number, NodeAssignment>>();
@@ -89,13 +114,19 @@ export async function distributeWarPlan(
             }
         }
 
+        // Tactic Logic
+        const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name));
+        const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name));
+
         bgNodeMaps.get(fight.battlegroup)!.set(fight.node.nodeNumber, {
             defenderName: fight.defender?.name,
             defenderImage,
             defenderClass: fight.defender?.class,
             attackerImage,
             attackerClass: fight.attacker?.class,
-            isTarget: false // Default
+            isTarget: false, // Default
+            isAttackerTactic,
+            isDefenderTactic
         });
     }
 
