@@ -92,6 +92,9 @@ The system now supports distributing detailed Alliance War plans directly from t
         *   **Pill Style:** Main fights are rendered as wide "Pills" displaying both the Attacker and Defender portraits.
         *   **Prefight Visualization:** Nodes where the player places a prefight are highlighted with a **Purple** border and display the Prefight Champion vs the Defender.
         *   **Standard Targets:** Regular attack targets are highlighted with a **Blue** border.
+        *   **Tactic Integration:** Champions matching the active war tactic display a visual **Sword** (Attacker) or **Shield** (Defender) badge, utilizing the same visual logic as the web planner.
+        *   **Color Synchronization:** Player colors on the map (used for borders and identifiers) are now globally synchronized with the Web UI palette, ensuring a consistent visual language across platforms.
+    *   **Battlegroup Overview:** In addition to private messages, the bot generates a "Battlegroup Overview Map" sent to the specific BG channel. This map includes a full legend and visualizes the entire lane strategy at a glance.
     *   **Assignments List:** Textual list of assigned fights (Attacker vs Defender on Node X).
     *   **Your Team:** A consolidated section listing all champions involved in attacks and prefights.
     *   **Pre-Fights to Place:** Clearly outlines prefight duties with dynamic wording.
@@ -110,6 +113,9 @@ The project now includes a dedicated "War Planning" feature within the web inter
         *   **Node Layer:** Interactive nodes are rendered on a separate layer. Heavy effects like `shadowBlur` are avoided in favor of performant alternatives (e.g., offset circles for hard shadows).
     *   **Zoom & Pan:** Native Canvas transformation logic replaces the DOM-based `react-zoom-pan-pinch` library, providing instant feedback without layout thrashing.
     *   **Dynamic Layout:** The map structure remains configuration-driven (`nodes-data.ts`), preserving flexibility. **It now supports different layouts, including the `BIG_THING` (10-node, 5-island) layout alongside the standard map.**
+*   **Deployment Stability (Version Checker):** To prevent errors when users are active during a new deployment (e.g., "Failed to find Server Action"), the web app includes a proactive `VersionChecker`.
+    *   **Mechanism:** The build process generates a unique ID (Git Commit Hash or Timestamp) injected via `next.config.ts`.
+    *   **Client Polling:** A client-side component polls a lightweight `/api/version` endpoint. If the server version differs from the client's initial version, a persistent Toast notification prompts the user to refresh the page.
 *   **Optimized Planning Workflow:**
     *   **Node Editing:** Clicking a node opens an optimized "Inspector Panel".
         *   **Virtualization:** The Champion and Player selection dropdowns (`ChampionCombobox`, `PlayerCombobox`) use `react-virtuoso` to virtualize their lists, rendering only visible items. This eliminates the massive render storms caused by mounting hundreds of DOM nodes for large rosters.

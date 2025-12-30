@@ -1,8 +1,19 @@
 import type { NextConfig } from 'next';
 import path from 'path';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
+import { execSync } from 'child_process';
+
+let buildId = 'dev';
+try {
+  buildId = execSync('git rev-parse HEAD').toString().trim();
+} catch (e) {
+  buildId = Date.now().toString();
+}
 
 const nextConfig: NextConfig = {
+  env: {
+    APP_VERSION: buildId,
+  },
   // !! WARN !!
   // Dangerously allow production builds to successfully complete even if
   // your project has type errors. This is a temporary measure to unblock

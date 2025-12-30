@@ -21,6 +21,7 @@ A modern interface built for complex visualization and management tasks.
     *   **Performance:** Implements **virtualized lists (react-virtuoso)** to handle heavy roster rendering without DOM thrashing. **Utilizes server-side in-memory caching for static data (like champions) to significantly reduce database load and improve response times.**
     *   **Real-time Collab:** Optimistic UI updates with polling synchronization to allow multiple officers to plan wars simultaneously.
     *   **Video Archive:** A searchable media library for Alliance War videos, linked directly to specific fights and nodes.
+    *   **Resilient Deployment:** Features an automated version-checking system that proactively alerts connected clients when a new server version is deployed, preventing Server Action mismatches.
 
 ### 2. The Discord Bot (`/src`)
 Handles high-frequency user interactions, notifications, and quick data lookups.
@@ -45,7 +46,7 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 The flagship feature of the platform.
 *   **Planning:** Supports multiple map layouts (`Standard` & `Big Thing`). Features pinch-to-zoom, node-specific tactic visualizers, and drag-and-drop assignments.
 *   **Defense Strategy:** Dedicated planner for managing season-long defense placements across multiple battlegroups. Features **Tier-aware Node Modifiers** and **Smart Roster Integration** that automatically suggests the correct champion version (Rank/Ascension) from the assigned player's profile.
-*   **Execution:** Now database-driven. Plans generated in the Web UI or via the `/aw plan` command can be distributed to players' private Discord threads. Messages feature rich header context (Season, Tier, Opponent) and **dynamically generated high-fidelity maps** that visually highlight player assignments (Attacks & Prefights) using specific champion portraits.
+*   **Execution:** Now database-driven. Plans generated in the Web UI or via the `/aw plan` command can be distributed to players' private Discord threads. Messages feature rich header context (Season, Tier, Opponent), **per-battlegroup Overview Maps**, and **dynamically generated high-fidelity player maps** that visually highlight assignments and active tactic badges (Sword/Shield).
 *   **Analysis:** 
     *   **Season Overview:** A new dashboard (`/analysis/season-overview`) aggregating performance metrics across entire war seasons. Features "Deadliest Defenders", "Top Attackers", and "Hardest Nodes" leaderboards with class-aware highlighting.
     *   **Video Archive:** "Plan-to-Upload" workflow generates unique tokens for players to upload war videos, automatically linking them to their specific node assignment.

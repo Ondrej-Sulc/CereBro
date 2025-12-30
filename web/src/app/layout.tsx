@@ -5,6 +5,7 @@ import { PHProvider, PostHogPageview } from "@/components/PostHogProvider";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { VersionChecker } from "@/components/version-checker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,12 +27,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appVersion = process.env.APP_VERSION || 'dev';
+
   return (
     <html lang="en" className="dark">
       <PHProvider>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-100 min-h-screen scroll-smooth bg-slate-950`}
         >
+          <VersionChecker initialVersion={appVersion} />
           <Suspense>
             <PostHogPageview />
           </Suspense>
