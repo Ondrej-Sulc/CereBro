@@ -289,42 +289,59 @@ const WarMap = memo(function WarMap({
 
       const newDistance = getDistance(p1, p2);
       const newCenter = getCenter(p1, p2);
+      const clientRect = stage.container().getBoundingClientRect();
+      
+      // Convert client coordinates to stage-relative coordinates (unscaled)
+      const newCenterRel = {
+        x: newCenter.x - clientRect.left,
+        y: newCenter.y - clientRect.top
+      };
+      
+      // We need the previous center in stage-relative coordinates too
+      // lastCenter.current is in client coordinates
+      const lastCenterRel = lastCenter.current ? {
+        x: lastCenter.current.x - clientRect.left,
+        y: lastCenter.current.y - clientRect.top
+      } : newCenterRel;
 
       const oldScale = stage.scaleX();
+      const oldPos = stage.position();
 
-      // Zoom
       if (lastTwoFingerDistance.current) {
+        // Calculate new scale
         const scale = newDistance / lastTwoFingerDistance.current;
         let newScale = oldScale * scale;
 
+        // Clamp scale
         if (newScale > 4) newScale = 4;
         if (newScale < minScale) newScale = minScale;
 
         stage.scale({ x: newScale, y: newScale });
 
-        // Adjust position to zoom around the center of the pinch
-        const stagePos = stage.position();
-        const clientRect = stage.container().getBoundingClientRect();
+        // Calculate new position
+        // Logic: The point on the map that WAS under lastCenter (WorldPoint)
+        // should now be under newCenter.
+        // WorldPoint = (lastCenterRel - oldPos) / oldScale
+        // newPos = newCenterRel - WorldPoint * newScale
+        
+        const worldPoint = {
+            x: (lastCenterRel.x - oldPos.x) / oldScale,
+            y: (lastCenterRel.y - oldPos.y) / oldScale
+        };
 
-        const tx = newCenter.x - clientRect.left;
-        const ty = newCenter.y - clientRect.top;
+        const newPosRaw = {
+            x: newCenterRel.x - worldPoint.x * newScale,
+            y: newCenterRel.y - worldPoint.y * newScale
+        };
 
-        const newX = tx - ((tx - stagePos.x) / oldScale) * newScale;
-        const newY = ty - ((ty - stagePos.y) / oldScale) * newScale;
-
-        stage.position({ x: newX, y: newY });
-      }
-
-      // Pan (single finger drag is handled by Konva draggable, this is for two-finger pan while pinching)
-      if (lastCenter.current) {
-        const dx = newCenter.x - lastCenter.current.x;
-        const dy = newCenter.y - lastCenter.current.y;
-        stage.move({ x: dx, y: dy });
+        // Constrain
+        const newPos = constrainPosition(newPosRaw, newScale);
+        stage.position(newPos);
+        stage.batchDraw();
       }
 
       lastTwoFingerDistance.current = newDistance;
       lastCenter.current = newCenter;
-      stage.batchDraw();
     }
   };
 

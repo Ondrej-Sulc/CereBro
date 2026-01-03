@@ -383,69 +383,92 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         )}>
           {/* Header */}
           <div className={cn(
-              "flex-none flex items-center justify-between p-3 sm:px-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10 gap-4",
+              "flex-none flex flex-col md:flex-row md:items-center justify-between p-3 sm:px-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10 gap-3 md:gap-4",
               isFullscreen && "hidden"
           )}>
-             {/* LEFT: Context & Metadata */}
-             <div className="flex items-center gap-4 overflow-hidden min-w-0">
-                <Link href="/planning/defense" className="flex-none">
-                  <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div className="flex flex-col overflow-hidden min-w-0">
-                  <div className="flex items-center gap-2">
-                     <Shield className="h-4 w-4 text-indigo-500 flex-shrink-0" />
-                     <h1 className="text-base sm:text-lg font-bold text-slate-100 truncate">{props.plan.name}</h1>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap overflow-x-auto no-scrollbar mask-linear-fade">
-                     <span>{props.plan.mapType === WarMapType.BIG_THING ? 'Big Thing' : 'Standard'}</span>
-                     
-                     <span className="text-slate-700">•</span>
+             {/* Top Row on Mobile: Context & View Toggle */}
+             <div className="flex items-center justify-between w-full md:w-auto gap-4">
+                 {/* LEFT: Context & Metadata */}
+                 <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                    <Link href="/planning/defense" className="flex-none">
+                      <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                        <ArrowLeft className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                    <div className="flex flex-col overflow-hidden min-w-0">
+                      <div className="flex items-center gap-2">
+                         <Shield className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                         <h1 className="text-base sm:text-lg font-bold text-slate-100 truncate">{props.plan.name}</h1>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap overflow-x-auto no-scrollbar mask-linear-fade">
+                         <span>{props.plan.mapType === WarMapType.BIG_THING ? 'Big Thing' : 'Standard'}</span>
+                         
+                         <span className="text-slate-700">•</span>
 
-                     {/* Compact Tier Selector */}
-                     <Select value={activeTier ? String(activeTier) : "none"} onValueChange={handleTierChange}>
-                        <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-indigo-300 focus:ring-0 gap-1">
-                            <span className="truncate">Tier: <span className={activeTier ? "text-indigo-400 font-medium" : ""}>{activeTier ?? '-'}</span></span>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">No Tier</SelectItem>
-                            {[1, 2, 3, 4, 5, 6].map(t => (
-                                <SelectItem key={t} value={String(t)}>
-                                    Tier {t}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                     </Select>
+                         {/* Compact Tier Selector */}
+                         <Select value={activeTier ? String(activeTier) : "none"} onValueChange={handleTierChange}>
+                            <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-indigo-300 focus:ring-0 gap-1">
+                                <span className="truncate">Tier: <span className={activeTier ? "text-indigo-400 font-medium" : ""}>{activeTier ?? '-'}</span></span>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No Tier</SelectItem>
+                                {[1, 2, 3, 4, 5, 6].map(t => (
+                                    <SelectItem key={t} value={String(t)}>
+                                        Tier {t}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                         </Select>
 
-                     <span className="text-slate-700">•</span>
+                         <span className="text-slate-700">•</span>
 
-                     {/* Compact Tactic Selector */}
-                     <Select value={activeTagId ? String(activeTagId) : "none"} onValueChange={handleTagChange}>
-                        <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-teal-300 focus:ring-0 gap-1 max-w-[150px]">
-                             <span className="truncate">Tag: <span className={activeTagId ? "text-teal-400 font-medium" : ""}>{activeTag?.name ?? '-'}</span></span>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">No Tag</SelectItem>
-                            {props.availableTags.map(t => (
-                                <SelectItem key={t.id} value={String(t.id)}>
-                                    <span className="truncate">{t.name}</span>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                     </Select>
-                  </div>
-                </div>
+                         {/* Compact Tactic Selector */}
+                         <Select value={activeTagId ? String(activeTagId) : "none"} onValueChange={handleTagChange}>
+                            <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-teal-300 focus:ring-0 gap-1 max-w-[150px]">
+                                 <span className="truncate">Tag: <span className={activeTagId ? "text-teal-400 font-medium" : ""}>{activeTag?.name ?? '-'}</span></span>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No Tag</SelectItem>
+                                {props.availableTags.map(t => (
+                                    <SelectItem key={t.id} value={String(t.id)}>
+                                        <span className="truncate">{t.name}</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                         </Select>
+                      </div>
+                    </div>
+                 </div>
+
+                 {/* Mobile View Toggle */}
+                 <div className="flex md:hidden items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800 shrink-0">
+                    <Button
+                        variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('roster')}
+                        className="h-7 px-2 text-xs"
+                    >
+                        <LayoutGrid className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                        variant={viewMode === 'map' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setViewMode('map')}
+                        className="h-7 px-2 text-xs"
+                    >
+                        <MapIcon className="h-3.5 w-3.5" />
+                    </Button>
+                 </div>
              </div>
 
              {/* CENTER: BG Navigation */}
-             <div className="hidden md:flex items-center p-1 rounded-lg bg-slate-900 border border-slate-800 absolute left-1/2 -translate-x-1/2">
+             <div className="flex items-center p-1 rounded-lg bg-slate-900 border border-slate-800 md:absolute md:left-1/2 md:-translate-x-1/2 mx-auto shrink-0">
                 <button
                     onClick={() => setActiveTab('bg1')}
                     className={cn(
                         "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
                         activeTab === 'bg1' 
-                            ? "bg-red-500/10 text-red-400 border-red-500/20 shadow-sm"
+                            ? "bg-red-500/10 text-red-400 border-red-500/20 shadow-sm ring-1 ring-red-500/20"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                     )}
                 >
@@ -456,7 +479,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     className={cn(
                         "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
                         activeTab === 'bg2' 
-                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-sm"
+                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-sm ring-1 ring-blue-500/20"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                     )}
                 >
@@ -467,7 +490,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     className={cn(
                         "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
                         activeTab === 'bg3' 
-                            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 shadow-sm"
+                            ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 shadow-sm ring-1 ring-yellow-500/20"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                     )}
                 >
@@ -476,9 +499,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
              </div>
 
              {/* RIGHT: View & Actions */}
-             <div className="flex items-center gap-2">
-                 {/* Mobile BG Toggle (Simple dropdown or condensed) - For now keeping desktop focus, but ensuring flex structure works */}
-                 
+             <div className="hidden md:flex items-center gap-2">
                  <div className="flex items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800">
                     <Button
                         variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
@@ -508,7 +529,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     variant={rightPanelState === 'tools' ? "secondary" : "outline"}
                     size="sm"
                     onClick={toggleTools}
-                    className="hidden md:flex gap-2 h-8"
+                    className="flex gap-2 h-8"
                  >
                     <Wrench className="h-3.5 w-3.5" />
                     <span className="hidden lg:inline">Tools</span>
