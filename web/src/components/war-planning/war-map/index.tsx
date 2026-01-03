@@ -68,6 +68,7 @@ const WarMap = memo(function WarMap({
   const gestureStartDist = useRef<number | null>(null);
   const gestureStartPos = useRef<{ x: number; y: number } | null>(null);
   const gestureStartCenter = useRef<{ x: number; y: number } | null>(null);
+  const isZooming = useRef(false);
 
   // Determine Map Data based on War Type
   const isBigThing = mapType === WarMapType.BIG_THING;
@@ -271,6 +272,9 @@ const WarMap = memo(function WarMap({
 
     const touches = e.evt.touches;
     if (touches.length === 2) {
+      isZooming.current = true;
+      stage.draggable(false); // Disable default drag to avoid conflict
+
       const p1 = { x: touches[0].clientX, y: touches[0].clientY };
       const p2 = { x: touches[1].clientX, y: touches[1].clientY };
       
@@ -294,8 +298,33 @@ const WarMap = memo(function WarMap({
     if (!stage) return;
 
     const touches = e.evt.touches;
-    if (touches.length === 2 && gestureStartDist.current && gestureStartScale.current && gestureStartPos.current && gestureStartCenter.current) {
+    
+    // Only process if strictly 2 touches (pinch/zoom)
+    if (touches.length === 2) {
       e.evt.preventDefault(); // Prevent page scroll
+      
+      if (!isZooming.current) {
+         isZooming.current = true;
+         stage.draggable(false);
+      }
+
+      // Safety: If for some reason start refs are null (e.g. initial touch wasn't caught as 2), init them now
+      if (!gestureStartDist.current || !gestureStartScale.current || !gestureStartPos.current || !gestureStartCenter.current) {
+          const p1 = { x: touches[0].clientX, y: touches[0].clientY };
+          const p2 = { x: touches[1].clientX, y: touches[1].clientY };
+          const dist = getDistance(p1, p2);
+          const center = getCenter(p1, p2);
+          const clientRect = stage.container().getBoundingClientRect();
+
+          gestureStartDist.current = dist;
+          gestureStartScale.current = stage.scaleX();
+          gestureStartPos.current = stage.position();
+          gestureStartCenter.current = {
+              x: center.x - clientRect.left,
+              y: center.y - clientRect.top
+          };
+          return; // Skip this frame to establish baseline
+      }
 
       const p1 = { x: touches[0].clientX, y: touches[0].clientY };
       const p2 = { x: touches[1].clientX, y: touches[1].clientY };
@@ -319,11 +348,6 @@ const WarMap = memo(function WarMap({
       stage.scale({ x: newScale, y: newScale });
 
       // 2. Calculate New Position (Absolute calculation from START state)
-      // Logic: P_start (World Point under gesture start center) must equal P_current (World Point under current gesture center)
-      // P_start = (StartCenter - StartPos) / StartScale
-      // P_current = (CurrentCenter - NewPos) / NewScale
-      // NewPos = CurrentCenter - (P_start * NewScale)
-
       const pStart = {
           x: (gestureStartCenter.current.x - gestureStartPos.current.x) / gestureStartScale.current,
           y: (gestureStartCenter.current.y - gestureStartPos.current.y) / gestureStartScale.current
@@ -342,9 +366,13 @@ const WarMap = memo(function WarMap({
   };
 
   const handleMultiTouchEnd = (e: KonvaEventObject<TouchEvent>) => {
-    // If one finger lifts, the gesture ends.
-    // Reset start refs.
+    const stage = e.target.getStage();
+    // If fewer than 2 fingers, zoom gesture ends.
     if (e.evt.touches.length < 2) {
+        if (isZooming.current) {
+            isZooming.current = false;
+            if (stage) stage.draggable(true); // Re-enable drag for single finger
+        }
         gestureStartDist.current = null;
         gestureStartScale.current = null;
         gestureStartPos.current = null;
