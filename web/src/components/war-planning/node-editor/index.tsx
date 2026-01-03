@@ -190,23 +190,32 @@ export default function NodeEditor({
     // Ensure currently assigned player is in the list (if any), even if moved BG
     if (currentFight?.playerId) {
         const assigned = players.find(p => p.id === currentFight.playerId);
-        if (assigned && !filtered.includes(assigned)) {
+        if (assigned && !filtered.some(p => p.id === assigned.id)) {
             filtered.push(assigned);
+        }
+    }
+
+    // Ensure currently SELECTED player is in the list
+    if (playerId) {
+        const selected = players.find(p => p.id === playerId);
+        if (selected && !filtered.some(p => p.id === selected.id)) {
+            filtered.push(selected);
         }
     }
 
     if (!attackerId) {
          return filtered.sort((a, b) => a.ingameName.localeCompare(b.ingameName));
     }
-    // ... (rest of availablePlayers logic)
-
-    // Filter players who have this champion
-    const owners = filtered.filter(p => p.roster.some(r => r.championId === attackerId));
     
-    // Sort owners by rank/ascension/stars of that champion
-    return owners.sort((a, b) => {
-        const rosterA = a.roster.find(r => r.championId === attackerId)!;
-        const rosterB = b.roster.find(r => r.championId === attackerId)!;
+    // Sort all available players by rank/ascension/stars of the selected champion
+    return filtered.sort((a, b) => {
+        const rosterA = a.roster.find(r => r.championId === attackerId);
+        const rosterB = b.roster.find(r => r.championId === attackerId);
+        
+        // Handle non-owners (put them at bottom)
+        if (!rosterA && !rosterB) return a.ingameName.localeCompare(b.ingameName);
+        if (!rosterA) return 1;
+        if (!rosterB) return -1;
         
         // Priority: Stars > Rank > Ascended
         if (rosterA.stars !== rosterB.stars) return rosterB.stars - rosterA.stars;
@@ -214,7 +223,7 @@ export default function NodeEditor({
         if (rosterA.isAscended !== rosterB.isAscended) return (rosterA.isAscended ? 1 : 0) - (rosterB.isAscended ? 1 : 0);
         return a.ingameName.localeCompare(b.ingameName);
     });
-  }, [players, attackerId, battlegroup, currentFight?.playerId]);
+  }, [players, attackerId, battlegroup, currentFight?.playerId, playerId]);
 
   // 2. Display Champions (Filtered by Player + Rank Info + BANS)
   const displayChampions = useMemo(() => {
@@ -228,7 +237,24 @@ export default function NodeEditor({
     const player = players.find(p => p.id === playerId);
     if (!player) return allowedChampions;
 
-    const rosterMap = new Map(player.roster.map(r => [r.championId, r]));
+    // Create a map of the "Best" version of each champion in the player's roster
+    const rosterMap = new Map();
+    player.roster.forEach(r => {
+        const existing = rosterMap.get(r.championId);
+        if (!existing) {
+            rosterMap.set(r.championId, r);
+        } else {
+             // Priority: Stars > Rank > Ascended
+            const isBetter = 
+                (r.stars > existing.stars) ||
+                (r.stars === existing.stars && r.rank > existing.rank) ||
+                (r.stars === existing.stars && r.rank === existing.rank && r.isAscended && !existing.isAscended);
+            
+            if (isBetter) {
+                rosterMap.set(r.championId, r);
+            }
+        }
+    });
     
     // Identify War Team (Assigned or Extra for this player in this war)
     const warTeamIds = new Set<number>();

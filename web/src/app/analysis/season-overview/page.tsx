@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skull, Trophy, AlertTriangle, Shield, Swords, Target, BarChart2 } from "lucide-react";
+import { Skull, Trophy, AlertTriangle, Shield, Swords, Target, BarChart2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeasonSelector } from "./season-selector";
 import { getChampionImageUrl } from "@/lib/championHelper";
@@ -10,6 +10,8 @@ import { ChampionImages } from "@/types/champion";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionClass } from "@prisma/client";
 import { getFromCache } from "@/lib/cache";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { redirect } from "next/navigation";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -46,9 +48,44 @@ interface NodeStat {
 export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   const awaitedSearchParams = await searchParams;
 
-  // 1. Fetch available seasons (Cached for 1 hour)
-  const seasons = await getFromCache('distinct-seasons', 3600, async () => {
+  // 0. Check Authentication and Alliance
+  const player = await getUserPlayerWithAlliance();
+  
+  if (!player) {
+    redirect("/api/auth/signin?callbackUrl=/analysis/season-overview");
+  }
+
+  if (!player.allianceId) {
+    return (
+        <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                    <Trophy className="h-6 w-6 text-yellow-500" />
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    Season Overview
+                </h1>
+            </div>
+            <Card className="bg-slate-950/50 border-slate-800/60 p-12 flex flex-col items-center justify-center text-center gap-4">
+                <Lock className="w-12 h-12 text-slate-700" />
+                <div className="space-y-2">
+                    <h2 className="text-xl font-semibold text-slate-300">Alliance Membership Required</h2>
+                    <p className="text-slate-500 max-w-md">
+                        You must be a member of an alliance to view season statistics. 
+                        Please join an alliance in Discord using CereBro.
+                    </p>
+                </div>
+            </Card>
+        </div>
+    );
+  }
+
+  const allianceId = player.allianceId;
+
+  // 1. Fetch available seasons (Cached for 1 hour per alliance)
+  const seasons = await getFromCache(`distinct-seasons-${allianceId}`, 3600, async () => {
     const distinctSeasons = await prisma.war.findMany({
+        where: { allianceId },
         distinct: ['season'],
         select: { season: true },
         orderBy: { season: 'desc' }
@@ -64,16 +101,21 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                 <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                     <Trophy className="h-6 w-6 text-yellow-500" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                    Season Overview
-                </h1>
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                        Season Overview
+                    </h1>
+                    <p className="text-sm text-slate-400 font-medium">
+                        {player.alliance?.name}
+                    </p>
+                </div>
             </div>
             <Card className="bg-slate-950/50 border-slate-800/60 p-12 flex flex-col items-center justify-center text-center gap-4">
                 <BarChart2 className="w-12 h-12 text-slate-700" />
                 <div className="space-y-2">
                     <h2 className="text-xl font-semibold text-slate-300">No Season Data Found</h2>
                     <p className="text-slate-500 max-w-md">
-                        There are no recorded alliance war seasons in the database yet. 
+                        There are no recorded alliance war seasons in the database for your alliance yet. 
                         Complete some wars to see performance analysis here.
                     </p>
                 </div>
@@ -100,11 +142,12 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
       selectedSeason = latestSeason;
   }
 
-    // 2. Fetch War Data (Cached for 5 minutes)
-    const wars = await getFromCache(`season-wars-${selectedSeason}`, 300, () => 
+    // 2. Fetch War Data (Cached for 5 minutes per alliance/season)
+    const wars = await getFromCache(`season-wars-${selectedSeason}-${allianceId}`, 300, () => 
         prisma.war.findMany({
             where: { 
                 season: selectedSeason,
+                allianceId,
                 status: { not: 'PLANNING' },
                 warNumber: { not: null } // Exclude Offseason wars
             },
@@ -256,9 +299,14 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                 <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
                     <Trophy className="h-6 w-6 text-yellow-500" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                    Season Overview
-                </h1>
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                        Season Overview
+                    </h1>
+                    <p className="text-sm text-slate-400 font-medium">
+                        {player.alliance?.name}
+                    </p>
+                </div>
             </div>
             <SeasonSelector seasons={seasons} currentSeason={selectedSeason} />
           </div>

@@ -44,3 +44,21 @@ export async function isUserBotAdmin(): Promise<boolean> {
 
   return !!adminProfile;
 }
+
+export async function getUserPlayerWithAlliance() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+
+  if (!account?.providerAccountId) return null;
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId, isActive: true },
+    include: { alliance: true },
+  });
+
+  return player;
+}

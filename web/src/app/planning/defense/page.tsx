@@ -1,39 +1,19 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import DefenseDashboard from "@/components/war-planning/defense-dashboard";
 import { redirect } from "next/navigation";
 import FormPageBackground from "@/components/FormPageBackground";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
 export default async function DefensePlanningPage() {
-  const session = await auth();
+  const player = await getUserPlayerWithAlliance();
 
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin");
+  if (!player) {
+    redirect("/api/auth/signin?callbackUrl=/planning/defense");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    return (
-      <div className="flex h-screen items-center justify-center text-slate-400">
-        No linked Discord account found.
-      </div>
-    );
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId) {
+  if (!player.allianceId) {
     return (
       <div className="flex h-screen items-center justify-center text-slate-400">
         You must be in an alliance to use the War Planner.

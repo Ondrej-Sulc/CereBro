@@ -17,6 +17,7 @@ import { auth } from "@/auth";
 import { SearchFilters } from "@/components/SearchFilters";
 import { UploadFightButton } from "@/components/UploadFightButton";
 import { getCachedChampions } from "@/lib/data/champions";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export const dynamic = 'force-dynamic';
 
@@ -83,20 +84,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   });
 
   // Authentication & Current User Check
-  const session = await auth();
-  let currentUser: (Player & { alliance: Alliance | null }) | null = null;
-
-  if (session?.user?.id) {
-    const account = await prisma.account.findFirst({
-      where: { userId: session.user.id, provider: 'discord' }
-    });
-    if (account?.providerAccountId) {
-      currentUser = await prisma.player.findFirst({
-        where: { discordId: account.providerAccountId },
-        include: { alliance: true }
-      });
-    }
-  }
+  const currentUser = await getUserPlayerWithAlliance();
 
   const rawFights = await prisma.warFight.findMany({
     where: {

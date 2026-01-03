@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getRoster, RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { redirect } from "next/navigation";
@@ -12,6 +11,7 @@ import Image from "next/image";
 import { ChampionClass } from "@prisma/client"; // Import ChampionClass
 import { getChampionClassColors } from "@/lib/championClassHelper"; // Import class colors helper
 import { cn } from "@/lib/utils"; // Import cn
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
     SCIENCE: "/icons/Science.png",
@@ -24,33 +24,10 @@ const CLASS_ICONS: Record<ChampionClass, string> = {
 };
 
 export default async function ProfilePage() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin?callbackUrl=/profile");
-  }
-
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-
-  if (!account?.providerAccountId) {
-    return <div className="p-8 text-center text-red-400">Could not resolve Discord Account.</div>;
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId, isActive: true },
-    include: { alliance: true },
-  });
-
+  const player = await getUserPlayerWithAlliance();
+  
   if (!player) {
-    return (
-      <div className="container mx-auto p-8 max-w-4xl text-center space-y-4">
-        <h1 className="text-3xl font-bold">Profile Not Found</h1>
-        <p className="text-slate-400">
-          You are not registered with CereBro. Please use the <code className="bg-slate-800 px-1 py-0.5 rounded">/register</code> command in Discord or join an alliance.
-        </p>
-      </div>
-    );
+    redirect("/api/auth/signin?callbackUrl=/profile");
   }
 
   const rosterResult = await getRoster(player.id, null, null, null);

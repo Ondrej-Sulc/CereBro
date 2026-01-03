@@ -1,32 +1,22 @@
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import WarPlanningDashboard from "@/components/war-planning/war-planning-dashboard";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export default async function WarPlanningPage() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin");
+  const player = await getUserPlayerWithAlliance();
+  
+  if (!player) {
+    redirect("/api/auth/signin?callbackUrl=/planning");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    return <p>Error: No linked Discord account found.</p>;
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    return <p>You must be an Alliance Officer to access War Planning.</p>;
+  if (!player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    return (
+        <div className="container mx-auto py-20 text-center space-y-4">
+            <h1 className="text-2xl font-bold text-white">Access Denied</h1>
+            <p className="text-slate-400">You must be an Alliance Officer to access War Planning.</p>
+        </div>
+    );
   }
 
   // Fetch past wars for the alliance
