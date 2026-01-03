@@ -7,6 +7,7 @@ import { WarFight, WarMapType, War, Alliance } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import logger from "@cerebro/core/services/loggerService";
 
 const createWarSchema = z.object({
   season: z.number().min(1),
@@ -485,6 +486,7 @@ export async function removeExtraChampion(id: string) {
   });
 
   if (!extraChampionToDelete) {
+      logger.warn({ extraId: id, playerId: player.id }, "Attempted to delete non-existent extra champion");
       throw new Error("Extra Champion not found.");
   }
 
@@ -493,6 +495,7 @@ export async function removeExtraChampion(id: string) {
   }
 
   await prisma.warExtraChampion.delete({ where: { id } });
+  logger.info({ extraId: id, playerId: player.id }, "Deleted extra champion");
 }
 
 export async function addWarBan(warId: string, championId: number) {
