@@ -8,9 +8,12 @@ import fs from 'fs/promises';
 import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification } from '@/lib/api/submission-helpers';
 
 export async function POST(req: NextRequest) {
-  const { fields, tempFilePath } = await parseFormData(req);
+  let tempFilePath: string | null = null;
 
   try {
+    const { fields, tempFilePath: path } = await parseFormData(req);
+    tempFilePath = path;
+
     const {
       token, playerId, visibility, title, description,
       fightIds: existingFightIdsJson,

@@ -111,7 +111,15 @@ export const DefensePlayerListPanel = ({
         {/* List */}
         <ScrollArea className="flex-1 bg-slate-950">
             <div className="p-2 space-y-1">
-                {sortedPlayers.map(player => {
+                {sortedPlayers.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center space-y-3">
+                        <Users className="w-10 h-10 text-slate-800" />
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-slate-400">No Players in BG {currentBattlegroup}</p>
+                            <p className="text-xs text-slate-600">Assign players to battlegroup roles in Discord to see them here.</p>
+                        </div>
+                    </div>
+                ) : sortedPlayers.map(player => {
                     const stat = playerStats.get(player.id);
                     const count = stat?.placementCount || 0;
                     const isSelected = highlightedPlayerId === player.id;

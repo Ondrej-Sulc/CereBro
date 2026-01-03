@@ -4,6 +4,7 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import logger from '@cerebro/core/services/loggerService';
 
 interface ParsedFormData {
   fields: Record<string, string>;
@@ -43,7 +44,16 @@ export const parseFormData = (req: NextRequest): Promise<ParsedFormData> => {
       resolve({ fields, tempFilePath });
     });
 
+    const cleanup = () => {
+      if (tempFilePath) {
+          fs.unlink(tempFilePath, (err) => {
+              if (err) logger.error({ err, tempFilePath }, "Failed to cleanup temp file");
+          });
+      }
+    };
+
     bb.on('error', (err) => {
+      cleanup();
       reject(err);
     });
 
@@ -57,6 +67,9 @@ export const parseFormData = (req: NextRequest): Promise<ParsedFormData> => {
                 }
                 bb.write(value);
                 pump();
+            }).catch((err) => {
+                cleanup();
+                reject(err);
             });
         };
         pump();
