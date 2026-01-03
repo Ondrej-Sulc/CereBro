@@ -63,9 +63,11 @@ const WarMap = memo(function WarMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 1000, height: 800 });
 
-  // Refs for touch events (pinch-to-zoom)
-  const lastTwoFingerDistance = useRef<number | null>(null);
-  const lastCenter = useRef<{ x: number; y: number } | null>(null);
+  // Refs for touch events (pinch-to-zoom) - Absolute Start Approach
+  const gestureStartScale = useRef<number | null>(null);
+  const gestureStartDist = useRef<number | null>(null);
+  const gestureStartPos = useRef<{ x: number; y: number } | null>(null);
+  const gestureStartCenter = useRef<{ x: number; y: number } | null>(null);
 
   // Determine Map Data based on War Type
   const isBigThing = mapType === WarMapType.BIG_THING;
@@ -271,8 +273,19 @@ const WarMap = memo(function WarMap({
     if (touches.length === 2) {
       const p1 = { x: touches[0].clientX, y: touches[0].clientY };
       const p2 = { x: touches[1].clientX, y: touches[1].clientY };
-      lastTwoFingerDistance.current = getDistance(p1, p2);
-      lastCenter.current = getCenter(p1, p2);
+      
+      const dist = getDistance(p1, p2);
+      const center = getCenter(p1, p2);
+      const clientRect = stage.container().getBoundingClientRect();
+
+      // Initialize Start Values
+      gestureStartDist.current = dist;
+      gestureStartScale.current = stage.scaleX();
+      gestureStartPos.current = stage.position();
+      gestureStartCenter.current = {
+          x: center.x - clientRect.left,
+          y: center.y - clientRect.top
+      };
     }
   };
 
@@ -281,73 +294,62 @@ const WarMap = memo(function WarMap({
     if (!stage) return;
 
     const touches = e.evt.touches;
-    if (touches.length === 2) {
+    if (touches.length === 2 && gestureStartDist.current && gestureStartScale.current && gestureStartPos.current && gestureStartCenter.current) {
       e.evt.preventDefault(); // Prevent page scroll
 
       const p1 = { x: touches[0].clientX, y: touches[0].clientY };
       const p2 = { x: touches[1].clientX, y: touches[1].clientY };
 
-      const newDistance = getDistance(p1, p2);
-      const newCenter = getCenter(p1, p2);
+      const currentDist = getDistance(p1, p2);
+      const currentCenterClient = getCenter(p1, p2);
       const clientRect = stage.container().getBoundingClientRect();
-      
-      // Convert client coordinates to stage-relative coordinates (unscaled)
-      const newCenterRel = {
-        x: newCenter.x - clientRect.left,
-        y: newCenter.y - clientRect.top
+      const currentCenterRel = {
+          x: currentCenterClient.x - clientRect.left,
+          y: currentCenterClient.y - clientRect.top
       };
-      
-      // We need the previous center in stage-relative coordinates too
-      // lastCenter.current is in client coordinates
-      const lastCenterRel = lastCenter.current ? {
-        x: lastCenter.current.x - clientRect.left,
-        y: lastCenter.current.y - clientRect.top
-      } : newCenterRel;
 
-      const oldScale = stage.scaleX();
-      const oldPos = stage.position();
+      // 1. Calculate New Scale
+      const scaleMultiplier = currentDist / gestureStartDist.current;
+      let newScale = gestureStartScale.current * scaleMultiplier;
 
-      if (lastTwoFingerDistance.current) {
-        // Calculate new scale
-        const scale = newDistance / lastTwoFingerDistance.current;
-        let newScale = oldScale * scale;
+      // Clamp Scale
+      if (newScale > 4) newScale = 4;
+      if (newScale < minScale) newScale = minScale;
 
-        // Clamp scale
-        if (newScale > 4) newScale = 4;
-        if (newScale < minScale) newScale = minScale;
+      stage.scale({ x: newScale, y: newScale });
 
-        stage.scale({ x: newScale, y: newScale });
+      // 2. Calculate New Position (Absolute calculation from START state)
+      // Logic: P_start (World Point under gesture start center) must equal P_current (World Point under current gesture center)
+      // P_start = (StartCenter - StartPos) / StartScale
+      // P_current = (CurrentCenter - NewPos) / NewScale
+      // NewPos = CurrentCenter - (P_start * NewScale)
 
-        // Calculate new position
-        // Logic: The point on the map that WAS under lastCenter (WorldPoint)
-        // should now be under newCenter.
-        // WorldPoint = (lastCenterRel - oldPos) / oldScale
-        // newPos = newCenterRel - WorldPoint * newScale
-        
-        const worldPoint = {
-            x: (lastCenterRel.x - oldPos.x) / oldScale,
-            y: (lastCenterRel.y - oldPos.y) / oldScale
-        };
+      const pStart = {
+          x: (gestureStartCenter.current.x - gestureStartPos.current.x) / gestureStartScale.current,
+          y: (gestureStartCenter.current.y - gestureStartPos.current.y) / gestureStartScale.current
+      };
 
-        const newPosRaw = {
-            x: newCenterRel.x - worldPoint.x * newScale,
-            y: newCenterRel.y - worldPoint.y * newScale
-        };
+      const newPosRaw = {
+          x: currentCenterRel.x - (pStart.x * newScale),
+          y: currentCenterRel.y - (pStart.y * newScale)
+      };
 
-        // Constrain
-        const newPos = constrainPosition(newPosRaw, newScale);
-        stage.position(newPos);
-        stage.batchDraw();
-      }
-
-      lastTwoFingerDistance.current = newDistance;
-      lastCenter.current = newCenter;
+      // 3. Constrain
+      const newPos = constrainPosition(newPosRaw, newScale);
+      stage.position(newPos);
+      stage.batchDraw();
     }
   };
 
   const handleMultiTouchEnd = (e: KonvaEventObject<TouchEvent>) => {
-    lastTwoFingerDistance.current = null;
-    lastCenter.current = null;
+    // If one finger lifts, the gesture ends.
+    // Reset start refs.
+    if (e.evt.touches.length < 2) {
+        gestureStartDist.current = null;
+        gestureStartScale.current = null;
+        gestureStartPos.current = null;
+        gestureStartCenter.current = null;
+    }
   };
 
   const fightsByNode = useMemo(() => {
