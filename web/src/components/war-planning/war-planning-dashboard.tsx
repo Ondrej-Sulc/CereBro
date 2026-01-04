@@ -63,6 +63,7 @@ interface WarPlanningDashboardProps {
   defaultTier: number;
   userTimezone?: string | null;
   isBotAdmin?: boolean;
+  isOfficer?: boolean;
 }
 
 export default function WarPlanningDashboard({
@@ -72,6 +73,7 @@ export default function WarPlanningDashboard({
   defaultTier,
   userTimezone,
   isBotAdmin,
+  isOfficer = false,
 }: WarPlanningDashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
@@ -123,104 +125,106 @@ export default function WarPlanningDashboard({
                     </Link>
                 </>
             )}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-                <Button size="lg" className="bg-sky-600 hover:bg-sky-500 text-white shadow-glow transition-all">
-                <Plus className="mr-2 h-5 w-5" />
-                Start New War
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800">
-                <DialogHeader>
-                <DialogTitle>Start New War</DialogTitle>
-                <DialogDescription>
-                    Set up details for the next Alliance War.
-                </DialogDescription>
-                </DialogHeader>
-                <form action={createWar} className="grid gap-4 py-4">
-                <input type="hidden" name="isOffSeason" value={isOffSeason ? "true" : "false"} />
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                    <Label htmlFor="season">Season</Label>
-                    <Input
-                        id="season"
-                        name="season"
-                        type="number"
-                        required
-                        defaultValue={defaultSeason}
-                        className="bg-slate-900 border-slate-800 no-spin-buttons"
+            {isOfficer && (
+              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                  <Button size="lg" className="bg-sky-600 hover:bg-sky-500 text-white shadow-glow transition-all">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Start New War
+                  </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800">
+                  <DialogHeader>
+                  <DialogTitle>Start New War</DialogTitle>
+                  <DialogDescription>
+                      Set up details for the next Alliance War.
+                  </DialogDescription>
+                  </DialogHeader>
+                  <form action={createWar} className="grid gap-4 py-4">
+                  <input type="hidden" name="isOffSeason" value={isOffSeason ? "true" : "false"} />
+                  <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                      <Label htmlFor="season">Season</Label>
+                      <Input
+                          id="season"
+                          name="season"
+                          type="number"
+                          required
+                          defaultValue={defaultSeason}
+                          className="bg-slate-900 border-slate-800 no-spin-buttons"
+                      />
+                      </div>
+                      <div className="space-y-2">
+                      <Label htmlFor="warNumber">War #</Label>
+                      <Input
+                          id="warNumber"
+                          name="warNumber"
+                          type="number"
+                          disabled={isOffSeason}
+                          defaultValue={defaultWarNumber}
+                          className="bg-slate-900 border-slate-800 no-spin-buttons disabled:opacity-50"
+                      />
+                      </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 py-2">
+                    <Checkbox 
+                      id="isOffSeason" 
+                      checked={isOffSeason}
+                      onCheckedChange={(checked) => setIsOffSeason(checked as boolean)}
                     />
-                    </div>
-                    <div className="space-y-2">
-                    <Label htmlFor="warNumber">War #</Label>
-                    <Input
-                        id="warNumber"
-                        name="warNumber"
-                        type="number"
-                        disabled={isOffSeason}
-                        defaultValue={defaultWarNumber}
-                        className="bg-slate-900 border-slate-800 no-spin-buttons disabled:opacity-50"
-                    />
-                    </div>
-                </div>
-                
-                <div className="flex items-center space-x-2 py-2">
-                  <Checkbox 
-                    id="isOffSeason" 
-                    checked={isOffSeason}
-                    onCheckedChange={(checked) => setIsOffSeason(checked as boolean)}
-                  />
-                  <Label 
-                    htmlFor="isOffSeason" 
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    Off Season War
-                  </Label>
-                </div>
+                    <Label 
+                      htmlFor="isOffSeason" 
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      Off Season War
+                    </Label>
+                  </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="tier">Tier</Label>
-                    <Input
-                    id="tier"
-                    name="tier"
-                    type="number"
-                    required
-                    defaultValue={defaultTier}
-                    className="bg-slate-900 border-slate-800 no-spin-buttons"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="mapType">Map Type</Label>
-                    <Select name="mapType" defaultValue={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
-                        <SelectTrigger className="bg-slate-900 border-slate-800">
-                            <SelectValue placeholder="Select Map Type" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-800">
-                            <SelectItem value={WarMapType.STANDARD}>Standard Map (50 Nodes)</SelectItem>
-                            <SelectItem value={WarMapType.BIG_THING}>Big Thing (10 Nodes)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="opponent">Opponent Alliance</Label>
-                    <Input
-                    id="opponent"
-                    name="opponent"
-                    type="text"
-                    required
-                    placeholder="e.g. [TAG] Alliance Name"
-                    className="bg-slate-900 border-slate-800"
-                    />
-                </div>
-                <div className="flex justify-end pt-4">
-                    <Button type="submit" className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg shadow-sky-900/20 transition-all duration-300 transform hover:scale-[1.02]">
-                    <Rocket className="mr-2 h-4 w-4" />
-                    Create War Plan
-                    </Button>
-                </div>
-                </form>
-            </DialogContent>
-            </Dialog>
+                  <div className="space-y-2">
+                      <Label htmlFor="tier">Tier</Label>
+                      <Input
+                      id="tier"
+                      name="tier"
+                      type="number"
+                      required
+                      defaultValue={defaultTier}
+                      className="bg-slate-900 border-slate-800 no-spin-buttons"
+                      />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="mapType">Map Type</Label>
+                      <Select name="mapType" defaultValue={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
+                          <SelectTrigger className="bg-slate-900 border-slate-800">
+                              <SelectValue placeholder="Select Map Type" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-slate-900 border-slate-800">
+                              <SelectItem value={WarMapType.STANDARD}>Standard Map (50 Nodes)</SelectItem>
+                              <SelectItem value={WarMapType.BIG_THING}>Big Thing (10 Nodes)</SelectItem>
+                          </SelectContent>
+                      </Select>
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="opponent">Opponent Alliance</Label>
+                      <Input
+                      id="opponent"
+                      name="opponent"
+                      type="text"
+                      required
+                      placeholder="e.g. [TAG] Alliance Name"
+                      className="bg-slate-900 border-slate-800"
+                      />
+                  </div>
+                  <div className="flex justify-end pt-4">
+                      <Button type="submit" className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg shadow-sky-900/20 transition-all duration-300 transform hover:scale-[1.02]">
+                      <Rocket className="mr-2 h-4 w-4" />
+                      Create War Plan
+                      </Button>
+                  </div>
+                  </form>
+              </DialogContent>
+              </Dialog>
+            )}
         </div>
       </div>
 
@@ -240,7 +244,7 @@ export default function WarPlanningDashboard({
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {activeWars.map((war) => (
-              <WarCard key={war.id} war={war} isActive userTimezone={userTimezone} />
+              <WarCard key={war.id} war={war} isActive userTimezone={userTimezone} isOfficer={isOfficer} />
             ))}
           </div>
         )}
@@ -258,7 +262,7 @@ export default function WarPlanningDashboard({
         ) : (
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
             {archivedWars.map((war) => (
-              <WarCard key={war.id} war={war} userTimezone={userTimezone} />
+              <WarCard key={war.id} war={war} userTimezone={userTimezone} isOfficer={isOfficer} />
             ))}
           </div>
         )}
@@ -267,7 +271,7 @@ export default function WarPlanningDashboard({
   );
 }
 
-function WarCard({ war, isActive = false, userTimezone }: { war: War; isActive?: boolean; userTimezone?: string | null }) {
+function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War; isActive?: boolean; userTimezone?: string | null; isOfficer?: boolean }) {
   const [dateString, setDateString] = useState<string>("");
   const { toast } = useToast();
 
@@ -329,45 +333,47 @@ function WarCard({ war, isActive = false, userTimezone }: { war: War; isActive?:
           </Button>
         </Link>
         
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-500 hover:bg-red-500/10">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="bg-slate-950 border-slate-800">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the war plan against <span className="text-white font-semibold">{war.enemyAlliance}</span> and all associated fight data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:text-white">Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={async () => {
-                  try {
-                    await deleteWar(war.id);
-                    toast({
-                      title: "War Deleted",
-                      description: `War against ${war.enemyAlliance} has been deleted.`
-                    });
-                  } catch (error) {
-                    console.error("Failed to delete war:", error);
-                    toast({
-                      title: "Delete Failed",
-                      description: "Could not delete the war plan. Please try again.",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                Delete War
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {isOfficer && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-500 hover:bg-red-500/10">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-slate-950 border-slate-800">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the war plan against <span className="text-white font-semibold">{war.enemyAlliance}</span> and all associated fight data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:text-white">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={async () => {
+                    try {
+                      await deleteWar(war.id);
+                      toast({
+                        title: "War Deleted",
+                        description: `War against ${war.enemyAlliance} has been deleted.`
+                      });
+                    } catch (error) {
+                      console.error("Failed to delete war:", error);
+                      toast({
+                        title: "Delete Failed",
+                        description: "Could not delete the war plan. Please try again.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Delete War
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </CardFooter>
     </Card>
   );

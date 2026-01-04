@@ -17,6 +17,7 @@ interface DefenseRosterViewProps {
   onSelectPlayer: (playerId: string) => void;
   activeTag?: Tag | null;
   onMove: (placementId: string, targetNodeNumber: number) => void;
+  isReadOnly?: boolean;
 }
 
 export const DefenseRosterView = ({
@@ -30,7 +31,8 @@ export const DefenseRosterView = ({
   selectedPlayerId,
   onSelectPlayer,
   activeTag,
-  onMove
+  onMove,
+  isReadOnly = false
 }: DefenseRosterViewProps) => {
   
   const championLimit = mapType === WarMapType.BIG_THING ? 1 : 5;
@@ -85,6 +87,7 @@ export const DefenseRosterView = ({
                             onSelect={onSelectPlayer}
                             activeTag={activeTag}
                             onMove={onMove}
+                            isReadOnly={isReadOnly}
                         />
                     ))}
                 </div>

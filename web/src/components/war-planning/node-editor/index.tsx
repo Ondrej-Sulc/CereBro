@@ -52,6 +52,7 @@ interface NodeEditorProps {
   warBans: WarBanWithChampion[];
   currentFights: FightWithNode[];
   extraChampions: ExtraChampion[];
+  isReadOnly?: boolean;
 }
 
 export default function NodeEditor({
@@ -73,6 +74,7 @@ export default function NodeEditor({
   warBans,
   currentFights,
   extraChampions,
+  isReadOnly = false,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -406,8 +408,9 @@ export default function NodeEditor({
                     champions={champions}
                     value={defenderId !== undefined ? String(defenderId) : ""}
                     onSelect={handleDefenderChange}
-                    open={isDefenderOpen}
-                    onOpenChange={setIsDefenderOpen}
+                    open={!isReadOnly && isDefenderOpen}
+                    onOpenChange={(val) => !isReadOnly && setIsDefenderOpen(val)}
+                    disabled={isReadOnly}
                   />
                   {defenderTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
@@ -429,6 +432,7 @@ export default function NodeEditor({
                 value={playerId}
                 onSelect={handlePlayerChange}
                 attackerId={attackerId}
+                disabled={isReadOnly}
               />
             </div>
           </div>
@@ -443,6 +447,7 @@ export default function NodeEditor({
                     value={attackerId !== undefined ? String(attackerId) : ""}
                     onSelect={handleAttackerChange}
                     placeholder={playerId ? "Select from roster..." : "Select counter..."}
+                    disabled={isReadOnly}
                   />
                   {attackerTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
@@ -463,7 +468,8 @@ export default function NodeEditor({
                 prefights={prefights}
                 onChange={handlePrefightsChange}
                 champions={prefightChampionsList}
-                players={bgPlayers} 
+                players={bgPlayers}
+                disabled={isReadOnly}
               />
             </div>
           </div>
@@ -480,6 +486,8 @@ export default function NodeEditor({
                   setDeaths(parseInt(e.target.value, 10) || 0);
               }}
               className="col-span-3 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              readOnly={isReadOnly}
+              disabled={isReadOnly}
             />
           </div>
 
@@ -494,6 +502,8 @@ export default function NodeEditor({
                   setNotes(e.target.value);
               }}
               className="col-span-3"
+              readOnly={isReadOnly}
+              disabled={isReadOnly}
             />
           </div>
 

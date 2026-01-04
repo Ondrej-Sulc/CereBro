@@ -34,8 +34,8 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
     include: { alliance: true },
   });
 
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    return <p>You must be an Alliance Officer to access War Planning.</p>;
+  if (!player || !player.allianceId) {
+    return <p>You must be in an Alliance to access War Planning.</p>;
   }
 
   const war = await prisma.war.findUnique({
@@ -45,6 +45,8 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
   if (!war) {
     return <p>War not found or you do not have permission to view it.</p>;
   }
+
+  const isOfficer = player.isOfficer || player.isBotAdmin;
 
   const champions = await getCachedChampions();
 
@@ -106,6 +108,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       players={allianceMembers}
       seasonBans={seasonBans}
       warBans={warBans}
+      isOfficer={isOfficer}
     />
   );
 }

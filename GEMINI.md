@@ -17,12 +17,11 @@ The platform provides a variety of features, including:
     *   **Scheduling:** The bot can be used to schedule reminders and other events.
     *   **AQ Management:** The bot has features to help with Alliance Quest (AQ) management.
 *   **Web Application Features:**
-    *   **War Planning UI:** An interactive, high-performance web interface for managing Alliance War plans.
-    *   **War Defense Planner:** A specialized interface for strategizing alliance defense placements, supporting multiple battlegroups, map types (Standard/Big Thing), and player roster management.
+    *   **War Planning UI:** An interactive, high-performance web interface for managing Alliance War plans. **Now accessible to all alliance members in a read-only mode, while editing remains restricted to Officers and Admins.**
+    *   **War Defense Planner:** A specialized interface for strategizing alliance defense placements, supporting multiple battlegroups, map types (Standard/Big Thing), and player roster management. **Follows the same permission model as Attack Planning (view-only for members, full access for officers).**
     *   **Season Overview:** A comprehensive analytics dashboard for tracking player and alliance performance across entire war seasons.
     *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
-    *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI.
-
+    *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI. **The system now features enhanced profile resolution that automatically falls back to the most recent profile if no "active" one is set, ensuring seamless access for all registered users.**
 *   **War Videos Database & Planning**
 
 The bot features a sophisticated system for tracking Alliance War performance by linking war plans to video uploads.

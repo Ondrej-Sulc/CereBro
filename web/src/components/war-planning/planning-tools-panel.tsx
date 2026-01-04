@@ -26,6 +26,7 @@ interface PlanningToolsPanelProps {
   initialPlayerId?: string | null;
   assignedChampions: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
+  isReadOnly?: boolean;
 }
 
 type ChampionWithTags = Champion & { tags?: { name: string }[] };
@@ -53,7 +54,8 @@ export default function PlanningToolsPanel({
   onAddExtra, 
   initialPlayerId,
   assignedChampions,
-  activeTag
+  activeTag,
+  isReadOnly = false
 }: PlanningToolsPanelProps) {
   const { toast } = useToast();
   const { getPlayerColor } = usePlayerColor(); // Initialize usePlayerColor
@@ -310,7 +312,7 @@ export default function PlanningToolsPanel({
                         key={item.id} 
                         className={cn(
                             "flex items-center gap-3 p-2 rounded-md border bg-slate-900/50 transition-colors",
-                            onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700",
+                            (onAddExtra && !isReadOnly) && "cursor-pointer hover:bg-slate-800 hover:border-slate-700",
                             isAssigned && "border-transparent", // Border is handled by gradient now
                             isTacticChampion && "border-teal-500"
                         )}
@@ -318,7 +320,7 @@ export default function PlanningToolsPanel({
                           backgroundImage: isAssigned ? `linear-gradient(to right, ${classColors.color}20, transparent)` : undefined,
                           borderWidth: isTacticChampion ? '1px' : undefined, // Explicit 1px border for tactic champion
                         }}
-                        onClick={onAddExtra ? () => handleAddChampion(item) : undefined}
+                        onClick={(onAddExtra && !isReadOnly) ? () => handleAddChampion(item) : undefined}
                     >
                       <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                         <Image
@@ -377,10 +379,10 @@ export default function PlanningToolsPanel({
                         key={item.id} 
                         className={cn(
                           "flex items-center justify-between p-2 rounded-md border border-slate-800/50 bg-slate-900/50 border-l-[2px] transition-colors",
-                          onAddExtra && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
+                          (onAddExtra && !isReadOnly) && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
                         )}
                         style={{ borderLeftColor: getPlayerColor(item.player.id) }}
-                        onClick={onAddExtra ? () => handleAddOwner(item) : undefined}
+                        onClick={(onAddExtra && !isReadOnly) ? () => handleAddOwner(item) : undefined}
                     >
                       <div className="flex items-center gap-3">
                         {item.player.avatar ? (

@@ -13,6 +13,7 @@ interface PlanningToolsProps {
   onAddExtra?: (playerId: string, championId: number) => void;
   assignedChampions?: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
+  isReadOnly?: boolean;
 }
 
 export default function PlanningTools({ 
@@ -22,7 +23,8 @@ export default function PlanningTools({
   currentBattlegroup, 
   onAddExtra,
   assignedChampions = [],
-  activeTag
+  activeTag,
+  isReadOnly = false
 }: PlanningToolsProps) {
   return (
     <Sheet>
@@ -45,6 +47,7 @@ export default function PlanningTools({
             onAddExtra={onAddExtra}
             assignedChampions={assignedChampions}
             activeTag={activeTag}
+            isReadOnly={isReadOnly}
         />
       </SheetContent>
     </Sheet>

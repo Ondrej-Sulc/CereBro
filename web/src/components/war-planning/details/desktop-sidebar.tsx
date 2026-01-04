@@ -29,6 +29,7 @@ interface DesktopSidebarProps {
   onAddExtra: (playerId: string, championId: number) => void;
   currentFights: FightWithNode[];
   extraChampions: ExtraChampion[];
+  isReadOnly?: boolean;
 }
 
 export function DesktopSidebar({
@@ -51,7 +52,8 @@ export function DesktopSidebar({
   warBans,
   onAddExtra,
   currentFights,
-  extraChampions
+  extraChampions,
+  isReadOnly = false
 }: DesktopSidebarProps) {
   return (
     <div 
@@ -76,6 +78,7 @@ export function DesktopSidebar({
                 )
             }
             activeTag={activeTactic?.attackTag}
+            isReadOnly={isReadOnly}
           />
         )}
         {rightPanelState === 'editor' && (
@@ -99,6 +102,7 @@ export function DesktopSidebar({
               warBans={warBans}
               currentFights={currentFights}
               extraChampions={extraChampions}
+              isReadOnly={isReadOnly}
           />
         )}
       </div>

@@ -27,6 +27,7 @@ interface DefenseDetailsClientProps {
   champions: (Champion & { tags?: { name: string }[] })[];
   players: PlayerWithRoster[];
   availableTags: Tag[];
+  isOfficer?: boolean;
 }
 
 interface WarNodeWithAllocations {
@@ -88,6 +89,7 @@ function findTargetNode(
 
 export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const { toast } = useToast();
+  const isReadOnly = !props.isOfficer;
   const {
     rightPanelState,
     setRightPanelState,
@@ -374,6 +376,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                 mapType={props.plan.mapType}
                 selectedNodeId={selectedNodeId}
                 onMoveDefender={handleMoveDefender}
+                isReadOnly={isReadOnly}
             />
         )}
 
@@ -406,7 +409,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                          <span className="text-slate-700">•</span>
 
                          {/* Compact Tier Selector */}
-                         <Select value={activeTier ? String(activeTier) : "none"} onValueChange={handleTierChange}>
+                         <Select 
+                            value={activeTier ? String(activeTier) : "none"} 
+                            onValueChange={handleTierChange}
+                            disabled={isReadOnly}
+                         >
                             <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-indigo-300 focus:ring-0 gap-1">
                                 <span className="truncate">Tier: <span className={activeTier ? "text-indigo-400 font-medium" : ""}>{activeTier ?? '-'}</span></span>
                             </SelectTrigger>
@@ -423,7 +430,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                          <span className="text-slate-700">•</span>
 
                          {/* Compact Tactic Selector */}
-                         <Select value={activeTagId ? String(activeTagId) : "none"} onValueChange={handleTagChange}>
+                         <Select 
+                            value={activeTagId ? String(activeTagId) : "none"} 
+                            onValueChange={handleTagChange}
+                            disabled={isReadOnly}
+                         >
                             <SelectTrigger className="h-auto w-auto p-0 border-none bg-transparent text-xs text-slate-400 hover:text-teal-300 focus:ring-0 gap-1 max-w-[150px]">
                                  <span className="truncate">Tag: <span className={activeTagId ? "text-teal-400 font-medium" : ""}>{activeTag?.name ?? '-'}</span></span>
                             </SelectTrigger>
@@ -575,6 +586,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                      onSelectPlayer={setSelectedPlayerId}
                      activeTag={activeTag || null} // Pass Tag instead of Tactic
                      onMove={handleMoveNode}
+                     isReadOnly={isReadOnly}
                   />
               </div>
           )}
@@ -601,6 +613,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     tier={activeTier}
                     currentBattlegroup={currentBattlegroup}
                     nodeData={selectedNodeId ? nodesMap.get(selectedNodeId) : undefined}
+                    isReadOnly={isReadOnly}
                  />
              )}
              {rightPanelState === 'tools' && (
@@ -618,6 +631,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                         .map(p => ({ playerId: p.playerId!, championId: p.defenderId! }))
                     }
                     activeTag={activeTag || null}
+                    isReadOnly={isReadOnly}
                  />
              )}
         </div>

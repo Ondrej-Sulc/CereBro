@@ -23,6 +23,7 @@ interface DefensePlayerListPanelProps {
   mapType: WarMapType;
   selectedNodeId?: number | null;
   onMoveDefender?: (placementId: string, targetNodeId: number) => void;
+  isReadOnly?: boolean;
 }
 
 export const DefensePlayerListPanel = ({
@@ -36,7 +37,8 @@ export const DefensePlayerListPanel = ({
   currentBattlegroup,
   mapType,
   selectedNodeId,
-  onMoveDefender
+  onMoveDefender,
+  isReadOnly = false
 }: DefensePlayerListPanelProps) => {
   const { getPlayerColor } = usePlayerColor();
   const championLimit = mapType === "BIG_THING" ? 1 : 5;
@@ -200,7 +202,7 @@ export const DefensePlayerListPanel = ({
                                     {stat?.champions.sort((a,b) => a.nodeId - b.nodeId).map((champ, idx) => {
                                         const roster = player.roster.find(r => r.championId === champ.id && r.stars === champ.starLevel); // Match by starLevel
                                         const classColors = getChampionClassColors(champ.class);
-                                        const isMoveMode = !!selectedNodeId && onMoveDefender && champ.nodeId !== selectedNodeId;
+                                        const isMoveMode = !isReadOnly && !!selectedNodeId && onMoveDefender && champ.nodeId !== selectedNodeId;
 
                                         return (
                                             <div 

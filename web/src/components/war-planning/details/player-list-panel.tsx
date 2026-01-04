@@ -20,6 +20,7 @@ interface PlayerListPanelProps {
   onRemoveExtra: (extraId: string) => void;
   champions: Champion[];
   war: War; // Add war prop
+  isReadOnly?: boolean;
 }
 
 export const PlayerListPanel = ({
@@ -35,7 +36,8 @@ export const PlayerListPanel = ({
   onAddExtra,
   onRemoveExtra,
   champions,
-  war // Destructure war prop
+  war, // Destructure war prop
+  isReadOnly = false
 }: PlayerListPanelProps) => {
 
   if (!isDesktop) return null; // Desktop only sidebar wrapper
@@ -64,6 +66,7 @@ export const PlayerListPanel = ({
                 champions={champions}
                 onClose={onToggle}
                 war={war} // Pass war prop
+                isReadOnly={isReadOnly}
              />
           </div>
       </div>

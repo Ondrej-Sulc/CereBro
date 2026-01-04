@@ -26,6 +26,7 @@ interface PlayerListContentProps {
   champions: Champion[];
   onClose?: () => void; 
   war: War; // Add war prop
+  isReadOnly?: boolean;
 }
 
 export const PlayerListContent = ({
@@ -39,7 +40,8 @@ export const PlayerListContent = ({
   onRemoveExtra,
   champions,
   onClose,
-  war // Destructure war prop
+  war, // Destructure war prop
+  isReadOnly = false
 }: PlayerListContentProps) => {
   const { getPlayerColor } = usePlayerColor();
   // Determine champion limit based on map type
@@ -300,28 +302,32 @@ export const PlayerListContent = ({
                                                           )}
                                                       </div>
                                                   </div>
-                                                  <Button 
-                                                      size="icon" 
-                                                      variant="ghost" 
-                                                      className="h-6 w-6 text-slate-500 hover:text-red-400 hover:bg-red-950/20 shrink-0" 
-                                                      onClick={() => onRemoveExtra(ex.id)}
-                                                  >
-                                                      <X className="h-3 w-3" />
-                                                  </Button>
+                                                  {!isReadOnly && (
+                                                    <Button 
+                                                        size="icon" 
+                                                        variant="ghost" 
+                                                        className="h-6 w-6 text-slate-500 hover:text-red-400 hover:bg-red-950/20 shrink-0" 
+                                                        onClick={() => onRemoveExtra(ex.id)}
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </Button>
+                                                  )}
                                               </div>
                                           )})}
                                       </div>
 
                                       {/* Add Button */}
-                                      <div className="pt-1">
-                                          <ChampionCombobox
-                                              champions={champions}
-                                              value=""
-                                              onSelect={(id: string) => onAddExtra(player.id, parseInt(id))}
-                                              placeholder="Add extra champion..."
-                                              className="h-7 text-xs bg-slate-900/50 border-slate-800 hover:bg-slate-900"
-                                          />
-                                      </div>
+                                      {!isReadOnly && (
+                                        <div className="pt-1">
+                                            <ChampionCombobox
+                                                champions={champions}
+                                                value=""
+                                                onSelect={(id: string) => onAddExtra(player.id, parseInt(id))}
+                                                placeholder="Add extra champion..."
+                                                className="h-7 text-xs bg-slate-900/50 border-slate-800 hover:bg-slate-900"
+                                            />
+                                        </div>
+                                      )}
                                   </div>
                               </motion.div>
                           )}

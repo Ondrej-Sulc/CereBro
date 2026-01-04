@@ -10,11 +10,11 @@ export default async function WarPlanningPage() {
     redirect("/api/auth/signin?callbackUrl=/planning");
   }
 
-  if (!player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+  if (!player.allianceId) {
     return (
         <div className="container mx-auto py-20 text-center space-y-4">
             <h1 className="text-2xl font-bold text-white">Access Denied</h1>
-            <p className="text-slate-400">You must be an Alliance Officer to access War Planning.</p>
+            <p className="text-slate-400">You must be in an Alliance to access War Planning.</p>
         </div>
     );
   }
@@ -35,6 +35,8 @@ export default async function WarPlanningPage() {
   const defaultWarNumber = lastWar && lastWar.warNumber !== null ? lastWar.warNumber + 1 : 1;
   const defaultTier = lastWar ? lastWar.warTier : 1;
 
+  const isOfficer = player.isOfficer || player.isBotAdmin;
+
   return (
     <div className="container mx-auto py-8 min-h-screen">
       <WarPlanningDashboard 
@@ -44,6 +46,7 @@ export default async function WarPlanningPage() {
         defaultTier={defaultTier}
         userTimezone={player.timezone}
         isBotAdmin={player.isBotAdmin}
+        isOfficer={isOfficer}
       />
     </div>
   );

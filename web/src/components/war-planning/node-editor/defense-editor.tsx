@@ -38,6 +38,7 @@ interface DefenseEditorProps {
   currentBattlegroup: number;
   tier?: number | null;
   nodeData?: WarNodeWithAllocations;
+  isReadOnly?: boolean;
 }
 
 export default function DefenseEditor({
@@ -55,6 +56,7 @@ export default function DefenseEditor({
   currentBattlegroup,
   tier,
   nodeData,
+  isReadOnly = false,
 }: DefenseEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentPlacement?.defenderId || undefined);
   const [playerId, setPlayerId] = useState<string | undefined>(currentPlacement?.playerId || undefined);
@@ -248,9 +250,9 @@ export default function DefenseEditor({
                     champions={champions}
                     value={defenderId !== undefined ? String(defenderId) : ""}
                     onSelect={handleDefenderChange}
-                    open={isDefenderOpen}
-                    onOpenChange={setIsDefenderOpen}
-                    disabled={!isReady}
+                    open={!isReadOnly && isDefenderOpen}
+                    onOpenChange={(val) => !isReadOnly && setIsDefenderOpen(val)}
+                    disabled={isReadOnly || !isReady}
                   />
                   {defenderTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
@@ -271,7 +273,7 @@ export default function DefenseEditor({
                 players={availablePlayers}
                 value={playerId}
                 onSelect={handlePlayerChange}
-                disabled={!isReady}
+                disabled={isReadOnly || !isReady}
                 attackerId={defenderId} 
               />
             </div>
@@ -289,11 +291,13 @@ export default function DefenseEditor({
                                 key={entry.stars}
                                 variant={starLevel === entry.stars ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => handleStarLevelChange(String(entry.stars))}
+                                onClick={() => !isReadOnly && handleStarLevelChange(String(entry.stars))}
                                 className={cn(
                                     "h-auto py-2 px-3 flex flex-col items-start gap-0.5",
-                                    starLevel === entry.stars ? "border-indigo-500 bg-indigo-500/20 text-white hover:bg-indigo-500/30" : "bg-slate-900 border-slate-700"
+                                    starLevel === entry.stars ? "border-indigo-500 bg-indigo-500/20 text-white hover:bg-indigo-500/30" : "bg-slate-900 border-slate-700",
+                                    isReadOnly && "cursor-default opacity-80"
                                 )}
+                                disabled={isReadOnly}
                              >
                                  <div className="flex items-center gap-1 text-xs font-bold">
                                     {entry.stars}<Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
@@ -315,7 +319,7 @@ export default function DefenseEditor({
                      <Select 
                         value={starLevel ? String(starLevel) : undefined} 
                         onValueChange={handleStarLevelChange} 
-                        disabled={!isReady || !defenderId}
+                        disabled={isReadOnly || !isReady || !defenderId}
                      >
                         <SelectTrigger className="w-full h-8 text-xs bg-slate-900 border-slate-800">
                             <SelectValue placeholder="Manual Star Level..." />

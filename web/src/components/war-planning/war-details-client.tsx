@@ -24,10 +24,12 @@ interface WarDetailsClientProps {
   players: PlayerWithRoster[];
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
+  isOfficer?: boolean;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
   const { toast } = useToast();
+  const isReadOnly = !props.isOfficer;
   const {
     // State
     rightPanelState,
@@ -154,6 +156,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           isDesktop={isDesktop}
           currentBattlegroup={currentBattlegroup}
           war={props.war}
+          isReadOnly={isReadOnly}
         />
 
         {/* Main Content Area (WarHeader + WarTabs/WarMap) */}
@@ -190,6 +193,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
                   .map(f => ({ playerId: f.player!.id, championId: f.attackerId! }))
               }
               activeTag={activeTactic?.attackTag}
+              isReadOnly={isReadOnly}
             />
             
             <WarTabs 
@@ -238,6 +242,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onAddExtra={handleAddExtra}
             currentFights={currentFights}
             extraChampions={extraChampions}
+            isReadOnly={isReadOnly}
           />
         ) : (
           // MobileSheet now rendered directly within the flex-col layout
@@ -267,6 +272,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             extraChampions={extraChampions}
             onAddExtra={handleAddExtra}
             onRemoveExtra={handleRemoveExtra}
+            isReadOnly={isReadOnly}
           />
         )}
       </div>

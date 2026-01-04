@@ -44,6 +44,7 @@ interface WarHeaderProps {
   onDistribute: (battlegroup?: number) => void;
   assignedChampions?: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
+  isReadOnly?: boolean;
 }
 
 export function WarHeader({
@@ -68,7 +69,8 @@ export function WarHeader({
   onAddExtra,
   onDistribute,
   assignedChampions = [],
-  activeTag
+  activeTag,
+  isReadOnly = false
 }: WarHeaderProps) {
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
 
@@ -99,45 +101,49 @@ export function WarHeader({
         </div>
         
         <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                    <Share className="h-4 w-4" /> <span className="hidden sm:inline">Distribute</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onDistribute()}>
-                    Distribute All
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDistribute(1)}>
-                    Distribute BG1
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDistribute(2)}>
-                    Distribute BG2
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDistribute(3)}>
-                    Distribute BG3
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!isReadOnly && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                      <Share className="h-4 w-4" /> <span className="hidden sm:inline">Distribute</span>
+                  </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onDistribute()}>
+                      Distribute All
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDistribute(1)}>
+                      Distribute BG1
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDistribute(2)}>
+                      Distribute BG2
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDistribute(3)}>
+                      Distribute BG3
+                  </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-          <Button 
-            variant={status === 'PLANNING' ? "destructive" : "outline"} 
-            size="sm"
-            onClick={onToggleStatus} 
-            disabled={isUpdatingStatus}
-            className="gap-2"
-          >
-            {status === 'PLANNING' ? (
-                <>
-                    <Lock className="h-4 w-4" /> <span className="hidden sm:inline">Finish War</span>
-                </>
-            ) : (
-                <>
-                    <Unlock className="h-4 w-4" /> <span className="hidden sm:inline">Reopen War</span>
-                </>
-            )}
-          </Button>
+          {!isReadOnly && (
+            <Button 
+              variant={status === 'PLANNING' ? "destructive" : "outline"} 
+              size="sm"
+              onClick={onToggleStatus} 
+              disabled={isUpdatingStatus}
+              className="gap-2"
+            >
+              {status === 'PLANNING' ? (
+                  <>
+                      <Lock className="h-4 w-4" /> <span className="hidden sm:inline">Finish War</span>
+                  </>
+              ) : (
+                  <>
+                      <Unlock className="h-4 w-4" /> <span className="hidden sm:inline">Reopen War</span>
+                  </>
+              )}
+            </Button>
+          )}
 
           {/* Mobile Tools (Sheet) */}
           <div className="md:hidden">
@@ -149,6 +155,7 @@ export function WarHeader({
               onAddExtra={onAddExtra}
               assignedChampions={assignedChampions}
               activeTag={activeTag}
+              isReadOnly={isReadOnly}
             />
           </div>
 
@@ -208,12 +215,14 @@ export function WarHeader({
                         fill
                         className="object-cover"
                         />
-                        <div 
-                        className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => onRemoveWarBan(ban.id)}
-                        >
-                        <X className="h-4 w-4 text-white" />
-                        </div>
+                        {!isReadOnly && (
+                          <div 
+                          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => onRemoveWarBan(ban.id)}
+                          >
+                          <X className="h-4 w-4 text-white" />
+                          </div>
+                        )}
                     </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -225,7 +234,7 @@ export function WarHeader({
             ))}
 
             {/* Add Ban Button */}
-            {warBans.length < 5 && (
+            {!isReadOnly && warBans.length < 5 && (
                 <Popover open={isBanPopoverOpen} onOpenChange={setIsBanPopoverOpen}>
                 <PopoverTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-dashed border-slate-700 hover:border-slate-500 hover:bg-slate-800 shrink-0">

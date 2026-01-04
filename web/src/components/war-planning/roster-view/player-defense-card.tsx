@@ -90,6 +90,7 @@ interface PlayerDefenseCardProps {
   onSelect: (playerId: string) => void;
   activeTag?: Tag | null;
   onMove?: (placementId: string, targetNodeNumber: number) => void;
+  isReadOnly?: boolean;
 }
 
 export const PlayerDefenseCard = ({
@@ -102,7 +103,8 @@ export const PlayerDefenseCard = ({
   isSelected,
   onSelect,
   activeTag,
-  onMove
+  onMove,
+  isReadOnly = false
 }: PlayerDefenseCardProps) => {
   const { getPlayerColor } = usePlayerColor();
   const playerColor = getPlayerColor(player.id);
@@ -165,31 +167,40 @@ export const PlayerDefenseCard = ({
                 <div className="text-xs text-slate-500">{sortedPlacements.length}/{limit} Defenders</div>
             </div>
         </div>
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-6 w-6 text-slate-500 hover:text-white"
-            onClick={(e) => {
-                e.stopPropagation();
-                onAdd(player.id);
-            }}
-        >
-            <Plus className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent className="p-2 space-y-2">
-         {sortedPlacements.length === 0 ? (
+        {!isReadOnly && (
             <Button 
-                variant="outline"
-                className="h-20 flex flex-col items-center justify-center text-slate-600 hover:text-slate-400 text-xs border border-dashed border-slate-800 rounded cursor-pointer hover:bg-slate-800/50 w-full"
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-slate-500 hover:text-white"
                 onClick={(e) => {
                     e.stopPropagation();
                     onAdd(player.id);
                 }}
             >
-                <Shield className="h-6 w-6 mb-1 opacity-50" />
-                <span>Add Defender</span>
+                <Plus className="h-4 w-4" />
             </Button>
+        )}
+      </CardHeader>
+      <CardContent className="p-2 space-y-2">
+         {sortedPlacements.length === 0 ? (
+            !isReadOnly ? (
+                <Button 
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center text-slate-600 hover:text-slate-400 text-xs border border-dashed border-slate-800 rounded cursor-pointer hover:bg-slate-800/50 w-full"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onAdd(player.id);
+                    }}
+                >
+                    <Shield className="h-6 w-6 mb-1 opacity-50" />
+                    <span>Add Defender</span>
+                </Button>
+            ) : (
+                <div className="h-20 flex flex-col items-center justify-center text-slate-700 text-xs border border-dashed border-slate-900 rounded w-full">
+                    <Shield className="h-6 w-6 mb-1 opacity-20" />
+                    <span>No Defenders</span>
+                </div>
+            )
          ) : (
              <div className="space-y-1.5">
                 {sortedPlacements.map(placement => {
@@ -212,7 +223,7 @@ export const PlayerDefenseCard = ({
                             )}
                         >
                             {/* Node Badge (Interactive) */}
-                            {onMove ? (
+                            {!isReadOnly && onMove ? (
                                 <NodeBadgePopover 
                                     placement={placement}
                                     onMove={onMove}
@@ -220,12 +231,16 @@ export const PlayerDefenseCard = ({
                                 />
                             ) : (
                                 <div 
-                                    className="h-8 w-8 flex items-center justify-center rounded bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-400 cursor-pointer hover:bg-slate-800 hover:text-white"
+                                    className={cn(
+                                        "h-8 w-8 flex items-center justify-center rounded bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-400",
+                                        !isReadOnly && "cursor-pointer hover:bg-slate-800 hover:text-white"
+                                    )}
                                     onClick={(e) => {
+                                        if (isReadOnly) return;
                                         e.stopPropagation();
                                         onEdit(placement.node.nodeNumber);
                                     }}
-                                    title="Edit Node"
+                                    title={isReadOnly ? `Node ${placement.node.nodeNumber}` : "Edit Node"}
                                 >
                                     {placement.node.nodeNumber}
                                 </div>
@@ -262,19 +277,21 @@ export const PlayerDefenseCard = ({
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-slate-500 hover:text-red-400"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onRemove(placement.id);
-                                    }}
-                                >
-                                    <X className="h-3 w-3" />
-                                </Button>
-                            </div>
+                            {!isReadOnly && (
+                                <div className="flex items-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-slate-500 hover:text-red-400"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onRemove(placement.id);
+                                        }}
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     );
                 })}

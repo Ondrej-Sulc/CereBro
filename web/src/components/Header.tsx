@@ -41,7 +41,7 @@ const WAR_ROOM_ITEMS = [
     label: "Attack Planning",
     icon: Swords,
     iconColor: "text-red-400",
-    requiresOfficer: true,
+    requiresOfficer: false,
   },
 ] as const;
 

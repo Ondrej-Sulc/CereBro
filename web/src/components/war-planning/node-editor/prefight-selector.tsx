@@ -20,17 +20,20 @@ interface PrefightSelectorProps {
   onChange: (newPrefights: PrefightEntry[]) => void;
   champions: Champion[];
   players: PlayerWithRoster[];
+  disabled?: boolean;
 }
 
 export function PrefightSelector({
   prefights,
   onChange,
   champions,
-  players
+  players,
+  disabled = false
 }: PrefightSelectorProps) {
   const [isAdding, setIsAdding] = React.useState(false);
 
   const handleAdd = (championIdStr: string) => {
+    if (disabled) return;
     const championId = parseInt(championIdStr, 10);
     if (isNaN(championId)) return;
     if (!prefights.some(p => p.championId === championId)) {
@@ -40,10 +43,12 @@ export function PrefightSelector({
   };
 
   const handleRemove = (championId: number) => {
+    if (disabled) return;
     onChange(prefights.filter(p => p.championId !== championId));
   };
 
   const handlePlayerChange = (championId: number, playerId: string | undefined) => {
+    if (disabled) return;
     onChange(prefights.map(p => 
       p.championId === championId 
         ? { ...p, playerId: playerId === undefined ? null : playerId } 
@@ -100,48 +105,53 @@ export function PrefightSelector({
                     placeholder="Assign Player..."
                     compact
                     attackerId={p.championId} // Pass champion ID to show rank info
+                    disabled={disabled}
                  />
               </div>
 
               {/* Remove Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-slate-500 hover:text-red-400"
-                onClick={() => handleRemove(p.championId)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
+              {!disabled && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-slate-500 hover:text-red-400"
+                  onClick={() => handleRemove(p.championId)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           );
         })}
       </div>
 
       {/* Add Button / Combobox */}
-      {isAdding ? (
-        <div className="flex gap-2 items-center animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex-1">
-                <ChampionCombobox
-                    champions={champions}
-                    value=""
-                    onSelect={handleAdd}
-                    placeholder="Search champion..."
-                    onOpenChange={(open) => !open && setIsAdding(false)}
-                />
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}>
-                <X className="h-4 w-4" />
-            </Button>
-        </div>
-      ) : (
-        <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full border-dashed border-slate-700 hover:bg-slate-800 text-slate-400"
-            onClick={() => setIsAdding(true)}
-        >
-            <Plus className="h-3 w-3 mr-2" /> Add Prefight
-        </Button>
+      {!disabled && (
+        isAdding ? (
+          <div className="flex gap-2 items-center animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex-1">
+                  <ChampionCombobox
+                      champions={champions}
+                      value=""
+                      onSelect={handleAdd}
+                      placeholder="Search champion..."
+                      onOpenChange={(open) => !open && setIsAdding(false)}
+                  />
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsAdding(false)}>
+                  <X className="h-4 w-4" />
+              </Button>
+          </div>
+        ) : (
+          <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full border-dashed border-slate-700 hover:bg-slate-800 text-slate-400"
+              onClick={() => setIsAdding(true)}
+          >
+              <Plus className="h-3 w-3 mr-2" /> Add Prefight
+          </Button>
+        )
       )}
     </div>
   );

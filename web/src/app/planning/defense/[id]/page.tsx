@@ -35,8 +35,8 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
     include: { alliance: true },
   });
 
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    return <p>You must be an Alliance Officer to access War Defense Planning.</p>;
+  if (!player || !player.allianceId) {
+    return <p>You must be in an Alliance to access War Defense Planning.</p>;
   }
 
   const plan = await prisma.warDefensePlan.findFirst({
@@ -49,6 +49,8 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   if (!plan) {
     return <p>Plan not found or you do not have permission to view it.</p>;
   }
+
+  const isOfficer = player.isOfficer || player.isBotAdmin;
 
   const champions = await getCachedChampions();
 
@@ -90,6 +92,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         champions={champions}
         players={allianceMembers}
         availableTags={tags}
+        isOfficer={isOfficer}
       />
     </>
   );
