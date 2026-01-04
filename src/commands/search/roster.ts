@@ -1,6 +1,9 @@
 import {
   ChatInputCommandInteraction,
   ButtonInteraction,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  MessageFlags,
 } from "discord.js";
 import crypto from "crypto";
 import {
@@ -118,9 +121,14 @@ async function handleRosterSearchPagination(interaction: ButtonInteraction) {
   const cachedSearch = rosterSearchCache.get(searchId);
 
   if (!cachedSearch) {
+    const container = new ContainerBuilder().addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        "This search has expired. Please run the command again."
+      )
+    );
     await interaction.update({
-      content: "This search has expired. Please run the command again.",
-      components: [],
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
     });
     return;
   }
@@ -129,9 +137,12 @@ async function handleRosterSearchPagination(interaction: ButtonInteraction) {
   const totalPages = pages.length;
 
   if (newPage < 1 || newPage > totalPages) {
+    const container = new ContainerBuilder().addTextDisplayComponents(
+      new TextDisplayBuilder().setContent("Invalid page number.")
+    );
     await interaction.update({
-      content: "Invalid page number.",
-      components: [],
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
     });
     return;
   }
