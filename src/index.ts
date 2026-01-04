@@ -37,6 +37,7 @@ import { getPosthogClient } from "./services/posthogService";
 import { prisma } from "./services/prismaService";
 import logger from "./services/loggerService";
 import { startJobProcessor } from "./services/jobProcessor";
+import { handleTranslationReaction } from "./services/translationService";
 
 declare module "discord.js" {
   interface Client {
@@ -51,8 +52,9 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMessageReactions,
   ],
-  partials: [Partials.Channel],
+  partials: [Partials.Channel, Partials.Message, Partials.Reaction],
 });
 
 client.commands = commands;
@@ -187,6 +189,10 @@ client.on(Events.GuildCreate, async (guild) => {
   } catch (error) {
     logger.error({ error: String(error) }, `❌ Error initializing guild ${guild.name}:`);
   }
+});
+
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  await handleTranslationReaction(reaction, user);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
