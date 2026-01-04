@@ -7,8 +7,12 @@ import logger from "./loggerService";
 const FLAG_TO_LANGUAGE: Record<string, string> = {
   "🇺🇸": "English",
   "🇬🇧": "English",
+  "🇦🇺": "English",
+  "🇨🇦": "English",
   "🇪🇸": "Spanish",
   "🇲🇽": "Spanish",
+  "🇦🇷": "Spanish",
+  "🇨🇴": "Spanish",
   "🇫🇷": "French",
   "🇩🇪": "German",
   "🇮🇹": "Italian",
@@ -19,16 +23,20 @@ const FLAG_TO_LANGUAGE: Record<string, string> = {
   "🇰🇷": "Korean",
   "🇨🇳": "Chinese (Simplified)",
   "🇹🇼": "Chinese (Traditional)",
+  "🇭🇰": "Chinese (Traditional)",
   "🇳🇱": "Dutch",
+  "🇧🇪": "Dutch",
   "🇵🇱": "Polish",
   "🇹🇷": "Turkish",
   "🇮🇩": "Indonesian",
   "🇻🇳": "Vietnamese",
   "🇹🇭": "Thai",
   "🇸🇦": "Arabic",
+  "🇦🇪": "Arabic",
   "🇮🇳": "Hindi",
   "🇺🇦": "Ukrainian",
   "🇨🇿": "Czech",
+  "🇸🇰": "Slovak",
   "🇬🇷": "Greek",
   "🇷🇴": "Romanian",
   "🇭🇺": "Hungarian",
@@ -36,6 +44,14 @@ const FLAG_TO_LANGUAGE: Record<string, string> = {
   "🇩🇰": "Danish",
   "🇳🇴": "Norwegian",
   "🇫🇮": "Finnish",
+  "🇮🇱": "Hebrew",
+  "🇵🇭": "Tagalog",
+  "🇲🇾": "Malay",
+  "🇸🇬": "Malay",
+  "🇮🇷": "Persian",
+  "🇵🇰": "Urdu",
+  "🇿🇦": "Afrikaans",
+  "🇮🇪": "Irish",
 };
 
 export async function handleTranslationReaction(
@@ -95,16 +111,30 @@ export async function handleTranslationReaction(
     logger.info(`Translating message ${message.id} to ${targetLanguage} for ${user.tag}`);
     const translatedText = await translateText(message.content, targetLanguage, contextMessageContent);
 
-    // 5. Send Result
+    // 5. Get Display Names
+    const authorName = message.member?.displayName || message.author.displayName || message.author.username;
+    
+    let requesterName = user.username;
+    if (message.guild && user.id) {
+        try {
+            const member = await message.guild.members.fetch(user.id);
+            requesterName = member.displayName;
+        } catch (e) {
+            // Fallback to user properties if fetch fails
+            requesterName = (user as User).displayName || user.username || "Unknown";
+        }
+    }
+
+    // 6. Send Result
     const embed = new EmbedBuilder()
       .setColor(0x0ea5e9) // CereBro Blue
       .setAuthor({
-        name: message.author.username,
+        name: authorName,
         iconURL: message.author.displayAvatarURL(),
       })
       .setDescription(`**Translation (${targetLanguage})**\n${translatedText}\n\n[Jump to Original Message](${message.url})`)
       .setFooter({
-        text: `Requested by ${user.username}`,
+        text: `Requested by ${requesterName}`,
         iconURL: user.displayAvatarURL() || undefined,
       })
       .setTimestamp();
