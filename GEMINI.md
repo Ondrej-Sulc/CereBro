@@ -10,6 +10,7 @@ The platform provides a variety of features, including:
 
 *   **Discord Bot Features:**
     *   **Champion Information:** Users can query for information about champions, including their abilities, attacks, and immunities.
+    *   **AI-Powered Translation:** A seamless translation feature triggered by flag emoji reactions. It uses LLMs (OpenRouter) to translate messages while preserving game-specific terminology and understanding conversational context.
     *   **Champion Administration:** A powerful admin command to add or update champions in the database.
     *   **Prestige Tracking:** Users can update and view their prestige values.
     *   **Roster Management:** Users can manage their MCOC rosters.
@@ -203,10 +204,24 @@ The `/champion duel` command has been enhanced to allow for community contributi
     *   Bot administrators are notified of new submissions in a designated admin channel.
     *   The `/admin duel review` command provides an interactive interface for admins to approve, reject, or archive submissions one by one.
     *   Rejected or deleted duel targets are not deleted from the database but are moved to an `ARCHIVED` status to prevent them from being re-added by automated CSV imports.
-*   **Database Model:**
+    *   **Database Model:**
     *   The `Duel` model in `prisma/schema.prisma` has been updated to support this workflow.
     *   A `DuelStatus` enum (`ACTIVE`, `SUGGESTED`, `OUTDATED`, `ARCHIVED`) tracks the state of each duel target.
     *   `source` and `submittedByDiscordId` fields have been added to track where a suggestion came from and who submitted it.
+
+### AI-Powered Translation
+
+The bot includes a high-performance translation system designed for multi-national alliances.
+
+*   **Flag-Triggered Workflow:** Users can translate any message by reacting to it with a country flag emoji (e.g., 🇺🇸, 🇫🇷, 🇪🇸, 🇨🇿).
+*   **AI Context & Terminology:** Powered by OpenRouter (Gemini/Liquid), the system is specifically tuned for MCOC. It recognizes game-specific terms like "Parry," "Dex," and "Alliance War" to ensure they are translated accurately or left in English where appropriate for the community.
+*   **Conversational Awareness:** If a message is a reply to another, the system automatically fetches the referenced message and provides it as context to the AI, resolving ambiguities in short chat messages.
+*   **Rich Visual Feedback:** Translations are delivered as rich embeds featuring:
+    *   The original author's server nickname and avatar.
+    *   The translated text labeled with the target language.
+    *   A "Jump to Original Message" deep link.
+    *   The requester's server nickname in the footer.
+*   **Extensive Language Support:** Supports 48+ languages and regional variations through a comprehensive flag-to-language mapping.
 
 The bot is built with a modern tech stack, including:
 
@@ -254,44 +269,9 @@ The web interface now includes a comprehensive Profile section.
 *   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, prestige, and a summary of their champion roster (grouped by star rating, rank, and class).
 *   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful OCR processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
 
-## Building and Running
-
-The project is fully containerized with Docker, so the easiest way to get started is with Docker Compose.
-
-### Prerequisites
-
-*   Node.js v18+
-*   Docker and Docker Compose
-*   A Discord Bot application
-*   API keys for Google, OpenRouter, and PostHog
-*   Discord OAuth2 Client ID and Secret (for web auth)
-
-### 1. Set Up Environment Variables
-
-Create a `.env` file by copying the example:
-
-```bash
-cp .env.example .env
-```
-
-Fill in the values in the `.env` file. This includes your Discord bot token, API keys, the connection details for your PostgreSQL database, the `GCS_BUCKET_NAME` for champion image uploads, the `POSTHOG_API_KEY` and `POSTHOG_HOST` for product analytics, and the Discord OAuth2 credentials (`DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `AUTH_SECRET`).
-
-### 2. Run the Bot
-
-Use Docker Compose to build the images and start the containers (bot and database). The `docker-compose.yaml` is configured for development with hot-reloading.
-
-```bash
-docker-compose up --build
-```
-
-The bot should now be running and connected to Discord and the database.
-
 ### Other Useful Commands
 
-*   **Build the project:** `npm run build`
-*   **Generate Prisma client:** `npm run prisma:generate`
-*   **Run database migrations:** `npm run prisma:migrate`
-*   **Seed the database:** `npm run prisma:seed`
+*   **Verify changes:** `pnpm exec tsc`
 
 ## Development Conventions
 

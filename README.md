@@ -60,6 +60,9 @@ The flagship feature of the platform.
 *   **Champion Search:** Powerful filtering by immunities, tags, and ability mechanics.
 *   **Community Data:** Crowdsourced Duel Targets with an admin review queue system.
 
+### 🌐 AI & Utilities
+*   **AI Translation:** React with a flag emoji to translate any message. Uses LLMs to maintain game-specific context and terminology.
+
 ### 🛡️ Alliance Operations
 *   **Role Sync:** Automatically maps Discord Roles to Database permissions (Officer, Battlegroup 1-3).
 *   **Channel Configuration:** Customizable Discord channels for specific battlegroup plans and general war video notifications.
