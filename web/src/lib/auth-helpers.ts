@@ -55,10 +55,19 @@ export async function getUserPlayerWithAlliance() {
 
   if (!account?.providerAccountId) return null;
 
-  const player = await prisma.player.findFirst({
+  let player = await prisma.player.findFirst({
     where: { discordId: account.providerAccountId, isActive: true },
     include: { alliance: true },
   });
+
+  // Fallback: If no active profile found, try to find the most recently updated one
+  if (!player) {
+    player = await prisma.player.findFirst({
+      where: { discordId: account.providerAccountId },
+      orderBy: { updatedAt: 'desc' },
+      include: { alliance: true },
+    });
+  }
 
   return player;
 }
