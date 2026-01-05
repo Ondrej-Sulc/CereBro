@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -94,12 +94,44 @@ export function useWarVideoForm({
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentUpload, setCurrentUpload] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Wake Lock Ref
+  const wakeLock = useRef<WakeLockSentinel | null>(null);
 
   const currentUser = useMemo(() => 
     initialPlayers.find(p => p.id === initialUserId), 
     [initialPlayers, initialUserId]
   );
   const canUploadFiles = !!currentUser?.alliance?.canUploadFiles;
+
+  // Wake Lock Helpers
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock.current = await navigator.wakeLock.request('screen');
+      }
+    } catch (err) {
+      console.warn('Wake Lock request failed:', err);
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    try {
+      if (wakeLock.current) {
+        await wakeLock.current.release();
+        wakeLock.current = null;
+      }
+    } catch (err) {
+      console.warn('Wake Lock release failed:', err);
+    }
+  };
+
+  // Cleanup Wake Lock on unmount
+  useEffect(() => {
+    return () => {
+      releaseWakeLock();
+    };
+  }, []);
 
   // Effect to update offseason state if warNumber changes
   useEffect(() => {
@@ -324,6 +356,9 @@ export function useWarVideoForm({
       if (!validateForm() || isSubmitting) return;
       setIsSubmitting(true);
       setUploadProgress(0);
+      
+      // Request Wake Lock to prevent screen sleep during upload
+      await requestWakeLock();
 
       try {
         if (sourceMode === 'link') {
@@ -515,6 +550,7 @@ export function useWarVideoForm({
       } finally {
         setIsSubmitting(false);
         setCurrentUpload("");
+        await releaseWakeLock();
       }
     },
     [
