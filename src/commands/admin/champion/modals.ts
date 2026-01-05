@@ -85,26 +85,6 @@ export async function handleChampionModalPart2(interaction: ModalSubmitInteracti
         interaction.fields.getTextInputValue("championObtainableRange") ||
         "2-7";
 
-      const prestigeString =
-        interaction.fields.getTextInputValue("championPrestige") || "0,0";
-      const [prestige6String, prestige7String] = prestigeString
-        .split(",")
-        .map((s) => s.trim());
-
-      const prestige6 = parseInt(prestige6String, 10);
-      if (isNaN(prestige6)) {
-        throw new Error(
-          `Invalid number for 6-Star Prestige: ${prestige6String}`
-        );
-      }
-
-      const prestige7 = parseInt(prestige7String || "0", 10);
-      if (isNaN(prestige7)) {
-        throw new Error(
-          `Invalid number for 7-Star Prestige: ${prestige7String}`
-        );
-      }
-
       if (
         !Object.values(ChampionClass).includes(
           partialChampionData.champClass as ChampionClass
@@ -122,8 +102,6 @@ export async function handleChampionModalPart2(interaction: ModalSubmitInteracti
         tagsImageUrl,
         heroImageUrl,
         obtainableRange,
-        prestige6,
-        prestige7,
         releaseDate: new Date(releaseDate),
       };
 

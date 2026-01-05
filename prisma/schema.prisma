@@ -110,7 +110,6 @@ model Champion {
   class         ChampionClass
   releaseDate   DateTime
   obtainable    String[]
-  prestige      Json
   images        Json
   discordEmoji  String?
   fullAbilities Json
@@ -119,6 +118,7 @@ model Champion {
   tags               Tag[]
   abilities          ChampionAbilityLink[]
   attacks            Attack[]
+  prestigeData       ChampionPrestige[]
   roster             Roster[]
   synergyProviderFor ChampionAbilitySynergy[]
   duels              Duel[]
@@ -132,6 +132,19 @@ model Champion {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ChampionPrestige {
+  id          Int      @id @default(autoincrement())
+  championId  Int
+  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  rarity      Int
+  rank        Int
+  sig         Int
+  prestige    Int
+
+  @@unique([championId, rarity, rank, sig])
+  @@index([championId])
 }
 
 model Duel {

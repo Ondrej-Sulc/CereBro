@@ -42,13 +42,10 @@ export async function handleChampionSyncSheet(interaction: CommandInteraction) {
         "Secondary 64",
         "Secondary 128",
         "Secondary 256",
-        "Prestige 6*",
-        "Prestige 7*",
         "Discord Emoji",
       ];
 
       const rows = champions.map((champion) => {
-        const prestige = champion.prestige as { "6"?: number; "7"?: number };
         const capitalize = (s: string) =>
           s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
@@ -71,8 +68,6 @@ export async function handleChampionSyncSheet(interaction: CommandInteraction) {
           getChampionImageUrl(champion.images, "64", "secondary") || "",
           getChampionImageUrl(champion.images, "128", "secondary") || "",
           getChampionImageUrl(champion.images, "full", "secondary") || "",
-          prestige?.["6"] || "",
-          prestige?.["7"] || "",
           champion.discordEmoji || "",
         ];
       });

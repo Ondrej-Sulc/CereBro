@@ -39,21 +39,13 @@ export async function showChampionModalPart2(
       .setRequired(false)
       .setValue("2-7");
 
-    const prestigeInput = new TextInputBuilder()
-      .setCustomId("championPrestige")
-      .setLabel("6*,7* Prestige (e.g., 12345,13456)")
-      .setStyle(TextInputStyle.Short)
-      .setRequired(false)
-      .setValue("0,0");
-
     modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(tagsImageInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(heroImageInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(releaseDateInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         obtainableRangeInput
-      ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(prestigeInput)
+      )
     );
 
     await interaction.showModal(modal);

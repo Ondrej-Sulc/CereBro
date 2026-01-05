@@ -137,8 +137,6 @@ export async function saveChampionToDb(
     champClass: ChampionClass,
     releaseDate: string,
     obtainableRange: string,
-    prestige6: number,
-    prestige7: number,
     imageUrls: any,
     tags: any,
     emoji: any | undefined
@@ -149,11 +147,6 @@ export async function saveChampionToDb(
       (start + i).toString()
     );
 
-    const prestige = {
-      "6": prestige6,
-      "7": prestige7,
-    };
-
     const discordEmoji = emoji ? `<:${emoji.name}:${emoji.id}>` : undefined;
 
     const championData = {
@@ -162,7 +155,6 @@ export async function saveChampionToDb(
       class: champClass,
       releaseDate: new Date(releaseDate),
       obtainable,
-      prestige,
       images: imageUrls,
       discordEmoji,
       fullAbilities: {},
@@ -222,8 +214,6 @@ export async function addChampion(
         heroImageUrl,
         releaseDate,
         obtainableRange,
-        prestige6,
-        prestige7,
       } = championData;
 
       logger.info(`Adding champion: ${name}`);
@@ -264,8 +254,6 @@ export async function addChampion(
         champClass,
         releaseDate,
         obtainableRange,
-        prestige6,
-        prestige7,
         imageUrls,
         tags,
         emoji
