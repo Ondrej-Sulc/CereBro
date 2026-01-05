@@ -16,7 +16,6 @@ export async function getCachedChampions() {
         shortName: true,
         releaseDate: true,
         obtainable: true,
-        prestige: true,
         discordEmoji: true,
         fullAbilities: true,
         createdAt: true,

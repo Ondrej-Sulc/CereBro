@@ -12,6 +12,7 @@ import { ChampionClass } from "@prisma/client"; // Import ChampionClass
 import { getChampionClassColors } from "@/lib/championClassHelper"; // Import class colors helper
 import { cn } from "@/lib/utils"; // Import cn
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { PrestigeHistoryChart } from "./prestige-chart";
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
     SCIENCE: "/icons/Science.png",
@@ -30,7 +31,15 @@ export default async function ProfilePage() {
     redirect("/api/auth/signin?callbackUrl=/profile");
   }
 
-  const rosterResult = await getRoster(player.id, null, null, null);
+  const [rosterResult, prestigeHistory] = await Promise.all([
+    getRoster(player.id, null, null, null),
+    prisma.prestigeLog.findMany({
+      where: { playerId: player.id },
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, championPrestige: true, summonerPrestige: true },
+    })
+  ]);
+
   const roster = typeof rosterResult === "string" ? [] : rosterResult;
 
   // Roster Analysis
@@ -66,32 +75,49 @@ export default async function ProfilePage() {
 
       <Separator className="bg-slate-800" />
 
-      {/* Prestige Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Summoner Prestige</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{player.summonerPrestige?.toLocaleString() || "N/A"}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Champion Prestige</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{player.championPrestige?.toLocaleString() || "N/A"}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-900/50 border-slate-800">
+      {/* Prestige Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Stats Cards */}
+        <div className="lg:col-span-1 grid grid-cols-1 gap-4">
+            <Card className="bg-slate-900/50 border-slate-800">
             <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-400">Relic Prestige</CardTitle>
+                <CardTitle className="text-sm font-medium text-slate-400">Summoner Prestige</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{player.relicPrestige?.toLocaleString() || "N/A"}</div>
+                <div className="text-2xl font-bold">{player.summonerPrestige?.toLocaleString() || "N/A"}</div>
             </CardContent>
-        </Card>
+            </Card>
+            <Card className="bg-slate-900/50 border-slate-800">
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-slate-400">Champion Prestige</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{player.championPrestige?.toLocaleString() || "N/A"}</div>
+            </CardContent>
+            </Card>
+            <Card className="bg-slate-900/50 border-slate-800">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-slate-400">Relic Prestige</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{player.relicPrestige?.toLocaleString() || "N/A"}</div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* History Chart */}
+        <div className="lg:col-span-2">
+            {prestigeHistory.length >= 3 ? (
+                <PrestigeHistoryChart data={prestigeHistory} />
+            ) : (
+                <Card className="bg-slate-900/30 border-slate-800 border-dashed h-full flex items-center justify-center p-8 text-center">
+                    <div className="space-y-2">
+                        <p className="text-slate-500 text-sm">Prestige history will appear here once you have at least three data points.</p>
+                        <p className="text-slate-600 text-xs italic">Updates are recorded when you sync your roster.</p>
+                    </div>
+                </Card>
+            )}
+        </div>
       </div>
 
       {/* Roster Summary */}

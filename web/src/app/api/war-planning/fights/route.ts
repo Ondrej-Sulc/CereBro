@@ -93,14 +93,14 @@ export async function GET(request: Request) {
                 name: attacker.name,
                 images: attacker.images,
                 class: attacker.class,
-                tags: attacker.tags
+                tags: attacker.tags.map(t => t.name)
             } : null,
             defender: defender ? {
                 id: defender.id,
                 name: defender.name,
                 images: defender.images,
                 class: defender.class,
-                tags: defender.tags
+                tags: defender.tags.map(t => t.name)
             } : null,
             prefightChampions: f.prefightChampions.map(pf => {
                 const champ = championMap.get(pf.championId);

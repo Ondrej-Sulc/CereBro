@@ -58,6 +58,7 @@ The flagship feature of the platform.
 
 ### 🧠 Knowledge Base
 *   **Champion Search:** Powerful filtering by immunities, tags, and ability mechanics.
+*   **Champion Prestige Data:** Maintains a normalized, high-performance database of prestige values across all rarities, ranks, and signature levels.
 *   **Community Data:** Crowdsourced Duel Targets with an admin review queue system.
 
 ### 🌐 AI & Utilities
