@@ -221,6 +221,15 @@ The bot includes a high-performance translation system designed for multi-nation
     *   A "Jump to Original Message" deep link.
     *   The requester's server nickname in the footer.
 *   **Extensive Language Support:** Supports 48+ languages and regional variations through a comprehensive flag-to-language mapping.
+### Champion Prestige Data
+
+The system now maintains a comprehensive, normalized database of champion prestige values to support accurate prestige calculations and roster analysis.
+
+*   **Normalized Data Model:**
+    *   `ChampionPrestige`: A dedicated model linked to `Champion`.
+    *   Stores `rarity`, `rank`, `sig` (Signature Level), and `prestige` value as integers.
+    *   Replaces the previous ad-hoc JSON `prestige` field on the `Champion` model.
+*   **Data Seeding:** The database is seeded with granular prestige data for all champions across various rarities and ranks (including 7-star champions).
 
 The bot is built with a modern tech stack, including:
 
