@@ -12,13 +12,14 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Users, Wrench, LayoutGrid, Map as MapIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Users, Wrench, LayoutGrid, Map as MapIcon, PieChart } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
 import { updateDefensePlanHighlightTag, updateDefensePlanTier } from "@/app/planning/defense-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getBattlegroupColor } from "@/lib/battlegroup-colors";
+import DefenseStatsPanel from "./defense-stats-panel";
 
 interface DefenseDetailsClientProps {
   plan: WarDefensePlan;
@@ -194,6 +195,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       handleNodeClick(nodeNumber);
       setRightPanelState('editor');
   }, [handleNodeClick, setRightPanelState]);
+
+  const toggleStats = useCallback(() => {
+    setRightPanelState((prev) => prev === 'stats' ? 'closed' : 'stats');
+  }, [setRightPanelState]);
 
   const handleAddForPlayer = useCallback((playerId: string) => {
       setSelectedPlayerId(playerId);
@@ -537,6 +542,16 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                  <div className="h-4 w-px bg-slate-800 mx-1 hidden sm:block" />
 
                  <Button
+                    variant={rightPanelState === 'stats' ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={toggleStats}
+                    className="flex gap-2 h-8"
+                 >
+                    <PieChart className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">Stats</span>
+                 </Button>
+
+                 <Button
                     variant={rightPanelState === 'tools' ? "secondary" : "outline"}
                     size="sm"
                     onClick={toggleTools}
@@ -595,7 +610,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         {/* Editor Sidebar */}
         <div className={cn(
             "bg-slate-950 border-l border-slate-800 transition-all duration-300 ease-in-out z-20 flex flex-col",
-            (rightPanelState === 'editor' || rightPanelState === 'tools') ? "w-full md:w-[400px]" : "w-0 overflow-hidden"
+            (rightPanelState === 'editor' || rightPanelState === 'tools' || rightPanelState === 'stats') ? "w-full md:w-[400px]" : "w-0 overflow-hidden"
         )}>
              {rightPanelState === 'editor' && (
                  <DefenseEditor 
@@ -614,6 +629,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     currentBattlegroup={currentBattlegroup}
                     nodeData={selectedNodeId ? nodesMap.get(selectedNodeId) : undefined}
                     isReadOnly={isReadOnly}
+                    bgPlacements={currentPlacements}
                  />
              )}
              {rightPanelState === 'tools' && (
@@ -632,6 +648,14 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     }
                     activeTag={activeTag || null}
                     isReadOnly={isReadOnly}
+                 />
+             )}
+             {rightPanelState === 'stats' && (
+                 <DefenseStatsPanel
+                    onClose={handleEditorClose}
+                    placements={currentPlacements}
+                    activeTag={activeTag || null}
+                    currentBattlegroup={currentBattlegroup}
                  />
              )}
         </div>

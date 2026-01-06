@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { WarDefensePlacement, WarTactic, WarMapType, WarNodeAllocation, NodeModifier } from "@prisma/client";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { WarDefensePlacement, WarMapType, WarNodeAllocation, NodeModifier } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,9 @@ import { ActiveModifiers } from "./active-modifiers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { WarTacticWithTags } from "../hooks/use-war-planning";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface ChampionWithTags extends Champion {
   tags?: { name: string }[];
@@ -39,6 +42,7 @@ interface DefenseEditorProps {
   tier?: number | null;
   nodeData?: WarNodeWithAllocations;
   isReadOnly?: boolean;
+  bgPlacements?: PlacementWithNode[];
 }
 
 export default function DefenseEditor({
@@ -57,6 +61,7 @@ export default function DefenseEditor({
   tier,
   nodeData,
   isReadOnly = false,
+  bgPlacements = [],
 }: DefenseEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentPlacement?.defenderId || undefined);
   const [playerId, setPlayerId] = useState<string | undefined>(currentPlacement?.playerId || undefined);
@@ -66,6 +71,22 @@ export default function DefenseEditor({
 
   const isReady = !!(currentPlacement?.id || dbNodeId);
 
+  // Duplicate Check for Current Selection
+  const duplicateWarning = useMemo(() => {
+      if (!defenderId) return null;
+      
+      const duplicates = bgPlacements.filter(p => 
+          p.defenderId === defenderId && 
+          p.nodeId !== (currentPlacement?.nodeId || dbNodeId) // Exclude self
+      );
+
+      if (duplicates.length > 0) {
+          return duplicates.map(p => p.node.nodeNumber);
+      }
+      return null;
+  }, [defenderId, bgPlacements, currentPlacement, dbNodeId]);
+
+
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
       const tactic = activeTactic;
@@ -73,6 +94,7 @@ export default function DefenseEditor({
       const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
       return def?.tags?.some(t => t.name === tactic.defenseTag!.name) ?? false;
   }, [defenderId, activeTactic, champions]);
+
 
   // Filter active modifiers
   const activeModifiers = useMemo(() => {
@@ -138,7 +160,7 @@ export default function DefenseEditor({
 
   // Sort Players: Alphabetical, filtered by BG
   const availablePlayers = useMemo(() => {
-      let filtered = players.filter(p => p.battlegroup === currentBattlegroup);
+      const filtered = players.filter(p => p.battlegroup === currentBattlegroup);
       
       // Ensure currently assigned player is in the list
       if (playerId) {
@@ -245,7 +267,7 @@ export default function DefenseEditor({
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="defender" className="text-right">Defender</Label>
             <div className="col-span-3">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                   <ChampionCombobox
                     champions={champions}
                     value={defenderId !== undefined ? String(defenderId) : ""}
@@ -254,12 +276,25 @@ export default function DefenseEditor({
                     onOpenChange={(val) => !isReadOnly && setIsDefenderOpen(val)}
                     disabled={isReadOnly || !isReady}
                   />
+                  
+                  {/* Tactic Badge */}
                   {defenderTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
                           <Badge variant="outline" className="border-indigo-500 text-indigo-400 bg-indigo-500/10 text-[10px] px-1.5 py-0 h-5">
                               Tactic: {activeTactic?.defenseTag?.name}
                           </Badge>
                       </div>
+                  )}
+
+                  {/* Duplicate Warning */}
+                  {duplicateWarning && (
+                      <Alert variant="destructive" className="py-2 px-3">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle className="text-xs font-bold ml-2">Duplicate Defender</AlertTitle>
+                          <AlertDescription className="text-xs ml-2">
+                              Already placed on Node(s): {duplicateWarning.join(", ")}
+                          </AlertDescription>
+                      </Alert>
                   )}
               </div>
             </div>

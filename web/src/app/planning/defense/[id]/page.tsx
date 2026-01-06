@@ -6,6 +6,7 @@ import { updateDefensePlacement } from "../../defense-actions";
 import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import FormPageBackground from "@/components/FormPageBackground";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 interface DefenseDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -19,28 +20,26 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
 
   const { id } = await params;
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
+  const player = await getUserPlayerWithAlliance();
 
-  if (!account?.providerAccountId) {
-    return <p>Error: No linked Discord account found.</p>;
+  if (!player) {
+    return <p>Player profile not found.</p>;
   }
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
+  const isBotAdmin = player.isBotAdmin;
 
-  if (!player || !player.allianceId) {
+  if (!player.allianceId && !isBotAdmin) {
     return <p>You must be in an Alliance to access War Defense Planning.</p>;
   }
 
+  // Allow admins to view any plan, otherwise restrict to player's alliance
+  const whereClause: any = { id: id };
+  if (!isBotAdmin) {
+      whereClause.allianceId = player.allianceId;
+  }
+
   const plan = await prisma.warDefensePlan.findFirst({
-    where: { id: id, allianceId: player.allianceId },
+    where: whereClause,
     include: {
         highlightTag: true
     }
@@ -50,13 +49,14 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
     return <p>Plan not found or you do not have permission to view it.</p>;
   }
 
-  const isOfficer = player.isOfficer || player.isBotAdmin;
+  const isOfficer = player.isOfficer || isBotAdmin;
 
   const champions = await getCachedChampions();
 
-  const allianceMembers = await getFromCache(`alliance-members-${player.allianceId}`, 3600, async () => {
+  // Fetch members of the PLAN's alliance, not necessarily the viewer's alliance
+  const allianceMembers = await getFromCache(`alliance-members-${plan.allianceId}`, 3600, async () => {
     return await prisma.player.findMany({
-      where: { allianceId: player.allianceId },
+      where: { allianceId: plan.allianceId },
       orderBy: { ingameName: 'asc' },
       include: {
         roster: {

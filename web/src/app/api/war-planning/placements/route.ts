@@ -1,17 +1,11 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import logger from '@cerebro/core/services/loggerService';
+import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
   const { searchParams } = new URL(request.url);
   const planId = searchParams.get('planId');
   const battlegroupParam = searchParams.get('battlegroup');
@@ -30,20 +24,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    const account = await prisma.account.findFirst({
-      where: { userId: session.user.id, provider: "discord" },
-    });
+    const player = await getUserPlayerWithAlliance();
   
-    if (!account?.providerAccountId) {
-      return NextResponse.json({ message: 'No linked Discord account found.' }, { status: 403 });
+    if (!player) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
+
+    const isBotAdmin = player.isBotAdmin;
   
-    const player = await prisma.player.findFirst({
-      where: { discordId: account.providerAccountId },
-      include: { alliance: true },
-    });
-  
-    if (!player || !player.allianceId) {
+    if (!isBotAdmin && !player.allianceId) {
       return NextResponse.json({ message: 'You must be in an alliance.' }, { status: 403 });
     }
 
@@ -52,8 +41,12 @@ export async function GET(request: Request) {
         select: { allianceId: true },
     });
 
-    if (!plan || plan.allianceId !== player.allianceId) {
-        return NextResponse.json({ message: 'Plan not found or not part of your alliance.' }, { status: 404 });
+    if (!plan) {
+         return NextResponse.json({ message: 'Plan not found' }, { status: 404 });
+    }
+
+    if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+        return NextResponse.json({ message: 'Plan not part of your alliance.' }, { status: 404 }); // 404 to mask existence? Or 403.
     }
 
     // Fetch placements (lightweight)

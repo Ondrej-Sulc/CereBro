@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import logger from "@cerebro/core/services/loggerService";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 const createWarSchema = z.object({
   season: z.number().min(1),
@@ -21,9 +22,6 @@ export async function getActiveTactic(season: number, tier: number) {
     const session = await auth();
     if (!session?.user?.id) return null;
 
-    // Find a tactic that matches season and includes the tier in its range
-    // minTier (Best) <= tier AND maxTier (Worst) >= tier
-    // e.g. Tactic 1-5. War Tier 3. (1 <= 3) && (5 >= 3) -> Match.
     const tactic = await prisma.warTactic.findFirst({
         where: {
             season,
@@ -40,28 +38,7 @@ export async function getActiveTactic(season: number, tier: number) {
 }
 
 export async function createWar(formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-
-  // 1. Get the NextAuth User's Discord ID
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
-  }
-
-  // 2. Find the Player and check Officer status
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
+  const player = await getUserPlayerWithAlliance();
 
   if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
     throw new Error("You must be an Alliance Officer or Bot Admin to plan a war.");
@@ -74,12 +51,9 @@ export async function createWar(formData: FormData) {
   const opponent = formData.get("opponent") as string;
   const mapType = (formData.get("mapType") as WarMapType) || WarMapType.STANDARD;
 
-  // Validate
   const data = createWarSchema.parse({ season, warNumber, tier, opponent, mapType });
 
-  // 3. Create War and Fights
   const war = await prisma.$transaction(async (tx) => {
-    // Create War
     const newWar = await tx.war.create({
       data: {
         season: data.season,
@@ -92,11 +66,9 @@ export async function createWar(formData: FormData) {
       },
     });
     
-    // Fetch all nodes mapping
     const warNodes = await tx.warNode.findMany();
     const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
 
-    // Determine max nodes based on map type
     const maxNodes = data.mapType === WarMapType.BIG_THING ? 10 : 50;
 
     const fightsData = [];
@@ -127,69 +99,44 @@ export async function createWar(formData: FormData) {
 export async function updateWarFight(updatedFight: Partial<WarFight> & { 
   prefightUpdates?: { championId: number; playerId?: string | null }[] 
 }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized.");
   }
 
-  // Basic authorization: Ensure user is an officer of the alliance
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer to update war fights.");
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to update war fights.");
   }
 
   const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
 
-  let targetWar: (War & { alliance: Alliance }) | null = null; // Declare targetWar here
+  let targetWar: (War & { alliance: Alliance }) | null = null;
 
-  // Strict Alliance Ownership Validation
   if (id) {
-      // Case 1: Update by ID
       const existingFight = await prisma.warFight.findUnique({
           where: { id },
-          include: { war: { include: { alliance: true } } } // Include alliance for type safety
+          include: { war: { include: { alliance: true } } }
       });
 
-      if (!existingFight) {
-          throw new Error("Fight not found.");
-      }
+      if (!existingFight) throw new Error("Fight not found.");
 
-      if (existingFight.war.alliance.id !== player.allianceId) { // Check alliance.id
+      if (!player.isBotAdmin && existingFight.war.alliance.id !== player.allianceId) {
           throw new Error("Unauthorized: Cannot edit fights from another alliance.");
       }
       targetWar = existingFight.war;
-      updatedFight.warId = existingFight.war.id; // Ensure warId is set for later use
+      updatedFight.warId = existingFight.war.id;
   } else {
-      // Case 2: Create/Upsert by Context
-      if (!warId) {
-          throw new Error("War ID is required for creating a fight.");
-      }
+      if (!warId) throw new Error("War ID is required for creating a fight.");
 
       targetWar = await prisma.war.findUnique({
           where: { id: warId },
-          include: { alliance: true } // Include alliance for type safety
+          include: { alliance: true }
       });
 
-      if (!targetWar) {
-          throw new Error("War not found.");
-      }
+      if (!targetWar) throw new Error("War not found.");
 
-      if (targetWar.alliance.id !== player.allianceId) { // Check alliance.id
+      if (!player.isBotAdmin && targetWar.alliance.id !== player.allianceId) {
           throw new Error("Unauthorized: Cannot edit fights from another alliance.");
       }
   }
@@ -201,7 +148,7 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
       death: rest.death,
       notes: rest.notes,
       prefightChampions: prefightUpdates ? {
-          deleteMany: {}, // Clear existing
+          deleteMany: {}, 
           create: prefightUpdates.map(p => ({
               championId: p.championId,
               playerId: p.playerId
@@ -215,15 +162,14 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
           data: updateData,
       });
   } else {
-      if (!updatedFight.warId || !battlegroup || !nodeId) { // Use updatedFight.warId
+      if (!updatedFight.warId || !battlegroup || !nodeId) {
           throw new Error("WarFight ID is missing, and WarID/BG/NodeID are not sufficient to create it.");
       }
       
       if (targetWar.warNumber === null) {
-        // Offseason: Always create new fights to allow duplicates
         await prisma.warFight.create({
             data: {
-                warId: updatedFight.warId, // Use updatedFight.warId
+                warId: updatedFight.warId,
                 battlegroup,
                 nodeId,
                 attackerId: rest.attackerId,
@@ -240,9 +186,8 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
             }
         });
       } else {
-        // Regular War: Check for existing fight to enforce uniqueness
         const existingFight = await prisma.warFight.findFirst({
-            where: { warId: updatedFight.warId, battlegroup, nodeId } // Use updatedFight.warId
+            where: { warId: updatedFight.warId, battlegroup, nodeId }
         });
 
         if (existingFight) {
@@ -253,7 +198,7 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
         } else {
             await prisma.warFight.create({
                 data: {
-                    warId: updatedFight.warId, // Use updatedFight.warId
+                    warId: updatedFight.warId,
                     battlegroup,
                     nodeId,
                     attackerId: rest.attackerId,
@@ -275,23 +220,17 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
 }
 
 export async function getPlayerRoster(playerId: string) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  const requester = await getUserPlayerWithAlliance();
+  
+  if (!requester) return [];
 
-  // Verify access rights (same alliance)
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-  if (!account?.providerAccountId) return [];
-
-  const requester = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-  });
   const targetPlayer = await prisma.player.findUnique({
     where: { id: playerId },
   });
 
-  if (!requester || !targetPlayer || requester.allianceId !== targetPlayer.allianceId) {
+  if (!targetPlayer) return [];
+  
+  if (!requester.isBotAdmin && requester.allianceId !== targetPlayer.allianceId) {
     return [];
   }
 
@@ -312,19 +251,11 @@ export async function getPlayerRoster(playerId: string) {
 }
 
 export async function getOwnersOfChampion(championId: number, allianceId: string, battlegroup?: number) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  const requester = await getUserPlayerWithAlliance();
 
-  // Verify access (must be in same alliance)
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-  if (!account?.providerAccountId) return [];
-  const requester = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-  });
-
-  if (!requester || requester.allianceId !== allianceId) {
+  if (!requester) return [];
+  
+  if (!requester.isBotAdmin && requester.allianceId !== allianceId) {
     return [];
   }
 
@@ -347,102 +278,68 @@ export async function getOwnersOfChampion(championId: number, allianceId: string
 }
 
 export async function updateWarStatus(warId: string, status: WarStatus) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to update war status.");
   }
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer to update war status.");
+  if (!player.isBotAdmin) {
+      const war = await prisma.war.findUnique({ where: { id: warId } });
+      if (!war || war.allianceId !== player.allianceId) {
+          throw new Error("Unauthorized.");
+      }
   }
 
   await prisma.war.update({
-    where: {
-      id: warId,
-      allianceId: player.allianceId,
-    },
-    data: {
-      status,
-    },
+    where: { id: warId },
+    data: { status },
   });
 }
 
 export async function deleteWar(warId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to delete a war.");
   }
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer to delete a war.");
+  if (!player.isBotAdmin) {
+      const war = await prisma.war.findUnique({ where: { id: warId } });
+      if (!war || war.allianceId !== player.allianceId) {
+          throw new Error("Unauthorized.");
+      }
   }
 
-  await prisma.war.delete({
-    where: {
-      id: warId,
-      allianceId: player.allianceId,
-    },
-  });
+  await prisma.war.delete({ where: { id: warId } });
 
   revalidatePath("/planning");
 }
 
 export async function addExtraChampion(warId: string, battlegroup: number, playerId: string, championId: number) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-  if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer to manage extra champions.");
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
   }
 
-  // Verify the War belongs to the user's alliance
-  const targetWar = await prisma.war.findUnique({
-      where: { id: warId }
-  });
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to manage extra champions.");
+  }
 
-  if (!targetWar || targetWar.allianceId !== player.allianceId) {
+  const targetWar = await prisma.war.findUnique({ where: { id: warId } });
+
+  if (!targetWar) throw new Error("War not found.");
+
+  if (!player.isBotAdmin && targetWar.allianceId !== player.allianceId) {
       throw new Error("Unauthorized: Cannot add extra champions to a war outside your alliance.");
   }
 
@@ -462,65 +359,48 @@ export async function addExtraChampion(warId: string, battlegroup: number, playe
 }
 
 export async function removeExtraChampion(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-  if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer to manage extra champions.");
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
   }
 
-  // Verify the WarExtraChampion belongs to the user's alliance
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to manage extra champions.");
+  }
+
   const extraChampionToDelete = await prisma.warExtraChampion.findUnique({
       where: { id },
       include: { war: true }
   });
 
   if (!extraChampionToDelete) {
-      logger.warn({ extraId: id, playerId: player.id }, "Attempted to delete non-existent extra champion");
       throw new Error("Extra Champion not found.");
   }
 
-  if (extraChampionToDelete.war.allianceId !== player.allianceId) {
+  if (!player.isBotAdmin && extraChampionToDelete.war.allianceId !== player.allianceId) {
       throw new Error("Unauthorized: Cannot delete extra champions from another alliance's war.");
   }
 
   await prisma.warExtraChampion.delete({ where: { id } });
-  logger.info({ extraId: id, playerId: player.id }, "Deleted extra champion");
 }
 
 export async function addWarBan(warId: string, championId: number) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
+    const player = await getUserPlayerWithAlliance();
 
-    const account = await prisma.account.findFirst({
-        where: { userId: session.user.id, provider: "discord" },
-    });
-    if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
-
-    const player = await prisma.player.findFirst({
-        where: { discordId: account.providerAccountId },
-        include: { alliance: true },
-    });
-
-    if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-        throw new Error("You must be an Alliance Officer to manage war bans.");
+    if (!player || (!player.allianceId && !player.isBotAdmin)) {
+        throw new Error("Unauthorized");
     }
 
-    const targetWar = await prisma.war.findUnique({
-        where: { id: warId }
-    });
+    if (!player.isOfficer && !player.isBotAdmin) {
+        throw new Error("You must be an Alliance Officer or Bot Admin to manage war bans.");
+    }
 
-    if (!targetWar || targetWar.allianceId !== player.allianceId) {
+    const targetWar = await prisma.war.findUnique({ where: { id: warId } });
+
+    if (!targetWar) throw new Error("War not found.");
+
+    if (!player.isBotAdmin && targetWar.allianceId !== player.allianceId) {
         throw new Error("Unauthorized: Cannot add bans to a war outside your alliance.");
     }
 
@@ -538,21 +418,14 @@ export async function addWarBan(warId: string, championId: number) {
 }
 
 export async function removeWarBan(id: string) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
+    const player = await getUserPlayerWithAlliance();
 
-    const account = await prisma.account.findFirst({
-        where: { userId: session.user.id, provider: "discord" },
-    });
-    if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
+    if (!player || (!player.allianceId && !player.isBotAdmin)) {
+        throw new Error("Unauthorized");
+    }
 
-    const player = await prisma.player.findFirst({
-        where: { discordId: account.providerAccountId },
-        include: { alliance: true },
-    });
-
-    if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-        throw new Error("You must be an Alliance Officer to manage war bans.");
+    if (!player.isOfficer && !player.isBotAdmin) {
+        throw new Error("You must be an Alliance Officer or Bot Admin to manage war bans.");
     }
 
     const banToDelete = await prisma.warBan.findUnique({
@@ -560,11 +433,9 @@ export async function removeWarBan(id: string) {
         include: { war: true }
     });
 
-    if (!banToDelete) {
-        throw new Error("Ban not found.");
-    }
+    if (!banToDelete) throw new Error("Ban not found.");
 
-    if (banToDelete.war.allianceId !== player.allianceId) {
+    if (!player.isBotAdmin && banToDelete.war.allianceId !== player.allianceId) {
         throw new Error("Unauthorized: Cannot delete bans from another alliance's war.");
     }
 
@@ -572,56 +443,38 @@ export async function removeWarBan(id: string) {
 }
 
 export async function getExtraChampions(warId: string, battlegroup: number) {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  const player = await getUserPlayerWithAlliance();
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-  if (!account?.providerAccountId) return [];
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-  });
-
-    if (!player || !player.allianceId) return [];
+  if (!player || (!player.allianceId && !player.isBotAdmin)) return [];
   
-    return await prisma.warExtraChampion.findMany({
-      where: {
-        warId,
-        battlegroup,
-        war: { allianceId: player.allianceId }, // Filter by alliance ID
-      },
-      include: {
-          champion: { select: { id: true, name: true, images: true } }
-      }
-    });
-  }
+  return await prisma.warExtraChampion.findMany({
+    where: {
+      warId,
+      battlegroup,
+      ...(player.isBotAdmin ? {} : { war: { allianceId: player.allianceId } })
+    },
+    include: {
+        champion: { select: { id: true, name: true, images: true } }
+    }
+  });
+}
 
 export async function distributePlan(warId: string, battlegroup?: number) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-  if (!account?.providerAccountId) throw new Error("No linked Discord account found.");
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer to distribute plans.");
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
   }
 
-  // Verify War belongs to alliance
-  const war = await prisma.war.findUnique({
-      where: { id: warId }
-  });
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to distribute plans.");
+  }
 
-  if (!war || war.allianceId !== player.allianceId) {
+  const war = await prisma.war.findUnique({ where: { id: warId } });
+
+  if (!war) throw new Error("War not found.");
+
+  if (!player.isBotAdmin && war.allianceId !== player.allianceId) {
       throw new Error("Unauthorized: Cannot distribute plans for another alliance.");
   }
 
@@ -629,7 +482,7 @@ export async function distributePlan(warId: string, battlegroup?: number) {
     data: {
       type: 'DISTRIBUTE_WAR_PLAN',
       payload: {
-        allianceId: player.allianceId,
+        allianceId: war.allianceId,
         warId,
         battlegroup
       }

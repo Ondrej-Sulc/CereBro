@@ -1,11 +1,11 @@
 'use server';
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarMapType, WarDefensePlacement } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 const createDefensePlanSchema = z.object({
   name: z.string().min(1),
@@ -13,29 +13,15 @@ const createDefensePlanSchema = z.object({
 });
 
 export async function createDefensePlan(formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to create a defense plan.");
+  // Even Bot Admins need to be in an alliance to create a plan for it (in the current UI context)
+  if (!player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Officer or Bot Admin (and in an alliance) to create a defense plan.");
   }
 
   const name = formData.get("name") as string;
@@ -88,28 +74,15 @@ export async function createDefensePlan(formData: FormData) {
 }
 
 export async function updateDefensePlacement(updatedPlacement: Partial<WarDefensePlacement>) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
+  const isBotAdmin = player.isBotAdmin;
 
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
     throw new Error("You must be an Alliance Officer to update defense placements.");
   }
 
@@ -126,7 +99,7 @@ export async function updateDefensePlacement(updatedPlacement: Partial<WarDefens
           throw new Error("Placement not found.");
       }
 
-      if (existingPlacement.plan.alliance.id !== player.allianceId) {
+      if (!isBotAdmin && existingPlacement.plan.alliance.id !== player.allianceId) {
           throw new Error("Unauthorized: Cannot edit placements from another alliance.");
       }
   } else {
@@ -143,7 +116,7 @@ export async function updateDefensePlacement(updatedPlacement: Partial<WarDefens
           throw new Error("Plan not found.");
       }
 
-      if (targetPlan.alliance.id !== player.allianceId) {
+      if (!isBotAdmin && targetPlan.alliance.id !== player.allianceId) {
           throw new Error("Unauthorized: Cannot edit placements from another alliance.");
       }
   }
@@ -154,64 +127,60 @@ export async function updateDefensePlacement(updatedPlacement: Partial<WarDefens
       starLevel: rest.starLevel,
   };
 
-        if (id) {
-            await prisma.warDefensePlacement.update({
-                where: { id },
-                data: updateData,
-            });
-        } else {
-            // Upsert logic with new constraint
-            if (!planId || !nodeId || !battlegroup) {
-                throw new Error("PlanID, NodeID and Battlegroup required.");
-            }
-            
-            await prisma.warDefensePlacement.upsert({
-                where: {
-                    planId_battlegroup_nodeId: { planId, battlegroup, nodeId }
-                },
-                update: updateData,
-                create: {
-                    planId,
-                    battlegroup,
-                    nodeId,
-                    defenderId: rest.defenderId,
-                    playerId: rest.playerId,
-                    starLevel: rest.starLevel
-                }
-            });
+    if (id) {
+        await prisma.warDefensePlacement.update({
+            where: { id },
+            data: updateData,
+        });
+    } else {
+        // Upsert logic with new constraint
+        if (!planId || !nodeId || !battlegroup) {
+            throw new Error("PlanID, NodeID and Battlegroup required.");
         }
+        
+        await prisma.warDefensePlacement.upsert({
+            where: {
+                planId_battlegroup_nodeId: { planId, battlegroup, nodeId }
+            },
+            update: updateData,
+            create: {
+                planId,
+                battlegroup,
+                nodeId,
+                defenderId: rest.defenderId,
+                playerId: rest.playerId,
+                starLevel: rest.starLevel
+            }
+        });
+    }
 }
 
 export async function deleteDefensePlan(planId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
   }
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
+  const isBotAdmin = player.isBotAdmin;
 
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
     throw new Error("You must be an Alliance Officer to delete a defense plan.");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({
+      where: { id: planId }
+  });
+
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized");
   }
 
   await prisma.warDefensePlan.delete({
     where: {
       id: planId,
-      allianceId: player.allianceId,
     },
   });
 
@@ -219,28 +188,27 @@ export async function deleteDefensePlan(planId: string) {
 }
 
 export async function updateDefensePlanHighlightTag(planId: string, tagId: number | null) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
   }
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true }
-  });
+  const isBotAdmin = player.isBotAdmin;
 
-  if (!player?.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
+      throw new Error("Unauthorized");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({ where: { id: planId } });
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
       throw new Error("Unauthorized");
   }
 
   await prisma.warDefensePlan.update({
-      where: { id: planId, allianceId: player.allianceId },
+      where: { id: planId },
       data: { highlightTagId: tagId }
   });
   
@@ -248,28 +216,27 @@ export async function updateDefensePlanHighlightTag(planId: string, tagId: numbe
 }
 
 export async function updateDefensePlanTier(planId: string, tier: number | null) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const player = await getUserPlayerWithAlliance();
 
-  const account = await prisma.account.findFirst({
-    where: { userId: session.user.id, provider: "discord" },
-  });
-
-  if (!account?.providerAccountId) {
-    throw new Error("No linked Discord account found.");
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
   }
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true }
-  });
+  const isBotAdmin = player.isBotAdmin;
 
-  if (!player?.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
+      throw new Error("Unauthorized");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({ where: { id: planId } });
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
       throw new Error("Unauthorized");
   }
 
   await prisma.warDefensePlan.update({
-      where: { id: planId, allianceId: player.allianceId },
+      where: { id: planId },
       data: { tier: tier }
   });
   

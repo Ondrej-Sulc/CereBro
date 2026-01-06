@@ -7,7 +7,7 @@ import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampio
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion, WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
 
-export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster';
+export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
 export interface ExtraChampion {
   id: string;
