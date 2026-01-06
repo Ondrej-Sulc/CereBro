@@ -88,6 +88,7 @@ export async function GET(request: Request) {
 
         return {
             ...f,
+            type: "attack",
             attacker: attacker ? {
                 id: attacker.id,
                 name: attacker.name,

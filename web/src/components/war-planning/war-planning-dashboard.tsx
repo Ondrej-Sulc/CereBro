@@ -16,12 +16,21 @@ import {
   Rocket,
   Trash2,
   Settings,
-  Ban
+  Ban,
+  Map as MapIcon,
+  Grid3x3,
+  ChevronDown
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -260,11 +269,39 @@ export default function WarPlanningDashboard({
         {archivedWars.length === 0 ? (
            <p className="text-slate-500">No past wars found.</p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {archivedWars.map((war) => (
-              <WarCard key={war.id} war={war} userTimezone={userTimezone} isOfficer={isOfficer} />
+          <Accordion type="multiple" defaultValue={[String(Math.max(...archivedWars.map(w => w.season)))]} className="w-full space-y-4">
+            {Object.entries(
+              archivedWars.reduce((acc, war) => {
+                const season = war.season;
+                if (!acc[season]) acc[season] = [];
+                acc[season].push(war);
+                return acc;
+              }, {} as Record<number, War[]>)
+            )
+            .sort(([seasonA], [seasonB]) => Number(seasonB) - Number(seasonA))
+            .map(([season, seasonWars]) => (
+              <AccordionItem key={season} value={season} className="border border-slate-800 rounded-lg bg-slate-950/20 px-4">
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-semibold text-slate-200">Season {season}</span>
+                    <Badge variant="secondary" className="bg-slate-800 text-slate-400 border-slate-700">
+                      {seasonWars.length} Wars
+                    </Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 pb-6">
+                  <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    {seasonWars
+                      .sort((a, b) => (b.warNumber || 0) - (a.warNumber || 0)) // Sort by war number descending within season
+                      .map((war) => (
+                        <WarCard key={war.id} war={war} userTimezone={userTimezone} isOfficer={isOfficer} />
+                      ))
+                    }
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         )}
       </section>
     </div>
@@ -311,13 +348,28 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
         </div>
       </CardHeader>
       <CardContent className="pb-3">
-        <div className="flex items-center gap-4 text-sm text-slate-400">
-          <div className="flex items-center gap-1.5 bg-slate-900/50 px-2 py-1 rounded-md border border-slate-800">
-            <Shield className="h-3.5 w-3.5 text-amber-500" />
-            <span>Tier {war.warTier}</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between text-sm text-slate-400">
+             <div className="flex items-center gap-1.5 bg-slate-900/50 px-2 py-1 rounded-md border border-slate-800">
+                <Shield className="h-3.5 w-3.5 text-amber-500" />
+                <span>Tier {war.warTier}</span>
+             </div>
+             <div className="flex items-center gap-1.5 bg-slate-900/50 px-2 py-1 rounded-md border border-slate-800" title="Map Type">
+                {war.mapType === WarMapType.BIG_THING ? (
+                  <>
+                    <Grid3x3 className="h-3.5 w-3.5 text-purple-400" />
+                    <span className="text-purple-300">Big Thing</span>
+                  </>
+                ) : (
+                  <>
+                    <MapIcon className="h-3.5 w-3.5 text-indigo-400" />
+                    <span className="text-indigo-300">Standard</span>
+                  </>
+                )}
+             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-             <Calendar className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 pl-1">
+             <Calendar className="h-3 w-3" />
              <span>{dateString || "Loading..."}</span>
           </div>
         </div>
