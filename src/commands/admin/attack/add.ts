@@ -11,9 +11,16 @@ export async function showAttackModal(
   interaction: ChatInputCommandInteraction,
   championName: string
 ) {
+  const titlePrefix = "Add Attack for ";
+  const maxNameLength = 45 - titlePrefix.length;
+  const displayName =
+    championName.length > maxNameLength
+      ? `${championName.substring(0, maxNameLength - 3)}...`
+      : championName;
+
   const modal = new ModalBuilder()
     .setCustomId(`admin_attack_add_${championName}`)
-    .setTitle(`Add Attack for ${championName}`);
+    .setTitle(`${titlePrefix}${displayName}`);
 
   const attackTypeInput = new TextInputBuilder()
     .setCustomId("attackType")
