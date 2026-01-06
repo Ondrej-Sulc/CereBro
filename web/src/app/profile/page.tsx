@@ -36,7 +36,7 @@ export default async function ProfilePage() {
     prisma.prestigeLog.findMany({
       where: { playerId: player.id },
       orderBy: { createdAt: "asc" },
-      select: { createdAt: true, championPrestige: true, summonerPrestige: true },
+      select: { createdAt: true, championPrestige: true, summonerPrestige: true, relicPrestige: true },
     })
   ]);
 

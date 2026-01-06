@@ -33,6 +33,12 @@
     --card-foreground: 210 40% 98%;
 
     --radius: 0.5rem;
+
+    --chart-1: 199 89% 48%; /* sky-500 equivalent */
+    --chart-2: 262 83% 58%; /* violet-500 equivalent */
+    --chart-3: 12 76% 61%;
+    --chart-4: 173 58% 39%;
+    --chart-5: 43 74% 66%;
   }
  
   .dark {
@@ -63,6 +69,12 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --radius: 0.5rem;
+
+    --chart-1: 199 89% 48%; /* sky-500 */
+    --chart-2: 262 83% 58%; /* violet-500 */
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
