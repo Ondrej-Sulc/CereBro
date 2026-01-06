@@ -464,8 +464,8 @@ export function useWarPlanning({
         const updatedNode = {
           ...f,
           ...updatedFight,
-          attacker: newAttacker ? { id: newAttacker.id, name: newAttacker.name, images: newAttacker.images, class: newAttacker.class } : null,
-          defender: newDefender ? { id: newDefender.id, name: newDefender.name, images: newDefender.images, class: newDefender.class } : null,
+          attacker: newAttacker ? { id: newAttacker.id, name: newAttacker.name, images: newAttacker.images, class: newAttacker.class, tags: newAttacker.tags } : null,
+          defender: newDefender ? { id: newDefender.id, name: newDefender.name, images: newDefender.images, class: newDefender.class, tags: newDefender.tags } : null,
           player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
           prefightChampions: newPrefights
         } as FightWithNode;
