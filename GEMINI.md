@@ -275,7 +275,7 @@ The web interface features a "War Archive" that allows users to browse and searc
 ### Profile & Roster Management
 The web interface now includes a comprehensive Profile section.
 *   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, prestige, and a summary of their champion roster (grouped by star rating, rank, and class).
-*   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful OCR processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
+*   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful image processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
 
 ### Other Useful Commands
 

@@ -34,7 +34,8 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 ### 3. Shared Services & Infrastructure
 *   **Database:** PostgreSQL managed via **Prisma ORM**.
 *   **Async Job Queue:** A database-backed task system (`BotJob`) that decouples the Web App from the Bot. This allows the Web App to trigger complex Discord actions (like notifications or distributing war plans) reliability without direct network coupling.
-*   **OCR Pipeline:** Google Vision API integration for extracting champion data from user-uploaded screenshots.
+*   **Image Processing Pipeline:** Google Vision API integration for extracting champion data from user-uploaded screenshots.
+*   **Smart Import:** Users can upload screenshots of their game roster. The system uses image processing to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
 *   **AI Integration:** OpenRouter (LLMs) used for drafting glossary terms and parsing complex abilities.
 *   **Analytics:** Deep integration with **PostHog** for feature usage tracking and error analysis.
 
