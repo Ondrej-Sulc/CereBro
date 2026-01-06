@@ -414,7 +414,7 @@ export default function NodeEditor({
                   />
                   {defenderTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
-                          <Badge variant="outline" className="border-indigo-500 text-indigo-400 bg-indigo-500/10 text-[10px] px-1.5 py-0 h-5">
+                          <Badge variant="outline" className="border-red-500 text-red-400 bg-red-500/10 text-[10px] px-1.5 py-0 h-5">
                               Tactic: {activeTactic?.defenseTag?.name}
                           </Badge>
                       </div>
@@ -451,7 +451,7 @@ export default function NodeEditor({
                   />
                   {attackerTacticMatch && (
                       <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
-                          <Badge variant="outline" className="border-orange-500 text-orange-400 bg-orange-500/10 text-[10px] px-1.5 py-0 h-5">
+                          <Badge variant="outline" className="border-emerald-500 text-emerald-400 bg-emerald-500/10 text-[10px] px-1.5 py-0 h-5">
                               Tactic: {activeTactic?.attackTag?.name}
                           </Badge>
                       </div>
