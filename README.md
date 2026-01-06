@@ -45,7 +45,7 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 
 ### ⚔️ Alliance War Command Center
 The flagship feature of the platform.
-*   **Planning:** Supports multiple map layouts (`Standard` & `Big Thing`). Features pinch-to-zoom, node-specific tactic visualizers, and drag-and-drop assignments.
+*   **Planning:** Supports multiple map layouts (`Standard` & `Big Thing`). Features pinch-to-zoom, node-specific tactic visualizers, and visual layout management.
 *   **Defense Strategy:** Dedicated planner for managing season-long defense placements across multiple battlegroups. Features **Tier-aware Node Modifiers** and **Smart Roster Integration** that automatically suggests the correct champion version (Rank/Ascension) from the assigned player's profile.
 *   **Execution:** Now database-driven. Plans generated in the Web UI or via the `/aw plan` command can be distributed to players' private Discord threads. Messages feature rich header context (Season, Tier, Opponent), **per-battlegroup Overview Maps**, and **dynamically generated high-fidelity player maps** that visually highlight assignments and active tactic badges (Sword/Shield).
 *   **Analysis:** 
@@ -54,11 +54,11 @@ The flagship feature of the platform.
 *   **Smart Notifications:** Automatically posts rich embeds to a configured Discord channel whenever a new war video is uploaded or linked, keeping the alliance in the loop.
 
 ### 👤 Roster & Identity
-*   **Smart Import:** Users can upload screenshots of their game roster. The system uses OCR to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
+*   **Smart Import:** Users can upload screenshots of their game roster. The system uses image processing to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
 *   **Profile:** Tracks Prestige history, multi-account support, and timezone management.
 
 ### 🧠 Knowledge Base
-*   **Champion Search:** Powerful filtering by immunities, tags, and ability mechanics.
+*   **Champion Search:** Powerful filtering by immunities, tags, and ability mechanics. Supported by a comprehensive glossary for deep effect lookups.
 *   **Champion Prestige Data:** Maintains a normalized, high-performance database of prestige values across all rarities, ranks, and signature levels.
 *   **Community Data:** Crowdsourced Duel Targets with an admin review queue system.
 
