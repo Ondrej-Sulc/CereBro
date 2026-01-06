@@ -146,9 +146,16 @@ export async function handleAttackAddMore(interaction: ButtonInteraction) {
     return;
   }
 
+  const titlePrefix = "Add Attack for ";
+  const maxNameLength = 45 - titlePrefix.length;
+  const displayName =
+    champion.name.length > maxNameLength
+      ? `${champion.name.substring(0, maxNameLength - 3)}...`
+      : champion.name;
+
   const modal = new ModalBuilder()
     .setCustomId(`admin_attack_add_${champion.name}`)
-    .setTitle(`Add Attack for ${champion.name}`);
+    .setTitle(`${titlePrefix}${displayName}`);
 
   const attackTypeInput = new TextInputBuilder()
     .setCustomId("attackType")
