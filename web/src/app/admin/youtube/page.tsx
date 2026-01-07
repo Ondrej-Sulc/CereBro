@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { isUserBotAdmin } from "@/lib/auth-helpers";
 
 export default async function YouTubeAdminPage({
   searchParams,
@@ -15,13 +16,10 @@ export default async function YouTubeAdminPage({
   const session = await auth();
   if (!session?.user) redirect("/");
 
-  // Check Admin Status
-  const account = await prisma.account.findFirst({
-      where: { userId: session.user.id, provider: 'discord' }
-  });
-  const player = account ? await prisma.player.findFirst({ where: { discordId: account.providerAccountId } }) : null;
+  // Check Admin Status using helper to support multi-account
+  const isAdmin = await isUserBotAdmin();
   
-  if (!player?.isBotAdmin) {
+  if (!isAdmin) {
      return <div className="p-8 text-center text-red-500">Access Denied</div>;
   }
 

@@ -3,18 +3,16 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import logger from '@cerebro/core/services/loggerService';
 import { auth } from '@/auth';
+import { isUserBotAdmin } from '@/lib/auth-helpers';
 
 export async function GET(req: Request) {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     
     // Perform permission check again for safety
-    const account = await prisma.account.findFirst({
-        where: { userId: session.user.id, provider: 'discord' }
-    });
-    const player = account ? await prisma.player.findFirst({ where: { discordId: account.providerAccountId } }) : null;
+    const isAdmin = await isUserBotAdmin();
     
-    if (!player?.isBotAdmin) {
+    if (!isAdmin) {
        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

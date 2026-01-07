@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { prisma } from '@/lib/prisma';
+import { isUserBotAdmin } from '@/lib/auth-helpers';
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -11,17 +11,9 @@ export async function GET(req: Request) {
   }
 
   // Check Bot Admin Permissions
-  const account = await prisma.account.findFirst({
-      where: { userId: session.user.id, provider: 'discord' }
-  });
+  const isAdmin = await isUserBotAdmin();
   
-  if (!account) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const player = await prisma.player.findFirst({ where: { discordId: account.providerAccountId } });
-  
-  if (!player?.isBotAdmin) {
+  if (!isAdmin) {
      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

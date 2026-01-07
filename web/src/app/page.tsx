@@ -361,11 +361,11 @@ export default async function Home() {
                     </div>
                     
                     <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                      I'm a developer from Czechia and a passionate MCOC player since 2018. I've spent the last several years competing in <strong className="text-white">Tier 1</strong> with my alliance, <strong className="text-white">Night Guardians</strong>, giving me a first-hand look at the complexities of endgame play.
+                      I'm a developer from Czechia and a passionate MCOC player since 2018. I've been a member of my alliance <strong className="text-white">Night Guardians</strong> from the start of my journey. The last few years we have been competing in <strong className="text-white">Tier 1</strong> Alliance Wars.
                     </p>
                     
                     <p className="text-slate-400 leading-relaxed">
-                      Living in the world of high-tier war planning, I spent years tinkering with spreadsheets to keep our defense organized and our rosters updated. What started as a small internal tool for the Night Guardians slowly evolved into a Discord bot, and eventually grew into the platform you see today. It’s the result of years spent collecting champion data and building tools to make alliance management less of a chore and more of a tactical advantage.
+                      I've been creating spreadsheets for our alliance since the beginning — for defense planning, Alliance Quest, war attack planning, and roster tracking. Manual roster updates became tedious, so I built a Discord bot to parse game screenshots. What started as a small internal tool for the Night Guardians grew into a full-featured bot and, eventually, the platform you see today: CereBro. It's the result of years spent collecting champion data and building tools to make alliance management less of a chore and more of a tactical advantage.
                     </p>
 
                     <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-6 opacity-60 italic text-sm">
@@ -402,7 +402,7 @@ export default async function Home() {
                   Help Keep CereBro Online
                 </h2>
                 <p className="text-slate-300 max-w-2xl mx-auto text-lg">
-                  CereBro is a free project built for the community. Your support directly funds the servers and database storage.
+                  CereBro is a free project built for the community. Your support directly funds the hosting and development.
                 </p>
               </div>
 
