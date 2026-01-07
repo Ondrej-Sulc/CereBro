@@ -55,7 +55,7 @@ export default async function Home() {
 
               <div className="flex flex-wrap gap-4">
                 <Link
-                  href="https://discord.com/oauth2/authorize"
+                  href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
                   target="_blank"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 transition-all hover:-translate-y-0.5"
                 >
@@ -63,10 +63,11 @@ export default async function Home() {
                   Add to Discord
                 </Link>
                 <Link
-                  href="#platform"
+                  href="https://discord.gg/eRv7fkMHmU"
+                  target="_blank"
                   className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg border border-slate-600/50 bg-slate-800/30 hover:bg-slate-800/50 text-slate-200 transition-all"
                 >
-                  Explore Features
+                  Support Server
                 </Link>
               </div>
 
@@ -489,7 +490,7 @@ export default async function Home() {
               </div>
               <div className="flex gap-3 items-center">
                 <Link
-                  href="https://discord.com/oauth2/authorize"
+                  href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
                   target="_blank"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm font-medium px-5 py-2 rounded-lg shadow-lg shadow-sky-500/25"
                 >
