@@ -7,6 +7,13 @@ export default function Footer() {
         <div className="flex justify-between items-center text-sm">
           <p className="text-slate-400">&copy; {new Date().getFullYear()} CereBro. All rights reserved.</p>
           <div className="flex gap-6">
+            <Link 
+              href="https://github.com/Ondrej-Sulc/CereBro" 
+              target="_blank"
+              className="text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+            >
+              GitHub
+            </Link>
             <Link href="/terms" className="text-slate-400 hover:text-white transition-colors">
               Terms of Service
             </Link>

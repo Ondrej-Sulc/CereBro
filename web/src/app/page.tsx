@@ -18,7 +18,8 @@ import {
   Award,
   Heart,
   Swords,
-  Gamepad2
+  Gamepad2,
+  Github
 } from "lucide-react";
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
@@ -386,6 +387,14 @@ export default async function Home() {
                         <Gamepad2 className="w-4 h-4 text-indigo-400" />
                         Summoner since 2018
                       </div>
+                      <Link 
+                        href="https://github.com/Ondrej-Sulc/CereBro" 
+                        target="_blank"
+                        className="flex items-center gap-2 hover:text-indigo-400 transition-colors"
+                      >
+                        <Github className="w-4 h-4 text-indigo-400" />
+                        GitHub Repo
+                      </Link>
                     </div>
                   </div>
                 </div>
