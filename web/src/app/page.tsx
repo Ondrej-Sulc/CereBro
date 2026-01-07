@@ -23,6 +23,7 @@ import {
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
 import Tilt from "@/components/TiltWrapper";
+import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDeck";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { isUserBotAdmin } from "@/lib/auth-helpers";
 
@@ -91,7 +92,7 @@ export default async function Home() {
 
         {/* Web Dashboard Section */}
         <section id="web-platform" className="py-20 lg:py-32 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-1/2 h-full bg-sky-500/5 blur-[120px] -z-10" />
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-b from-transparent via-sky-500/5 to-sky-500/5 blur-[120px] -z-10" />
             
             <div className="max-w-7xl mx-auto px-4 lg:px-6">
                 <div className="text-center mb-20">
@@ -118,7 +119,7 @@ export default async function Home() {
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-4">Interactive War Map</h3>
                             <p className="text-slate-400 text-lg leading-relaxed">
-                                Drag and drop defenders, assign lanes, and see the whole board. It’s the easiest way to plan your defense.
+                                Plan your Attacks and Defense with player's rosters right at your fingertips, assign nodes, see the whole board. It’s the easiest way to plan.
                             </p>
                         </ScrollReveal>
                         <ScrollReveal direction="left" className="order-1 lg:order-2">
@@ -223,17 +224,20 @@ export default async function Home() {
                                 Get abilities, immunities, and duel targets instantly. Powerful search tools let you query the game glossary or find the perfect counter in your roster.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2">
-                            {/* Placeholder 1 */}
-                            <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
-                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-[4/3] flex items-center justify-center overflow-hidden group hover:border-indigo-500/30 transition-all shadow-2xl shadow-indigo-900/10">
-                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <span className="text-slate-600 font-medium flex flex-col items-center gap-2">
-                                        <Search className="w-8 h-8 opacity-50" />
-                                        Screenshot: Champion Info
-                                    </span>
-                                </div>
-                            </Tilt>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                            <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={[
+                                        '/discord-champion-1.png',
+                                        '/discord-champion-2.png',
+                                        '/discord-champion-3.png',
+                                        '/discord-champion-4.png'
+                                    ]}
+                                    alt="Champion Intel Feature"
+                                    widthClass="w-50 md:w-64"
+                                    overlap="-space-x-36"
+                                />
+                            </div>
                         </ScrollReveal>
                     </div>
 
@@ -245,20 +249,22 @@ export default async function Home() {
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-4">Roster & Prestige</h3>
                             <p className="text-slate-400 text-lg leading-relaxed">
-                                Update your roster in seconds. Just upload screenshots, and our OCR technology adds your champions and calculates prestige automatically.
+                                Update your roster in seconds. Just upload screenshots, and our image processing technology adds your champions automatically.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="right" className="order-1 lg:order-1">
-                            {/* Placeholder 2 */}
-                             <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
-                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-[4/3] flex items-center justify-center overflow-hidden group hover:border-indigo-500/30 transition-all shadow-2xl shadow-indigo-900/10">
-                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <span className="text-slate-600 font-medium flex flex-col items-center gap-2">
-                                        <Award className="w-8 h-8 opacity-50" />
-                                        Screenshot: Roster OCR
-                                    </span>
-                                </div>
-                            </Tilt>
+                        <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
+                            <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={[
+                                        '/discord-roster-3.png',
+                                        '/discord-roster-2.png',
+                                        '/discord-roster-1.png',
+                                    ]}
+                                    alt="Roster Management Feature"
+                                    widthClass="w-64 md:w-72"
+                                    overlap="-space-x-40"
+                                />
+                            </div>
                         </ScrollReveal>
                     </div>
 
@@ -273,17 +279,19 @@ export default async function Home() {
                                 Receive your War assignments directly in your DMs. Track Alliance Quest movement and stay coordinated with smart alerts.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2">
-                            {/* Placeholder 3 */}
-                            <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
-                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-[4/3] flex items-center justify-center overflow-hidden group hover:border-indigo-500/30 transition-all shadow-2xl shadow-indigo-900/10">
-                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <span className="text-slate-600 font-medium flex flex-col items-center gap-2">
-                                        <Swords className="w-8 h-8 opacity-50" />
-                                        Screenshot: War Plan DM
-                                    </span>
-                                </div>
-                            </Tilt>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                            <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={[
+                                        '/discord-war-3.png',
+                                        '/discord-war-2.png',
+                                        '/discord-war-1.png',
+                                    ]}
+                                    alt="War Planning Feature"
+                                    widthClass="w-64 md:w-72"
+                                    overlap="-space-x-40"
+                                />
+                            </div>
                         </ScrollReveal>
                     </div>
                 </div>
