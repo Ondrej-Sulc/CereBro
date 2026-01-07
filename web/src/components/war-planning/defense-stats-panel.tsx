@@ -143,7 +143,7 @@ export default function DefenseStatsPanel({
                             <Tooltip 
                                 contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', fontSize: '12px' }}
                                 itemStyle={{ color: '#e2e8f0' }}
-                                formatter={(value: number, name: string) => [`${value} (${((value / stats.totalFilled) * 100).toFixed(0)}%)`, name.charAt(0).toUpperCase() + name.slice(1)]}
+                                formatter={(value: any, name: any) => [`${value} (${((value / stats.totalFilled) * 100).toFixed(0)}%)`, (name || '').charAt(0).toUpperCase() + (name || '').slice(1)]}
                             />
                         </PieChart>
                     </ResponsiveContainer>

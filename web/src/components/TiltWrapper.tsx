@@ -14,6 +14,7 @@ interface TiltWrapperProps {
   glareMaxOpacity?: number;
   glarePosition?: "all" | "top" | "right" | "bottom" | "left";
   scale?: number;
+  transitionSpeed?: number;
 }
 
 export default function TiltWrapper(props: TiltWrapperProps) {

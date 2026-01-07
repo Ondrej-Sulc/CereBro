@@ -5,12 +5,6 @@ import CommandReference from "@/components/CommandReference";
 import { HeroVisual } from "@/components/HeroVisual";
 import { LiveSetup } from "@/components/LiveSetup";
 import { 
-  CalendarCheck, 
-  Award, 
-  Search, 
-  Users, 
-  Database, 
-  BookOpen, 
   Coffee, 
   Server, 
   HardDrive, 
@@ -20,8 +14,8 @@ import {
   LineChart,
   Video,
   Bot,
-  Zap,
-  ShieldAlert,
+  Search,
+  Award,
   Heart,
   Swords,
   Gamepad2
@@ -29,6 +23,7 @@ import {
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
 import Tilt from "@/components/TiltWrapper";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { isUserBotAdmin } from "@/lib/auth-helpers";
 
 export default async function Home() {
@@ -94,115 +89,202 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Platform Split Section */}
-        <section id="platform" className="py-16 lg:py-24 relative">
+        {/* Web Dashboard Section */}
+        <section id="web-platform" className="py-20 lg:py-32 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-1/2 h-full bg-sky-500/5 blur-[120px] -z-10" />
+            
             <div className="max-w-7xl mx-auto px-4 lg:px-6">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">Two Powerful Tools. One Platform.</h2>
-                    <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                        Bridge the gap between your game data and your alliance communication.
-                    </p>
+                <div className="text-center mb-20">
+                    <ScrollReveal direction="up">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-sm font-medium uppercase tracking-wider mb-4">
+                            <LayoutDashboard className="w-4 h-4" />
+                            Web Dashboard
+                        </div>
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+                            Plan Better. Win More.
+                        </h2>
+                        <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+                            Stop using spreadsheets. Manage your war strategy on a big screen with tools built specifically for the game.
+                        </p>
+                    </ScrollReveal>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-                    {/* Web Dashboard Column */}
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-b from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl -z-10" />
-                        <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl h-full flex flex-col">
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-12 h-12 rounded-xl bg-sky-500/20 flex items-center justify-center text-sky-400">
-                                    <LayoutDashboard className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold text-white">The War Room</h3>
-                                    <p className="text-sky-400 text-sm font-medium uppercase tracking-wider">Web Dashboard</p>
-                                </div>
+                <div className="space-y-24">
+                    {/* Feature 1: Map */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                            <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
+                                <Map className="w-6 h-6" />
                             </div>
-                            
-                            <p className="text-slate-300 mb-8 leading-relaxed">
-                                A desktop-class interface designed for high-level strategy, analytics, and visual planning.
+                            <h3 className="text-2xl font-bold text-white mb-4">Interactive War Map</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Drag and drop defenders, assign lanes, and see the whole board. It’s the easiest way to plan your defense.
                             </p>
-
-                            <div className="space-y-6 flex-grow">
-                                <div className="flex gap-4">
-                                    <div className="mt-1">
-                                        <Map className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-semibold">Interactive War Planner</h4>
-                                        <p className="text-sm text-slate-400 mt-1">Real-time collaborative map. Visually design your defense and assign lanes with precision.</p>
-                                    </div>
+                        </ScrollReveal>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
+                            <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
+                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-video flex items-center justify-center overflow-hidden group hover:border-sky-500/30 transition-all shadow-2xl shadow-sky-900/10">
+                                    <Image 
+                                      src="/war-map.png" 
+                                      alt="War Map" 
+                                      fill 
+                                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                    />
+                                    <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
-                                <div className="flex gap-4">
-                                    <div className="mt-1">
-                                        <LineChart className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-semibold">Season Analytics</h4>
-                                        <p className="text-sm text-slate-400 mt-1">Track deaths, diversity, and attacker efficiency across the entire season.</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="mt-1">
-                                        <Video className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-semibold">War Archive</h4>
-                                        <p className="text-sm text-slate-400 mt-1">A searchable database of fight logs and video uploads for review.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            </Tilt>
+                        </ScrollReveal>
                     </div>
 
-                    {/* Discord Bot Column */}
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl -z-10" />
-                        <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-3xl h-full flex flex-col">
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                    <Bot className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold text-white">The Field Assistant</h3>
-                                    <p className="text-indigo-400 text-sm font-medium uppercase tracking-wider">Discord Bot</p>
-                                </div>
+                    {/* Feature 2: Archive (Swapped) */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2">
+                            <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
+                                <Video className="w-6 h-6" />
                             </div>
-                            
-                            <p className="text-slate-300 mb-8 leading-relaxed">
-                                Your always-on companion for quick information, notifications, and automated management.
+                            <h3 className="text-2xl font-bold text-white mb-4">Video Library</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Upload your fights and tag them. Search the archive later to find the best counters for any defender.
                             </p>
+                        </ScrollReveal>
+                        <ScrollReveal direction="right" className="order-1 lg:order-1">
+                             <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
+                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-video flex items-center justify-center overflow-hidden group hover:border-sky-500/30 transition-all shadow-2xl shadow-sky-900/10">
+                                    <Image 
+                                      src="/war-archive.png" 
+                                      alt="War Archive" 
+                                      fill 
+                                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                    />
+                                    <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                            </Tilt>
+                        </ScrollReveal>
+                    </div>
 
-                            <div className="space-y-6 flex-grow">
-                                <div className="flex gap-4">
-                                    <div className="mt-1">
-                                        <Zap className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-semibold">Instant Intel</h4>
-                                        <p className="text-sm text-slate-400 mt-1">Access abilities, immunities, and stats instantly. Powered by a deep glossary search.</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="mt-1">
-                                        <ShieldAlert className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-semibold">Smart Reminders</h4>
-                                        <p className="text-sm text-slate-400 mt-1">Automated alerts for AQ moves, War starts, and important events.</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="mt-1">
-                                        <Users className="w-5 h-5 text-slate-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-white font-semibold">Automated Setup</h4>
-                                        <p className="text-sm text-slate-400 mt-1">The bot initializes on join. Configure your roles once, and let the background sync handle the rest.</p>
-                                    </div>
-                                </div>
+                    {/* Feature 3: Stats (Swapped) */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                            <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
+                                <LineChart className="w-6 h-6" />
                             </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">Season Stats</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                See who died and who cleared their lane. We track the stats automatically so you know exactly how the season is going.
+                            </p>
+                        </ScrollReveal>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
+                             <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
+                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-video flex items-center justify-center overflow-hidden group hover:border-sky-500/30 transition-all shadow-2xl shadow-sky-900/10">
+                                    <Image 
+                                      src="/season-stats.png" 
+                                      alt="Season Stats" 
+                                      fill 
+                                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                    />
+                                    <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                            </Tilt>
+                        </ScrollReveal>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {/* Discord Bot Section */}
+        <section id="discord-bot" className="py-20 lg:py-32 relative overflow-hidden bg-slate-900/30 border-y border-slate-800/50">
+            <div className="absolute bottom-0 left-0 w-1/2 h-full bg-indigo-500/5 blur-[120px] -z-10" />
+
+            <div className="max-w-7xl mx-auto px-4 lg:px-6">
+                <div className="text-center mb-20">
+                    <ScrollReveal direction="up">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium uppercase tracking-wider mb-4">
+                            <Bot className="w-4 h-4" />
+                            Discord Bot
                         </div>
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+                            Your Daily Helper
+                        </h2>
+                        <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+                            Get info, reminders, and roster updates without leaving your chat app.
+                        </p>
+                    </ScrollReveal>
+                </div>
+
+                <div className="space-y-24">
+                     {/* Feature 1: Champion Intel */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-900/50 border border-indigo-800 flex items-center justify-center text-indigo-400 mb-6">
+                                <Search className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">Instant Champion Intel</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Get abilities, immunities, and duel targets instantly. Powerful search tools let you query the game glossary or find the perfect counter in your roster.
+                            </p>
+                        </ScrollReveal>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
+                            {/* Placeholder 1 */}
+                            <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
+                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-[4/3] flex items-center justify-center overflow-hidden group hover:border-indigo-500/30 transition-all shadow-2xl shadow-indigo-900/10">
+                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <span className="text-slate-600 font-medium flex flex-col items-center gap-2">
+                                        <Search className="w-8 h-8 opacity-50" />
+                                        Screenshot: Champion Info
+                                    </span>
+                                </div>
+                            </Tilt>
+                        </ScrollReveal>
+                    </div>
+
+                    {/* Feature 2: Roster & Prestige (Swapped) */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-900/50 border border-indigo-800 flex items-center justify-center text-indigo-400 mb-6">
+                                <Award className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">Roster & Prestige</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Update your roster in seconds. Just upload screenshots, and our OCR technology adds your champions and calculates prestige automatically.
+                            </p>
+                        </ScrollReveal>
+                        <ScrollReveal direction="right" className="order-1 lg:order-1">
+                            {/* Placeholder 2 */}
+                             <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
+                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-[4/3] flex items-center justify-center overflow-hidden group hover:border-indigo-500/30 transition-all shadow-2xl shadow-indigo-900/10">
+                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <span className="text-slate-600 font-medium flex flex-col items-center gap-2">
+                                        <Award className="w-8 h-8 opacity-50" />
+                                        Screenshot: Roster OCR
+                                    </span>
+                                </div>
+                            </Tilt>
+                        </ScrollReveal>
+                    </div>
+
+                    {/* Feature 3: War & Quest Support */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-900/50 border border-indigo-800 flex items-center justify-center text-indigo-400 mb-6">
+                                <Swords className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">War & Quest Support</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Receive your War assignments directly in your DMs. Track Alliance Quest movement and stay coordinated with smart alerts.
+                            </p>
+                        </ScrollReveal>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
+                            {/* Placeholder 3 */}
+                            <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
+                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-[4/3] flex items-center justify-center overflow-hidden group hover:border-indigo-500/30 transition-all shadow-2xl shadow-indigo-900/10">
+                                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <span className="text-slate-600 font-medium flex flex-col items-center gap-2">
+                                        <Swords className="w-8 h-8 opacity-50" />
+                                        Screenshot: War Plan DM
+                                    </span>
+                                </div>
+                            </Tilt>
+                        </ScrollReveal>
                     </div>
                 </div>
             </div>
@@ -220,60 +302,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Feature Grid (Secondary) */}
-        <section id="features" className="section-offset py-16">
-          <div className="max-w-6xl mx-auto px-4 lg:px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl font-semibold text-white">
-                Everything you need to lead
-              </h2>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <Tilt className="rounded-xl h-full">
-                <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-sky-500/40 transition h-full flex flex-col">
-                    <Search className="w-8 h-8 text-sky-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Advanced Search</h3>
-                    <p className="text-sm text-slate-400">Multi-filter searches to find the perfect champion for any node.</p>
-                </div>
-              </Tilt>
-              <Tilt className="rounded-xl h-full">
-                <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-indigo-500/40 transition h-full flex flex-col">
-                    <Users className="w-8 h-8 text-indigo-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Roster Processing</h3>
-                    <p className="text-sm text-slate-400">Instant image processing extracts stats from your screenshots. We store the data, not the images.</p>
-                </div>
-              </Tilt>
-              <Tilt className="rounded-xl h-full">
-                <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-pink-500/40 transition h-full flex flex-col">
-                    <CalendarCheck className="w-8 h-8 text-pink-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Automated Scheduling</h3>
-                    <p className="text-sm text-slate-400">Set your AQ schedule once and let the bot handle the daily reminders.</p>
-                </div>
-              </Tilt>
-              <Tilt className="rounded-xl h-full">
-                <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-sky-500/40 transition h-full flex flex-col">
-                    <Award className="w-8 h-8 text-sky-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Prestige Tracking</h3>
-                    <p className="text-sm text-slate-400">Track individual and alliance prestige evolution over time.</p>
-                </div>
-              </Tilt>
-              <Tilt className="rounded-xl h-full">
-                <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-indigo-500/40 transition h-full flex flex-col">
-                    <BookOpen className="w-8 h-8 text-indigo-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Game Glossary</h3>
-                    <p className="text-sm text-slate-400">Instant definitions for buffs, nodes, and interactions.</p>
-                </div>
-              </Tilt>
-              <Tilt className="rounded-xl h-full">
-                <div className="glass rounded-xl p-5 border border-slate-800/40 hover:border-pink-500/40 transition h-full flex flex-col">
-                    <Database className="w-8 h-8 text-pink-400 mb-4" />
-                    <h3 className="text-lg font-semibold text-white mb-2">Central Database</h3>
-                    <p className="text-sm text-slate-400">A unified data source for your entire alliance's operations.</p>
-                </div>
-              </Tilt>
-            </div>
-          </div>
-        </section>
+
 
         {/* Command Reference */}
         <section
@@ -297,6 +326,63 @@ export default async function Home() {
           <Suspense fallback={<div className="h-96 flex items-center justify-center text-slate-500">Loading commands...</div>}>
             <CommandReference isAdmin={isAdmin} />
           </Suspense>
+        </section>
+
+        {/* Meet the Developer */}
+        <section className="py-20 bg-slate-950/50">
+          <div className="max-w-4xl mx-auto px-4 lg:px-6">
+            <ScrollReveal direction="up">
+              <div className="relative glass rounded-3xl border border-slate-800/50 p-8 md:p-12 overflow-hidden">
+                {/* Background Decoration */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[80px] -z-10" />
+                
+                <div className="flex flex-col md:flex-row items-center gap-10">
+                  {/* Avatar with Tilt */}
+                  <div className="shrink-0">
+                    <Tilt glareEnable={true} glareMaxOpacity={0.2} scale={1.05} tiltMaxAngleX={10} tiltMaxAngleY={10}>
+                      <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-2 border-indigo-500/30 p-1 bg-slate-900 shadow-xl shadow-indigo-500/10">
+                        <Image 
+                          src="/avatar.png" 
+                          alt="Solomon" 
+                          fill 
+                          className="object-cover rounded-xl"
+                        />
+                      </div>
+                    </Tilt>
+                  </div>
+
+                  {/* Bio Content */}
+                  <div className="text-center md:text-left">
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
+                      <h2 className="text-3xl font-bold text-white">Hi, I'm Solomon</h2>
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+                        Creator of CereBro
+                      </span>
+                    </div>
+                    
+                    <p className="text-slate-300 text-lg leading-relaxed mb-6">
+                      I'm a developer from Czechia and a passionate MCOC player since 2018. I've spent the last several years competing in <strong className="text-white">Tier 1</strong> with my alliance, <strong className="text-white">Night Guardians</strong>, giving me a first-hand look at the complexities of endgame play.
+                    </p>
+                    
+                    <p className="text-slate-400 leading-relaxed">
+                      Living in the world of high-tier war planning, I spent years tinkering with spreadsheets to keep our defense organized and our rosters updated. What started as a small internal tool for the Night Guardians slowly evolved into a Discord bot, and eventually grew into the platform you see today. It’s the result of years spent collecting champion data and building tools to make alliance management less of a chore and more of a tactical advantage.
+                    </p>
+
+                    <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-6 opacity-60 italic text-sm">
+                      <div className="flex items-center gap-2">
+                        <Code className="w-4 h-4 text-indigo-400" />
+                        Full-stack Developer
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Gamepad2 className="w-4 h-4 text-indigo-400" />
+                        Summoner since 2018
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
         </section>
 
         {/* Support Section */}

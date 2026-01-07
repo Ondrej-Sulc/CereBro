@@ -162,7 +162,7 @@ export function useWarPlanning({
         });
 
         setCurrentFights(hydratedFights);
-        setExtraChampions(extrasData);
+        setExtraChampions(extrasData as any);
       } catch (err: any) {
         console.error("Failed to fetch war data:", err);
         setFightsError(err.message || "Failed to load war data.");
@@ -221,7 +221,7 @@ export function useWarPlanning({
             // Sync extras (less critical race condition here usually)
             setExtraChampions(prev => {
                  if (JSON.stringify(prev) !== JSON.stringify(extrasData)) {
-                     return extrasData;
+                     return extrasData as any;
                  }
                  return prev;
             });
@@ -464,8 +464,8 @@ export function useWarPlanning({
         const updatedNode = {
           ...f,
           ...updatedFight,
-          attacker: newAttacker ? { id: newAttacker.id, name: newAttacker.name, images: newAttacker.images, class: newAttacker.class, tags: newAttacker.tags } : null,
-          defender: newDefender ? { id: newDefender.id, name: newDefender.name, images: newDefender.images, class: newDefender.class, tags: newDefender.tags } : null,
+          attacker: newAttacker ? { id: newAttacker.id, name: newAttacker.name, images: newAttacker.images, class: newAttacker.class, tags: (newAttacker as any).tags } : null,
+          defender: newDefender ? { id: newDefender.id, name: newDefender.name, images: newDefender.images, class: newDefender.class, tags: (newDefender as any).tags } : null,
           player: newPlayer ? { id: newPlayer.id, ingameName: newPlayer.ingameName, avatar: newPlayer.avatar } : null,
           prefightChampions: newPrefights
         } as FightWithNode;

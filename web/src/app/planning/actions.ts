@@ -451,7 +451,7 @@ export async function getExtraChampions(warId: string, battlegroup: number) {
     where: {
       warId,
       battlegroup,
-      ...(player.isBotAdmin ? {} : { war: { allianceId: player.allianceId } })
+      ...(player.isBotAdmin ? {} : { war: { allianceId: player.allianceId as string } })
     },
     include: {
         champion: { select: { id: true, name: true, images: true } }
