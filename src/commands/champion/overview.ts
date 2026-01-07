@@ -8,10 +8,15 @@ import {
   formatTags,
 } from "./view";
 
+export interface OverviewSection {
+  title: string;
+  content: string;
+}
+
 export function getOverviewContent(
   champion: ChampionWithAllRelations,
   resolveEmoji: (text: string) => string
-): string {
+): OverviewSection[] | string {
   const abilities = champion.abilities.filter(
     (a: ChampionAbilityLinkWithRelations) => a.type === "ABILITY"
   );
@@ -19,7 +24,7 @@ export function getOverviewContent(
     (a: ChampionAbilityLinkWithRelations) => a.type === "IMMUNITY"
   );
 
-  const sections = [];
+  const sections: OverviewSection[] = [];
 
   if (abilities.length > 0) {
     sections.push({
@@ -53,5 +58,5 @@ export function getOverviewContent(
     return "This champion has no listed abilities, immunities, tags, or attacks.";
   }
 
-  return sections.map(section => `## ${section.title}\n${section.content}`).join("\n\n---\n\n");
+  return sections;
 }

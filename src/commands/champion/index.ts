@@ -22,7 +22,7 @@ import { getAttacksContent } from "./attacks";
 import { getAbilitiesContent } from "./abilities";
 import { getImmunitiesContent } from "./immunities";
 import { getTagsContent } from "./tags";
-import { getOverviewContent } from "./overview";
+import { getOverviewContent, OverviewSection } from "./overview";
 import { getDuelContent, addDuelComponents } from "./duel";
 import { createChampionActionRow, createPaginationActionRow } from "./actionRow";
 import { CLASS_COLOR } from "./view";
@@ -236,12 +236,18 @@ export const command: Command = {
     container.addMediaGalleryComponents(thumbnailGallery);
 
     const resolveEmoji = createEmojiResolver(interaction.client);
-    let content = "";
+    let content: string | null = null;
+    let overviewSections: OverviewSection[] | null = null;
     let paginationRow: ActionRowBuilder<ButtonBuilder> | null = null;
 
     switch (subcommand) {
       case "overview":
-        content = getOverviewContent(champion, resolveEmoji);
+        const result = getOverviewContent(champion, resolveEmoji);
+        if (typeof result === "string") {
+          content = result;
+        } else {
+          overviewSections = result;
+        }
         break;
       case "abilities":
         content = getAbilitiesContent(champion, resolveEmoji);
@@ -274,11 +280,28 @@ export const command: Command = {
         content = getDuelContent(duelsToShow, resolveEmoji);
         break;
       default:
-        content = getOverviewContent(champion, resolveEmoji);
+        // Default to overview logic
+        const defaultResult = getOverviewContent(champion, resolveEmoji);
+        if (typeof defaultResult === "string") {
+          content = defaultResult;
+        } else {
+          overviewSections = defaultResult;
+        }
         break;
     }
 
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
+    if (overviewSections) {
+      overviewSections.forEach((section, index) => {
+        container.addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(`## ${section.title}\n${section.content}`)
+        );
+        if (index < overviewSections!.length - 1) {
+          container.addSeparatorComponents(new SeparatorBuilder());
+        }
+      });
+    } else if (content) {
+      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
+    }
 
     if (paginationRow) {
       container.addSeparatorComponents(new SeparatorBuilder());
