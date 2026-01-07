@@ -340,7 +340,7 @@ export default async function Home() {
 
         {/* Meet the Developer */}
         <section className="py-20 bg-slate-950/50">
-          <div className="max-w-4xl mx-auto px-4 lg:px-6">
+          <div className="max-w-6xl mx-auto px-4 lg:px-6">
             <ScrollReveal direction="up">
               <div className="relative glass rounded-3xl border border-slate-800/50 p-8 md:p-12 overflow-hidden">
                 {/* Background Decoration */}
@@ -407,7 +407,7 @@ export default async function Home() {
         <section id="support" className="section-offset py-16 relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-pink-600/20 blur-[100px] rounded-full -z-10 pointer-events-none" />
 
-          <div className="max-w-5xl mx-auto px-4 lg:px-6">
+          <div className="max-w-6xl mx-auto px-4 lg:px-6">
             <div className="relative rounded-3xl border border-pink-500/30 bg-slate-900/60 p-8 md:p-12 overflow-hidden backdrop-blur-sm">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent opacity-50" />
 
@@ -526,7 +526,7 @@ export default async function Home() {
 
         {/* FAQ */}
         <section id="faq" className="section-offset py-10 lg:py-14">
-          <div className="max-w-4xl mx-auto px-4 lg:px-6">
+          <div className="max-w-6xl mx-auto px-4 lg:px-6">
             <p className="text-xs uppercase tracking-wide text-sky-400/80 mb-1 text-center">
               Questions
             </p>
