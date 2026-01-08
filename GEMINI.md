@@ -277,6 +277,12 @@ The web interface now includes a comprehensive Profile section.
 *   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, prestige, and a summary of their champion roster (grouped by star rating, rank, and class).
 *   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful image processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
 
+### Landing Page Enhancements
+
+*   **Interactive Screenshot Deck:** Implements a full-screen Lightbox Gallery using `framer-motion` for smooth transitions. Features include click-to-expand, keyboard navigation (Arrow keys, Escape), and touch support.
+*   **Image Optimization:** Replaces standard `img` tags with `next/image` components. Utilizes `quality={10}` for blurred backgrounds and explicit responsive sizing for main images to improve Core Web Vitals.
+*   **Performance Optimization:** The `Starfield` background component now uses an `IntersectionObserver` to pause its heavy canvas animation loop when not in the viewport, significantly reducing CPU usage on longer pages.
+
 ### Other Useful Commands
 
 *   **Verify changes:** `pnpm exec tsc`

@@ -22,6 +22,7 @@ A modern interface built for complex visualization and management tasks.
     *   **Real-time Collab:** Optimistic UI updates with polling synchronization to allow multiple officers to plan wars simultaneously.
     *   **Video Archive:** A searchable media library for Alliance War videos, linked directly to specific fights and nodes.
     *   **Resilient Deployment:** Features an automated version-checking system that proactively alerts connected clients when a new server version is deployed, preventing Server Action mismatches.
+    *   **Optimized Visuals:** Features an interactive **Lightbox Gallery** for screenshots and performance-tuned background animations (`IntersectionObserver`-controlled canvas) to maintain high frame rates on landing pages.
 
 ### 2. The Discord Bot (`/src`)
 Handles high-frequency user interactions, notifications, and quick data lookups.
