@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getRoster } from "@cerebro/core/services/rosterService";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -42,7 +41,7 @@ export default async function RosterPage() {
         </Link>
       </div>
 
-      <RosterView initialRoster={roster} playerId={player.id} />
+      <RosterView initialRoster={roster} />
     </div>
   );
 }

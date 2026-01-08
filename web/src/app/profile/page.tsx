@@ -153,7 +153,7 @@ export default async function ProfilePage() {
                 }, {} as Record<number, Record<ChampionClass | 'total', number>>);
 
                 const ranks = Object.keys(statsByRank).map(Number).sort((a, b) => b - a);
-                const classOrder: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC"];
+                const classOrder: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC", "SUPERIOR"];
 
                 return (
                     <Card key={stars} className="bg-slate-900/50 border-slate-800 overflow-hidden">

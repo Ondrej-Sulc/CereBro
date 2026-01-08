@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -6,7 +5,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 const updateSchema = z.object({
   id: z.string(),
-  rank: z.number().optional(),
+  rank: z.number().min(1).max(10).optional(),
   isAwakened: z.boolean().optional(),
   isAscended: z.boolean().optional(),
   powerRating: z.number().nullable().optional(),

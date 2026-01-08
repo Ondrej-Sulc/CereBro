@@ -6,7 +6,7 @@ import { ChampionClass } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, X, Star, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff } from "lucide-react";
+import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -35,7 +35,6 @@ import { useRouter } from "next/navigation";
 
 interface RosterViewProps {
   initialRoster: RosterWithChampion[];
-  playerId: string;
 }
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
@@ -48,9 +47,9 @@ const CLASS_ICONS: Record<ChampionClass, string> = {
     SUPERIOR: "/icons/Superior.png"
 };
 
-const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
+const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT", "SUPERIOR"];
 
-export function RosterView({ initialRoster, playerId }: RosterViewProps) {
+export function RosterView({ initialRoster }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
