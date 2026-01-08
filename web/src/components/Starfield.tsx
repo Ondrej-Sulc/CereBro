@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 
 export const Starfield = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameIdRef = useRef<number | null>(null);
+  const isVisibleRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,26 +57,59 @@ export const Starfield = () => {
       ctx.fill();
     };
 
-    let animationFrameId: number;
     const animate = () => {
+      if (!isVisibleRef.current) return;
       draw();
-      animationFrameId = window.requestAnimationFrame(animate);
+      animationFrameIdRef.current = window.requestAnimationFrame(animate);
     };
 
     const handleResize = () => {
-      window.cancelAnimationFrame(animationFrameId);
+      if (animationFrameIdRef.current) {
+        window.cancelAnimationFrame(animationFrameIdRef.current);
+      }
       setup();
-      animate();
+      if (isVisibleRef.current) {
+        animate();
+      }
     };
 
-    setup();
-    animate();
+    // Intersection Observer setup
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            isVisibleRef.current = true;
+            // Restart animation if not already running
+            // We cancel first to be safe and avoid double-loops
+            if (animationFrameIdRef.current) {
+              window.cancelAnimationFrame(animationFrameIdRef.current);
+            }
+            animate();
+          } else {
+            isVisibleRef.current = false;
+            if (animationFrameIdRef.current) {
+              window.cancelAnimationFrame(animationFrameIdRef.current);
+            }
+          }
+        });
+      },
+      { threshold: 0 }
+    );
 
+    observer.observe(canvas);
+
+    setup();
+    // Don't auto-start animate here, rely on observer to trigger it when visible
+    // (It will likely be visible immediately)
+    
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.cancelAnimationFrame(animationFrameId);
+      if (animationFrameIdRef.current) {
+        window.cancelAnimationFrame(animationFrameIdRef.current);
+      }
+      observer.disconnect();
     };
   }, []);
 

@@ -236,8 +236,8 @@ export default async function Home() {
                                         '/discord-champion-4.png'
                                     ]}
                                     alt="Champion Intel Feature"
-                                    widthClass="w-50 md:w-64"
-                                    overlap="-space-x-36"
+                                    widthClass="w-36 sm:w-48 md:w-64"
+                                    overlap="-space-x-24 sm:-space-x-32 md:-space-x-36"
                                 />
                             </div>
                         </ScrollReveal>
@@ -263,8 +263,8 @@ export default async function Home() {
                                         '/discord-roster-1.png',
                                     ]}
                                     alt="Roster Management Feature"
-                                    widthClass="w-64 md:w-72"
-                                    overlap="-space-x-40"
+                                    widthClass="w-40 sm:w-56 md:w-72"
+                                    overlap="-space-x-20 sm:-space-x-32 md:-space-x-40"
                                 />
                             </div>
                         </ScrollReveal>
@@ -290,8 +290,8 @@ export default async function Home() {
                                         '/discord-war-1.png',
                                     ]}
                                     alt="War Planning Feature"
-                                    widthClass="w-64 md:w-72"
-                                    overlap="-space-x-40"
+                                    widthClass="w-40 sm:w-56 md:w-72"
+                                    overlap="-space-x-20 sm:-space-x-32 md:-space-x-40"
                                 />
                             </div>
                         </ScrollReveal>
