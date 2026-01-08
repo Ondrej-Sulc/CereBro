@@ -13,6 +13,7 @@ import { getChampionClassColors } from "@/lib/championClassHelper"; // Import cl
 import { cn } from "@/lib/utils"; // Import cn
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { PrestigeHistoryChart } from "./prestige-chart";
+import { Upload, LayoutGrid } from "lucide-react";
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
     SCIENCE: "/icons/Science.png",
@@ -66,9 +67,18 @@ export default async function ProfilePage() {
             {player.alliance ? `Alliance: ${player.alliance.name}` : "No Alliance"} • Timezone: {player.timezone || "Not set"}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-3">
+            <Link href="/profile/roster">
+                <Button variant="outline" className="text-slate-200 border-slate-700 hover:bg-slate-800 flex items-center gap-2">
+                    <LayoutGrid className="w-4 h-4" />
+                    View Full Roster
+                </Button>
+            </Link>
             <Link href="/profile/update">
-                <Button className="bg-sky-600 hover:bg-sky-700">Update Roster</Button>
+                <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20 flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    Update Roster
+                </Button>
             </Link>
         </div>
       </div>
@@ -134,17 +144,16 @@ export default async function ProfilePage() {
         ) : (
             starLevels.map((stars) => {
                 const champions = byStar[stars];
-                // Rank Stats
-                const byRank = champions.reduce((acc, c) => {
-                    acc[c.rank] = (acc[c.rank] || 0) + 1;
+                // Group by Rank then Class
+                const statsByRank = champions.reduce((acc, c) => {
+                    if (!acc[c.rank]) acc[c.rank] = { total: 0 } as Record<ChampionClass | 'total', number>;
+                    acc[c.rank][c.champion.class] = (acc[c.rank][c.champion.class] || 0) + 1;
+                    acc[c.rank].total += 1;
                     return acc;
-                }, {} as Record<number, number>);
-                
-                // Class Stats
-                const byClass = champions.reduce((acc, c) => {
-                    acc[c.champion.class] = (acc[c.champion.class] || 0) + 1;
-                    return acc;
-                }, {} as Record<string, number>);
+                }, {} as Record<number, Record<ChampionClass | 'total', number>>);
+
+                const ranks = Object.keys(statsByRank).map(Number).sort((a, b) => b - a);
+                const classOrder: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC", "SUPERIOR"];
 
                 return (
                     <Card key={stars} className="bg-slate-900/50 border-slate-800 overflow-hidden">
@@ -157,43 +166,54 @@ export default async function ProfilePage() {
                                 </CardTitle>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-4 space-y-4">
-                            {/* Rank Distribution */}
-                            <div>
-                                <h4 className="text-xs uppercase font-semibold text-slate-500 mb-2">By Rank</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {Object.entries(byRank)
-                                        .sort(([r1], [r2]) => Number(r2) - Number(r1))
-                                        .map(([rank, count]) => (
-                                            <Badge key={rank} variant="secondary" className="bg-slate-800 hover:bg-slate-700">
-                                                R{rank}: <span className="text-sky-400 ml-1">{count}</span>
-                                            </Badge>
-                                        ))
-                                    }
-                                </div>
-                            </div>
-                            
-                             {/* Class Distribution */}
-                             <div>
-                                <h4 className="text-xs uppercase font-semibold text-slate-500 mb-2">By Class</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {Object.entries(byClass)
-                                        .sort(([, c1], [, c2]) => c2 - c1)
-                                        .map(([className, count]) => {
-                                            const classColors = getChampionClassColors(className as ChampionClass);
-                                            return (
-                                                <Badge key={className} variant="outline" className={cn("flex items-center gap-1", classColors.border, "bg-slate-950/50")}>
-                                                    <div className="relative w-4 h-4">
-                                                        <Image src={CLASS_ICONS[className as ChampionClass]} alt={className} fill className="object-contain" />
+                        <CardContent className="p-0">
+                           <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs uppercase bg-slate-950/50 text-slate-400">
+                                        <tr>
+                                            <th className="px-4 py-3 font-medium">Rank</th>
+                                            {classOrder.map(cls => (
+                                                <th key={cls} className="px-4 py-3 text-center">
+                                                    <div className="flex justify-center items-center" title={cls}>
+                                                         <div className="relative w-5 h-5 opacity-80">
+                                                            <Image src={CLASS_ICONS[cls]} alt={cls} fill className="object-contain" />
+                                                        </div>
                                                     </div>
-                                                    <span className={cn("capitalize", classColors.text)}>{className.toLowerCase()}</span>
-                                                    <span className="ml-1.5 text-slate-400 border-l border-slate-700 pl-1.5">{count}</span>
-                                                </Badge>
+                                                </th>
+                                            ))}
+                                            <th className="px-4 py-3 text-center font-medium">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800/50">
+                                        {ranks.map(rank => {
+                                            const rowStats = statsByRank[rank];
+                                            return (
+                                                <tr key={rank} className="hover:bg-slate-800/20 transition-colors">
+                                                    <td className="px-4 py-3 font-medium text-slate-200">
+                                                        <Badge variant="secondary" className="bg-slate-800 text-slate-300 border-slate-700">R{rank}</Badge>
+                                                    </td>
+                                                    {classOrder.map(cls => {
+                                                        const count = rowStats[cls] || 0;
+                                                        const classColors = getChampionClassColors(cls);
+                                                        return (
+                                                            <td key={cls} className="px-4 py-3 text-center">
+                                                                {count > 0 ? (
+                                                                    <span className={cn("font-medium", classColors.text)}>{count}</span>
+                                                                ) : (
+                                                                    <span className="text-slate-700">-</span>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td className="px-4 py-3 text-center font-bold text-slate-200">
+                                                        {rowStats.total}
+                                                    </td>
+                                                </tr>
                                             );
-                                        })
-                                    }
-                                </div>
-                            </div>
+                                        })}
+                                    </tbody>
+                                </table>
+                           </div>
                         </CardContent>
                     </Card>
                 );
