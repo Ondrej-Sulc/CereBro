@@ -58,7 +58,7 @@ const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit:
     return (
         <div 
             className={cn(
-                "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-all cursor-pointer shadow-lg",
+                "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-colors cursor-pointer bg-slate-900",
                 classColors.bg,
                 "border-slate-800 hover:border-slate-500"
             )}
@@ -70,7 +70,7 @@ const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit:
                 alt={item.champion.name}
                 fill
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 10vw"
-                className="object-cover transition-transform group-hover:scale-110 p-1"
+                className="object-cover transition-transform group-hover:scale-105 p-1"
             />
             
             {/* Gradient Overlay */}
@@ -78,21 +78,26 @@ const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit:
 
             {/* Top Info (Stars/Rank Indicator) */}
             <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                <div className="flex items-center gap-1 bg-black/70 px-2 py-0.5 rounded-md backdrop-blur-md border border-white/20 shadow-md">
+                <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded border border-white/10">
                         <span className="text-yellow-500 text-[10px]">★</span>
                         <span className="text-white text-xs font-black leading-none">{item.stars}</span>
                 </div>
                     {item.isAscended && (
-                    <div className="bg-sky-500/20 p-1 rounded-md backdrop-blur-md border border-sky-400/40 shadow-md" title="Ascended">
-                        <ShieldAlert className="w-4 h-4 text-sky-400 fill-sky-400/20" />
+                    <div className="bg-sky-900/80 p-1 rounded border border-sky-500/30" title="Ascended">
+                        <ShieldAlert className="w-4 h-4 text-sky-400" />
                     </div>
                 )}
             </div>
 
                 <div className="absolute top-1.5 left-1.5">
-                    <div className={cn("p-1.5 rounded-full bg-black/70 border border-white/20 backdrop-blur-md shadow-md", classColors.text)}>
+                    <div className={cn("p-1.5 rounded-full bg-black/80 border border-white/10", classColors.text)}>
                     <div className="relative w-5 h-5">
-                        <Image src={CLASS_ICONS[item.champion.class]} alt={item.champion.class} fill className="object-contain" />
+                        <img 
+                            src={CLASS_ICONS[item.champion.class]} 
+                            alt={item.champion.class} 
+                            className="w-full h-full object-contain"
+                            loading="lazy" 
+                        />
                     </div>
                     </div>
                 </div>
@@ -105,15 +110,15 @@ const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit:
                         R{item.rank}
                     </Badge>
                         {item.isAwakened && (
-                        <Sparkles className="w-4 h-4 text-white fill-white/10 drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
+                        <Sparkles className="w-4 h-4 text-white fill-white/20" />
                     )}
                 </div>
-                <p className="text-[11px] sm:text-xs font-bold text-white leading-tight truncate drop-shadow-md">{item.champion.name}</p>
+                <p className="text-[11px] sm:text-xs font-bold text-white leading-tight truncate">{item.champion.name}</p>
             </div>
 
             {/* Hover Overlay Action */}
             <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-sky-500/80 p-2 rounded-full shadow-2xl scale-75 group-hover:scale-100 transition-transform">
+                    <div className="bg-sky-600 p-2 rounded-full scale-75 group-hover:scale-100 transition-transform">
                         <Edit2 className="w-4 h-4 text-white" />
                     </div>
             </div>
@@ -121,6 +126,18 @@ const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit:
     );
 });
 ChampionCard.displayName = 'ChampionCard';
+
+const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
+    <div
+        ref={ref}
+        {...props}
+        style={style}
+        className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2"
+    >
+        {children}
+    </div>
+));
+GridList.displayName = "GridList";
 
 export function RosterView({ initialRoster }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
@@ -296,18 +313,10 @@ export function RosterView({ initialRoster }: RosterViewProps) {
             <VirtuosoGrid
                 useWindowScroll
                 totalCount={filteredRoster.length}
-                overscan={400}
+                overscan={2000}
+                computeItemKey={(index) => filteredRoster[index]?.id}
                 components={{
-                    List: forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
-                        <div
-                            ref={ref}
-                            {...props}
-                            style={style}
-                            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2"
-                        >
-                            {children}
-                        </div>
-                    ))
+                    List: GridList
                 }}
                 itemContent={itemContent}
             />
