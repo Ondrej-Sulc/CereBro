@@ -55,8 +55,10 @@ The flagship feature of the platform.
 *   **Smart Notifications:** Automatically posts rich embeds to a configured Discord channel whenever a new war video is uploaded or linked, keeping the alliance in the loop.
 
 ### 👤 Roster & Identity
+*   **Web Roster Manager:** A dedicated, high-performance interface (`/profile/roster`) for viewing and managing champion rosters. Features a **virtualized grid** capable of rendering hundreds of champions smoothly, advanced class/rank filtering, and a modern card-based design with class-specific tinting.
+*   **Interactive Editor:** Users can manually edit champion details (Rank, Awakening, Ascension, Power Rating) or delete entries directly from the web grid via a modal editor.
 *   **Smart Import:** Users can upload screenshots of their game roster. The system uses image processing to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
-*   **Profile:** Tracks Prestige history, multi-account support, and timezone management.
+*   **Profile Analysis:** The main profile view now includes a detailed, table-based breakdown of the roster by Rank and Class for each Star level, alongside Prestige history and timezone management.
 
 ### 🧠 Knowledge Base
 *   **Champion Search:** Powerful filtering by immunities, tags, and ability mechanics. Supported by a comprehensive glossary for deep effect lookups.

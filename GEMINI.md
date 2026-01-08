@@ -274,8 +274,11 @@ The web interface features a "War Archive" that allows users to browse and searc
 
 ### Profile & Roster Management
 The web interface now includes a comprehensive Profile section.
-*   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, prestige, and a summary of their champion roster (grouped by star rating, rank, and class).
+*   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, and prestige history. **The roster summary has been redesigned into a clear, table-based breakdown showing champion counts by Rank and Class for each Star level.**
+*   **Interactive Roster Page:** A dedicated `/profile/roster` page features a high-performance, virtualized grid (`react-virtuoso`) capable of displaying hundreds of champions. It includes advanced filtering by Search, Star Level, Rank, and Class (using visual icon buttons).
+*   **Roster Editor:** Users can click on any champion in the grid to open an "Edit Modal". This allows for manual updates to Rank, Awakened Status, Ascension, and Power Rating, as well as deleting champions from the roster.
 *   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful image processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
+*   **Visual Polish:** The interface features class-tinted champion cards, prominent Star/Rank indicators, and responsive layouts that adapt to different screen sizes.
 
 ### Landing Page Enhancements
 
