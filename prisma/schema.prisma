@@ -402,6 +402,7 @@ model Roster {
   isAwakened  Boolean
   isAscended  Boolean @default(false)
   powerRating Int?
+  sigLevel    Int     @default(0)
 
   player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   playerId   String

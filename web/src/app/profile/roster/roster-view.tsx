@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff } from "lucide-react";
+import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -34,8 +34,23 @@ import { ChampionImages } from "@/types/champion";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 
+export interface Recommendation {
+    championName: string;
+    championClass: ChampionClass;
+    championImage: any;
+    stars: number;
+    fromRank: number;
+    toRank: number;
+    prestigeGain: number;
+    accountGain: number;
+}
+
 interface RosterViewProps {
   initialRoster: RosterWithChampion[];
+  top30Average: number;
+  prestigeMap: Record<string, number>;
+  recommendations?: Recommendation[];
+  simulationTargetRank: number;
 }
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
@@ -52,7 +67,7 @@ const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH"
 
 // Extracted Card Component for Virtuoso
 
-const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit: (item: RosterWithChampion) => void }) => {
+const ChampionCard = memo(({ item, prestige, onEdit }: { item: RosterWithChampion; prestige?: number; onEdit: (item: RosterWithChampion) => void }) => {
     const classColors = getChampionClassColors(item.champion.class);
     
     return (
@@ -106,11 +121,23 @@ const ChampionCard = memo(({ item, onEdit }: { item: RosterWithChampion; onEdit:
             {/* Bottom Info */}
             <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
                 <div className="flex items-center justify-between mb-1">
-                        <Badge variant="outline" className="bg-slate-900/90 border-slate-700 text-[11px] px-2 py-0.5 h-5 font-bold text-slate-100">
-                        R{item.rank}
-                    </Badge>
+                    <div className="flex gap-1 items-center">
+                        <Badge variant="outline" className="bg-slate-900/90 border-slate-700 text-[10px] px-1.5 py-0 h-4 font-bold text-slate-100">
+                            R{item.rank}
+                        </Badge>
                         {item.isAwakened && (
-                        <Sparkles className="w-4 h-4 text-white fill-white/20" />
+                             <Badge variant="outline" className="bg-sky-950/40 border-sky-500/30 text-[10px] px-1.5 py-0 h-4 font-bold text-sky-400">
+                                S{item.sigLevel}
+                            </Badge>
+                        )}
+                    </div>
+                    {/* Prestige Display */}
+                    {prestige ? (
+                         <span className="text-[10px] font-mono font-medium text-slate-300 bg-black/40 px-1 rounded">
+                            {prestige.toLocaleString()}
+                        </span>
+                    ) : (
+                        item.isAwakened && <Sparkles className="w-3.5 h-3.5 text-white fill-white/20" />
                     )}
                 </div>
                 <p className="text-[11px] sm:text-xs font-bold text-white leading-tight truncate">{item.champion.name}</p>
@@ -139,25 +166,45 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 ));
 GridList.displayName = "GridList";
 
-export function RosterView({ initialRoster }: RosterViewProps) {
+export function RosterView({ initialRoster, top30Average, prestigeMap, recommendations, simulationTargetRank }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
   const [filterStars, setFilterStars] = useState<string>("ALL");
   const [filterRank, setFilterRank] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
   const [editingItem, setEditingItem] = useState<RosterWithChampion | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
+  const handleTargetChange = (val: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('targetRank', val);
+    router.push(`?${params.toString()}`);
+  };
+
   const filteredRoster = useMemo(() => {
-    return roster.filter((item) => {
+    const filtered = roster.filter((item) => {
       const matchesSearch = item.champion.name.toLowerCase().includes(search.toLowerCase());
       const matchesClass = !filterClass || item.champion.class === filterClass;
       const matchesStars = filterStars === "ALL" || item.stars.toString() === filterStars;
       const matchesRank = filterRank === "ALL" || item.rank.toString() === filterRank;
       return matchesSearch && matchesClass && matchesStars && matchesRank;
     });
-  }, [roster, search, filterClass, filterStars, filterRank]);
+
+    return filtered.sort((a, b) => {
+        if (sortBy === "NAME") {
+            return a.champion.name.localeCompare(b.champion.name);
+        } else {
+            const prestigeA = prestigeMap[a.id] || 0;
+            const prestigeB = prestigeMap[b.id] || 0;
+            // Primary: Prestige Descending
+            if (prestigeA !== prestigeB) return prestigeB - prestigeA;
+            // Secondary: Name Ascending (for equal prestige)
+            return a.champion.name.localeCompare(b.champion.name);
+        }
+    });
+  }, [roster, search, filterClass, filterStars, filterRank, sortBy, prestigeMap]);
 
   const handleUpdate = async (updatedData: Partial<RosterWithChampion> & { id: string }) => {
     try {
@@ -205,15 +252,107 @@ export function RosterView({ initialRoster }: RosterViewProps) {
     setEditingItem(item);
   }, []);
 
-  const itemContent = useCallback((index: number) => (
-      <ChampionCard 
-          item={filteredRoster[index]} 
-          onEdit={handleEdit} 
-      />
-  ), [filteredRoster, handleEdit]);
+  const itemContent = useCallback((index: number) => {
+      const item = filteredRoster[index];
+      return (
+        <ChampionCard 
+            item={item} 
+            prestige={prestigeMap[item.id]}
+            onEdit={handleEdit} 
+        />
+      );
+  }, [filteredRoster, handleEdit, prestigeMap]);
 
   return (
     <div className="space-y-6">
+      {/* Recommendations Card */}
+      {recommendations && (
+          <Card className="bg-gradient-to-br from-indigo-950/40 via-slate-900/50 to-slate-950 border-indigo-500/20 overflow-hidden">
+              <div className="px-4 py-3 border-b border-indigo-500/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-indigo-500/20 rounded-lg">
+                        <TrendingUp className="w-4 h-4 text-indigo-400" />
+                      </div>
+                      <h3 className="font-bold text-slate-100">Prestige Opportunities</h3>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                     <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
+                     <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
+                        <SelectTrigger className="h-7 w-[90px] bg-indigo-950/30 border-indigo-500/20 text-indigo-300 text-xs">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {[3, 4, 5, 6].map(r => (
+                                <SelectItem key={r} value={String(r)} className="text-xs">Rank {r}</SelectItem>
+                            ))}
+                        </SelectContent>
+                     </Select>
+                  </div>
+              </div>
+
+              {recommendations.length > 0 ? (
+                <>
+                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                        {recommendations.map((rec, i) => {
+                            const classColors = getChampionClassColors(rec.championClass);
+                            return (
+                                <div key={i} className={cn(
+                                    "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative",
+                                    classColors.bg,
+                                    "bg-opacity-10 hover:bg-opacity-20",
+                                    classColors.border,
+                                    "border-opacity-30"
+                                )}>
+                                    {/* Avatar */}
+                                    <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
+                                         <Image 
+                                            src={getChampionImageUrl(rec.championImage, 'full')} 
+                                            alt={rec.championName}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    
+                                    {/* Info */}
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                            <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★</span>
+                                            <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
+                                                <span>R{rec.fromRank}</span>
+                                                <ChevronRight className="w-2.5 h-2.5" />
+                                                <span className={cn(classColors.text, "brightness-150")}>R{rec.toRank}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
+                                        
+                                        <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                                            +{rec.accountGain} Avg
+                                        </Badge>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="px-4 py-2 bg-indigo-500/5 border-t border-indigo-500/10 text-[10px] text-slate-500 italic">
+                        These rank-ups would provide the largest net increase to your Top 30 account average.
+                    </div>
+                </>
+              ) : (
+                  <div className="p-8 flex flex-col items-center justify-center text-center space-y-2">
+                      <div className="p-3 bg-slate-900/50 rounded-full mb-2">
+                          <TrendingUp className="w-6 h-6 text-slate-600" />
+                      </div>
+                      <p className="text-slate-400 font-medium text-sm">No impactful rank-ups found for Target Rank {simulationTargetRank}.</p>
+                      <p className="text-slate-500 text-xs max-w-md">
+                          Rank-ups to this level won't increase your Top 30 Average enough to matter. Try increasing the Target Rank to see future opportunities.
+                      </p>
+                  </div>
+              )}
+          </Card>
+      )}
+
       {/* Filters */}
       <Card className="bg-slate-900/50 border-slate-800 p-4">
         <div className="flex flex-col xl:flex-row gap-4 items-center">
@@ -228,7 +367,26 @@ export function RosterView({ initialRoster }: RosterViewProps) {
             </div>
             
             <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                {top30Average > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-950/20 border border-amber-900/40 rounded-md shrink-0">
+                        <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wide">Top 30 Avg Prestige</span>
+                        <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString()}</span>
+                    </div>
+                )}
+                
+                <div className="h-8 w-px bg-slate-800 hidden xl:block" />
+
                 <div className="flex gap-2 shrink-0">
+                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as "PRESTIGE" | "NAME")}>
+                        <SelectTrigger className="w-[110px] bg-slate-950/50 border-slate-700">
+                            <SelectValue placeholder="Sort" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="PRESTIGE">Prestige</SelectItem>
+                            <SelectItem value="NAME">Name</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    
                     <Select value={filterStars} onValueChange={setFilterStars}>
                         <SelectTrigger className="w-[110px] bg-slate-950/50 border-slate-700">
                             <SelectValue placeholder="Stars" />
@@ -359,13 +517,23 @@ export function RosterView({ initialRoster }: RosterViewProps) {
                         </Select>
                     </div>
                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="pr" className="text-right">Power Rating</Label>
+                        <Label htmlFor="sig" className="text-right">Sig Level</Label>
                         <Input 
-                            id="pr" 
+                            id="sig" 
                             type="number" 
-                            className="col-span-3 bg-slate-950 border-slate-700"
-                            value={editingItem.powerRating || ""}
-                            onChange={(e) => setEditingItem({...editingItem, powerRating: parseInt(e.target.value) || null})}
+                            disabled={!editingItem.isAwakened}
+                            className="w-[180px] bg-slate-950 border-slate-700 disabled:opacity-50"
+                            min={0}
+                            max={editingItem.stars >= 5 ? 200 : 99}
+                            value={editingItem.sigLevel || 0}
+                            onChange={(e) => {
+                                const maxSig = editingItem.stars >= 5 ? 200 : 99;
+                                let val = parseInt(e.target.value);
+                                if (isNaN(val)) val = 0;
+                                if (val > maxSig) val = maxSig;
+                                if (val < 0) val = 0;
+                                setEditingItem({...editingItem, sigLevel: val});
+                            }}
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -375,7 +543,18 @@ export function RosterView({ initialRoster }: RosterViewProps) {
                                 <Checkbox 
                                     id="awakened" 
                                     checked={editingItem.isAwakened}
-                                    onCheckedChange={(c) => setEditingItem({...editingItem, isAwakened: !!c})}
+                                    onCheckedChange={(c) => {
+                                        const isAwakened = !!c;
+                                        setEditingItem({
+                                            ...editingItem, 
+                                            isAwakened,
+                                            // If unawakening, set sig to 0. If awakening and sig is 0, default to 1? Or keep 0? 
+                                            // Game logic: Awakening usually implies sig 1 unless using a gem that specifically says otherwise, 
+                                            // but generally simplest is: if on -> keep current (or 1 if 0), if off -> 0.
+                                            // Let's just reset to 0 if turning off. If turning on, let user type.
+                                            sigLevel: isAwakened ? (editingItem.sigLevel || 1) : 0
+                                        });
+                                    }}
                                     className="border-slate-600 data-[state=checked]:bg-sky-600"
                                 />
                                 <Label htmlFor="awakened">Awakened</Label>
@@ -406,7 +585,7 @@ export function RosterView({ initialRoster }: RosterViewProps) {
                             rank: editingItem.rank,
                             isAwakened: editingItem.isAwakened,
                             isAscended: editingItem.isAscended,
-                            powerRating: editingItem.powerRating
+                            sigLevel: editingItem.sigLevel
                         })}
                         className="bg-sky-600 hover:bg-sky-700"
                     >

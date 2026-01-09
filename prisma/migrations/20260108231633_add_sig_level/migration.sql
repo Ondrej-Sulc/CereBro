@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Roster" ADD COLUMN     "sigLevel" INTEGER NOT NULL DEFAULT 0;

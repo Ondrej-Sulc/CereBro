@@ -15,14 +15,13 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { PrestigeHistoryChart } from "./prestige-chart";
 import { Upload, LayoutGrid } from "lucide-react";
 
-const CLASS_ICONS: Record<ChampionClass, string> = {
+const CLASS_ICONS: Record<Exclude<ChampionClass, 'SUPERIOR'>, string> = {
     SCIENCE: "/icons/Science.png",
     SKILL: "/icons/Skill.png",
     MYSTIC: "/icons/Mystic.png",
     COSMIC: "/icons/Cosmic.png",
     TECH: "/icons/Tech.png",
     MUTANT: "/icons/Mutant.png",
-    SUPERIOR: "/icons/Superior.png"
 };
 
 export default async function ProfilePage() {
@@ -153,7 +152,7 @@ export default async function ProfilePage() {
                 }, {} as Record<number, Record<ChampionClass | 'total', number>>);
 
                 const ranks = Object.keys(statsByRank).map(Number).sort((a, b) => b - a);
-                const classOrder: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC", "SUPERIOR"];
+                const classOrder: Exclude<ChampionClass, 'SUPERIOR'>[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC"];
 
                 return (
                     <Card key={stars} className="bg-slate-900/50 border-slate-800 overflow-hidden">
