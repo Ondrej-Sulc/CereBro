@@ -2,6 +2,7 @@ import sharp from "sharp";
 import { prisma } from "../../../services/prismaService";
 import { getChampionImageUrl } from "../../../utils/championHelper";
 import { Champion, Roster } from "@prisma/client";
+import logger from "../../../services/loggerService";
 
 import {
   ChampionGridCell,
@@ -85,9 +86,9 @@ export async function solveShortNames(
           ];
 
           if (extractOptions.width <= 0 || extractOptions.height <= 0) {
-            console.log(
-              `[DEBUG] Skipping invalid extract region for ${cell.championName}`,
-              extractOptions
+            logger.debug(
+              { championName: cell.championName, extractOptions },
+              `[DEBUG] Skipping invalid extract region`
             );
             continue;
           }
@@ -152,8 +153,9 @@ export async function solveShortNames(
               "primary"
             );
             if (!imageUrl) {
-              console.log(
-                `[DEBUG] Skipping champion ${possibleChampion.name} due to missing official image URL.`
+              logger.debug(
+                { championName: possibleChampion.name },
+                `[DEBUG] Skipping champion due to missing official image URL.`
               );
               continue;
             }
@@ -270,12 +272,9 @@ export async function isChampionAwakened(
 
   if (stripWidth <= 0 || stripHeight <= 0) {
     if (debugMode) {
-      console.log(
-        `[DEBUG] Awakened check for champion at [${bounds[0].x.toFixed(
-          0
-        )}, ${bounds[0].y.toFixed(
-          0
-        )}]: Invalid strip dimensions (${stripWidth}x${stripHeight}), returning not awakened.`
+      logger.debug(
+        { x: bounds[0].x.toFixed(0), y: bounds[0].y.toFixed(0), stripWidth, stripHeight },
+        `[DEBUG] Awakened check: Invalid strip dimensions, returning not awakened.`
       );
     }
     return { isAwakened: false, awakenedCheckBounds };
@@ -318,10 +317,17 @@ export async function isChampionAwakened(
   const isAwakened = blueRatio > BLUE_RATIO_THRESHOLD;
 
   if (debugMode) {
-    console.log(
-      `[DEBUG] Awakened check for champion at [${bounds[0].x.toFixed(0)}, ${bounds[0].y.toFixed(0)}]: ` +
-      `R=${avgR.toFixed(1)}, G=${avgG.toFixed(1)}, B=${avgB.toFixed(1)} -> Ratio=${blueRatio.toFixed(2)} ` +
-      `-> ${isAwakened ? "AWAKENED (Silver)" : "UNAWAKENED (Gold)"}`
+    logger.debug(
+      {
+        x: bounds[0].x.toFixed(0),
+        y: bounds[0].y.toFixed(0),
+        avgR: avgR.toFixed(1),
+        avgG: avgG.toFixed(1),
+        avgB: avgB.toFixed(1),
+        blueRatio: blueRatio.toFixed(2),
+        isAwakened
+      },
+      `[DEBUG] Awakened check result`
     );
   }
 

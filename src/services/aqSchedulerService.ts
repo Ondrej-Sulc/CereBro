@@ -8,7 +8,7 @@ let isRunning = false;
 
 export function startAQScheduler(client: Client) {
   if (isRunning) {
-    console.log("[AQScheduler] Already running.");
+    logger.info("[AQScheduler] Already running.");
     return;
   }
 
@@ -68,5 +68,5 @@ export function startAQScheduler(client: Client) {
   });
 
   isRunning = true;
-  console.log("[AQScheduler] Started.");
+  logger.info("[AQScheduler] Started.");
 }

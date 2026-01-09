@@ -1,4 +1,5 @@
 import "dotenv/config";
+import logger from "./services/loggerService";
 
 interface GoogleCredentials {
   client_email: string;
@@ -111,9 +112,9 @@ const createConfig = (): Config => {
     ).toString("utf8");
     credentials = JSON.parse(decodedCredentialsString);
   } catch (error) {
-    console.error(
-      `Error loading/parsing Google credentials from environment variable:`,
-      error
+    logger.error(
+      { error },
+      `Error loading/parsing Google credentials from environment variable`
     );
     throw new Error(
       `Failed to load Google credentials. Check the GOOGLE_CREDENTIALS_JSON environment variable.`

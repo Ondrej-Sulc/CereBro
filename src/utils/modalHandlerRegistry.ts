@@ -1,4 +1,5 @@
 import { ModalSubmitInteraction } from "discord.js";
+import logger from "../services/loggerService";
 
 export type ModalHandler = (
   interaction: ModalSubmitInteraction
@@ -8,7 +9,7 @@ const modalHandlers = new Map<string, ModalHandler>();
 
 export function registerModalHandler(customId: string, handler: ModalHandler) {
   if (modalHandlers.has(customId)) {
-    console.warn(`Overwriting modal handler for customId: ${customId}`);
+    logger.warn(`Overwriting modal handler for customId: ${customId}`);
   }
   modalHandlers.set(customId, handler);
 }

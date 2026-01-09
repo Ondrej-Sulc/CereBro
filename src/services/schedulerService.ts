@@ -119,7 +119,7 @@ async function executeScheduledCommand(client: Client, schedule: Schedule) {
   const targetUserId = schedule.target_user_id;
 
   if (!targetUserId && !targetChannelId) {
-    console.warn(
+    loggerService.warn(
       `[Scheduler] No target specified for schedule: ${schedule.id}`
     );
     return;
@@ -131,7 +131,7 @@ async function executeScheduledCommand(client: Client, schedule: Schedule) {
 
   const command = commands.get(commandName);
   if (!command) {
-    console.warn(
+    loggerService.warn(
       `[Scheduler] Command "${commandName}" not found for schedule: ${schedule.id}`
     );
     return;
@@ -158,9 +158,9 @@ async function executeScheduledCommand(client: Client, schedule: Schedule) {
         channel = fetchedChannel as TextChannel | ThreadChannel;
       }
     } catch (error) {
-      console.error(
-        `[Scheduler] Could not fetch channel ${targetChannelId}:`,
-        error
+      loggerService.error(
+        { error, channelId: targetChannelId },
+        `[Scheduler] Could not fetch channel ${targetChannelId}`
       );
       return;
     }
@@ -248,9 +248,9 @@ async function executeScheduledCommand(client: Client, schedule: Schedule) {
   try {
     await command.execute(mockInteraction);
   } catch (error) {
-    console.error(
-      `[Scheduler] Error executing command for schedule ${schedule.id}:`,
-      error
+    loggerService.error(
+      { error, scheduleId: schedule.id },
+      `[Scheduler] Error executing command for schedule ${schedule.id}`
     );
   }
 }
@@ -282,14 +282,14 @@ export async function startScheduler(client: Client) {
 
     for (const cronExpr of cronExprs) {
       if (!cron.validate(cronExpr)) {
-        console.warn(`[Scheduler] Invalid cron for schedule: ${schedule.id}`);
+        loggerService.warn(`[Scheduler] Invalid cron for schedule: ${schedule.id}`);
         continue;
       }
 
       const job = cron.schedule(
         cronExpr,
         async () => {
-          console.log(
+          loggerService.info(
             `[Scheduler] Triggering schedule: ${schedule.name} (${schedule.id})`
           );
 
@@ -311,7 +311,7 @@ export async function startScheduler(client: Client) {
               });
             }
           } catch (e) {
-            console.error("Error capturing PostHog event for schedule trigger:", e);
+            loggerService.error({ error: e }, "Error capturing PostHog event for schedule trigger");
           }
 
           if (schedule.frequency === "every" && schedule.unit === "weeks") {
@@ -339,7 +339,7 @@ export async function startScheduler(client: Client) {
       );
 
       jobs[schedule.id].push(job);
-      console.log(
+      loggerService.info(
         `[Scheduler] Scheduled: ${schedule.name} (${cronExpr}) [${schedule.id}]`
       );
     }
@@ -348,5 +348,5 @@ export async function startScheduler(client: Client) {
   cron.schedule('0 * * * *', () => syncAllAllianceRoles(client), {
     timezone: config.TIMEZONE,
   });
-  console.log('[Scheduler] Scheduled hourly alliance role sync.');
+  loggerService.info('[Scheduler] Scheduled hourly alliance role sync.');
 }

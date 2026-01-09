@@ -10,6 +10,7 @@ import { estimateGrid } from "./gridEstimator";
 import { solveShortNames, isChampionAwakened } from "./championIdentifier";
 import Fuse from "fuse.js";
 import { getGoogleVisionService } from "../../../services/googleVisionService.js";
+import logger from "../../../services/loggerService.js";
 
 export async function processRosterScreenshot(
   imageInput: string | Buffer,
@@ -21,33 +22,38 @@ export async function processRosterScreenshot(
 ): Promise<RosterUpdateResult | RosterDebugResult> {
   const googleVisionService = await getGoogleVisionService();
   const { prisma } = await import("../../../services/prismaService.js");
+  
+  const logContext = { playerId, stars, rank, isAscended };
+
   if (debugMode)
-    console.log(`[DEBUG] Starting roster processing...`);
+    logger.debug(logContext, "Starting roster processing (DEBUG MODE)");
 
   // 1. Prepare image buffer
   let imageBuffer: Buffer;
   if (typeof imageInput === 'string') {
-      if (debugMode) console.log(`[DEBUG] Downloading image from URL: ${imageInput}`);
+      if (debugMode) logger.debug({ ...logContext, url: imageInput }, "Downloading image from URL");
       imageBuffer = await downloadImage(imageInput);
   } else {
-      if (debugMode) console.log(`[DEBUG] Using provided image buffer`);
       imageBuffer = imageInput;
   }
 
   if (debugMode)
-    console.log(`[DEBUG] Image ready, size: ${imageBuffer.length} bytes`);
+    logger.debug({ ...logContext, bufferSize: imageBuffer.length }, "Image buffer ready");
 
   // 2. Run OCR using Google Cloud Vision
   if (debugMode)
-    console.log("[DEBUG] Sending image to Google Cloud Vision for OCR...");
+    logger.debug(logContext, "Sending image to Google Cloud Vision for OCR");
   const detections = await googleVisionService.detectText(imageBuffer);
+  
   if (debugMode)
-    console.log(
-      `[DEBUG] OCR complete, ${detections?.length || 0} text annotations found.`
+    logger.debug(
+      { ...logContext, detectionsCount: detections?.length || 0 },
+      "OCR complete"
     );
 
   if (!detections || detections.length === 0) {
     const message = "Could not detect any text in the image.";
+    logger.warn(logContext, message);
     if (debugMode) {
       return { message };
     }
@@ -57,25 +63,20 @@ export async function processRosterScreenshot(
   // 3. Process OCR results
   const ocrResults = processOcrDetections(detections);
   if (debugMode) {
-    console.log(`[DEBUG] Processed ${ocrResults.length} OCR results.`);
-    console.log(
-      "[DEBUG] OCR results sample:",
-      ocrResults.slice(0, 100).map((r) => r.text)
-    );
+    logger.debug({ ...logContext, resultsCount: ocrResults.length }, "Processed OCR results");
   }
 
   // 4. Estimate grid and parse champions
-  if (debugMode) console.log("[DEBUG] Estimating champion grid...");
+  if (debugMode) logger.debug(logContext, "Estimating champion grid");
   let { grid, topBoundary } = await estimateGrid(
     ocrResults,
     imageBuffer,
     debugMode
   );
   if (debugMode) {
-    console.log(
-      `[DEBUG] Grid estimated with ${grid.length} rows and ${
-        grid[0]?.length || 0
-      } columns.`
+    logger.debug(
+      { ...logContext, rows: grid.length, cols: grid[0]?.length || 0 },
+      "Grid estimated"
     );
   }
 
@@ -106,9 +107,9 @@ export async function processRosterScreenshot(
   }
 
   // 6. Solve ambiguous short names
-  if (debugMode) console.log("[DEBUG] Solving ambiguous short names...");
+  if (debugMode) logger.debug(logContext, "Solving ambiguous short names");
   grid = await solveShortNames(grid, imageBuffer);
-  if (debugMode) console.log("[DEBUG] Short names solved.");
+  if (debugMode) logger.debug(logContext, "Short names solved");
 
   // 7. Final pass for awakened status
   for (const row of grid) {
@@ -127,18 +128,16 @@ export async function processRosterScreenshot(
 
   let debugImageBuffer: Buffer | undefined;
   if (debugMode) {
-    console.log("[DEBUG] Drawing debug bounds on image...");
+    logger.debug(logContext, "Drawing debug bounds on image");
     debugImageBuffer = await drawDebugBoundsOnImage(
       imageBuffer,
       grid,
       topBoundary
     );
-    console.log("[DEBUG] Debug bounds image created.");
   }
 
   if (debugMode) {
-    if (debugMode)
-      console.log("[DEBUG] Debug mode enabled, skipping database save.");
+    logger.debug(logContext, "Debug mode enabled, skipping database save");
     return {
       message: `--- DEBUG MODE --- \nFinal parsed roster: \n${await gridToString(
         grid
@@ -153,7 +152,7 @@ export async function processRosterScreenshot(
   }
 
   // 8. Save roster to database
-  console.log(`Saving roster for player ${playerId}...`);
+  logger.info(logContext, "Saving roster to database");
   const savedChampions = await saveRoster(
     grid,
     playerId,
@@ -162,7 +161,7 @@ export async function processRosterScreenshot(
     isAscended
   );
   const count = savedChampions.flat().length;
-  console.log(`${count} champions saved.`);
+  logger.info({ ...logContext, count }, "Successfully saved roster");
 
   return {
     champions: savedChampions,
@@ -256,13 +255,13 @@ async function updateRosterInSheet(
   const { prisma } = await import("../../../services/prismaService.js");
   const { sheetsService } = await import("../../../services/sheetsService.js");
   if (stars !== 6 && stars !== 7) {
-    console.log(`Skipping sheet update for ${stars}* champions.`);
+    logger.debug({ playerId, stars }, "Skipping sheet update for non-6/7* champions");
     return;
   }
 
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) {
-    console.error(`Player with ID ${playerId} not found.`);
+    logger.error({ playerId }, "Player not found during sheet update");
     return;
   }
 
@@ -276,7 +275,7 @@ async function updateRosterInSheet(
   );
 
   if (!playerNames || !championNames) {
-    console.error("Failed to read player or champion names from the sheet.");
+    logger.error({ playerId, sheetId }, "Failed to read player or champion names from sheet");
     return;
   }
 
@@ -285,7 +284,7 @@ async function updateRosterInSheet(
   );
 
   if (playerIndex === -1) {
-    console.log(`Player ${player.ingameName} not found in the sheet.`);
+    logger.debug({ playerId, ingameName: player.ingameName }, "Player not found in sheet");
     return;
   }
 
@@ -334,8 +333,9 @@ async function updateRosterInSheet(
     targetRange,
     newRosterData
   );
-  console.log(
-    `Successfully updated ${player.ingameName}'s ${stars}* roster in the sheet.`
+  logger.info(
+    { playerId, stars, count: flatUpdatedChampions.length },
+    "Successfully updated roster in sheet"
   );
 }
 

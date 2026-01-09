@@ -9,6 +9,7 @@ import {
     AutocompleteInteraction,
 } from 'discord.js';
 import { prisma } from '../../services/prismaService';
+import logger from '../../services/loggerService';
 
 export async function handleSearchAutocomplete(interaction: AutocompleteInteraction) {
     const focusedOption = interaction.options.getFocused(true);
@@ -193,7 +194,7 @@ export async function handleSearchSubcommand(interaction: ChatInputCommandIntera
         });
 
     } catch (error) {
-        console.error('Search error:', error);
+        logger.error({ error }, 'Search error');
         await interaction.editReply('An error occurred while searching.');
     }
 }

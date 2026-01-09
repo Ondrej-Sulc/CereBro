@@ -20,6 +20,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
+import { Progress } from "@/components/ui/progress";
+import axios from "axios";
 
 // Define local types matching what the API returns
 interface ChampionData {
@@ -52,6 +54,9 @@ export function RosterUpdateForm() {
   const [isAscended, setIsAscended] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [statusMessage, setStatusMessage] = useState("");
 
   // Cleanup object URLs to avoid memory leaks
   useEffect(() => {
@@ -104,54 +109,108 @@ export function RosterUpdateForm() {
       }
   };
 
+  const compressImage = (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement("img");
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+
+                // Max dimension 2560px (good balance for OCR)
+                const MAX_DIMENSION = 2560;
+                if (width > height) {
+                    if (width > MAX_DIMENSION) {
+                        height *= MAX_DIMENSION / width;
+                        width = MAX_DIMENSION;
+                    }
+                } else {
+                    if (height > MAX_DIMENSION) {
+                        width *= MAX_DIMENSION / height;
+                        height = MAX_DIMENSION;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) {
+                    reject(new Error("Could not get canvas context"));
+                    return;
+                }
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error("Compression failed"));
+                }, "image/jpeg", 0.85); // 0.85 quality JPEG
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (files.length === 0) return;
 
     setLoading(true);
     setResult(null);
+    setUploadProgress(0);
+    setStatusMessage("Preparing images...");
 
     const formData = new FormData();
     formData.append("stars", stars);
     formData.append("rank", rank);
     formData.append("isAscended", String(isAscended));
     
-    for (let i = 0; i < files.length; i++) {
-      formData.append("images", files[i]);
-    }
-
     try {
-      const res = await fetch("/api/profile/roster/update", {
-        method: "POST",
-        body: formData,
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to update roster");
-      }
+        // Compress/Convert all images
+        for (let i = 0; i < files.length; i++) {
+            setStatusMessage(`Processing image ${i + 1} of ${files.length}...`);
+            const compressedBlob = await compressImage(files[i]);
+            formData.append("images", compressedBlob, files[i].name.replace(/\.[^/.]+$/, "") + ".jpg");
+        }
 
-      setResult({
-        success: data.count,
-        added: data.added || [],
-        errors: data.errors || [],
-      });
+        setStatusMessage("Uploading...");
+
+        const response = await axios.post("/api/profile/roster/update", formData, {
+            onUploadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
+                setUploadProgress(percentCompleted);
+                if (percentCompleted === 100) {
+                    setStatusMessage("Analyzing roster... (this may take a moment)");
+                }
+            },
+        });
       
-      // Clear files on success
-      if (data.count > 0) {
-        setFiles([]);
-        setPreviews([]);
-      }
+        const data = response.data;
+      
+        setResult({
+            success: data.count,
+            added: data.added || [],
+            errors: data.errors || [],
+        });
+      
+        // Clear files on success
+        if (data.count > 0) {
+            setFiles([]);
+            setPreviews([]);
+        }
       
     } catch (err: any) {
-      setResult({
-        success: 0,
-        added: [],
-        errors: [err.message],
-      });
+        const errorMessage = err.response?.data?.error || err.message || "Failed to update roster";
+        setResult({
+            success: 0,
+            added: [],
+            errors: [errorMessage],
+        });
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
@@ -288,7 +347,7 @@ export function RosterUpdateForm() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4"
              >
                 <div className="relative w-24 h-24 mb-8">
                     <motion.div 
@@ -305,8 +364,14 @@ export function RosterUpdateForm() {
                         <Upload className="w-10 h-10 text-sky-400 animate-pulse" />
                     </div>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Analyzing Roster...</h3>
-                <p className="text-slate-400">Scanning for champions and stats</p>
+                <h3 className="text-2xl font-bold text-white mb-2 text-center">{statusMessage}</h3>
+                
+                {/* Progress Bar */}
+                <div className="w-full max-w-sm mt-4">
+                     <Progress value={uploadProgress} className="h-2" />
+                     <p className="text-slate-400 text-sm text-center mt-2">{uploadProgress}%</p>
+                </div>
+
              </motion.div>
         )}
 

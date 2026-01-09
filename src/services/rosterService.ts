@@ -1,4 +1,5 @@
 import { Roster, Prisma, Champion } from "@prisma/client";
+import logger from "./loggerService";
 
 export type RosterWithChampion = Roster & { champion: Champion };
 
@@ -39,7 +40,7 @@ export async function importRosterFromSheet(playerId: string) {
   const { sheetsService } = await import("./sheetsService.js");
   const player = await prisma.player.findUnique({ where: { id: playerId } });
   if (!player) {
-    console.error(`Player with ID ${playerId} not found.`);
+    logger.error(`Player with ID ${playerId} not found.`);
     return;
   }
 
@@ -53,7 +54,7 @@ export async function importRosterFromSheet(playerId: string) {
   );
 
   if (!playerNames || !championNames) {
-    console.error("Failed to read player or champion names from the sheet.");
+    logger.error("Failed to read player or champion names from the sheet.");
     return;
   }
 
@@ -62,7 +63,7 @@ export async function importRosterFromSheet(playerId: string) {
   );
 
   if (playerIndex === -1) {
-    console.log(
+    logger.info(
       `Player ${player.ingameName} not found in the sheet, skipping roster import.`
     );
     return;
@@ -124,7 +125,7 @@ export async function importRosterFromSheet(playerId: string) {
       data: rosterDataToCreate,
       skipDuplicates: true,
     });
-    console.log(
+    logger.info(
       `Successfully imported ${rosterDataToCreate.length} champions for ${player.ingameName}.`
     );
   }

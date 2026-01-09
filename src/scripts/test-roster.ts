@@ -4,6 +4,7 @@ import { processRosterScreenshot } from "../commands/roster/ocr/process";
 import { RosterUpdateResult, RosterDebugResult } from "../commands/roster/ocr/types";
 import * as fs from "fs/promises";
 import * as path from "path";
+import logger from "../services/loggerService";
 
 // URL from the user
 const imageUrl =
@@ -19,7 +20,7 @@ const testPlayerData = {
 
 async function testRoster() {
   const debugMode = true; // Set to true to test without saving to DB
-  console.log(`Starting roster processing test... (Debug mode: ${debugMode})`);
+  logger.info({ debugMode }, "Starting roster processing test...");
   try {
     let result: RosterUpdateResult | RosterDebugResult;
     if (debugMode) {
@@ -42,8 +43,9 @@ async function testRoster() {
         update: {},
         create: testPlayerData,
       });
-      console.log(
-        `Test player '${player.ingameName}' ensured with ID: ${player.id}`
+      logger.info(
+        { ingameName: player.ingameName, id: player.id },
+        "Test player ensured"
       );
       result = await processRosterScreenshot(
         imageUrl,
@@ -54,15 +56,15 @@ async function testRoster() {
         player.id
       );
     }
-    console.log("Processing finished.");
+    logger.info("Processing finished.");
 
     if ("message" in result) {
-      console.log("Result:", result.message);
+      logger.info({ message: result.message }, "Result message");
     } else {
-      console.log("Result:", `${result.count} champions processed.`);
-      console.log(
-        "Champions:",
-        result.champions.flat().map((c: any) => c.champion.name)
+      logger.info(`Result: ${result.count} champions processed.`);
+      logger.info(
+        { champions: result.champions.flat().map((c: any) => c.champion.name) },
+        "Champions processed"
       );
     }
 
@@ -73,16 +75,16 @@ async function testRoster() {
       if (result.imageBuffer) {
         const basePath = path.join(debugDir, "roster_base.png");
         await fs.writeFile(basePath, result.imageBuffer);
-        console.log(`Saved base image to: ${basePath}`);
+        logger.info(`Saved base image to: ${basePath}`);
       }
       if (result.debugImageBuffer) {
         const debugPath = path.join(debugDir, "roster_debug.png");
         await fs.writeFile(debugPath, result.debugImageBuffer);
-        console.log(`Saved debug image to: ${debugPath}`);
+        logger.info(`Saved debug image to: ${debugPath}`);
       }
     }
   } catch (error) {
-    console.error("An error occurred during roster processing:", error);
+    logger.error({ error }, "An error occurred during roster processing");
   } finally {
     await prisma.$disconnect();
   }

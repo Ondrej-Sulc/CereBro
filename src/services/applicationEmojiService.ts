@@ -1,4 +1,5 @@
 import { Client, Routes } from "discord.js";
+import logger from "./loggerService";
 
 type AppEmojiInfo = {
   id: string;
@@ -43,7 +44,7 @@ export async function loadApplicationEmojis(client: Client): Promise<void> {
 
   if (emojis.length === 0) {
     // Emit a compact debug once to help diagnose without leaking tokens
-    console.warn(
+    logger.warn(
       "⚠️ Application emojis list appears empty or unrecognized response shape."
     );
   }

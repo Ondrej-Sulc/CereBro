@@ -4,6 +4,7 @@ import cron from "node-cron";
 import { config } from "../config";
 import { AQState, getAllStates, setState } from "../commands/aq/state";
 import { prisma } from "./prismaService";
+import logger from "./loggerService";
 
 function getSlackers(
   state: AQState,
@@ -54,9 +55,9 @@ async function sendReminderPing(
       await (channel as TextChannel).send(message);
     }
   } catch (error) {
-    console.error(
-      `Failed to send AQ reminder to channel ${state.channelId}:`,
-      error
+    logger.error(
+      { error, channelId: state.channelId },
+      `Failed to send AQ reminder to channel ${state.channelId}`
     );
   }
 }
@@ -175,5 +176,5 @@ export function initializeAqReminders(client: Client) {
   cron.schedule("*/5 * * * *", () => checkAqStatuses(client), {
     timezone: config.TIMEZONE,
   });
-  console.log(" AQ Reminder service initialized.");
+  logger.info(" AQ Reminder service initialized.");
 }

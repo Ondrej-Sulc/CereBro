@@ -1,4 +1,5 @@
 import { PostHog } from 'posthog-node';
+import logger from './loggerService';
 
 let posthogClient: PostHog | null = null;
 let isInitialized = false;
@@ -14,10 +15,10 @@ export async function getPosthogClient(): Promise<PostHog | null> {
                     flushAt: 1,
                     flushInterval: 0
                 });
-                console.log("✅ PostHog client initialized.");
+                logger.info("✅ PostHog client initialized.");
             }
         } catch (e) {
-            console.error("❌ Failed to initialize PostHog client:", e);
+            logger.error({ error: e }, "❌ Failed to initialize PostHog client");
             posthogClient = null;
         }
     }

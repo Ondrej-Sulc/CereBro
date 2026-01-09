@@ -2,6 +2,7 @@ import sharp from "sharp";
 import { prisma } from "../../../services/prismaService";
 import { ChampionGridCell, OcrResult } from "./types";
 import { mergeOcrResults } from "./ocrProcessing";
+import logger from "../../../services/loggerService";
 
 export async function estimateGrid(
   ocrResults: OcrResult[],
@@ -40,7 +41,7 @@ export async function estimateGrid(
   if (infoText) {
     topBoundary = infoText.bounds[3].y;
     if (debugMode)
-      console.log(`[DEBUG] Found top boundary at y=${topBoundary}`);
+      logger.debug(`[DEBUG] Found top boundary at y=${topBoundary}`);
   }
 
   const ocrResultsBelowBoundary = ocrResults.filter(
@@ -70,7 +71,7 @@ export async function estimateGrid(
   }
 
   if (ratingTexts.length === 0) {
-    console.log("[DEBUG] No ratings found, cannot estimate grid.");
+    logger.debug("[DEBUG] No ratings found, cannot estimate grid.");
     return { grid: [], topBoundary: 0 };
   }
 
@@ -198,7 +199,7 @@ export async function estimateGrid(
   }
 
   if (championData.length === 0) {
-    console.log("[DEBUG] Could not pair any champions with ratings.");
+    logger.debug("[DEBUG] Could not pair any champions with ratings.");
     return { grid: [], topBoundary: 0 };
   }
 
@@ -294,7 +295,7 @@ export async function estimateGrid(
   }
 
   if (debugMode)
-    console.log(
+    logger.debug(
       `[DEBUG] Placing ${championData.length} identified champions into the grid...`
     );
   for (const champ of championData) {
@@ -330,14 +331,14 @@ export async function estimateGrid(
 
     if (bestCell) {
       if (debugMode)
-        console.log(
+        logger.debug(
           `[DEBUG] Placing '${champ.name}' (${champ.rating}) into grid cell [${bestCell.r}, ${bestCell.c}].`
         );
       grid[bestCell.r][bestCell.c].championName = champ.name;
       grid[bestCell.r][bestCell.c].powerRating = champ.rating;
     } else {
       if (debugMode)
-        console.warn(
+        logger.warn(
           `[DEBUG] Could not find a grid cell for champion '${champ.name}'.`
         );
     }

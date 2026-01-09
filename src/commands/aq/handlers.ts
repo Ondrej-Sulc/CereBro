@@ -2,6 +2,7 @@ import { ButtonInteraction, MessageFlags } from "discord.js";
 import { registerButtonHandler } from "../../utils/buttonHandlerRegistry";
 import { getState, SectionKey, setState } from "./state";
 import { updateAqMessage } from "./view";
+import logger from "../../services/loggerService";
 
 async function handleTogglePath(
   interaction: ButtonInteraction,
@@ -57,7 +58,7 @@ async function handleSectionClear(
     : interaction.channel;
 
   if (!targetChannel || !targetChannel.isTextBased()) {
-    console.error("Cannot send message to non-text-based guild channel.");
+    logger.error("Cannot send message to non-text-based guild channel.");
     return;
   }
 
@@ -98,7 +99,7 @@ async function handleMapClear(interaction: ButtonInteraction) {
     : interaction.channel;
 
   if (!targetChannel || !targetChannel.isTextBased()) {
-    console.error("Cannot send message to non-text-based guild channel.");
+    logger.error("Cannot send message to non-text-based guild channel.");
     return;
   }
 
@@ -118,7 +119,7 @@ async function handleMapClear(interaction: ButtonInteraction) {
         await thread.setLocked(true);
       }
     } catch (e) {
-      console.error("Failed to lock thread:", e);
+      logger.error({ error: e }, "Failed to lock thread");
     }
   }
 }

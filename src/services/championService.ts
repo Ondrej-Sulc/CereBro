@@ -10,6 +10,7 @@ import {
   Duel,
 } from "@prisma/client";
 import { normalizeChampionName } from "../utils/championHelper";
+import logger from "./loggerService";
 
 export let championsByName = new Map<string, Champion>();
 export let championList: Champion[] = [];
@@ -18,7 +19,7 @@ export async function loadChampions() {
   const allChampions = await prisma.champion.findMany();
   championsByName = new Map(allChampions.map(c => [normalizeChampionName(c.name), c]));
   championList = allChampions;
-  console.log(`Loaded ${allChampions.length} champions into cache.`);
+  logger.info(`Loaded ${allChampions.length} champions into cache.`);
 }
 
 export async function getChampionByName(name: string) {

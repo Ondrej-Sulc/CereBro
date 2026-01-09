@@ -44,6 +44,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid stars or rank" }, { status: 400 });
     }
 
+    logger.info({ 
+        playerId: player.id, 
+        stars, 
+        rank, 
+        isAscended, 
+        fileCount: files.length,
+        fileNames: files.map(f => f.name)
+    }, "Starting roster update via screenshot upload");
+
+    const startTime = Date.now();
     let totalCount = 0;
     const errors: string[] = [];
 
@@ -51,10 +61,12 @@ export async function POST(req: NextRequest) {
 
     for (const file of files) {
       try {
+        const fileStartTime = Date.now();
         const buffer = Buffer.from(await file.arrayBuffer());
         
+        logger.info({ playerId: player.id, fileName: file.name, fileSize: buffer.length }, "Processing roster screenshot");
+
         // Call the core processing logic
-        // processRosterScreenshot throws on error
         const result = await processRosterScreenshot(
           buffer,
           stars,
@@ -69,16 +81,31 @@ export async function POST(req: NextRequest) {
             const added = updateResult.champions.flat();
             totalCount += added.length;
             allAdded.push(...added);
-        } else if ('message' in result) {
-            // Should not happen if debugMode is false, but just in case
-            logger.info({ message: result.message }, "Roster process returned message");
+            logger.info({ 
+                playerId: player.id, 
+                fileName: file.name, 
+                addedCount: added.length,
+                duration: Date.now() - fileStartTime 
+            }, "Successfully processed roster screenshot");
         }
-
       } catch (err: any) {
-        logger.error({ error: err, fileName: file.name }, "Error processing file");
+        logger.error({ 
+            error: err.message, 
+            stack: err.stack,
+            playerId: player.id,
+            fileName: file.name 
+        }, "Error processing roster screenshot file");
         errors.push(`File ${file.name}: ${err.message || "Unknown error"}`);
       }
     }
+
+    const duration = Date.now() - startTime;
+    logger.info({ 
+        playerId: player.id, 
+        totalAdded: totalCount, 
+        errorCount: errors.length,
+        duration 
+    }, "Completed roster update request");
 
     return NextResponse.json({ count: totalCount, added: allAdded, errors });
 
