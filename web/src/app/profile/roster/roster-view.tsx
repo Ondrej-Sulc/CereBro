@@ -151,7 +151,7 @@ const ChampionCard = memo(({ item, prestige, onEdit }: { item: RosterWithChampio
                     {/* Prestige Display */}
                     {prestige ? (
                          <span className="text-[10px] font-mono font-medium text-slate-300 bg-black/40 px-1 rounded">
-                            {prestige.toLocaleString()}
+                            {prestige.toLocaleString('en-US')}
                         </span>
                     ) : (
                         item.isAwakened && <Sparkles className="w-3.5 h-3.5 text-white fill-white/20" />
@@ -529,7 +529,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                 {top30Average > 0 && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-amber-950/20 border border-amber-900/40 rounded-md shrink-0">
                         <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wide">Top 30 Prestige</span>
-                        <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString()}</span>
+                        <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString('en-US')}</span>
                     </div>
                 )}
                 
