@@ -487,7 +487,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                                         
                                                         <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
                                                         
-                                                        <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                                                        <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-emerald-500/20">
                                                             +{rec.accountGain}
                                                         </Badge>
                                                     </div>
@@ -575,7 +575,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                                 <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
                                                 
                                                 <div className="flex items-center gap-2">
-                                                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                                                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-purple-500/20">
                                                         +{rec.accountGain}
                                                     </Badge>
                                                     {rec.prestigePerSig > 0 && (
