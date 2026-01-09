@@ -229,6 +229,7 @@ The system now maintains a comprehensive, normalized database of champion presti
     *   `ChampionPrestige`: A dedicated model linked to `Champion`.
     *   Stores `rarity`, `rank`, `sig` (Signature Level), and `prestige` value as integers.
     *   Replaces the previous ad-hoc JSON `prestige` field on the `Champion` model.
+*   **Roster Integration:** The `Roster` model now includes a `sigLevel` field. This allows the system to perform precise prestige lookups and real-time **Prestige Simulations**, enabling users to see how ranking up a champion or increasing their signature level would affect their Top 30 average.
 *   **Data Seeding:** The database is seeded with granular prestige data for all champions across various rarities and ranks (including 7-star champions).
 
 The bot is built with a modern tech stack, including:
@@ -276,7 +277,8 @@ The web interface features a "War Archive" that allows users to browse and searc
 The web interface now includes a comprehensive Profile section.
 *   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, and prestige history. **The roster summary has been redesigned into a clear, table-based breakdown showing champion counts by Rank and Class for each Star level.**
 *   **Interactive Roster Page:** A dedicated `/profile/roster` page features a high-performance, virtualized grid (`react-virtuoso`) capable of displaying hundreds of champions. It includes advanced filtering by Search, Star Level, Rank, and Class (using visual icon buttons).
-*   **Roster Editor:** Users can click on any champion in the grid to open an "Edit Modal". This allows for manual updates to Rank, Awakened Status, Ascension, and Power Rating, as well as deleting champions from the roster.
+*   **Prestige Simulation:** The system now calculates the user's **Top 30 Prestige** average and offers actionable **Rank-up Recommendations**. These suggestions simulate the prestige impact of ranking up specific champions, helping users maximize their account progression.
+*   **Roster Editor:** Users can click on any champion in the grid to open an "Edit Modal". This allows for manual updates to **Signature Level**, Rank, Awakened Status, Ascension, and Power Rating, as well as deleting champions from the roster.
 *   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful image processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
 *   **Visual Polish:** The interface features class-tinted champion cards, prominent Star/Rank indicators, and responsive layouts that adapt to different screen sizes.
 
