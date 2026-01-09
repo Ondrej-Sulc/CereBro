@@ -320,7 +320,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                     value={sigBudget || ""}
                                     placeholder="Max"
                                     onChange={(e) => setSigBudget(e.target.value ? parseInt(e.target.value) : 0)}
-                                    className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center"
+                                    className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
                             <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
