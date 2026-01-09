@@ -521,7 +521,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                     <Sparkles className="w-4 h-4 text-purple-400" />
                                 </div>
                                 <h3 className="font-bold text-slate-100">
-                                    {sigBudget > 0 ? "Recommended Allocation" : "Max Sig Potential"}
+                                    {sigBudget > 0 ? `Recommended Allocation of ${sigBudget} Sig Stones` : "Max Sig Potential"}
                                 </h3>
                                 <Tooltip>
                                     <TooltipTrigger>
