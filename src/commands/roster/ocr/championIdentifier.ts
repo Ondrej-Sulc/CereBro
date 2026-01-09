@@ -247,7 +247,10 @@ export async function isChampionAwakened(
   // The vertical offset of the color strip from the top of the cell, as a ratio of the cell height.
   const STRIP_Y_OFFSET_RATIO = 0.6;
   // The average blue value a pixel must have to be considered part of an awakened gem.
-  const AWAKENED_BLUE_THRESHOLD = 90;
+  // UPDATE: We now use a ratio of Blue vs (Red+Green) to distinguish Silver (Awakened) vs Gold (Unawakened).
+  // Silver is Grey/White (High B, High R, High G) -> Ratio ~ 1.0
+  // Gold is Yellow (Low B, High R, High G) -> Ratio << 1.0
+  const BLUE_RATIO_THRESHOLD = 0.7;
 
   const [topLeft, , bottomRight] = bounds;
   const boxWidth = bottomRight.x - topLeft.x;
@@ -285,6 +288,7 @@ export async function isChampionAwakened(
       width: stripWidth,
       height: stripHeight,
     })
+    .toColorspace('srgb') // Ensure standard RGB
     .raw()
     .toBuffer();
 
@@ -302,15 +306,24 @@ export async function isChampionAwakened(
     b += strip[i * 3 + 2];
   }
 
-  const avgBlue = b / numPixels;
+  const avgR = r / numPixels;
+  const avgG = g / numPixels;
+  const avgB = b / numPixels;
+  
+  // Calculate Blue Ratio: B / Average(R, G)
+  // Avoid divide by zero
+  const avgRG = (avgR + avgG) / 2;
+  const blueRatio = avgRG > 0 ? avgB / avgRG : 1.0; 
+
+  const isAwakened = blueRatio > BLUE_RATIO_THRESHOLD;
 
   if (debugMode) {
     console.log(
-      `[DEBUG] Awakened check for champion at [${bounds[0].x.toFixed(
-        0
-      )}, ${bounds[0].y.toFixed(0)}]: avgBlue = ${avgBlue.toFixed(2)}`
+      `[DEBUG] Awakened check for champion at [${bounds[0].x.toFixed(0)}, ${bounds[0].y.toFixed(0)}]: ` +
+      `R=${avgR.toFixed(1)}, G=${avgG.toFixed(1)}, B=${avgB.toFixed(1)} -> Ratio=${blueRatio.toFixed(2)} ` +
+      `-> ${isAwakened ? "AWAKENED (Silver)" : "UNAWAKENED (Gold)"}`
     );
   }
 
-  return { isAwakened: avgBlue > AWAKENED_BLUE_THRESHOLD, awakenedCheckBounds };
+  return { isAwakened, awakenedCheckBounds };
 }
