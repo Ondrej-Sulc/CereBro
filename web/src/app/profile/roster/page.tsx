@@ -262,6 +262,7 @@ export default async function RosterPage(props: {
                 const efficiency = delta / added;
 
                return {
+                   championId: original.championId,
                    championName: original.champion.name,
                    championClass: original.champion.class,
                    championImage: original.champion.images,
