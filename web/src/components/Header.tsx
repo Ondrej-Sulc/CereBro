@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown } from "lucide-react";
+import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown, LayoutGrid } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -70,6 +70,10 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <Link href="/profile/roster" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+              <LayoutGrid className="w-4 h-4" />
+              My Roster
+            </Link>
             <Link href="/war-videos" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
               <Book className="w-4 h-4" />
               War Archive
@@ -140,6 +144,10 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                 </SheetHeader>
                 <nav className="flex flex-col gap-6">
                   <div className="flex flex-col gap-4">
+                    <Link href="/profile/roster" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                      <LayoutGrid className="w-5 h-5" />
+                      My Roster
+                    </Link>
                     <Link href="/war-videos" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
                       <Book className="w-5 h-5" />
                       War Archive
