@@ -758,6 +758,11 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
       {/* Chart Dialog */}
       <Dialog open={!!chartData || loadingChart} onOpenChange={(open) => !open && setChartData(null)}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[500px]">
+            {!chartData && (
+                <DialogHeader className="sr-only">
+                    <DialogTitle>Prestige Curve Loading</DialogTitle>
+                </DialogHeader>
+            )}
             {chartData && (
                 <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
                     <div className={cn(
