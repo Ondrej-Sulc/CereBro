@@ -26,8 +26,14 @@ export const command: Command = {
     const discordId = interaction.user.id;
     const avatar = interaction.user.displayAvatarURL({ extension: 'png', size: 256 });
 
-    const anyProfile = await prisma.player.findFirst({
+    const botUser = await prisma.botUser.upsert({
       where: { discordId },
+      update: {},
+      create: { discordId }
+    });
+
+    const anyProfile = await prisma.player.findFirst({
+      where: { botUserId: botUser.id },
     });
 
     if (anyProfile) {
@@ -48,14 +54,20 @@ export const command: Command = {
       }
     }
 
-    await prisma.player.create({
+    const newPlayer = await prisma.player.create({
       data: {
         discordId,
         ingameName,
         avatar,
         allianceId,
         isActive: true, // First profile is active
+        botUserId: botUser.id
       },
+    });
+
+    await prisma.botUser.update({
+        where: { id: botUser.id },
+        data: { activeProfileId: newPlayer.id }
     });
 
     await safeReply(interaction, `✅ Successfully registered **${ingameName}**. It has been set as your active profile.`);

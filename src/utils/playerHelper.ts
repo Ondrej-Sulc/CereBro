@@ -4,21 +4,35 @@ import { safeReply } from "./errorHandler";
 
 export async function getActivePlayer(discordId: string): Promise<Player | null> {
   const { prisma } = await import("../services/prismaService.js");
-  const player = await prisma.player.findFirst({
+  
+  // 1. Fetch the BotUser for global permissions
+  const botUser = await prisma.botUser.findUnique({
+    where: { discordId }
+  });
+
+  // 2. Fetch the Profile
+  let player = await prisma.player.findFirst({
     where: { 
       discordId,
       isActive: true,
     },
   });
 
-  if (player) {
-    return player;
+  if (!player) {
+    // If no active player, return the first one found
+    player = await prisma.player.findFirst({
+      where: { discordId },
+    });
   }
 
-  // If no active player, return the first one found
-  return prisma.player.findFirst({
-    where: { discordId },
-  });
+  if (player && botUser) {
+    return {
+        ...player,
+        isBotAdmin: botUser.isBotAdmin
+    };
+  }
+
+  return player;
 }
 
 export async function getPlayer(

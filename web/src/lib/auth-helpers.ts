@@ -11,38 +11,11 @@ export async function isUserBotAdmin(): Promise<boolean> {
 
   if (!account?.providerAccountId) return false;
 
-  // Use findFirst instead of findUnique because discordId isn't the primary key (though it is unique)
-  // Wait, schema says @@unique([discordId, ingameName]), but checking unique constraint on just discordId might need findFirst
-  // Schema: discordId String, but @@unique is composite.
-  // Actually, there is `@@unique([discordId, ingameName])`.
-  // Wait, looking at schema again:
-  // `id String @id @default(cuid())`
-  // `discordId String`
-  // `@@unique([discordId, ingameName])`
-  // There isn't a unique constraint on just `discordId`?
-  // Let's re-read schema.
-  // `model Player { ... discordId String ... @@unique([discordId, ingameName]) ... }`
-  // Ah, so a user could technically have multiple players with same discordId if ingameName differs?
-  // "The /profile command ... supports multiple accounts, allowing you to switch between them easily."
-  // So yes, multiple players per discord ID.
-  // But permissions like `isBotAdmin` should probably attach to the Discord ID conceptually, but here they attach to the Player profile.
-  // If ANY of the user's profiles has `isBotAdmin`, are they an admin?
-  // Or do we check the "active" profile?
-  // `isActive Boolean @default(false)`
-  
-  // Let's assume if ANY profile associated with that Discord ID is bot admin, they are admin.
-  // Or maybe specific to the active profile.
-  // Given "Bot Admin" is a high level privilege, it's safer to check if *any* of their profiles has it, or just if the user is trusted.
-  // Actually, checking `findFirst({ where: { discordId, isBotAdmin: true } })` would tell us if they have ANY admin profile.
-
-  const adminProfile = await prisma.player.findFirst({
-    where: { 
-        discordId: account.providerAccountId,
-        isBotAdmin: true
-    },
+  const botUser = await prisma.botUser.findUnique({
+    where: { discordId: account.providerAccountId }
   });
 
-  return !!adminProfile;
+  return !!botUser?.isBotAdmin;
 }
 
 export async function getUserPlayerWithAlliance() {
@@ -55,6 +28,12 @@ export async function getUserPlayerWithAlliance() {
 
   if (!account?.providerAccountId) return null;
 
+  // 1. Fetch the BotUser to get global permissions
+  const botUser = await prisma.botUser.findUnique({
+    where: { discordId: account.providerAccountId }
+  });
+
+  // 2. Fetch the Player (Profile)
   let player = await prisma.player.findFirst({
     where: { discordId: account.providerAccountId, isActive: true },
     include: { alliance: true },
@@ -69,5 +48,34 @@ export async function getUserPlayerWithAlliance() {
     });
   }
 
-  return player;
+  if (player && botUser) {
+    // Override the local isBotAdmin with the global BotUser permission
+    return {
+        ...player,
+        isBotAdmin: botUser.isBotAdmin
+    };
+  } else if (player) {
+      // Fallback if no BotUser exists yet (should be covered by migration)
+      return player;
+  }
+
+  return null;
+}
+
+export async function requireBotAdmin() {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const account = await prisma.account.findFirst({
+        where: { userId: session.user.id, provider: "discord" },
+    });
+    if (!account?.providerAccountId) throw new Error("No discord account linked");
+    
+    const botUser = await prisma.botUser.findUnique({
+        where: { discordId: account.providerAccountId }
+    });
+
+    if (!botUser?.isBotAdmin) throw new Error("Must be bot admin");
+
+    return { session, account, botUser };
 }

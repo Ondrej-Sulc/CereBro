@@ -20,11 +20,11 @@ export default async function AdminNodeManagerPage() {
     return <p>Error: No linked Discord account found.</p>;
   }
 
-  const player = await prisma.player.findFirst({
+  const botUser = await prisma.botUser.findUnique({
     where: { discordId: account.providerAccountId },
   });
 
-  if (!player?.isBotAdmin) {
+  if (!botUser?.isBotAdmin) {
     return <p>You must be a Bot Admin to access this page.</p>;
   }
 

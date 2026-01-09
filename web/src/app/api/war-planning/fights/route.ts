@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import logger from '@cerebro/core/services/loggerService';
 import { getCachedChampions } from '@/lib/data/champions';
+import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
 
 export async function GET(request: Request) {
-  const session = await auth();
+  const player = await getUserPlayerWithAlliance();
 
-  if (!session?.user?.id) {
+  if (!player) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
@@ -26,24 +26,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Check if the user is an officer of the alliance the war belongs to
-    const account = await prisma.account.findFirst({
-      where: {
-        userId: session.user.id,
-        provider: "discord",
-      },
-    });
-  
-    if (!account?.providerAccountId) {
-      return NextResponse.json({ message: 'No linked Discord account found.' }, { status: 403 });
-    }
-  
-    const player = await prisma.player.findFirst({
-      where: { discordId: account.providerAccountId },
-      include: { alliance: true },
-    });
-  
-    if (!player || !player.allianceId) {
+    if (!player.isBotAdmin && !player.allianceId) {
       return NextResponse.json({ message: 'You must be in an Alliance to access this resource.' }, { status: 403 });
     }
 
@@ -52,7 +35,7 @@ export async function GET(request: Request) {
         select: { allianceId: true },
     });
 
-    if (!war || war.allianceId !== player.allianceId) {
+    if (!war || (!player.isBotAdmin && war.allianceId !== player.allianceId)) {
         return NextResponse.json({ message: 'War not found or not part of your alliance.' }, { status: 404 });
     }
 

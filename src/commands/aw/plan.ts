@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { prisma } from "../../services/prismaService";
 import { distributeWarPlan } from "../../services/distribution/warPlanDistributor";
 import { capitalize } from "./utils";
+import { getActivePlayer } from "../../utils/playerHelper";
 
 export async function handlePlan(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -18,6 +19,19 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
   if (!alliance) {
     await interaction.editReply("No alliance configured for this server.");
     return;
+  }
+
+  // Permission Check
+  const player = await getActivePlayer(interaction.user.id);
+  if (!player || (!player.isOfficer && !player.isBotAdmin)) {
+      await interaction.editReply("You must be an Alliance Officer or Bot Admin to distribute war plans.");
+      return;
+  }
+
+  // Ensure they belong to THIS alliance if they aren't a global admin
+  if (!player.isBotAdmin && player.allianceId !== alliance.id) {
+       await interaction.editReply("You are not an officer of this alliance.");
+       return;
   }
 
   const battlegroup = interaction.options.getInteger("battlegroup", true);

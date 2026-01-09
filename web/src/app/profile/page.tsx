@@ -31,12 +31,17 @@ export default async function ProfilePage() {
     redirect("/api/auth/signin?callbackUrl=/profile");
   }
 
-  const [rosterResult, prestigeHistory] = await Promise.all([
+  const [rosterResult, prestigeHistory, allProfiles] = await Promise.all([
     getRoster(player.id, null, null, null),
     prisma.prestigeLog.findMany({
       where: { playerId: player.id },
       orderBy: { createdAt: "asc" },
       select: { createdAt: true, championPrestige: true, summonerPrestige: true, relicPrestige: true },
+    }),
+    prisma.player.findMany({
+        where: { discordId: player.discordId },
+        include: { alliance: true },
+        orderBy: { ingameName: 'asc' }
     })
   ]);
 
@@ -55,6 +60,26 @@ export default async function ProfilePage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-5xl space-y-8">
+      {/* Profile Selector (Multiple Profiles) */}
+      {allProfiles.length > 1 && (
+          <div className="flex flex-wrap gap-2 p-1 bg-slate-900/50 border border-slate-800 rounded-lg w-fit">
+              {allProfiles.map(p => (
+                  <Link key={p.id} href={`/api/profile/switch?name=${encodeURIComponent(p.ingameName)}`}>
+                      <Button 
+                        variant={p.id === player.id ? "secondary" : "ghost"} 
+                        size="sm"
+                        className={cn(
+                            "h-8 text-xs font-bold transition-all",
+                            p.id === player.id ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                        )}
+                      >
+                          {p.ingameName}
+                      </Button>
+                  </Link>
+              ))}
+          </div>
+      )}
+
       {/* Profile Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

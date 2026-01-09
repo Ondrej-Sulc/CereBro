@@ -31,10 +31,11 @@ interface UserAccess {
 
 async function getUserAccess(interaction: ChatInputCommandInteraction): Promise<UserAccess> {
   const players = await prisma.player.findMany({ where: { discordId: interaction.user.id } });
+  const botUser = await prisma.botUser.findUnique({ where: { discordId: interaction.user.id } });
   const member = await interaction.guild?.members.fetch(interaction.user.id);
   const alliance = interaction.guild ? await prisma.alliance.findUnique({ where: { guildId: interaction.guild.id } }) : null;
 
-  const isBotAdmin = players.some(p => p.isBotAdmin);
+  const isBotAdmin = botUser?.isBotAdmin || false;
   const isRegistered = players.length > 0;
 
   return {

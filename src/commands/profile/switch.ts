@@ -49,6 +49,11 @@ export async function handleProfileSwitch(interaction: ChatInputCommandInteracti
         isActive: true,
       },
     }),
+    // Update activeProfileId in BotUser
+    prisma.botUser.update({
+        where: { discordId },
+        data: { activeProfileId: targetProfile.id }
+    })
   ]);
 
   await safeReply(interaction, `✅ Switched active profile to **${profileName}**.`);

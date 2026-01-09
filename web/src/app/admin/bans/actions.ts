@@ -2,31 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { requireBotAdmin } from "@/lib/auth-helpers";
 
 export async function addSeasonBan(season: number, minTier: number | undefined, maxTier: number | undefined, championId: number) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        throw new Error("Unauthorized");
-    }
-
-    const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        include: { accounts: true },
-    });
-
-    if (!user) throw new Error("User not found");
-
-    const discordAccount = user.accounts.find((acc) => acc.provider === "discord");
-    if (!discordAccount) throw new Error("Discord account not linked");
-
-    const player = await prisma.player.findFirst({
-        where: { discordId: discordAccount.providerAccountId },
-    });
-
-    if (!player?.isBotAdmin) {
-        throw new Error("Unauthorized: Must be Bot Admin");
-    }
+    await requireBotAdmin();
 
     await prisma.seasonBan.create({
         data: {
@@ -41,28 +20,7 @@ export async function addSeasonBan(season: number, minTier: number | undefined, 
 }
 
 export async function deleteSeasonBan(id: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        throw new Error("Unauthorized");
-    }
-
-    const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        include: { accounts: true },
-    });
-
-    if (!user) throw new Error("User not found");
-
-    const discordAccount = user.accounts.find((acc) => acc.provider === "discord");
-    if (!discordAccount) throw new Error("Discord account not linked");
-
-    const player = await prisma.player.findFirst({
-        where: { discordId: discordAccount.providerAccountId },
-    });
-
-    if (!player?.isBotAdmin) {
-        throw new Error("Unauthorized: Must be Bot Admin");
-    }
+    await requireBotAdmin();
 
     await prisma.seasonBan.delete({
         where: { id },

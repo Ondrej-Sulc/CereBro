@@ -387,11 +387,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
       break;
     }
     case CommandAccess.BOT_ADMIN: {
-      const players = await prisma.player.findMany({
+      const botUser = await prisma.botUser.findUnique({
         where: { discordId: interaction.user.id },
       });
-      const isBotAdmin = players.some(p => p.isBotAdmin);
-      if (!isBotAdmin) {
+      
+      if (!botUser?.isBotAdmin) {
         await safeReply(
           interaction,
           "You are not authorized to use this command."

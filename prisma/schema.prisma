@@ -273,6 +273,17 @@ model AQState {
 
 // --- Player and Prestige Logging ---
 
+model BotUser {
+  id              String   @id @default(cuid())
+  discordId       String   @unique
+  isBotAdmin      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profiles        Player[]
+  activeProfileId String?
+}
+
 model Player {
   id                String  @id @default(cuid())
   discordId         String
@@ -285,9 +296,12 @@ model Player {
   summonerPrestige Int?
   championPrestige Int?
   relicPrestige    Int?
-  isBotAdmin       Boolean @default(false)
+  isBotAdmin       Boolean @default(false) // Deprecated: Use BotUser.isBotAdmin
   isOfficer        Boolean @default(false)
   battlegroup      Int?
+
+  botUserId String?
+  botUser   BotUser? @relation(fields: [botUserId], references: [id], onDelete: Cascade)
 
   roster          Roster[]
   prestigeHistory PrestigeLog[]

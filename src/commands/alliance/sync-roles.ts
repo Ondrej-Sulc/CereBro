@@ -25,6 +25,7 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
   // Fetch all players currently linked to this alliance in the DB
   const dbAllianceMembers = await prisma.player.findMany({
     where: { allianceId: alliance.id },
+    include: { botUser: true }
   });
   
   // Create a map for quick lookup and tracking processed members
@@ -81,14 +82,22 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
                 where: { discordId: member.id },
             });
 
+            // Ensure BotUser exists
+            const botUser = await prisma.botUser.upsert({
+                where: { discordId: member.id },
+                update: {},
+                create: { discordId: member.id }
+            });
+
             if (globalPlayer) {
-                // Player exists, link them to this alliance
+                // Player exists, link them to this alliance and ensure botUserId
                 await prisma.player.update({
                     where: { id: globalPlayer.id },
                     data: {
                         allianceId: alliance.id,
                         battlegroup,
                         isOfficer,
+                        botUserId: botUser.id
                     },
                 });
                 updatedCount++;
@@ -101,6 +110,7 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
                         allianceId: alliance.id,
                         battlegroup,
                         isOfficer,
+                        botUserId: botUser.id
                     },
                 });
                 createdCount++;
@@ -113,7 +123,7 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
             dbMembersMap.delete(member.id);
 
             // Do not remove Bot Admins from the alliance even if they don't have roles
-            if (existingAllianceMember.isBotAdmin) {
+            if (existingAllianceMember.botUser?.isBotAdmin) {
                 continue;
             }
 

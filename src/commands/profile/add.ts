@@ -6,11 +6,11 @@ export async function handleProfileAdd(interaction: ChatInputCommandInteraction)
   const ingameName = interaction.options.getString('name', true);
   const discordId = interaction.user.id;
 
-  const anyProfile = await prisma.player.findFirst({
-    where: { discordId },
+  const botUser = await prisma.botUser.findUnique({
+    where: { discordId }
   });
 
-  if (!anyProfile) {
+  if (!botUser) {
     await safeReply(interaction, "You need to register your first account with `/register` before you can add more.");
     return;
   }
@@ -47,6 +47,7 @@ export async function handleProfileAdd(interaction: ChatInputCommandInteraction)
       ingameName,
       allianceId,
       isActive: false, // Subsequent profiles are not active by default
+      botUserId: botUser.id
     },
   });
 

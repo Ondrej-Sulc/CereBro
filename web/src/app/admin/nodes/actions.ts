@@ -4,17 +4,11 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { WarMapType } from "@prisma/client";
+import { requireBotAdmin } from "@/lib/auth-helpers";
 
 export async function searchModifiers(query: string) {
     const session = await auth();
     if (!session?.user?.id) return [];
-
-    // Basic admin check (could be more robust)
-    const account = await prisma.account.findFirst({ where: { userId: session.user.id, provider: "discord" } });
-    if (!account) return [];
-    
-    // We trust client-side to hide UI, but server should ideally verify role again.
-    // For search, it's low risk.
 
     if (!query || query.length < 2) return [];
 
@@ -37,13 +31,7 @@ export async function addAllocation(
     season?: number,
     mapType: WarMapType = WarMapType.STANDARD
 ) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
-
-    // Admin check
-    const account = await prisma.account.findFirst({ where: { userId: session.user.id, provider: "discord" } });
-    const player = await prisma.player.findFirst({ where: { discordId: account?.providerAccountId } });
-    if (!player?.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     await prisma.warNodeAllocation.create({
         data: {
@@ -60,12 +48,7 @@ export async function addAllocation(
 }
 
 export async function removeAllocation(allocationId: string) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
-
-    const account = await prisma.account.findFirst({ where: { userId: session.user.id, provider: "discord" } });
-    const player = await prisma.player.findFirst({ where: { discordId: account?.providerAccountId } });
-    if (!player?.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     await prisma.warNodeAllocation.delete({
         where: { id: allocationId }

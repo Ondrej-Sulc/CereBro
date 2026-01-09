@@ -5,48 +5,40 @@ import WarDetailsClient from "@/components/war-planning/war-details-client";
 import { updateWarFight, updateWarStatus } from "../actions";
 import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
 }
 
 export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/api/auth/signin");
+  const player = await getUserPlayerWithAlliance();
+  
+  if (!player) {
+    redirect("/api/auth/signin?callbackUrl=/planning");
   }
 
   const { warId } = await params;
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    return <p>Error: No linked Discord account found.</p>;
-  }
-
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-  });
-
-  if (!player || !player.allianceId) {
-    return <p>You must be in an Alliance to access War Planning.</p>;
-  }
-
+  // 1. Fetch the War
   const war = await prisma.war.findUnique({
-    where: { id: warId, allianceId: player.allianceId },
+    where: { id: warId },
+    include: { alliance: true }
   });
 
   if (!war) {
-    return <p>War not found or you do not have permission to view it.</p>;
+    return <p>War not found.</p>;
   }
 
-  const isOfficer = player.isOfficer || player.isBotAdmin;
+  // 2. Permission Check
+  const isBotAdmin = player.isBotAdmin;
+  const isMember = player.allianceId === war.allianceId;
+
+  if (!isBotAdmin && !isMember) {
+    return <p>You do not have permission to view this war plan.</p>;
+  }
+
+  const isOfficer = player.isOfficer || isBotAdmin;
 
   const champions = await getCachedChampions();
 
@@ -80,9 +72,9 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
     });
   });
 
-  const allianceMembers = await getFromCache(`alliance-members-${player.allianceId}`, 300, async () => {
+  const allianceMembers = await getFromCache(`alliance-members-${war.allianceId}`, 300, async () => {
     return await prisma.player.findMany({
-      where: { allianceId: player.allianceId },
+      where: { allianceId: war.allianceId },
       orderBy: { ingameName: 'asc' },
       include: {
         roster: {

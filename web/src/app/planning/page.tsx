@@ -10,7 +10,7 @@ export default async function WarPlanningPage() {
     redirect("/api/auth/signin?callbackUrl=/planning");
   }
 
-  if (!player.allianceId) {
+  if (!player.isBotAdmin && !player.allianceId) {
     return (
         <div className="container mx-auto py-20 text-center space-y-4">
             <h1 className="text-2xl font-bold text-white">Access Denied</h1>
@@ -20,14 +20,14 @@ export default async function WarPlanningPage() {
   }
 
   // Fetch past wars for the alliance
-  const wars = await prisma.war.findMany({
+  const wars = player.allianceId ? await prisma.war.findMany({
     where: {
       allianceId: player.allianceId,
     },
     orderBy: {
       createdAt: "desc",
     },
-  });
+  }) : [];
 
   // Pre-fill logic (example: based on last war)
   const lastWar = wars.length > 0 ? wars[0] : null;
