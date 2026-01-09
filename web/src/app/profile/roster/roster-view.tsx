@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown, Zap, Loader2 } from "lucide-react";
+import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown, Zap, Loader2, Plus, Info } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -27,6 +27,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +40,8 @@ import { ChampionImages } from "@/types/champion";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { PrestigeCurveChart } from "./prestige-curve-chart";
+import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
+import { Champion } from "@prisma/client";
 
 export interface Recommendation {
     championName: string;
@@ -62,6 +70,7 @@ export interface SigRecommendation {
 
 interface RosterViewProps {
   initialRoster: RosterWithChampion[];
+  allChampions: Champion[];
   top30Average: number;
   prestigeMap: Record<string, number>;
   recommendations?: Recommendation[];
@@ -183,7 +192,7 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 ));
 GridList.displayName = "GridList";
 
-export function RosterView({ initialRoster, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank, initialSigBudget = 0 }: RosterViewProps) {
+export function RosterView({ initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank, initialSigBudget = 0 }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
@@ -197,8 +206,69 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
   const [chartData, setChartData] = useState<{data: any[], rec: SigRecommendation} | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
 
+  // Add Champion State
+  const [isAddingChampion, setIsAddingChampion] = useState(false);
+  const [newChampion, setNewChampion] = useState<{
+      championId: string;
+      stars: number;
+      rank: number;
+      sigLevel: number;
+      isAwakened: boolean;
+      isAscended: boolean;
+  }>({
+      championId: "",
+      stars: 6,
+      rank: 1,
+      sigLevel: 0,
+      isAwakened: false,
+      isAscended: false,
+  });
+
   const router = useRouter();
   const { toast } = useToast();
+
+  const handleAddChampion = async () => {
+      if (!newChampion.championId) {
+          toast({ title: "Error", description: "Please select a champion", variant: "destructive" });
+          return;
+      }
+
+      try {
+        const response = await fetch("/api/profile/roster/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                championId: parseInt(newChampion.championId),
+                stars: newChampion.stars,
+                rank: newChampion.rank,
+                sigLevel: newChampion.sigLevel,
+                isAwakened: newChampion.isAwakened,
+                isAscended: newChampion.isAscended,
+            }),
+        });
+
+        if (!response.ok) throw new Error("Failed to add champion");
+
+        const addedChampion = await response.json();
+        
+        // Optimistic Update (or full refresh)
+        // Since we need prestige calc, full refresh is safer but let's try to just append if possible
+        // Ideally we re-fetch everything or reload page.
+        toast({ title: "Success", description: "Champion added to roster" });
+        setIsAddingChampion(false);
+        setNewChampion({
+            championId: "",
+            stars: 6,
+            rank: 1,
+            sigLevel: 0,
+            isAwakened: false,
+            isAscended: false,
+        });
+        router.refresh();
+      } catch (error) {
+          toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
+      }
+  };
 
   const handleRecommendationClick = async (rec: SigRecommendation) => {
       setLoadingChart(true);
@@ -315,6 +385,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
   }, [filteredRoster, handleEdit, prestigeMap]);
 
   return (
+    <TooltipProvider>
     <div className="space-y-6">
       {/* Insights Toggle & Header */}
       {(recommendations?.length || sigRecommendations?.length) ? (
@@ -369,6 +440,14 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                         <TrendingUp className="w-4 h-4 text-indigo-400" />
                                     </div>
                                     <h3 className="font-bold text-slate-100">Rank-up Opportunities</h3>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
+                                            <p>Rank-ups that provide the highest immediate increase to your Top 30 Average Prestige.</p>
+                                        </TooltipContent>
+                                    </Tooltip>
                                 </div>
                             </div>
 
@@ -444,6 +523,18 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                 <h3 className="font-bold text-slate-100">
                                     {sigBudget > 0 ? "Recommended Allocation" : "Max Sig Potential"}
                                 </h3>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
+                                        <p>
+                                            {sigBudget > 0 
+                                                ? "Optimal stone distribution to maximize your account average with the given budget." 
+                                                : "Champions with the highest potential average increase if taken to Max Sig."}
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
 
                             <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -454,7 +545,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                             key={i} 
                                             onClick={() => handleRecommendationClick(rec)}
                                             className={cn(
-                                            "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer",
+                                            "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
                                             classColors.bg,
                                             "bg-opacity-10 hover:bg-opacity-20",
                                             classColors.border,
@@ -515,14 +606,24 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
       {/* Filters */}
       <Card className="bg-slate-900/50 border-slate-800 p-4">
         <div className="flex flex-col xl:flex-row gap-4 items-center">
-            <div className="relative flex-1 w-full min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <Input 
-                    placeholder="Search champions..." 
-                    value={search} 
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 bg-slate-950/50 border-slate-700"
-                />
+            <div className="flex gap-2 flex-1 w-full min-w-[200px]">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Input 
+                        placeholder="Search champions..." 
+                        value={search} 
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-9 bg-slate-950/50 border-slate-700"
+                    />
+                </div>
+                <Button 
+                    className="bg-sky-600 hover:bg-sky-700 w-10 px-0 sm:w-auto sm:px-4" 
+                    onClick={() => setIsAddingChampion(true)}
+                    title="Add Single Champion"
+                >
+                    <Plus className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Add</span>
+                </Button>
             </div>
             
             <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
@@ -642,19 +743,32 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
       {/* Edit Modal */}
       <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                    Edit {editingItem?.champion.name}
-                    {editingItem && (
-                         <Badge variant="secondary" className="ml-2 text-xs bg-slate-800">
-                            {editingItem.stars}★ R{editingItem.rank}
-                        </Badge>
-                    )}
-                </DialogTitle>
-                <DialogDescription>
-                    Update details for this champion in your roster.
-                </DialogDescription>
-            </DialogHeader>
+            {editingItem && (
+                <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
+                    <div className={cn(
+                        "relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0",
+                        getChampionClassColors(editingItem.champion.class).border
+                    )}>
+                        <Image 
+                            src={getChampionImageUrl(editingItem.champion.images as unknown as ChampionImages, 'full')} 
+                            alt={editingItem.champion.name}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1 text-left">
+                        <DialogTitle className={cn("text-xl flex items-center gap-2", getChampionClassColors(editingItem.champion.class).text)}>
+                            {editingItem.champion.name}
+                            <Badge variant="secondary" className="text-xs bg-slate-800 text-slate-300 border-slate-700">
+                                {editingItem.stars}★ R{editingItem.rank}
+                            </Badge>
+                        </DialogTitle>
+                        <DialogDescription>
+                            Update details for this champion in your roster.
+                        </DialogDescription>
+                    </div>
+                </DialogHeader>
+            )}
             
             {editingItem && (
                 <div className="grid gap-4 py-4">
@@ -802,6 +916,114 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
             ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Add Champion Modal */}
+      <Dialog open={isAddingChampion} onOpenChange={setIsAddingChampion}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
+            <DialogHeader>
+                <DialogTitle>Add Champion</DialogTitle>
+                <DialogDescription>Manually add a champion to your roster.</DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                    <Label>Champion</Label>
+                    <ChampionCombobox 
+                        champions={allChampions}
+                        value={newChampion.championId}
+                        onSelect={(val) => setNewChampion({...newChampion, championId: val})}
+                        className="bg-slate-950 border-slate-700 text-slate-200 w-full"
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Star Level</Label>
+                        <Select 
+                            value={String(newChampion.stars)} 
+                            onValueChange={(v) => setNewChampion({...newChampion, stars: parseInt(v)})}
+                        >
+                            <SelectTrigger className="bg-slate-950 border-slate-700">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {[4, 5, 6, 7].map(s => (
+                                    <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Rank</Label>
+                        <Select 
+                            value={String(newChampion.rank)} 
+                            onValueChange={(v) => setNewChampion({...newChampion, rank: parseInt(v)})}
+                        >
+                            <SelectTrigger className="bg-slate-950 border-slate-700">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Array.from({length: newChampion.stars === 7 ? 3 : (newChampion.stars === 6 ? 6 : 5)}, (_, i) => i + 1).map(r => (
+                                     <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Signature Level</Label>
+                    <Input 
+                        type="number" 
+                        disabled={!newChampion.isAwakened}
+                        className="bg-slate-950 border-slate-700 disabled:opacity-50"
+                        min={0}
+                        max={200}
+                        value={newChampion.sigLevel}
+                        onChange={(e) => {
+                            let val = parseInt(e.target.value);
+                            if (isNaN(val)) val = 0;
+                            setNewChampion({...newChampion, sigLevel: val});
+                        }}
+                    />
+                </div>
+
+                <div className="flex gap-6 mt-2">
+                     <div className="flex items-center space-x-2">
+                        <Checkbox 
+                            id="new-awakened" 
+                            checked={newChampion.isAwakened}
+                            onCheckedChange={(c) => {
+                                const isAwakened = !!c;
+                                setNewChampion({
+                                    ...newChampion, 
+                                    isAwakened,
+                                    sigLevel: isAwakened ? (newChampion.sigLevel || 1) : 0
+                                });
+                            }}
+                            className="border-slate-600 data-[state=checked]:bg-sky-600"
+                        />
+                        <Label htmlFor="new-awakened">Awakened</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox 
+                            id="new-ascended" 
+                            checked={newChampion.isAscended}
+                            onCheckedChange={(c) => setNewChampion({...newChampion, isAscended: !!c})}
+                            className="border-slate-600 data-[state=checked]:bg-sky-600"
+                        />
+                        <Label htmlFor="new-ascended">Ascended</Label>
+                    </div>
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddingChampion(false)}>Cancel</Button>
+                <Button onClick={handleAddChampion} className="bg-sky-600 hover:bg-sky-700">Add to Roster</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+    </TooltipProvider>
   );
 }
