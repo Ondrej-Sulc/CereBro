@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, memo, useCallback } from "react";
+import { useState, useMemo, forwardRef, HTMLAttributes, memo, useCallback, useEffect } from "react";
 import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionClass } from "@prisma/client";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown } from "lucide-react";
+import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown, Zap } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -55,6 +55,7 @@ export interface SigRecommendation {
     toSig: number;
     prestigeGain: number;
     accountGain: number;
+    prestigePerSig: number;
 }
 
 interface RosterViewProps {
@@ -64,6 +65,7 @@ interface RosterViewProps {
   recommendations?: Recommendation[];
   sigRecommendations?: SigRecommendation[];
   simulationTargetRank: number;
+  initialSigBudget?: number;
 }
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
@@ -179,7 +181,7 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 ));
 GridList.displayName = "GridList";
 
-export function RosterView({ initialRoster, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank }: RosterViewProps) {
+export function RosterView({ initialRoster, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank, initialSigBudget = 0 }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
@@ -188,6 +190,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
   const [editingItem, setEditingItem] = useState<RosterWithChampion | null>(null);
   const [showInsights, setShowInsights] = useState(true);
+  const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -196,6 +199,20 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
     params.set('targetRank', val);
     router.push(`?${params.toString()}`);
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (sigBudget > 0) {
+            params.set('sigBudget', sigBudget.toString());
+        } else {
+            params.delete('sigBudget');
+        }
+        router.push(`?${params.toString()}`);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [sigBudget, router]);
 
   const filteredRoster = useMemo(() => {
     const filtered = roster.filter((item) => {
@@ -279,8 +296,6 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
 
   return (
     <div className="space-y-6">
-  return (
-    <div className="space-y-6">
       {/* Insights Toggle & Header */}
       {(recommendations?.length || sigRecommendations?.length) ? (
           <div className="space-y-4">
@@ -297,6 +312,17 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                    </Button>
                    {showInsights && (
                         <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 mr-2">
+                                <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Stone Budget</Label>
+                                <Input 
+                                    type="number"
+                                    min={0}
+                                    value={sigBudget || ""}
+                                    placeholder="Max"
+                                    onChange={(e) => setSigBudget(e.target.value ? parseInt(e.target.value) : 0)}
+                                    className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center"
+                                />
+                            </div>
                             <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
                             <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
                                 <SelectTrigger className="h-7 w-[90px] bg-slate-900 border-slate-700 text-slate-300 text-xs">
@@ -395,7 +421,9 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                 <div className="p-1.5 bg-purple-500/20 rounded-lg">
                                     <Sparkles className="w-4 h-4 text-purple-400" />
                                 </div>
-                                <h3 className="font-bold text-slate-100">Signature Stone Opportunities</h3>
+                                <h3 className="font-bold text-slate-100">
+                                    {sigBudget > 0 ? "Recommended Allocation" : "Max Sig Potential"}
+                                </h3>
                             </div>
 
                             <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -432,16 +460,27 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                                 
                                                 <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
                                                 
-                                                <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
-                                                    +{rec.accountGain}
-                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                                                        +{rec.accountGain}
+                                                    </Badge>
+                                                    {rec.prestigePerSig > 0 && (
+                                                        <div className="flex items-center gap-0.5 text-[9px] font-mono text-purple-300/80" title="Prestige Gain per Sig Stone">
+                                                            <Zap className="w-2.5 h-2.5" />
+                                                            {rec.prestigePerSig}/sig
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
                             <div className="px-4 py-2 bg-purple-500/5 border-t border-purple-500/10 text-[10px] text-slate-500 italic">
-                                Potential average increase if you take these champions to Max Sig.
+                                {sigBudget > 0 
+                                    ? "Optimal distribution of your budget to maximize Top 30 Average." 
+                                    : "Potential average increase if you take these champions to Max Sig."
+                                }
                             </div>
                         </Card>
                     )}

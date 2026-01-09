@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string }>;
+  searchParams: Promise<{ targetRank?: string; sigBudget?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
@@ -38,21 +38,13 @@ export default async function RosterPage(props: {
   let maxRosterRank = 1;
   roster.forEach(r => {
       if (r.stars === 7 && r.rank > maxRosterRank) maxRosterRank = r.rank;
-      // Map 6* R5 roughly to 7* R3 for "max rank" logic? 
-      // Actually, simplified: just track max numerical rank found regardless of rarity, 
-      // usually 7* rank is lower than 6* rank (R3 vs R5).
-      // But for the slider/dropdown, we usually mean "7-Star Rank Level".
-      // If user has 6* R5 (Max) and 7* R2. They might want to see R3.
-      // Let's look for highest 7* rank. If no 7*, default to 3?
   });
   
   const highest7StarRank = roster.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
-  // Default to highest 7* rank, or 3 if none, or 2?
-  // User said "default to a rank that the highest champion is".
-  // If I have 7* R4, default is 4.
   const defaultTarget = highest7StarRank > 0 ? highest7StarRank : 3;
   
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : defaultTarget;
+  const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
 
   if (roster.length > 0) {
       const championIds = Array.from(new Set(roster.map(r => r.championId)));
@@ -165,7 +157,7 @@ export default async function RosterPage(props: {
           .sort((a, b) => b.accountGain - a.accountGain)
           .slice(0, 5);
 
-      // Signature Stone Simulation (Max Sig 200)
+      // Signature Stone Simulation
       const sigCandidates = roster.filter(r => {
           if ((r.sigLevel || 0) >= 200) return false;
           // Focus on 7* and High Rank 6*
@@ -174,38 +166,152 @@ export default async function RosterPage(props: {
           return false;
       });
 
-      const allSigRecommendations = sigCandidates.map(c => {
-           const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank, 200);
-           if (nextPrestige === 0) return null;
+      if (sigBudget > 0) {
+          // GREEDY OPTIMIZATION
+          // Clone roster state for simulation
+          const simState = rosterWithPrestige.map(r => ({ ...r, currentSig: r.sigLevel || 0, currentPrestige: r.prestige }));
+          // Track added sigs per champion ID
+          const addedSigs: Record<string, number> = {};
+          
+          // Loop until budget exhausted or no moves possible
+          for (let i = 0; i < sigBudget; i++) {
+              let bestMove: { rosterIndex: number, gain: number, newPrestige: number } | null = null;
+              
+              // Sort current state to find Top 30 threshold quickly
+              // (Optimization: Maintain sorted list, but for N<500 array.sort is fast enough per iteration)
+              const sortedState = [...simState].sort((a, b) => b.currentPrestige - a.currentPrestige);
+              const currentTop30Sum = sortedState.slice(0, 30).reduce((s, r) => s + r.currentPrestige, 0);
+              
+              // Evaluate +1 sig for each candidate
+              for (const cand of sigCandidates) {
+                  const idx = simState.findIndex(r => r.id === cand.id);
+                  const charState = simState[idx];
+                  
+                  if (charState.currentSig >= 200) continue; // Cap at 200
+                  
+                  const nextPrestige = getInterpolatedPrestige(cand.championId, cand.stars, cand.rank, charState.currentSig + 1);
+                  if (nextPrestige <= charState.currentPrestige) continue; // No gain (shouldn't happen with interpolation but safe check)
 
-           const currentPrestige = rosterPrestigeMap[c.id] || 0;
-           
-           // Simulate Top 30 with this change
-           const simulatedPrestigeList = rosterWithPrestige.map(r => 
-               r.id === c.id ? nextPrestige : r.prestige
-           );
-           simulatedPrestigeList.sort((a, b) => b - a);
-           
-           const simSum = simulatedPrestigeList.slice(0, 30).reduce((s, p) => s + p, 0);
-           const simAvg = Math.round(simSum / Math.min(30, simulatedPrestigeList.length));
-           const delta = simAvg - top30Average;
+                  // Calculate net account gain
+                  // If char is already in Top 30, gain is just delta
+                  // If char enters Top 30, gain is (newPrestige - 30thPrestige)
+                  
+                  let moveGain = 0;
+                  // We simulate the new sum
+                  // Optimization: calculate delta directly
+                  const isInTop30 = sortedState.findIndex(s => s.id === cand.id) < 30;
+                  
+                  if (isInTop30) {
+                      moveGain = nextPrestige - charState.currentPrestige;
+                  } else {
+                      const p30 = sortedState[29]?.currentPrestige || 0;
+                      if (nextPrestige > p30) {
+                          moveGain = nextPrestige - p30;
+                      }
+                  }
+                  
+                  if (moveGain > 0) {
+                       if (!bestMove || moveGain > bestMove.gain) {
+                           bestMove = { rosterIndex: idx, gain: moveGain, newPrestige: nextPrestige };
+                       }
+                  }
+              }
+              
+              if (bestMove) {
+                  const target = simState[bestMove.rosterIndex];
+                  target.currentSig += 1;
+                  target.currentPrestige = bestMove.newPrestige;
+                  addedSigs[target.id] = (addedSigs[target.id] || 0) + 1;
+              } else {
+                  break; // No improving moves found
+              }
+          }
+          
+          // Generate Result List
+          const allSigRecommendations = Object.entries(addedSigs).map(([id, added]) => {
+               const original = rosterWithPrestige.find(r => r.id === id)!;
+               const finalSig = (original.sigLevel || 0) + added;
+               const finalPrestige = getInterpolatedPrestige(original.championId, original.stars, original.rank, finalSig);
+               
+               // Calculate Average Efficiency (Prestige Gain / Stones Used)
+               const totalPrestigeGain = finalPrestige - original.prestige;
+               const efficiency = totalPrestigeGain / added;
+               
+               // Account Gain (Final State vs Initial State)
+               // Re-sort final state
+               const finalSimList = simState.map(r => r.currentPrestige).sort((a, b) => b - a);
+               const finalSum = finalSimList.slice(0, 30).reduce((s, p) => s + p, 0);
+               const finalAvg = Math.round(finalSum / Math.min(30, finalSimList.length));
 
-           return {
-               championName: c.champion.name,
-               championClass: c.champion.class,
-               championImage: c.champion.images,
-               stars: c.stars,
-               rank: c.rank,
-               fromSig: c.sigLevel || 0,
-               toSig: 200,
-               prestigeGain: nextPrestige - currentPrestige,
-               accountGain: delta
-           };
-      }).filter((r): r is NonNullable<typeof r> => r !== null && r.accountGain > 0);
+               // Note: This logic computes total account gain for the whole batch, 
+               // but we want per-champion contribution roughly?
+               // Actually, for the list, we can just show the efficiency and the total added.
+               // The "Account Gain" displayed on the card usually implies "If you do THIS action".
+               // So let's calculate the account gain of THIS specific allocation in isolation?
+               // OR just show the efficiency.
+               // Let's stick to consistent UI: "Account Gain" is nice.
+               // Let's calc isolation gain:
+                const isolationList = rosterWithPrestige.map(r => r.id === id ? finalPrestige : r.prestige).sort((a,b)=>b-a);
+                const isoSum = isolationList.slice(0, 30).reduce((s, p) => s + p, 0);
+                const isoAvg = Math.round(isoSum / 30);
+                const delta = isoAvg - top30Average;
 
-      sigRecommendations = allSigRecommendations
-          .sort((a, b) => b.accountGain - a.accountGain)
-          .slice(0, 5);
+               return {
+                   championName: original.champion.name,
+                   championClass: original.champion.class,
+                   championImage: original.champion.images,
+                   stars: original.stars,
+                   rank: original.rank,
+                   fromSig: original.sigLevel || 0,
+                   toSig: finalSig,
+                   prestigeGain: totalPrestigeGain,
+                   accountGain: delta,
+                   prestigePerSig: parseFloat(efficiency.toFixed(2))
+               };
+          });
+          
+          sigRecommendations = allSigRecommendations.sort((a, b) => b.accountGain - a.accountGain);
+
+      } else {
+          // DEFAULT: MAX SIG POTENTIAL
+          const allSigRecommendations = sigCandidates.map(c => {
+               const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank, 200);
+               if (nextPrestige === 0) return null;
+    
+               const currentPrestige = rosterPrestigeMap[c.id] || 0;
+               const sigsNeeded = 200 - (c.sigLevel || 0);
+               
+               // Simulate Top 30 with this change
+               const simulatedPrestigeList = rosterWithPrestige.map(r => 
+                   r.id === c.id ? nextPrestige : r.prestige
+               );
+               simulatedPrestigeList.sort((a, b) => b - a);
+               
+               const simSum = simulatedPrestigeList.slice(0, 30).reduce((s, p) => s + p, 0);
+               const simAvg = Math.round(simSum / Math.min(30, simulatedPrestigeList.length));
+               const delta = simAvg - top30Average;
+               
+               const prestigeGain = nextPrestige - currentPrestige;
+               const efficiency = sigsNeeded > 0 ? prestigeGain / sigsNeeded : 0;
+    
+               return {
+                   championName: c.champion.name,
+                   championClass: c.champion.class,
+                   championImage: c.champion.images,
+                   stars: c.stars,
+                   rank: c.rank,
+                   fromSig: c.sigLevel || 0,
+                   toSig: 200,
+                   prestigeGain: prestigeGain,
+                   accountGain: delta,
+                   prestigePerSig: parseFloat(efficiency.toFixed(2))
+               };
+          }).filter((r): r is NonNullable<typeof r> => r !== null && r.accountGain > 0);
+    
+          sigRecommendations = allSigRecommendations
+              .sort((a, b) => b.accountGain - a.accountGain)
+              .slice(0, 5);
+      }
   }
 
   return (
@@ -234,6 +340,7 @@ export default async function RosterPage(props: {
         recommendations={recommendations}
         sigRecommendations={sigRecommendations}
         simulationTargetRank={targetRank}
+        initialSigBudget={sigBudget}
       />
     </div>
   );
