@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { CartesianGrid, Area, AreaChart, XAxis, YAxis, ReferenceLine } from "recharts"
+import { ChampionClass } from "@prisma/client"
+import { getChampionClassColors } from "@/lib/championClassHelper"
 
 import {
   Card,
@@ -28,6 +30,7 @@ interface PrestigeCurveChartProps {
   championName: string;
   rarity: number;
   rank: number;
+  championClass: ChampionClass;
 }
 
 const chartConfig = {
@@ -37,12 +40,13 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function PrestigeCurveChart({ data, currentSig, championName, rarity, rank }: PrestigeCurveChartProps) {
+export function PrestigeCurveChart({ data, currentSig, championName, rarity, rank, championClass }: PrestigeCurveChartProps) {
   
   // Find min/max for domain
   const minPrestige = Math.min(...data.map(d => d.prestige));
   const maxPrestige = Math.max(...data.map(d => d.prestige));
   const padding = (maxPrestige - minPrestige) * 0.1;
+  const classColors = getChampionClassColors(championClass);
 
   return (
     <Card className="border-0 shadow-none bg-transparent">
@@ -60,8 +64,8 @@ export function PrestigeCurveChart({ data, currentSig, championName, rarity, ran
           >
             <defs>
               <linearGradient id="fillPrestige" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-prestige)" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="var(--color-prestige)" stopOpacity={0.1} />
+                <stop offset="5%" stopColor={classColors.color} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={classColors.color} stopOpacity={0.1} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
@@ -82,7 +86,7 @@ export function PrestigeCurveChart({ data, currentSig, championName, rarity, ran
               tickCount={5}
               domain={[minPrestige - padding, maxPrestige + padding]}
               tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-              width={40}
+              width={50}
             />
             
             <ChartTooltip
@@ -99,19 +103,20 @@ export function PrestigeCurveChart({ data, currentSig, championName, rarity, ran
               dataKey="prestige"
               type="monotone"
               fill="url(#fillPrestige)"
-              stroke="var(--color-prestige)"
+              stroke={classColors.color}
               strokeWidth={2}
             />
 
             <ReferenceLine 
                 x={currentSig} 
-                stroke="hsl(var(--chart-2))" 
+                stroke="white" 
                 strokeDasharray="3 3"
                 label={{ 
-                    position: 'top', 
+                    position: 'insideTopLeft', 
                     value: 'Current', 
-                    fill: 'hsl(var(--chart-2))', 
-                    fontSize: 10 
+                    fill: 'white', 
+                    fontSize: 10,
+                    offset: 10
                 }} 
             />
 

@@ -759,11 +759,26 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
       <Dialog open={!!chartData || loadingChart} onOpenChange={(open) => !open && setChartData(null)}>
         <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[500px]">
             {chartData && (
-                <DialogHeader>
-                    <DialogTitle>{chartData.rec.championName} Prestige Curve</DialogTitle>
-                    <DialogDescription>
-                        {chartData.rec.stars}-Star Rank {chartData.rec.rank} • Current Sig: {chartData.rec.fromSig}
-                    </DialogDescription>
+                <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
+                    <div className={cn(
+                        "relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0",
+                        getChampionClassColors(chartData.rec.championClass).border
+                    )}>
+                        <Image 
+                            src={getChampionImageUrl(chartData.rec.championImage, 'full')} 
+                            alt={chartData.rec.championName}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1 text-left">
+                        <DialogTitle className={cn("text-xl", getChampionClassColors(chartData.rec.championClass).text)}>
+                            {chartData.rec.championName}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {chartData.rec.stars}-Star Rank {chartData.rec.rank} • Current Sig: {chartData.rec.fromSig}
+                        </DialogDescription>
+                    </div>
                 </DialogHeader>
             )}
             {loadingChart ? (
@@ -777,6 +792,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                     championName={chartData.rec.championName}
                     rarity={chartData.rec.stars}
                     rank={chartData.rec.rank}
+                    championClass={chartData.rec.championClass}
                 />
             ) : null}
         </DialogContent>
