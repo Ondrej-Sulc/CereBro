@@ -465,7 +465,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                                         +{rec.accountGain}
                                                     </Badge>
                                                     {rec.prestigePerSig > 0 && (
-                                                        <div className="flex items-center gap-0.5 text-[9px] font-mono text-purple-300/80" title="Prestige Gain per Sig Stone">
+                                                        <div className="flex items-center gap-0.5 text-[9px] font-mono text-purple-300/80" title="Champion Prestige Gain per Sig Stone">
                                                             <Zap className="w-2.5 h-2.5" />
                                                             {rec.prestigePerSig}/sig
                                                         </div>
