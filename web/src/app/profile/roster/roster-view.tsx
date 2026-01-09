@@ -28,11 +28,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
@@ -385,7 +384,6 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
   }, [filteredRoster, handleEdit, prestigeMap]);
 
   return (
-    <TooltipProvider>
     <div className="space-y-6">
       {/* Insights Toggle & Header */}
       {(recommendations?.length || sigRecommendations?.length) ? (
@@ -440,14 +438,14 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                         <TrendingUp className="w-4 h-4 text-indigo-400" />
                                     </div>
                                     <h3 className="font-bold text-slate-100">Rank-up Opportunities</h3>
-                                    <Tooltip>
-                                        <TooltipTrigger>
-                                            <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" />
-                                        </TooltipTrigger>
-                                        <TooltipContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
+                                    <Popover>
+                                        <PopoverTrigger>
+                                            <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" />
+                                        </PopoverTrigger>
+                                        <PopoverContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
                                             <p>Rank-ups that provide the highest immediate increase to your Top 30 Prestige.</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
 
@@ -523,18 +521,18 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                 <h3 className="font-bold text-slate-100">
                                     {sigBudget > 0 ? `Recommended Allocation of ${sigBudget} Sig Stones` : "Max Sig Potential"}
                                 </h3>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" />
-                                    </TooltipTrigger>
-                                    <TooltipContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
+                                <Popover>
+                                    <PopoverTrigger>
+                                        <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" />
+                                    </PopoverTrigger>
+                                    <PopoverContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
                                         <p>
                                             {sigBudget > 0 
                                                 ? "Optimal stone distribution to maximize your account average with the given budget." 
                                                 : "Champions with the highest potential average increase if taken to Max Sig."}
                                         </p>
-                                    </TooltipContent>
-                                </Tooltip>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
 
                             <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -1024,6 +1022,5 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
         </DialogContent>
       </Dialog>
     </div>
-    </TooltipProvider>
   );
 }
