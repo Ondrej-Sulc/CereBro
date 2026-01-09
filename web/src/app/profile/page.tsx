@@ -154,6 +154,12 @@ export default async function ProfilePage() {
                 const ranks = Object.keys(statsByRank).map(Number).sort((a, b) => b - a);
                 const classOrder: Exclude<ChampionClass, 'SUPERIOR'>[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC"];
 
+                // Calculate Class Totals for this Star Level
+                const classTotals = champions.reduce((acc, c) => {
+                    acc[c.champion.class] = (acc[c.champion.class] || 0) + 1;
+                    return acc;
+                }, {} as Record<ChampionClass, number>);
+
                 return (
                     <Card key={stars} className="bg-slate-900/50 border-slate-800 overflow-hidden">
                         <CardHeader className="bg-slate-900/80 border-b border-slate-800 pb-3">
@@ -210,6 +216,26 @@ export default async function ProfilePage() {
                                                 </tr>
                                             );
                                         })}
+                                        {/* Total Row */}
+                                        <tr className="bg-slate-950/30 font-bold border-t-2 border-slate-800">
+                                            <td className="px-4 py-3 text-slate-400 uppercase text-xs tracking-wider">Total</td>
+                                            {classOrder.map(cls => {
+                                                const count = classTotals[cls] || 0;
+                                                const classColors = getChampionClassColors(cls);
+                                                return (
+                                                    <td key={cls} className="px-4 py-3 text-center">
+                                                        {count > 0 ? (
+                                                            <span className={cn(classColors.text)}>{count}</span>
+                                                        ) : (
+                                                            <span className="text-slate-700">-</span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className="px-4 py-3 text-center text-white">
+                                                {champions.length}
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                            </div>
