@@ -445,7 +445,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                             <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors" />
                                         </TooltipTrigger>
                                         <TooltipContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
-                                            <p>Rank-ups that provide the highest immediate increase to your Top 30 Average Prestige.</p>
+                                            <p>Rank-ups that provide the highest immediate increase to your Top 30 Prestige.</p>
                                         </TooltipContent>
                                     </Tooltip>
                                 </div>
@@ -506,7 +506,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                     </div>
                                     <p className="text-slate-400 font-medium text-sm">No impactful rank-ups found for Target Rank {simulationTargetRank}.</p>
                                     <p className="text-slate-500 text-xs max-w-md">
-                                        Rank-ups to this level won't increase your Top 30 Average enough to matter. Try increasing the Target Rank to see future opportunities.
+                                        Rank-ups to this level won't increase your Top 30 Prestige enough to matter. Try increasing the Target Rank to see future opportunities.
                                     </p>
                                 </div>
                             )}
@@ -592,7 +592,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                             </div>
                             <div className="px-4 py-2 bg-purple-500/5 border-t border-purple-500/10 text-[10px] text-slate-500 italic">
                                 {sigBudget > 0 
-                                    ? "Optimal distribution of your budget to maximize Top 30 Average." 
+                                    ? "Optimal distribution of your budget to maximize Top 30 Prestige." 
                                     : "Potential average increase if you take these champions to Max Sig."
                                 }
                             </div>
