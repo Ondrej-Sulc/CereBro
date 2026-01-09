@@ -57,7 +57,10 @@ The flagship feature of the platform.
 ### 👤 Roster & Identity
 *   **Web Roster Manager:** A dedicated, high-performance interface (`/profile/roster`) for viewing and managing champion rosters. Features a **virtualized grid** capable of rendering hundreds of champions smoothly, advanced class/rank filtering, and a modern card-based design with class-specific tinting.
 *   **Interactive Editor:** Users can manually edit champion details (**Signature Level**, Rank, Awakening, Ascension, Power Rating) or delete entries directly from the web grid via a modal editor.
-*   **Prestige & Simulation:** Calculates **Top 30 Prestige** averages and provides **Rank-up Recommendations** with real-time prestige simulation, helping users optimize their roster growth.
+*   **Prestige & Simulation:** Calculates **Top 30 Prestige** averages and provides **Rank-up Recommendations** with real-time prestige simulation.
+    *   **Budget Optimizer:** A "Stone Budget" tool uses a greedy algorithm to simulate the optimal allocation of signature stones to maximize account prestige.
+    *   **Efficiency Metrics:** Displays the "Champion Prestige Gain per Sig Stone" to help users identify the most efficient investments.
+    *   **Interactive Visualizations:** Clicking on a recommendation opens a detailed **Prestige Curve Chart**, visualizing the champion's prestige growth across all signature levels.
 *   **Smart Import:** Users can upload screenshots of their game roster. The system uses image processing to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
 *   **Profile Analysis:** The main profile view now includes a detailed, table-based breakdown of the roster by Rank and Class for each Star level, alongside Prestige history and timezone management.
 
