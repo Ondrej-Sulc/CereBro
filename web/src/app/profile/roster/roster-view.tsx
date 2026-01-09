@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown, Zap } from "lucide-react";
+import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown, Zap, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -33,6 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChampionImages } from "@/types/champion";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
+import { PrestigeCurveChart } from "./prestige-curve-chart";
 
 export interface Recommendation {
     championName: string;
@@ -46,6 +47,7 @@ export interface Recommendation {
 }
 
 export interface SigRecommendation {
+    championId: number;
     championName: string;
     championClass: ChampionClass;
     championImage: any;
@@ -191,8 +193,26 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
   const [editingItem, setEditingItem] = useState<RosterWithChampion | null>(null);
   const [showInsights, setShowInsights] = useState(true);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
+  
+  const [chartData, setChartData] = useState<{data: any[], rec: SigRecommendation} | null>(null);
+  const [loadingChart, setLoadingChart] = useState(false);
+
   const router = useRouter();
   const { toast } = useToast();
+
+  const handleRecommendationClick = async (rec: SigRecommendation) => {
+      setLoadingChart(true);
+      try {
+        const res = await fetch(`/api/profile/champion-prestige?championId=${rec.championId}&rarity=${rec.stars}&rank=${rec.rank}`);
+        if (!res.ok) throw new Error("Failed to fetch prestige data");
+        const data = await res.json();
+        setChartData({ data, rec });
+      } catch (error) {
+        toast({ title: "Error", description: "Could not load prestige curve", variant: "destructive" });
+      } finally {
+        setLoadingChart(false);
+      }
+  };
 
   const handleTargetChange = (val: string) => {
     const params = new URLSearchParams(window.location.search);
@@ -430,8 +450,11 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                                 {sigRecommendations.map((rec, i) => {
                                     const classColors = getChampionClassColors(rec.championClass);
                                     return (
-                                        <div key={i} className={cn(
-                                            "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative",
+                                        <div 
+                                            key={i} 
+                                            onClick={() => handleRecommendationClick(rec)}
+                                            className={cn(
+                                            "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer",
                                             classColors.bg,
                                             "bg-opacity-10 hover:bg-opacity-20",
                                             classColors.border,
@@ -729,6 +752,33 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
                     </Button>
                 </div>
             </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Chart Dialog */}
+      <Dialog open={!!chartData || loadingChart} onOpenChange={(open) => !open && setChartData(null)}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[500px]">
+            {chartData && (
+                <DialogHeader>
+                    <DialogTitle>{chartData.rec.championName} Prestige Curve</DialogTitle>
+                    <DialogDescription>
+                        {chartData.rec.stars}-Star Rank {chartData.rec.rank} • Current Sig: {chartData.rec.fromSig}
+                    </DialogDescription>
+                </DialogHeader>
+            )}
+            {loadingChart ? (
+                <div className="h-[300px] flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-slate-500" />
+                </div>
+            ) : chartData ? (
+                <PrestigeCurveChart 
+                    data={chartData.data}
+                    currentSig={chartData.rec.fromSig}
+                    championName={chartData.rec.championName}
+                    rarity={chartData.rec.stars}
+                    rank={chartData.rec.rank}
+                />
+            ) : null}
         </DialogContent>
       </Dialog>
     </div>

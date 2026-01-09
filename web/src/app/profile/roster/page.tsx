@@ -141,10 +141,10 @@ export default async function RosterPage(props: {
           const simAvg = Math.round(simSum / Math.min(30, simulatedPrestigeList.length));
           const delta = simAvg - top30Average;
 
-          return {
-              championName: c.champion.name,
-              championClass: c.champion.class,
-              championImage: c.champion.images,
+                         return {
+                             championId: c.championId,
+                             championName: c.champion.name,
+                             championClass: c.champion.class,              championImage: c.champion.images,
               stars: c.stars,
               fromRank: c.rank,
               toRank: c.rank + 1,
@@ -233,9 +233,8 @@ export default async function RosterPage(props: {
                const finalSig = (original.sigLevel || 0) + added;
                const finalPrestige = getInterpolatedPrestige(original.championId, original.stars, original.rank, finalSig);
                
-               // Calculate Average Efficiency (Prestige Gain / Stones Used)
+               // Calculate Average Efficiency (Account Gain / Stones Used)
                const totalPrestigeGain = finalPrestige - original.prestige;
-               const efficiency = totalPrestigeGain / added;
                
                // Account Gain (Final State vs Initial State)
                // Re-sort final state
@@ -255,6 +254,7 @@ export default async function RosterPage(props: {
                 const isoSum = isolationList.slice(0, 30).reduce((s, p) => s + p, 0);
                 const isoAvg = Math.round(isoSum / 30);
                 const delta = isoAvg - top30Average;
+                const efficiency = delta / added;
 
                return {
                    championName: original.champion.name,
@@ -292,9 +292,10 @@ export default async function RosterPage(props: {
                const delta = simAvg - top30Average;
                
                const prestigeGain = nextPrestige - currentPrestige;
-               const efficiency = sigsNeeded > 0 ? prestigeGain / sigsNeeded : 0;
+               const efficiency = sigsNeeded > 0 ? delta / sigsNeeded : 0;
     
                return {
+                   championId: c.championId,
                    championName: c.champion.name,
                    championClass: c.champion.class,
                    championImage: c.champion.images,
