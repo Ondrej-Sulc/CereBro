@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight } from "lucide-react";
+import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -45,11 +45,24 @@ export interface Recommendation {
     accountGain: number;
 }
 
+export interface SigRecommendation {
+    championName: string;
+    championClass: ChampionClass;
+    championImage: any;
+    stars: number;
+    rank: number;
+    fromSig: number;
+    toSig: number;
+    prestigeGain: number;
+    accountGain: number;
+}
+
 interface RosterViewProps {
   initialRoster: RosterWithChampion[];
   top30Average: number;
   prestigeMap: Record<string, number>;
   recommendations?: Recommendation[];
+  sigRecommendations?: SigRecommendation[];
   simulationTargetRank: number;
 }
 
@@ -63,7 +76,7 @@ const CLASS_ICONS: Record<ChampionClass, string> = {
     SUPERIOR: "/icons/Superior.png",
 };
 
-const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT", "SUPERIOR"];
+const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
 // Extracted Card Component for Virtuoso
 
@@ -94,12 +107,12 @@ const ChampionCard = memo(({ item, prestige, onEdit }: { item: RosterWithChampio
             {/* Top Info (Stars/Rank Indicator) */}
             <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
                 <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded border border-white/10">
-                        <span className="text-yellow-500 text-[10px]">★</span>
                         <span className="text-white text-xs font-black leading-none">{item.stars}</span>
+                        <span className="text-yellow-500 text-[10px]">★</span>
                 </div>
                     {item.isAscended && (
-                    <div className="bg-sky-900/80 p-1 rounded border border-sky-500/30" title="Ascended">
-                        <ShieldAlert className="w-4 h-4 text-sky-400" />
+                    <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30" title="Ascended">
+                        <Trophy className="w-4 h-4 text-yellow-400" />
                     </div>
                 )}
             </div>
@@ -166,7 +179,7 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 ));
 GridList.displayName = "GridList";
 
-export function RosterView({ initialRoster, top30Average, prestigeMap, recommendations, simulationTargetRank }: RosterViewProps) {
+export function RosterView({ initialRoster, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
@@ -174,6 +187,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
   const [filterRank, setFilterRank] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
   const [editingItem, setEditingItem] = useState<RosterWithChampion | null>(null);
+  const [showInsights, setShowInsights] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -265,93 +279,176 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
 
   return (
     <div className="space-y-6">
-      {/* Recommendations Card */}
-      {recommendations && (
-          <Card className="bg-gradient-to-br from-indigo-950/40 via-slate-900/50 to-slate-950 border-indigo-500/20 overflow-hidden">
-              <div className="px-4 py-3 border-b border-indigo-500/10 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                      <div className="p-1.5 bg-indigo-500/20 rounded-lg">
-                        <TrendingUp className="w-4 h-4 text-indigo-400" />
-                      </div>
-                      <h3 className="font-bold text-slate-100">Prestige Opportunities</h3>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                     <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
-                     <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
-                        <SelectTrigger className="h-7 w-[90px] bg-indigo-950/30 border-indigo-500/20 text-indigo-300 text-xs">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {[3, 4, 5, 6].map(r => (
-                                <SelectItem key={r} value={String(r)} className="text-xs">Rank {r}</SelectItem>
-                            ))}
-                        </SelectContent>
-                     </Select>
-                  </div>
+  return (
+    <div className="space-y-6">
+      {/* Insights Toggle & Header */}
+      {(recommendations?.length || sigRecommendations?.length) ? (
+          <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                   <Button 
+                        variant="ghost" 
+                        onClick={() => setShowInsights(!showInsights)}
+                        className="flex items-center gap-2 px-0 hover:bg-transparent text-slate-300 hover:text-white"
+                   >
+                       <div className={cn("p-1 bg-slate-800 rounded transition-transform duration-200", showInsights && "rotate-180")}>
+                           <ChevronDown className="w-4 h-4" />
+                       </div>
+                       <h2 className="font-bold text-lg">Prestige Suggestions</h2>
+                   </Button>
+                   {showInsights && (
+                        <div className="flex items-center gap-2">
+                            <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
+                            <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
+                                <SelectTrigger className="h-7 w-[90px] bg-slate-900 border-slate-700 text-slate-300 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[3, 4, 5, 6].map(r => (
+                                        <SelectItem key={r} value={String(r)} className="text-xs">Rank {r}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                   )}
               </div>
 
-              {recommendations.length > 0 ? (
-                <>
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-                        {recommendations.map((rec, i) => {
-                            const classColors = getChampionClassColors(rec.championClass);
-                            return (
-                                <div key={i} className={cn(
-                                    "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative",
-                                    classColors.bg,
-                                    "bg-opacity-10 hover:bg-opacity-20",
-                                    classColors.border,
-                                    "border-opacity-30"
-                                )}>
-                                    {/* Avatar */}
-                                    <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                                         <Image 
-                                            src={getChampionImageUrl(rec.championImage, 'full')} 
-                                            alt={rec.championName}
-                                            fill
-                                            className="object-cover"
-                                        />
+            {showInsights && (
+                <div className="space-y-6 animate-in slide-in-from-top-2 fade-in duration-300">
+                    {/* Rank-up Recommendations Card */}
+                    {recommendations && (
+                        <Card className="bg-gradient-to-br from-indigo-950/40 via-slate-900/50 to-slate-950 border-indigo-500/20 overflow-hidden">
+                            <div className="px-4 py-3 border-b border-indigo-500/10 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-indigo-500/20 rounded-lg">
+                                        <TrendingUp className="w-4 h-4 text-indigo-400" />
                                     </div>
-                                    
-                                    {/* Info */}
-                                    <div className="flex flex-col min-w-0 flex-1">
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★</span>
-                                            <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
-                                                <span>R{rec.fromRank}</span>
-                                                <ChevronRight className="w-2.5 h-2.5" />
-                                                <span className={cn(classColors.text, "brightness-150")}>R{rec.toRank}</span>
+                                    <h3 className="font-bold text-slate-100">Rank-up Opportunities</h3>
+                                </div>
+                            </div>
+
+                            {recommendations.length > 0 ? (
+                                <>
+                                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                        {recommendations.map((rec, i) => {
+                                            const classColors = getChampionClassColors(rec.championClass);
+                                            return (
+                                                <div key={i} className={cn(
+                                                    "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative",
+                                                    classColors.bg,
+                                                    "bg-opacity-10 hover:bg-opacity-20",
+                                                    classColors.border,
+                                                    "border-opacity-30"
+                                                )}>
+                                                    {/* Avatar */}
+                                                    <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
+                                                        <Image 
+                                                            src={getChampionImageUrl(rec.championImage, 'full')} 
+                                                            alt={rec.championName}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                    
+                                                    {/* Info */}
+                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between mb-0.5">
+                                                            <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★</span>
+                                                            <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
+                                                                <span>R{rec.fromRank}</span>
+                                                                <ChevronRight className="w-2.5 h-2.5" />
+                                                                <span className={cn(classColors.text, "brightness-150")}>R{rec.toRank}</span>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
+                                                        
+                                                        <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                                                            +{rec.accountGain}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="px-4 py-2 bg-indigo-500/5 border-t border-indigo-500/10 text-[10px] text-slate-500 italic">
+                                        These rank-ups would provide the largest net increase to your Top 30 account average.
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="p-8 flex flex-col items-center justify-center text-center space-y-2">
+                                    <div className="p-3 bg-slate-900/50 rounded-full mb-2">
+                                        <TrendingUp className="w-6 h-6 text-slate-600" />
+                                    </div>
+                                    <p className="text-slate-400 font-medium text-sm">No impactful rank-ups found for Target Rank {simulationTargetRank}.</p>
+                                    <p className="text-slate-500 text-xs max-w-md">
+                                        Rank-ups to this level won't increase your Top 30 Average enough to matter. Try increasing the Target Rank to see future opportunities.
+                                    </p>
+                                </div>
+                            )}
+                        </Card>
+                    )}
+
+                    {/* Sig Recommendations Card */}
+                    {sigRecommendations && sigRecommendations.length > 0 && (
+                        <Card className="bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-slate-950 border-purple-500/20 overflow-hidden">
+                            <div className="px-4 py-3 border-b border-purple-500/10 flex items-center gap-2">
+                                <div className="p-1.5 bg-purple-500/20 rounded-lg">
+                                    <Sparkles className="w-4 h-4 text-purple-400" />
+                                </div>
+                                <h3 className="font-bold text-slate-100">Signature Stone Opportunities</h3>
+                            </div>
+
+                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                {sigRecommendations.map((rec, i) => {
+                                    const classColors = getChampionClassColors(rec.championClass);
+                                    return (
+                                        <div key={i} className={cn(
+                                            "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative",
+                                            classColors.bg,
+                                            "bg-opacity-10 hover:bg-opacity-20",
+                                            classColors.border,
+                                            "border-opacity-30"
+                                        )}>
+                                            {/* Avatar */}
+                                            <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
+                                                <Image 
+                                                    src={getChampionImageUrl(rec.championImage, 'full')} 
+                                                    alt={rec.championName}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                            
+                                            {/* Info */}
+                                            <div className="flex flex-col min-w-0 flex-1">
+                                                <div className="flex items-center justify-between mb-0.5">
+                                                    <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★ R{rec.rank}</span>
+                                                    <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
+                                                        <span>S{rec.fromSig}</span>
+                                                        <ChevronRight className="w-2.5 h-2.5" />
+                                                        <span className={cn(classColors.text, "brightness-150")}>S{rec.toSig}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
+                                                
+                                                <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
+                                                    +{rec.accountGain}
+                                                </Badge>
                                             </div>
                                         </div>
-                                        
-                                        <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                                        
-                                        <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">
-                                            +{rec.accountGain} Avg
-                                        </Badge>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <div className="px-4 py-2 bg-indigo-500/5 border-t border-indigo-500/10 text-[10px] text-slate-500 italic">
-                        These rank-ups would provide the largest net increase to your Top 30 account average.
-                    </div>
-                </>
-              ) : (
-                  <div className="p-8 flex flex-col items-center justify-center text-center space-y-2">
-                      <div className="p-3 bg-slate-900/50 rounded-full mb-2">
-                          <TrendingUp className="w-6 h-6 text-slate-600" />
-                      </div>
-                      <p className="text-slate-400 font-medium text-sm">No impactful rank-ups found for Target Rank {simulationTargetRank}.</p>
-                      <p className="text-slate-500 text-xs max-w-md">
-                          Rank-ups to this level won't increase your Top 30 Average enough to matter. Try increasing the Target Rank to see future opportunities.
-                      </p>
-                  </div>
-              )}
-          </Card>
-      )}
+                                    );
+                                })}
+                            </div>
+                            <div className="px-4 py-2 bg-purple-500/5 border-t border-purple-500/10 text-[10px] text-slate-500 italic">
+                                Potential average increase if you take these champions to Max Sig.
+                            </div>
+                        </Card>
+                    )}
+                </div>
+            )}
+          </div>
+      ) : null}
 
       {/* Filters */}
       <Card className="bg-slate-900/50 border-slate-800 p-4">
@@ -369,7 +466,7 @@ export function RosterView({ initialRoster, top30Average, prestigeMap, recommend
             <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
                 {top30Average > 0 && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-amber-950/20 border border-amber-900/40 rounded-md shrink-0">
-                        <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wide">Top 30 Avg Prestige</span>
+                        <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wide">Top 30 Prestige</span>
                         <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString()}</span>
                     </div>
                 )}

@@ -31,6 +31,7 @@ export default async function RosterPage(props: {
   // Calculate Top 30 Average Prestige
   let top30Average = 0;
   let recommendations: any[] = [];
+  let sigRecommendations: any[] = [];
   const rosterPrestigeMap: Record<string, number> = {};
   
   // Determine Simulation Cap
@@ -163,6 +164,48 @@ export default async function RosterPage(props: {
       recommendations = allRecommendations
           .sort((a, b) => b.accountGain - a.accountGain)
           .slice(0, 5);
+
+      // Signature Stone Simulation (Max Sig 200)
+      const sigCandidates = roster.filter(r => {
+          if ((r.sigLevel || 0) >= 200) return false;
+          // Focus on 7* and High Rank 6*
+          if (r.stars === 7) return true;
+          if (r.stars === 6 && r.rank >= 4) return true;
+          return false;
+      });
+
+      const allSigRecommendations = sigCandidates.map(c => {
+           const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank, 200);
+           if (nextPrestige === 0) return null;
+
+           const currentPrestige = rosterPrestigeMap[c.id] || 0;
+           
+           // Simulate Top 30 with this change
+           const simulatedPrestigeList = rosterWithPrestige.map(r => 
+               r.id === c.id ? nextPrestige : r.prestige
+           );
+           simulatedPrestigeList.sort((a, b) => b - a);
+           
+           const simSum = simulatedPrestigeList.slice(0, 30).reduce((s, p) => s + p, 0);
+           const simAvg = Math.round(simSum / Math.min(30, simulatedPrestigeList.length));
+           const delta = simAvg - top30Average;
+
+           return {
+               championName: c.champion.name,
+               championClass: c.champion.class,
+               championImage: c.champion.images,
+               stars: c.stars,
+               rank: c.rank,
+               fromSig: c.sigLevel || 0,
+               toSig: 200,
+               prestigeGain: nextPrestige - currentPrestige,
+               accountGain: delta
+           };
+      }).filter((r): r is NonNullable<typeof r> => r !== null && r.accountGain > 0);
+
+      sigRecommendations = allSigRecommendations
+          .sort((a, b) => b.accountGain - a.accountGain)
+          .slice(0, 5);
   }
 
   return (
@@ -189,6 +232,7 @@ export default async function RosterPage(props: {
         top30Average={top30Average}
         prestigeMap={rosterPrestigeMap}
         recommendations={recommendations}
+        sigRecommendations={sigRecommendations}
         simulationTargetRank={targetRank}
       />
     </div>
