@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getRoster } from "@cerebro/core/services/rosterService";
+import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
 import { Metadata } from "next";
@@ -25,7 +26,11 @@ export default async function RosterPage(props: {
     redirect("/api/auth/signin?callbackUrl=/profile/roster");
   }
 
-  const rosterResult = await getRoster(player.id, null, null, null);
+  const [rosterResult, allChampions] = await Promise.all([
+      getRoster(player.id, null, null, null),
+      getCachedChampions()
+  ]);
+  
   const roster = typeof rosterResult === "string" ? [] : rosterResult;
 
   // Calculate Top 30 Average Prestige
@@ -336,6 +341,7 @@ export default async function RosterPage(props: {
 
       <RosterView 
         initialRoster={roster} 
+        allChampions={allChampions}
         top30Average={top30Average}
         prestigeMap={rosterPrestigeMap}
         recommendations={recommendations}
