@@ -181,6 +181,20 @@ The bot includes a robust system for managing alliance structure, including offi
     *   Commands requiring elevated permissions are restricted to users with either Discord Administrator permissions or the `isOfficer` flag set to `true` in the database.
 *   **Overview:** The `/alliance view` command provides a public, read-only overview of the entire alliance, showing members organized by battlegroup and highlighting officers.
 
+### User Identity & Permissions
+
+The system uses a multi-layered identity model to handle Discord authentication, bot interactions, and game profiles.
+
+*   **`BotUser` (Global Identity):**
+    *   Represents the discord user globally across the platform.
+    *   Stores global permissions like `isBotAdmin`. **Note: The `isBotAdmin` field on the `Player` model is DEPRECATED. Always check `BotUser.isBotAdmin`.**
+    *   Linked to NextAuth `Account` via Discord ID.
+*   **`Player` (Game Profile):**
+    *   Represents a specific MCOC in-game account.
+    *   Linked to `BotUser` via `botUserId`.
+    *   Stores game-specific data (Roster, Prestige) and alliance-scoped roles (`isOfficer`, `allianceId`).
+    *   Users can have multiple `Player` profiles (e.g., alt accounts), but only one is active at a time per `BotUser`.
+
 ### Interactive Champion Command
 
 The `/champion` command has been refactored into a fully interactive experience using V2 components. It follows a "re-render everything" model, where every interaction (initial command or button click) generates a complete, new message layout from scratch.
