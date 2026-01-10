@@ -86,7 +86,10 @@ export async function handleUpdateMemberRoles(client: Client, payload: unknown) 
         await member.roles.remove(finalToRemove);
         logger.info({ member: member.displayName, roles: finalToRemove }, 'Removed roles from member.');
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 50013) {
+        logger.warn({ guildId: player.alliance.guildId }, 'Missing Permissions to update roles. Check Bot Role Hierarchy in Discord Server settings.');
+    }
     logger.error({ error, playerId }, 'Error executing handleUpdateMemberRoles');
     throw error; // Re-throw to fail the job
   }
