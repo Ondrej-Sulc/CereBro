@@ -4,6 +4,7 @@ import logger from "@cerebro/core/services/loggerService";
 import { NextRequest, NextResponse } from "next/server";
 import { processRosterScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export const maxDuration = 60; // Allow 60 seconds for processing
 
@@ -22,9 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Discord account not found" }, { status: 404 });
     }
 
-    const player = await prisma.player.findFirst({
-      where: { discordId: account.providerAccountId, isActive: true },
-    });
+    const player = await getUserPlayerWithAlliance();
 
     if (!player) {
       return NextResponse.json({ error: "Player profile not found" }, { status: 404 });
