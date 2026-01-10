@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"; // Import cn
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { PrestigeHistoryChart } from "./prestige-chart";
 import { Upload, LayoutGrid } from "lucide-react";
+import logger from "@/lib/logger";
 
 const CLASS_ICONS: Record<Exclude<ChampionClass, 'SUPERIOR'>, string> = {
     SCIENCE: "/icons/Science.png",
@@ -30,6 +31,8 @@ export default async function ProfilePage() {
   if (!player) {
     redirect("/api/auth/signin?callbackUrl=/profile");
   }
+
+  logger.info({ userId: player.id }, "User accessing Profile page");
 
   const [rosterResult, prestigeHistory, allProfiles] = await Promise.all([
     getRoster(player.id, null, null, null),

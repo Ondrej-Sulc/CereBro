@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AllianceManagementClient } from "./client-page";
 import { Metadata } from "next";
+import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
   title: "Alliance Management - CereBro",
@@ -16,6 +17,8 @@ export default async function AlliancePage() {
     if (!player || !player.allianceId) {
         redirect("/");
     }
+
+    logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing Alliance Management page");
 
     const members = await prisma.player.findMany({
         where: { allianceId: player.allianceId },

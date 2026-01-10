@@ -3,6 +3,7 @@ import DefenseDashboard from "@/components/war-planning/defense-dashboard";
 import { redirect } from "next/navigation";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import logger from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,8 @@ export default async function DefensePlanningPage() {
       </div>
     );
   }
+
+  logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing Defense Planning page");
 
   const plans = await prisma.warDefensePlan.findMany({
     where: { allianceId: player.allianceId },

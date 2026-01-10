@@ -18,6 +18,7 @@ import { SearchFilters } from "@/components/SearchFilters";
 import { UploadFightButton } from "@/components/UploadFightButton";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import logger from "@/lib/logger";
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +86,10 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
 
   // Authentication & Current User Check
   const currentUser = await getUserPlayerWithAlliance();
+
+  if (currentUser) {
+    logger.info({ userId: currentUser.id, allianceId: currentUser.allianceId }, "User accessing War Archive page");
+  }
 
   const rawFights = await prisma.warFight.findMany({
     where: {

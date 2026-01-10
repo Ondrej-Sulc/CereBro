@@ -12,6 +12,7 @@ import { ChampionClass } from "@prisma/client";
 import { getFromCache } from "@/lib/cache";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
+import logger from "@/lib/logger";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -81,6 +82,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   }
 
   const allianceId = player.allianceId;
+  logger.info({ userId: player.id, allianceId }, "User accessing Season Overview page");
 
   // 1. Fetch available seasons (Cached for 1 hour per alliance)
   const seasons = await getFromCache(`distinct-seasons-${allianceId}`, 3600, async () => {
