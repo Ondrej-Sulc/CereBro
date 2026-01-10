@@ -80,6 +80,7 @@ enum BotJobStatus {
 enum BotJobType {
   NOTIFY_WAR_VIDEO
   DISTRIBUTE_WAR_PLAN
+  UPDATE_MEMBER_ROLES
 }
 
 // --- Models ---

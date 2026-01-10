@@ -11,6 +11,7 @@ import { handleAllianceManageRemove } from './manage/remove';
 import { handleAllianceManageList } from './manage/list';
 import { handleAllianceFindChampion } from './find-champion';
 import { championList } from '../../services/championService';
+import { getActivePlayer } from '../../utils/playerHelper';
 
 export const command: Command = {
   data: new SlashCommandBuilder()
@@ -145,6 +146,14 @@ export const command: Command = {
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand(true);
     const subcommandGroup = interaction.options.getSubcommandGroup();
+
+    if (subcommand === 'join') {
+        const player = await getActivePlayer(interaction.user.id);
+        if (!player || !player.isBotAdmin) {
+            await interaction.reply({ content: 'This command is restricted to Bot Administrators.', flags: [MessageFlags.Ephemeral] });
+            return;
+        }
+    }
 
     if (subcommand === 'toggle-feature' || subcommand === 'name' || subcommand === 'config-roles' || subcommand === 'config-channels' || subcommand === 'sync-roles' || subcommandGroup === 'manage') {
       const member = interaction.member;

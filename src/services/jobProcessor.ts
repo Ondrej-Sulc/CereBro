@@ -3,6 +3,7 @@ import { prisma } from './prismaService';
 import logger from './loggerService';
 import { handleWarVideoNotification } from './jobHandlers/warVideoNotification';
 import { handleDistributeWarPlan } from './jobHandlers/distributeWarPlan';
+import { handleUpdateMemberRoles } from './jobHandlers/updateMemberRoles';
 // @ts-ignore - Types might be stale until regen
 import { BotJobType, BotJobStatus } from '@prisma/client';
 
@@ -40,6 +41,9 @@ export function startJobProcessor(client: Client) {
             break;
           case 'DISTRIBUTE_WAR_PLAN':
             await handleDistributeWarPlan(client, job.payload);
+            break;
+          case 'UPDATE_MEMBER_ROLES':
+            await handleUpdateMemberRoles(client, job.payload);
             break;
           default:
             logger.warn(`Unknown job type: ${job.type}`);
