@@ -16,7 +16,8 @@ export async function createUploadSession(fightId: string) {
   if (!account) throw new Error("No linked account");
 
   const currentUser = await prisma.player.findFirst({
-      where: { discordId: account.providerAccountId }
+      where: { discordId: account.providerAccountId },
+      include: { botUser: true }
   });
   if (!currentUser) throw new Error("Player not found");
 
@@ -29,7 +30,7 @@ export async function createUploadSession(fightId: string) {
   // Permission Check
   const isOwner = fight.playerId === currentUser.id;
   const isOfficer = currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId;
-  const isBotAdmin = currentUser.isBotAdmin;
+  const isBotAdmin = currentUser.botUser?.isBotAdmin || currentUser.isBotAdmin;
 
   if (!isOwner && !isOfficer && !isBotAdmin) {
       throw new Error("Permission denied");
