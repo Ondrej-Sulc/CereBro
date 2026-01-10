@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import logger from '@cerebro/core/services/loggerService';
 
 export async function GET(request: Request) {
   const session = await auth();
@@ -53,10 +54,10 @@ export async function GET(request: Request) {
       })
     ]);
 
-    // Redirect back to profile page
-    return redirect('/profile');
   } catch (error) {
-    console.error('Error switching profile:', error);
+    logger.error({ error }, 'Error switching profile');
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
+
+  return redirect('/profile');
 }

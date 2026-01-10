@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import logger from "@cerebro/core/services/loggerService";
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ alliances });
   } catch (error) {
-    console.error("Error searching alliances:", error);
+    logger.error({ error }, "Error searching alliances");
     return NextResponse.json({ error: "Failed to search alliances" }, { status: 500 });
   }
 }

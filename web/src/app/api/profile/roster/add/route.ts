@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import logger from "@cerebro/core/services/loggerService";
 
 const addSchema = z.object({
   championId: z.number(),
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(newRoster);
   } catch (error) {
-    console.error("Error adding champion:", error);
+    logger.error({ error }, "Error adding champion");
     if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid data", details: (error as z.ZodError).issues }, { status: 400 });
     }

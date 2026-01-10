@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import logger from "@cerebro/core/services/loggerService";
 
 const updateSchema = z.object({
   id: z.string(),
@@ -52,7 +53,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json(updatedRoster);
   } catch (error) {
-    console.error("Error updating roster:", error);
+    logger.error({ error }, "Error updating roster");
     if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid data", details: (error as z.ZodError).issues }, { status: 400 });
     }
@@ -88,7 +89,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting roster:", error);
+    logger.error({ error }, "Error deleting roster");
     if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid data", details: (error as z.ZodError).issues }, { status: 400 });
     }

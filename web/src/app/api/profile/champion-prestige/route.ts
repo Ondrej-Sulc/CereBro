@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import logger from "@cerebro/core/services/loggerService";
 
 const querySchema = z.object({
   championId: z.coerce.number(),
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(prestigeData);
   } catch (error) {
-    console.error("Error fetching prestige data:", error);
+    logger.error({ error }, "Error fetching prestige data");
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
     }
