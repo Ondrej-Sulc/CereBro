@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, memo, useCallback, useEffect } from "react";
+import { useState, useMemo, forwardRef, HTMLAttributes, memo, useCallback, useEffect, useTransition } from "react";
 import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionClass } from "@prisma/client";
 import { Input } from "@/components/ui/input";
@@ -201,6 +201,9 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
   const [editingItem, setEditingItem] = useState<RosterWithChampion | null>(null);
   const [showInsights, setShowInsights] = useState(true);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
+  const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
+  
+  const [isPending, startTransition] = useTransition();
   
   const [chartData, setChartData] = useState<{data: any[], rec: SigRecommendation} | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
@@ -263,7 +266,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
             isAwakened: false,
             isAscended: false,
         });
-        router.refresh();
+        setPendingSection('all');
+        startTransition(() => {
+            router.refresh();
+        });
       } catch (error) {
           toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
       }
@@ -286,7 +292,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
   const handleTargetChange = (val: string) => {
     const params = new URLSearchParams(window.location.search);
     params.set('targetRank', val);
-    router.push(`?${params.toString()}`);
+    setPendingSection('rank');
+    startTransition(() => {
+        router.push(`?${params.toString()}`);
+    });
   };
 
   useEffect(() => {
@@ -297,7 +306,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
         } else {
             params.delete('sigBudget');
         }
-        router.push(`?${params.toString()}`);
+        setPendingSection('sig');
+        startTransition(() => {
+            router.push(`?${params.toString()}`);
+        });
     }, 500);
 
     return () => clearTimeout(timer);
@@ -341,7 +353,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
         setRoster(prev => prev.map(item => item.id === updatedData.id ? { ...item, ...updatedItem } : item));
         toast({ title: "Success", description: "Champion updated" });
         setEditingItem(null);
-        router.refresh();
+        setPendingSection('all');
+        startTransition(() => {
+            router.refresh();
+        });
     } catch (error) {
         toast({ title: "Error", description: "Failed to update champion", variant: "destructive" });
     }
@@ -362,7 +377,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
         setRoster(prev => prev.filter(item => item.id !== id));
         toast({ title: "Success", description: "Champion removed" });
         setEditingItem(null);
-        router.refresh();
+        setPendingSection('all');
+        startTransition(() => {
+            router.refresh();
+        });
       } catch (error) {
           toast({ title: "Error", description: "Failed to remove champion", variant: "destructive" });
       }
@@ -451,7 +469,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
 
                             {recommendations.length > 0 ? (
                                 <>
-                                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                    <div className={cn(
+                                        "p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500 ease-out",
+                                        isPending && (pendingSection === 'rank' || pendingSection === 'all') && "blur-[1px] scale-[0.995] opacity-80 pointer-events-none"
+                                    )}>
                                         {recommendations.map((rec, i) => {
                                             const classColors = getChampionClassColors(rec.championClass);
                                             return (
@@ -535,7 +556,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                 </Popover>
                             </div>
 
-                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                            <div className={cn(
+                                "p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500 ease-out",
+                                isPending && (pendingSection === 'sig' || pendingSection === 'all') && "blur-[1px] scale-[0.995] opacity-80 pointer-events-none"
+                            )}>
                                 {sigRecommendations.map((rec, i) => {
                                     const classColors = getChampionClassColors(rec.championClass);
                                     return (
