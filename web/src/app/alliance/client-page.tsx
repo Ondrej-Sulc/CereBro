@@ -32,7 +32,16 @@ export function AllianceManagementClient({ members, currentUser, allianceName }:
             // We pass undefined for isOfficer to only update battlegroup
             await updatePlayerRole(playerId, { battlegroup: bgValue });
             toast({ title: "Updated", description: "Player battlegroup updated." });
-        } catch (e) {
+        } catch (e: any) {
+            if (e.message?.includes("Failed to find Server Action")) {
+                 toast({ 
+                    title: "Update Required", 
+                    description: "Application updated. Reloading...", 
+                    variant: "destructive" 
+                 });
+                 setTimeout(() => window.location.reload(), 1500);
+                 return;
+            }
             toast({ title: "Error", description: "Failed to update player.", variant: "destructive" });
         } finally {
             setLoadingId(null);
