@@ -8,8 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updatePlayerRole } from "../actions/alliance";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type PlayerWithRoster = Player & { roster: any[] };
 
@@ -113,7 +122,40 @@ export function AllianceManagementClient({ members, currentUser, allianceName }:
         <div className="container mx-auto py-6 px-4">
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{allianceName}</h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold tracking-tight">{allianceName}</h1>
+                        {isOfficer && (
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-300">
+                                        <HelpCircle className="h-4 w-4" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
+                                    <DialogHeader>
+                                        <DialogTitle>Managing Roles & Permissions</DialogTitle>
+                                        <DialogDescription className="text-slate-400">
+                                            Troubleshooting assignment issues
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 text-sm">
+                                        <p>
+                                            When you change a player's Battlegroup here, CereBro attempts to update their roles in your Discord server automatically.
+                                        </p>
+                                        <div className="bg-yellow-950/20 border border-yellow-900/30 p-3 rounded-md space-y-2">
+                                            <p className="font-semibold text-yellow-500">If updates fail:</p>
+                                            <p className="text-slate-300">
+                                                Ensure the <strong>CereBro</strong> bot role is placed <strong>HIGHER</strong> than the Officer and Battlegroup roles in your Discord Server Settings &gt; Roles list.
+                                            </p>
+                                            <p className="text-slate-400 text-xs">
+                                                Discord prevents bots from managing roles that are above them in the hierarchy.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        )}
+                    </div>
                     <p className="text-sm text-slate-400">Alliance Management & Overview</p>
                 </div>
             </div>

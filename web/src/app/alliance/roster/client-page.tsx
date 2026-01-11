@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChampionClass } from "@prisma/client";
-import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X } from "lucide-react";
+import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X, SlidersHorizontal } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -56,6 +56,7 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
     const [minRankFilter, setMinRankFilter] = useState<string>("0");
     const [limitFilter, setLimitFilter] = useState<string>("10");
     const [tagFilter, setTagFilter] = useState<string | null>(null);
+    const [showFilters, setShowFilters] = useState(false);
 
     // Derived Data
     const players = useMemo(() => {
@@ -204,155 +205,177 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
                 <div className="flex flex-col gap-4">
                     {/* Top Row: Primary Filters */}
                     <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-                         <div className="flex flex-wrap gap-2 w-full xl:w-auto items-center">
-                            {/* Battlegroup */}
-                            <FilterGroup 
-                                options={[
-                                    { value: "ALL", label: "All BGs" },
-                                    { value: "1", label: "BG 1" },
-                                    { value: "2", label: "BG 2" },
-                                    { value: "3", label: "BG 3" },
-                                ]}
-                                value={bgFilter}
-                                onChange={setBgFilter}
-                            />
+                         <div className="flex flex-col w-full gap-4">
+                            <div className="flex items-center justify-between w-full">
+                                {/* Battlegroup - Always Visible */}
+                                <FilterGroup 
+                                    options={[
+                                        { value: "ALL", label: "All BGs" },
+                                        { value: "1", label: "BG 1" },
+                                        { value: "2", label: "BG 2" },
+                                        { value: "3", label: "BG 3" },
+                                    ]}
+                                    value={bgFilter}
+                                    onChange={setBgFilter}
+                                    className="flex-1 max-w-[300px]"
+                                />
+                                
+                                {/* Mobile Toggle */}
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="xl:hidden ml-2"
+                                    onClick={() => setShowFilters(!showFilters)}
+                                >
+                                    <SlidersHorizontal className="w-4 h-4" />
+                                </Button>
+                            </div>
 
-                             {/* Stars */}
-                             <FilterGroup 
-                                options={[
-                                    { value: "ALL", label: "All Stars" },
-                                    { value: "7", label: "7 ★" },
-                                    { value: "6", label: "6 ★" },
-                                ]}
-                                value={starFilter}
-                                onChange={setStarFilter}
-                            />
+                            {/* Secondary Filters - Hidden on Mobile unless toggled */}
+                            <div className={cn(
+                                "flex flex-col gap-4 w-full transition-all duration-300 ease-in-out",
+                                !showFilters && "hidden xl:flex",
+                                showFilters && "flex"
+                            )}>
+                                 <div className="flex flex-wrap gap-2 items-center">
+                                     {/* Stars */}
+                                     <FilterGroup 
+                                        options={[
+                                            { value: "ALL", label: "All Stars" },
+                                            { value: "7", label: "7 ★" },
+                                            { value: "6", label: "6 ★" },
+                                        ]}
+                                        value={starFilter}
+                                        onChange={setStarFilter}
+                                    />
 
-                             {/* Min Rank */}
-                             <FilterGroup 
-                                options={[
-                                    { value: "0", label: "Any Rank" },
-                                    { value: "3", label: "R3+" },
-                                    { value: "4", label: "R4+" },
-                                    { value: "5", label: "R5+" },
-                                ]}
-                                value={minRankFilter}
-                                onChange={setMinRankFilter}
-                            />
+                                     {/* Min Rank */}
+                                     <FilterGroup 
+                                        options={[
+                                            { value: "0", label: "Any Rank" },
+                                            { value: "3", label: "R3+" },
+                                            { value: "4", label: "R4+" },
+                                            { value: "5", label: "R5+" },
+                                        ]}
+                                        value={minRankFilter}
+                                        onChange={setMinRankFilter}
+                                    />
 
-                             {/* Limit */}
-                             <FilterGroup 
-                                options={[
-                                    { value: "5", label: "Top 5" },
-                                    { value: "10", label: "Top 10" },
-                                    { value: "20", label: "Top 20" },
-                                    { value: "ALL", label: "All" },
-                                ]}
-                                value={limitFilter}
-                                onChange={setLimitFilter}
-                            />
-                        </div>
-                    </div>
+                                     {/* Limit */}
+                                     <FilterGroup 
+                                        options={[
+                                            { value: "5", label: "Top 5" },
+                                            { value: "10", label: "Top 10" },
+                                            { value: "20", label: "Top 20" },
+                                            { value: "ALL", label: "All" },
+                                        ]}
+                                        value={limitFilter}
+                                        onChange={setLimitFilter}
+                                    />
+                                </div>
 
-                    {/* Bottom Row: Tags, Class */}
-                    <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
-                        <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
-                             {/* Tags Dropdown */}
-                             <div className="flex items-center gap-1">
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[180px]">
-                                            <div className="flex items-center gap-2 truncate">
-                                                <Filter className="w-3.5 h-3.5" />
-                                                {tagFilter ? tagFilter : "Filter Tags"}
-                                            </div>
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                {/* Bottom Row: Tags, Class */}
+                                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
+                                    <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
+                                         {/* Tags Dropdown */}
+                                         <div className="flex items-center gap-1 w-full sm:w-auto">
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between w-full sm:min-w-[180px]">
+                                                        <div className="flex items-center gap-2 truncate">
+                                                            <Filter className="w-3.5 h-3.5" />
+                                                            {tagFilter ? tagFilter : "Filter Tags"}
+                                                        </div>
+                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[250px] p-0 bg-slate-950 border-slate-800" align="start">
+                                                    <Command className="bg-slate-950 text-slate-300">
+                                                        <CommandInput placeholder="Search tags..." className="h-9" />
+                                                        <CommandList>
+                                                            <CommandEmpty>No tag found.</CommandEmpty>
+                                                            <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                                                <CommandItem
+                                                                    value="clear_filter"
+                                                                    onSelect={() => setTagFilter(null)}
+                                                                    className="text-xs"
+                                                                >
+                                                                    <Check className={cn("mr-2 h-4 w-4", !tagFilter ? "opacity-100" : "opacity-0")} />
+                                                                    Clear Filter
+                                                                </CommandItem>
+                                                                {initialTags.map(tag => (
+                                                                    <CommandItem
+                                                                        key={tag.id}
+                                                                        value={tag.name}
+                                                                        onSelect={(currentValue) => {
+                                                                            setTagFilter(currentValue === tagFilter ? null : currentValue)
+                                                                        }}
+                                                                        className="text-xs"
+                                                                    >
+                                                                        <Check className={cn("mr-2 h-4 w-4", tagFilter === tag.name ? "opacity-100" : "opacity-0")} />
+                                                                        {tag.name}
+                                                                    </CommandItem>
+                                                                ))}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </PopoverContent>
+                                            </Popover>
+                                            {tagFilter && (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-9 w-9 text-slate-500 hover:text-red-400"
+                                                    onClick={() => setTagFilter(null)}
+                                                    title="Clear Tag"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </Button>
+                                            )}
+                                         </div>
+                                    </div>
+
+                                     {/* Class Filter */}
+                                     <div className="flex gap-1 overflow-x-auto pb-1 lg:pb-0 w-full sm:w-auto">
+                                         <Button
+                                            variant="ghost" size="icon"
+                                            className={cn(
+                                                "h-8 w-8 rounded-full shrink-0", 
+                                                classFilter.length === 0 ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
+                                            )}
+                                            onClick={() => setClassFilter([])}
+                                            title="Clear Classes"
+                                        >
+                                            <CircleOff className="w-4 h-4" />
                                         </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[250px] p-0 bg-slate-950 border-slate-800" align="start">
-                                        <Command className="bg-slate-950 text-slate-300">
-                                            <CommandInput placeholder="Search tags..." className="h-9" />
-                                            <CommandList>
-                                                <CommandEmpty>No tag found.</CommandEmpty>
-                                                <CommandGroup className="max-h-[300px] overflow-y-auto">
-                                                    <CommandItem
-                                                        value="clear_filter"
-                                                        onSelect={() => setTagFilter(null)}
-                                                        className="text-xs"
-                                                    >
-                                                        <Check className={cn("mr-2 h-4 w-4", !tagFilter ? "opacity-100" : "opacity-0")} />
-                                                        Clear Filter
-                                                    </CommandItem>
-                                                    {initialTags.map(tag => (
-                                                        <CommandItem
-                                                            key={tag.id}
-                                                            value={tag.name}
-                                                            onSelect={(currentValue) => {
-                                                                setTagFilter(currentValue === tagFilter ? null : currentValue)
-                                                            }}
-                                                            className="text-xs"
-                                                        >
-                                                            <Check className={cn("mr-2 h-4 w-4", tagFilter === tag.name ? "opacity-100" : "opacity-0")} />
-                                                            {tag.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
-                                {tagFilter && (
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        className="h-9 w-9 text-slate-500 hover:text-red-400"
-                                        onClick={() => setTagFilter(null)}
-                                        title="Clear Tag"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </Button>
-                                )}
-                             </div>
-                        </div>
-
-                         {/* Class Filter */}
-                         <div className="flex gap-1 overflow-x-auto pb-1 lg:pb-0">
-                             <Button
-                                variant="ghost" size="icon"
-                                className={cn(
-                                    "h-8 w-8 rounded-full shrink-0", 
-                                    classFilter.length === 0 ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
-                                )}
-                                onClick={() => setClassFilter([])}
-                                title="Clear Classes"
-                            >
-                                <CircleOff className="w-4 h-4" />
-                            </Button>
-                            {CLASSES.map(c => {
-                                const colors = getChampionClassColors(c);
-                                const isSelected = classFilter.includes(c);
-                                return (
-                                    <Button
-                                        key={c}
-                                        variant="ghost" size="icon"
-                                        className={cn(
-                                            "h-8 w-8 rounded-full shrink-0 border border-transparent",
-                                            isSelected && cn(colors.bg, colors.border)
-                                        )}
-                                        onClick={() => {
-                                            if (isSelected) {
-                                                setClassFilter(classFilter.filter(item => item !== c));
-                                            } else {
-                                                setClassFilter([...classFilter, c]);
-                                            }
-                                        }}
-                                    >
-                                       <div className="relative w-5 h-5">
-                                            <Image src={`/icons/${c.charAt(0) + c.slice(1).toLowerCase()}.png`} alt={c} fill className="object-contain" />
-                                       </div>
-                                    </Button>
-                                );
-                            })}
+                                        {CLASSES.map(c => {
+                                            const colors = getChampionClassColors(c);
+                                            const isSelected = classFilter.includes(c);
+                                            return (
+                                                <Button
+                                                    key={c}
+                                                    variant="ghost" size="icon"
+                                                    className={cn(
+                                                        "h-8 w-8 rounded-full shrink-0 border border-transparent",
+                                                        isSelected && cn(colors.bg, colors.border)
+                                                    )}
+                                                    onClick={() => {
+                                                        if (isSelected) {
+                                                            setClassFilter(classFilter.filter(item => item !== c));
+                                                        } else {
+                                                            setClassFilter([...classFilter, c]);
+                                                        }
+                                                    }}
+                                                >
+                                                   <div className="relative w-5 h-5">
+                                                        <Image src={`/icons/${c.charAt(0) + c.slice(1).toLowerCase()}.png`} alt={c} fill className="object-contain" />
+                                                   </div>
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

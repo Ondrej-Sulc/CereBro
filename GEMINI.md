@@ -22,6 +22,9 @@ The platform provides a variety of features, including:
     *   **Season Overview:** A comprehensive analytics dashboard for tracking player and alliance performance across entire war seasons.
     *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
     *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI. **The system now features enhanced profile resolution that automatically falls back to the most recent profile if no "active" one is set, ensuring seamless access for all registered users.**
+    *   **Alliance Management:**
+        *   **Overview:** A dedicated `/alliance` page for officers to manage member battlegroup assignments. Changes are synced to Discord roles automatically via background jobs. Includes troubleshooting help for permission hierarchy issues.
+        *   **Roster Matrix:** A powerful, spreadsheet-like view (`/alliance/roster`) for visualizing the entire alliance's champion roster. Features advanced filtering by Battlegroup, Star Level, Rank, multiple Classes, and searchable Tags. The layout is optimized for density, displaying compact champion portraits with centered rank/star indicators.
 *   **War Videos Database & Planning**
 
 The bot features a sophisticated system for tracking Alliance War performance by linking war plans to video uploads.
@@ -67,6 +70,10 @@ To reliably handle communication between the Web App and the Discord Bot (e.g., 
     *   **Model:** `BotJob` (id, type, status, payload, error).
     *   **Producer (Web):** The Next.js app creates a `BotJob` record (e.g., type `NOTIFY_WAR_VIDEO`) instead of trying to contact the bot directly.
     *   **Consumer (Bot):** The Discord Bot runs a `JobProcessor` service that polls the database for `PENDING` jobs. It processes them (executing Discord API calls via `discord.js`) and updates the status to `COMPLETED` or `FAILED`.
+    *   **Job Types:**
+        *   `NOTIFY_WAR_VIDEO`: Posts video uploads to Discord.
+        *   `DISTRIBUTE_WAR_PLAN`: Sends war plan DMs.
+        *   `UPDATE_MEMBER_ROLES`: Syncs web-based battlegroup/officer changes to Discord roles. Handles permission errors (50013) gracefully with warnings.
 *   **Benefits:** This decouples the services, ensuring that if the bot is restarting, notifications are not lost but simply queued. It also avoids timeout issues for long-running tasks.
 *   **Submission Helpers:** A shared library `web/src/lib/api/submission-helpers.ts` centralizes the logic for validating tokens, handling War/Fight creation (including Offseason logic), and queuing these notifications.
 
@@ -318,7 +325,10 @@ The web interface now includes a comprehensive Profile section.
 *   **Error Handling:** A centralized error handling system is used to provide users with a unique error ID while logging detailed context for debugging.
 *   **Database:** Prisma is used to manage the PostgreSQL database. The schema is defined in `prisma/schema.prisma`.
 *   **Code Style:** The project follows standard TypeScript and Prettier conventions.
-*   **Logging:** For consistency and performance, all logging should be done using the `pino` logger, which is available through the `loggerService`. This provides structured, leveled logging. Avoid using `console.log` for any persistent or important logging.
+*   **Logging:**
+    *   **Bot:** Uses `pino` logger via `src/services/loggerService.ts`.
+    *   **Web:** Uses a dedicated `pino` instance in `web/src/lib/logger.ts`. Configured to use `pino-pretty` only in development to prevent worker exit issues in production. Key pages (Alliance, Roster, Planning, Profile, War Archive) log access events for observability.
+    *   Avoid using `console.log` for any persistent or important logging.
 *   **Documentation Maintenance:** Command documentation is managed via a "Single Source of Truth" system. All descriptions, groups, and other metadata are defined in a `help` property within each command's main source file (e.g., `src/commands/somecommand/index.ts`). The `npm run build` command executes a script that automatically generates a master `commands.json` file from this data. This file is then used by both the in-bot `/help` command and the `/web` interface, ensuring all documentation is consistent and automatically updated with code changes. To update documentation, edit the `help` block in the relevant command file.
 *   **Services vs. Utils:**
     *   `src/services`: For modules that connect to external APIs or manage stateful business logic.
