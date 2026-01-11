@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
-  title: "Alliance Roster Matrix - CereBro",
+  title: "Alliance Roster Overview - CereBro",
   description: "View and filter your alliance's champion roster.",
 };
 
@@ -17,7 +17,7 @@ export default async function AllianceRosterPage() {
         redirect("/");
     }
 
-    logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing Alliance Roster Matrix page");
+    logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing Alliance Roster Overview page");
 
     // Parallel fetch for data
     const [rosterData, metaData] = await Promise.all([

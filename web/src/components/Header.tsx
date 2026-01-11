@@ -116,7 +116,7 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                   <DropdownMenuItem asChild>
                     <Link href="/alliance/roster" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
                         <LayoutGrid className="w-4 h-4 text-slate-300" />
-                        <span>Roster Matrix</span>
+                        <span>Roster Overview</span>
                     </Link>
                   </DropdownMenuItem>
                   
@@ -197,7 +197,7 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                         </Link>
                         <Link href="/alliance/roster" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
                             <LayoutGrid className="w-5 h-5 text-slate-300" />
-                            Roster Matrix
+                            Roster Overview
                         </Link>
                         <Link href="/planning" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
                             <Swords className="w-5 h-5 text-red-400" />
