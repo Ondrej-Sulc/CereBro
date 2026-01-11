@@ -54,6 +54,7 @@ interface DefenseDashboardProps {
   plans: WarDefensePlan[];
   userTimezone?: string | null;
   isOfficer?: boolean;
+  bgColors?: Record<number, string>;
 }
 
 // Separate component for submit button to use useFormStatus
@@ -80,6 +81,7 @@ export default function DefenseDashboard({
   plans,
   userTimezone,
   isOfficer,
+  bgColors
 }: DefenseDashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);

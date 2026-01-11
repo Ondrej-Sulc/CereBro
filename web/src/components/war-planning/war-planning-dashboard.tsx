@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { War, WarStatus, WarMapType } from "@prisma/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Plus, 
   Swords, 
@@ -70,9 +71,10 @@ interface WarPlanningDashboardProps {
   defaultSeason: number;
   defaultWarNumber: number;
   defaultTier: number;
-  userTimezone?: string | null;
-  isBotAdmin?: boolean;
-  isOfficer?: boolean;
+  userTimezone: string | null;
+  isBotAdmin: boolean;
+  isOfficer: boolean;
+  bgColors?: Record<number, string>;
 }
 
 export default function WarPlanningDashboard({
@@ -82,8 +84,10 @@ export default function WarPlanningDashboard({
   defaultTier,
   userTimezone,
   isBotAdmin,
-  isOfficer = false,
+  isOfficer,
+  bgColors
 }: WarPlanningDashboardProps) {
+  const router = useRouter();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
   const [isOffSeason, setIsOffSeason] = useState(false);

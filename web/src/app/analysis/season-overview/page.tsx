@@ -128,6 +128,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
 
   const latestSeason = seasons[0];
 
+  // Colors
+  const bgColors = {
+      1: player.alliance?.battlegroup1Color || "#ef4444",
+      2: player.alliance?.battlegroup2Color || "#22c55e",
+      3: player.alliance?.battlegroup3Color || "#3b82f6"
+  };
+
   // Parse and validate the selected season
   let selectedSeason: number;
   const seasonParam = awaitedSearchParams.season;
@@ -290,7 +297,27 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
     const hardestNodes = Array.from(nodeStats.values())
         .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights)
         .slice(0, 5);
-  
+
+    // Global Stats Calculation
+    const globalFights = bgTotals[1].fights + bgTotals[2].fights + bgTotals[3].fights;
+    const globalDeaths = bgTotals[1].deaths + bgTotals[2].deaths + bgTotals[3].deaths;
+    const globalSoloRate = globalFights > 0 ? ((globalFights - globalDeaths) / globalFights) * 100 : 0;
+    
+    // Find Best BG (Lowest Death Rate = Deaths / Fights)
+    let bestBg = 0;
+    let bestRate = Infinity;
+    [1, 2, 3].forEach(bgNum => {
+        const bg = bgNum as 1|2|3;
+        const fights = bgTotals[bg].fights;
+        if (fights > 0) {
+            const rate = bgTotals[bg].deaths / fights;
+            if (rate < bestRate) {
+                bestRate = rate;
+                bestBg = bg;
+            }
+        }
+    });
+
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
         {/* Header */}
@@ -314,7 +341,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
           </div>
 
           {/* Stats Overview Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
                  <span className="text-xs text-slate-500 uppercase font-medium">Season</span>
                  <span className="text-xl font-mono font-bold text-slate-200">{selectedSeason}</span>
@@ -324,6 +351,22 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                  <span className="text-xl font-mono font-bold text-slate-200">{totalWars}</span>
               </Card>
               <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
+                 <span className="text-xs text-slate-500 uppercase font-medium">Global Solo %</span>
+                 <span className={cn(
+                     "text-xl font-mono font-bold",
+                     globalSoloRate >= 95 ? "text-emerald-400" : globalSoloRate >= 80 ? "text-slate-300" : "text-amber-500"
+                 )}>
+                     {globalSoloRate.toFixed(1)}%
+                 </span>
+              </Card>
+              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
+                 <span className="text-xs text-slate-500 uppercase font-medium">Total Deaths</span>
+                 <div className="flex items-center gap-2 text-red-400">
+                    <Skull className="w-4 h-4" />
+                    <span className="text-xl font-mono font-bold">{globalDeaths}</span>
+                 </div>
+              </Card>
+              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1 col-span-2 lg:col-span-1">
                  <span className="text-xs text-slate-500 uppercase font-medium">Map Type</span>
                  <div className="flex items-center gap-2">
                      {mapTypes.has("BIG_THING") && mapTypes.has("STANDARD") ? (
@@ -346,17 +389,28 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   
         {/* Battlegroup Grids */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(bg => {
+          {[1, 2, 3].map(bgNum => {
+            const bg = bgNum as 1 | 2 | 3;
             const totalFights = bgTotals[bg].fights;
             const totalDeaths = bgTotals[bg].deaths;
             const totalSoloRate = totalFights > 0 
               ? ((totalFights - totalDeaths) / totalFights) * 100 
               : 0;
+
+            const accentColor = bgColors[bg];
   
             return (
-              <Card key={bg} className="bg-slate-950/50 border-slate-800/60 flex flex-col">
-                <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
-                  <CardTitle className="text-xl font-mono text-slate-200 flex items-center justify-between">
+              <Card key={bg} className="bg-slate-950/50 border-slate-800/60 flex flex-col transition-all duration-300 hover:border-slate-700"
+                style={{ borderColor: `${accentColor}40` }} // 25% opacity border
+              >
+                <CardHeader 
+                    className="pb-3 border-b border-slate-800/60 bg-slate-900/20"
+                    style={{ borderBottomColor: `${accentColor}30` }}
+                >
+                  <CardTitle 
+                    className="text-xl font-mono flex items-center justify-between"
+                    style={{ color: accentColor }}
+                  >
                     Battlegroup {bg}
                     <Badge variant="outline" className="bg-slate-900 text-slate-400 border-slate-700">
                       {sortedBgs[bg].length} Players
