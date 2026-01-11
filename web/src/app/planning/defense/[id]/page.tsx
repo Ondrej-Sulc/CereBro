@@ -41,7 +41,8 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   const plan = await prisma.warDefensePlan.findFirst({
     where: whereClause,
     include: {
-        highlightTag: true
+        highlightTag: true,
+        alliance: true
     }
   });
 
@@ -82,6 +83,12 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
       orderBy: { name: 'asc' }
   });
 
+  const bgColors = {
+      1: plan.alliance.battlegroup1Color || "#ef4444",
+      2: plan.alliance.battlegroup2Color || "#22c55e",
+      3: plan.alliance.battlegroup3Color || "#3b82f6",
+  };
+
   return (
     <>
       <FormPageBackground />
@@ -93,6 +100,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         players={allianceMembers}
         availableTags={tags}
         isOfficer={isOfficer}
+        bgColors={bgColors}
       />
     </>
   );

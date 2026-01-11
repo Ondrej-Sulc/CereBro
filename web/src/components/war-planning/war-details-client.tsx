@@ -25,6 +25,7 @@ interface WarDetailsClientProps {
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
   isOfficer?: boolean;
+  bgColors?: Record<number, string>;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
@@ -194,6 +195,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               }
               activeTag={activeTactic?.attackTag}
               isReadOnly={isReadOnly}
+              bgColors={props.bgColors}
             />
             
             <WarTabs 
@@ -215,6 +217,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               onTogglePlayerPanel={handleTogglePlayerPanel}
               isPlayerPanelOpen={isRosterVisible}
               hideTabsList={true}
+              bgColors={props.bgColors}
             />
           </div>
         </div>

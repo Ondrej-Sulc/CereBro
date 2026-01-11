@@ -29,6 +29,12 @@ export default async function DefensePlanningPage() {
     orderBy: { updatedAt: "desc" },
   });
 
+  const bgColors = {
+      1: player.alliance?.battlegroup1Color || "#ef4444",
+      2: player.alliance?.battlegroup2Color || "#22c55e",
+      3: player.alliance?.battlegroup3Color || "#3b82f6",
+  };
+
   return (
     <div className="min-h-screen text-slate-200 font-sans selection:bg-indigo-500/30 relative">
       <FormPageBackground />
@@ -37,6 +43,7 @@ export default async function DefensePlanningPage() {
           plans={plans}
           userTimezone={player.timezone}
           isOfficer={player.isOfficer || player.isBotAdmin}
+          bgColors={bgColors}
         />
       </main>
     </div>

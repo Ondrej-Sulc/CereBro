@@ -87,7 +87,8 @@ export class MapImageService {
         nodes: WarNodePosition[],
         assignments: Map<number, NodeAssignment>,
         preloadedImageCache?: Map<string, string>,
-        legend?: LegendItem[]
+        legend?: LegendItem[],
+        accentColor?: string
     ): Promise<Buffer> {
         
         // 1. Calculate Bounding Box
@@ -163,7 +164,8 @@ export class MapImageService {
             assignments, 
             imageCache,
             legend,
-            legendWidth
+            legendWidth,
+            accentColor
         );
 
         // 4. Convert to PNG
@@ -183,7 +185,8 @@ export class MapImageService {
         assignments: Map<number, NodeAssignment>,
         imageCache: Map<string, string>,
         legend?: LegendItem[],
-        legendWidth: number = 0
+        legendWidth: number = 0,
+        accentColor?: string
     ): string {
         
         // --- 1. Background Elements (Nebulas & Stars) ---
@@ -196,6 +199,9 @@ export class MapImageService {
             const op = Math.random() * 0.7 + 0.3;
             starsSvg += `<circle cx="${x}" cy="${y}" r="${r}" fill="white" opacity="${op}" />`;
         }
+
+        // Tint the paths based on accentColor
+        const pathColor = accentColor || '#22d3ee';
 
         const nebDefs = `
             <radialGradient id="nebula-violet" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
@@ -226,7 +232,7 @@ export class MapImageService {
         const styles = `
             <style>
                 .path { 
-                    stroke: #22d3ee; 
+                    stroke: ${pathColor}; 
                     stroke-width: 3; 
                     fill: none; 
                     stroke-dasharray: 12, 12; 
@@ -293,11 +299,12 @@ export class MapImageService {
             
             // Render Portals
             if (node.isPortal) {
+                const portalFill = accentColor || "#10B981";
                 nodesSvg += `
                     <g transform="translate(${x}, ${y})">
-                         <circle r="12" fill="#10B981" opacity="0.3" />
-                         <circle r="7" fill="#10B981" stroke="#064e3b" stroke-width="1" />
-                         <circle r="3" fill="#ecfdf5" />
+                         <circle r="12" fill="${portalFill}" opacity="0.3" />
+                         <circle r="7" fill="${portalFill}" stroke="white" stroke-width="1" opacity="0.9" />
+                         <circle r="3" fill="white" />
                     </g>
                 `;
                 return;

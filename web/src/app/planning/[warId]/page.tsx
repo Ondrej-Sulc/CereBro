@@ -90,6 +90,12 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
     });
   });
 
+  const bgColors = {
+      1: war.alliance.battlegroup1Color || "#ef4444",
+      2: war.alliance.battlegroup2Color || "#22c55e",
+      3: war.alliance.battlegroup3Color || "#3b82f6",
+  };
+
   return (
     <WarDetailsClient
       war={war}
@@ -101,6 +107,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       seasonBans={seasonBans}
       warBans={warBans}
       isOfficer={isOfficer}
+      bgColors={bgColors}
     />
   );
 }

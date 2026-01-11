@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getChampionImageUrl } from "@/lib/championHelper";
 import Image from "next/image";
 import { ChampionClass } from "@prisma/client"; // Import ChampionClass
 import { getChampionClassColors } from "@/lib/championClassHelper"; // Import class colors helper
@@ -63,28 +62,8 @@ export default async function ProfilePage() {
 
   return (
     <div className="container mx-auto p-4 sm:p-8 max-w-5xl space-y-8">
-      {/* Profile Selector (Multiple Profiles) */}
-      {allProfiles.length > 1 && (
-          <div className="flex flex-wrap gap-2 p-1 bg-slate-900/50 border border-slate-800 rounded-lg w-fit">
-              {allProfiles.map(p => (
-                  <Link key={p.id} href={`/api/profile/switch?name=${encodeURIComponent(p.ingameName)}`}>
-                      <Button 
-                        variant={p.id === player.id ? "secondary" : "ghost"} 
-                        size="sm"
-                        className={cn(
-                            "h-8 text-xs font-bold transition-all",
-                            p.id === player.id ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                        )}
-                      >
-                          {p.ingameName}
-                      </Button>
-                  </Link>
-              ))}
-          </div>
-      )}
-
       {/* Profile Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             {player.ingameName}
@@ -94,20 +73,29 @@ export default async function ProfilePage() {
             {player.alliance ? `Alliance: ${player.alliance.name}` : "No Alliance"} • Timezone: {player.timezone || "Not set"}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-            <Link href="/profile/roster">
-                <Button variant="outline" className="text-slate-200 border-slate-700 hover:bg-slate-800 flex items-center gap-2">
-                    <LayoutGrid className="w-4 h-4" />
-                    View Full Roster
-                </Button>
-            </Link>
-            <Link href="/profile/update">
-                <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20 flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Update Roster
-                </Button>
-            </Link>
-        </div>
+
+        {/* Profile Selector (Multiple Profiles) */}
+        {allProfiles.length > 1 && (
+            <div className="flex items-center gap-3">
+                <span className="text-sm text-slate-400 font-medium">Switch Profile:</span>
+                <div className="flex flex-wrap gap-2 p-1 bg-slate-900/50 border border-slate-800 rounded-lg w-fit">
+                    {allProfiles.map(p => (
+                        <Link key={p.id} href={`/api/profile/switch?name=${encodeURIComponent(p.ingameName)}`}>
+                            <Button 
+                                variant={p.id === player.id ? "secondary" : "ghost"} 
+                                size="sm"
+                                className={cn(
+                                    "h-8 text-xs font-bold transition-all",
+                                    p.id === player.id ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
+                                )}
+                            >
+                                {p.ingameName}
+                            </Button>
+                        </Link>
+                    ))}
+                </div>
+            </div>
+        )}
       </div>
 
       <Separator className="bg-slate-800" />
@@ -159,7 +147,23 @@ export default async function ProfilePage() {
 
       {/* Roster Summary */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-semibold tracking-tight">Roster Summary</h2>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h2 className="text-2xl font-semibold tracking-tight">Roster Summary</h2>
+            <div className="flex flex-wrap gap-3">
+                <Link href="/profile/roster">
+                    <Button variant="outline" className="text-slate-200 border-slate-700 hover:bg-slate-800 flex items-center gap-2">
+                        <LayoutGrid className="w-4 h-4" />
+                        View Full Roster
+                    </Button>
+                </Link>
+                <Link href="/profile/update">
+                    <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20 flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        Update Roster
+                    </Button>
+                </Link>
+            </div>
+        </div>
         
         {roster.length === 0 ? (
             <Card className="bg-slate-900/30 border-slate-800 border-dashed p-8 text-center">

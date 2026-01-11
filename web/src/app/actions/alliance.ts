@@ -49,3 +49,26 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
     revalidatePath('/alliance');
     return { success: true };
 }
+
+export async function updateAllianceColors(colors: { bg1: string, bg2: string, bg3: string }) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser || !actingUser.allianceId) {
+        throw new Error("Unauthorized");
+    }
+
+    if (!actingUser.isOfficer && !actingUser.isBotAdmin) {
+        throw new Error("Insufficient permissions");
+    }
+
+    await prisma.alliance.update({
+        where: { id: actingUser.allianceId },
+        data: {
+            battlegroup1Color: colors.bg1,
+            battlegroup2Color: colors.bg2,
+            battlegroup3Color: colors.bg3,
+        }
+    });
+
+    revalidatePath('/alliance');
+    return { success: true };
+}

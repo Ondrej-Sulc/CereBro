@@ -29,6 +29,7 @@ interface DefenseDetailsClientProps {
   players: PlayerWithRoster[];
   availableTags: Tag[];
   isOfficer?: boolean;
+  bgColors?: Record<number, string>;
 }
 
 interface WarNodeWithAllocations {
@@ -139,6 +140,19 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
+
+  const getButtonStyle = (bgId: number, isActive: boolean) => {
+      const color = props.bgColors?.[bgId];
+      if (color && isActive) {
+          return {
+              backgroundColor: `${color}1A`, // 10% opacity
+              color: color,
+              borderColor: `${color}33`, // 20% opacity
+              boxShadow: `0 0 0 1px ${color}33`
+          };
+      }
+      return {};
+  };
   
   const handleToggleFullscreen = useCallback(() => {
     setIsFullscreen((prev: boolean) => !prev);
@@ -483,10 +497,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     onClick={() => setActiveTab('bg1')}
                     className={cn(
                         "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
-                        activeTab === 'bg1' 
+                        !props.bgColors && activeTab === 'bg1' 
                             ? "bg-red-500/10 text-red-400 border-red-500/20 shadow-sm ring-1 ring-red-500/20"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                     )}
+                    style={getButtonStyle(1, activeTab === 'bg1')}
                 >
                     BG 1
                 </button>
@@ -494,10 +509,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     onClick={() => setActiveTab('bg2')}
                     className={cn(
                         "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
-                        activeTab === 'bg2' 
+                        !props.bgColors && activeTab === 'bg2' 
                             ? "bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-sm ring-1 ring-blue-500/20"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                     )}
+                    style={getButtonStyle(2, activeTab === 'bg2')}
                 >
                     BG 2
                 </button>
@@ -505,10 +521,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     onClick={() => setActiveTab('bg3')}
                     className={cn(
                         "px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
-                        activeTab === 'bg3' 
+                        !props.bgColors && activeTab === 'bg3' 
                             ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 shadow-sm ring-1 ring-yellow-500/20"
                             : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                     )}
+                    style={getButtonStyle(3, activeTab === 'bg3')}
                 >
                     BG 3
                 </button>
@@ -586,6 +603,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                   onTogglePlayerPanel={handleTogglePlayerPanel}
                   isPlayerPanelOpen={isPlayerPanelOpen}
                   hideTabsList={true}
+                  bgColors={props.bgColors}
               />
           ) : (
               <div className="flex-1 overflow-hidden flex flex-col">

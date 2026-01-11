@@ -333,6 +333,12 @@ export async function distributeWarPlan(
     const mapType = war.mapType || WarMapType.STANDARD;
     const nodesData = mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
 
+    const bgColors: Record<number, string> = {
+        1: alliance.battlegroup1Color || "#ef4444",
+        2: alliance.battlegroup2Color || "#22c55e",
+        3: alliance.battlegroup3Color || "#3b82f6"
+    };
+
     // --- Global Color Assignment (Mirrors Web UI) ---
     // 1. Collect all unique players involved in the war
     const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
@@ -408,8 +414,9 @@ export async function distributeWarPlan(
                     }
                 });
 
-                // Generate Image
-                const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend);
+                // Generate Image with Accent Color
+                const accentColor = bgColors[bg];
+                const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend, accentColor);
                 const mapFileName = `war-overview-bg${bg}.png`;
                 const mapAttachment = new AttachmentBuilder(mapBuffer, { name: mapFileName });
 
@@ -418,7 +425,7 @@ export async function distributeWarPlan(
                 const seasonInfo = `📅 Season ${war.season} | War ${war.warNumber || '?'} | Tier ${war.warTier}`;
                 const matchInfo = `⚔️ ${alliance.name} vs ${war.enemyAlliance || 'Unknown Opponent'}`;
                 
-                const container = new ContainerBuilder().setAccentColor(0x0ea5e9);
+                const container = new ContainerBuilder().setAccentColor(parseInt(accentColor.replace('#', ''), 16));
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
                      `## 🗺️ Battlegroup ${bg} War Plan\n` +
                      `**${matchInfo}**\n` +
@@ -487,9 +494,10 @@ export async function distributeWarPlan(
 
         let mapAttachment: AttachmentBuilder | undefined;
         let mapMediaGallery: MediaGalleryBuilder | undefined;
+        const accentColor = bgColors[bg];
 
         try {
-            const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache);
+            const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, undefined, accentColor);
             const mapFileName = `war-plan-${playerObj.id}.png`; // Unique file name
             mapAttachment = new AttachmentBuilder(mapBuffer, { name: mapFileName });
             
@@ -503,7 +511,7 @@ export async function distributeWarPlan(
         }
 
         // --- Build Message ---
-        const container = new ContainerBuilder().setAccentColor(0x0ea5e9);
+        const container = new ContainerBuilder().setAccentColor(parseInt(accentColor.replace('#', ''), 16));
         
         // Add Media Gallery to the container if map was generated
         if (mapMediaGallery) {

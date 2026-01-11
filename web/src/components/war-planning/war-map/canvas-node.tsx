@@ -162,6 +162,7 @@ interface CanvasNodeProps {
     history: HistoricalFightStat[] | undefined | null;
     activeTactic: WarTactic | null | undefined;
     highlightedPlayerId: string | null;
+    accentColor?: string;
 }
 
 export const CanvasNode = memo(function CanvasNode({
@@ -172,13 +173,18 @@ export const CanvasNode = memo(function CanvasNode({
     showHistory,
     history,
     activeTactic,
-    highlightedPlayerId
+    highlightedPlayerId,
+    accentColor
 }: CanvasNodeProps) {
     const { getPlayerColor } = usePlayerColor();
     const numericId = typeof node.id === 'number' ? node.id : parseInt(node.id as string);
 
     // --- PORTAL RENDERING ---
     if (node.isPortal) {
+        const portalFill = accentColor || "#10B981"; // Emerald default
+        // We can't easily darken hex without helper, so we use the fill for stroke too or a static dark if no accent
+        // For simplicity, let's use the fill color for stroke but with a border width
+        
         return (
             <Group 
                 x={node.x} 
@@ -186,9 +192,9 @@ export const CanvasNode = memo(function CanvasNode({
                 onClick={() => {}}
             >
                 {/* Glow */}
-                <Circle radius={8} fill="#10B981" opacity={0.3} />
-                <Circle radius={5} fill="#10B981" stroke="#064e3b" strokeWidth={1} />
-                <Circle radius={2} fill="#ecfdf5" />
+                <Circle radius={8} fill={portalFill} opacity={0.3} />
+                <Circle radius={5} fill={portalFill} stroke="white" strokeWidth={0.5} opacity={0.9} />
+                <Circle radius={2} fill="white" />
             </Group>
         );
     }

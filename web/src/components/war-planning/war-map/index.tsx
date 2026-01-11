@@ -34,6 +34,7 @@ interface WarMapProps {
   highlightedPlayerId: string | null;
   onTogglePlayerPanel?: () => void;
   isPlayerPanelOpen?: boolean;
+  accentColor?: string;
 }
 
 const WarMap = memo(function WarMap({
@@ -49,7 +50,8 @@ const WarMap = memo(function WarMap({
   highlightedPlayerId,
   onTogglePlayerPanel,
   isPlayerPanelOpen,
-  warId // Destructure warId here to use in conditional logic
+  warId, // Destructure warId here to use in conditional logic
+  accentColor
 }: WarMapProps) {
   const playerColorContextValue = useContext(PlayerColorContext);
   const [internalFullscreen, setInternalFullscreen] = useState(false);
@@ -463,7 +465,7 @@ const WarMap = memo(function WarMap({
         <PlayerColorContext.Provider value={playerColorContextValue}>
           {/* Background Layer */}
           <Layer listening={false}>
-            <WarMapBackground isBigThing={isBigThing} />
+            <WarMapBackground isBigThing={isBigThing} accentColor={accentColor} />
           </Layer>
 
           {/* Interactive Nodes Layer */}
@@ -485,6 +487,7 @@ const WarMap = memo(function WarMap({
                   history={history}
                   activeTactic={activeTactic}
                   highlightedPlayerId={highlightedPlayerId}
+                  accentColor={accentColor}
                 />
               );
             })}

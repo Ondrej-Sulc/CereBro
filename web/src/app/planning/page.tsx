@@ -40,6 +40,12 @@ export default async function WarPlanningPage() {
 
   const isOfficer = player.isOfficer || player.isBotAdmin;
 
+  const bgColors = {
+      1: player.alliance?.battlegroup1Color || "#ef4444",
+      2: player.alliance?.battlegroup2Color || "#22c55e",
+      3: player.alliance?.battlegroup3Color || "#3b82f6",
+  };
+
   return (
     <div className="container mx-auto py-8 min-h-screen">
       <WarPlanningDashboard 
@@ -50,6 +56,7 @@ export default async function WarPlanningPage() {
         userTimezone={player.timezone}
         isBotAdmin={player.isBotAdmin}
         isOfficer={isOfficer}
+        bgColors={bgColors}
       />
     </div>
   );

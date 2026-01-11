@@ -354,6 +354,10 @@ model Alliance {
   battlegroup2ChannelId  String?
   battlegroup3ChannelId  String?
 
+  battlegroup1Color      String   @default("#ef4444") // Red
+  battlegroup2Color      String   @default("#22c55e") // Green
+  battlegroup3Color      String   @default("#3b82f6") // Blue
+
   members            Player[]
   config             AllianceConfig?
   aqSchedules        AQSchedule[]

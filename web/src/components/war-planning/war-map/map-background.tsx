@@ -15,9 +15,28 @@ interface Star {
 
 interface WarMapBackgroundProps {
     isBigThing?: boolean;
+    accentColor?: string;
 }
 
-export const WarMapBackground = React.memo(function WarMapBackground({ isBigThing }: WarMapBackgroundProps) {
+function hexToRgba(hex: string, alpha: number) {
+    if (!hex || typeof hex !== 'string') return `rgba(34, 211, 238, ${alpha})`;
+    
+    // Support #RGB and #RRGGBB
+    let cleanHex = hex.replace('#', '');
+    if (cleanHex.length === 3) {
+        cleanHex = cleanHex.split('').map(c => c + c).join('');
+    }
+    
+    if (cleanHex.length !== 6) return `rgba(34, 211, 238, ${alpha})`;
+
+    const r = parseInt(cleanHex.slice(0, 2), 16);
+    const g = parseInt(cleanHex.slice(2, 4), 16);
+    const b = parseInt(cleanHex.slice(4, 6), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export const WarMapBackground = React.memo(function WarMapBackground({ isBigThing, accentColor }: WarMapBackgroundProps) {
     const shapeRef = useRef<Konva.Shape>(null);
 
     const currentLayout = isBigThing ? LAYOUT_BIG : LAYOUT;
@@ -78,11 +97,11 @@ export const WarMapBackground = React.memo(function WarMapBackground({ isBigThin
 
         // === 2. Draw Paths ===
         ctx.save();
-        ctx.strokeStyle = "#22d3ee";
+        ctx.strokeStyle = accentColor || "#22d3ee";
         ctx.lineWidth = 2;
         ctx.setLineDash([10, 10]);
         ctx.globalAlpha = 0.6;
-        ctx.shadowColor = "#0891b2";
+        ctx.shadowColor = accentColor || "#0891b2";
         ctx.shadowBlur = 15;
 
         ctx.beginPath();

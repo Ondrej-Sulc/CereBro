@@ -46,9 +46,10 @@ interface ClientPageProps {
     initialTactics: any[];
     initialTags: any[];
     season: number;
+    bgColors: Record<number, string>;
 }
 
-export function AllianceRosterMatrix({ data, initialTactics, initialTags, season }: ClientPageProps) {
+export function AllianceRosterMatrix({ data, initialTactics, initialTags, season, bgColors }: ClientPageProps) {
     // Filters
     const [bgFilter, setBgFilter] = useState<string>("ALL");
     const [classFilter, setClassFilter] = useState<ChampionClass[]>([]);
@@ -385,11 +386,19 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
             <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/20">
                 {Object.entries(groupedByBg).map(([bg, players]) => {
                     if (players.length === 0) return null;
+                    const bgId = bg === "unassigned" ? null : parseInt(bg);
+                    const accentColor = bgId ? bgColors[bgId] : null;
                     
                     return (
                         <div key={bg} className="flex flex-col">
-                            <div className="bg-slate-900/80 px-4 py-1 border-y border-slate-800 flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            <div 
+                                className="bg-slate-900/80 px-4 py-1.5 border-y border-slate-800 flex items-center justify-between"
+                                style={accentColor ? { borderLeft: `3px solid ${accentColor}` } : {}}
+                            >
+                                <span 
+                                    className="text-[11px] font-black uppercase tracking-widest text-slate-400"
+                                    style={accentColor ? { color: accentColor } : {}}
+                                >
                                     {bg === "unassigned" ? "Unassigned" : `Battlegroup ${bg}`}
                                 </span>
                                 <Badge variant="outline" className="h-4 text-[9px] bg-slate-950 border-slate-800 text-slate-400">

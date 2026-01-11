@@ -35,11 +35,13 @@ export default async function AlliancePage() {
         where: { id: player.allianceId }
     });
 
+    if (!alliance) return null;
+
     return (
         <AllianceManagementClient 
             members={members} 
             currentUser={player}
-            allianceName={alliance?.name || "Alliance"}
+            alliance={alliance}
         />
     );
 }

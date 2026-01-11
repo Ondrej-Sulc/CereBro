@@ -25,12 +25,19 @@ export default async function AllianceRosterPage() {
         getAllianceTagsAndTactics(player.allianceId)
     ]);
 
+    const bgColors = {
+        1: player.alliance?.battlegroup1Color || "#ef4444",
+        2: player.alliance?.battlegroup2Color || "#22c55e",
+        3: player.alliance?.battlegroup3Color || "#3b82f6",
+    };
+
     return (
         <AllianceRosterMatrix 
             data={rosterData}
             initialTactics={metaData.tactics}
             initialTags={metaData.tags}
             season={metaData.season}
+            bgColors={bgColors}
         />
     );
 }

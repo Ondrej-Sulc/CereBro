@@ -24,6 +24,7 @@ The platform provides a variety of features, including:
     *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI. **The system now features enhanced profile resolution that automatically falls back to the most recent profile if no "active" one is set, ensuring seamless access for all registered users.**
     *   **Alliance Management:**
         *   **Overview:** A dedicated `/alliance` page for officers to manage member battlegroup assignments. Changes are synced to Discord roles automatically via background jobs. Includes troubleshooting help for permission hierarchy issues.
+        *   **Custom Battlegroup Colors:** Officers can customize the identity color for each Battlegroup. These colors are used throughout the Web UI (Roster Overview headers, War Map paths/portals) and in Discord War Plan messages/maps for a unified theme.
         *   **Roster Overview:** A powerful, spreadsheet-like view (`/alliance/roster`) for visualizing the entire alliance's champion roster. Features advanced filtering by Battlegroup, Star Level, Rank, multiple Classes, and searchable Tags. The layout is optimized for density, displaying compact champion portraits with centered rank/star indicators.
 *   **War Videos Database & Planning**
 

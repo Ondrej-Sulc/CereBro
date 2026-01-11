@@ -25,6 +25,7 @@ interface WarTabsProps {
   onTogglePlayerPanel?: () => void;
   isPlayerPanelOpen?: boolean;
   hideTabsList?: boolean;
+  bgColors?: Record<number, string>;
 }
 
 export const WarTabs = memo(function WarTabs({
@@ -45,7 +46,8 @@ export const WarTabs = memo(function WarTabs({
   highlightedPlayerId,
   onTogglePlayerPanel,
   isPlayerPanelOpen,
-  hideTabsList
+  hideTabsList,
+  bgColors
 }: WarTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full flex-1 flex flex-col min-h-0">
@@ -101,6 +103,7 @@ export const WarTabs = memo(function WarTabs({
                     highlightedPlayerId={highlightedPlayerId}
                     onTogglePlayerPanel={onTogglePlayerPanel}
                     isPlayerPanelOpen={isPlayerPanelOpen}
+                    accentColor={bgColors?.[index + 1]}
                 />
             )}
           </TabsContent>

@@ -45,6 +45,7 @@ interface WarHeaderProps {
   assignedChampions?: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
   isReadOnly?: boolean;
+  bgColors?: Record<number, string>;
 }
 
 export function WarHeader({
@@ -70,7 +71,8 @@ export function WarHeader({
   onDistribute,
   assignedChampions = [],
   activeTag,
-  isReadOnly = false
+  isReadOnly = false,
+  bgColors
 }: WarHeaderProps) {
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
 
@@ -79,6 +81,19 @@ export function WarHeader({
     !warBans.some(b => b.championId === c.id) &&
     !seasonBans.some(b => b.championId === c.id)
   );
+
+  const getButtonStyle = (bgId: number, isActive: boolean) => {
+      const color = bgColors?.[bgId];
+      if (color && isActive) {
+          return {
+              backgroundColor: `${color}1A`, // 10% opacity
+              color: color,
+              borderColor: `${color}33`, // 20% opacity
+              boxShadow: `0 0 0 1px ${color}33`
+          };
+      }
+      return {};
+  };
 
   return (
     <div className={cn(
@@ -267,33 +282,36 @@ export function WarHeader({
              <button 
                 onClick={() => onTabChange('bg1')} 
                 className={cn(
-                    "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-                    activeTab === 'bg1' 
+                    "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
+                    !bgColors && activeTab === 'bg1' 
                         ? "bg-red-500/10 text-red-400 ring-1 ring-red-500/20" 
                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                 )}
+                style={getButtonStyle(1, activeTab === 'bg1')}
              >
                 BG 1
              </button>
              <button 
                 onClick={() => onTabChange('bg2')} 
                 className={cn(
-                    "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-                    activeTab === 'bg2' 
+                    "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
+                    !bgColors && activeTab === 'bg2' 
                         ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20" 
                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                 )}
+                style={getButtonStyle(2, activeTab === 'bg2')}
              >
                 BG 2
              </button>
              <button 
                 onClick={() => onTabChange('bg3')} 
                 className={cn(
-                    "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all",
-                    activeTab === 'bg3' 
+                    "px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all border border-transparent",
+                    !bgColors && activeTab === 'bg3' 
                         ? "bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20" 
                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"
                 )}
+                style={getButtonStyle(3, activeTab === 'bg3')}
              >
                 BG 3
              </button>
