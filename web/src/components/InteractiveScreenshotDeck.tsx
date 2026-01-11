@@ -13,15 +13,20 @@ interface InteractiveScreenshotDeckProps {
   widthClass?: string;
   // Controls how much they overlap (negative margin)
   overlap?: string;
+  orientation?: "portrait" | "landscape";
 }
 
 export function InteractiveScreenshotDeck({
   images,
   alt,
-  widthClass = "w-64",
+  widthClass,
   overlap = "-space-x-32",
+  orientation = "portrait",
 }: InteractiveScreenshotDeckProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  
+  const isLandscape = orientation === "landscape";
+  const finalWidth = widthClass || (isLandscape ? "w-full max-w-[500px]" : "w-64");
 
   const closeLightbox = useCallback(() => setSelectedIndex(null), []);
   
@@ -61,12 +66,12 @@ export function InteractiveScreenshotDeck({
               // Base styles
               "rounded-2xl border border-slate-700/50 bg-slate-900 shadow-2xl",
               // Interaction
-              "hover:z-50 hover:scale-110 hover:-translate-y-4 hover:shadow-indigo-500/20 hover:border-slate-500",
-              // Subtle rotation for "hand of cards" feel, straightening on hover
-              idx % 2 === 0 ? "-rotate-2" : "rotate-2",
+              "hover:z-50 hover:scale-105 hover:-translate-y-2 hover:shadow-indigo-500/20 hover:border-slate-500",
+              // Subtle rotation for "hand of cards" feel, straightening on hover (only if multiple)
+              images.length > 1 ? (idx % 2 === 0 ? "-rotate-2" : "rotate-2") : "",
               "hover:rotate-0",
               // Width control
-              widthClass
+              finalWidth
             )}
           >
               {/* Background Blur for ambient glow */}
@@ -86,10 +91,10 @@ export function InteractiveScreenshotDeck({
                   <Image
                       src={src}
                       alt={`${alt} ${idx + 1}`}
-                      width={600}
-                      height={1200}
+                      width={isLandscape ? 1200 : 600}
+                      height={isLandscape ? 675 : 1200}
                       className="w-full h-auto rounded-xl drop-shadow-md"
-                      sizes="(max-width: 768px) 100vw, 400px"
+                      sizes="(max-width: 768px) 100vw, 600px"
                       style={{ width: "100%", height: "auto" }}
                   />
                   

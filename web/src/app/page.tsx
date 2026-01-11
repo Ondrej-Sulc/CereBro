@@ -11,7 +11,6 @@ import {
   Code,
   LayoutDashboard,
   Map,
-  LineChart,
   Video,
   Bot,
   Search,
@@ -19,11 +18,11 @@ import {
   Heart,
   Swords,
   Gamepad2,
-  Github
+  Github,
+  Users
 } from "lucide-react";
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
-import Tilt from "@/components/TiltWrapper";
 import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDeck";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { isUserBotAdmin } from "@/lib/auth-helpers";
@@ -124,18 +123,15 @@ export default async function Home() {
                                 Plan your Attacks and Defense with player's rosters right at your fingertips, assign nodes, see the whole board. It’s the easiest way to plan.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2">
-                            <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
-                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-video flex items-center justify-center overflow-hidden group hover:border-sky-500/30 transition-all shadow-2xl shadow-sky-900/10">
-                                    <Image 
-                                      src="/war-map.png" 
-                                      alt="War Map" 
-                                      fill 
-                                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                    />
-                                    <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                            </Tilt>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                            <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={['/war-map.png']}
+                                    alt="Interactive War Map"
+                                    orientation="landscape"
+                                    overlap="space-x-0"
+                                />
+                            </div>
                         </ScrollReveal>
                     </div>
 
@@ -150,44 +146,61 @@ export default async function Home() {
                                 Upload your fights and tag them. Search the archive later to find the best counters for any defender.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="right" className="order-1 lg:order-1">
-                             <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
-                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-video flex items-center justify-center overflow-hidden group hover:border-sky-500/30 transition-all shadow-2xl shadow-sky-900/10">
-                                    <Image 
-                                      src="/war-archive.png" 
-                                      alt="War Archive" 
-                                      fill 
-                                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                    />
-                                    <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                            </Tilt>
+                        <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
+                             <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={['/war-archive.png']}
+                                    alt="Video Library"
+                                    orientation="landscape"
+                                    overlap="space-x-0"
+                                />
+                            </div>
                         </ScrollReveal>
                     </div>
 
-                    {/* Feature 3: Stats (Swapped) */}
+                    {/* Feature 3: Smart Roster & Prestige */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <ScrollReveal direction="right" className="order-2 lg:order-1">
                             <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
-                                <LineChart className="w-6 h-6" />
+                                <Award className="w-6 h-6" />
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-4">Season Stats</h3>
+                            <h3 className="text-2xl font-bold text-white mb-4">Smart Roster & Prestige</h3>
                             <p className="text-slate-400 text-lg leading-relaxed">
-                                See who died and who cleared their lane. We track the stats automatically so you know exactly how the season is going.
+                                Visualize your roster with advanced filtering. Simulate prestige rank-ups and optimize your signature stone usage with our intelligent budget calculator.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2">
-                             <Tilt glareEnable={true} glareMaxOpacity={0.3} scale={1.02} transitionSpeed={2000} tiltMaxAngleX={8} tiltMaxAngleY={8}>
-                                <div className="relative rounded-xl border border-slate-800 bg-slate-900/50 aspect-video flex items-center justify-center overflow-hidden group hover:border-sky-500/30 transition-all shadow-2xl shadow-sky-900/10">
-                                    <Image 
-                                      src="/season-stats.png" 
-                                      alt="Season Stats" 
-                                      fill 
-                                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                                    />
-                                    <div className="absolute inset-0 bg-sky-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </div>
-                            </Tilt>
+                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                             <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={['/web-roster.png']}
+                                    alt="Roster & Prestige"
+                                    orientation="landscape"
+                                    overlap="space-x-0"
+                                />
+                            </div>
+                        </ScrollReveal>
+                    </div>
+
+                    {/* Feature 4: Alliance Roster Overview */}
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2">
+                            <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
+                                <Users className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-4">Alliance Roster Overview</h3>
+                            <p className="text-slate-400 text-lg leading-relaxed">
+                                Officers get a bird's-eye view of the entire alliance. Filter champions by Battlegroup, Class, or Rank to find the perfect defenders or counters for war.
+                            </p>
+                        </ScrollReveal>
+                        <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
+                             <div className="w-full max-w-[600px]">
+                                <InteractiveScreenshotDeck 
+                                    images={['/web-alliance-roster.png']}
+                                    alt="Alliance Roster Overview"
+                                    orientation="landscape"
+                                    overlap="space-x-0"
+                                />
+                            </div>
                         </ScrollReveal>
                     </div>
                 </div>
@@ -347,10 +360,9 @@ export default async function Home() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[80px] -z-10" />
                 
                 <div className="flex flex-col md:flex-row items-center gap-10">
-                  {/* Avatar with Tilt */}
+                  {/* Avatar */}
                   <div className="shrink-0">
-                    <Tilt glareEnable={true} glareMaxOpacity={0.2} scale={1.05} tiltMaxAngleX={10} tiltMaxAngleY={10}>
-                      <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-2 border-indigo-500/30 p-1 bg-slate-900 shadow-xl shadow-indigo-500/10">
+                      <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-2 border-indigo-500/30 p-1 bg-slate-900 shadow-xl shadow-indigo-500/10 hover:scale-105 transition-transform duration-500">
                         <Image 
                           src="/avatar.png" 
                           alt="Solomon" 
@@ -358,7 +370,6 @@ export default async function Home() {
                           className="object-cover rounded-xl"
                         />
                       </div>
-                    </Tilt>
                   </div>
 
                   {/* Bio Content */}

@@ -417,32 +417,6 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                        </div>
                        <h2 className="font-bold text-lg">Prestige Suggestions</h2>
                    </Button>
-                   {showInsights && (
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 mr-2">
-                                <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Stone Budget</Label>
-                                <Input 
-                                    type="number"
-                                    min={0}
-                                    value={sigBudget || ""}
-                                    placeholder="Max"
-                                    onChange={(e) => setSigBudget(e.target.value ? parseInt(e.target.value) : 0)}
-                                    className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                />
-                            </div>
-                            <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
-                            <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
-                                <SelectTrigger className="h-7 w-[90px] bg-slate-900 border-slate-700 text-slate-300 text-xs">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {[3, 4, 5, 6].map(r => (
-                                        <SelectItem key={r} value={String(r)} className="text-xs">Rank {r}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                   )}
               </div>
 
             {showInsights && (
@@ -464,6 +438,19 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                             <p>Rank-ups that provide the highest immediate increase to your Top 30 Prestige.</p>
                                         </PopoverContent>
                                     </Popover>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
+                                    <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
+                                        <SelectTrigger className="h-7 w-[90px] bg-slate-900 border-slate-700 text-slate-300 text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {[3, 4, 5, 6].map(r => (
+                                                <SelectItem key={r} value={String(r)} className="text-xs">Rank {r}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
@@ -535,25 +522,38 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                     {/* Sig Recommendations Card */}
                     {sigRecommendations && sigRecommendations.length > 0 && (
                         <Card className="bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-slate-950 border-purple-500/20 overflow-hidden">
-                            <div className="px-4 py-3 border-b border-purple-500/10 flex items-center gap-2">
-                                <div className="p-1.5 bg-purple-500/20 rounded-lg">
-                                    <Sparkles className="w-4 h-4 text-purple-400" />
+                            <div className="px-4 py-3 border-b border-purple-500/10 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-purple-500/20 rounded-lg">
+                                        <Sparkles className="w-4 h-4 text-purple-400" />
+                                    </div>
+                                    <h3 className="font-bold text-slate-100">
+                                        {sigBudget > 0 ? `Recommended Allocation of ${sigBudget} Sig Stones` : "Max Sig Potential"}
+                                    </h3>
+                                    <Popover>
+                                        <PopoverTrigger>
+                                            <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" />
+                                        </PopoverTrigger>
+                                        <PopoverContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
+                                            <p>
+                                                {sigBudget > 0 
+                                                    ? "Optimal stone distribution to maximize your account average with the given budget." 
+                                                    : "Champions with the highest potential average increase if taken to Max Sig."}
+                                            </p>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
-                                <h3 className="font-bold text-slate-100">
-                                    {sigBudget > 0 ? `Recommended Allocation of ${sigBudget} Sig Stones` : "Max Sig Potential"}
-                                </h3>
-                                <Popover>
-                                    <PopoverTrigger>
-                                        <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
-                                        <p>
-                                            {sigBudget > 0 
-                                                ? "Optimal stone distribution to maximize your account average with the given budget." 
-                                                : "Champions with the highest potential average increase if taken to Max Sig."}
-                                        </p>
-                                    </PopoverContent>
-                                </Popover>
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Stone Budget</Label>
+                                    <Input 
+                                        type="number"
+                                        min={0}
+                                        value={sigBudget || ""}
+                                        placeholder="Max"
+                                        onChange={(e) => setSigBudget(e.target.value ? parseInt(e.target.value) : 0)}
+                                        className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
+                                </div>
                             </div>
 
                             <div className={cn(
