@@ -38,6 +38,7 @@ export default async function AllianceRosterPage() {
             initialTags={metaData.tags}
             initialAbilityCategories={metaData.abilityCategories}
             initialAbilities={metaData.abilities}
+            initialImmunities={metaData.immunities}
             season={metaData.season}
             bgColors={bgColors}
         />

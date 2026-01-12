@@ -160,10 +160,30 @@ export async function getAllianceTagsAndTactics(allianceId: string) {
         orderBy: { name: 'asc' }
     });
 
+    // Fetch separate lists for Abilities and Immunities based on actual usage
+    const abilityLinks = await prisma.championAbilityLink.findMany({
+        where: { type: 'ABILITY' },
+        select: { abilityId: true },
+        distinct: ['abilityId']
+    });
+    
+    const immunityLinks = await prisma.championAbilityLink.findMany({
+        where: { type: 'IMMUNITY' },
+        select: { abilityId: true },
+        distinct: ['abilityId']
+    });
+
     const abilities = await prisma.ability.findMany({
+        where: { id: { in: abilityLinks.map(l => l.abilityId) } },
         select: { id: true, name: true },
         orderBy: { name: 'asc' }
     });
 
-    return { tactics, tags, abilityCategories, abilities, season };
+    const immunities = await prisma.ability.findMany({
+        where: { id: { in: immunityLinks.map(l => l.abilityId) } },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' }
+    });
+
+    return { tactics, tags, abilityCategories, abilities, immunities, season };
 }

@@ -117,6 +117,7 @@ interface ClientPageProps {
     initialTags: any[];
     initialAbilityCategories: any[];
     initialAbilities: any[];
+    initialImmunities: any[];
     season: number;
     bgColors: Record<number, string>;
 }
@@ -127,6 +128,7 @@ export function AllianceRosterMatrix({
     initialTags, 
     initialAbilityCategories,
     initialAbilities,
+    initialImmunities,
     season, 
     bgColors 
 }: ClientPageProps) {
@@ -538,7 +540,7 @@ export function AllianceRosterMatrix({
                                          <MultiSelectFilter 
                                             title="Immunities"
                                             icon={Shield}
-                                            options={initialAbilities} // We use the same ability list for immunities as the name is what matters
+                                            options={initialImmunities}
                                             selectedValues={immunityFilter}
                                             onSelect={setImmunityFilter}
                                             placeholder="Search immunities..."
