@@ -328,11 +328,13 @@ export function AllianceRosterMatrix({
                                     <ScrollArea className="max-h-[300px]">
                                         <div className="p-3 space-y-4">
                                             {(() => {
-                                                const isFiltering = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0;
+                                                const isFiltering = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0 || tagFilter.length > 0;
                                                 
+                                                if (!isFiltering) {
+                                                    return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion abilities.</div>;
+                                                }
+
                                                 const relevantItems = champ.abilities.filter(a => {
-                                                    if (!isFiltering) return true;
-                                                    
                                                     // Strict Type Checking for Filters
                                                     if (abilityFilter.length > 0 && a.type === 'ABILITY' && abilityFilter.includes(a.name)) return true;
                                                     if (immunityFilter.length > 0 && a.type === 'IMMUNITY' && immunityFilter.includes(a.name)) return true;
