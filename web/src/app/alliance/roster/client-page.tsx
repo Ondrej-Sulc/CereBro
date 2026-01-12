@@ -359,16 +359,18 @@ export function AllianceRosterMatrix({
                                                                 </div>
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {displayImmunities.map((imm, i) => (
-                                                                        <div key={i} className="group/item relative">
-                                                                            <Badge variant="secondary" className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-1.5 py-0 cursor-default">
-                                                                                {imm.name}
-                                                                            </Badge>
+                                                                        <Badge 
+                                                                            key={i} 
+                                                                            variant="secondary" 
+                                                                            className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-center gap-1.5"
+                                                                        >
+                                                                            <span className="font-semibold">{imm.name}</span>
                                                                             {imm.sources.length > 0 && (
-                                                                                 <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50 shadow-xl">
+                                                                                 <span className="text-sky-400/70 font-normal border-l border-sky-800/50 pl-1.5">
                                                                                     {imm.sources.join(', ')}
                                                                                  </span>
                                                                             )}
-                                                                        </div>
+                                                                        </Badge>
                                                                     ))}
                                                                 </div>
                                                             </div>
@@ -382,16 +384,18 @@ export function AllianceRosterMatrix({
                                                                 </div>
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {displayAbilities.map((ab, i) => (
-                                                                        <div key={i} className="group/item relative">
-                                                                            <Badge variant="secondary" className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-1.5 py-0 cursor-default">
-                                                                                {ab.name}
-                                                                            </Badge>
+                                                                        <Badge 
+                                                                            key={i} 
+                                                                            variant="secondary" 
+                                                                            className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-center gap-1.5"
+                                                                        >
+                                                                            <span className="font-semibold">{ab.name}</span>
                                                                              {ab.sources.length > 0 && (
-                                                                                 <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50 shadow-xl">
+                                                                                 <span className="text-amber-400/60 font-normal border-l border-amber-800/40 pl-1.5">
                                                                                     {ab.sources.join(', ')}
                                                                                  </span>
                                                                             )}
-                                                                        </div>
+                                                                        </Badge>
                                                                     ))}
                                                                 </div>
                                                             </div>
