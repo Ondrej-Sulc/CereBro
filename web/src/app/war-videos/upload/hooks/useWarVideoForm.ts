@@ -87,6 +87,7 @@ export function useWarVideoForm({
     return "";
   });
   const [playerInVideoId, setPlayerInVideoId] = useState<string>(() => preFilledFights?.[0]?.player?.id || initialUserId);
+  const [customPlayerName, setCustomPlayerName] = useState<string>(""); // New state for custom names
   const [visibility, setVisibility] = useState<"public" | "alliance">("public");
   const [description, setDescription] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -103,6 +104,18 @@ export function useWarVideoForm({
     [initialPlayers, initialUserId]
   );
   const canUploadFiles = !!currentUser?.alliance?.canUploadFiles;
+  const isSolo = !currentUser?.alliance; // User has no alliance
+
+  // Handle Player Selection (Existing or Custom)
+  const handlePlayerChange = useCallback((value: string, isCustom: boolean) => {
+    if (isCustom) {
+        setCustomPlayerName(value);
+        setPlayerInVideoId(""); // Clear ID if custom name used
+    } else {
+        setPlayerInVideoId(value);
+        setCustomPlayerName(""); // Clear custom name if ID selected
+    }
+  }, []);
 
   // Wake Lock Helpers
   const requestWakeLock = async () => {
@@ -140,14 +153,24 @@ export function useWarVideoForm({
 
   // Effect to force link mode if not allowed to upload
   useEffect(() => {
-    if (!canUploadFiles && sourceMode === 'upload') {
+    if ((!canUploadFiles || isSolo) && sourceMode === 'upload') {
       setSourceMode('link');
     }
-  }, [canUploadFiles, sourceMode]);
+  }, [canUploadFiles, sourceMode, isSolo]);
+
+  // Effect to handle Solo Mode defaults
+  useEffect(() => {
+    if (isSolo) {
+        setBattlegroup("0");
+        setVisibility("public");
+        setIsOffseason(true);
+        setWarNumber("");
+    }
+  }, [isSolo]);
 
   // Effect to update battlegroup if playerInVideoId changes and not pre-filled
   useEffect(() => {
-    if (!preFilledFights) { // Only update if not pre-filled
+    if (!preFilledFights && !isSolo && playerInVideoId) { // Only update if not pre-filled, NOT solo, and has ID
       const selectedPlayer = initialPlayers.find(p => p.id === playerInVideoId);
       if (selectedPlayer?.battlegroup) {
         setBattlegroup(selectedPlayer.battlegroup.toString());
@@ -155,7 +178,7 @@ export function useWarVideoForm({
         setBattlegroup("");
       }
     }
-  }, [playerInVideoId, initialPlayers, preFilledFights]);
+  }, [playerInVideoId, initialPlayers, preFilledFights, isSolo]);
 
   // Memoized derived data
   const prefightChampions = useMemo(() => {
@@ -256,7 +279,8 @@ export function useWarVideoForm({
     if (!isOffseason && !warNumber)
       newErrors.warNumber = "War number is required.";
     if (!warTier) newErrors.warTier = "War tier is required.";
-    if (!battlegroup) newErrors.battlegroup = "Battlegroup is required.";
+    // Only require battlegroup if not solo (defaults to 0 for solo)
+    if (!battlegroup && !isSolo) newErrors.battlegroup = "Battlegroup is required.";
 
     fights.forEach((fight) => {
       if (uploadMode === "multiple") {
@@ -369,6 +393,7 @@ export function useWarVideoForm({
             visibility,
             description,
             playerId: playerInVideoId,
+            customPlayerName: customPlayerName || undefined, // Send custom name if exists
           };
 
           if (uploadMode === 'single') {
@@ -404,13 +429,8 @@ export function useWarVideoForm({
             }
           } else { // 'multiple' mode
             const allLinkedVideoIds = [];
-            const commonPayload = { // Moved commonPayload outside the loop
-              token,
-              visibility,
-              description,
-              playerId: playerInVideoId,
-            };
-
+            // Common payload reused
+            
             for (let i = 0; i < fights.length; i++) {
               const fight = fights[i];
               setCurrentUpload(`Linking fight ${i + 1} of ${fights.length}...`);
@@ -458,7 +478,7 @@ export function useWarVideoForm({
             const attackerName = selectedAttacker?.name || "Unknown";
             const defenderName = selectedDefender?.name || "Unknown";
             const nodeNumber = selectedNode?.nodeNumber || "??";
-            const playerName = selectedPlayer?.ingameName || "Unknown";
+            const playerName = selectedPlayer?.ingameName || customPlayerName || "Unknown"; // Use custom name
             return `MCOC AW: S${season} ${isOffseason ? "Offseason" : "W" + warNumber} T${warTier} - ${attackerName} vs ${defenderName} on Node ${nodeNumber} by ${playerName}`;
           };
 
@@ -470,6 +490,7 @@ export function useWarVideoForm({
             formData.append("visibility", visibility);
             formData.append("description", description);
             if (playerInVideoId) formData.append("playerId", playerInVideoId);
+            if (customPlayerName) formData.append("customPlayerName", customPlayerName); // Append custom name
             formData.append("title", getTitle(fights[0]));
             formData.append("mode", "single");
 
@@ -506,6 +527,7 @@ export function useWarVideoForm({
               formData.append("visibility", visibility);
               formData.append("description", description);
               if (playerInVideoId) formData.append("playerId", playerInVideoId);
+              if (customPlayerName) formData.append("customPlayerName", customPlayerName);
               formData.append("title", getTitle(fight));
               formData.append("mode", "multiple");
 
@@ -564,6 +586,7 @@ export function useWarVideoForm({
       visibility,
       description,
       playerInVideoId,
+      customPlayerName, // Dependency
       isSubmitting,
       router,
       toast,
@@ -577,6 +600,7 @@ export function useWarVideoForm({
       linkVideo,
       battlegroup,
       mapType,
+      handlePlayerChange, // Dependency
     ]
   );
 
@@ -617,6 +641,8 @@ export function useWarVideoForm({
     setBattlegroup,
     playerInVideoId,
     setPlayerInVideoId,
+    customPlayerName, // Export
+    setCustomPlayerName, // Export
     visibility,
     setVisibility,
     description,
@@ -642,5 +668,6 @@ export function useWarVideoForm({
     handleAddFight,
     handleRemoveFight,
     handleSubmit,
+    handlePlayerChange, // Export
   };
 }

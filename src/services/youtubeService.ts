@@ -87,7 +87,10 @@ class YouTubeService {
     description: string,
     privacyStatus: 'private' | 'unlisted' | 'public' = 'private'
   ): Promise<string | null> {
-    loggerService.info({ title, privacyStatus }, 'Starting YouTube video upload.');
+    // Sanitize description: YouTube forbids '<' and '>' characters.
+    const sanitizedDescription = description.replace(/[<>]/g, '').slice(0, 4900); // 4900 to be safe
+    
+    loggerService.info({ title, privacyStatus, descriptionLength: description.length }, 'Starting YouTube video upload.');
 
     try {
       await this.ensureAuthenticated();
@@ -97,7 +100,7 @@ class YouTubeService {
         requestBody: {
           snippet: {
             title,
-            description,
+            description: sanitizedDescription,
             // TODO: Add tags if needed, e.g., ['mcoc', 'alliance-war', 'gaming']
             tags: [],
           },

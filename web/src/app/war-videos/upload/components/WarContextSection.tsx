@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MemoizedSelect } from "@/components/MemoizedSelect";
+import { CreatablePlayerCombobox } from "./CreatablePlayerCombobox";
 import { FlipToggle } from "@/components/ui/flip-toggle";
 import { Map, Flag, CalendarDays, Hash, Eye, Users } from "lucide-react";
 import { PreFilledFight } from "../hooks/useWarVideoForm"; // Or define locally/in types file
@@ -18,7 +19,8 @@ interface WarContextSectionProps {
   isOffseason: boolean;
   setIsOffseason: (isOff: boolean) => void;
   playerInVideoId: string;
-  setPlayerInVideoId: (id: string) => void;
+  customPlayerName: string;
+  handlePlayerChange: (value: string, isCustom: boolean) => void;
   playerOptions: Option[];
   preFilledFights: PreFilledFight[] | null;
   battlegroup: string;
@@ -45,7 +47,8 @@ export function WarContextSection({
   isOffseason,
   setIsOffseason,
   playerInVideoId,
-  setPlayerInVideoId,
+  customPlayerName,
+  handlePlayerChange,
   playerOptions,
   preFilledFights,
   battlegroup,
@@ -87,49 +90,53 @@ export function WarContextSection({
           />
         </div>
 
-        {/* Offseason Toggle */}
-        <div className="flex flex-col">
-          <Label className="text-sm font-medium text-slate-300 mb-2">War Status</Label>
-          <FlipToggle
-            value={isOffseason}
-            onChange={setIsOffseason}
-            leftLabel="Active War"
-            rightLabel="Offseason"
-            leftIcon={<CalendarDays className="h-4 w-4" />}
-            rightIcon={<Hash className="h-4 w-4" />}
-            className="flex-1"
-          />
-        </div>
+        {/* Offseason Toggle - Hide if Solo (BG 0) */}
+        {battlegroup !== "0" && (
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium text-slate-300 mb-2">War Status</Label>
+            <FlipToggle
+              value={isOffseason}
+              onChange={setIsOffseason}
+              leftLabel="Active War"
+              rightLabel="Offseason"
+              leftIcon={<CalendarDays className="h-4 w-4" />}
+              rightIcon={<Hash className="h-4 w-4" />}
+              className="flex-1"
+            />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Player In Video */}
         <div>
           <Label htmlFor="playerInVideo" className="text-sm font-medium text-slate-300 mb-2 block">Player in Video</Label>
-          <MemoizedSelect
+          <CreatablePlayerCombobox
             value={playerInVideoId}
-            onValueChange={setPlayerInVideoId}
-            placeholder="Select player..."
+            customValue={customPlayerName}
+            onChange={handlePlayerChange}
             options={playerOptions}
             disabled={!!preFilledFights}
           />
         </div>
 
-        {/* Battlegroup */}
-        <div>
-          <Label htmlFor="battlegroup" className="text-sm font-medium text-slate-300 mb-2 block">Battlegroup</Label>
-          <MemoizedSelect
-            value={battlegroup}
-            onValueChange={setBattlegroup}
-            placeholder="Select BG..."
-            options={battlegroupOptions}
-            required
-            disabled={!!preFilledFights}
-          />
-          {errors.battlegroup && (
-            <p className="text-sm text-red-400 mt-2">{errors.battlegroup}</p>
-          )}
-        </div>
+        {/* Battlegroup - Only show if not Solo (BG 0) */}
+        {battlegroup !== "0" && (
+          <div>
+            <Label htmlFor="battlegroup" className="text-sm font-medium text-slate-300 mb-2 block">Battlegroup</Label>
+            <MemoizedSelect
+              value={battlegroup}
+              onValueChange={setBattlegroup}
+              placeholder="Select BG..."
+              options={battlegroupOptions}
+              required
+              disabled={!!preFilledFights}
+            />
+            {errors.battlegroup && (
+              <p className="text-sm text-red-400 mt-2">{errors.battlegroup}</p>
+            )}
+          </div>
+        )}
 
         {/* Season */}
         <div>
@@ -150,22 +157,24 @@ export function WarContextSection({
           )}
         </div>
 
-        {/* War Number */}
-        <div>
-          <Label htmlFor="warNumber" className="text-sm font-medium text-slate-300 mb-2 block">War Number</Label>
-          <MemoizedSelect
-            value={warNumber}
-            onValueChange={setWarNumber}
-            placeholder="Select number..."
-            options={warNumberOptions}
-            required={!isOffseason}
-            disabled={isOffseason || !!preFilledFights}
-            contentClassName="max-h-60 overflow-y-auto"
-          />
-          {errors.warNumber && (
-            <p className="text-sm text-red-400 mt-2">{errors.warNumber}</p>
-          )}
-        </div>
+        {/* War Number - Hide if Solo (BG 0) */}
+        {battlegroup !== "0" && (
+          <div>
+            <Label htmlFor="warNumber" className="text-sm font-medium text-slate-300 mb-2 block">War Number</Label>
+            <MemoizedSelect
+              value={warNumber}
+              onValueChange={setWarNumber}
+              placeholder="Select number..."
+              options={warNumberOptions}
+              required={!isOffseason}
+              disabled={isOffseason || !!preFilledFights}
+              contentClassName="max-h-60 overflow-y-auto"
+            />
+            {errors.warNumber && (
+              <p className="text-sm text-red-400 mt-2">{errors.warNumber}</p>
+            )}
+          </div>
+        )}
 
         {/* War Tier */}
         <div>
@@ -184,19 +193,21 @@ export function WarContextSection({
           )}
         </div>
 
-        {/* Visibility */}
-        <div>
-          <Label className="text-sm font-medium text-slate-300 mb-2 block">Visibility</Label>
-          <FlipToggle
-            value={visibility === "alliance"}
-            onChange={(value) => setVisibility(value ? "alliance" : "public")}
-            leftLabel="Public"
-            rightLabel="Alliance Only"
-            leftIcon={<Eye className="h-4 w-4" />}
-            rightIcon={<Users className="h-4 w-4" />}
-            className="flex-1"
-          />
-        </div>
+        {/* Visibility - Hide completely if Solo */}
+        {battlegroup !== "0" && (
+          <div>
+            <Label className="text-sm font-medium text-slate-300 mb-2 block">Visibility</Label>
+            <FlipToggle
+              value={visibility === "alliance"}
+              onChange={(value) => setVisibility(value ? "alliance" : "public")}
+              leftLabel="Public"
+              rightLabel="Alliance Only"
+              leftIcon={<Eye className="h-4 w-4" />}
+              rightIcon={<Users className="h-4 w-4" />}
+              className="flex-1"
+            />
+          </div>
+        )}
       </div>
 
       {/* Video Description */}

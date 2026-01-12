@@ -34,6 +34,8 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
     setBattlegroup,
     playerInVideoId,
     setPlayerInVideoId,
+    customPlayerName,
+    handlePlayerChange,
     visibility,
     setVisibility,
     description,
@@ -102,6 +104,8 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           isOffseason={isOffseason}
           setIsOffseason={setIsOffseason}
           playerInVideoId={playerInVideoId}
+          customPlayerName={customPlayerName}
+          handlePlayerChange={handlePlayerChange}
           setPlayerInVideoId={setPlayerInVideoId}
           playerOptions={playerOptions}
           preFilledFights={props.preFilledFights}

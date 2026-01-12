@@ -1,9 +1,12 @@
 import { PrismaClient, WarMapType } from '@prisma/client';
 import logger from '@cerebro/core/services/loggerService';
+import crypto from 'crypto';
 
 export type ValidationResult = 
   | { success: true; player: any; uploadToken: any }
   | { success: false; error: string; status: number };
+
+const GLOBAL_ALLIANCE_ID = "GLOBAL";
 
 export async function validateUploadToken(
   prisma: PrismaClient, 
@@ -46,7 +49,7 @@ export async function validateUploadToken(
 export async function processNewFights(
     prisma: PrismaClient,
     params: {
-        allianceId: string;
+        allianceId: string | null;
         season: number;
         warNumber: number | null;
         warTier: number;
@@ -54,11 +57,68 @@ export async function processNewFights(
         mapType: WarMapType;
         fights: any[];
         playerId: string;
+        customPlayerName?: string;
     }
 ): Promise<string[]> {
-    const { allianceId, season, warNumber, warTier, battlegroup, mapType, fights, playerId } = params;
+    const { allianceId, season, warNumber, warTier, battlegroup, mapType, fights, playerId, customPlayerName } = params;
 
     logger.info({ allianceId, season, warNumber, warTier, battlegroup, mapType }, "Processing new fights");
+
+    let targetAllianceId = allianceId;
+    let targetBattlegroup = battlegroup;
+
+    // Handle "Global/Mercenary" Uploads (No Alliance)
+    if (!targetAllianceId) {
+        logger.info("No alliance ID provided. Falling back to Global/Mercenary Alliance.");
+        
+        // Ensure the Global Alliance exists
+        const globalAlliance = await prisma.alliance.upsert({
+            where: { id: GLOBAL_ALLIANCE_ID },
+            update: {},
+            create: {
+                id: GLOBAL_ALLIANCE_ID,
+                guildId: "GLOBAL",
+                name: "Mercenaries (Global)",
+                canUploadFiles: false, // Strict default
+            }
+        });
+        
+        targetAllianceId = globalAlliance.id;
+        targetBattlegroup = 0; // Force BG 0 for global uploads
+    }
+
+    // Resolve Player (Existing ID vs Custom Name)
+    let finalPlayerId = playerId;
+    if (customPlayerName && (!playerId || playerId === "")) {
+        logger.info({ customPlayerName }, "Resolving custom player name");
+        // Try to find existing player by name (case-insensitive search would be better but exact match for now)
+        // Prisma default is case-sensitive usually unless configured otherwise.
+        let player = await prisma.player.findFirst({
+            where: { 
+                ingameName: {
+                    equals: customPlayerName,
+                    mode: 'insensitive' 
+                } 
+            }
+        });
+
+        if (!player) {
+            logger.info("Creating new Guest Player");
+            const guestId = `guest_${crypto.randomBytes(8).toString('hex')}`;
+            
+            player = await prisma.player.create({
+                data: {
+                    ingameName: customPlayerName,
+                    discordId: guestId,
+                    isActive: false,
+                    // If context is Global, we can link them to Global Alliance so they appear in lists?
+                    // Or keep them alliance-less. Let's keep them alliance-less to avoid cluttering the Mercenaries roster excessively unless needed.
+                    allianceId: null, 
+                }
+            });
+        }
+        finalPlayerId = player.id;
+    }
 
     // 1. Find or Create War
     let war;
@@ -66,7 +126,7 @@ export async function processNewFights(
         // Offseason
         war = await prisma.war.findFirst({
             where: {
-                allianceId,
+                allianceId: targetAllianceId,
                 season,
                 warNumber: null,
                 mapType,
@@ -82,7 +142,7 @@ export async function processNewFights(
                     warTier,
                     warNumber: null,
                     enemyAlliance: 'Offseason',
-                    allianceId,
+                    allianceId: targetAllianceId,
                     mapType,
                     status: 'FINISHED',
                 },
@@ -100,7 +160,7 @@ export async function processNewFights(
         war = await prisma.war.upsert({
             where: {
                 allianceId_season_warNumber: {
-                    allianceId,
+                    allianceId: targetAllianceId,
                     season,
                     warNumber,
                 },
@@ -114,7 +174,7 @@ export async function processNewFights(
                 season,
                 warTier,
                 warNumber,
-                allianceId,
+                allianceId: targetAllianceId,
                 mapType,
                 status: 'FINISHED',
             },
@@ -125,17 +185,17 @@ export async function processNewFights(
     const createdFights = await Promise.all(fights.map(async (fight: any) => {
         const fightData = {
             warId: war.id,
-            playerId: playerId,
+            playerId: finalPlayerId, // Use resolved player ID
             nodeId: parseInt(fight.nodeId),
             attackerId: parseInt(fight.attackerId),
             defenderId: parseInt(fight.defenderId),
             death: fight.death,
-            battlegroup: battlegroup,
+            battlegroup: targetBattlegroup,
             prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
               create: fight.prefightChampionIds
                   .map((id: string) => parseInt(id))
                   .filter((id: number) => !isNaN(id))
-                  .map((id: number) => ({ championId: id, playerId }))
+                  .map((id: number) => ({ championId: id, playerId: finalPlayerId }))
             } : undefined,
         };
         
@@ -149,7 +209,7 @@ export async function processNewFights(
             const existingFight = await prisma.warFight.findFirst({
                 where: {
                     warId: war.id,
-                    battlegroup: battlegroup,
+                    battlegroup: targetBattlegroup,
                     nodeId: parseInt(fight.nodeId),
                 }
             });
@@ -159,7 +219,7 @@ export async function processNewFights(
                 return prisma.warFight.update({
                     where: { id: existingFight.id },
                     data: {
-                        playerId: playerId,
+                        playerId: finalPlayerId, // Use resolved player ID
                         attackerId: parseInt(fight.attackerId),
                         defenderId: parseInt(fight.defenderId),
                         death: fight.death,
@@ -169,7 +229,7 @@ export async function processNewFights(
                                 ? fight.prefightChampionIds
                                     .map((id: string) => parseInt(id))
                                     .filter((id: number) => !isNaN(id))
-                                    .map((id: number) => ({ championId: id, playerId })) 
+                                    .map((id: number) => ({ championId: id, playerId: finalPlayerId })) 
                                 : []
                         }
                     }

@@ -11,7 +11,8 @@ export async function POST(req: NextRequest) {
         fightIds: existingFightIdsJson,
         fightUpdates,
         fights: newFightsJson,
-        season, warNumber, warTier, battlegroup, mapType
+        season, warNumber, warTier, battlegroup, mapType,
+        customPlayerName // Extract customPlayerName
     } = body;
 
     const parsedSeason = parseInt(season);
@@ -37,10 +38,7 @@ export async function POST(req: NextRequest) {
         const newFights = newFightsJson; 
         if (!Array.isArray(newFights) || newFights.length === 0) throw new Error("Invalid new fights data");
         
-        if (!player.allianceId) {
-            return NextResponse.json({ error: 'Player submitting new fights is not in an alliance.' }, { status: 400 });
-        }
-
+        // Allowed: Users without alliance (will be routed to Global Alliance in helper)
         fightIdsToLink = await processNewFights(prisma, {
             allianceId: player.allianceId,
             season: parsedSeason,
@@ -49,7 +47,10 @@ export async function POST(req: NextRequest) {
             battlegroup: parseInt(battlegroup),
             mapType: mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD',
             fights: newFights,
-            playerId: playerId || player.id
+            // If custom name is provided, allow playerId to be empty (it will be resolved in helper).
+            // Otherwise, fallback to the uploader's ID if no specific player selected.
+            playerId: customPlayerName ? (playerId || "") : (playerId || player.id),
+            customPlayerName 
         });
     } else if (fightUpdates) {
         if (!Array.isArray(fightUpdates) || fightUpdates.length === 0) throw new Error("Invalid fight updates data");

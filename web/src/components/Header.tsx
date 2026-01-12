@@ -145,14 +145,12 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
               </DropdownMenu>
             )}
 
-            {isInAlliance && (
-              <Link href="/war-videos/upload/init">
-                <Button variant="outline" className="flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors h-9 px-3">
-                  <UploadCloud className="w-4 h-4" />
-                  <span className="hidden lg:inline">{canUploadFiles ? "Upload Video" : "Add Video"}</span>
-                </Button>
-              </Link>
-            )}
+            <Link href="/war-videos/upload/init">
+              <Button variant="outline" className="flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors h-9 px-3">
+                <UploadCloud className="w-4 h-4" />
+                <span className="hidden lg:inline">{canUploadFiles ? "Upload Video" : "Add Video"}</span>
+              </Button>
+            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -216,12 +214,10 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                       </>
                     )}
 
-                    {isInAlliance && (
-                      <Link href="/war-videos/upload/init" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
-                        <UploadCloud className="w-5 h-5" />
-                        {canUploadFiles ? "Upload Video" : "Add Video"}
-                      </Link>
-                    )}
+                    <Link href="/war-videos/upload/init" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                      <UploadCloud className="w-5 h-5" />
+                      {canUploadFiles ? "Upload Video" : "Add Video"}
+                    </Link>
                   </div>
                   
                   <div className="h-px bg-slate-800 my-2" />
