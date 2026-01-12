@@ -324,9 +324,13 @@ export function AllianceRosterMatrix({
                                                 
                                                 const relevantItems = champ.abilities.filter(a => {
                                                     if (!isFiltering) return true;
-                                                    if (abilityFilter.includes(a.name)) return true;
-                                                    if (immunityFilter.includes(a.name)) return true;
-                                                    if (a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
+                                                    
+                                                    // Strict Type Checking for Filters
+                                                    if (abilityFilter.length > 0 && a.type === 'ABILITY' && abilityFilter.includes(a.name)) return true;
+                                                    if (immunityFilter.length > 0 && a.type === 'IMMUNITY' && immunityFilter.includes(a.name)) return true;
+                                                    
+                                                    if (abilityCategoryFilter.length > 0 && a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
+                                                    
                                                     return false;
                                                 });
 
