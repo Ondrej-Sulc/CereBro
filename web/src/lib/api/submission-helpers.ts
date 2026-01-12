@@ -58,18 +58,19 @@ export async function processNewFights(
         fights: any[];
         playerId: string;
         customPlayerName?: string;
+        isGlobal?: boolean; // New param
     }
 ): Promise<string[]> {
-    const { allianceId, season, warNumber, warTier, battlegroup, mapType, fights, playerId, customPlayerName } = params;
+    const { allianceId, season, warNumber, warTier, battlegroup, mapType, fights, playerId, customPlayerName, isGlobal } = params;
 
-    logger.info({ allianceId, season, warNumber, warTier, battlegroup, mapType }, "Processing new fights");
+    logger.info({ allianceId, season, warNumber, warTier, battlegroup, mapType, isGlobal }, "Processing new fights");
 
     let targetAllianceId = allianceId;
     let targetBattlegroup = battlegroup;
 
-    // Handle "Global/Mercenary" Uploads (No Alliance)
-    if (!targetAllianceId) {
-        logger.info("No alliance ID provided. Falling back to Global/Mercenary Alliance.");
+    // Handle "Global/Mercenary" Uploads (No Alliance OR Forced Global)
+    if (!targetAllianceId || isGlobal) {
+        logger.info("No alliance ID provided or Global mode forced. Falling back to Global/Mercenary Alliance.");
         
         // Ensure the Global Alliance exists
         const globalAlliance = await prisma.alliance.upsert({

@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
       fightUpdates: fightUpdatesJson,
       fights: newFightsJson,
       season, warNumber, warTier, battlegroup, mapType,
-      customPlayerName // Extract customPlayerName
+      customPlayerName, // Extract customPlayerName
+      isGlobal // Extract isGlobal
     } = fields;
 
     const parsedSeason = parseInt(season);
@@ -64,7 +65,8 @@ export async function POST(req: NextRequest) {
             // If custom name is provided, allow playerId to be empty (it will be resolved in helper).
             // Otherwise, fallback to the uploader's ID if no specific player selected.
             playerId: customPlayerName ? (playerId || "") : (playerId || player.id),
-            customPlayerName // Pass customPlayerName
+            customPlayerName, // Pass customPlayerName
+            isGlobal: isGlobal === "true" // Use string comparison
         });
     } else if (fightUpdatesJson) {
         const updates = JSON.parse(fightUpdatesJson);

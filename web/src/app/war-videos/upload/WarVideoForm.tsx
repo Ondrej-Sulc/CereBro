@@ -36,6 +36,9 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
     setPlayerInVideoId,
     customPlayerName,
     handlePlayerChange,
+    contextMode,
+    setContextMode,
+    isSolo,
     visibility,
     setVisibility,
     description,
@@ -106,7 +109,9 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           playerInVideoId={playerInVideoId}
           customPlayerName={customPlayerName}
           handlePlayerChange={handlePlayerChange}
-          setPlayerInVideoId={setPlayerInVideoId}
+          contextMode={contextMode}
+          setContextMode={setContextMode}
+          hasAlliance={!isSolo}
           playerOptions={playerOptions}
           preFilledFights={props.preFilledFights}
           battlegroup={battlegroup}

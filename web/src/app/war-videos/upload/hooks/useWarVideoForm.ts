@@ -106,6 +106,9 @@ export function useWarVideoForm({
   const canUploadFiles = !!currentUser?.alliance?.canUploadFiles;
   const isSolo = !currentUser?.alliance; // User has no alliance
 
+  // Context Mode: 'alliance' (normal) or 'global' (external/solo upload)
+  const [contextMode, setContextMode] = useState<"alliance" | "global">(() => isSolo ? "global" : "alliance");
+
   // Handle Player Selection (Existing or Custom)
   const handlePlayerChange = useCallback((value: string, isCustom: boolean) => {
     if (isCustom) {
@@ -153,24 +156,30 @@ export function useWarVideoForm({
 
   // Effect to force link mode if not allowed to upload
   useEffect(() => {
-    if ((!canUploadFiles || isSolo) && sourceMode === 'upload') {
+    if ((!canUploadFiles || isSolo || contextMode === 'global') && sourceMode === 'upload') {
       setSourceMode('link');
     }
-  }, [canUploadFiles, sourceMode, isSolo]);
+  }, [canUploadFiles, sourceMode, isSolo, contextMode]);
 
-  // Effect to handle Solo Mode defaults
+  // Effect to handle Solo/Global Mode defaults
   useEffect(() => {
-    if (isSolo) {
+    if (isSolo || contextMode === 'global') {
         setBattlegroup("0");
         setVisibility("public");
         setIsOffseason(true);
         setWarNumber("");
+    } else {
+        // Restore defaults if switching back to Alliance mode? 
+        if (battlegroup === "0") {
+             const defaultPlayer = initialPlayers.find(p => p.id === initialUserId);
+             setBattlegroup(defaultPlayer?.battlegroup?.toString() || "");
+        }
     }
-  }, [isSolo]);
+  }, [isSolo, contextMode, initialPlayers, initialUserId]);
 
   // Effect to update battlegroup if playerInVideoId changes and not pre-filled
   useEffect(() => {
-    if (!preFilledFights && !isSolo && playerInVideoId) { // Only update if not pre-filled, NOT solo, and has ID
+    if (!preFilledFights && contextMode === 'alliance' && playerInVideoId) { 
       const selectedPlayer = initialPlayers.find(p => p.id === playerInVideoId);
       if (selectedPlayer?.battlegroup) {
         setBattlegroup(selectedPlayer.battlegroup.toString());
@@ -178,7 +187,7 @@ export function useWarVideoForm({
         setBattlegroup("");
       }
     }
-  }, [playerInVideoId, initialPlayers, preFilledFights, isSolo]);
+  }, [playerInVideoId, initialPlayers, preFilledFights, contextMode]);
 
   // Memoized derived data
   const prefightChampions = useMemo(() => {
@@ -279,8 +288,8 @@ export function useWarVideoForm({
     if (!isOffseason && !warNumber)
       newErrors.warNumber = "War number is required.";
     if (!warTier) newErrors.warTier = "War tier is required.";
-    // Only require battlegroup if not solo (defaults to 0 for solo)
-    if (!battlegroup && !isSolo) newErrors.battlegroup = "Battlegroup is required.";
+    // Only require battlegroup if in alliance mode
+    if (!battlegroup && contextMode === 'alliance') newErrors.battlegroup = "Battlegroup is required.";
 
     fights.forEach((fight) => {
       if (uploadMode === "multiple") {
@@ -384,6 +393,8 @@ export function useWarVideoForm({
       // Request Wake Lock to prevent screen sleep during upload
       await requestWakeLock();
 
+      const isGlobal = contextMode === 'global';
+
       try {
         if (sourceMode === 'link') {
           // --- Handle URL Submission ---
@@ -394,6 +405,7 @@ export function useWarVideoForm({
             description,
             playerId: playerInVideoId,
             customPlayerName: customPlayerName || undefined, // Send custom name if exists
+            isGlobal, // Send flag
           };
 
           if (uploadMode === 'single') {
@@ -429,15 +441,22 @@ export function useWarVideoForm({
             }
           } else { // 'multiple' mode
             const allLinkedVideoIds = [];
-            // Common payload reused
-            
+            const commonPayloadLoop = { // Moved commonPayload outside the loop, renamed to avoid shadow
+              token,
+              visibility,
+              description,
+              playerId: playerInVideoId,
+              customPlayerName: customPlayerName || undefined,
+              isGlobal,
+            };
+
             for (let i = 0; i < fights.length; i++) {
               const fight = fights[i];
               setCurrentUpload(`Linking fight ${i + 1} of ${fights.length}...`);
 
               if (preFilledFights) {
                 const result = await linkVideo({
-                  ...commonPayload,
+                  ...commonPayloadLoop,
                   videoUrl: fight.videoUrl,
                   fightUpdates: [fight],
                 });
@@ -447,7 +466,7 @@ export function useWarVideoForm({
               } else {
                 // New: send full fight data for creation
                 const result = await linkVideo({
-                  ...commonPayload,
+                  ...commonPayloadLoop,
                   videoUrl: fight.videoUrl,
                   fights: [fight], // send single fight
                   season: season,
@@ -491,6 +510,7 @@ export function useWarVideoForm({
             formData.append("description", description);
             if (playerInVideoId) formData.append("playerId", playerInVideoId);
             if (customPlayerName) formData.append("customPlayerName", customPlayerName); // Append custom name
+            if (isGlobal) formData.append("isGlobal", "true");
             formData.append("title", getTitle(fights[0]));
             formData.append("mode", "single");
 
@@ -528,6 +548,7 @@ export function useWarVideoForm({
               formData.append("description", description);
               if (playerInVideoId) formData.append("playerId", playerInVideoId);
               if (customPlayerName) formData.append("customPlayerName", customPlayerName);
+              if (isGlobal) formData.append("isGlobal", "true");
               formData.append("title", getTitle(fight));
               formData.append("mode", "multiple");
 
@@ -601,6 +622,7 @@ export function useWarVideoForm({
       battlegroup,
       mapType,
       handlePlayerChange, // Dependency
+      contextMode, // Dependency
     ]
   );
 
@@ -614,7 +636,7 @@ export function useWarVideoForm({
       if (sourceMode === 'upload') return fights.some((f) => !f.videoFile);
       if (sourceMode === 'link') return fights.some((f) => !f.videoUrl);
     }
-    return true;
+    return false;
   };
 
   return {
@@ -643,6 +665,8 @@ export function useWarVideoForm({
     setPlayerInVideoId,
     customPlayerName, // Export
     setCustomPlayerName, // Export
+    contextMode, // Export
+    setContextMode, // Export
     visibility,
     setVisibility,
     description,
@@ -662,6 +686,7 @@ export function useWarVideoForm({
     battlegroupOptions,
     playerOptions,
     isSubmitDisabled,
+    isSolo, // Export for UI checks
 
     // Handlers
     handleFightChange,

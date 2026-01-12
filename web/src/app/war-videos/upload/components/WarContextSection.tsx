@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { MemoizedSelect } from "@/components/MemoizedSelect";
 import { CreatablePlayerCombobox } from "./CreatablePlayerCombobox";
 import { FlipToggle } from "@/components/ui/flip-toggle";
-import { Map, Flag, CalendarDays, Hash, Eye, Users } from "lucide-react";
+import { Map, Flag, CalendarDays, Hash, Eye, Users, Globe } from "lucide-react";
 import { PreFilledFight } from "../hooks/useWarVideoForm"; // Or define locally/in types file
 
 interface Option {
@@ -39,6 +39,10 @@ interface WarContextSectionProps {
   setVisibility: (v: "public" | "alliance") => void;
   description: string;
   setDescription: (d: string) => void;
+  // New props
+  contextMode: "alliance" | "global";
+  setContextMode: (mode: "alliance" | "global") => void;
+  hasAlliance: boolean;
 }
 
 export function WarContextSection({
@@ -67,6 +71,9 @@ export function WarContextSection({
   setVisibility,
   description,
   setDescription,
+  contextMode,
+  setContextMode,
+  hasAlliance,
 }: WarContextSectionProps) {
   return (
     <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 space-y-6 bg-slate-900/50 bg-gradient-to-br from-teal-950/50 via-slate-950/50 to-slate-900/50">
@@ -76,6 +83,22 @@ export function WarContextSection({
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Context Mode Toggle (Only if user has alliance) */}
+        {hasAlliance && (
+          <div className="flex flex-col">
+            <Label className="text-sm font-medium text-slate-300 mb-2">Upload Context</Label>
+            <FlipToggle
+              value={contextMode === "global"}
+              onChange={(val) => setContextMode(val ? "global" : "alliance")}
+              leftLabel="My Alliance"
+              rightLabel="Global / Solo"
+              leftIcon={<Users className="h-4 w-4" />}
+              rightIcon={<Globe className="h-4 w-4" />}
+              className="flex-1"
+            />
+          </div>
+        )}
+
         {/* Map Type Flip Toggle */}
         <div className="flex flex-col">
           <Label className="text-sm font-medium text-slate-300 mb-2">Map Type</Label>
@@ -90,8 +113,8 @@ export function WarContextSection({
           />
         </div>
 
-        {/* Offseason Toggle - Hide if Solo (BG 0) */}
-        {battlegroup !== "0" && (
+        {/* Offseason Toggle - Hide if Global (implied) */}
+        {contextMode === "alliance" && (
           <div className="flex flex-col">
             <Label className="text-sm font-medium text-slate-300 mb-2">War Status</Label>
             <FlipToggle
@@ -120,8 +143,8 @@ export function WarContextSection({
           />
         </div>
 
-        {/* Battlegroup - Only show if not Solo (BG 0) */}
-        {battlegroup !== "0" && (
+        {/* Battlegroup - Hide if Global */}
+        {contextMode === "alliance" && (
           <div>
             <Label htmlFor="battlegroup" className="text-sm font-medium text-slate-300 mb-2 block">Battlegroup</Label>
             <MemoizedSelect
@@ -157,8 +180,8 @@ export function WarContextSection({
           )}
         </div>
 
-        {/* War Number - Hide if Solo (BG 0) */}
-        {battlegroup !== "0" && (
+        {/* War Number - Hide if Global */}
+        {contextMode === "alliance" && (
           <div>
             <Label htmlFor="warNumber" className="text-sm font-medium text-slate-300 mb-2 block">War Number</Label>
             <MemoizedSelect
@@ -193,8 +216,8 @@ export function WarContextSection({
           )}
         </div>
 
-        {/* Visibility - Hide completely if Solo */}
-        {battlegroup !== "0" && (
+        {/* Visibility - Hide completely if Global */}
+        {contextMode === "alliance" && (
           <div>
             <Label className="text-sm font-medium text-slate-300 mb-2 block">Visibility</Label>
             <FlipToggle
