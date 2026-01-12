@@ -319,51 +319,86 @@ export function AllianceRosterMatrix({
                                     </div>
                                     <ScrollArea className="max-h-[300px]">
                                         <div className="p-3 space-y-4">
-                                            {immunities.length > 0 && (
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400">
-                                                        <Shield className="w-3.5 h-3.5" />
-                                                        Immunities
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {immunities.map((imm, i) => (
-                                                            <div key={i} className="group/item relative">
-                                                                <Badge variant="secondary" className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-1.5 py-0">
-                                                                    {imm.name}
-                                                                </Badge>
-                                                                {imm.source && (
-                                                                     <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50">
-                                                                        {imm.source}
-                                                                     </span>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                const isFiltering = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0;
+                                                
+                                                const relevantItems = champ.abilities.filter(a => {
+                                                    if (!isFiltering) return true;
+                                                    if (abilityFilter.includes(a.name)) return true;
+                                                    if (immunityFilter.includes(a.name)) return true;
+                                                    if (a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
+                                                    return false;
+                                                });
 
-                                            {abilities.length > 0 && (
-                                                <div className="space-y-1.5">
-                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-                                                        <Zap className="w-3.5 h-3.5" />
-                                                        Abilities
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-1.5">
-                                                        {abilities.map((ab, i) => (
-                                                            <div key={i} className="group/item relative">
-                                                                <Badge variant="secondary" className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-1.5 py-0">
-                                                                    {ab.name}
-                                                                </Badge>
-                                                                 {ab.source && (
-                                                                     <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50">
-                                                                        {ab.source}
-                                                                     </span>
-                                                                )}
+                                                // Group by Name + Type to combine sources
+                                                const groupedItems = relevantItems.reduce((acc, curr) => {
+                                                    const key = `${curr.type}-${curr.name}`;
+                                                    if (!acc[key]) {
+                                                        acc[key] = { ...curr, sources: [] as string[] };
+                                                    }
+                                                    if (curr.source) {
+                                                        acc[key].sources.push(curr.source);
+                                                    }
+                                                    return acc;
+                                                }, {} as Record<string, typeof relevantItems[0] & { sources: string[] }>);
+
+                                                const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
+                                                const displayImmunities = Object.values(groupedItems).filter(a => a.type === 'IMMUNITY');
+
+                                                if (displayAbilities.length === 0 && displayImmunities.length === 0) {
+                                                    return <div className="text-xs text-slate-500 text-center italic">No matching abilities found.</div>;
+                                                }
+
+                                                return (
+                                                    <>
+                                                        {displayImmunities.length > 0 && (
+                                                            <div className="space-y-1.5">
+                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400">
+                                                                    <Shield className="w-3.5 h-3.5" />
+                                                                    Immunities
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-1.5">
+                                                                    {displayImmunities.map((imm, i) => (
+                                                                        <div key={i} className="group/item relative">
+                                                                            <Badge variant="secondary" className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-1.5 py-0 cursor-default">
+                                                                                {imm.name}
+                                                                            </Badge>
+                                                                            {imm.sources.length > 0 && (
+                                                                                 <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50 shadow-xl">
+                                                                                    {imm.sources.join(', ')}
+                                                                                 </span>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
+                                                        )}
+
+                                                        {displayAbilities.length > 0 && (
+                                                            <div className="space-y-1.5">
+                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                                                                    <Zap className="w-3.5 h-3.5" />
+                                                                    Abilities
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-1.5">
+                                                                    {displayAbilities.map((ab, i) => (
+                                                                        <div key={i} className="group/item relative">
+                                                                            <Badge variant="secondary" className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-1.5 py-0 cursor-default">
+                                                                                {ab.name}
+                                                                            </Badge>
+                                                                             {ab.sources.length > 0 && (
+                                                                                 <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50 shadow-xl">
+                                                                                    {ab.sources.join(', ')}
+                                                                                 </span>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                     </ScrollArea>
                                 </PopoverContent>
