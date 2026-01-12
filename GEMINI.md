@@ -310,7 +310,7 @@ The web interface now includes a comprehensive Profile section.
 
 ### Landing Page Enhancements
 
-*   **Interactive Screenshot Deck:** Implements a full-screen Lightbox Gallery using `framer-motion` for smooth transitions. Features include click-to-expand, keyboard navigation (Arrow keys, Escape), and touch support.
+*   **Interactive Screenshot Deck:** Implements a full-screen Lightbox Gallery using `framer-motion` for smooth transitions. Features include click-to-expand, keyboard navigation (Arrow keys, Escape), and touch support. **Now supports both portrait and landscape orientations for versatile feature showcases.**
 *   **Image Optimization:** Replaces standard `img` tags with `next/image` components. Utilizes `quality={10}` for blurred backgrounds and explicit responsive sizing for main images to improve Core Web Vitals.
 *   **Performance Optimization:** The `Starfield` background component now uses an `IntersectionObserver` to pause its heavy canvas animation loop when not in the viewport, significantly reducing CPU usage on longer pages.
 
