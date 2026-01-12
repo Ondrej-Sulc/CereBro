@@ -16,6 +16,7 @@ import { ChampionImages } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { FlipToggle } from "@/components/ui/flip-toggle";
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
@@ -45,9 +46,11 @@ interface MultiSelectFilterProps {
     selectedValues: string[];
     onSelect: (values: string[]) => void;
     placeholder?: string;
+    logic: 'AND' | 'OR';
+    onLogicChange: (logic: 'AND' | 'OR') => void;
 }
 
-const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, onSelect, placeholder }: MultiSelectFilterProps) => {
+const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, onSelect, placeholder, logic, onLogicChange }: MultiSelectFilterProps) => {
     const [open, setOpen] = useState(false);
 
     const toggleValue = (val: string) => {
@@ -74,6 +77,15 @@ const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, onSelec
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[250px] p-0 bg-slate-950 border-slate-800" align="start">
+                <div className="p-2 border-b border-slate-800 bg-slate-900/50">
+                    <FlipToggle
+                        value={logic === 'AND'}
+                        onChange={(val) => onLogicChange(val ? 'AND' : 'OR')}
+                        leftLabel="OR"
+                        rightLabel="AND"
+                        className="w-full"
+                    />
+                </div>
                 <Command className="bg-slate-950 text-slate-300">
                     <CommandInput placeholder={placeholder || `Search ${title}...`} className="h-9" />
                     <CommandList>
@@ -142,9 +154,17 @@ export function AllianceRosterMatrix({
 
     // Multi-Select Filters
     const [tagFilter, setTagFilter] = useState<string[]>([]);
+    const [tagLogic, setTagLogic] = useState<'AND' | 'OR'>('AND');
+
     const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
+    const [abilityCategoryLogic, setAbilityCategoryLogic] = useState<'AND' | 'OR'>('OR'); // Default to OR for categories usually
+
     const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
+    const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
+
     const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
+    const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
+
 
     // Derived Data
     const players = useMemo(() => {
@@ -184,32 +204,47 @@ export function AllianceRosterMatrix({
             // Min Rank
             if (parseInt(minRankFilter) > 0 && entry.rank < parseInt(minRankFilter)) return false;
             
-            // Tag (Check if champion has ALL selected tags)
+            // Tag Logic
             if (tagFilter.length > 0) {
-                const hasAllTags = tagFilter.every(t => entry.tags.includes(t));
-                if (!hasAllTags) return false;
+                if (tagLogic === 'AND') {
+                    if (!tagFilter.every(t => entry.tags.includes(t))) return false;
+                } else {
+                    if (!tagFilter.some(t => entry.tags.includes(t))) return false;
+                }
             }
 
-            // Ability Category (Check if champion has at least one ability in one of the selected categories)
+            // Ability Category Logic
             if (abilityCategoryFilter.length > 0) {
-                 const hasCategory = entry.abilities.some(a => 
-                    a.categories.some(c => abilityCategoryFilter.includes(c))
-                 );
-                 if (!hasCategory) return false;
+                // Get all category names present on this champion
+                const championCategories = new Set(entry.abilities.flatMap(a => a.categories));
+                
+                if (abilityCategoryLogic === 'AND') {
+                    // Must have ALL selected categories (across its abilities)
+                    if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false;
+                } else {
+                    // Must have AT LEAST ONE of the selected categories
+                    if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false;
+                }
             }
 
-            // Ability (Check if champion has ALL selected abilities)
+            // Ability Logic
             if (abilityFilter.length > 0) {
                 const champAbilities = new Set(entry.abilities.filter(a => a.type === 'ABILITY').map(a => a.name));
-                const hasAll = abilityFilter.every(req => champAbilities.has(req));
-                if (!hasAll) return false;
+                if (abilityLogic === 'AND') {
+                    if (!abilityFilter.every(req => champAbilities.has(req))) return false;
+                } else {
+                    if (!abilityFilter.some(req => champAbilities.has(req))) return false;
+                }
             }
 
-            // Immunity (Check if champion has ALL selected immunities)
+            // Immunity Logic
             if (immunityFilter.length > 0) {
                 const champImmunities = new Set(entry.abilities.filter(a => a.type === 'IMMUNITY').map(a => a.name));
-                const hasAll = immunityFilter.every(req => champImmunities.has(req));
-                if (!hasAll) return false;
+                if (immunityLogic === 'AND') {
+                    if (!immunityFilter.every(req => champImmunities.has(req))) return false;
+                } else {
+                    if (!immunityFilter.some(req => champImmunities.has(req))) return false;
+                }
             }
 
             return true;
@@ -546,6 +581,8 @@ export function AllianceRosterMatrix({
                                             selectedValues={tagFilter}
                                             onSelect={setTagFilter}
                                             placeholder="Search tags..."
+                                            logic={tagLogic}
+                                            onLogicChange={setTagLogic}
                                          />
 
                                          {/* Ability Categories */}
@@ -556,6 +593,8 @@ export function AllianceRosterMatrix({
                                             selectedValues={abilityCategoryFilter}
                                             onSelect={setAbilityCategoryFilter}
                                             placeholder="Search categories..."
+                                            logic={abilityCategoryLogic}
+                                            onLogicChange={setAbilityCategoryLogic}
                                          />
 
                                          {/* Abilities */}
@@ -566,6 +605,8 @@ export function AllianceRosterMatrix({
                                             selectedValues={abilityFilter}
                                             onSelect={setAbilityFilter}
                                             placeholder="Search abilities..."
+                                            logic={abilityLogic}
+                                            onLogicChange={setAbilityLogic}
                                          />
 
                                          {/* Immunities */}
@@ -576,6 +617,8 @@ export function AllianceRosterMatrix({
                                             selectedValues={immunityFilter}
                                             onSelect={setImmunityFilter}
                                             placeholder="Search immunities..."
+                                            logic={immunityLogic}
+                                            onLogicChange={setImmunityLogic}
                                          />
                                     </div>
 
