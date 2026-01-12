@@ -407,13 +407,13 @@ export function AllianceRosterMatrix({
 
                                                 const renderBadgeContent = (item: typeof displayAbilities[0]) => (
                                                     <>
-                                                        <span className="font-semibold">{item.name}</span>
+                                                        <span className="font-semibold whitespace-nowrap">{item.name}</span>
                                                         {(item.sources.length > 0 || item.allSynergyChampions.length > 0) && (
                                                             <div className="flex items-center gap-1.5 pl-1.5 border-l border-white/10">
                                                                 {item.allSynergyChampions.length > 0 && (
                                                                     <div className="flex -space-x-1.5">
                                                                         {item.allSynergyChampions.map((sc, scIdx) => (
-                                                                             <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700" title={sc.name}>
+                                                                             <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
                                                                                  <Image 
                                                                                      src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
                                                                                      alt={sc.name}
@@ -425,9 +425,16 @@ export function AllianceRosterMatrix({
                                                                     </div>
                                                                 )}
                                                                 {item.sources.length > 0 && (
-                                                                    <span className="font-normal opacity-70">
-                                                                        {item.sources.join(', ')}
-                                                                    </span>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        {item.sources.map((src, sIdx) => (
+                                                                            <span key={sIdx} className={cn(
+                                                                                "font-normal opacity-70 text-[9px]",
+                                                                                sIdx > 0 && "pl-1.5 border-l border-white/5"
+                                                                            )}>
+                                                                                {src}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
                                                                 )}
                                                             </div>
                                                         )}
