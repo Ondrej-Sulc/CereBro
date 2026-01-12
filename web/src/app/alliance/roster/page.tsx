@@ -36,6 +36,8 @@ export default async function AllianceRosterPage() {
             data={rosterData}
             initialTactics={metaData.tactics}
             initialTags={metaData.tags}
+            initialAbilityCategories={metaData.abilityCategories}
+            initialAbilities={metaData.abilities}
             season={metaData.season}
             bgColors={bgColors}
         />

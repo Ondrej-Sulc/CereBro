@@ -20,6 +20,12 @@ export type AllianceRosterEntry = {
     isAscended: boolean;
     tags: string[];
     tactics: { attack: boolean; defense: boolean };
+    abilities: {
+        name: string;
+        type: string; // AbilityLinkType
+        source: string | null;
+        categories: string[];
+    }[];
 };
 
 export async function getAllianceRoster(
@@ -74,6 +80,20 @@ export async function getAllianceRoster(
                     images: true,
                     tags: {
                         select: { id: true, name: true }
+                    },
+                    abilities: {
+                        select: {
+                            type: true,
+                            source: true,
+                            ability: {
+                                select: {
+                                    name: true,
+                                    categories: {
+                                        select: { name: true }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -107,7 +127,13 @@ export async function getAllianceRoster(
             tactics: {
                 attack: hasAttackTactic,
                 defense: hasDefenseTactic
-            }
+            },
+            abilities: entry.champion.abilities.map(a => ({
+                name: a.ability.name,
+                type: a.type,
+                source: a.source,
+                categories: a.ability.categories.map(c => c.name)
+            }))
         };
     });
 
@@ -130,5 +156,14 @@ export async function getAllianceTagsAndTactics(allianceId: string) {
         orderBy: { name: 'asc' }
     });
 
-    return { tactics, tags, season };
+    const abilityCategories = await prisma.abilityCategory.findMany({
+        orderBy: { name: 'asc' }
+    });
+
+    const abilities = await prisma.ability.findMany({
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' }
+    });
+
+    return { tactics, tags, abilityCategories, abilities, season };
 }

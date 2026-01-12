@@ -3,15 +3,11 @@
 import { useState, useMemo } from 'react';
 import { AllianceRosterEntry } from '@/app/actions/alliance-roster';
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChampionClass } from "@prisma/client";
-import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X, SlidersHorizontal } from "lucide-react";
+import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X, SlidersHorizontal, Shield, Zap, BookOpen } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -19,6 +15,7 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
@@ -41,15 +38,98 @@ const FilterGroup = ({ options, value, onChange, className }: { options: { value
     </div>
 );
 
+interface MultiSelectFilterProps {
+    title: string;
+    icon: React.ElementType;
+    options: { id: string | number, name: string }[];
+    selectedValues: string[];
+    onSelect: (values: string[]) => void;
+    placeholder?: string;
+}
+
+const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, onSelect, placeholder }: MultiSelectFilterProps) => {
+    const [open, setOpen] = useState(false);
+
+    const toggleValue = (val: string) => {
+        if (selectedValues.includes(val)) {
+            onSelect(selectedValues.filter(v => v !== val));
+        } else {
+            onSelect([...selectedValues, val]);
+        }
+    };
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[160px]">
+                    <div className="flex items-center gap-2 truncate">
+                        <Icon className="w-3.5 h-3.5" />
+                        {selectedValues.length > 0 ? (
+                            <span className="text-slate-100">{selectedValues.length} selected</span>
+                        ) : (
+                            <span>{title}</span>
+                        )}
+                    </div>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[250px] p-0 bg-slate-950 border-slate-800" align="start">
+                <Command className="bg-slate-950 text-slate-300">
+                    <CommandInput placeholder={placeholder || `Search ${title}...`} className="h-9" />
+                    <CommandList>
+                        <CommandEmpty>No results found.</CommandEmpty>
+                        <CommandGroup className="max-h-[300px] overflow-y-auto">
+                            <CommandItem
+                                value="clear_filter"
+                                onSelect={() => onSelect([])}
+                                className="text-xs font-bold text-red-400"
+                            >
+                                <X className="mr-2 h-4 w-4" />
+                                Clear Filter
+                            </CommandItem>
+                            {options.map(opt => (
+                                <CommandItem
+                                    key={opt.id}
+                                    value={opt.name}
+                                    onSelect={() => toggleValue(opt.name)}
+                                    className="text-xs"
+                                >
+                                    <div className={cn(
+                                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-slate-700",
+                                        selectedValues.includes(opt.name) ? "bg-slate-100 text-slate-900" : "opacity-50 [&_svg]:invisible"
+                                    )}>
+                                        <Check className={cn("h-3 w-3")} />
+                                    </div>
+                                    {opt.name}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
 interface ClientPageProps {
     data: AllianceRosterEntry[];
     initialTactics: any[];
     initialTags: any[];
+    initialAbilityCategories: any[];
+    initialAbilities: any[];
     season: number;
     bgColors: Record<number, string>;
 }
 
-export function AllianceRosterMatrix({ data, initialTactics, initialTags, season, bgColors }: ClientPageProps) {
+export function AllianceRosterMatrix({ 
+    data, 
+    initialTactics, 
+    initialTags, 
+    initialAbilityCategories,
+    initialAbilities,
+    season, 
+    bgColors 
+}: ClientPageProps) {
     // Filters
     const [bgFilter, setBgFilter] = useState<string>("ALL");
     const [classFilter, setClassFilter] = useState<ChampionClass[]>([]);
@@ -58,6 +138,11 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
     const [limitFilter, setLimitFilter] = useState<string>("10");
     const [tagFilter, setTagFilter] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
+
+    // New Filters
+    const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
+    const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
+    const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
 
     // Derived Data
     const players = useMemo(() => {
@@ -99,6 +184,28 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
             
             // Tag
             if (tagFilter && !entry.tags.includes(tagFilter)) return false;
+
+            // Ability Category (Check if champion has at least one ability in one of the selected categories)
+            if (abilityCategoryFilter.length > 0) {
+                 const hasCategory = entry.abilities.some(a => 
+                    a.categories.some(c => abilityCategoryFilter.includes(c))
+                 );
+                 if (!hasCategory) return false;
+            }
+
+            // Ability (Check if champion has ALL selected abilities)
+            if (abilityFilter.length > 0) {
+                const champAbilities = new Set(entry.abilities.filter(a => a.type === 'ABILITY').map(a => a.name));
+                const hasAll = abilityFilter.every(req => champAbilities.has(req));
+                if (!hasAll) return false;
+            }
+
+            // Immunity (Check if champion has ALL selected immunities)
+            if (immunityFilter.length > 0) {
+                const champImmunities = new Set(entry.abilities.filter(a => a.type === 'IMMUNITY').map(a => a.name));
+                const hasAll = immunityFilter.every(req => champImmunities.has(req));
+                if (!hasAll) return false;
+            }
 
             return true;
         }).sort((a, b) => {
@@ -150,43 +257,115 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
                 <div className="flex-1 p-1.5 flex flex-wrap gap-1 items-start content-start">
                     {champions.map((champ, idx) => {
                         const classColors = getChampionClassColors(champ.championClass);
-                        return (
-                            <div 
-                                key={`${champ.championId}-${idx}`} 
-                                title={`${champ.championName} (${champ.stars}★ R${champ.rank})`}
-                                className="flex flex-col items-center gap-0.5 shrink-0 group transition-transform hover:scale-110 hover:z-10"
-                            >
-                                <div className={cn(
-                                    "relative w-12 h-12 rounded overflow-hidden border bg-slate-900",
-                                    classColors.border
-                                )}>
-                                    {/* Portrait */}
-                                    {champ.championImages && (
-                                        <Image 
-                                            src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
-                                            alt={champ.championName}
-                                            fill
-                                            sizes="48px"
-                                            className="object-cover"
-                                        />
-                                    )}
-                                    
-                                    {/* Tactic Indicators */}
-                                    <div className="absolute top-0 left-0 p-0.5 flex flex-col gap-0.5">
-                                        {champ.tactics.attack && <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm ring-1 ring-black/50" title="Attack Tactic" />}
-                                        {champ.tactics.defense && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-sm ring-1 ring-black/50" title="Defense Tactic" />}
-                                    </div>
+                        const abilities = champ.abilities.filter(a => a.type === 'ABILITY');
+                        const immunities = champ.abilities.filter(a => a.type === 'IMMUNITY');
 
-                                    {champ.isAscended && (
-                                        <div className="absolute bottom-0 right-0 p-0.5">
-                                            <Trophy className="w-2 h-2 text-yellow-400 drop-shadow-md" />
+                        return (
+                            <Popover key={`${champ.championId}-${idx}`}>
+                                <PopoverTrigger asChild>
+                                    <div 
+                                        className="flex flex-col items-center gap-0.5 shrink-0 group transition-transform hover:scale-110 hover:z-10 cursor-pointer"
+                                    >
+                                        <div className={cn(
+                                            "relative w-12 h-12 rounded overflow-hidden border bg-slate-900",
+                                            classColors.border
+                                        )}>
+                                            {/* Portrait */}
+                                            {champ.championImages && (
+                                                <Image 
+                                                    src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                    alt={champ.championName}
+                                                    fill
+                                                    sizes="48px"
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                            
+                                            {/* Tactic Indicators */}
+                                            <div className="absolute top-0 left-0 p-0.5 flex flex-col gap-0.5">
+                                                {champ.tactics.attack && <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm ring-1 ring-black/50" title="Attack Tactic" />}
+                                                {champ.tactics.defense && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-sm ring-1 ring-black/50" title="Defense Tactic" />}
+                                            </div>
+
+                                            {champ.isAscended && (
+                                                <div className="absolute bottom-0 right-0 p-0.5">
+                                                    <Trophy className="w-2 h-2 text-yellow-400 drop-shadow-md" />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                <span className="text-[8px] font-bold text-slate-300 leading-none whitespace-nowrap">
-                                    <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank}
-                                </span>
-                            </div>
+                                        <span className="text-[8px] font-bold text-slate-300 leading-none whitespace-nowrap">
+                                            <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank}
+                                        </span>
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[280px] p-0 bg-slate-950 border-slate-800 shadow-xl z-50">
+                                    <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
+                                        <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
+                                            {champ.championImages && (
+                                                <Image 
+                                                    src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                    alt={champ.championName}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-sm text-slate-100">{champ.championName}</div>
+                                            <div className={cn("text-[10px] font-bold uppercase", classColors.text)}>{champ.championClass}</div>
+                                        </div>
+                                    </div>
+                                    <ScrollArea className="max-h-[300px]">
+                                        <div className="p-3 space-y-4">
+                                            {immunities.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400">
+                                                        <Shield className="w-3.5 h-3.5" />
+                                                        Immunities
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {immunities.map((imm, i) => (
+                                                            <div key={i} className="group/item relative">
+                                                                <Badge variant="secondary" className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-1.5 py-0">
+                                                                    {imm.name}
+                                                                </Badge>
+                                                                {imm.source && (
+                                                                     <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50">
+                                                                        {imm.source}
+                                                                     </span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {abilities.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                                                        <Zap className="w-3.5 h-3.5" />
+                                                        Abilities
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {abilities.map((ab, i) => (
+                                                            <div key={i} className="group/item relative">
+                                                                <Badge variant="secondary" className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-1.5 py-0">
+                                                                    {ab.name}
+                                                                </Badge>
+                                                                 {ab.source && (
+                                                                     <span className="hidden group-hover/item:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 border border-slate-700 text-slate-300 text-[9px] rounded whitespace-nowrap z-50">
+                                                                        {ab.source}
+                                                                     </span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
                         );
                     })}
                 </div>
@@ -275,14 +454,14 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
                                     />
                                 </div>
 
-                                {/* Bottom Row: Tags, Class */}
+                                {/* Bottom Row: Tag, Abilities, Categories */}
                                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
                                     <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
                                          {/* Tags Dropdown */}
-                                         <div className="flex items-center gap-1 w-full sm:w-auto">
+                                         <div className="flex items-center gap-1">
                                             <Popover>
                                                 <PopoverTrigger asChild>
-                                                    <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between w-full sm:min-w-[180px]">
+                                                    <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[150px]">
                                                         <div className="flex items-center gap-2 truncate">
                                                             <Filter className="w-3.5 h-3.5" />
                                                             {tagFilter ? tagFilter : "Filter Tags"}
@@ -290,7 +469,7 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
                                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent className="w-[250px] p-0 bg-slate-950 border-slate-800" align="start">
+                                                <PopoverContent className="w-[200px] p-0 bg-slate-950 border-slate-800" align="start">
                                                     <Command className="bg-slate-950 text-slate-300">
                                                         <CommandInput placeholder="Search tags..." className="h-9" />
                                                         <CommandList>
@@ -334,6 +513,36 @@ export function AllianceRosterMatrix({ data, initialTactics, initialTags, season
                                                 </Button>
                                             )}
                                          </div>
+
+                                         {/* Ability Categories */}
+                                         <MultiSelectFilter 
+                                            title="Categories"
+                                            icon={BookOpen}
+                                            options={initialAbilityCategories}
+                                            selectedValues={abilityCategoryFilter}
+                                            onSelect={setAbilityCategoryFilter}
+                                            placeholder="Search categories..."
+                                         />
+
+                                         {/* Abilities */}
+                                         <MultiSelectFilter 
+                                            title="Abilities"
+                                            icon={Zap}
+                                            options={initialAbilities}
+                                            selectedValues={abilityFilter}
+                                            onSelect={setAbilityFilter}
+                                            placeholder="Search abilities..."
+                                         />
+
+                                         {/* Immunities */}
+                                         <MultiSelectFilter 
+                                            title="Immunities"
+                                            icon={Shield}
+                                            options={initialAbilities} // We use the same ability list for immunities as the name is what matters
+                                            selectedValues={immunityFilter}
+                                            onSelect={setImmunityFilter}
+                                            placeholder="Search immunities..."
+                                         />
                                     </div>
 
                                      {/* Class Filter */}
