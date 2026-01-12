@@ -344,17 +344,24 @@ export function AllianceRosterMatrix({
                                                     return false;
                                                 });
 
-                                                // Group by Name + Type to combine sources
+                                                // Group by Name + Type to combine sources and synergy champions
                                                 const groupedItems = relevantItems.reduce((acc, curr) => {
                                                     const key = `${curr.type}-${curr.name}`;
                                                     if (!acc[key]) {
-                                                        acc[key] = { ...curr, sources: [] as string[] };
+                                                        acc[key] = { 
+                                                            ...curr, 
+                                                            sources: [] as string[],
+                                                            allSynergyChampions: [] as { name: string, images: any }[] 
+                                                        };
                                                     }
                                                     if (curr.source) {
                                                         acc[key].sources.push(curr.source);
                                                     }
+                                                    if (curr.synergyChampions && curr.synergyChampions.length > 0) {
+                                                        acc[key].allSynergyChampions.push(...curr.synergyChampions);
+                                                    }
                                                     return acc;
-                                                }, {} as Record<string, typeof relevantItems[0] & { sources: string[] }>);
+                                                }, {} as Record<string, typeof relevantItems[0] & { sources: string[], allSynergyChampions: { name: string, images: any }[] }>);
 
                                                 const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
                                                 const displayImmunities = Object.values(groupedItems).filter(a => a.type === 'IMMUNITY');
@@ -362,6 +369,35 @@ export function AllianceRosterMatrix({
                                                 if (displayAbilities.length === 0 && displayImmunities.length === 0) {
                                                     return <div className="text-xs text-slate-500 text-center italic">No matching abilities found.</div>;
                                                 }
+
+                                                const renderBadgeContent = (item: typeof displayAbilities[0]) => (
+                                                    <>
+                                                        <span className="font-semibold">{item.name}</span>
+                                                        {(item.sources.length > 0 || item.allSynergyChampions.length > 0) && (
+                                                            <div className="flex items-center gap-1.5 pl-1.5 border-l border-white/10">
+                                                                {item.allSynergyChampions.length > 0 && (
+                                                                    <div className="flex -space-x-1.5">
+                                                                        {item.allSynergyChampions.map((sc, scIdx) => (
+                                                                             <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700" title={sc.name}>
+                                                                                 <Image 
+                                                                                     src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                                                     alt={sc.name}
+                                                                                     fill
+                                                                                     className="object-cover"
+                                                                                 />
+                                                                             </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {item.sources.length > 0 && (
+                                                                    <span className="font-normal opacity-70">
+                                                                        {item.sources.join(', ')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                );
 
                                                 return (
                                                     <>
@@ -378,12 +414,7 @@ export function AllianceRosterMatrix({
                                                                             variant="secondary" 
                                                                             className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-center gap-1.5"
                                                                         >
-                                                                            <span className="font-semibold">{imm.name}</span>
-                                                                            {imm.sources.length > 0 && (
-                                                                                 <span className="text-sky-400/70 font-normal border-l border-sky-800/50 pl-1.5">
-                                                                                    {imm.sources.join(', ')}
-                                                                                 </span>
-                                                                            )}
+                                                                            {renderBadgeContent(imm)}
                                                                         </Badge>
                                                                     ))}
                                                                 </div>
@@ -403,12 +434,7 @@ export function AllianceRosterMatrix({
                                                                             variant="secondary" 
                                                                             className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-center gap-1.5"
                                                                         >
-                                                                            <span className="font-semibold">{ab.name}</span>
-                                                                             {ab.sources.length > 0 && (
-                                                                                 <span className="text-amber-400/60 font-normal border-l border-amber-800/40 pl-1.5">
-                                                                                    {ab.sources.join(', ')}
-                                                                                 </span>
-                                                                            )}
+                                                                           {renderBadgeContent(ab)}
                                                                         </Badge>
                                                                     ))}
                                                                 </div>

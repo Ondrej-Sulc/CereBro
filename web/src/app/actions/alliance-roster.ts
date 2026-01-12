@@ -25,6 +25,10 @@ export type AllianceRosterEntry = {
         type: string; // AbilityLinkType
         source: string | null;
         categories: string[];
+        synergyChampions: {
+            name: string;
+            images: any;
+        }[];
     }[];
 };
 
@@ -92,6 +96,16 @@ export async function getAllianceRoster(
                                         select: { name: true }
                                     }
                                 }
+                            },
+                            synergyChampions: {
+                                select: {
+                                    champion: {
+                                        select: {
+                                            name: true,
+                                            images: true
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -132,7 +146,11 @@ export async function getAllianceRoster(
                 name: a.ability.name,
                 type: a.type,
                 source: a.source,
-                categories: a.ability.categories.map(c => c.name)
+                categories: a.ability.categories.map(c => c.name),
+                synergyChampions: a.synergyChampions.map(sc => ({
+                    name: sc.champion.name,
+                    images: sc.champion.images
+                }))
             }))
         };
     });
