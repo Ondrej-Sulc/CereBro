@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChampionClass } from "@prisma/client";
-import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X, SlidersHorizontal, Shield, Zap, BookOpen } from "lucide-react";
+import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as TagIcon } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -61,7 +61,7 @@ const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, onSelec
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[160px]">
+                <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[150px]">
                     <div className="flex items-center gap-2 truncate">
                         <Icon className="w-3.5 h-3.5" />
                         {selectedValues.length > 0 ? (
@@ -138,10 +138,10 @@ export function AllianceRosterMatrix({
     const [starFilter, setStarFilter] = useState<string>("ALL");
     const [minRankFilter, setMinRankFilter] = useState<string>("0");
     const [limitFilter, setLimitFilter] = useState<string>("10");
-    const [tagFilter, setTagFilter] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
 
-    // New Filters
+    // Multi-Select Filters
+    const [tagFilter, setTagFilter] = useState<string[]>([]);
     const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
     const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
     const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
@@ -184,8 +184,11 @@ export function AllianceRosterMatrix({
             // Min Rank
             if (parseInt(minRankFilter) > 0 && entry.rank < parseInt(minRankFilter)) return false;
             
-            // Tag
-            if (tagFilter && !entry.tags.includes(tagFilter)) return false;
+            // Tag (Check if champion has ALL selected tags)
+            if (tagFilter.length > 0) {
+                const hasAllTags = tagFilter.every(t => entry.tags.includes(t));
+                if (!hasAllTags) return false;
+            }
 
             // Ability Category (Check if champion has at least one ability in one of the selected categories)
             if (abilityCategoryFilter.length > 0) {
@@ -237,6 +240,13 @@ export function AllianceRosterMatrix({
         return groups;
     }, [filteredPlayers]);
 
+    const activeFilters = [
+        ...tagFilter.map(t => ({ label: t, type: 'Tag', onRemove: () => setTagFilter(tagFilter.filter(x => x !== t)) })),
+        ...abilityCategoryFilter.map(c => ({ label: c, type: 'Category', onRemove: () => setAbilityCategoryFilter(abilityCategoryFilter.filter(x => x !== c)) })),
+        ...abilityFilter.map(a => ({ label: a, type: 'Ability', onRemove: () => setAbilityFilter(abilityFilter.filter(x => x !== a)) })),
+        ...immunityFilter.map(i => ({ label: i, type: 'Immunity', onRemove: () => setImmunityFilter(immunityFilter.filter(x => x !== i)) })),
+    ];
+
     const renderPlayerRow = (player: typeof players[0]) => {
         const champions = getFilteredChampionsForPlayer(player.id);
         if (champions.length === 0) return null;
@@ -259,9 +269,7 @@ export function AllianceRosterMatrix({
                 <div className="flex-1 p-1.5 flex flex-wrap gap-1 items-start content-start">
                     {champions.map((champ, idx) => {
                         const classColors = getChampionClassColors(champ.championClass);
-                        const abilities = champ.abilities.filter(a => a.type === 'ABILITY');
-                        const immunities = champ.abilities.filter(a => a.type === 'IMMUNITY');
-
+                        
                         return (
                             <Popover key={`${champ.championId}-${idx}`}>
                                 <PopoverTrigger asChild>
@@ -502,62 +510,15 @@ export function AllianceRosterMatrix({
                                 {/* Bottom Row: Tag, Abilities, Categories */}
                                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
                                     <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
-                                         {/* Tags Dropdown */}
-                                         <div className="flex items-center gap-1">
-                                            <Popover>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[150px]">
-                                                        <div className="flex items-center gap-2 truncate">
-                                                            <Filter className="w-3.5 h-3.5" />
-                                                            {tagFilter ? tagFilter : "Filter Tags"}
-                                                        </div>
-                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-[200px] p-0 bg-slate-950 border-slate-800" align="start">
-                                                    <Command className="bg-slate-950 text-slate-300">
-                                                        <CommandInput placeholder="Search tags..." className="h-9" />
-                                                        <CommandList>
-                                                            <CommandEmpty>No tag found.</CommandEmpty>
-                                                            <CommandGroup className="max-h-[300px] overflow-y-auto">
-                                                                <CommandItem
-                                                                    value="clear_filter"
-                                                                    onSelect={() => setTagFilter(null)}
-                                                                    className="text-xs"
-                                                                >
-                                                                    <Check className={cn("mr-2 h-4 w-4", !tagFilter ? "opacity-100" : "opacity-0")} />
-                                                                    Clear Filter
-                                                                </CommandItem>
-                                                                {initialTags.map(tag => (
-                                                                    <CommandItem
-                                                                        key={tag.id}
-                                                                        value={tag.name}
-                                                                        onSelect={(currentValue) => {
-                                                                            setTagFilter(currentValue === tagFilter ? null : currentValue)
-                                                                        }}
-                                                                        className="text-xs"
-                                                                    >
-                                                                        <Check className={cn("mr-2 h-4 w-4", tagFilter === tag.name ? "opacity-100" : "opacity-0")} />
-                                                                        {tag.name}
-                                                                    </CommandItem>
-                                                                ))}
-                                                            </CommandGroup>
-                                                        </CommandList>
-                                                    </Command>
-                                                </PopoverContent>
-                                            </Popover>
-                                            {tagFilter && (
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    className="h-9 w-9 text-slate-500 hover:text-red-400"
-                                                    onClick={() => setTagFilter(null)}
-                                                    title="Clear Tag"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            )}
-                                         </div>
+                                         {/* Tags */}
+                                         <MultiSelectFilter 
+                                            title="Tags"
+                                            icon={TagIcon}
+                                            options={initialTags}
+                                            selectedValues={tagFilter}
+                                            onSelect={setTagFilter}
+                                            placeholder="Search tags..."
+                                         />
 
                                          {/* Ability Categories */}
                                          <MultiSelectFilter 
@@ -630,6 +591,44 @@ export function AllianceRosterMatrix({
                                         })}
                                     </div>
                                 </div>
+
+                                {/* Active Filter Badges */}
+                                {activeFilters.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-3">
+                                        <span className="text-xs text-slate-500 py-0.5">Active Filters:</span>
+                                        {activeFilters.map((f, idx) => (
+                                            <Badge 
+                                                key={`${f.type}-${f.label}-${idx}`}
+                                                variant="outline"
+                                                className="bg-slate-900 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-6"
+                                            >
+                                                <span className="text-slate-500 font-normal mr-1">{f.type}:</span>
+                                                {f.label}
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    className="h-4 w-4 ml-1 hover:bg-slate-800 hover:text-red-400 rounded-full"
+                                                    onClick={f.onRemove}
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            </Badge>
+                                        ))}
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-6 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                                            onClick={() => {
+                                                setTagFilter([]);
+                                                setAbilityCategoryFilter([]);
+                                                setAbilityFilter([]);
+                                                setImmunityFilter([]);
+                                            }}
+                                        >
+                                            Clear All
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
