@@ -237,7 +237,7 @@ const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFi
                   )}
                 </div>
                 <span className="text-slate-300 truncate">{player.name}</span>
-                {player.battlegroup && (
+                {(player.battlegroup ?? 0) > 0 && (
                   <span className={cn(
                     "px-1 py-0.5 rounded text-[9px] font-mono leading-none",
                     player.battlegroup === 1 ? "bg-red-900/30 text-red-400 border border-red-900/50" :

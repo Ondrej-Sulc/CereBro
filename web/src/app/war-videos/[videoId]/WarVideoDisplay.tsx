@@ -378,7 +378,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
               <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 p-3 rounded-lg border border-slate-700/50">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Player</span>
-                  {warVideo.fights[0]?.battlegroup && (
+                  {(warVideo.fights[0]?.battlegroup ?? 0) > 0 && (
                     <Badge variant="outline" className="border-purple-500/50 bg-purple-900/20 text-purple-300 text-xs">
                       BG {warVideo.fights[0].battlegroup}
                     </Badge>

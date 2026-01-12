@@ -144,7 +144,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 </div>
                             ) : (
                                 <Badge variant="outline" className="text-[10px] h-5">
-                                    {player.battlegroup ? `BG ${player.battlegroup}` : 'No BG'}
+                                    {(player.battlegroup ?? 0) > 0 ? `BG ${player.battlegroup}` : 'No BG'}
                                 </Badge>
                             )}
                         </CardContent>

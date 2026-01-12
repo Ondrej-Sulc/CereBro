@@ -123,13 +123,13 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         attacker ? { attacker: { name: { contains: attacker, mode: "insensitive" } } } : {},
         defender ? { defender: { name: { contains: defender, mode: "insensitive" } } } : {},
         node ? { node: { nodeNumber: node } } : {},
-        warNumber ? { war: { warNumber: warNumber } } : {},
+        warNumber !== undefined ? { war: { warNumber: warNumber === 0 ? null : warNumber } } : {},
         warTierFilter ? { war: { warTier: warTierFilter } } : {},
         selectedSeasons.length > 0 ? { war: { season: { in: selectedSeasons } } } : {},
         tier ? { war: { warTier: tier } } : {},
         player ? { player: { ingameName: { contains: player, mode: "insensitive" } } } : {},
         alliance ? { war: { alliance: { name: { contains: alliance, mode: "insensitive" } } } } : {},
-        battlegroup ? { battlegroup: battlegroup } : {},
+        battlegroup !== undefined ? { battlegroup: battlegroup } : {},
         hasVideo ? { videoId: { not: null } } : {},
       ]
     },
@@ -498,7 +498,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 >
                                     <div className="flex flex-col">
                                         <span className="font-medium text-slate-300">{fight.player?.ingameName || 'Unknown'}</span>
-                                        {fight.battlegroup && (
+                                        {(fight.battlegroup ?? 0) > 0 && (
                                             <span className="text-[10px] text-slate-500">BG {fight.battlegroup}</span>
                                         )}
                                     </div>

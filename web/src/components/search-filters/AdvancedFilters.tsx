@@ -188,7 +188,7 @@ export function AdvancedFilters({
           </Label>
         </div>
         <div className="flex items-center gap-1 bg-slate-950/60 border border-slate-800 rounded-md p-1 h-9">
-          {[1, 2, 3].map((bg) => (
+          {[0, 1, 2, 3].map((bg) => (
             <button
               key={bg}
               onClick={() =>
@@ -198,13 +198,13 @@ export function AdvancedFilters({
               }
               aria-pressed={battlegroup === bg.toString()}
               className={cn(
-                "flex-1 h-full rounded text-xs font-medium transition-colors hover:bg-slate-800",
+                "flex-1 h-full rounded text-[10px] font-medium transition-colors hover:bg-slate-800",
                 battlegroup === bg.toString()
                   ? "bg-cyan-600 text-white shadow-sm"
                   : "text-slate-400"
               )}
             >
-              {bg}
+              {bg === 0 ? "Solo" : bg}
             </button>
           ))}
         </div>

@@ -254,7 +254,7 @@ export function useSearchFilters({ champions, availableSeasons }: UseSearchFilte
     if (battlegroup)
       filters.push({
         id: "battlegroup",
-        label: `BG ${battlegroup}`,
+        label: battlegroup === "0" ? "Solo" : `BG ${battlegroup}`,
         onRemove: () => setBattlegroup(""),
       });
 
