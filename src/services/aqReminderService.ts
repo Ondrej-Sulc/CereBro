@@ -57,7 +57,7 @@ async function sendReminderPing(
   } catch (error) {
     logger.error(
       { error, channelId: state.channelId },
-      `Failed to send AQ reminder to channel ${state.channelId}`
+      `[AQReminder] Failed to send AQ reminder to channel ${state.channelId}`
     );
   }
 }
@@ -176,5 +176,5 @@ export function initializeAqReminders(client: Client) {
   cron.schedule("*/5 * * * *", () => checkAqStatuses(client), {
     timezone: config.TIMEZONE,
   });
-  logger.info(" AQ Reminder service initialized.");
+  logger.info("[AQReminder] Service initialized.");
 }
