@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string; sigBudget?: string }>;
+  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
@@ -50,6 +50,8 @@ export default async function RosterPage(props: {
   
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : defaultTarget;
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
+  const rankClassFilter = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
+  const sigClassFilter = searchParams.sigClassFilter ? searchParams.sigClassFilter.split(',') : [];
 
   if (roster.length > 0) {
       const championIds = Array.from(new Set(roster.map(r => r.championId)));
@@ -119,6 +121,9 @@ export default async function RosterPage(props: {
 
       // Smart Recommendations Simulation
       const candidates = roster.filter(r => {
+          // Check Class Filter
+          if (rankClassFilter.length > 0 && !rankClassFilter.includes(r.champion.class)) return false;
+
           // Check 7* up to targetRank (but max 6)
           if (r.stars === 7) return r.rank < Math.min(targetRank, 6); 
           // Check 6* and 5* up to Rank 5 (Max), regardless of higher targetRank
@@ -164,6 +169,9 @@ export default async function RosterPage(props: {
 
       // Signature Stone Simulation
       const sigCandidates = roster.filter(r => {
+          // Check Class Filter
+          if (sigClassFilter.length > 0 && !sigClassFilter.includes(r.champion.class)) return false;
+
           if ((r.sigLevel || 0) >= 200) return false;
           // Focus on 7* and High Rank 6*
           if (r.stars === 7) return true;
@@ -349,6 +357,8 @@ export default async function RosterPage(props: {
         sigRecommendations={sigRecommendations}
         simulationTargetRank={targetRank}
         initialSigBudget={sigBudget}
+        initialRankClassFilter={rankClassFilter as any}
+        initialSigClassFilter={sigClassFilter as any}
       />
     </div>
   );

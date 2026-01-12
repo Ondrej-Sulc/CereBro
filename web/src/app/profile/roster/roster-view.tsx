@@ -76,6 +76,8 @@ interface RosterViewProps {
   sigRecommendations?: SigRecommendation[];
   simulationTargetRank: number;
   initialSigBudget?: number;
+  initialRankClassFilter: ChampionClass[];
+  initialSigClassFilter: ChampionClass[];
 }
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
@@ -191,7 +193,126 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 ));
 GridList.displayName = "GridList";
 
-export function RosterView({ initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank, initialSigBudget = 0 }: RosterViewProps) {
+function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: ChampionClass[], onChange: (classes: ChampionClass[]) => void }) {
+    const toggleClass = (c: ChampionClass) => {
+        if (selectedClasses.includes(c)) {
+            onChange(selectedClasses.filter(cls => cls !== c));
+        } else {
+            onChange([...selectedClasses, c]);
+        }
+    };
+
+    return (
+        <div className="flex items-center">
+            {/* Mobile / Compact View */}
+            <div className="lg:hidden">
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className={cn("h-7 w-7 rounded-full", selectedClasses.length > 0 ? "bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 hover:text-sky-300" : "text-slate-400 hover:text-slate-200")}>
+                            <div className="relative">
+                                <CircleOff className={cn("w-4 h-4", selectedClasses.length > 0 && "hidden")} />
+                                {selectedClasses.length > 0 && (
+                                    <div className="flex -space-x-1 items-center justify-center">
+                                        <div className="w-4 h-4 rounded-full bg-sky-500 text-[10px] text-white font-bold flex items-center justify-center ring-2 ring-slate-900">
+                                            {selectedClasses.length}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2 bg-slate-900 border-slate-800" align="end">
+                        <div className="flex gap-2">
+                            {CLASSES.map(c => {
+                                const colors = getChampionClassColors(c);
+                                const isSelected = selectedClasses.includes(c);
+                                return (
+                                     <Button
+                                        key={c}
+                                        variant="ghost"
+                                        size="sm"
+                                        className={cn(
+                                            "h-8 w-8 p-1.5 rounded-full transition-all border shrink-0",
+                                            isSelected 
+                                                ? cn(colors.bg, colors.border, "shadow-sm") 
+                                                : "bg-transparent border-transparent hover:bg-slate-800"
+                                        )}
+                                        onClick={() => toggleClass(c)}
+                                        title={c}
+                                    >
+                                        <div className="relative w-full h-full">
+                                            <Image 
+                                                src={CLASS_ICONS[c]} 
+                                                alt={c} 
+                                                fill 
+                                                sizes="24px"
+                                                className="object-contain"
+                                            />
+                                        </div>
+                                    </Button>
+                                );
+                            })}
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-800 flex justify-end">
+                            <Button variant="ghost" size="sm" className="h-6 text-[10px] text-slate-400 hover:text-white" onClick={() => onChange([])}>
+                                Clear Filter
+                            </Button>
+                        </div>
+                    </PopoverContent>
+                </Popover>
+            </div>
+
+            {/* Desktop / Expanded View */}
+            <div className="hidden lg:flex items-center gap-1 bg-slate-900/50 p-1 rounded-full border border-slate-800">
+                 <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                        "h-6 w-6 rounded-full transition-all shrink-0",
+                        selectedClasses.length === 0 ? "bg-slate-700 text-white shadow-inner" : "text-slate-500 hover:text-slate-300"
+                    )}
+                    onClick={() => onChange([])}
+                    title="All Classes"
+                >
+                    <CircleOff className="h-3 w-3" />
+                </Button>
+                <div className="h-3 w-px bg-slate-800 mx-0.5" />
+                {CLASSES.map(c => {
+                    const colors = getChampionClassColors(c);
+                    const isSelected = selectedClasses.includes(c);
+                    
+                    return (
+                        <Button
+                            key={c}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                                "h-6 w-6 p-1 rounded-full transition-all border shrink-0",
+                                isSelected 
+                                    ? cn(colors.bg, colors.border, "shadow-sm") 
+                                    : "bg-transparent border-transparent hover:bg-slate-800"
+                            )}
+                            onClick={() => toggleClass(c)}
+                            title={c}
+                        >
+                            <div className="relative w-full h-full">
+                                <Image 
+                                    src={CLASS_ICONS[c]} 
+                                    alt={c} 
+                                    fill 
+                                    sizes="24px"
+                                    className="object-contain"
+                                />
+                            </div>
+                        </Button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+export function RosterView({ initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter }: RosterViewProps) {
   const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
@@ -202,6 +323,10 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
   const [showInsights, setShowInsights] = useState(true);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
+  
+  // New Filter States
+  const [rankUpClassFilter, setRankUpClassFilter] = useState<ChampionClass[]>(initialRankClassFilter);
+  const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   
   const [isPending, startTransition] = useTransition();
   
@@ -228,6 +353,33 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
 
   const router = useRouter();
   const { toast } = useToast();
+
+  // Sync Filters to URL
+  const updateUrlParams = (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(window.location.search);
+      Object.entries(updates).forEach(([key, value]) => {
+          if (value) {
+              params.set(key, value);
+          } else {
+              params.delete(key);
+          }
+      });
+      startTransition(() => {
+          router.push(`?${params.toString()}`);
+      });
+  };
+
+  const handleRankClassFilterChange = (classes: ChampionClass[]) => {
+      setRankUpClassFilter(classes);
+      setPendingSection('rank');
+      updateUrlParams({ rankClassFilter: classes.length > 0 ? classes.join(',') : null });
+  };
+
+  const handleSigClassFilterChange = (classes: ChampionClass[]) => {
+      setSigClassFilter(classes);
+      setPendingSection('sig');
+      updateUrlParams({ sigClassFilter: classes.length > 0 ? classes.join(',') : null });
+  };
 
   const handleAddChampion = async () => {
       if (!newChampion.championId) {
@@ -290,26 +442,14 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
   };
 
   const handleTargetChange = (val: string) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set('targetRank', val);
     setPendingSection('rank');
-    startTransition(() => {
-        router.push(`?${params.toString()}`);
-    });
+    updateUrlParams({ targetRank: val });
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (sigBudget > 0) {
-            params.set('sigBudget', sigBudget.toString());
-        } else {
-            params.delete('sigBudget');
-        }
         setPendingSection('sig');
-        startTransition(() => {
-            router.push(`?${params.toString()}`);
-        });
+        updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
     }, 500);
 
     return () => clearTimeout(timer);
@@ -440,6 +580,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                     </Popover>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <ClassFilterSelector selectedClasses={rankUpClassFilter} onChange={handleRankClassFilterChange} />
                                     <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
                                     <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
                                         <SelectTrigger className="h-7 w-[90px] bg-slate-900 border-slate-700 text-slate-300 text-xs">
@@ -460,7 +601,8 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                         "p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500 ease-out",
                                         isPending && (pendingSection === 'rank' || pendingSection === 'all') && "blur-[1px] scale-[0.995] opacity-80 pointer-events-none"
                                     )}>
-                                        {recommendations.map((rec, i) => {
+                                        {recommendations
+                                            .map((rec, i) => {
                                             const classColors = getChampionClassColors(rec.championClass);
                                             return (
                                                 <div key={i} className={cn(
@@ -544,6 +686,7 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                     </Popover>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <ClassFilterSelector selectedClasses={sigClassFilter} onChange={handleSigClassFilterChange} />
                                     <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Stone Budget</Label>
                                     <Input 
                                         type="number"
@@ -560,7 +703,8 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
                                 "p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500 ease-out",
                                 isPending && (pendingSection === 'sig' || pendingSection === 'all') && "blur-[1px] scale-[0.995] opacity-80 pointer-events-none"
                             )}>
-                                {sigRecommendations.map((rec, i) => {
+                                {sigRecommendations
+                                    .map((rec, i) => {
                                     const classColors = getChampionClassColors(rec.championClass);
                                     return (
                                         <div 
