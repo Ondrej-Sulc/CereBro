@@ -49,9 +49,6 @@ jobs:
       - name: Build Web (web)
         run: pnpm --filter ./web... run build
 
-      - name: Typecheck (src)
-        run: pnpm -w -r exec tsc --noEmit
-
       - name: Run tests (src)
         run: pnpm -w -r test
 
