@@ -39,11 +39,17 @@ jobs:
       - name: Generate Prisma client
         run: pnpm run prisma:generate
 
-      - name: Build (workspace)
-        run: pnpm -w -r run build --if-present
+      - name: Build Bot (src)
+        run: pnpm run build
+
+      - name: Build Web (web)
+        run: pnpm --filter ./web... run build --if-present
 
       - name: Typecheck
-        run: pnpm -w -r exec tsc --noEmit || true
+        run: pnpm -w -r exec tsc --noEmit
+
+      - name: Run tests (web)
+        run: pnpm -w -r test --if-present
 
       - name: Run tests (workspace)
         run: pnpm -w -r test --if-present
