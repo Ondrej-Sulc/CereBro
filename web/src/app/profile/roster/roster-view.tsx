@@ -74,8 +74,15 @@ export function RosterView({
   const [chartData, setChartData] = useState<{data: PrestigePoint[], rec: SigRecommendation} | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
   const [isAddingChampion, setIsAddingChampion] = useState(false);
-  const [newChampion, setNewChampion] = useState({
-      championId: "", stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
+  const [newChampion, setNewChampion] = useState<{
+      championId: number | null;
+      stars: number;
+      rank: number;
+      sigLevel: number;
+      isAwakened: boolean;
+      isAscended: boolean;
+  }>({
+      championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
   });
 
   const router = useRouter();
@@ -98,16 +105,16 @@ export function RosterView({
   };
 
   const handleAddChampion = async () => {
-      if (!newChampion.championId) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
+      if (newChampion.championId === null) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
       try {
         const response = await fetch("/api/profile/roster/add", {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ championId: parseInt(newChampion.championId), stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
+            body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
         });
         if (!response.ok) throw new Error("Failed to add champion");
         toast({ title: "Success", description: "Champion added to roster" });
         setIsAddingChampion(false);
-        setNewChampion({ championId: "", stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
+        setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
         setPendingSection('all');
         startTransition(() => { router.refresh(); });
       } catch (error) {
@@ -255,7 +262,7 @@ export function RosterView({
               <p>No champions found matching your criteria.</p>
           </div>
         ) : (
-            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={2000} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
+            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
         )}
 
       <EditChampionModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />
