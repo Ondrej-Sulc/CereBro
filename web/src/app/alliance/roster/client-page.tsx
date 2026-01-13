@@ -379,24 +379,22 @@ export function AllianceRosterMatrix({
                                                     return false;
                                                 });
 
-                                                // Group by Name + Type to combine sources and synergy champions
+                                                // Group by Name + Type to combine source instances
                                                 const groupedItems = relevantItems.reduce((acc, curr) => {
                                                     const key = `${curr.type}-${curr.name}`;
                                                     if (!acc[key]) {
                                                         acc[key] = { 
-                                                            ...curr, 
-                                                            sources: [] as string[],
-                                                            allSynergyChampions: [] as { name: string, images: any }[] 
+                                                            name: curr.name,
+                                                            type: curr.type,
+                                                            instances: [] as { source: string | null, synergyChampions: any[] }[] 
                                                         };
                                                     }
-                                                    if (curr.source) {
-                                                        acc[key].sources.push(curr.source);
-                                                    }
-                                                    if (curr.synergyChampions && curr.synergyChampions.length > 0) {
-                                                        acc[key].allSynergyChampions.push(...curr.synergyChampions);
-                                                    }
+                                                    acc[key].instances.push({
+                                                        source: curr.source,
+                                                        synergyChampions: curr.synergyChampions || []
+                                                    });
                                                     return acc;
-                                                }, {} as Record<string, typeof relevantItems[0] & { sources: string[], allSynergyChampions: { name: string, images: any }[] }>);
+                                                }, {} as Record<string, { name: string, type: string, instances: { source: string | null, synergyChampions: any[] }[] }>);
 
                                                 const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
                                                 const displayImmunities = Object.values(groupedItems).filter(a => a.type === 'IMMUNITY');
@@ -405,41 +403,45 @@ export function AllianceRosterMatrix({
                                                     return <div className="text-xs text-slate-500 text-center italic">No matching abilities found.</div>;
                                                 }
 
-                                                const renderBadgeContent = (item: typeof displayAbilities[0]) => (
-                                                    <div className="flex items-start gap-1.5">
-                                                        <span className="font-semibold whitespace-nowrap mt-1">{item.name}</span>
-                                                        {(item.sources.length > 0 || item.allSynergyChampions.length > 0) && (
-                                                            <div className="flex flex-col pl-1.5 border-l border-white/10">
-                                                                {item.allSynergyChampions.length > 0 && (
-                                                                    <div className="flex -space-x-1.5 py-1.5">
-                                                                        {item.allSynergyChampions.map((sc, scIdx) => (
-                                                                             <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                 <Image 
-                                                                                     src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
-                                                                                     alt={sc.name}
-                                                                                     fill
-                                                                                     className="object-cover"
-                                                                                 />
-                                                                             </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                {item.sources.length > 0 && (
-                                                                    <div className="flex flex-col">
-                                                                        {item.sources.map((src, sIdx) => (
-                                                                            <span key={sIdx} className={cn(
-                                                                                "font-normal opacity-70 text-[9px] leading-tight py-1",
-                                                                                (sIdx > 0 || item.allSynergyChampions.length > 0) && "border-t border-white/5"
-                                                                            )}>
-                                                                                {src}
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
+                                                const renderBadgeContent = (item: typeof displayAbilities[0]) => {
+                                                    const validInstances = item.instances.filter(inst => inst.source || inst.synergyChampions.length > 0);
+                                                    
+                                                    return (
+                                                        <div className="flex items-start gap-1.5">
+                                                            <span className="font-semibold whitespace-nowrap mt-1">{item.name}</span>
+                                                            {validInstances.length > 0 && (
+                                                                <div className="flex flex-col pl-1.5 border-l border-white/10">
+                                                                    {validInstances.map((instance, vIdx) => (
+                                                                        <div key={vIdx} className={cn(
+                                                                            "flex items-center gap-1.5 py-1",
+                                                                            vIdx > 0 && "border-t border-white/5"
+                                                                        )}>
+                                                                            {instance.synergyChampions.length > 0 && (
+                                                                                <div className="flex -space-x-1.5">
+                                                                                    {instance.synergyChampions.map((sc, scIdx) => (
+                                                                                         <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
+                                                                                             <Image 
+                                                                                                 src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                                                                 alt={sc.name}
+                                                                                                 fill
+                                                                                                 className="object-cover"
+                                                                                             />
+                                                                                         </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
+                                                                            {instance.source && (
+                                                                                <span className="font-normal opacity-70 text-[9px] leading-tight">
+                                                                                    {instance.source}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                };
 
                                                 return (
                                                     <>
