@@ -407,11 +407,11 @@ export function AllianceRosterMatrix({
 
                                                 const renderBadgeContent = (item: typeof displayAbilities[0]) => (
                                                     <div className="flex items-start gap-1.5">
-                                                        <span className="font-semibold whitespace-nowrap mt-0.5">{item.name}</span>
+                                                        <span className="font-semibold whitespace-nowrap mt-1">{item.name}</span>
                                                         {(item.sources.length > 0 || item.allSynergyChampions.length > 0) && (
-                                                            <div className="flex flex-col gap-1 pl-1.5 border-l border-white/10">
+                                                            <div className="flex flex-col pl-1.5 border-l border-white/10">
                                                                 {item.allSynergyChampions.length > 0 && (
-                                                                    <div className="flex -space-x-1.5">
+                                                                    <div className="flex -space-x-1.5 py-1.5">
                                                                         {item.allSynergyChampions.map((sc, scIdx) => (
                                                                              <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
                                                                                  <Image 
@@ -425,9 +425,12 @@ export function AllianceRosterMatrix({
                                                                     </div>
                                                                 )}
                                                                 {item.sources.length > 0 && (
-                                                                    <div className="flex flex-col gap-0.5">
+                                                                    <div className="flex flex-col">
                                                                         {item.sources.map((src, sIdx) => (
-                                                                            <span key={sIdx} className="font-normal opacity-70 text-[9px] leading-tight">
+                                                                            <span key={sIdx} className={cn(
+                                                                                "font-normal opacity-70 text-[9px] leading-tight py-1",
+                                                                                (sIdx > 0 || item.allSynergyChampions.length > 0) && "border-t border-white/5"
+                                                                            )}>
                                                                                 {src}
                                                                             </span>
                                                                         ))}
