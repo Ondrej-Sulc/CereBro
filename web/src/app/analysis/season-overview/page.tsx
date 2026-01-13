@@ -13,21 +13,13 @@ import { getFromCache } from "@/lib/cache";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import logger from "@/lib/logger";
+import { SeasonOverviewView, PlayerStats } from "./season-overview-view";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
-
-interface PlayerStats {
-  playerId: string;
-  playerName: string;
-  avatar: string | null;
-  fights: number;
-  deaths: number;
-  battlegroup: number;
 }
 
 interface ChampionStat {
@@ -214,12 +206,37 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             avatar: fight.player.avatar,
             fights: 0,
             deaths: 0,
-            battlegroup: bg
+            battlegroup: bg,
+            warStats: []
           };
         }
         bgStats[bg][pid].fights += 1;
         bgStats[bg][pid].deaths += fight.death;
         
+        // War Stats Aggregation
+        let playerWarStat = bgStats[bg][pid].warStats.find(w => w.warId === war.id);
+        if (!playerWarStat) {
+            playerWarStat = {
+                warId: war.id,
+                warNumber: war.warNumber || 0,
+                opponent: war.enemyAlliance || 'Unknown',
+                fights: 0,
+                deaths: 0,
+                fightDetails: []
+            };
+            bgStats[bg][pid].warStats.push(playerWarStat);
+        }
+
+        playerWarStat.fights += 1;
+        playerWarStat.deaths += fight.death;
+        playerWarStat.fightDetails.push({
+            defenderName: fight.defender?.name || 'Unknown',
+            defenderClass: fight.defender?.class || 'UNKNOWN',
+            nodeNumber: fight.node?.nodeNumber || 0,
+            isSolo: fight.death === 0,
+            deaths: fight.death
+        });
+
         bgTotals[bg].fights += 1;
         bgTotals[bg].deaths += fight.death;
 
@@ -303,21 +320,6 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
     const globalDeaths = bgTotals[1].deaths + bgTotals[2].deaths + bgTotals[3].deaths;
     const globalSoloRate = globalFights > 0 ? ((globalFights - globalDeaths) / globalFights) * 100 : 0;
     
-    // Find Best BG (Lowest Death Rate = Deaths / Fights)
-    let bestBg = 0;
-    let bestRate = Infinity;
-    [1, 2, 3].forEach(bgNum => {
-        const bg = bgNum as 1|2|3;
-        const fights = bgTotals[bg].fights;
-        if (fights > 0) {
-            const rate = bgTotals[bg].deaths / fights;
-            if (rate < bestRate) {
-                bestRate = rate;
-                bestBg = bg;
-            }
-        }
-    });
-
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
         {/* Header */}
@@ -387,142 +389,12 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
           </div>
         </div>
   
-        {/* Battlegroup Grids */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(bgNum => {
-            const bg = bgNum as 1 | 2 | 3;
-            const totalFights = bgTotals[bg].fights;
-            const totalDeaths = bgTotals[bg].deaths;
-            const totalSoloRate = totalFights > 0 
-              ? ((totalFights - totalDeaths) / totalFights) * 100 
-              : 0;
-
-            const accentColor = bgColors[bg];
-  
-            return (
-              <Card key={bg} className="bg-slate-950/50 border-slate-800/60 flex flex-col transition-all duration-300 hover:border-slate-700"
-                style={{ borderColor: `${accentColor}40` }} // 25% opacity border
-              >
-                <CardHeader 
-                    className="pb-3 border-b border-slate-800/60 bg-slate-900/20"
-                    style={{ borderBottomColor: `${accentColor}30` }}
-                >
-                  <CardTitle 
-                    className="text-xl font-mono flex items-center justify-between"
-                    style={{ color: accentColor }}
-                  >
-                    Battlegroup {bg}
-                    <Badge variant="outline" className="bg-slate-900 text-slate-400 border-slate-700">
-                      {sortedBgs[bg].length} Players
-                    </Badge>
-                  </CardTitle>
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/40 text-sm text-slate-400">
-                    <span>Total Stats:</span>
-                    <div className="flex gap-3">
-                      <span className={cn(
-                          "font-mono font-bold",
-                          totalSoloRate >= 95 ? "text-emerald-400" : totalSoloRate >= 80 ? "text-slate-300" : "text-amber-500"
-                      )}>
-                          {totalSoloRate.toFixed(0)}%
-                      </span>
-                      <span className="font-mono flex items-center gap-1 text-red-400">
-                          <Skull className="w-3.5 h-3.5" /> {totalDeaths}
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 flex-1">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead className="text-xs text-slate-500 uppercase bg-slate-900/40 font-medium">
-                        <tr>
-                          <th className="px-2 py-3 w-8 text-center">#</th>
-                          <th className="px-2 py-3">Player</th>
-                          <th className="px-2 py-3 text-center">Fights</th>
-                          <th className="px-2 py-3 text-center">Solo %</th>
-                          <th className="px-2 py-3 text-center">Deaths</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/40 text-sm">
-                        {sortedBgs[bg].map((player, index) => {
-                          const rank = index + 1;
-                          const isTop3 = rank <= 3;
-                          const soloRate = player.fights > 0 
-                            ? Math.max(0, ((player.fights - player.deaths) / player.fights) * 100) 
-                            : 0;
-                          
-                          const deathColor = player.deaths === 0 
-                            ? "text-emerald-400" 
-                            : player.deaths < 3 
-                              ? "text-slate-300" 
-                              : "text-red-400";
-  
-                          return (
-                            <tr key={player.playerId} className="group hover:bg-slate-800/20 transition-colors">
-                              <td className="px-2 py-3 text-center font-mono text-slate-500">
-                                {isTop3 ? (
-                                    <span className={cn(
-                                        "inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold",
-                                        rank === 1 && "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40",
-                                        rank === 2 && "bg-slate-400/20 text-slate-300 border border-slate-400/40",
-                                        rank === 3 && "bg-amber-700/20 text-amber-600 border border-amber-700/40"
-                                    )}>
-                                        {rank}
-                                    </span>
-                                ) : (
-                                    <span>{rank}</span>
-                                )}
-                              </td>
-                              <td className="px-2 py-3">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8 border border-slate-700">
-                                    <AvatarImage src={player.avatar || undefined} />
-                                    <AvatarFallback className="text-[10px] bg-slate-800 text-slate-400">
-                                      {player.playerName.substring(0, 2).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className={cn("font-medium truncate max-w-[90px] sm:max-w-[120px]", isTop3 ? "text-slate-200" : "text-slate-400")}>
-                                    {player.playerName}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-2 py-3 text-center">
-                                <span className="font-mono font-bold text-lg text-slate-200">
-                                    {player.fights}
-                                </span>
-                              </td>
-                              <td className="px-2 py-3 text-center">
-                                <span className={cn(
-                                    "font-mono font-bold text-sm",
-                                    soloRate >= 95 ? "text-emerald-400" : soloRate >= 80 ? "text-slate-300" : "text-amber-500"
-                                )}>
-                                    {soloRate.toFixed(0)}%
-                                </span>
-                              </td>
-                              <td className="px-2 py-3 text-center">
-                                <span className={cn("inline-flex items-center gap-1 font-mono font-bold px-2 py-0.5 rounded text-sm", deathColor, player.deaths > 0 && "bg-red-950/20 border border-red-900/30")}>
-                                    {player.deaths > 0 && <Skull className="w-3.5 h-3.5" />}
-                                    {player.deaths}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {sortedBgs[bg].length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="px-4 py-8 text-center text-slate-500 italic">
-                              No stats recorded for this battlegroup.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Interactive Battlegroup Grids */}
+        <SeasonOverviewView 
+            sortedBgs={sortedBgs} 
+            bgTotals={bgTotals} 
+            bgColors={bgColors} 
+        />
 
         {/* Season Insights */}
         <div className="space-y-4">
