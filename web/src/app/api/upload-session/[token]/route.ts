@@ -117,8 +117,9 @@ export async function GET(
       token: uploadToken.token,
     });
 
-  } catch (error: any) {
-    logger.error({ error }, 'Error fetching upload session');
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error({ error: err }, 'Error fetching upload session');
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
 }

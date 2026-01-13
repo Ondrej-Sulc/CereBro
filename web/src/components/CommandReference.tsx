@@ -91,7 +91,10 @@ const getGroupColorBorder = (group: string) => {
 
 // --- Components ---
 
-
+function GroupIconDisplay({ group, className }: { group: string; className?: string }) {
+    const Icon = getGroupIcon(group);
+    return <Icon className={className} />;
+}
 
 interface CommandReferenceProps {
   isAdmin?: boolean;
@@ -106,8 +109,10 @@ export default function CommandReference({ isAdmin = false }: CommandReferencePr
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (!mounted) {
+      setMounted(true);
+    }
+  }, [mounted]);
 
   // Reset selection when group changes, unless searching
   useEffect(() => {
@@ -288,8 +293,6 @@ function EmptyState() {
 }
 
 function CommandDetailView({ command }: { command: Command }) {
-  const GroupIcon = getGroupIcon(command.group);
-
   return (
     <div className="h-full overflow-y-auto custom-scrollbar">
       {/* Header */}
@@ -300,7 +303,7 @@ function CommandDetailView({ command }: { command: Command }) {
             <p className="text-slate-300 text-lg leading-relaxed">{command.description}</p>
           </div>
           <div className={cn("shrink-0 px-3 py-1.5 rounded-lg border flex items-center gap-2", getGroupColor(command.group))}>
-            <GroupIcon className="w-4 h-4" />
+            <GroupIconDisplay group={command.group} className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">{command.group}</span>
           </div>
         </div>

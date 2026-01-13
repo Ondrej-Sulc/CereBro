@@ -130,13 +130,15 @@ export function MobileSheet({
       sheetHeight.set(newHeight);
   }, [minDragHeight, expandedHeight, sheetHeight]);
 
+  const handlePointerUpRef = useRef<(e: PointerEvent) => void>(() => {});
+
   const handlePointerUp = useCallback((e: PointerEvent) => {
       if (!isDragging.current) return;
       isDragging.current = false;
 
       // Clean up listeners
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointerup', handlePointerUpRef.current);
 
       const currentHeight = sheetHeight.get();
       
@@ -149,7 +151,12 @@ export function MobileSheet({
       }
       // When released, animate to the current height (no snapping).
       controls.start({ height: currentHeight });
-  }, [sheetHeight, minDragHeight, controls, onClose]);
+  }, [sheetHeight, minDragHeight, controls, onClose, handlePointerMove]);
+
+  // Keep ref synced
+  useEffect(() => {
+    handlePointerUpRef.current = handlePointerUp;
+  }, [handlePointerUp]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
       e.preventDefault(); // Prevent text selection
@@ -166,9 +173,10 @@ export function MobileSheet({
   useEffect(() => {
       return () => {
           window.removeEventListener('pointermove', handlePointerMove);
-          window.removeEventListener('pointerup', handlePointerUp);
+          // Use the ref for cleanup as well to be safe, though handlePointerUp is stable enough in dependency
+          window.removeEventListener('pointerup', handlePointerUpRef.current);
       };
-  }, [handlePointerMove, handlePointerUp]);
+  }, [handlePointerMove]);
 
 
   if (isDesktop) return null; // No longer needs to return null immediately

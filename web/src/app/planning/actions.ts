@@ -7,7 +7,6 @@ import { WarFight, WarMapType, War, Alliance } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import logger from "@cerebro/core/services/loggerService";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 const createWarSchema = z.object({
@@ -485,7 +484,7 @@ export async function distributePlan(warId: string, battlegroup?: number) {
         allianceId: war.allianceId,
         warId,
         battlegroup
-      }
+      } as { allianceId: string; warId: string; battlegroup?: number }
     }
   });
 

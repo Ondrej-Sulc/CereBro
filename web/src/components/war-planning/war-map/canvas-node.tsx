@@ -5,6 +5,7 @@ import { WarTactic, ChampionClass } from '@prisma/client';
 import { WarNodePosition } from "@cerebro/core/data/war-planning/nodes-data";
 import { WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from '@/lib/championHelper';
+import { ChampionImages } from '@/types/champion';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons
 import { svgToDataUrl } from '@/lib/svgHelper'; // Import the SVG helper
@@ -31,8 +32,10 @@ const useIconImage = (IconComponent: React.ElementType, size: number, color: str
         if (typeof window === 'undefined') return; 
 
         const dataUrl = svgToDataUrl(IconComponent, {}, size, color);
-        setImageUrl(dataUrl);
-    }, [IconComponent, size, color]);
+        if (dataUrl !== imageUrl) {
+            setImageUrl(dataUrl);
+        }
+    }, [IconComponent, size, color, imageUrl]);
 
     return image;
 };
@@ -203,8 +206,8 @@ export const CanvasNode = memo(function CanvasNode({
     const attacker = fight?.attacker;
     const player = fight?.player;
     
-    const defenderImgUrl = defender ? getChampionImageUrl(defender.images as any, '128') : null;
-    const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as any, '128') : null;
+    const defenderImgUrl = defender ? getChampionImageUrl(defender.images as unknown as ChampionImages, '128') : null;
+    const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as unknown as ChampionImages, '128') : null;
     
     // Type guard for fight
     const prefightChampions = fight?.type === 'attack' ? fight.prefightChampions : undefined; 
@@ -375,7 +378,7 @@ export const CanvasNode = memo(function CanvasNode({
                         return (
                         <CircularImage
                             key={`pf-${i}`}
-                            src={getChampionImageUrl(champ.images as any, '64')}
+                            src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64')}
                             x={i * 20}
                             y={0}
                             radius={9}
@@ -420,7 +423,7 @@ export const CanvasNode = memo(function CanvasNode({
                             }}
                         >
                             <CircularImage
-                                src={getChampionImageUrl(stat.attackerImages as any, '64')}
+                                src={getChampionImageUrl(stat.attackerImages as unknown as ChampionImages, '64')}
                                 x={0} y={0}
                                 radius={11}
                                 border={1.5}

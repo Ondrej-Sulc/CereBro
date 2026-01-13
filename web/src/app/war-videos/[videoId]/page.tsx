@@ -5,7 +5,11 @@ import { isUserBotAdmin } from "@/lib/auth-helpers";
 
 export const dynamic = 'force-dynamic';
 
-export default async function WarVideoPage(props: any) {
+interface PageProps {
+    params: Promise<{ videoId: string }>;
+}
+
+export default async function WarVideoPage(props: PageProps) {
   const { params } = props;
 
   const isAdmin = await isUserBotAdmin();

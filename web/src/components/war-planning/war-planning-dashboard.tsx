@@ -97,10 +97,10 @@ export default function WarPlanningDashboard({
 
   // Pre-fill logic based on last war if available
   useEffect(() => {
-      if (wars.length > 0) {
+      if (wars.length > 0 && wars[0].mapType !== selectedMapType) {
           setSelectedMapType(wars[0].mapType);
       }
-  }, [wars]);
+  }, [wars, selectedMapType]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -318,10 +318,13 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
 
   useEffect(() => {
      const date = new Date(war.createdAt);
-     setDateString(date.toLocaleDateString(undefined, { 
+     const formatted = date.toLocaleDateString(undefined, { 
        timeZone: userTimezone || undefined 
-     }));
-  }, [war.createdAt, userTimezone]);
+     });
+     if (formatted !== dateString) {
+        setDateString(formatted);
+     }
+  }, [war.createdAt, userTimezone, dateString]);
 
   return (
     <Card className={cn(

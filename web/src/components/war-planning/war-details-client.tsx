@@ -94,10 +94,11 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             title: "Plan Distribution Started",
             description: `Distribution job queued for ${battlegroup ? `Battlegroup ${battlegroup}` : 'all battlegroups'}.`,
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const error = e as Error;
         toast({
             title: "Distribution Failed",
-            description: e.message,
+            description: error.message,
             variant: "destructive",
         });
     }

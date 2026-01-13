@@ -8,8 +8,9 @@ export function svgToDataUrl<P extends object>(
   size: number = 24,
   color: string = 'white'
 ): string {
+  const elementProps = { size, color, ...(props || {}) } as P & { size?: number; color?: string };
   const svgString = ReactDOMServer.renderToStaticMarkup(
-    React.createElement(SvgComponent, { size, color, ...props } as any)
+    React.createElement(SvgComponent, elementProps)
   );
   const encodedSvg = encodeURIComponent(svgString);
   return `data:image/svg+xml;charset=utf-8,${encodedSvg}`;

@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { ChampionClass, Roster } from "@prisma/client";
+import { ChampionImages } from "@/types/champion";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +16,32 @@ export const metadata: Metadata = {
   title: "My Roster | CereBro",
   description: "Manage and view your MCOC champion roster.",
 };
+
+interface Recommendation {
+    championId: number;
+    championName: string;
+    championClass: ChampionClass;
+    championImage: ChampionImages;
+    stars: number;
+    fromRank: number;
+    toRank: number;
+    prestigeGain: number;
+    accountGain: number;
+}
+
+interface SigRecommendation {
+    championId: number;
+    championName: string;
+    championClass: ChampionClass;
+    championImage: ChampionImages;
+    stars: number;
+    rank: number;
+    fromSig: number;
+    toSig: number;
+    prestigeGain: number;
+    accountGain: number;
+    prestigePerSig: number;
+}
 
 export default async function RosterPage(props: {
   searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string }>;
@@ -65,8 +93,8 @@ export default async function RosterPage(props: {
 
   // Calculate Top 30 Average Prestige
   let top30Average = 0;
-  let recommendations: any[] = [];
-  let sigRecommendations: any[] = [];
+  let recommendations: Recommendation[] = [];
+  let sigRecommendations: SigRecommendation[] = [];
   const rosterPrestigeMap: Record<string, number> = {};
   
   // Determine Simulation Cap
@@ -223,7 +251,6 @@ export default async function RosterPage(props: {
               // Sort current state to find Top 30 threshold quickly
               // (Optimization: Maintain sorted list, but for N<500 array.sort is fast enough per iteration)
               const sortedState = [...simState].sort((a, b) => b.currentPrestige - a.currentPrestige);
-              const currentTop30Sum = sortedState.slice(0, 30).reduce((s, r) => s + r.currentPrestige, 0);
               
               // Evaluate +1 sig for each candidate
               for (const cand of sigCandidates) {
@@ -279,12 +306,6 @@ export default async function RosterPage(props: {
                // Calculate Average Efficiency (Account Gain / Stones Used)
                const totalPrestigeGain = finalPrestige - original.prestige;
                
-               // Account Gain (Final State vs Initial State)
-               // Re-sort final state
-               const finalSimList = simState.map(r => r.currentPrestige).sort((a, b) => b - a);
-               const finalSum = finalSimList.slice(0, 30).reduce((s, p) => s + p, 0);
-               const finalAvg = Math.round(finalSum / Math.min(30, finalSimList.length));
-
                // Note: This logic computes total account gain for the whole batch, 
                // but we want per-champion contribution roughly?
                // Actually, for the list, we can just show the efficiency and the total added.
@@ -379,7 +400,7 @@ export default async function RosterPage(props: {
       </div>
 
       <RosterView 
-        initialRoster={roster as any} 
+        initialRoster={roster as Roster[]} 
         allChampions={allChampions}
         top30Average={top30Average}
         prestigeMap={rosterPrestigeMap}
@@ -387,8 +408,8 @@ export default async function RosterPage(props: {
         sigRecommendations={sigRecommendations}
         simulationTargetRank={targetRank}
         initialSigBudget={sigBudget}
-        initialRankClassFilter={rankClassFilter as any}
-        initialSigClassFilter={sigClassFilter as any}
+        initialRankClassFilter={rankClassFilter as ChampionClass[]}
+        initialSigClassFilter={sigClassFilter as ChampionClass[]}
         initialTags={tags}
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}

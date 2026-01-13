@@ -1,8 +1,8 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
-import { ChampionClass, Prisma } from "@prisma/client";
+import { ChampionClass } from "@prisma/client";
+import { ChampionImages } from "@/types/champion";
 
 export type AllianceRosterEntry = {
     playerId: string;
@@ -12,7 +12,7 @@ export type AllianceRosterEntry = {
     championId: number;
     championName: string;
     championClass: ChampionClass;
-    championImages: any;
+    championImages: ChampionImages;
     stars: number;
     rank: number;
     sigLevel: number;
@@ -27,7 +27,7 @@ export type AllianceRosterEntry = {
         categories: string[];
         synergyChampions: {
             name: string;
-            images: any;
+            images: ChampionImages;
         }[];
     }[];
 };

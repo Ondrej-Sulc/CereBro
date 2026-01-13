@@ -1,19 +1,31 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Circle, Rect, Line, Group } from 'react-konva';
 import { LAYOUT, warNodesData } from "@cerebro/core/data/war-planning/nodes-data";
 
+interface Star {
+    id: number;
+    x: number;
+    y: number;
+    r: number;
+    opacity: number;
+}
+
 export const CanvasBackground = React.memo(function CanvasBackground() {
-    // Generate static stars
-    const stars = useMemo(() => {
-        const count = 400;
-        return Array.from({ length: count }).map((_, i) => ({
-            id: i,
-            x: Math.random() * LAYOUT.WIDTH,
-            y: Math.random() * LAYOUT.HEIGHT,
-            radius: Math.random() * 1.5 + 0.5,
-            opacity: Math.random() * 0.7 + 0.3,
-        }));
-    }, []);
+    // Generate static stars in effect to avoid impure render
+    const [stars, setStars] = useState<Star[]>([]);
+
+    useEffect(() => {
+        if (stars.length === 0) {
+            const count = 400;
+            setStars(Array.from({ length: count }).map((_, i) => ({
+                id: i,
+                x: Math.random() * LAYOUT.WIDTH,
+                y: Math.random() * LAYOUT.HEIGHT,
+                r: Math.random() * 1.5 + 0.5,
+                opacity: Math.random() * 0.7 + 0.3,
+            })));
+        }
+    }, [stars.length]);
 
     // Nebulas - approximations using large circles with radial gradients (simulated via multiple circles or opacity)
     // Konva supports FillRadialGradient.
@@ -73,7 +85,7 @@ export const CanvasBackground = React.memo(function CanvasBackground() {
                     key={`star-${star.id}`}
                     x={star.x}
                     y={star.y}
-                    radius={star.radius}
+                    radius={star.r}
                     fill="white"
                     opacity={star.opacity}
                 />

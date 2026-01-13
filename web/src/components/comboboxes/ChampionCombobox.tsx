@@ -14,13 +14,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import { Champion } from "@/types/champion";
+import { Champion, ChampionImages } from "@/types/champion";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -145,7 +141,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                 >
                   <Image
                     src={getChampionImageUrl(
-                      selectedChampion.images as any,
+                      selectedChampion.images as ChampionImages,
                       "128"
                     )}
                     alt={selectedChampion.name}
@@ -262,7 +258,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                           )}
                         >
                           <Image
-                            src={getChampionImageUrl(item.images as any, "64")}
+                            src={getChampionImageUrl(item.images as ChampionImages, "64")}
                             alt={item.name}
                             fill
                             className="object-cover"

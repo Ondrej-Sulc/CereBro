@@ -202,8 +202,9 @@ export function RosterUpdateForm() {
             setPreviews([]);
         }
       
-    } catch (err: any) {
-        const errorMessage = err.response?.data?.error || err.message || "Failed to update roster";
+    } catch (err: unknown) {
+        const error = err as any;
+        const errorMessage = error.response?.data?.error || error.message || "Failed to update roster";
         setResult({
             success: 0,
             added: [],
@@ -301,7 +302,7 @@ export function RosterUpdateForm() {
                             exit={{ opacity: 0, scale: 0.5 }}
                             className="relative aspect-video rounded-lg overflow-hidden border border-slate-700 group"
                         >
-                            <img src={src} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                            <Image src={src} alt={`Preview ${index}`} fill className="object-cover" />
                             <button
                                 type="button"
                                 onClick={() => removeFile(index)}

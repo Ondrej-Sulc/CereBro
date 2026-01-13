@@ -2,28 +2,42 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { ChampionImages } from "@/types/champion";
 import { Prisma, WarMapType } from "@prisma/client";
 
 export type HistoricalFightStat = {
   attackerId: number;
   attackerName: string;
-  attackerImages: any;
+  attackerImages: ChampionImages;
   solos: number;
   deaths: number;
   totalFights: number;
   videoCount: number;
   sampleVideoUrl?: string;
   sampleVideoInternalId?: string;
-  prefightChampions?: { name: string; images: any }[];
+  prefightChampions?: { name: string; images: ChampionImages }[];
   players: {
     name: string;
     avatar: string | null;
     battlegroup: number | null;
     death: number;
     videoId?: string;
-    prefightChampions: { name: string; images: any }[];
+    prefightChampions: { name: string; images: ChampionImages }[];
   }[];
 };
+
+interface RawStatRow {
+    nodeNumber: number;
+    defenderId: number;
+    attackerId: number;
+    totalFights: bigint;
+    totalDeaths: bigint;
+    solos: bigint;
+    videoCount: bigint;
+    sampleVideoUrl: string | null;
+    sampleVideoInternalId: string | null;
+    sampleFightId: string | null;
+}
 
 // ... existing imports
 
@@ -48,7 +62,7 @@ export async function getBatchHistoricalCounters(
     requests.map((r) => Prisma.sql`(${r.nodeNumber}, ${r.defenderId})`)
   );
 
-  const rawStats = await prisma.$queryRaw<any[]>`
+  const rawStats = await prisma.$queryRaw<RawStatRow[]>`
     SELECT 
       "wn"."nodeNumber",
       "wf"."defenderId",
@@ -98,7 +112,7 @@ export async function getBatchHistoricalCounters(
   `;
 
   // Fetch prefight champions for all sample fights found
-  const sampleFightIds = rawStats.map((r: any) => r.sampleFightId).filter(Boolean);
+  const sampleFightIds = rawStats.map((r) => r.sampleFightId).filter((id): id is string => !!id);
   const fightPrefights = await prisma.warFight.findMany({
     where: { id: { in: sampleFightIds } },
     select: {
@@ -112,13 +126,13 @@ export async function getBatchHistoricalCounters(
   });
   const prefightMap = new Map(fightPrefights.map(f => [
       f.id, 
-      f.prefightChampions.map(p => p.champion)
+      f.prefightChampions.map(p => p.champion as { name: string; images: ChampionImages })
   ]));
 
   // Fetch all attackers involved
-  const rawAttackerIds = [...new Set(rawStats.map((r: any) => r.attackerId))]; // dedupe
+  const rawAttackerIds = [...new Set(rawStats.map((r) => r.attackerId))]; // dedupe
   const rawAttackers = await prisma.champion.findMany({
-    where: { id: { in: rawAttackerIds as number[] } },
+    where: { id: { in: rawAttackerIds } },
     select: { id: true, name: true, images: true }
   });
   const rawAttackerMap = new Map(rawAttackers.map(a => [a.id, a]));
@@ -140,7 +154,7 @@ export async function getBatchHistoricalCounters(
       resultsByNode[nodeNum].push({
           attackerId: attacker.id,
           attackerName: attacker.name,
-          attackerImages: attacker.images,
+          attackerImages: attacker.images as unknown as ChampionImages,
           solos: Number(row.solos),
           deaths: Number(row.totalDeaths),
           totalFights: Number(row.totalFights),
@@ -224,7 +238,7 @@ export async function getHistoricalCounters(
       statsMap.set(attackerId, {
         attackerId,
         attackerName: fight.attacker.name,
-        attackerImages: fight.attacker.images,
+        attackerImages: fight.attacker.images as unknown as ChampionImages,
         solos: 0,
         deaths: 0,
         totalFights: 0,
@@ -246,11 +260,11 @@ export async function getHistoricalCounters(
         if (!stat.sampleVideoUrl && !stat.sampleVideoInternalId) {
             stat.sampleVideoUrl = fight.video.url || undefined;
             stat.sampleVideoInternalId = fight.video.id;
-            stat.prefightChampions = prefights;
+            stat.prefightChampions = prefights.map(p => ({ name: p.name, images: p.images as unknown as ChampionImages }));
         }
     } else if (stat.prefightChampions!.length === 0 && prefights.length > 0) {
         // If no video yet, still capture prefights from a non-video fight if available
-        stat.prefightChampions = prefights;
+        stat.prefightChampions = prefights.map(p => ({ name: p.name, images: p.images as unknown as ChampionImages }));
     }
 
     // Add to player list
@@ -261,7 +275,7 @@ export async function getHistoricalCounters(
         battlegroup: fight.battlegroup,
         death: fight.death,
         videoId: fight.video?.id,
-        prefightChampions: prefights
+        prefightChampions: prefights.map(p => ({ name: p.name, images: p.images as unknown as ChampionImages }))
       });
     }
   }

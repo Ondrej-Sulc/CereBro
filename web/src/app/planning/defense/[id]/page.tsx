@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import DefenseDetailsClient from "@/components/war-planning/defense-details-client";
 import { updateDefensePlacement } from "../../defense-actions";
 import { getFromCache } from "@/lib/cache";
@@ -33,7 +34,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   }
 
   // Allow admins to view any plan, otherwise restrict to player's alliance
-  const whereClause: any = { id: id };
+  const whereClause: Prisma.WarDefensePlanWhereInput = { id: id };
   if (!isBotAdmin) {
       whereClause.allianceId = player.allianceId;
   }

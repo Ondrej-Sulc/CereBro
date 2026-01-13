@@ -66,13 +66,15 @@ export const WarMapBackground = React.memo(function WarMapBackground({ isBigThin
     }, [currentNodesData]);
 
     // Pre-render static background for performance
-    const staticCanvas = useMemo(() => {
+    const [staticCanvas, setStaticCanvas] = React.useState<HTMLCanvasElement | null>(null);
+
+    useEffect(() => {
         const canvas = document.createElement('canvas');
         canvas.width = currentLayout.WIDTH;
         canvas.height = currentLayout.HEIGHT;
         const ctx = canvas.getContext('2d');
 
-        if (!ctx) return canvas;
+        if (!ctx) return;
 
         const W = currentLayout.WIDTH;
         const H = currentLayout.HEIGHT;
@@ -156,12 +158,15 @@ export const WarMapBackground = React.memo(function WarMapBackground({ isBigThin
 
         ctx.globalCompositeOperation = 'source-over';
 
-        return canvas;
-    }, [currentLayout, currentNodesData, contentBounds]);
+        if (!staticCanvas) {
+            setStaticCanvas(canvas);
+        }
+    }, [currentLayout, currentNodesData, contentBounds, accentColor, staticCanvas]);
 
     // Scene function just draws the pre-rendered canvas
     const sceneFunc = useMemo(() => {
         return (context: Konva.Context, _shape: Konva.Shape) => {
+            if (!staticCanvas) return;
             const ctx = context._context;
             ctx.drawImage(staticCanvas, 0, 0);
         };

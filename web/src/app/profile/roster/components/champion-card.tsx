@@ -59,11 +59,12 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                             <div className="absolute top-1.5 left-1.5">
                                 <div className={cn("p-1.5 rounded-full bg-black/80 border border-white/10", classColors.text)}>
                                 <div className="relative w-5 h-5">
-                                    <img 
+                                    <Image 
                                         src={CLASS_ICONS[item.champion.class as Exclude<ChampionClass, 'SUPERIOR'>]} 
                                         alt={item.champion.class} 
-                                        className="w-full h-full object-contain"
-                                        loading="lazy" 
+                                        fill
+                                        sizes="20px"
+                                        className="object-contain"
                                     />
                                 </div>
                                 </div>
@@ -152,14 +153,26 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                     const grouped = items.reduce((acc, curr) => {
                                         const name = curr.ability.name;
                                         if (!acc[name]) {
-                                            acc[name] = { name, instances: [] as { source: string | null, synergyChampions: any[] }[] };
+                                            acc[name] = { name, instances: [] as { 
+                                                source: string | null, 
+                                                synergyChampions: { name: string; images: ChampionImages }[] 
+                                            }[] };
                                         }
                                         acc[name].instances.push({
                                             source: curr.source,
-                                            synergyChampions: curr.synergyChampions.map(s => s.champion) || []
+                                            synergyChampions: curr.synergyChampions.map(s => ({
+                                                name: s.champion.name,
+                                                images: s.champion.images as unknown as ChampionImages
+                                            }))
                                         });
                                         return acc;
-                                    }, {} as Record<string, { name: string, instances: { source: string | null, synergyChampions: any[] }[] }>);
+                                    }, {} as Record<string, { 
+                                        name: string, 
+                                        instances: { 
+                                            source: string | null, 
+                                            synergyChampions: { name: string; images: ChampionImages }[] 
+                                        }[] 
+                                    }>);
                                     return Object.values(grouped);
                                 };
 
