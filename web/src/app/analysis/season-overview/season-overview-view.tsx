@@ -11,12 +11,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Skull } from "lucide-react";
+import { Skull, Swords } from "lucide-react";
 import { useState } from "react";
 
 interface WarFightDetail {
   defenderName: string;
   defenderClass: string;
+  defenderImageUrl: string;
+  attackerName: string;
+  attackerClass: string;
+  attackerImageUrl: string;
   nodeNumber: number;
   isSolo: boolean;
   deaths: number;
@@ -326,11 +330,11 @@ export function SeasonOverviewView({
                   >
                     <CardHeader className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/20">
                       <div className="flex items-center justify-between">
-                        <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
                           <span className="text-sm font-bold text-slate-200">
                             War {war.warNumber}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-sm text-slate-500 font-medium">
                             vs {war.opponent || "Unknown"}
                           </span>
                         </div>
@@ -359,26 +363,48 @@ export function SeasonOverviewView({
                             key={idx}
                             className="flex items-center justify-between py-2 px-4 hover:bg-slate-800/20"
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-4">
                               <Badge
                                 variant="outline"
-                                className="bg-slate-950 text-amber-500 border-slate-800 text-[10px] w-14 justify-center"
+                                className="bg-slate-950 text-amber-500 border-slate-800 text-[10px] w-8 justify-center font-mono"
                               >
-                                Node {fight.nodeNumber}
+                                {fight.nodeNumber}
                               </Badge>
-                              <span className="text-sm text-slate-300">
-                                {fight.defenderName}
-                              </span>
+
+                              <div className="flex items-center gap-2">
+                                {/* Attacker */}
+                                <Avatar className="h-8 w-8 border border-slate-700 bg-slate-900">
+                                  <AvatarImage src={fight.attackerImageUrl} />
+                                  <AvatarFallback className="text-[10px]">
+                                    {fight.attackerName.substring(0, 2)}
+                                  </AvatarFallback>
+                                </Avatar>
+
+                                <Swords className="w-3 h-3 text-slate-600" />
+
+                                {/* Defender */}
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-8 w-8 border border-slate-700 bg-slate-900">
+                                    <AvatarImage src={fight.defenderImageUrl} />
+                                    <AvatarFallback className="text-[10px]">
+                                      {fight.defenderName.substring(0, 2)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-sm text-slate-300 font-medium hidden sm:inline-block">
+                                    {fight.defenderName}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                             {fight.deaths > 0 ? (
-                                <div className="flex items-center gap-1 text-red-400 text-xs font-bold uppercase">
-                                    <Skull className="w-3 h-3" />
-                                    {fight.deaths} Death{fight.deaths > 1 ? "s" : ""}
-                                </div>
+                              <div className="flex items-center gap-1 text-red-400 text-xs font-bold uppercase">
+                                <Skull className="w-3 h-3" />
+                                {fight.deaths} Death{fight.deaths > 1 ? "s" : ""}
+                              </div>
                             ) : (
-                                <span className="text-emerald-500 text-xs font-bold uppercase tracking-wider">
-                                    Solo
-                                </span>
+                              <span className="text-emerald-500 text-xs font-bold uppercase tracking-wider">
+                                Solo
+                              </span>
                             )}
                           </div>
                         ))}
