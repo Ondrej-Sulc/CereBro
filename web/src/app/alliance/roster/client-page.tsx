@@ -406,10 +406,10 @@ export function AllianceRosterMatrix({
                                                 }
 
                                                 const renderBadgeContent = (item: typeof displayAbilities[0]) => (
-                                                    <>
-                                                        <span className="font-semibold whitespace-nowrap">{item.name}</span>
+                                                    <div className="flex items-start gap-1.5">
+                                                        <span className="font-semibold whitespace-nowrap mt-0.5">{item.name}</span>
                                                         {(item.sources.length > 0 || item.allSynergyChampions.length > 0) && (
-                                                            <div className="flex items-center gap-1.5 pl-1.5 border-l border-white/10">
+                                                            <div className="flex flex-col gap-1 pl-1.5 border-l border-white/10">
                                                                 {item.allSynergyChampions.length > 0 && (
                                                                     <div className="flex -space-x-1.5">
                                                                         {item.allSynergyChampions.map((sc, scIdx) => (
@@ -425,12 +425,9 @@ export function AllianceRosterMatrix({
                                                                     </div>
                                                                 )}
                                                                 {item.sources.length > 0 && (
-                                                                    <div className="flex items-center gap-1.5">
+                                                                    <div className="flex flex-col gap-0.5">
                                                                         {item.sources.map((src, sIdx) => (
-                                                                            <span key={sIdx} className={cn(
-                                                                                "font-normal opacity-70 text-[9px]",
-                                                                                sIdx > 0 && "pl-1.5 border-l border-white/5"
-                                                                            )}>
+                                                                            <span key={sIdx} className="font-normal opacity-70 text-[9px] leading-tight">
                                                                                 {src}
                                                                             </span>
                                                                         ))}
@@ -438,7 +435,7 @@ export function AllianceRosterMatrix({
                                                                 )}
                                                             </div>
                                                         )}
-                                                    </>
+                                                    </div>
                                                 );
 
                                                 return (
@@ -454,7 +451,7 @@ export function AllianceRosterMatrix({
                                                                         <Badge 
                                                                             key={i} 
                                                                             variant="secondary" 
-                                                                            className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-center gap-1.5"
+                                                                            className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                                         >
                                                                             {renderBadgeContent(imm)}
                                                                         </Badge>
@@ -474,7 +471,7 @@ export function AllianceRosterMatrix({
                                                                         <Badge 
                                                                             key={i} 
                                                                             variant="secondary" 
-                                                                            className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-center gap-1.5"
+                                                                            className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                                         >
                                                                            {renderBadgeContent(ab)}
                                                                         </Badge>
