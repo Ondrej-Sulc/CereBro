@@ -17,111 +17,9 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FlipToggle } from "@/components/ui/flip-toggle";
+import { FilterGroup, MultiSelectFilter } from "@/components/ui/filters";
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
-
-const FilterGroup = ({ options, value, onChange, className }: { options: { value: string, label: string }[], value: string, onChange: (v: string) => void, className?: string }) => (
-    <div className={cn("flex items-center bg-slate-950 rounded-md border border-slate-800 p-1 shrink-0 overflow-x-auto no-scrollbar", className)}>
-        {options.map(opt => (
-            <Button
-                key={opt.value}
-                variant="ghost"
-                size="sm"
-                onClick={() => onChange(opt.value)}
-                className={cn(
-                    "h-7 px-3 text-xs whitespace-nowrap",
-                    value === opt.value ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
-                )}
-            >
-                {opt.label}
-            </Button>
-        ))}
-    </div>
-);
-
-interface MultiSelectFilterProps {
-    title: string;
-    icon: React.ElementType;
-    options: { id: string | number, name: string }[];
-    selectedValues: string[];
-    onSelect: (values: string[]) => void;
-    placeholder?: string;
-    logic: 'AND' | 'OR';
-    onLogicChange: (logic: 'AND' | 'OR') => void;
-}
-
-const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, onSelect, placeholder, logic, onLogicChange }: MultiSelectFilterProps) => {
-    const [open, setOpen] = useState(false);
-
-    const toggleValue = (val: string) => {
-        if (selectedValues.includes(val)) {
-            onSelect(selectedValues.filter(v => v !== val));
-        } else {
-            onSelect([...selectedValues, val]);
-        }
-    };
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[150px]">
-                    <div className="flex items-center gap-2 truncate">
-                        <Icon className="w-3.5 h-3.5" />
-                        {selectedValues.length > 0 ? (
-                            <span className="text-slate-100">{selectedValues.length} selected</span>
-                        ) : (
-                            <span>{title}</span>
-                        )}
-                    </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[250px] p-0 bg-slate-950 border-slate-800" align="start">
-                <div className="p-2 border-b border-slate-800 bg-slate-900/50">
-                    <FlipToggle
-                        value={logic === 'AND'}
-                        onChange={(val) => onLogicChange(val ? 'AND' : 'OR')}
-                        leftLabel="OR"
-                        rightLabel="AND"
-                        className="w-full"
-                    />
-                </div>
-                <Command className="bg-slate-950 text-slate-300">
-                    <CommandInput placeholder={placeholder || `Search ${title}...`} className="h-9" />
-                    <CommandList>
-                        <CommandEmpty>No results found.</CommandEmpty>
-                        <CommandGroup className="max-h-[300px] overflow-y-auto">
-                            <CommandItem
-                                value="clear_filter"
-                                onSelect={() => onSelect([])}
-                                className="text-xs font-bold text-red-400"
-                            >
-                                <X className="mr-2 h-4 w-4" />
-                                Clear Filter
-                            </CommandItem>
-                            {options.map(opt => (
-                                <CommandItem
-                                    key={opt.id}
-                                    value={opt.name}
-                                    onSelect={() => toggleValue(opt.name)}
-                                    className="text-xs"
-                                >
-                                    <div className={cn(
-                                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-slate-700",
-                                        selectedValues.includes(opt.name) ? "bg-slate-100 text-slate-900" : "opacity-50 [&_svg]:invisible"
-                                    )}>
-                                        <Check className={cn("h-3 w-3")} />
-                                    </div>
-                                    {opt.name}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    );
-};
 
 interface ClientPageProps {
     data: AllianceRosterEntry[];
@@ -216,7 +114,7 @@ export function AllianceRosterMatrix({
             // Ability Category Logic
             if (abilityCategoryFilter.length > 0) {
                 // Get all category names present on this champion
-                const championCategories = new Set(entry.abilities.flatMap(a => a.categories));
+                const championCategories = new Set(entry.abilities.filter(a => a.type === 'ABILITY').flatMap(a => a.categories));
                 
                 if (abilityCategoryLogic === 'AND') {
                     // Must have ALL selected categories (across its abilities)
@@ -363,21 +261,23 @@ export function AllianceRosterMatrix({
                                     <ScrollArea className="max-h-[300px]">
                                         <div className="p-3 space-y-4">
                                             {(() => {
-                                                const isFiltering = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0 || tagFilter.length > 0;
+                                                const isFilteringAbilities = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0;
+                                                const isFilteringTags = tagFilter.length > 0;
+                                                const isFiltering = isFilteringAbilities || isFilteringTags;
                                                 
                                                 if (!isFiltering) {
-                                                    return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion abilities.</div>;
+                                                    return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion details.</div>;
                                                 }
 
-                                                const relevantItems = champ.abilities.filter(a => {
+                                                const relevantItems = isFilteringAbilities ? champ.abilities.filter(a => {
                                                     // Strict Type Checking for Filters
                                                     if (abilityFilter.length > 0 && a.type === 'ABILITY' && abilityFilter.includes(a.name)) return true;
                                                     if (immunityFilter.length > 0 && a.type === 'IMMUNITY' && immunityFilter.includes(a.name)) return true;
                                                     
-                                                    if (abilityCategoryFilter.length > 0 && a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
+                                                    if (abilityCategoryFilter.length > 0 && a.type === 'ABILITY' && a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
                                                     
                                                     return false;
-                                                });
+                                                }) : [];
 
                                                 // Group by Name + Type to combine source instances
                                                 const groupedItems = relevantItems.reduce((acc, curr) => {
@@ -398,9 +298,10 @@ export function AllianceRosterMatrix({
 
                                                 const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
                                                 const displayImmunities = Object.values(groupedItems).filter(a => a.type === 'IMMUNITY');
+                                                const displayTags = isFilteringTags ? champ.tags.filter(t => tagFilter.includes(t)) : [];
 
-                                                if (displayAbilities.length === 0 && displayImmunities.length === 0) {
-                                                    return <div className="text-xs text-slate-500 text-center italic">No matching abilities found.</div>;
+                                                if (displayAbilities.length === 0 && displayImmunities.length === 0 && displayTags.length === 0) {
+                                                    return <div className="text-xs text-slate-500 text-center italic">No matching details found.</div>;
                                                 }
 
                                                 const renderBadgeContent = (item: typeof displayAbilities[0]) => {
@@ -479,6 +380,22 @@ export function AllianceRosterMatrix({
                                                                             className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                                         >
                                                                            {renderBadgeContent(ab)}
+                                                                        </Badge>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {displayTags.length > 0 && (
+                                                            <div className="space-y-1.5">
+                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                                                                    <TagIcon className="w-3.5 h-3.5" />
+                                                                    Matching Tags
+                                                                </div>
+                                                                <div className="flex flex-wrap gap-1.5">
+                                                                    {displayTags.map((tag, i) => (
+                                                                        <Badge key={i} variant="outline" className="text-[10px] border-slate-700 text-slate-400">
+                                                                            {tag}
                                                                         </Badge>
                                                                     ))}
                                                                 </div>

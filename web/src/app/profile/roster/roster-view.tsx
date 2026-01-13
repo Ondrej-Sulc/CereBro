@@ -1,74 +1,23 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, memo, useCallback, useEffect, useTransition } from "react";
-import { RosterWithChampion } from "@cerebro/core/services/rosterService";
+import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition } from "react";
 import { ChampionClass } from "@prisma/client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Search, Sparkles, Trash2, Edit2, ShieldAlert, CircleOff, TrendingUp, ChevronRight, Trophy, ChevronDown, Zap, Loader2, Plus, Info } from "lucide-react";
-import Image from "next/image";
-import { getChampionImageUrl } from "@/lib/championHelper";
-import { getChampionClassColors } from "@/lib/championClassHelper";
-import { cn } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ChampionImages } from "@/types/champion";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
-import { PrestigeCurveChart } from "./prestige-curve-chart";
-import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@prisma/client";
 
-export interface Recommendation {
-    championName: string;
-    championClass: ChampionClass;
-    championImage: any;
-    stars: number;
-    fromRank: number;
-    toRank: number;
-    prestigeGain: number;
-    accountGain: number;
-}
-
-export interface SigRecommendation {
-    championId: number;
-    championName: string;
-    championClass: ChampionClass;
-    championImage: any;
-    stars: number;
-    rank: number;
-    fromSig: number;
-    toSig: number;
-    prestigeGain: number;
-    accountGain: number;
-    prestigePerSig: number;
-}
+// Local imports
+import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
+import { ChampionCard } from "./components/champion-card";
+import { RosterFilters } from "./components/roster-filters";
+import { RosterInsights } from "./components/roster-insights";
+import { EditChampionModal } from "./components/modals/edit-champion-modal";
+import { AddChampionModal } from "./components/modals/add-champion-modal";
+import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 
 interface RosterViewProps {
-  initialRoster: RosterWithChampion[];
+  initialRoster: ProfileRosterEntry[];
   allChampions: Champion[];
   top30Average: number;
   prestigeMap: Record<string, number>;
@@ -78,350 +27,96 @@ interface RosterViewProps {
   initialSigBudget?: number;
   initialRankClassFilter: ChampionClass[];
   initialSigClassFilter: ChampionClass[];
+  initialTags: { id: string | number, name: string }[];
+  initialAbilityCategories: { id: string | number, name: string }[];
+  initialAbilities: { id: string | number, name: string }[];
+  initialImmunities: { id: string | number, name: string }[];
 }
 
-const CLASS_ICONS: Record<ChampionClass, string> = {
-    SCIENCE: "/icons/Science.png",
-    SKILL: "/icons/Skill.png",
-    MYSTIC: "/icons/Mystic.png",
-    COSMIC: "/icons/Cosmic.png",
-    TECH: "/icons/Tech.png",
-    MUTANT: "/icons/Mutant.png",
-    SUPERIOR: "/icons/Superior.png",
-};
-
-const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
-
-// Extracted Card Component for Virtuoso
-
-const ChampionCard = memo(({ item, prestige, onEdit }: { item: RosterWithChampion; prestige?: number; onEdit: (item: RosterWithChampion) => void }) => {
-    const classColors = getChampionClassColors(item.champion.class);
-    
-    return (
-        <div 
-            className={cn(
-                "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-colors cursor-pointer bg-slate-900",
-                classColors.bg,
-                "border-slate-800 hover:border-slate-500"
-            )}
-            onClick={() => onEdit(item)}
-        >
-            {/* Image */}
-            <Image 
-                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, 'full')} 
-                alt={item.champion.name}
-                fill
-                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 10vw"
-                className="object-cover transition-transform group-hover:scale-105 p-1"
-            />
-            
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
-
-            {/* Top Info (Stars/Rank Indicator) */}
-            <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded border border-white/10">
-                        <span className="text-white text-xs font-black leading-none">{item.stars}</span>
-                        <span className="text-yellow-500 text-[10px]">★</span>
-                </div>
-                    {item.isAscended && (
-                    <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30" title="Ascended">
-                        <Trophy className="w-4 h-4 text-yellow-400" />
-                    </div>
-                )}
-            </div>
-
-                <div className="absolute top-1.5 left-1.5">
-                    <div className={cn("p-1.5 rounded-full bg-black/80 border border-white/10", classColors.text)}>
-                    <div className="relative w-5 h-5">
-                        <img 
-                            src={CLASS_ICONS[item.champion.class]} 
-                            alt={item.champion.class} 
-                            className="w-full h-full object-contain"
-                            loading="lazy" 
-                        />
-                    </div>
-                    </div>
-                </div>
-
-
-            {/* Bottom Info */}
-            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                <div className="flex items-center justify-between mb-1">
-                    <div className="flex gap-1 items-center">
-                        <Badge variant="outline" className="bg-slate-900/90 border-slate-700 text-[10px] px-1.5 py-0 h-4 font-bold text-slate-100">
-                            R{item.rank}
-                        </Badge>
-                        {item.isAwakened && (
-                             <Badge variant="outline" className="bg-sky-950/40 border-sky-500/30 text-[10px] px-1.5 py-0 h-4 font-bold text-sky-400">
-                                S{item.sigLevel}
-                            </Badge>
-                        )}
-                    </div>
-                    {/* Prestige Display */}
-                    {prestige ? (
-                         <span className="text-[10px] font-mono font-medium text-slate-300 bg-black/40 px-1 rounded">
-                            {prestige.toLocaleString('en-US')}
-                        </span>
-                    ) : (
-                        item.isAwakened && <Sparkles className="w-3.5 h-3.5 text-white fill-white/20" />
-                    )}
-                </div>
-                <p className="text-[11px] sm:text-xs font-bold text-white leading-tight truncate">{item.champion.name}</p>
-            </div>
-
-            {/* Hover Overlay Action */}
-            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-sky-600 p-2 rounded-full scale-75 group-hover:scale-100 transition-transform">
-                        <Edit2 className="w-4 h-4 text-white" />
-                    </div>
-            </div>
-        </div>
-    );
-});
-ChampionCard.displayName = 'ChampionCard';
-
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
-    <div
-        ref={ref}
-        {...props}
-        style={style}
-        className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2"
-    >
+    <div ref={ref} {...props} style={style} className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
         {children}
     </div>
 ));
 GridList.displayName = "GridList";
 
-function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: ChampionClass[], onChange: (classes: ChampionClass[]) => void }) {
-    const toggleClass = (c: ChampionClass) => {
-        if (selectedClasses.includes(c)) {
-            onChange(selectedClasses.filter(cls => cls !== c));
-        } else {
-            onChange([...selectedClasses, c]);
-        }
-    };
-
-    return (
-        <div className="flex items-center">
-            {/* Mobile / Compact View */}
-            <div className="lg:hidden">
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("h-7 w-7 rounded-full", selectedClasses.length > 0 ? "bg-sky-600/20 text-sky-400 hover:bg-sky-600/30 hover:text-sky-300" : "text-slate-400 hover:text-slate-200")}>
-                            <div className="relative">
-                                <CircleOff className={cn("w-4 h-4", selectedClasses.length > 0 && "hidden")} />
-                                {selectedClasses.length > 0 && (
-                                    <div className="flex -space-x-1 items-center justify-center">
-                                        <div className="w-4 h-4 rounded-full bg-sky-500 text-[10px] text-white font-bold flex items-center justify-center ring-2 ring-slate-900">
-                                            {selectedClasses.length}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2 bg-slate-900 border-slate-800" align="end">
-                        <div className="flex gap-2">
-                            {CLASSES.map(c => {
-                                const colors = getChampionClassColors(c);
-                                const isSelected = selectedClasses.includes(c);
-                                return (
-                                     <Button
-                                        key={c}
-                                        variant="ghost"
-                                        size="sm"
-                                        className={cn(
-                                            "h-8 w-8 p-1.5 rounded-full transition-all border shrink-0",
-                                            isSelected 
-                                                ? cn(colors.bg, colors.border, "shadow-sm") 
-                                                : "bg-transparent border-transparent hover:bg-slate-800"
-                                        )}
-                                        onClick={() => toggleClass(c)}
-                                        title={c}
-                                    >
-                                        <div className="relative w-full h-full">
-                                            <Image 
-                                                src={CLASS_ICONS[c]} 
-                                                alt={c} 
-                                                fill 
-                                                sizes="24px"
-                                                className="object-contain"
-                                            />
-                                        </div>
-                                    </Button>
-                                );
-                            })}
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-slate-800 flex justify-end">
-                            <Button variant="ghost" size="sm" className="h-6 text-[10px] text-slate-400 hover:text-white" onClick={() => onChange([])}>
-                                Clear Filter
-                            </Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            </div>
-
-            {/* Desktop / Expanded View */}
-            <div className="hidden lg:flex items-center gap-1 bg-slate-900/50 p-1 rounded-full border border-slate-800">
-                 <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                        "h-6 w-6 rounded-full transition-all shrink-0",
-                        selectedClasses.length === 0 ? "bg-slate-700 text-white shadow-inner" : "text-slate-500 hover:text-slate-300"
-                    )}
-                    onClick={() => onChange([])}
-                    title="All Classes"
-                >
-                    <CircleOff className="h-3 w-3" />
-                </Button>
-                <div className="h-3 w-px bg-slate-800 mx-0.5" />
-                {CLASSES.map(c => {
-                    const colors = getChampionClassColors(c);
-                    const isSelected = selectedClasses.includes(c);
-                    
-                    return (
-                        <Button
-                            key={c}
-                            variant="ghost"
-                            size="sm"
-                            className={cn(
-                                "h-6 w-6 p-1 rounded-full transition-all border shrink-0",
-                                isSelected 
-                                    ? cn(colors.bg, colors.border, "shadow-sm") 
-                                    : "bg-transparent border-transparent hover:bg-slate-800"
-                            )}
-                            onClick={() => toggleClass(c)}
-                            title={c}
-                        >
-                            <div className="relative w-full h-full">
-                                <Image 
-                                    src={CLASS_ICONS[c]} 
-                                    alt={c} 
-                                    fill 
-                                    sizes="24px"
-                                    className="object-contain"
-                                />
-                            </div>
-                        </Button>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
-export function RosterView({ initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations, simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter }: RosterViewProps) {
-  const [roster, setRoster] = useState<RosterWithChampion[]>(initialRoster);
+export function RosterView({
+    initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations,
+    simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
+    initialTags, initialAbilityCategories, initialAbilities, initialImmunities
+}: RosterViewProps) {
+  const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
   const [search, setSearch] = useState("");
-  const [filterClass, setFilterClass] = useState<ChampionClass | null>(null);
-  const [filterStars, setFilterStars] = useState<string>("ALL");
-  const [filterRank, setFilterRank] = useState<string>("ALL");
+  const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
+  const [filterStars, setFilterStars] = useState<number[]>([]);
+  const [filterRanks, setFilterRanks] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
-  const [editingItem, setEditingItem] = useState<RosterWithChampion | null>(null);
+  const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(true);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
   
-  // New Filter States
+  // Filter States
+  const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+  const [tagLogic, setTagLogic] = useState<'AND' | 'OR'>('AND');
+  const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
+  const [abilityCategoryLogic, setAbilityCategoryLogic] = useState<'AND' | 'OR'>('OR');
+  const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
+  const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
+  const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
+  const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
+
   const [rankUpClassFilter, setRankUpClassFilter] = useState<ChampionClass[]>(initialRankClassFilter);
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   
   const [isPending, startTransition] = useTransition();
-  
-  const [chartData, setChartData] = useState<{data: any[], rec: SigRecommendation} | null>(null);
+  const [chartData, setChartData] = useState<{data: PrestigePoint[], rec: SigRecommendation} | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
-
-  // Add Champion State
   const [isAddingChampion, setIsAddingChampion] = useState(false);
   const [newChampion, setNewChampion] = useState<{
-      championId: string;
+      championId: number | null;
       stars: number;
       rank: number;
       sigLevel: number;
       isAwakened: boolean;
       isAscended: boolean;
   }>({
-      championId: "",
-      stars: 6,
-      rank: 1,
-      sigLevel: 0,
-      isAwakened: false,
-      isAscended: false,
+      championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
   });
 
   const router = useRouter();
   const { toast } = useToast();
 
-  // Sync Filters to URL
-  const updateUrlParams = (updates: Record<string, string | null>) => {
+  const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);
-      Object.entries(updates).forEach(([key, value]) => {
-          if (value) {
-              params.set(key, value);
-          } else {
-              params.delete(key);
-          }
-      });
-      startTransition(() => {
-          router.push(`?${params.toString()}`);
-      });
-  };
+      Object.entries(updates).forEach(([key, value]) => { if (value) params.set(key, value); else params.delete(key); });
+      startTransition(() => { router.push(`?${params.toString()}`); });
+  }, [router]);
 
   const handleRankClassFilterChange = (classes: ChampionClass[]) => {
-      setRankUpClassFilter(classes);
-      setPendingSection('rank');
+      setRankUpClassFilter(classes); setPendingSection('rank');
       updateUrlParams({ rankClassFilter: classes.length > 0 ? classes.join(',') : null });
   };
 
   const handleSigClassFilterChange = (classes: ChampionClass[]) => {
-      setSigClassFilter(classes);
-      setPendingSection('sig');
+      setSigClassFilter(classes); setPendingSection('sig');
       updateUrlParams({ sigClassFilter: classes.length > 0 ? classes.join(',') : null });
   };
 
   const handleAddChampion = async () => {
-      if (!newChampion.championId) {
-          toast({ title: "Error", description: "Please select a champion", variant: "destructive" });
-          return;
-      }
-
+      if (newChampion.championId === null) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
       try {
         const response = await fetch("/api/profile/roster/add", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                championId: parseInt(newChampion.championId),
-                stars: newChampion.stars,
-                rank: newChampion.rank,
-                sigLevel: newChampion.sigLevel,
-                isAwakened: newChampion.isAwakened,
-                isAscended: newChampion.isAscended,
-            }),
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
         });
-
         if (!response.ok) throw new Error("Failed to add champion");
-
-        const addedChampion = await response.json();
-        
-        // Optimistic Update (or full refresh)
-        // Since we need prestige calc, full refresh is safer but let's try to just append if possible
-        // Ideally we re-fetch everything or reload page.
         toast({ title: "Success", description: "Champion added to roster" });
         setIsAddingChampion(false);
-        setNewChampion({
-            championId: "",
-            stars: 6,
-            rank: 1,
-            sigLevel: 0,
-            isAwakened: false,
-            isAscended: false,
-        });
+        setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
         setPendingSection('all');
-        startTransition(() => {
-            router.refresh();
-        });
+        startTransition(() => { router.refresh(); });
       } catch (error) {
           toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
       }
@@ -441,62 +136,76 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
       }
   };
 
-  const handleTargetChange = (val: string) => {
-    setPendingSection('rank');
-    updateUrlParams({ targetRank: val });
-  };
-
   useEffect(() => {
     const timer = setTimeout(() => {
         setPendingSection('sig');
         updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
     }, 500);
-
     return () => clearTimeout(timer);
-  }, [sigBudget, router]);
+  }, [sigBudget, updateUrlParams]);
 
   const filteredRoster = useMemo(() => {
     const filtered = roster.filter((item) => {
       const matchesSearch = item.champion.name.toLowerCase().includes(search.toLowerCase());
-      const matchesClass = !filterClass || item.champion.class === filterClass;
-      const matchesStars = filterStars === "ALL" || item.stars.toString() === filterStars;
-      const matchesRank = filterRank === "ALL" || item.rank.toString() === filterRank;
-      return matchesSearch && matchesClass && matchesStars && matchesRank;
+      const matchesClass = filterClasses.length === 0 || filterClasses.includes(item.champion.class);
+      const matchesStars = filterStars.length === 0 || filterStars.includes(item.stars);
+      const matchesRank = filterRanks.length === 0 || filterRanks.includes(item.rank);
+      
+      if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank) return false;
+
+      // Pre-compute sets once per item for performance
+      const abilityEntries = item.champion.abilities.filter(a => a.type === 'ABILITY');
+      const immunityEntries = item.champion.abilities.filter(a => a.type === 'IMMUNITY');
+      const champTags = item.champion.tags.map(t => t.name);
+      
+      if (tagFilter.length > 0) {
+          if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }
+          else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
+      }
+
+      if (abilityCategoryFilter.length > 0) {
+          const championCategories = new Set(abilityEntries.flatMap(a => a.ability.categories.map(c => c.name)));
+          if (abilityCategoryLogic === 'AND') { if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false; }
+          else { if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false; }
+      }
+
+      if (abilityFilter.length > 0) {
+          const champAbilities = new Set(abilityEntries.map(a => a.ability.name));
+          if (abilityLogic === 'AND') { if (!abilityFilter.every(req => champAbilities.has(req))) return false; }
+          else { if (!abilityFilter.some(req => champAbilities.has(req))) return false; }
+      }
+
+      if (immunityFilter.length > 0) {
+          const champImmunities = new Set(immunityEntries.map(a => a.ability.name));
+          if (immunityLogic === 'AND') { if (!immunityFilter.every(req => champImmunities.has(req))) return false; }
+          else { if (!immunityFilter.some(req => champImmunities.has(req))) return false; }
+      }
+
+      return true;
     });
 
     return filtered.sort((a, b) => {
-        if (sortBy === "NAME") {
-            return a.champion.name.localeCompare(b.champion.name);
-        } else {
-            const prestigeA = prestigeMap[a.id] || 0;
-            const prestigeB = prestigeMap[b.id] || 0;
-            // Primary: Prestige Descending
-            if (prestigeA !== prestigeB) return prestigeB - prestigeA;
-            // Secondary: Name Ascending (for equal prestige)
-            return a.champion.name.localeCompare(b.champion.name);
-        }
+        if (sortBy === "NAME") return a.champion.name.localeCompare(b.champion.name);
+        const prestigeA = prestigeMap[a.id] || 0;
+        const prestigeB = prestigeMap[b.id] || 0;
+        if (prestigeA !== prestigeB) return prestigeB - prestigeA;
+        return a.champion.name.localeCompare(b.champion.name);
     });
-  }, [roster, search, filterClass, filterStars, filterRank, sortBy, prestigeMap]);
+  }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, prestigeMap, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic]);
 
-  const handleUpdate = async (updatedData: Partial<RosterWithChampion> & { id: string }) => {
+  const handleUpdate = async (updatedData: Partial<ProfileRosterEntry> & { id: string }) => {
     try {
         const response = await fetch("/api/profile/roster/manage", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            method: "PUT", headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedData),
         });
-
         if (!response.ok) throw new Error("Failed to update");
-
         const updatedItem = await response.json();
-        
         setRoster(prev => prev.map(item => item.id === updatedData.id ? { ...item, ...updatedItem } : item));
         toast({ title: "Success", description: "Champion updated" });
         setEditingItem(null);
         setPendingSection('all');
-        startTransition(() => {
-            router.refresh();
-        });
+        startTransition(() => { router.refresh(); });
     } catch (error) {
         toast({ title: "Error", description: "Failed to update champion", variant: "destructive" });
     }
@@ -504,691 +213,67 @@ export function RosterView({ initialRoster, allChampions, top30Average, prestige
 
   const handleDelete = async (id: string) => {
       if (!confirm("Are you sure you want to remove this champion from your roster?")) return;
-
       try {
         const response = await fetch("/api/profile/roster/manage", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            method: "DELETE", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id }),
         });
-
         if (!response.ok) throw new Error("Failed to delete");
-
         setRoster(prev => prev.filter(item => item.id !== id));
         toast({ title: "Success", description: "Champion removed" });
         setEditingItem(null);
         setPendingSection('all');
-        startTransition(() => {
-            router.refresh();
-        });
+        startTransition(() => { router.refresh(); });
       } catch (error) {
           toast({ title: "Error", description: "Failed to remove champion", variant: "destructive" });
       }
   };
 
-  const handleEdit = useCallback((item: RosterWithChampion) => {
-    setEditingItem(item);
-  }, []);
-
   const itemContent = useCallback((index: number) => {
       const item = filteredRoster[index];
       return (
         <ChampionCard 
-            item={item} 
-            prestige={prestigeMap[item.id]}
-            onEdit={handleEdit} 
+            item={item} prestige={prestigeMap[item.id]} onClick={setEditingItem} mode={viewMode}
+            filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
         />
       );
-  }, [filteredRoster, handleEdit, prestigeMap]);
+  }, [filteredRoster, prestigeMap, viewMode, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
 
   return (
     <div className="space-y-6">
-      {/* Insights Toggle & Header */}
-      {(recommendations?.length || sigRecommendations?.length) ? (
-          <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                   <Button 
-                        variant="ghost" 
-                        onClick={() => setShowInsights(!showInsights)}
-                        className="flex items-center gap-2 px-0 hover:bg-transparent text-slate-300 hover:text-white"
-                   >
-                       <div className={cn("p-1 bg-slate-800 rounded transition-transform duration-200", showInsights && "rotate-180")}>
-                           <ChevronDown className="w-4 h-4" />
-                       </div>
-                       <h2 className="font-bold text-lg">Prestige Suggestions</h2>
-                   </Button>
-              </div>
+      <RosterInsights 
+        showInsights={showInsights} onToggleInsights={() => setShowInsights(!showInsights)}
+        recommendations={recommendations} sigRecommendations={sigRecommendations}
+        simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
+        sigBudget={sigBudget} onSigBudgetChange={setSigBudget}
+        rankUpClassFilter={rankUpClassFilter} onRankUpClassFilterChange={handleRankClassFilterChange}
+        sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
+        isPending={isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
+      />
 
-            {showInsights && (
-                <div className="space-y-6 animate-in slide-in-from-top-2 fade-in duration-300">
-                    {/* Rank-up Recommendations Card */}
-                    {recommendations && (
-                        <Card className="bg-gradient-to-br from-indigo-950/40 via-slate-900/50 to-slate-950 border-indigo-500/20 overflow-hidden">
-                            <div className="px-4 py-3 border-b border-indigo-500/10 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-indigo-500/20 rounded-lg">
-                                        <TrendingUp className="w-4 h-4 text-indigo-400" />
-                                    </div>
-                                    <h3 className="font-bold text-slate-100">Rank-up Opportunities</h3>
-                                    <Popover>
-                                        <PopoverTrigger>
-                                            <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" />
-                                        </PopoverTrigger>
-                                        <PopoverContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
-                                            <p>Rank-ups that provide the highest immediate increase to your Top 30 Prestige.</p>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <ClassFilterSelector selectedClasses={rankUpClassFilter} onChange={handleRankClassFilterChange} />
-                                    <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block">Target Rank</Label>
-                                    <Select value={String(simulationTargetRank)} onValueChange={handleTargetChange}>
-                                        <SelectTrigger className="h-7 w-[90px] bg-slate-900 border-slate-700 text-slate-300 text-xs">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {[3, 4, 5, 6].map(r => (
-                                                <SelectItem key={r} value={String(r)} className="text-xs">Rank {r}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+      <RosterFilters 
+        search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
+        onAddClick={() => setIsAddingChampion(true)} top30Average={top30Average}
+        sortBy={sortBy} onSortByChange={setSortBy} filterStars={filterStars} onFilterStarsChange={setFilterStars}
+        filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
+        tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
+        abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
+        abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
+        immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
+        initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
+      />
 
-                            {recommendations.length > 0 ? (
-                                <>
-                                    <div className={cn(
-                                        "p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500 ease-out",
-                                        isPending && (pendingSection === 'rank' || pendingSection === 'all') && "blur-[1px] scale-[0.995] opacity-80 pointer-events-none"
-                                    )}>
-                                        {recommendations
-                                            .map((rec, i) => {
-                                            const classColors = getChampionClassColors(rec.championClass);
-                                            return (
-                                                <div key={i} className={cn(
-                                                    "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative",
-                                                    classColors.bg,
-                                                    "bg-opacity-10 hover:bg-opacity-20",
-                                                    classColors.border,
-                                                    "border-opacity-30"
-                                                )}>
-                                                    {/* Avatar */}
-                                                    <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                                                        <Image 
-                                                            src={getChampionImageUrl(rec.championImage, 'full')} 
-                                                            alt={rec.championName}
-                                                            fill
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                    
-                                                    {/* Info */}
-                                                    <div className="flex flex-col min-w-0 flex-1">
-                                                        <div className="flex items-center justify-between mb-0.5">
-                                                            <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★</span>
-                                                            <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
-                                                                <span>R{rec.fromRank}</span>
-                                                                <ChevronRight className="w-2.5 h-2.5" />
-                                                                <span className={cn(classColors.text, "brightness-150")}>R{rec.toRank}</span>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                                                        
-                                                        <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-emerald-500/20">
-                                                            +{rec.accountGain}
-                                                        </Badge>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="px-4 py-2 bg-indigo-500/5 border-t border-indigo-500/10 text-[10px] text-slate-500 italic">
-                                        These rank-ups would provide the largest net increase to your Top 30 account average.
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="p-8 flex flex-col items-center justify-center text-center space-y-2">
-                                    <div className="p-3 bg-slate-900/50 rounded-full mb-2">
-                                        <TrendingUp className="w-6 h-6 text-slate-600" />
-                                    </div>
-                                    <p className="text-slate-400 font-medium text-sm">No impactful rank-ups found for Target Rank {simulationTargetRank}.</p>
-                                    <p className="text-slate-500 text-xs max-w-md">
-                                        Rank-ups to this level won't increase your Top 30 Prestige enough to matter. Try increasing the Target Rank to see future opportunities.
-                                    </p>
-                                </div>
-                            )}
-                        </Card>
-                    )}
-
-                    {/* Sig Recommendations Card */}
-                    {sigRecommendations && sigRecommendations.length > 0 && (
-                        <Card className="bg-gradient-to-br from-purple-950/40 via-slate-900/50 to-slate-950 border-purple-500/20 overflow-hidden">
-                            <div className="px-4 py-3 border-b border-purple-500/10 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-purple-500/20 rounded-lg">
-                                        <Sparkles className="w-4 h-4 text-purple-400" />
-                                    </div>
-                                    <h3 className="font-bold text-slate-100">
-                                        {sigBudget > 0 ? `Recommended Allocation of ${sigBudget} Sig Stones` : "Max Sig Potential"}
-                                    </h3>
-                                    <Popover>
-                                        <PopoverTrigger>
-                                            <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer" />
-                                        </PopoverTrigger>
-                                        <PopoverContent className="bg-slate-900 border-slate-800 text-slate-300 max-w-[300px]">
-                                            <p>
-                                                {sigBudget > 0 
-                                                    ? "Optimal stone distribution to maximize your account average with the given budget." 
-                                                    : "Champions with the highest potential average increase if taken to Max Sig."}
-                                            </p>
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <ClassFilterSelector selectedClasses={sigClassFilter} onChange={handleSigClassFilterChange} />
-                                    <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Stone Budget</Label>
-                                    <Input 
-                                        type="number"
-                                        min={0}
-                                        value={sigBudget || ""}
-                                        placeholder="Max"
-                                        onChange={(e) => setSigBudget(e.target.value ? parseInt(e.target.value) : 0)}
-                                        className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={cn(
-                                "p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500 ease-out",
-                                isPending && (pendingSection === 'sig' || pendingSection === 'all') && "blur-[1px] scale-[0.995] opacity-80 pointer-events-none"
-                            )}>
-                                {sigRecommendations
-                                    .map((rec, i) => {
-                                    const classColors = getChampionClassColors(rec.championClass);
-                                    return (
-                                        <div 
-                                            key={i} 
-                                            onClick={() => handleRecommendationClick(rec)}
-                                            className={cn(
-                                            "flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
-                                            classColors.bg,
-                                            "bg-opacity-10 hover:bg-opacity-20",
-                                            classColors.border,
-                                            "border-opacity-30"
-                                        )}>
-                                            {/* Avatar */}
-                                            <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                                                <Image 
-                                                    src={getChampionImageUrl(rec.championImage, 'full')} 
-                                                    alt={rec.championName}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                            
-                                            {/* Info */}
-                                            <div className="flex flex-col min-w-0 flex-1">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★ R{rec.rank}</span>
-                                                    <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
-                                                        <span>S{rec.fromSig}</span>
-                                                        <ChevronRight className="w-2.5 h-2.5" />
-                                                        <span className={cn(classColors.text, "brightness-150")}>S{rec.toSig}</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                                                
-                                                <div className="flex items-center gap-2">
-                                                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-purple-500/20">
-                                                        +{rec.accountGain}
-                                                    </Badge>
-                                                    {rec.prestigePerSig > 0 && (
-                                                        <div className="flex items-center gap-0.5 text-[9px] font-mono text-purple-300/80" title="Champion Prestige Gain per Sig Stone">
-                                                            <Zap className="w-2.5 h-2.5" />
-                                                            {rec.prestigePerSig}/sig
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div className="px-4 py-2 bg-purple-500/5 border-t border-purple-500/10 text-[10px] text-slate-500 italic">
-                                {sigBudget > 0 
-                                    ? "Optimal distribution of your budget to maximize Top 30 Prestige." 
-                                    : "Potential average increase if you take these champions to Max Sig."
-                                }
-                            </div>
-                        </Card>
-                    )}
-                </div>
-            )}
-          </div>
-      ) : null}
-
-      {/* Filters */}
-      <Card className="bg-slate-900/50 border-slate-800 p-4">
-        <div className="flex flex-col xl:flex-row gap-4 items-center">
-            <div className="flex gap-2 flex-1 w-full min-w-[200px]">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <Input 
-                        placeholder="Search champions..." 
-                        value={search} 
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 bg-slate-950/50 border-slate-700"
-                    />
-                </div>
-                <Button 
-                    className="bg-sky-600 hover:bg-sky-700 w-10 px-0 sm:w-auto sm:px-4" 
-                    onClick={() => setIsAddingChampion(true)}
-                    title="Add Single Champion"
-                >
-                    <Plus className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Add</span>
-                </Button>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                {top30Average > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-950/20 border border-amber-900/40 rounded-md shrink-0">
-                        <span className="text-amber-500/80 text-xs font-bold uppercase tracking-wide">Top 30 Prestige</span>
-                        <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString('en-US')}</span>
-                    </div>
-                )}
-                
-                <div className="h-8 w-px bg-slate-800 hidden xl:block" />
-
-                <div className="flex gap-2 shrink-0">
-                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as "PRESTIGE" | "NAME")}>
-                        <SelectTrigger className="w-[110px] bg-slate-950/50 border-slate-700">
-                            <SelectValue placeholder="Sort" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="PRESTIGE">Prestige</SelectItem>
-                            <SelectItem value="NAME">Name</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    
-                    <Select value={filterStars} onValueChange={setFilterStars}>
-                        <SelectTrigger className="w-[110px] bg-slate-950/50 border-slate-700">
-                            <SelectValue placeholder="Stars" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">All Stars</SelectItem>
-                            <SelectItem value="7">7-Star</SelectItem>
-                            <SelectItem value="6">6-Star</SelectItem>
-                            <SelectItem value="5">5-Star</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Select value={filterRank} onValueChange={setFilterRank}>
-                        <SelectTrigger className="w-[110px] bg-slate-950/50 border-slate-700">
-                            <SelectValue placeholder="Rank" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">All Ranks</SelectItem>
-                            {[1,2,3,4,5,6].map(r => (
-                                <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="h-8 w-px bg-slate-800 hidden md:block" />
-
-                <div className="flex items-center gap-1 bg-slate-950/40 p-1 rounded-full border border-slate-800/50 overflow-x-auto no-scrollbar">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                            "h-8 w-8 rounded-full transition-all shrink-0",
-                            !filterClass ? "bg-slate-700 text-white shadow-inner" : "text-slate-500 hover:text-slate-300"
-                        )}
-                        onClick={() => setFilterClass(null)}
-                        title="All Classes"
-                    >
-                        <CircleOff className="h-4 w-4" />
-                    </Button>
-                    <div className="h-4 w-px bg-slate-800 mx-0.5" />
-                    {CLASSES.map(c => {
-                        const colors = getChampionClassColors(c);
-                        const isSelected = filterClass === c;
-                        
-                        return (
-                            <Button
-                                key={c}
-                                variant="ghost"
-                                size="sm"
-                                className={cn(
-                                    "h-8 w-8 p-1.5 rounded-full transition-all border shrink-0",
-                                    isSelected 
-                                        ? cn(colors.bg, colors.border, "shadow-sm") 
-                                        : "bg-transparent border-transparent hover:bg-slate-800"
-                                )}
-                                onClick={() => setFilterClass(isSelected ? null : c)}
-                                title={c}
-                            >
-                                <div className="relative w-full h-full">
-                                    <Image 
-                                        src={CLASS_ICONS[c]} 
-                                        alt={c} 
-                                        fill 
-                                        sizes="24px"
-                                        className="object-contain"
-                                    />
-                                </div>
-                            </Button>
-                        );
-                    })}
-                </div>
-            </div>
-        </div>
-      </Card>
-
-      {/* Grid */}
-        {filteredRoster.length === 0 ? (
+      {filteredRoster.length === 0 ? (
           <div className="text-center py-12 text-slate-500 bg-slate-900/20 rounded-lg border border-slate-800 border-dashed">
               <p>No champions found matching your criteria.</p>
           </div>
         ) : (
-            <VirtuosoGrid
-                useWindowScroll
-                totalCount={filteredRoster.length}
-                overscan={2000}
-                computeItemKey={(index) => filteredRoster[index]?.id}
-                components={{
-                    List: GridList
-                }}
-                itemContent={itemContent}
-            />
+            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
         )}
 
-      {/* Edit Modal */}
-      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
-            {editingItem && (
-                <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
-                    <div className={cn(
-                        "relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0",
-                        getChampionClassColors(editingItem.champion.class).border
-                    )}>
-                        <Image 
-                            src={getChampionImageUrl(editingItem.champion.images as unknown as ChampionImages, 'full')} 
-                            alt={editingItem.champion.name}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <div className="flex flex-col gap-1 text-left">
-                        <DialogTitle className={cn("text-xl flex items-center gap-2", getChampionClassColors(editingItem.champion.class).text)}>
-                            {editingItem.champion.name}
-                            <Badge variant="secondary" className="text-xs bg-slate-800 text-slate-300 border-slate-700">
-                                {editingItem.stars}★ R{editingItem.rank}
-                            </Badge>
-                        </DialogTitle>
-                        <DialogDescription>
-                            Update details for this champion in your roster.
-                        </DialogDescription>
-                    </div>
-                </DialogHeader>
-            )}
-            
-            {editingItem && (
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="rank" className="text-right">Rank</Label>
-                        <Select 
-                            key={editingItem.id}
-                            value={String(editingItem.rank)} 
-                            onValueChange={(v) => setEditingItem({...editingItem, rank: parseInt(v)})}
-                        >
-                            <SelectTrigger className="w-[180px] bg-slate-950 border-slate-700">
-                                <SelectValue placeholder="Rank" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({length: Math.max(6, editingItem.rank)}, (_, i) => i + 1).map(r => (
-                                     <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="sig" className="text-right">Sig Level</Label>
-                        <Input 
-                            id="sig" 
-                            type="number" 
-                            disabled={!editingItem.isAwakened}
-                            className="w-[180px] bg-slate-950 border-slate-700 disabled:opacity-50"
-                            min={0}
-                            max={editingItem.stars >= 5 ? 200 : 99}
-                            value={editingItem.sigLevel || 0}
-                            onChange={(e) => {
-                                const maxSig = editingItem.stars >= 5 ? 200 : 99;
-                                let val = parseInt(e.target.value);
-                                if (isNaN(val)) val = 0;
-                                if (val > maxSig) val = maxSig;
-                                if (val < 0) val = 0;
-                                setEditingItem({...editingItem, sigLevel: val});
-                            }}
-                        />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                         <Label className="text-right">Options</Label>
-                         <div className="col-span-3 flex gap-4">
-                             <div className="flex items-center space-x-2">
-                                <Checkbox 
-                                    id="awakened" 
-                                    checked={editingItem.isAwakened}
-                                    onCheckedChange={(c) => {
-                                        const isAwakened = !!c;
-                                        setEditingItem({
-                                            ...editingItem, 
-                                            isAwakened,
-                                            // If unawakening, set sig to 0. If awakening and sig is 0, default to 1? Or keep 0? 
-                                            // Game logic: Awakening usually implies sig 1 unless using a gem that specifically says otherwise, 
-                                            // but generally simplest is: if on -> keep current (or 1 if 0), if off -> 0.
-                                            // Let's just reset to 0 if turning off. If turning on, let user type.
-                                            sigLevel: isAwakened ? (editingItem.sigLevel || 1) : 0
-                                        });
-                                    }}
-                                    className="border-slate-600 data-[state=checked]:bg-sky-600"
-                                />
-                                <Label htmlFor="awakened">Awakened</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox 
-                                    id="ascended" 
-                                    checked={editingItem.isAscended}
-                                    onCheckedChange={(c) => setEditingItem({...editingItem, isAscended: !!c})}
-                                    className="border-slate-600 data-[state=checked]:bg-sky-600"
-                                />
-                                <Label htmlFor="ascended">Ascended</Label>
-                            </div>
-                         </div>
-                    </div>
-                </div>
-            )}
-
-            <DialogFooter className="flex justify-between sm:justify-between w-full">
-                <Button variant="destructive" size="icon" onClick={() => editingItem && handleDelete(editingItem.id)}>
-                    <Trash2 className="w-4 h-4" />
-                </Button>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setEditingItem(null)}>Cancel</Button>
-                    <Button 
-                        onClick={() => editingItem && handleUpdate({
-                            id: editingItem.id,
-                            rank: editingItem.rank,
-                            isAwakened: editingItem.isAwakened,
-                            isAscended: editingItem.isAscended,
-                            sigLevel: editingItem.sigLevel
-                        })}
-                        className="bg-sky-600 hover:bg-sky-700"
-                    >
-                        Save Changes
-                    </Button>
-                </div>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Chart Dialog */}
-      <Dialog open={!!chartData || loadingChart} onOpenChange={(open) => !open && setChartData(null)}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[500px]">
-            {!chartData && (
-                <DialogHeader className="sr-only">
-                    <DialogTitle>Prestige Curve Loading</DialogTitle>
-                </DialogHeader>
-            )}
-            {chartData && (
-                <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
-                    <div className={cn(
-                        "relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0",
-                        getChampionClassColors(chartData.rec.championClass).border
-                    )}>
-                        <Image 
-                            src={getChampionImageUrl(chartData.rec.championImage, 'full')} 
-                            alt={chartData.rec.championName}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <div className="flex flex-col gap-1 text-left">
-                        <DialogTitle className={cn("text-xl", getChampionClassColors(chartData.rec.championClass).text)}>
-                            {chartData.rec.championName}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {chartData.rec.stars}-Star Rank {chartData.rec.rank} • Current Sig: {chartData.rec.fromSig}
-                        </DialogDescription>
-                    </div>
-                </DialogHeader>
-            )}
-            {loadingChart ? (
-                <div className="h-[300px] flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-slate-500" />
-                </div>
-            ) : chartData ? (
-                <PrestigeCurveChart 
-                    data={chartData.data}
-                    currentSig={chartData.rec.fromSig}
-                    championName={chartData.rec.championName}
-                    rarity={chartData.rec.stars}
-                    rank={chartData.rec.rank}
-                    championClass={chartData.rec.championClass}
-                />
-            ) : null}
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Champion Modal */}
-      <Dialog open={isAddingChampion} onOpenChange={setIsAddingChampion}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
-            <DialogHeader>
-                <DialogTitle>Add Champion</DialogTitle>
-                <DialogDescription>Manually add a champion to your roster.</DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                    <Label>Champion</Label>
-                    <ChampionCombobox 
-                        champions={allChampions}
-                        value={newChampion.championId}
-                        onSelect={(val) => setNewChampion({...newChampion, championId: val})}
-                        className="bg-slate-950 border-slate-700 text-slate-200 w-full"
-                    />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Star Level</Label>
-                        <Select 
-                            value={String(newChampion.stars)} 
-                            onValueChange={(v) => setNewChampion({...newChampion, stars: parseInt(v)})}
-                        >
-                            <SelectTrigger className="bg-slate-950 border-slate-700">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {[4, 5, 6, 7].map(s => (
-                                    <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Rank</Label>
-                        <Select 
-                            value={String(newChampion.rank)} 
-                            onValueChange={(v) => setNewChampion({...newChampion, rank: parseInt(v)})}
-                        >
-                            <SelectTrigger className="bg-slate-950 border-slate-700">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({length: newChampion.stars === 7 ? 3 : (newChampion.stars === 6 ? 6 : 5)}, (_, i) => i + 1).map(r => (
-                                     <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Signature Level</Label>
-                    <Input 
-                        type="number" 
-                        disabled={!newChampion.isAwakened}
-                        className="bg-slate-950 border-slate-700 disabled:opacity-50"
-                        min={0}
-                        max={200}
-                        value={newChampion.sigLevel}
-                        onChange={(e) => {
-                            let val = parseInt(e.target.value);
-                            if (isNaN(val)) val = 0;
-                            setNewChampion({...newChampion, sigLevel: val});
-                        }}
-                    />
-                </div>
-
-                <div className="flex gap-6 mt-2">
-                     <div className="flex items-center space-x-2">
-                        <Checkbox 
-                            id="new-awakened" 
-                            checked={newChampion.isAwakened}
-                            onCheckedChange={(c) => {
-                                const isAwakened = !!c;
-                                setNewChampion({
-                                    ...newChampion, 
-                                    isAwakened,
-                                    sigLevel: isAwakened ? (newChampion.sigLevel || 1) : 0
-                                });
-                            }}
-                            className="border-slate-600 data-[state=checked]:bg-sky-600"
-                        />
-                        <Label htmlFor="new-awakened">Awakened</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox 
-                            id="new-ascended" 
-                            checked={newChampion.isAscended}
-                            onCheckedChange={(c) => setNewChampion({...newChampion, isAscended: !!c})}
-                            className="border-slate-600 data-[state=checked]:bg-sky-600"
-                        />
-                        <Label htmlFor="new-ascended">Ascended</Label>
-                    </div>
-                </div>
-            </div>
-
-            <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddingChampion(false)}>Cancel</Button>
-                <Button onClick={handleAddChampion} className="bg-sky-600 hover:bg-sky-700">Add to Roster</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditChampionModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />
+      <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />
+      <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>
   );
 }

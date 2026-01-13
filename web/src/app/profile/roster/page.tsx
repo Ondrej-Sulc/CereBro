@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { getRoster } from "@cerebro/core/services/rosterService";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
@@ -26,12 +25,43 @@ export default async function RosterPage(props: {
     redirect("/api/auth/signin?callbackUrl=/profile/roster");
   }
 
-  const [rosterResult, allChampions] = await Promise.all([
-      getRoster(player.id, null, null, null),
-      getCachedChampions()
+  // Parallel fetch for data
+  const [rosterEntries, allChampions, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
+      prisma.roster.findMany({
+        where: { playerId: player.id },
+        include: {
+          champion: {
+            include: {
+               tags: { select: { id: true, name: true } },
+               abilities: {
+                 include: {
+                   ability: {
+                     select: {
+                        name: true,
+                        categories: { select: { name: true } }
+                     }
+                   },
+                   synergyChampions: {
+                     include: { champion: { select: { name: true, images: true } } }
+                   }
+                 }
+               }
+            }
+          }
+        },
+        orderBy: [{ stars: "desc" }, { rank: "desc" }],
+      }),
+      getCachedChampions(),
+      prisma.tag.findMany({ orderBy: { name: 'asc' } }),
+      prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
+      prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
+      prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] })
   ]);
-  
-  const roster = typeof rosterResult === "string" ? [] : rosterResult;
+
+  const abilities = await prisma.ability.findMany({ where: { id: { in: abilityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
+  const immunities = await prisma.ability.findMany({ where: { id: { in: immunityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
+
+  const roster = rosterEntries;
 
   // Calculate Top 30 Average Prestige
   let top30Average = 0;
@@ -349,7 +379,7 @@ export default async function RosterPage(props: {
       </div>
 
       <RosterView 
-        initialRoster={roster} 
+        initialRoster={roster as any} 
         allChampions={allChampions}
         top30Average={top30Average}
         prestigeMap={rosterPrestigeMap}
@@ -359,6 +389,10 @@ export default async function RosterPage(props: {
         initialSigBudget={sigBudget}
         initialRankClassFilter={rankClassFilter as any}
         initialSigClassFilter={sigClassFilter as any}
+        initialTags={tags}
+        initialAbilityCategories={abilityCategories}
+        initialAbilities={abilities}
+        initialImmunities={immunities}
       />
     </div>
   );
