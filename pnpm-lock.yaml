@@ -15,7 +15,7 @@ importers:
         specifier: ^5.3.3
         version: 5.3.4
       '@prisma/client':
-        specifier: ^6.14.0
+        specifier: ^6.19.0
         version: 6.19.0(prisma@6.19.0(typescript@5.9.3))(typescript@5.9.3)
       '@radix-ui/react-visually-hidden':
         specifier: ^1.2.4
@@ -97,7 +97,7 @@ importers:
         specifier: ^13.1.1
         version: 13.1.2
       prisma:
-        specifier: ^6.14.0
+        specifier: ^6.19.0
         version: 6.19.0(typescript@5.9.3)
       tesseract.js:
         specifier: ^6.0.1
@@ -909,8 +909,8 @@ packages:
   '@maxim_mazurok/gapi.client.discovery-v1@0.4.20200806':
     resolution: {integrity: sha512-Jeo/KZqK39DI6ExXHcJ4lqnn1O/wEqboQ6eQ8WnNpu5eJ7wUnX/C5KazOgs1aRhnIB/dVzDe8wm62nmtkMIoaw==}
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.1.20251215':
-    resolution: {integrity: sha512-3+BrV28fDH8MIugX4y4VouEJcsZaRwwamuj8hsVkP2uHPHbgkvP2IFmljdeGBrxdghz/dlUcxDi1f75mW8bE2w==}
+  '@maxim_mazurok/gapi.client.sheets-v4@0.1.20260108':
+    resolution: {integrity: sha512-l2lYe46BfhcLZwVRuEIfHwt8Os+Ii9bar2vwHRXvJjbZycaNSYaE9erP3+BYJS0D8KXfVVofeam6guB0pxIMcw==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -5457,7 +5457,7 @@ snapshots:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.1.20251215':
+  '@maxim_mazurok/gapi.client.sheets-v4@0.1.20260108':
     dependencies:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
@@ -6332,7 +6332,7 @@ snapshots:
 
   '@types/gapi.client.sheets-v4@0.0.4':
     dependencies:
-      '@maxim_mazurok/gapi.client.sheets-v4': 0.1.20251215
+      '@maxim_mazurok/gapi.client.sheets-v4': 0.1.20260108
 
   '@types/gapi.client@1.0.8': {}
 
