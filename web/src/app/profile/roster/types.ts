@@ -1,8 +1,10 @@
 import { Champion, ChampionClass, Roster } from "@prisma/client";
 import { RosterWithChampion } from "@cerebro/core/services/rosterService";
+import { ChampionImages } from "@/types/champion";
 
 export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
     champion: Champion & {
+        images: ChampionImages;
         tags: { id: string | number, name: string }[];
         abilities: {
             type: string;
@@ -14,7 +16,7 @@ export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
             synergyChampions: {
                 champion: {
                     name: string;
-                    images: any;
+                    images: ChampionImages;
                 };
             }[];
         }[];
@@ -24,7 +26,7 @@ export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
 export interface Recommendation {
     championName: string;
     championClass: ChampionClass;
-    championImage: any;
+    championImage: ChampionImages;
     stars: number;
     fromRank: number;
     toRank: number;
@@ -36,7 +38,7 @@ export interface SigRecommendation {
     championId: number;
     championName: string;
     championClass: ChampionClass;
-    championImage: any;
+    championImage: ChampionImages;
     stars: number;
     rank: number;
     fromSig: number;

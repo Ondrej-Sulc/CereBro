@@ -9,13 +9,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@prisma/client";
 
+interface NewChampionFormData {
+    championId: number | null;
+    stars: number;
+    rank: number;
+    sigLevel: number;
+    isAwakened: boolean;
+    isAscended: boolean;
+}
+
 interface AddChampionModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     allChampions: Champion[];
-    onAdd: (data: any) => void;
-    newChampion: any;
-    onNewChampionChange: (data: any) => void;
+    onAdd: () => void;
+    newChampion: NewChampionFormData;
+    onNewChampionChange: (data: NewChampionFormData) => void;
 }
 
 export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newChampion, onNewChampionChange }: AddChampionModalProps) {
@@ -30,7 +39,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                 <div className="grid gap-4 py-4">
                     <div className="space-y-2">
                         <Label>Champion</Label>
-                        <ChampionCombobox champions={allChampions} value={newChampion.championId} onSelect={(val) => onNewChampionChange({...newChampion, championId: val})} className="bg-slate-950 border-slate-700 text-slate-200 w-full" />
+                        <ChampionCombobox champions={allChampions} value={newChampion.championId ? String(newChampion.championId) : ""} onSelect={(val) => onNewChampionChange({...newChampion, championId: val ? parseInt(val) : null})} className="bg-slate-950 border-slate-700 text-slate-200 w-full" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, memo, useCallback, useEffect, useTransition } from "react";
+import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition } from "react";
 import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -151,31 +151,37 @@ export function RosterView({
       const matchesStars = filterStars.length === 0 || filterStars.includes(item.stars);
       const matchesRank = filterRanks.length === 0 || filterRanks.includes(item.rank);
       
+      if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank) return false;
+
+      // Pre-compute sets once per item for performance
+      const abilityEntries = item.champion.abilities.filter(a => a.type === 'ABILITY');
+      const immunityEntries = item.champion.abilities.filter(a => a.type === 'IMMUNITY');
+      const champTags = item.champion.tags.map(t => t.name);
+      
       if (tagFilter.length > 0) {
-          const champTags = item.champion.tags.map(t => t.name);
           if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }
           else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
       }
 
       if (abilityCategoryFilter.length > 0) {
-          const championCategories = new Set(item.champion.abilities.filter(a => a.type === 'ABILITY').flatMap(a => a.ability.categories.map(c => c.name)));
+          const championCategories = new Set(abilityEntries.flatMap(a => a.ability.categories.map(c => c.name)));
           if (abilityCategoryLogic === 'AND') { if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false; }
           else { if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false; }
       }
 
       if (abilityFilter.length > 0) {
-          const champAbilities = new Set(item.champion.abilities.filter(a => a.type === 'ABILITY').map(a => a.ability.name));
+          const champAbilities = new Set(abilityEntries.map(a => a.ability.name));
           if (abilityLogic === 'AND') { if (!abilityFilter.every(req => champAbilities.has(req))) return false; }
           else { if (!abilityFilter.some(req => champAbilities.has(req))) return false; }
       }
 
       if (immunityFilter.length > 0) {
-          const champImmunities = new Set(item.champion.abilities.filter(a => a.type === 'IMMUNITY').map(a => a.ability.name));
+          const champImmunities = new Set(immunityEntries.map(a => a.ability.name));
           if (immunityLogic === 'AND') { if (!immunityFilter.every(req => champImmunities.has(req))) return false; }
           else { if (!immunityFilter.some(req => champImmunities.has(req))) return false; }
       }
 
-      return matchesSearch && matchesClass && matchesStars && matchesRank;
+      return true;
     });
 
     return filtered.sort((a, b) => {

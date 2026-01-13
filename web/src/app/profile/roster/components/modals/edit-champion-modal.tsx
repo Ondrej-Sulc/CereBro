@@ -31,7 +31,7 @@ export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemCha
             <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
                 <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
                     <div className={cn("relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0", getChampionClassColors(item.champion.class).border)}>
-                        <Image src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, 'full')} alt={item.champion.name} fill className="object-cover" />
+                        <Image src={getChampionImageUrl(item.champion.images, 'full')} alt={item.champion.name} fill sizes="64px" className="object-cover" />
                     </div>
                     <div className="flex flex-col gap-1 text-left">
                         <DialogTitle className={cn("text-xl flex items-center gap-2", getChampionClassColors(item.champion.class).text)}>
@@ -50,7 +50,7 @@ export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemCha
                                 <SelectValue placeholder="Rank" />
                             </SelectTrigger>
                             <SelectContent>
-                                {Array.from({length: Math.max(6, item.rank)}, (_, i) => i + 1).map(r => (
+                                {Array.from({length: Math.max(item.stars === 7 ? 6 : 5, item.rank)}, (_, i) => i + 1).map(r => (
                                      <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
                                 ))}
                             </SelectContent>
