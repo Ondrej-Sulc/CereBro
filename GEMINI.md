@@ -25,7 +25,10 @@ The platform provides a variety of features, including:
     *   **Alliance Management:**
         *   **Overview:** A dedicated `/alliance` page for officers to manage member battlegroup assignments. Changes are synced to Discord roles automatically via background jobs. Includes troubleshooting help for permission hierarchy issues.
         *   **Custom Battlegroup Colors:** Officers can customize the identity color for each Battlegroup. These colors are used throughout the Web UI (Roster Overview headers, War Map paths/portals) and in Discord War Plan messages/maps for a unified theme.
-        *   **Roster Overview:** A powerful, spreadsheet-like view (`/alliance/roster`) for visualizing the entire alliance's champion roster. Features advanced filtering by Battlegroup, Star Level, Rank, multiple Classes, and searchable Tags. The layout is optimized for density, displaying compact champion portraits with centered rank/star indicators.
+        *   **Roster Overview:** A powerful, spreadsheet-like view (`/alliance/roster`) for visualizing the entire alliance's champion roster.
+            *   **Advanced Filtering:** Features distinct filters for **Abilities**, **Immunities**, **Categories**, and **Tags**. Each multi-select filter supports toggling between **AND/OR logic** for complex queries (e.g., "Bleed" OR "Poison" Immunity).
+            *   **Interactive Details:** Clicking a champion opens a context-aware popover. If filters are active, it highlights only the matching abilities/immunities.
+            *   **Source Transparency:** Detailed badges display the exact source of an effect (e.g., "Signature Ability", "Synergy"). Multiple sources are cleanly separated, and **Synergy Champions** are visualized with inline icons.
 *   **War Videos Database & Planning**
 
 The bot features a sophisticated system for tracking Alliance War performance by linking war plans to video uploads.

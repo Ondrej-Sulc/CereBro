@@ -76,7 +76,7 @@ The flagship feature of the platform.
 *   **Web Management:** A dedicated dashboard (`/alliance`) for Officers to manage member rosters and battlegroup assignments.
     *   **Auto-Sync:** Changes made on the web automatically update Discord roles via a background job queue.
     *   **Custom Identity:** Customize Battlegroup colors to theming Web UI maps and Discord plan messages.
-    *   **Roster Overview:** A dense, spreadsheet-style view (`/alliance/roster`) for filtering the entire alliance's champions by Battlegroup, Class, Rank, and Tags.
+    *   **Roster Explorer:** A dense, spreadsheet-style view (`/alliance/roster`) for filtering the entire alliance's champions. Now features **Advanced Logic Filters (AND/OR)** for Tags, Abilities, and Immunities. Clicking a champion reveals detailed source information, including specific synergies and ability origins.
 *   **Role Sync:** Automatically maps Discord Roles to Database permissions (Officer, Battlegroup 1-3).
 *   **Channel Configuration:** Customizable Discord channels for specific battlegroup plans and general war video notifications.
 *   **AQ Management:** Scheduling and tracking for Alliance Quest timers.
