@@ -285,6 +285,10 @@ The entire CereBro platform, including the production environment for both the b
     *   **Controllers** (`index.ts` for the initial command, and button handlers for subsequent interactions) are responsible for fetching data and building the complete message response, including all UI components (Containers, Action Rows, etc.).
     *   **Views** (e.g., `getAbilitiesContent`) are simple, pure functions responsible only for formatting data into a string. They should not create Discord components.
     *   This pattern centralizes response-building logic and makes the individual view formatters easier to test and maintain.
+*   **Web Component Architecture:** Complex web pages (like Roster) should follow a modular architecture.
+    *   **Container/Page:** Handles data fetching and state management (e.g., `roster-view.tsx` or `page.tsx`).
+    *   **Components:** Logic-heavy UI sections (Filters, Insights) should be extracted into dedicated components (e.g., `roster-filters.tsx`, `roster-insights.tsx`) to keep the main view clean.
+    *   **Strict Typing:** Use specific interfaces (e.g., `NewChampionFormData`) instead of `any` for form handling and props.
 
 ## Web Interface
 
@@ -301,14 +305,18 @@ The web interface features a "War Archive" that allows users to browse and searc
 ### Profile & Roster Management
 The web interface now includes a comprehensive Profile section.
 *   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, and prestige history. **The roster summary has been redesigned into a clear, table-based breakdown showing champion counts by Rank and Class for each Star level.**
-*   **Interactive Roster Page:** A dedicated `/profile/roster` page features a high-performance, virtualized grid (`react-virtuoso`) capable of displaying hundreds of champions. It includes advanced filtering by Search, Star Level, Rank, and Class (using visual icon buttons).
-*   **Prestige Simulation:** The system now calculates the user's **Top 30 Prestige** average and offers actionable **Rank-up Recommendations**.
-    *   **Contextual Controls:** Key simulation inputs are now integrated directly into their respective sections for better usability. The **Target Rank** selector is located within the "Rank-up Opportunities" header, and the **Stone Budget** input is within the "Sig Stone Allocation" header.
-    *   **Class Filtering:** Users can now filter rank-up and signature stone recommendations by specific **Champion Classes**. This allows for targeted simulations when resources are limited to specific classes (e.g., "Show me the best Tech rank-ups"). The filter supports multi-selection and features a responsive UI that adapts between desktop (inline icons) and mobile (popover menu) layouts.
-    *   **Budget Optimization:** Users can input a "Stone Budget" to simulate the optimal distribution of signature stones using a greedy algorithm.
-    *   **Interactive Charts:** Recommendations are clickable, opening a **Prestige Curve Chart** that visualizes the champion's prestige progression and highlights their current position.
+*   **Interactive Roster Page:** A dedicated `/profile/roster` page features a high-performance, virtualized grid (`react-virtuoso`) capable of displaying hundreds of champions.
+    *   **Modular Architecture:** The roster view has been refactored into a modular component architecture (`roster-filters`, `roster-insights`, `champion-card`), separating view logic from UI presentation.
+    *   **Consolidated Filter Bar:** A sticky, comprehensive filter interface featuring separate **View** and **Edit** modes.
+    *   **Standard Filters:** Includes robust filtering for **Sort By** (Prestige/Name), **Stars** (7, 6, 5), **Ranks** (1-6), and **Class** (multi-select with icons).
+    *   **Advanced Logic Filters:** Users can filter by **Tags**, **Ability Categories**, **Abilities**, and **Immunities**. Each of these advanced filters supports toggling between **AND** (match all) and **OR** (match any) logic, allowing for complex queries like "Champions with Poison Immunity OR Bleed Immunity".
+    *   **Top 30 Integration:** The filter bar displays the user's current Top 30 Prestige average at a glance.
+*   **Prestige & Roster Insights:** A dedicated "Prestige Suggestions" section (`RosterInsights`) offers actionable advice.
+    *   **Rank-up Opportunities:** Identifies rank-ups that provide the highest immediate increase to Top 30 Prestige. Features integrated **Target Rank** (R3-R6) and **Class Filters** specific to rank-up decisions.
+    *   **Sig Stone Allocation:** Simulates optimal signature stone usage. Includes a **Stone Budget** input and **Class Filters** to simulate allocations for specific classes (e.g., "Best use of 50 Tech stones").
+    *   **Visualization:** Recommendations are displayed as interactive cards showing "From -> To" stats and net account gain. Clicking a recommendation opens a **Prestige Curve Chart** modal to visualize the champion's full potential.
     *   **Efficiency Analysis:** Displays "Prestige per Sig" metrics to highlight the most efficient rank-up candidates.
-*   **Roster Editor:** Users can click on any champion in the grid to open an "Edit Modal". This allows for manual updates to **Signature Level**, Rank, Awakened Status, Ascension, and Power Rating, as well as deleting champions from the roster.
+*   **Roster Editor:** In "Edit" mode, users can click champions to open an enhanced **Edit Modal** to update Signature Level, Rank, Awakening, Ascension, and Power Rating, as well as deleting champions from the roster.
 *   **Manual Add:** A new "Add Champion" feature allows users to manually add champions to their roster using a searchable combobox, bypassing the screenshot requirement for single additions.
 *   **Update Roster:** Users can update their roster by uploading screenshots. The system reuses the bot's powerful image processing logic (`src/commands/roster/ocr/process.ts`) to detect champions, stats, and awakened status, and syncs the data to the database and linked Google Sheets.
 *   **Visual Polish:** The interface features class-tinted champion cards, prominent Star/Rank indicators, and responsive layouts that adapt to different screen sizes.

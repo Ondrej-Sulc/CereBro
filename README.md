@@ -55,12 +55,14 @@ The flagship feature of the platform.
 *   **Smart Notifications:** Automatically posts rich embeds to a configured Discord channel whenever a new war video is uploaded or linked, keeping the alliance in the loop.
 
 ### 👤 Roster & Identity
-*   **Web Roster Manager:** A dedicated, high-performance interface (`/profile/roster`) for viewing and managing champion rosters. Features a **virtualized grid** capable of rendering hundreds of champions smoothly, advanced class/rank filtering, and a modern card-based design with class-specific tinting.
+*   **Web Roster Manager:** A dedicated, high-performance interface (`/profile/roster`) for viewing and managing champion rosters. Features a **virtualized grid** capable of rendering hundreds of champions smoothly.
+    *   **Advanced Filtering:** A consolidated filter bar supporting **AND/OR logic** for Tags, Ability Categories, Abilities, and Immunities, alongside standard Rank/Class filters.
+    *   **Dual Modes:** Seamlessly switch between "View" (clean browsing) and "Edit" (management) modes.
 *   **Interactive Editor:** Users can manually edit champion details (**Signature Level**, Rank, Awakening, Ascension, Power Rating) or delete entries directly from the web grid via a modal editor.
-*   **Prestige & Simulation:** Calculates **Top 30 Prestige** averages and provides **Rank-up Recommendations** with real-time prestige simulation.
-    *   **Budget Optimizer:** A "Stone Budget" tool uses a greedy algorithm to simulate the optimal allocation of signature stones to maximize account prestige.
-    *   **Efficiency Metrics:** Displays the "Champion Prestige Gain per Sig Stone" to help users identify the most efficient investments.
-    *   **Interactive Visualizations:** Clicking on a recommendation opens a detailed **Prestige Curve Chart**, visualizing the champion's prestige growth across all signature levels.
+*   **Prestige & Roster Insights:** A dedicated "Prestige Suggestions" engine offering actionable advice.
+    *   **Rank-up Recommendations:** Identifies high-value rank-ups for Top 30 Prestige, with integrated **Target Rank** and **Class Filters**.
+    *   **Sig Stone Optimizer:** Simulates optimal stone allocation based on a user-defined budget, supporting specific **Class Filters** (e.g., "Best use of 50 Science stones").
+    *   **Interactive Visualizations:** Clicking on a recommendation opens a detailed **Prestige Curve Chart**, visualizing the champion's prestige growth potential.
 *   **Smart Import:** Users can upload screenshots of their game roster. The system uses image processing to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
 *   **Profile Analysis:** The main profile view now includes a detailed, table-based breakdown of the roster by Rank and Class for each Star level, alongside Prestige history and timezone management.
 

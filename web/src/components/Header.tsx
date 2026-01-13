@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown, LayoutGrid, Users } from "lucide-react";
 import {
   Sheet,
@@ -20,45 +21,11 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-const ALLIANCE_ITEMS = [
-  {
-    href: "/alliance",
-    label: "Management",
-    icon: Users,
-    iconColor: "text-slate-300",
-    requiresOfficer: false, // Visible to all alliance members, implementation handles logic
-    section: "manage"
-  },
-  {
-    href: "/planning",
-    label: "Attack Planning",
-    icon: Swords,
-    iconColor: "text-red-400",
-    requiresOfficer: false,
-    section: "war"
-  },
-  {
-    href: "/planning/defense",
-    label: "Defense Strategy",
-    icon: Shield,
-    iconColor: "text-sky-400",
-    requiresOfficer: false,
-    section: "war"
-  },
-  {
-    href: "/analysis/season-overview",
-    label: "Season Overview",
-    icon: Trophy,
-    iconColor: "text-yellow-500",
-    requiresOfficer: false,
-    section: "stats"
-  },
-] as const;
 
 export default function Header({ userButton, isOfficer, isInAlliance, canUploadFiles }: { userButton: React.ReactNode; isOfficer: boolean; isInAlliance: boolean; canUploadFiles: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,6 +34,11 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Automatically close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header className={`sticky top-0 inset-x-0 z-30 nav-blur transition-colors duration-300 ${isScrolled ? 'bg-slate-950/80 border-b border-slate-800/70' : 'bg-transparent border-b border-transparent'}`}>
@@ -159,7 +131,7 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
             </div>
 
             {/* Mobile menu button */}
-            <Sheet>
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden text-slate-300 hover:text-white hover:bg-slate-800/50">
                   <Menu className="h-6 w-6" />
@@ -175,11 +147,17 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                 </SheetHeader>
                 <nav className="flex flex-col gap-6">
                   <div className="flex flex-col gap-4">
-                    <Link href="/profile/roster" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                    <Link 
+                        href="/profile/roster" 
+                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                    >
                       <LayoutGrid className="w-5 h-5" />
                       My Roster
                     </Link>
-                    <Link href="/war-videos" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                    <Link 
+                        href="/war-videos" 
+                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                    >
                       <Book className="w-5 h-5" />
                       War Archive
                     </Link>
@@ -189,23 +167,38 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                         <div className="h-px bg-slate-800/50 my-1" />
                         <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold pl-1">Alliance</span>
                         
-                        <Link href="/alliance" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
+                        <Link 
+                            href="/alliance" 
+                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                        >
                             <Users className="w-5 h-5 text-slate-300" />
                             Overview
                         </Link>
-                        <Link href="/alliance/roster" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
+                        <Link 
+                            href="/alliance/roster" 
+                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                        >
                             <LayoutGrid className="w-5 h-5 text-slate-300" />
                             Roster Overview
                         </Link>
-                        <Link href="/planning" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
+                        <Link 
+                            href="/planning" 
+                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                        >
                             <Swords className="w-5 h-5 text-red-400" />
                             Attack Planning
                         </Link>
-                        <Link href="/planning/defense" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
+                        <Link 
+                            href="/planning/defense" 
+                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                        >
                             <Shield className="w-5 h-5 text-sky-400" />
                             Defense Strategy
                         </Link>
-                        <Link href="/analysis/season-overview" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2">
+                        <Link 
+                            href="/analysis/season-overview" 
+                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
+                        >
                             <Trophy className="w-5 h-5 text-yellow-500" />
                             Season Stats
                         </Link>
@@ -214,7 +207,10 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
                       </>
                     )}
 
-                    <Link href="/war-videos/upload/init" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                    <Link 
+                        href="/war-videos/upload/init" 
+                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                    >
                       <UploadCloud className="w-5 h-5" />
                       {canUploadFiles ? "Upload Video" : "Add Video"}
                     </Link>

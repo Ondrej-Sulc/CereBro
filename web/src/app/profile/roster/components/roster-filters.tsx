@@ -60,7 +60,7 @@ export function RosterFilters({
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities
 }: RosterFiltersProps) {
     return (
-        <Card className="bg-slate-900/50 border-slate-800 p-4 sticky top-4 z-40 backdrop-blur-md shadow-lg">
+        <Card className="bg-slate-900/50 border-slate-800 p-4 z-40 backdrop-blur-md shadow-lg">
             <div className="flex flex-col gap-4">
                 {/* Row 1: Search + View Toggle + Actions */}
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

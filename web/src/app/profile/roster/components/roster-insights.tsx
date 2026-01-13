@@ -128,7 +128,7 @@ export function RosterInsights({
                                                     </div>
                                                 </div>
                                                 <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                                                <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">+{rec.accountGain}</Badge>
+                                                <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-emerald-500/20">+{rec.accountGain}</Badge>
                                             </div>
                                         </div>
                                     );
@@ -153,7 +153,14 @@ export function RosterInsights({
                                 <div className="flex items-center gap-2">
                                     <ClassFilterSelector selectedClasses={sigClassFilter} onChange={onSigClassFilterChange} />
                                     <Label className="text-[10px] text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Stone Budget</Label>
-                                    <Input type="number" min={0} value={sigBudget || ""} placeholder="Max" onChange={(e) => onSigBudgetChange(e.target.value ? parseInt(e.target.value) : 0)} className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center" />
+                                    <Input 
+                                        type="number" 
+                                        min={0} 
+                                        value={sigBudget || ""} 
+                                        placeholder="Max" 
+                                        onChange={(e) => onSigBudgetChange(e.target.value ? parseInt(e.target.value) : 0)} 
+                                        className="h-7 w-[70px] bg-slate-900 border-slate-700 text-slate-300 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                    />
                                 </div>
                             </div>
                             <div className={cn("p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500", isPending && (pendingSection === 'sig' || pendingSection === 'all') && "blur-[1px] opacity-80 pointer-events-none")}>
@@ -173,7 +180,7 @@ export function RosterInsights({
                                                 </div>
                                                 <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
                                                 <div className="flex items-center gap-2">
-                                                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold">+{rec.accountGain}</Badge>
+                                                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-purple-500/20">+{rec.accountGain}</Badge>
                                                     {rec.prestigePerSig > 0 && <div className="flex items-center gap-0.5 text-[9px] font-mono text-purple-300/80"><Zap className="w-2.5 h-2.5" />{rec.prestigePerSig}/sig</div>}
                                                 </div>
                                             </div>
