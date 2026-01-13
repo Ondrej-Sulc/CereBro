@@ -46,7 +46,14 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label>Star Level</Label>
-                            <Select value={String(newChampion.stars)} onValueChange={(v) => onNewChampionChange({...newChampion, stars: parseInt(v)})}>
+                            <Select value={String(newChampion.stars)} onValueChange={(v) => {
+                                const newStars = parseInt(v);
+                                const maxRank = getMaxRank(newStars);
+                                const clampedRank = Math.min(newChampion.rank, maxRank);
+                                const maxSig = newStars >= 5 ? 200 : 99;
+                                const clampedSig = Math.min(newChampion.sigLevel, maxSig);
+                                onNewChampionChange({...newChampion, stars: newStars, rank: clampedRank, sigLevel: clampedSig});
+                            }}>
                                 <SelectTrigger className="bg-slate-950 border-slate-700"><SelectValue /></SelectTrigger>
                                 <SelectContent>{[4, 5, 6, 7].map(s => <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>)}</SelectContent>
                             </Select>
