@@ -40,7 +40,7 @@ export function PrestigeChartModal({ chartData, loading, onClose }: PrestigeChar
                                 <DialogDescription>{chartData.rec.stars}-Star Rank {chartData.rec.rank} • Current Sig: {chartData.rec.fromSig}</DialogDescription>
                             </div>
                         </DialogHeader>
-                        <PrestigeCurveChart data={chartData.data} currentSig={chartData.rec.fromSig} championName={chartData.rec.championName} rarity={chartData.rec.stars} rank={chartData.rec.rank} championClass={chartData.rec.championClass} />
+                        <PrestigeCurveChart data={chartData.data} currentSig={chartData.rec.fromSig} championClass={chartData.rec.championClass} />
                     </>
                 ) : null}
             </DialogContent>

@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getChampionImageUrl } from '@/lib/championHelper';
 import { ChampionImages } from '@/types/champion';
 import { WarNode, Player, ChampionClass, War, WarTactic, Tag } from '@prisma/client';
-import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info, Play } from 'lucide-react';
+import { Check, Trash, Swords, Shield, Diamond, Info, Play } from 'lucide-react';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
@@ -71,7 +71,7 @@ function getYouTubeVideoId(url: string | null): string | null {
       if (potentialId && potentialId.length === 11) {
         videoId = potentialId;
       }
-    } catch (e) {
+    } catch {
       // Ignore URL parsing errors if regex fails
     }
   }

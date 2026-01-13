@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Group, Rect, Circle, Text, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
 import { WarTactic, ChampionClass } from '@prisma/client';
@@ -24,18 +24,12 @@ const CLASS_HEX_COLORS: Record<ChampionClass, string> = {
 
 // Custom hook to load Lucide icons as Konva Images
 const useIconImage = (IconComponent: React.ElementType, size: number, color: string) => {
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const imageUrl = useMemo(() => {
+        if (typeof window === 'undefined') return ''; 
+        return svgToDataUrl(IconComponent, {}, size, color);
+    }, [IconComponent, size, color]);
+
     const [image] = useImage(imageUrl || '', 'anonymous');
-
-    useEffect(() => {
-        // Ensure this effect only runs on the client-side
-        if (typeof window === 'undefined') return; 
-
-        const dataUrl = svgToDataUrl(IconComponent, {}, size, color);
-        if (dataUrl !== imageUrl) {
-            setImageUrl(dataUrl);
-        }
-    }, [IconComponent, size, color, imageUrl]);
 
     return image;
 };
@@ -221,7 +215,7 @@ export const CanvasNode = memo(function CanvasNode({
     const activeTacticWithTags: WarTacticWithTags | null | undefined = activeTactic;
     
     // Ensure tags are correctly typed
-    interface ChampionWithTagsForTactic { id: number; name: string; images: any; class: ChampionClass; tags?: { name: string }[] }
+    interface ChampionWithTagsForTactic { id: number; name: string; images: ChampionImages; class: ChampionClass; tags?: { name: string }[] }
 
     const attackerChampionForTactic = attacker as ChampionWithTagsForTactic | undefined;
     const defenderChampionForTactic = defender as ChampionWithTagsForTactic | undefined;

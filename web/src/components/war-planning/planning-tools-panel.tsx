@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Users, Shield, Star, X, Filter, CircleOff, Check } from "lucide-react";
+import { Users, Shield, Star, X, CircleOff, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { getPlayerRoster, getOwnersOfChampion } from "@/app/planning/actions";

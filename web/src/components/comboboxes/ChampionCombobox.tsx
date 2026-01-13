@@ -141,7 +141,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                 >
                   <Image
                     src={getChampionImageUrl(
-                      selectedChampion.images as ChampionImages,
+                      selectedChampion.images as unknown as ChampionImages,
                       "128"
                     )}
                     alt={selectedChampion.name}
@@ -258,7 +258,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                           )}
                         >
                           <Image
-                            src={getChampionImageUrl(item.images as ChampionImages, "64")}
+                            src={getChampionImageUrl(item.images as unknown as ChampionImages, "64")}
                             alt={item.name}
                             fill
                             className="object-cover"

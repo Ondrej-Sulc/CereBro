@@ -5,6 +5,7 @@ import { updateWarFight, updateWarStatus } from "../actions";
 import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
@@ -103,8 +104,8 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       updateWarStatus={updateWarStatus}
       champions={champions}
       players={allianceMembers}
-      seasonBans={seasonBans}
-      warBans={warBans}
+      seasonBans={seasonBans as unknown as SeasonBanWithChampion[]}
+      warBans={warBans as unknown as WarBanWithChampion[]}
       isOfficer={isOfficer}
       bgColors={bgColors}
     />

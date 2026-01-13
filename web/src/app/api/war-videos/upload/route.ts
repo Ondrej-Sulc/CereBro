@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     } else if (existingFightIdsJson) {
         try {
             fightIdsToLink = JSON.parse(existingFightIdsJson);
-        } catch (e) { throw new Error("Invalid existing fight IDs"); }
+        } catch { throw new Error("Invalid existing fight IDs"); }
         if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) throw new Error("Existing fight IDs must be an array");
     } else {
         if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
@@ -114,12 +114,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error: unknown) {
     interface ApiError extends Error {
-        meta?: any;
-        errors?: any[];
+        meta?: unknown;
+        errors?: { reason: string; message: string }[];
         response?: {
             data?: {
                 error?: {
-                    errors?: any[];
+                    errors?: { reason: string; message: string }[];
                 }
             }
         };

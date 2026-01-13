@@ -131,7 +131,7 @@ export async function getAllianceRoster(
             championId: entry.champion.id,
             championName: entry.champion.name,
             championClass: entry.champion.class,
-            championImages: entry.champion.images,
+            championImages: entry.champion.images as unknown as ChampionImages,
             stars: entry.stars,
             rank: entry.rank,
             sigLevel: entry.sigLevel,
@@ -149,7 +149,7 @@ export async function getAllianceRoster(
                 categories: a.ability.categories.map(c => c.name),
                 synergyChampions: a.synergyChampions.map(sc => ({
                     name: sc.champion.name,
-                    images: sc.champion.images
+                    images: sc.champion.images as unknown as ChampionImages
                 }))
             }))
         };
@@ -193,13 +193,13 @@ export async function getAllianceTagsAndTactics(allianceId: string) {
 
     const abilities = await prisma.ability.findMany({
         where: { id: { in: abilityLinks.map(l => l.abilityId) } },
-        select: { id: true, name: true },
+        select: { id: true, name: true, description: true, emoji: true },
         orderBy: { name: 'asc' }
     });
 
     const immunities = await prisma.ability.findMany({
         where: { id: { in: immunityLinks.map(l => l.abilityId) } },
-        select: { id: true, name: true },
+        select: { id: true, name: true, description: true, emoji: true },
         orderBy: { name: 'asc' }
     });
 

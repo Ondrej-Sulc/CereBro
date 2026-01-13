@@ -15,17 +15,17 @@ export const CanvasBackground = React.memo(function CanvasBackground() {
     const [stars, setStars] = useState<Star[]>([]);
 
     useEffect(() => {
-        if (stars.length === 0) {
-            const count = 400;
-            setStars(Array.from({ length: count }).map((_, i) => ({
-                id: i,
-                x: Math.random() * LAYOUT.WIDTH,
-                y: Math.random() * LAYOUT.HEIGHT,
-                r: Math.random() * 1.5 + 0.5,
-                opacity: Math.random() * 0.7 + 0.3,
-            })));
-        }
-    }, [stars.length]);
+        const count = 400;
+        const newStars = Array.from({ length: count }).map((_, i) => ({
+            id: i,
+            x: Math.random() * LAYOUT.WIDTH,
+            y: Math.random() * LAYOUT.HEIGHT,
+            r: Math.random() * 1.5 + 0.5,
+            opacity: Math.random() * 0.7 + 0.3,
+        }));
+        const timer = setTimeout(() => setStars(newStars), 0);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Nebulas - approximations using large circles with radial gradients (simulated via multiple circles or opacity)
     // Konva supports FillRadialGradient.

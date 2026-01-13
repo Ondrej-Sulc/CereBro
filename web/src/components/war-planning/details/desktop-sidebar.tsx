@@ -18,8 +18,16 @@ interface DesktopSidebarProps {
   selectedNodeId: number | null;
   selectedFight: FightWithNode | null;
   activeTactic: WarTacticWithTags | null;
-  historyFilters: any;
-  onHistoryFiltersChange: any;
+  historyFilters: {
+      onlyCurrentTier: boolean;
+      onlyAlliance: boolean;
+      minSeason: number | undefined;
+  };
+  onHistoryFiltersChange: React.Dispatch<React.SetStateAction<{
+      onlyCurrentTier: boolean;
+      onlyAlliance: boolean;
+      minSeason: number | undefined;
+  }>>;
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
   onClose: () => void;
   onNavigate: (direction: number) => void;

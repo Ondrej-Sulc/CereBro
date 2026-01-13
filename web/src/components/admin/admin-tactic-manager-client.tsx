@@ -267,7 +267,7 @@ function TagSelector({ value, onChange, placeholder }: { value: string, onChange
                                         setOpen(false);
                                     }}
                                 >
-                                    Use "{query}"
+                                    Use &quot;{query}&quot;
                                 </div>
                             )}
                         </CommandEmpty>
@@ -276,7 +276,7 @@ function TagSelector({ value, onChange, placeholder }: { value: string, onChange
                                 <CommandItem
                                     key={tag.id}
                                     value={tag.name}
-                                    onSelect={(currentValue) => {
+                                    onSelect={() => {
                                         onChange(tag.name);
                                         setOpen(false);
                                     }}

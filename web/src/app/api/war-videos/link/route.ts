@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         } else {
             try {
                 fightIdsToLink = JSON.parse(existingFightIdsJson);
-            } catch (e) { throw new Error("Invalid existing fight IDs format"); }
+            } catch { throw new Error("Invalid existing fight IDs format"); }
         }
         if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) throw new Error("Existing fight IDs must be an array");
     } else {

@@ -126,7 +126,7 @@ export async function getBatchHistoricalCounters(
   });
   const prefightMap = new Map(fightPrefights.map(f => [
       f.id, 
-      f.prefightChampions.map(p => p.champion as { name: string; images: ChampionImages })
+      f.prefightChampions.map(p => p.champion as unknown as { name: string; images: ChampionImages })
   ]));
 
   // Fetch all attackers involved

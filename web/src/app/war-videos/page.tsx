@@ -1,19 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Search, Play, Calendar, User, Shield, Swords, CircleDot, EyeOff, Filter, Skull } from "lucide-react";
+import { Play, User, Shield, Swords, EyeOff, Skull } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
-import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarTactic, WarMapType } from "@prisma/client";
+import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarMapType } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 
 import { SearchFilters } from "@/components/SearchFilters";
 import { UploadFightButton } from "@/components/UploadFightButton";
@@ -546,11 +541,4 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       </div>
     </div>
   );
-}
-
-function getYouTubeID(url: string | null) {
-   if (!url) return null;
-   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-   const match = url.match(regExp);
-   return (match&&match[7].length==11)? match[7] : null;
 }

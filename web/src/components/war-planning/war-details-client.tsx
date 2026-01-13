@@ -53,8 +53,6 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     setHistoryFilters,
     historyCache,
     currentBattlegroup,
-    validationError,
-    setValidationError,
     // Bans
     seasonBans,
     warBans,
@@ -182,8 +180,6 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               activeTab={activeTab}
               onTabChange={setActiveTab}
               isFullscreen={isFullscreen}
-              onTogglePlayerPanel={handleTogglePlayerPanel} 
-              isPlayerPanelOpen={isRosterVisible}
               seasonBans={seasonBans}
               warBans={warBans}
               onAddWarBan={handleAddWarBan}

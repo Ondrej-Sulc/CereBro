@@ -1,6 +1,6 @@
 // sw.js
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   console.log('Service Worker installing.');
   // Skip waiting to ensure the new service worker activates immediately.
   self.skipWaiting();

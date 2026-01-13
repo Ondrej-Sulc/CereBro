@@ -16,7 +16,11 @@ interface WarTabsProps {
   war?: War; // Optional for Defense
   mapType: WarMapType; // Required
   selectedNodeId: number | null;
-  historyFilters: any;
+  historyFilters: {
+      onlyCurrentTier: boolean;
+      onlyAlliance: boolean;
+      minSeason: number | undefined;
+  };
   activeTactic: WarTactic | null;
   onNodeClick: (nodeId: number, fight?: WarPlacement) => void;
   onToggleFullscreen: () => void;

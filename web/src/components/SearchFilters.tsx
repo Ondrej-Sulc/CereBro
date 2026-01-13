@@ -25,7 +25,6 @@ export function SearchFilters({
 }: SearchFiltersProps) {
   const { state, setters, computed } = useSearchFilters({
     champions,
-    availableSeasons,
   });
 
   const {

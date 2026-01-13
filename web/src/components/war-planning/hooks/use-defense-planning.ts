@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { WarDefensePlan, WarDefensePlacement, WarMapType, WarNode, WarNodeAllocation, NodeModifier, ChampionClass } from "@prisma/client";
+import { WarDefensePlacement, WarNode, WarNodeAllocation, NodeModifier } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { RightPanelState } from "./use-war-planning";
@@ -10,7 +9,6 @@ interface WarNodeWithAllocations extends WarNode {
 }
 
 interface UseDefensePlanningProps {
-  plan: WarDefensePlan;
   planId: string;
   champions: (Champion & { tags?: { name: string }[] })[];
   players: PlayerWithRoster[];
@@ -18,14 +16,11 @@ interface UseDefensePlanningProps {
 }
 
 export function useDefensePlanning({
-  plan,
   planId,
   champions,
   players,
   updatePlacement,
 }: UseDefensePlanningProps) {
-  const router = useRouter();
-
   // UI State
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
   const [activeTab, setActiveTab] = useState("bg1");
@@ -129,8 +124,6 @@ export function useDefensePlanning({
                  // Here we just map to preserve local optimistic updates
                  if (prev.length === 0) return data;
 
-                 const newMap = new Map(data.map(d => [d.id, d]));
-                 
                  // If we have local optimistic updates, we want to keep them if the server hasn't confirmed them yet?
                  // Actually, usually we trust the server unless we are *currently* editing/saving.
                  // pendingSaveNodeIds tracks nodes we are saving.

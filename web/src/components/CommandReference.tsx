@@ -11,12 +11,9 @@ import {
   Command as CommandIcon,
   ChevronRight,
   Hash,
-  Type,
   List,
   User,
   Shield,
-  Zap,
-  Info,
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -60,15 +57,6 @@ interface Command {
 
 // --- Helpers ---
 
-const getGroupIcon = (group: string) => {
-  switch (group.toLowerCase()) {
-    case "BOT_ADMIN": return Shield;
-    case "alliance tools": return User;
-    case "information & search": return Search;
-    default: return CommandIcon;
-  }
-};
-
 const getGroupColor = (group: string) => {
   // Map the JSON colors to Tailwind classes
   // The JSON has "red", "sky", "indigo", etc.
@@ -80,20 +68,15 @@ const getGroupColor = (group: string) => {
   }
 };
 
-const getGroupColorBorder = (group: string) => {
-  switch (group.toLowerCase()) {
-    case "BOT_ADMIN": return "border-red-500/50";
-    case "alliance tools": return "border-sky-500/50";
-    case "information & search": return "border-indigo-500/50";
-    default: return "border-slate-500/50";
-  }
-};
-
 // --- Components ---
 
 function GroupIconDisplay({ group, className }: { group: string; className?: string }) {
-    const Icon = getGroupIcon(group);
-    return <Icon className={className} />;
+  switch (group.toLowerCase()) {
+    case "bot_admin": return <Shield className={className} />;
+    case "alliance tools": return <User className={className} />;
+    case "information & search": return <Search className={className} />;
+    default: return <CommandIcon className={className} />;
+  }
 }
 
 interface CommandReferenceProps {
@@ -109,10 +92,9 @@ export default function CommandReference({ isAdmin = false }: CommandReferencePr
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (!mounted) {
-      setMounted(true);
-    }
-  }, [mounted]);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Reset selection when group changes, unless searching
   useEffect(() => {
@@ -174,7 +156,6 @@ export default function CommandReference({ isAdmin = false }: CommandReferencePr
         {/* Groups (Wrapped Pills) */}
         <div className="flex flex-wrap gap-2 pb-2 shrink-0">
           {commandGroups.map((group) => {
-            const Icon = getGroupIcon(group);
             const isActive = selectedGroup === group;
             return (
               <button
@@ -187,7 +168,7 @@ export default function CommandReference({ isAdmin = false }: CommandReferencePr
                     : "bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-800 hover:text-slate-200"
                 )}
               >
-                {group !== "All" && <Icon className="w-3 h-3" />}
+                {group !== "All" && <GroupIconDisplay group={group} className="w-3 h-3" />}
                 {group}
               </button>
             );

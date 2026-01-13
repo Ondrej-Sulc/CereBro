@@ -203,8 +203,12 @@ export function RosterUpdateForm() {
         }
       
     } catch (err: unknown) {
-        const error = err as any;
-        const errorMessage = error.response?.data?.error || error.message || "Failed to update roster";
+        let errorMessage = "Failed to update roster";
+        if (axios.isAxiosError(err)) {
+            errorMessage = err.response?.data?.error || err.message;
+        } else if (err instanceof Error) {
+            errorMessage = err.message;
+        }
         setResult({
             success: 0,
             added: [],

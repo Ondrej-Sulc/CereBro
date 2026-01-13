@@ -5,35 +5,9 @@ import { Shape } from 'react-konva';
 import { LAYOUT, LAYOUT_BIG, warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 import Konva from 'konva';
 
-interface Star {
-    id: number;
-    x: number;
-    y: number;
-    r: number;
-    opacity: number;
-}
-
 interface WarMapBackgroundProps {
     isBigThing?: boolean;
     accentColor?: string;
-}
-
-function hexToRgba(hex: string, alpha: number) {
-    if (!hex || typeof hex !== 'string') return `rgba(34, 211, 238, ${alpha})`;
-    
-    // Support #RGB and #RRGGBB
-    let cleanHex = hex.replace('#', '');
-    if (cleanHex.length === 3) {
-        cleanHex = cleanHex.split('').map(c => c + c).join('');
-    }
-    
-    if (cleanHex.length !== 6) return `rgba(34, 211, 238, ${alpha})`;
-
-    const r = parseInt(cleanHex.slice(0, 2), 16);
-    const g = parseInt(cleanHex.slice(2, 4), 16);
-    const b = parseInt(cleanHex.slice(4, 6), 16);
-
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export const WarMapBackground = React.memo(function WarMapBackground({ isBigThing, accentColor }: WarMapBackgroundProps) {
@@ -158,14 +132,13 @@ export const WarMapBackground = React.memo(function WarMapBackground({ isBigThin
 
         ctx.globalCompositeOperation = 'source-over';
 
-        if (!staticCanvas) {
-            setStaticCanvas(canvas);
-        }
-    }, [currentLayout, currentNodesData, contentBounds, accentColor, staticCanvas]);
+        const timer = setTimeout(() => setStaticCanvas(canvas), 0);
+        return () => clearTimeout(timer);
+    }, [currentLayout, currentNodesData, contentBounds, accentColor]);
 
     // Scene function just draws the pre-rendered canvas
     const sceneFunc = useMemo(() => {
-        return (context: Konva.Context, _shape: Konva.Shape) => {
+        return (context: Konva.Context) => {
             if (!staticCanvas) return;
             const ctx = context._context;
             ctx.drawImage(staticCanvas, 0, 0);

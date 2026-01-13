@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss"
+import tailwindAnimate from "tailwindcss-animate"
 
 const config = {
   darkMode: ["class"],
@@ -90,7 +91,7 @@ const config = {
   		  			glow: 'glow 4s ease-in-out infinite'
   		  		}  	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindAnimate],
 } satisfies Config
 
 export default config

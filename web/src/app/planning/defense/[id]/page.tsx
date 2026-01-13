@@ -35,7 +35,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
 
   // Allow admins to view any plan, otherwise restrict to player's alliance
   const whereClause: Prisma.WarDefensePlanWhereInput = { id: id };
-  if (!isBotAdmin) {
+  if (!isBotAdmin && player.allianceId) {
       whereClause.allianceId = player.allianceId;
   }
 

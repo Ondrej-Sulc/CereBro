@@ -22,7 +22,7 @@ export function UploadFightButton({ fightId }: { fightId: string }) {
                 try {
                     const url = await createUploadSession(fightId);
                     router.push(url);
-                } catch (e) {
+                } catch {
                     toast({ title: "Error", description: "Failed to start upload session", variant: "destructive" });
                 }
             })}

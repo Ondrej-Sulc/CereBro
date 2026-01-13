@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChampionClass, WarTactic, Tag, AbilityCategory, Ability } from "@prisma/client";
+import { ChampionClass, Tag, AbilityCategory, Ability } from "@prisma/client";
 import { CircleOff, Trophy, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as TagIcon } from "lucide-react";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -210,7 +210,7 @@ export function AllianceRosterMatrix({
                                             {/* Portrait */}
                                             {champ.championImages && (
                                                 <Image 
-                                                    src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/icons/unknown.png'} 
                                                     alt={champ.championName}
                                                     fill
                                                     sizes="48px"
@@ -240,7 +240,7 @@ export function AllianceRosterMatrix({
                                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                                             {champ.championImages && (
                                                 <Image 
-                                                    src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/icons/unknown.png'} 
                                                     alt={champ.championName}
                                                     fill
                                                     className="object-cover"
@@ -290,7 +290,7 @@ export function AllianceRosterMatrix({
                                                         source: curr.source,
                                                         synergyChampions: curr.synergyChampions.map(sc => ({
                                                             name: sc.name,
-                                                            images: sc.images as unknown as ChampionImages
+                                                            images: sc.images
                                                         }))
                                                     });
                                                     return acc;

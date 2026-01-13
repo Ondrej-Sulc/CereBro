@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, RefreshCw, CheckCircle2, Link as LinkIcon, ArrowRight } from 'lucide-react';
+import { Bot, RefreshCw, CheckCircle2, Link as LinkIcon } from 'lucide-react';
 import Tilt from "@/components/TiltWrapper";
 import Link from 'next/link';
 

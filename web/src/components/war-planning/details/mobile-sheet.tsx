@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence, useDragControls, useAnimation, PanInfo, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence, useAnimation, useMotionValue } from "framer-motion";
 import NodeEditor from "../node-editor";
 import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { Champion } from "@/types/champion";
@@ -121,7 +121,6 @@ export function MobileSheet({
   const handlePointerMove = useCallback((e: PointerEvent) => {
       if (!isDragging.current) return;
 
-      e.preventDefault(); // Prevent scrolling while dragging
       const deltaY = startY.current - e.clientY; // Dragging UP (negative clientY delta) increases height
       let newHeight = startHeight.current + deltaY;
 
@@ -130,9 +129,9 @@ export function MobileSheet({
       sheetHeight.set(newHeight);
   }, [minDragHeight, expandedHeight, sheetHeight]);
 
-  const handlePointerUpRef = useRef<(e: PointerEvent) => void>(() => {});
+  const handlePointerUpRef = useRef<() => void>(() => {});
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
+  const handlePointerUp = useCallback(() => {
       if (!isDragging.current) return;
       isDragging.current = false;
 

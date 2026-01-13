@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import Image from "next/image";
 import { Users, ChevronLeft, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
 import { WarMapType, ChampionClass } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { ChampionImages } from "@/types/champion";
 import { motion } from "framer-motion";
 import { usePlayerColor } from "../player-color-context";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -46,7 +48,7 @@ export const DefensePlayerListPanel = ({
   // Calculate player usage stats (filtered by BG)
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
-      champions: { id: number; name: string; images: any; class: ChampionClass; nodeId: number; placementId: string; starLevel: number | null | undefined }[],
+      champions: { id: number; name: string; images: ChampionImages; class: ChampionClass; nodeId: number; placementId: string; starLevel: number | null | undefined }[],
       placementCount: number
     }>();
 
@@ -178,11 +180,13 @@ export const DefensePlayerListPanel = ({
                                 <div className="flex gap-1 pl-11 flex-wrap">
                                     {stat?.champions.map((champ, idx) => (
                                         <div key={`${champ.id}-${idx}`} className="relative group/champ">
-                                            <img 
+                                            <Image 
                                                 src={getChampionImageUrl(champ.images, '64')} 
                                                 alt={champ.name}
+                                                width={28}
+                                                height={28}
                                                 className={cn(
-                                                    "w-7 h-7 rounded-full border-2",
+                                                    "rounded-full border-2",
                                                     getChampionClassColors(champ.class).border
                                                 )}
                                             />
@@ -221,10 +225,12 @@ export const DefensePlayerListPanel = ({
                                                 <div className="w-5 flex justify-center text-[10px] font-mono text-slate-500 group-hover/row:text-slate-300">
                                                     #{champ.nodeId}
                                                 </div>
-                                                <img 
+                                                <Image 
                                                     src={getChampionImageUrl(champ.images, '64')} 
                                                     alt={champ.name}
-                                                    className={cn("w-8 h-8 rounded-full border-2", classColors.border)} 
+                                                    width={32}
+                                                    height={32}
+                                                    className={cn("rounded-full border-2", classColors.border)} 
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <div className={cn("text-xs font-bold truncate transition-colors", classColors.text, isMoveMode && "group-hover/row:text-indigo-300")}>{champ.name}</div>

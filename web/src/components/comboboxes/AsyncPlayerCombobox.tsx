@@ -5,7 +5,7 @@ import { ChevronsUpDown, X, Users, Loader2 } from "lucide-react"
 import Image from "next/image";
 
 import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,

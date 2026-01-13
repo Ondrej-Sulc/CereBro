@@ -93,7 +93,7 @@ export default function AdminBansManagerClient({ initialBans, champions }: Admin
         } catch (error) {
             toast({
                 title: "Error",
-                description: "Failed to remove ban",
+                description: error instanceof Error ? error.message : "Failed to remove ban",
                 variant: "destructive",
             });
         }

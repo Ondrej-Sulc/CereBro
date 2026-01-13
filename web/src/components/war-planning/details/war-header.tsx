@@ -1,7 +1,7 @@
 import { War, WarStatus, Tag } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen, Users, Ban, Plus, X, Share, ChevronLeft } from "lucide-react";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft } from "lucide-react";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
@@ -34,8 +34,6 @@ interface WarHeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   isFullscreen: boolean;
-  onTogglePlayerPanel?: () => void;
-  isPlayerPanelOpen?: boolean;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
   onAddWarBan: (championId: number) => Promise<void>;
@@ -61,8 +59,6 @@ export function WarHeader({
   activeTab,
   onTabChange,
   isFullscreen,
-  onTogglePlayerPanel,
-  isPlayerPanelOpen,
   seasonBans,
   warBans,
   onAddWarBan,

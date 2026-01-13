@@ -7,10 +7,9 @@ import { Champion } from "@/types/champion";
 
 interface UseSearchFiltersProps {
   champions: Champion[];
-  availableSeasons: number[];
 }
 
-export function useSearchFilters({ champions, availableSeasons }: UseSearchFiltersProps) {
+export function useSearchFilters({ champions }: UseSearchFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -204,6 +203,7 @@ export function useSearchFilters({ champions, availableSeasons }: UseSearchFilte
     debouncedBattlegroup,
     pathname,
     router,
+    searchParams,
   ]);
 
   const activeAdvancedCount = [

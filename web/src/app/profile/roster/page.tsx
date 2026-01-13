@@ -7,8 +7,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { ChampionClass, Roster } from "@prisma/client";
+import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
+import { ProfileRosterEntry } from "./types";
 
 export const dynamic = 'force-dynamic';
 
@@ -212,7 +213,8 @@ export default async function RosterPage(props: {
                          return {
                              championId: c.championId,
                              championName: c.champion.name,
-                             championClass: c.champion.class,              championImage: c.champion.images,
+                             championClass: c.champion.class,
+                             championImage: c.champion.images as unknown as ChampionImages,
               stars: c.stars,
               fromRank: c.rank,
               toRank: c.rank + 1,
@@ -324,7 +326,7 @@ export default async function RosterPage(props: {
                    championId: original.championId,
                    championName: original.champion.name,
                    championClass: original.champion.class,
-                   championImage: original.champion.images,
+                   championImage: original.champion.images as unknown as ChampionImages,
                    stars: original.stars,
                    rank: original.rank,
                    fromSig: original.sigLevel || 0,
@@ -363,7 +365,7 @@ export default async function RosterPage(props: {
                    championId: c.championId,
                    championName: c.champion.name,
                    championClass: c.champion.class,
-                   championImage: c.champion.images,
+                   championImage: c.champion.images as unknown as ChampionImages,
                    stars: c.stars,
                    rank: c.rank,
                    fromSig: c.sigLevel || 0,
@@ -400,7 +402,7 @@ export default async function RosterPage(props: {
       </div>
 
       <RosterView 
-        initialRoster={roster as Roster[]} 
+        initialRoster={rosterEntries as unknown as ProfileRosterEntry[]} 
         allChampions={allChampions}
         top30Average={top30Average}
         prestigeMap={rosterPrestigeMap}

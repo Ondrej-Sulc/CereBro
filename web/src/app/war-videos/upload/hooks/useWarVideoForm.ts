@@ -175,7 +175,7 @@ export function useWarVideoForm({
              setBattlegroup(defaultPlayer?.battlegroup?.toString() || "");
         }
     }
-  }, [isSolo, contextMode, initialPlayers, initialUserId]);
+  }, [isSolo, contextMode, initialPlayers, initialUserId, battlegroup]);
 
   // Effect to update battlegroup if playerInVideoId changes and not pre-filled
   useEffect(() => {
@@ -275,7 +275,7 @@ export function useWarVideoForm({
     );
   }, []);
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
     if (uploadMode === "single") {
       if (sourceMode === 'upload' && !videoFile) {
@@ -309,10 +309,10 @@ export function useWarVideoForm({
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [uploadMode, sourceMode, videoFile, videoUrl, season, isOffseason, warNumber, warTier, battlegroup, contextMode, fights]);
 
   const uploadVideo = useCallback(
-    async (formData: FormData, fightIds: string[], title: string) => {
+    async (formData: FormData, fightIds: string[]) => {
       // Use XMLHttpRequest for consistent progress tracking across all browsers
       return new Promise<{ videoIds: string[] }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -331,7 +331,7 @@ export function useWarVideoForm({
             try {
               const result = JSON.parse(xhr.responseText);
               resolve(result);
-            } catch (e) {
+            } catch {
               reject(new Error('Invalid response from server'));
             }
           } else {
@@ -342,7 +342,7 @@ export function useWarVideoForm({
               if (errorData.details) {
                 errorMessage += `: ${errorData.details}`;
               }
-            } catch (e) {
+            } catch {
               // If JSON parsing fails, use the raw response text if available
               if (xhr.responseText) {
                 errorMessage = xhr.responseText;
@@ -360,7 +360,7 @@ export function useWarVideoForm({
         xhr.send(formData);
       });
     },
-    [fights, uploadMode, videoFile]
+    []
   );
 
   const linkVideo = useCallback(
@@ -525,7 +525,7 @@ export function useWarVideoForm({
               formData.append("mapType", mapType);
             }
 
-            const result = await uploadVideo(formData, fights.map(f => f.id), getTitle(fights[0]));
+            const result = await uploadVideo(formData, fights.map(f => f.id));
             
             // Handle Direct Upload Result
             toast({ title: "Success!", description: "All fights have been submitted." });
@@ -563,7 +563,7 @@ export function useWarVideoForm({
                 formData.append("mapType", mapType);
               }
 
-              const result = await uploadVideo(formData, [fight.id], getTitle(fight));
+              const result = await uploadVideo(formData, [fight.id]);
               
               if (result.videoIds && result.videoIds.length > 0) {
                 allUploadedVideoIds.push(result.videoIds[0]);
@@ -578,16 +578,17 @@ export function useWarVideoForm({
             }
           }
         }
-      } catch (error: any) {
-        console.error("Submission error:", error);
+      } catch (error: unknown) {
+        const err = error as Error;
+        console.error("Submission error:", err);
         console.error("Error details:", {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
+          message: err.message,
+          stack: err.stack,
+          name: err.name
         });
         toast({
           title: "Upload Failed",
-          description: error.message || "An unknown error occurred.",
+          description: err.message || "An unknown error occurred.",
           variant: "destructive",
         });
       } finally {
@@ -597,6 +598,8 @@ export function useWarVideoForm({
       }
     },
     [
+      validateForm,
+      preFilledFights,
       token,
       videoFile,
       videoUrl,
@@ -621,7 +624,6 @@ export function useWarVideoForm({
       linkVideo,
       battlegroup,
       mapType,
-      handlePlayerChange, // Dependency
       contextMode, // Dependency
     ]
   );

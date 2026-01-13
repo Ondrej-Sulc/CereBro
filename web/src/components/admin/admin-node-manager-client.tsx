@@ -12,7 +12,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { searchModifiers, addAllocation, removeAllocation } from "@/app/admin/nodes/actions";
 import { Loader2, Plus, Trash2, Search, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,12 +35,15 @@ interface AdminNodeManagerClientProps {
 export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManagerClientProps) {
     const router = useRouter();
     const { toast } = useToast();
-    const [selectedNode, setSelectedNode] = useState<WarNodeWithAllocations | null>(null);
+    const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
     const [modifierSearch, setModifierSearch] = useState("");
     const [searchResults, setSearchResults] = useState<NodeModifier[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [mapType, setMapType] = useState<WarMapType>(WarMapType.STANDARD);
     
+    // Derived selected node
+    const selectedNode = selectedNodeId ? initialNodes.find(n => n.id === selectedNodeId) : null;
+
     // Allocation form state
     const [minTier, setMinTier] = useState<string>("");
     const [maxTier, setMaxTier] = useState<string>("");
@@ -85,23 +87,14 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
         };
     }, [debouncedSearch]);
 
-    useEffect(() => {
-        if (selectedNode) {
-            const updatedNode = initialNodes.find(n => n.id === selectedNode.id);
-            if (updatedNode) {
-                setSelectedNode(updatedNode);
-            }
-        }
-    }, [initialNodes]);
-
     // Reset selected node when map type changes if out of range
     useEffect(() => {
         if (selectedNode) {
             if (mapType === WarMapType.BIG_THING && selectedNode.nodeNumber > 10) {
-                setSelectedNode(null);
+                setSelectedNodeId(null);
             }
         }
-    }, [mapType]);
+    }, [mapType, selectedNode]);
 
     const handlePresetChange = (value: string) => {
         setSelectedPreset(value);
@@ -135,11 +128,12 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                 title: "Modifier Added",
                 description: `Successfully added ${modifier.name} to Node ${selectedNode.nodeNumber} (${mapType}).`,
             });
-        } catch (error: any) {
-            console.error("Failed to add allocation:", error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error("Failed to add allocation:", err);
             toast({
                 title: "Failed to Add Modifier",
-                description: error.message || "Please check the console for details.",
+                description: err.message || "Please check the console for details.",
                 variant: "destructive",
             });
         }
@@ -153,11 +147,12 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                 title: "Modifier Removed",
                 description: "Successfully removed modifier.",
             });
-        } catch (error: any) {
-            console.error("Failed to remove allocation:", error);
+        } catch (error: unknown) {
+            const err = error as Error;
+            console.error("Failed to remove allocation:", err);
             toast({
                 title: "Failed to Remove Modifier",
-                description: error.message || "Please check the console for details.",
+                description: err.message || "Please check the console for details.",
                 variant: "destructive",
             });
         }
@@ -189,9 +184,9 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                                 {displayedNodes.map(node => (
                                     <Button
                                         key={node.id}
-                                        variant={selectedNode?.id === node.id ? "default" : "outline"}
+                                        variant={selectedNodeId === node.id ? "default" : "outline"}
                                         className="h-12 w-full font-mono text-lg"
-                                        onClick={() => setSelectedNode(node)}
+                                        onClick={() => setSelectedNodeId(node.id)}
                                     >
                                         {node.nodeNumber}
                                     </Button>

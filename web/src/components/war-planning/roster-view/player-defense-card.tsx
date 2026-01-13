@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -248,9 +249,11 @@ export const PlayerDefenseCard = ({
 
                             {/* Champion Info */}
                             <div className="flex-1 flex items-center gap-2 min-w-0">
-                                <img 
+                                <Image 
                                     src={getChampionImageUrl(champ.images, '64')} 
                                     alt={champ.name}
+                                    width={32}
+                                    height={32}
                                     className={cn("h-8 w-8 rounded-full border", colors.border)}
                                 />
                                 <div className="min-w-0">

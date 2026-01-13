@@ -3,7 +3,7 @@ import { X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
-import { Champion } from "@/types/champion";
+import { Champion, ChampionImages } from "@/types/champion";
 import { PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import Image from "next/image";
@@ -76,18 +76,14 @@ export function PrefightSelector({
               return a.ingameName.localeCompare(b.ingameName);
           });
 
-          const others = players.filter(player => 
-              !player.roster.some(r => r.championId === p.championId)
-          ).sort((a, b) => a.ingameName.localeCompare(b.ingameName));
-
-          const sortedPlayers = [...owners, ...others];
+          const sortedPlayers = [...owners, ...players.filter(player => !player.roster.some(r => r.championId === p.championId)).sort((a, b) => a.ingameName.localeCompare(b.ingameName))];
 
           return (
             <div key={p.championId} className="flex items-center gap-2 bg-slate-900/50 p-2 rounded-md border border-slate-800">
               {/* Champion Image */}
               <div className="relative flex-shrink-0">
                  <Image
-                    src={getChampionImageUrl(champ.images as any, '64')}
+                    src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64')}
                     alt={champ.name}
                     width={32}
                     height={32}
