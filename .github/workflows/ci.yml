@@ -44,7 +44,7 @@ jobs:
         run: pnpm run prisma:generate
 
       - name: Build Bot (src)
-        run: pnpm run build
+        run: pnpm run build-only
 
       - name: Build Web (web)
         run: pnpm --filter ./web... run build

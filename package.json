@@ -30,6 +30,7 @@
   },
   "scripts": {
     "test": "vitest --run",
+    "build-only": "tsc --noEmit",
     "build": "tsc && node scripts/generate-docs.js",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
