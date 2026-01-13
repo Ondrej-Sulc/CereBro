@@ -170,7 +170,7 @@ export function RosterFilters({
                                         title={c}
                                     >
                                         <div className="relative w-4 h-4">
-                                            <Image src={CLASS_ICONS[c]} alt={c} fill sizes="16px" className="object-contain" />
+                                            <Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="16px" className="object-contain" />
                                         </div>
                                     </Button>
                                 );

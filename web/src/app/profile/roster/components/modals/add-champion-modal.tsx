@@ -56,7 +56,22 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
 
                     <div className="space-y-2">
                         <Label>Signature Level</Label>
-                        <Input type="number" disabled={!newChampion.isAwakened} className="bg-slate-950 border-slate-700 disabled:opacity-50" min={0} max={200} value={newChampion.sigLevel} onChange={(e) => onNewChampionChange({...newChampion, sigLevel: parseInt(e.target.value) || 0})} />
+                        <Input 
+                            type="number" 
+                            disabled={!newChampion.isAwakened} 
+                            className="bg-slate-950 border-slate-700 disabled:opacity-50" 
+                            min={0} 
+                            max={newChampion.stars >= 5 ? 200 : 99} 
+                            value={newChampion.sigLevel} 
+                            onChange={(e) => {
+                                const maxSig = newChampion.stars >= 5 ? 200 : 99;
+                                let val = parseInt(e.target.value);
+                                if (isNaN(val)) val = 0;
+                                if (val > maxSig) val = maxSig;
+                                if (val < 0) val = 0;
+                                onNewChampionChange({...newChampion, sigLevel: val});
+                            }} 
+                        />
                     </div>
 
                     <div className="flex gap-6 mt-2">

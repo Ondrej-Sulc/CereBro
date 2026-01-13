@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionImages } from "@/types/champion";
+import { ChampionClass } from "@prisma/client";
 import { ProfileRosterEntry, FilterState } from "../types";
 import { CLASS_ICONS } from "../constants";
 
@@ -55,19 +56,18 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                 )}
             </div>
 
-            <div className="absolute top-1.5 left-1.5">
-                <div className={cn("p-1.5 rounded-full bg-black/80 border border-white/10", classColors.text)}>
-                <div className="relative w-5 h-5">
-                    <img 
-                        src={CLASS_ICONS[item.champion.class]} 
-                        alt={item.champion.class} 
-                        className="w-full h-full object-contain"
-                        loading="lazy" 
-                    />
-                </div>
-                </div>
-            </div>
-
+                            <div className="absolute top-1.5 left-1.5">
+                                <div className={cn("p-1.5 rounded-full bg-black/80 border border-white/10", classColors.text)}>
+                                <div className="relative w-5 h-5">
+                                    <img 
+                                        src={CLASS_ICONS[item.champion.class as Exclude<ChampionClass, 'SUPERIOR'>]} 
+                                        alt={item.champion.class} 
+                                        className="w-full h-full object-contain"
+                                        loading="lazy" 
+                                    />
+                                </div>
+                                </div>
+                            </div>
             <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
                 <div className="flex items-center justify-between mb-1">
                     <div className="flex gap-1 items-center">

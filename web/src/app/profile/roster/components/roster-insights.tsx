@@ -53,7 +53,7 @@ function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: C
                         <div className="flex gap-2">
                             {CLASSES.map(c => (
                                 <Button key={c} variant="ghost" size="sm" className={cn("h-8 w-8 p-1.5 rounded-full transition-all border shrink-0", selectedClasses.includes(c) ? "bg-slate-800 border-slate-700" : "bg-transparent border-transparent")} onClick={() => toggleClass(c)}>
-                                    <div className="relative w-full h-full"><Image src={CLASS_ICONS[c]} alt={c} fill sizes="24px" className="object-contain" /></div>
+                                    <div className="relative w-full h-full"><Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="24px" className="object-contain" /></div>
                                 </Button>
                             ))}
                         </div>
@@ -63,7 +63,7 @@ function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: C
             <div className="hidden lg:flex items-center gap-1 bg-slate-900/50 p-1 rounded-full border border-slate-800">
                 {CLASSES.map(c => (
                     <Button key={c} variant="ghost" size="sm" className={cn("h-6 w-6 p-1 rounded-full transition-all border shrink-0", selectedClasses.includes(c) ? "bg-slate-800 border-slate-700 shadow-sm" : "bg-transparent border-transparent")} onClick={() => toggleClass(c)}>
-                        <div className="relative w-full h-full"><Image src={CLASS_ICONS[c]} alt={c} fill sizes="24px" className="object-contain" /></div>
+                        <div className="relative w-full h-full"><Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="24px" className="object-contain" /></div>
                     </Button>
                 ))}
             </div>

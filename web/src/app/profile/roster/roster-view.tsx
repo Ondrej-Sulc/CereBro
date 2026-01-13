@@ -81,11 +81,11 @@ export function RosterView({
   const router = useRouter();
   const { toast } = useToast();
 
-  const updateUrlParams = (updates: Record<string, string | null>) => {
+  const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);
       Object.entries(updates).forEach(([key, value]) => { if (value) params.set(key, value); else params.delete(key); });
       startTransition(() => { router.push(`?${params.toString()}`); });
-  };
+  }, [router]);
 
   const handleRankClassFilterChange = (classes: ChampionClass[]) => {
       setRankUpClassFilter(classes); setPendingSection('rank');
@@ -135,7 +135,7 @@ export function RosterView({
         updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
     }, 500);
     return () => clearTimeout(timer);
-  }, [sigBudget]);
+  }, [sigBudget, updateUrlParams]);
 
   const filteredRoster = useMemo(() => {
     const filtered = roster.filter((item) => {
