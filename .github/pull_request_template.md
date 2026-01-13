@@ -37,7 +37,7 @@ Explain **why** this change is needed.
 
 ## Screenshots / Output (if applicable)
 
-## Include CLI output, logs, or screenshots if this affects user-facing behavior.
+Include CLI output, logs, or screenshots if this affects user-facing behavior.
 
 ## Related Issues
 
