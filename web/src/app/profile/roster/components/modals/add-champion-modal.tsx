@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@prisma/client";
+import { getMaxRank } from "@/lib/championHelper";
 
 interface NewChampionFormData {
     championId: number | null;
@@ -55,7 +56,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                             <Select value={String(newChampion.rank)} onValueChange={(v) => onNewChampionChange({...newChampion, rank: parseInt(v)})}>
                                 <SelectTrigger className="bg-slate-950 border-slate-700"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                    {Array.from({length: newChampion.stars === 7 ? 3 : (newChampion.stars === 6 ? 6 : 5)}, (_, i) => i + 1).map(r => (
+                                    {Array.from({length: getMaxRank(newChampion.stars)}, (_, i) => i + 1).map(r => (
                                          <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
                                     ))}
                                 </SelectContent>

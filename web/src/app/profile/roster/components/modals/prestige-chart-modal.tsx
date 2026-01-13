@@ -22,9 +22,13 @@ export function PrestigeChartModal({ chartData, loading, onClose }: PrestigeChar
         <Dialog open={!!chartData || loading} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[500px]">
                 {loading ? (
-                    <div className="h-[300px] flex items-center justify-center">
-                        <Loader2 className="w-8 h-8 animate-spin text-slate-500" />
-                    </div>
+                    <>
+                         <DialogTitle className="sr-only">Loading Chart</DialogTitle>
+                         <DialogDescription className="sr-only">Please wait while the chart data is loading.</DialogDescription>
+                        <div className="h-[300px] flex items-center justify-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-slate-500" />
+                        </div>
+                    </>
                 ) : chartData ? (
                     <>
                         <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">

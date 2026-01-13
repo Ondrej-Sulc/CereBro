@@ -19,6 +19,15 @@ export function getChampionImageUrl(
   return images[key];
 }
 
+export function getMaxRank(stars: number): number {
+  if (stars === 7) return 6;
+  if (stars >= 4) return 5;
+  if (stars === 3) return 4;
+  if (stars === 2) return 3;
+  if (stars === 1) return 2;
+  return 5;
+}
+
 export function normalizeChampionName(name: string): string {
   if (!name) return "";
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");

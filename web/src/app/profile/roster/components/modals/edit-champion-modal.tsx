@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getMaxRank } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ProfileRosterEntry } from "../../types";
@@ -50,7 +50,7 @@ export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemCha
                                 <SelectValue placeholder="Rank" />
                             </SelectTrigger>
                             <SelectContent>
-                                {Array.from({length: Math.max(item.stars === 7 ? 6 : 5, item.rank)}, (_, i) => i + 1).map(r => (
+                                {Array.from({length: getMaxRank(item.stars)}, (_, i) => i + 1).map(r => (
                                      <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
                                 ))}
                             </SelectContent>
