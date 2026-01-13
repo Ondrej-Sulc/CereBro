@@ -105,7 +105,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
 
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={onAdd} className="bg-sky-600 hover:bg-sky-700">Add to Roster</Button>
+                    <Button onClick={onAdd} disabled={!newChampion.championId} className="bg-sky-600 hover:bg-sky-700 disabled:opacity-50">Add to Roster</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
