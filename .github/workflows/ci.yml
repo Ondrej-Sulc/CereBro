@@ -49,11 +49,12 @@ jobs:
       - name: Build Web (web)
         run: pnpm --filter ./web... run build
 
-      - name: Typecheck
+      - name: Typecheck (src)
         run: pnpm -w -r exec tsc --noEmit
 
-      - name: Run tests (web)
-        run: pnpm -w -r test --if-present
+      - name: Run tests (src)
+        run: pnpm -w -r test
 
-      - name: Run tests (workspace)
-        run: pnpm -w -r test --if-present
+      # TODO Figure out web test lib and add web tests
+      # - name: Run tests (web)
+      #   run: pnpm -w -r test
