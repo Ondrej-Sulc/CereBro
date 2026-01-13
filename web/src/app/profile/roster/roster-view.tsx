@@ -8,7 +8,7 @@ import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@prisma/client";
 
 // Local imports
-import { ProfileRosterEntry, Recommendation, SigRecommendation } from "./types";
+import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
 import { ChampionCard } from "./components/champion-card";
 import { RosterFilters } from "./components/roster-filters";
 import { RosterInsights } from "./components/roster-insights";
@@ -71,7 +71,7 @@ export function RosterView({
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   
   const [isPending, startTransition] = useTransition();
-  const [chartData, setChartData] = useState<{data: any[], rec: SigRecommendation} | null>(null);
+  const [chartData, setChartData] = useState<{data: PrestigePoint[], rec: SigRecommendation} | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
   const [isAddingChampion, setIsAddingChampion] = useState(false);
   const [newChampion, setNewChampion] = useState({

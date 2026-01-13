@@ -52,3 +52,8 @@ export interface FilterState {
     abilities: string[];
     immunities: string[];
 }
+
+export interface PrestigePoint {
+    sig: number;
+    prestige: number;
+}

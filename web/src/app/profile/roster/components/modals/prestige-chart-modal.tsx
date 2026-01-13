@@ -7,10 +7,10 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { PrestigeCurveChart } from "../../prestige-curve-chart";
-import { SigRecommendation } from "../../types";
+import { SigRecommendation, PrestigePoint } from "../../types";
 
 interface PrestigeChartModalProps {
-    chartData: { data: any[], rec: SigRecommendation } | null;
+    chartData: { data: PrestigePoint[], rec: SigRecommendation } | null;
     loading: boolean;
     onClose: () => void;
 }
