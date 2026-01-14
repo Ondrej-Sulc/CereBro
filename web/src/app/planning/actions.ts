@@ -8,6 +8,16 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { ChampionImages } from "@/types/champion";
+
+export interface ExtraChampion {
+  id: string;
+  warId: string;
+  playerId: string;
+  championId: number;
+  battlegroup: number;
+  champion: { id: number; name: string; images: ChampionImages };
+}
 
 const createWarSchema = z.object({
   season: z.number().min(1),
@@ -441,12 +451,12 @@ export async function removeWarBan(id: string) {
     await prisma.warBan.delete({ where: { id } });
 }
 
-export async function getExtraChampions(warId: string, battlegroup: number) {
+export async function getExtraChampions(warId: string, battlegroup: number): Promise<ExtraChampion[]> {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) return [];
   
-  return await prisma.warExtraChampion.findMany({
+  const extras = await prisma.warExtraChampion.findMany({
     where: {
       warId,
       battlegroup,
@@ -456,6 +466,19 @@ export async function getExtraChampions(warId: string, battlegroup: number) {
         champion: { select: { id: true, name: true, images: true } }
     }
   });
+
+  return extras.map(e => ({
+    id: e.id,
+    warId: e.warId,
+    playerId: e.playerId,
+    championId: e.championId,
+    battlegroup: e.battlegroup,
+    champion: {
+      id: e.champion.id,
+      name: e.champion.name,
+      images: e.champion.images as unknown as ChampionImages
+    }
+  }));
 }
 
 export async function distributePlan(warId: string, battlegroup?: number) {

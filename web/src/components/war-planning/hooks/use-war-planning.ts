@@ -3,18 +3,11 @@ import { useRouter } from "next/navigation";
 import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
+import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, type ExtraChampion } from "@/app/planning/actions";
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
-export interface ExtraChampion {
-  id: string;
-  warId: string;
-  playerId: string;
-  championId: number;
-  battlegroup: number;
-  champion: { id: number; name: string; images: ChampionImages };
-}
+export type { ExtraChampion };
 
 export type WarTacticWithTags = WarTactic & {
     attackTag?: Tag | null;
@@ -160,7 +153,7 @@ export function useWarPlanning({
         });
 
         setCurrentFights(hydratedFights);
-        setExtraChampions(extrasData as unknown as ExtraChampion[]);
+        setExtraChampions(extrasData);
       } catch (err: unknown) {
         const error = err as Error;
         console.error("Failed to fetch war data:", error);
@@ -220,7 +213,7 @@ export function useWarPlanning({
             // Sync extras (less critical race condition here usually)
             setExtraChampions(prev => {
                  if (JSON.stringify(prev) !== JSON.stringify(extrasData)) {
-                     return extrasData as unknown as ExtraChampion[];
+                     return extrasData;
                  }
                  return prev;
             });
