@@ -155,9 +155,9 @@ export function useWarPlanning({
         setCurrentFights(hydratedFights);
         setExtraChampions(extrasData);
       } catch (err: unknown) {
-        const error = err as Error;
-        console.error("Failed to fetch war data:", error);
-        setFightsError(error.message || "Failed to load war data.");
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("Failed to fetch war data:", err);
+        setFightsError(message || "Failed to load war data.");
       } finally {
         setLoadingFights(false);
       }
@@ -266,9 +266,10 @@ export function useWarPlanning({
       await updateWarStatus(warId, newStatus);
       setStatus(newStatus);
       router.refresh();
-    } catch (error) {
-      console.error("Failed to update war status:", error);
-      setFightsError("Failed to update war status.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to update war status:", err);
+      setFightsError(message || "Failed to update war status.");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -324,7 +325,7 @@ export function useWarPlanning({
       battlegroup: currentBattlegroup,
       playerId,
       championId,
-      champion: { id: champ.id, name: champ.name, images: champ.images as unknown as ChampionImages }
+      champion: { id: champ.id, name: champ.name, images: champ.images }
     };
 
     setExtraChampions((prev: ExtraChampion[]) => [...prev, newExtra]);
@@ -332,11 +333,11 @@ export function useWarPlanning({
     try {
       const created = await addExtraChampion(warId, currentBattlegroup, playerId, championId);
       setExtraChampions((prev: ExtraChampion[]) => prev.map((x: ExtraChampion) => x.id === tempId ? { ...x, id: created.id } : x));
-    } catch (e: unknown) {
-      const error = e as Error;
-      console.error("Failed to add extra champion", error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to add extra champion", err);
       setExtraChampions((prev: ExtraChampion[]) => prev.filter((x: ExtraChampion) => x.id !== tempId));
-      setFightsError(error.message || "Failed to add extra champion.");
+      setFightsError(message || "Failed to add extra champion.");
     }
   }, [warId, currentBattlegroup, champions]);
 
@@ -348,11 +349,11 @@ export function useWarPlanning({
 
     try {
       await removeExtraChampion(extraId);
-    } catch (e: unknown) {
-      const error = e as Error;
-      console.error("Failed to remove extra champion", error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to remove extra champion", err);
       setExtraChampions((prev: ExtraChampion[]) => [...prev, toRemove]);
-      setFightsError(error.message || "Failed to remove extra champion.");
+      setFightsError(message || "Failed to remove extra champion.");
     }
   }, [extraChampions]);
 
@@ -367,7 +368,7 @@ export function useWarPlanning({
       warId,
       championId,
       createdAt: new Date(),
-      champion: { id: champ.id, name: champ.name, images: champ.images as unknown as ChampionImages }
+      champion: { id: champ.id, name: champ.name, images: champ.images }
     };
 
     setWarBans((prev: WarBanWithChampion[]) => [...prev, newBan]);
@@ -375,11 +376,11 @@ export function useWarPlanning({
     try {
       const created = await addWarBan(warId, championId);
       setWarBans((prev: WarBanWithChampion[]) => prev.map((x: WarBanWithChampion) => x.id === tempId ? { ...x, id: created.id } : x));
-    } catch (e: unknown) {
-      const error = e as Error;
-      console.error("Failed to add war ban", error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to add war ban", err);
       setWarBans((prev: WarBanWithChampion[]) => prev.filter((x: WarBanWithChampion) => x.id !== tempId));
-      setFightsError(error.message || "Failed to add war ban.");
+      setFightsError(message || "Failed to add war ban.");
     }
   }, [warId, champions]);
 
@@ -391,11 +392,11 @@ export function useWarPlanning({
 
     try {
       await removeWarBan(banId);
-    } catch (e: unknown) {
-      const error = e as Error;
-      console.error("Failed to remove war ban", error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to remove war ban", err);
       setWarBans((prev: WarBanWithChampion[]) => [...prev, toRemove]);
-      setFightsError(error.message || "Failed to remove war ban.");
+      setFightsError(message || "Failed to remove war ban.");
     }
   }, [warBans]);
 
@@ -449,7 +450,7 @@ export function useWarPlanning({
             return {
               id: champ.id,
               name: champ.name,
-              images: champ.images as unknown as ChampionImages,
+              images: champ.images,
               class: champ.class,
               fightPrefightId: 'temp-' + champ.id,
               player: player ? { id: player.id, ingameName: player.ingameName, avatar: player.avatar } : null
@@ -507,12 +508,12 @@ export function useWarPlanning({
 
     try {
       await updateWarFight(updatedFight);
-    } catch (error: unknown) {
-      const err = error as Error;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       console.error("Failed to save fight:", err);
       // Rollback
       setCurrentFights(previousFights);
-      setFightsError(err.message || "Failed to save changes. Please try again.");
+      setFightsError(message || "Failed to save changes. Please try again.");
     } finally {
         if (fightToUpdate) {
             pendingSaveNodeIds.current.delete(fightToUpdate.node.nodeNumber);

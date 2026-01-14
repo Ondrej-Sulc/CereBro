@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
+import { Payload } from "recharts/types/component/DefaultTooltipContent"
 
 import { cn } from "@/lib/utils"
 
@@ -108,11 +109,11 @@ const ChartTooltipContent = React.forwardRef<
     labelKey?: string
     // Injected by Recharts
     active?: boolean
-    payload?: Record<string, unknown>[]
+    payload?: Payload<string | number | (string | number)[], string | number>[]
     label?: string
-    labelFormatter?: (label: string, payload: Record<string, unknown>[]) => React.ReactNode
+    labelFormatter?: (label: React.ReactNode, payload: Payload<string | number | (string | number)[], string | number>[]) => React.ReactNode
     labelClassName?: string
-    formatter?: (value: number, name: string, item: Record<string, unknown>, index: number, payload: Record<string, unknown>) => React.ReactNode
+    formatter?: (value: number | string | Array<number | string>, name: string, item: Payload<string | number | (string | number)[], string | number>, index: number, payload: Payload<string | number | (string | number)[], string | number>) => React.ReactNode
     color?: string
   }
 >(
@@ -152,7 +153,7 @@ const ChartTooltipContent = React.forwardRef<
       if (labelFormatter) {
         return (
           <div className={cn("font-medium", labelClassName)}>
-            {labelFormatter(value as string, payload)}
+            {labelFormatter(value, payload)}
           </div>
         )
       }
@@ -195,14 +196,14 @@ const ChartTooltipContent = React.forwardRef<
 
             return (
               <div
-                key={item.dataKey as string}
+                key={String(item.dataKey || item.name || index)}
                 className={cn(
                   "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                   indicator === "dot" && "items-center"
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value as number, item.name as string, item, index, item.payload as Record<string, unknown>)
+                  formatter(item.value as number | string | Array<number | string>, item.name as string, item, index, item.payload as Payload<string | number | (string | number)[], string | number>)
                 ) : (
                   <>
                     {itemConfig?.icon ? (
@@ -267,7 +268,7 @@ const ChartLegendContent = React.forwardRef<
     hideIcon?: boolean
     nameKey?: string
     // Injected by Recharts
-    payload?: Record<string, unknown>[]
+    payload?: Payload<string | number | (string | number)[], string | number>[]
     verticalAlign?: "top" | "middle" | "bottom"
   }
 >(
@@ -290,13 +291,13 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
+        {payload.map((item, index) => {
           const key = `${nameKey || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
           return (
             <div
-              key={item.value as string}
+              key={`${String(item.value)}-${index}`}
               className={cn(
                 "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
               )}
