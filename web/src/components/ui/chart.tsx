@@ -113,7 +113,7 @@ const ChartTooltipContent = React.forwardRef<
     label?: string
     labelFormatter?: (label: React.ReactNode, payload: Payload<string | number | (string | number)[], string | number>[]) => React.ReactNode
     labelClassName?: string
-    formatter?: (value: number | string | Array<number | string>, name: string, item: Payload<string | number | (string | number)[], string | number>, index: number, payload: Payload<string | number | (string | number)[], string | number>) => React.ReactNode
+    formatter?: (value: number | string | Array<number | string>, name: string, item: Payload<string | number | (string | number)[], string | number>, index: number, payload: ReadonlyArray<Payload<string | number | (string | number)[], string | number>>) => React.ReactNode
     color?: string
   }
 >(
@@ -203,7 +203,7 @@ const ChartTooltipContent = React.forwardRef<
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value as number | string | Array<number | string>, item.name as string, item, index, item.payload as Payload<string | number | (string | number)[], string | number>)
+                  formatter(item.value as number | string | Array<number | string>, item.name as string, item, index, payload as ReadonlyArray<Payload<string | number | (string | number)[], string | number>>)
                 ) : (
                   <>
                     {itemConfig?.icon ? (
