@@ -34,6 +34,7 @@ async function syncAllAllianceRoles(client: Client) {
 
   for (const alliance of alliances) {
     try {
+      if (!alliance.guildId) continue;
       const guild = await client.guilds.fetch(alliance.guildId);
       await syncRolesForGuild(guild);
     } catch (error) {

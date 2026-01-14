@@ -1,18 +1,25 @@
 'use client';
 
-import { Player, Alliance } from "@prisma/client";
+import { Player } from "@prisma/client";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updatePlayerRole, updateAllianceColors } from "../actions/alliance";
+import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance } from "../actions/alliance";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users, HelpCircle, Settings } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -22,17 +29,46 @@ import {
   DialogTrigger,
   DialogFooter
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRouter } from "next/navigation";
+
+interface MembershipRequest {
+    id: string;
+    status: string;
+    type: string;
+    createdAt: Date;
+    player: Player;
+}
+
+interface PlayerSearchResult {
+    id: string;
+    ingameName: string;
+    avatar: string | null;
+    allianceId: string | null;
+    alliance: { name: string } | null;
+}
+
+interface AllianceWithRequests {
+    id: string;
+    name: string;
+    battlegroup1Color: string;
+    battlegroup2Color: string;
+    battlegroup3Color: string;
+    membershipRequests: MembershipRequest[];
+}
 
 type PlayerWithRoster = Player & { roster: unknown[] };
 
 interface ClientPageProps {
     members: PlayerWithRoster[];
     currentUser: Player;
-    alliance: Alliance;
+    alliance: AllianceWithRequests;
 }
 
 export function AllianceManagementClient({ members, currentUser, alliance }: ClientPageProps) {
     const { toast } = useToast();
+    const router = useRouter();
     const [loadingId, setLoadingId] = useState<string | null>(null);
 
     const isOfficer = currentUser.isOfficer || currentUser.isBotAdmin;
@@ -43,6 +79,90 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         bg3: alliance.battlegroup3Color || "#3b82f6",
     });
     const [isSavingColors, setIsSavingColors] = useState(false);
+
+    // Search for inviting players
+    const [playerSearchQuery, setPlayerSearchQuery] = useState("");
+    const [playerSearchResults, setPlayerSearchResults] = useState<PlayerSearchResult[]>([]);
+    const [isSearchingPlayers, setIsSearchingPlayers] = useState(false);
+
+    const handlePlayerSearch = async () => {
+        if (!playerSearchQuery.trim()) return;
+        setIsSearchingPlayers(true);
+        try {
+            const response = await fetch(`/api/player/search?q=${encodeURIComponent(playerSearchQuery)}`);
+            const data = await response.json();
+            setPlayerSearchResults(data);
+        } catch {
+            toast({ title: "Error", description: "Failed to search for players", variant: "destructive" });
+        } finally {
+            setIsSearchingPlayers(false);
+        }
+    };
+
+    const handleInvite = async (playerId: string) => {
+        setLoadingId(playerId);
+        try {
+            await invitePlayerToAlliance(playerId);
+            toast({ title: "Invitation Sent", description: "Player has been invited to join." });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to invite player";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
+    const handleRespondToRequest = async (requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
+        setLoadingId(requestId);
+        try {
+            await respondToMembershipRequest(requestId, status);
+            toast({ title: status === 'ACCEPTED' ? "Member Accepted" : "Request Rejected" });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to respond to request";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
+    const handleKick = async (playerId: string) => {
+        if (!confirm("Are you sure you want to remove this player?")) return;
+        setLoadingId(playerId);
+        try {
+            await removeMember(playerId);
+            toast({ title: "Member Removed" });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to remove member";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
+    const handleLeave = async () => {
+        if (!confirm("Are you sure you want to leave the alliance?")) return;
+        try {
+            await leaveAlliance();
+            toast({ title: "Left Alliance" });
+            router.push("/");
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to leave alliance";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        }
+    };
+
+    const handleToggleOfficer = async (player: Player) => {
+        setLoadingId(player.id);
+        try {
+            await updatePlayerRole(player.id, { isOfficer: !player.isOfficer });
+            toast({ title: player.isOfficer ? "Officer Demoted" : "Member Promoted" });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to update role";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setLoadingId(null);
+        }
+    };
 
     const handleSaveColors = async () => {
         setIsSavingColors(true);
@@ -111,7 +231,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             </div>
             <div className="flex flex-col gap-2">
                 {players.map(player => (
-                    <Card key={player.id} className={cn("bg-slate-900/50 border-slate-800 transition-all", loadingId === player.id && "opacity-50")}>
+                    <Card key={player.id} className={cn("bg-slate-900/50 border-slate-800 transition-all group/card", loadingId === player.id && "opacity-50")}>
                         <CardContent className="p-2.5 flex items-center gap-3">
                             <Avatar className="h-9 w-9 border border-slate-700">
                                 <AvatarImage src={player.avatar || undefined} />
@@ -127,13 +247,13 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             </div>
 
                             {isOfficer ? (
-                                <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
                                     <Select 
                                         disabled={loadingId === player.id}
                                         onValueChange={(val) => handleBgChange(player.id, val)} 
                                         defaultValue={player.battlegroup?.toString() || "unassigned"}
                                     >
-                                        <SelectTrigger className="h-6 w-[90px] text-[10px]">
+                                        <SelectTrigger className="h-6 w-[80px] text-[10px]">
                                             <SelectValue placeholder="BG" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -143,6 +263,25 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                             <SelectItem value="3" className="text-[10px]">BG 3</SelectItem>
                                         </SelectContent>
                                     </Select>
+
+                                    {player.id !== currentUser.id && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                                    <Settings className="h-3 w-3" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-slate-950 border-slate-800">
+                                                <DropdownMenuItem onClick={() => handleToggleOfficer(player)} className="text-xs">
+                                                    {player.isOfficer ? "Demote from Officer" : "Promote to Officer"}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator className="bg-slate-800" />
+                                                <DropdownMenuItem onClick={() => handleKick(player.id)} className="text-xs text-red-400 focus:text-red-300">
+                                                    Kick Member
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
                                 </div>
                             ) : (
                                 <Badge variant="outline" className="text-[10px] h-5">
@@ -158,44 +297,43 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
 
     return (
         <div className="container mx-auto py-6 px-4">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">{alliance.name}</h1>
-                        {isOfficer && (
-                            <div className="flex items-center gap-1">
-                                {/* Help Dialog */}
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-300">
-                                            <HelpCircle className="h-4 w-4" />
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
-                                        <DialogHeader>
-                                            <DialogTitle>Managing Roles & Permissions</DialogTitle>
-                                            <DialogDescription className="text-slate-400">
-                                                Troubleshooting assignment issues
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="space-y-4 text-sm">
-                                            <p>
-                                                When you change a player&apos;s Battlegroup here, CereBro attempts to update their roles in your Discord server automatically.
+                        <div className="flex items-center gap-1">
+                            {/* Help Dialog */}
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-300">
+                                        <HelpCircle className="h-4 w-4" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
+                                    <DialogHeader>
+                                        <DialogTitle>Managing Roles & Permissions</DialogTitle>
+                                        <DialogDescription className="text-slate-400">
+                                            Troubleshooting assignment issues
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 text-sm">
+                                        <p>
+                                            When you change a player&apos;s Battlegroup here, CereBro attempts to update their roles in your Discord server automatically.
+                                        </p>
+                                        <div className="bg-yellow-950/20 border border-yellow-900/30 p-3 rounded-md space-y-2">
+                                            <p className="font-semibold text-yellow-500">If updates fail:</p>
+                                            <p className="text-slate-300">
+                                                Ensure the <strong>CereBro</strong> bot role is placed <strong>HIGHER</strong> than the Officer and Battlegroup roles in your Discord Server Settings &gt; Roles list.
                                             </p>
-                                            <div className="bg-yellow-950/20 border border-yellow-900/30 p-3 rounded-md space-y-2">
-                                                <p className="font-semibold text-yellow-500">If updates fail:</p>
-                                                <p className="text-slate-300">
-                                                    Ensure the <strong>CereBro</strong> bot role is placed <strong>HIGHER</strong> than the Officer and Battlegroup roles in your Discord Server Settings &gt; Roles list.
-                                                </p>
-                                                <p className="text-slate-400 text-xs">
-                                                    Discord prevents bots from managing roles that are above them in the hierarchy.
-                                                </p>
-                                            </div>
+                                            <p className="text-slate-400 text-xs">
+                                                Discord prevents bots from managing roles that are above them in the hierarchy.
+                                            </p>
                                         </div>
-                                    </DialogContent>
-                                </Dialog>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
 
-                                {/* Color Settings Dialog */}
+                            {isOfficer && (
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-300">
@@ -263,10 +401,148 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                         </DialogFooter>
                                     </DialogContent>
                                 </Dialog>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                     <p className="text-sm text-slate-400">Alliance Management & Overview</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {isOfficer && (
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="gap-2 border-slate-700 bg-slate-900/50">
+                                    <UserPlus className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Recruit Members</span>
+                                    {alliance.membershipRequests?.some((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST') && (
+                                        <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center bg-sky-500">
+                                            {alliance.membershipRequests.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST').length}
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 max-w-2xl p-0 overflow-hidden">
+                                <Tabs defaultValue="recruit" className="w-full">
+                                    <div className="px-6 pt-6 pb-2 border-b border-slate-800">
+                                        <TabsList className="bg-slate-950 border-slate-800">
+                                            <TabsTrigger value="recruit" className="gap-2">
+                                                <Search className="w-3.5 h-3.5" />
+                                                Find Players
+                                            </TabsTrigger>
+                                            <TabsTrigger value="requests" className="gap-2">
+                                                <Mail className="w-3.5 h-3.5" />
+                                                Join Requests
+                                                {alliance.membershipRequests?.some((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST') && (
+                                                    <Badge variant="secondary" className="h-4 px-1 min-w-[16px]">
+                                                        {alliance.membershipRequests.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST').length}
+                                                    </Badge>
+                                                )}
+                                            </TabsTrigger>
+                                        </TabsList>
+                                    </div>
+
+                                    <div className="p-6 h-[400px]">
+                                        <TabsContent value="recruit" className="m-0 h-full flex flex-col gap-4">
+                                            <div className="flex gap-2">
+                                                <Input 
+                                                    placeholder="Search by In-Game Name..." 
+                                                    value={playerSearchQuery}
+                                                    onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handlePlayerSearch()}
+                                                    className="bg-slate-950 border-slate-800"
+                                                />
+                                                <Button variant="secondary" onClick={handlePlayerSearch} disabled={isSearchingPlayers}>
+                                                    {isSearchingPlayers ? "..." : <Search className="w-4 h-4" />}
+                                                </Button>
+                                            </div>
+                                            <ScrollArea className="flex-1 pr-4">
+                                                <div className="space-y-2">
+                                                    {playerSearchResults.map(player => (
+                                                        <div key={player.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-950/50">
+                                                            <div className="flex items-center gap-3">
+                                                                <Avatar className="h-8 w-8">
+                                                                    <AvatarImage src={player.avatar || undefined} />
+                                                                    <AvatarFallback>{player.ingameName[0]}</AvatarFallback>
+                                                                </Avatar>
+                                                                <div>
+                                                                    <p className="text-sm font-medium">{player.ingameName}</p>
+                                                                    <p className="text-[10px] text-slate-500">{player.alliance?.name || 'No Alliance'}</p>
+                                                                </div>
+                                                            </div>
+                                                            <Button 
+                                                                size="sm" 
+                                                                variant="ghost" 
+                                                                className="text-sky-400 hover:bg-sky-500/10 h-8"
+                                                                disabled={loadingId === player.id || !!player.allianceId}
+                                                                onClick={() => handleInvite(player.id)}
+                                                            >
+                                                                {loadingId === player.id ? "..." : <UserPlus className="w-4 h-4" />}
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </TabsContent>
+
+                                        <TabsContent value="requests" className="m-0 h-full">
+                                            <ScrollArea className="h-full pr-4">
+                                                <div className="space-y-3">
+                                                    {alliance.membershipRequests?.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST').length === 0 && (
+                                                        <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-3 py-12">
+                                                            <Mail className="w-12 h-12 opacity-10" />
+                                                            <p>No pending join requests</p>
+                                                        </div>
+                                                    )}
+                                                    {alliance.membershipRequests?.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST').map((req: MembershipRequest) => (
+                                                        <div key={req.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-800 bg-slate-950/50">
+                                                            <div className="flex items-center gap-3">
+                                                                <Avatar>
+                                                                    <AvatarImage src={req.player.avatar || undefined} />
+                                                                    <AvatarFallback>{req.player.ingameName[0]}</AvatarFallback>
+                                                                </Avatar>
+                                                                <div>
+                                                                    <p className="font-bold">{req.player.ingameName}</p>
+                                                                    <p className="text-xs text-slate-400 flex items-center gap-1">
+                                                                        <Clock className="w-3 h-3" />
+                                                                        {new Date(req.createdAt).toLocaleDateString()}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <Button 
+                                                                    size="sm" 
+                                                                    variant="secondary"
+                                                                    className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 h-8"
+                                                                    onClick={() => handleRespondToRequest(req.id, 'ACCEPTED')}
+                                                                    disabled={loadingId === req.id}
+                                                                >
+                                                                    Accept
+                                                                </Button>
+                                                                <Button 
+                                                                    size="sm" 
+                                                                    variant="ghost" 
+                                                                    className="text-slate-400 hover:text-white h-8"
+                                                                    onClick={() => handleRespondToRequest(req.id, 'REJECTED')}
+                                                                    disabled={loadingId === req.id}
+                                                                >
+                                                                    Decline
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </TabsContent>
+                                    </div>
+                                </Tabs>
+                            </DialogContent>
+                        </Dialog>
+                    )}
+
+                    <Button variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-950/20 gap-2" onClick={handleLeave}>
+                        <LogOut className="w-4 h-4" />
+                        <span className="hidden sm:inline">Leave Alliance</span>
+                    </Button>
                 </div>
             </div>
 
@@ -279,3 +555,4 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         </div>
     );
 }
+

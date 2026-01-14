@@ -38,6 +38,8 @@ export function getDuelContent(
           duelString += " <:GuiaMTC:0>";
         } else if (duel.source === DuelSource.COCPIT) {
           duelString += " <:CoCPit:0>";
+        } else if (duel.source === DuelSource.MCOCHUB) {
+          duelString += " <:MCOCHUB:0>";
         }
 
         // Add status indicator for outdated duels
@@ -68,16 +70,25 @@ export function addDuelComponents(
   const hasCoCPitSourcedDuels = duelsToShow.some(
     (duel) => duel.source === DuelSource.COCPIT
   );
+  const hasMCHubSourcedDuels = duelsToShow.some(
+    (duel) => duel.source === DuelSource.MCOCHUB
+  );
 
-  if (hasGuiaMTCSourcedDuels || hasCoCPitSourcedDuels) {
+  if (hasGuiaMTCSourcedDuels || hasCoCPitSourcedDuels || hasMCHubSourcedDuels) {
     let sourceCredits = "\nSources: ";
+    const sources: string[] = [];
     if (hasGuiaMTCSourcedDuels) {
-      sourceCredits += "<:GuiaMTC:0> *[GuiaMTC](https://www.guiamtc.com/)*";
+      sources.push("<:GuiaMTC:0> *[GuiaMTC](https://www.guiamtc.com/)*");
     }
     if (hasCoCPitSourcedDuels) {
-      if (hasGuiaMTCSourcedDuels) sourceCredits += ", ";
-      sourceCredits += "<:CoCPit:0> *[CoCPit](https://cocpit.org)*";
+      sources.push("<:CoCPit:0> *[CoCPit](https://cocpit.org)*");
     }
+    if (hasMCHubSourcedDuels) {
+      sources.push(
+        "<:MCOCHUB:0> *[MCOCHUB](https://mcochub.insaneskull.com)*"
+      );
+    }
+    sourceCredits += sources.join(", ");
     
     container.addSeparatorComponents(new SeparatorBuilder());
     container.addTextDisplayComponents(

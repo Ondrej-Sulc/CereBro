@@ -68,8 +68,7 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
               War Archive
             </Link>
 
-            {/* Alliance Dropdown */}
-            {isInAlliance && (
+            {isInAlliance ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -119,6 +118,11 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            ) : (
+                <Link href="/alliance/onboarding" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                    <Users className="w-4 h-4" />
+                    Join Alliance
+                </Link>
             )}
 
             <Link href="/war-videos/upload/init">
@@ -166,7 +170,7 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
                       War Archive
                     </Link>
                     
-                    {isInAlliance && (
+                    {isInAlliance ? (
                       <>
                         <div className="h-px bg-slate-800/50 my-1" />
                         <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold pl-1">Alliance</span>
@@ -209,6 +213,14 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
                         
                         <div className="h-px bg-slate-800/50 my-1" />
                       </>
+                    ) : (
+                        <Link 
+                            href="/alliance/onboarding" 
+                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                        >
+                            <Users className="w-5 h-5 text-slate-300" />
+                            Join/Create Alliance
+                        </Link>
                     )}
 
                     <Link 

@@ -370,7 +370,8 @@ export const command: Command = {
                 .setRequired(true)
                 .addChoices(
                   { name: "GuiaMTC", value: DuelSource.GUIA_MTC },
-                  { name: "CoCPit", value: DuelSource.COCPIT }
+                  { name: "CoCPit", value: DuelSource.COCPIT },
+                  { name: "MCOCHUB", value: DuelSource.MCOCHUB }
                 )
             )
         )

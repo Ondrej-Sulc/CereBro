@@ -31,7 +31,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!existingPlayer) {
           // Create a default profile if they don't have one
-          const ingameName = (profile as any)?.global_name || profile?.name || user.name || "New Player";
+          const discordProfile = profile as { global_name?: string; name?: string };
+          const ingameName = discordProfile.global_name || discordProfile.name || user.name || "New Player";
           const avatar = user.image || null;
 
           const newPlayer = await prisma.player.create({

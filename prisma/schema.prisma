@@ -68,6 +68,7 @@ enum DuelSource {
   USER_SUGGESTION
   GUIA_MTC
   COCPIT
+  MCOCHUB
 }
 
 enum BotJobStatus {
@@ -311,6 +312,9 @@ model Player {
   alliance   Alliance? @relation(fields: [allianceId], references: [id], onDelete: SetNull)
   allianceId String?
 
+  membershipRequests AllianceMembershipRequest[] @relation("PlayerRequests")
+  sentInvitations    AllianceMembershipRequest[] @relation("OfficerInvites")
+
   playedInFights  WarFight[]         @relation("PlayerInFight")
   defensePlacements WarDefensePlacement[]
   submittedVideos WarVideo[]         @relation("SubmittedBy")
@@ -340,7 +344,7 @@ model PrestigeLog {
 
 model Alliance {
   id                     String   @id @default(cuid())
-  guildId                String   @unique
+  guildId                String?  @unique
   name                   String
   enabledFeatureCommands String[] @default([])
   createAqThread         Boolean  @default(false)
@@ -365,9 +369,44 @@ model Alliance {
   aqReminderSettings AQReminderSettings?
   wars               War[]
   defensePlans       WarDefensePlan[]
+  membershipRequests AllianceMembershipRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum MembershipRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum MembershipRequestType {
+  INVITE // Officer invites player
+  REQUEST // Player requests to join
+}
+
+model AllianceMembershipRequest {
+  id         String                  @id @default(cuid())
+  status     MembershipRequestStatus @default(PENDING)
+  type       MembershipRequestType
+  
+  allianceId String
+  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+
+  playerId   String
+  player     Player   @relation("PlayerRequests", fields: [playerId], references: [id], onDelete: Cascade)
+
+  // Who sent the invite (if type is INVITE)
+  inviterId  String?
+  inviter    Player?  @relation("OfficerInvites", fields: [inviterId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([allianceId])
+  @@index([playerId])
 }
 
 model AQReminderSettings {

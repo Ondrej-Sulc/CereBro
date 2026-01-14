@@ -32,7 +32,14 @@ export default async function AlliancePage() {
     });
 
     const alliance = await prisma.alliance.findUnique({
-        where: { id: player.allianceId }
+        where: { id: player.allianceId },
+        include: {
+            membershipRequests: {
+                include: {
+                    player: true
+                }
+            }
+        }
     });
 
     if (!alliance) return null;
