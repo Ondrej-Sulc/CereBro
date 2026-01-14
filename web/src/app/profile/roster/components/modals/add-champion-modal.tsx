@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
-import { Champion } from "@prisma/client";
+import { Champion } from "@/types/champion";
 import { getMaxRank } from "@/lib/championHelper";
 
 interface NewChampionFormData {

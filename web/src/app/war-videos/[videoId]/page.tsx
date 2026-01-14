@@ -1,6 +1,6 @@
 import { prisma } from '@cerebro/core/services/prismaService';
 import { notFound } from 'next/navigation';
-import WarVideoDisplay from './WarVideoDisplay';
+import WarVideoDisplay, { WarVideo } from './WarVideoDisplay';
 import { isUserBotAdmin } from "@/lib/auth-helpers";
 
 export const dynamic = 'force-dynamic';
@@ -85,5 +85,5 @@ export default async function WarVideoPage(props: PageProps) {
      });
   }
 
-  return <WarVideoDisplay warVideo={warVideo} isAdmin={isAdmin} activeTactic={activeTactic} />;
+  return <WarVideoDisplay warVideo={warVideo as unknown as WarVideo} isAdmin={isAdmin} activeTactic={activeTactic} />;
 }

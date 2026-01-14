@@ -12,6 +12,8 @@ export interface ChampionImages {
   s_128: string;
 }
 
-export interface Champion extends PrismaChampion {
+export interface Champion extends Omit<PrismaChampion, 'images'> {
+  images: ChampionImages;
   abilities?: { ability: { name: string } }[];
+  tags?: { name: string }[];
 }

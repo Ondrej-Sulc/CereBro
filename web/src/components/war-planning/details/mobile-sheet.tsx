@@ -178,7 +178,7 @@ export function MobileSheet({
   }, [handlePointerMove]);
 
 
-  if (isDesktop) return null; // No longer needs to return null immediately
+  if (isDesktop) return null; // Hide mobile sheet on desktop
 
   return (
     <AnimatePresence>

@@ -5,7 +5,7 @@ import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
-import { Champion } from "@prisma/client";
+import { Champion } from "@/types/champion";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";

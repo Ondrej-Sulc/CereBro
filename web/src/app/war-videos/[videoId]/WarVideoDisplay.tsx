@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
 import { useState } from 'react';
 
-interface WarFight {
+export interface WarFight {
   id: string;
   death: number;
   battlegroup: number | null;
@@ -26,7 +26,7 @@ interface WarFight {
   war: War; // Added back
 }
 
-interface WarVideo {
+export interface WarVideo {
   id: string;
   url: string | null;
   description: string | null;

@@ -109,8 +109,13 @@ export default async function RosterPage(props: {
   
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : defaultTarget;
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
-  const rankClassFilter = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
-  const sigClassFilter = searchParams.sigClassFilter ? searchParams.sigClassFilter.split(',') : [];
+  
+  const validClasses = Object.values(ChampionClass);
+  const rankClassFilterRaw = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
+  const sigClassFilterRaw = searchParams.sigClassFilter ? searchParams.sigClassFilter.split(',') : [];
+
+  const rankClassFilter = rankClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
+  const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
 
   if (roster.length > 0) {
       const championIds = Array.from(new Set(roster.map(r => r.championId)));
@@ -410,8 +415,8 @@ export default async function RosterPage(props: {
         sigRecommendations={sigRecommendations}
         simulationTargetRank={targetRank}
         initialSigBudget={sigBudget}
-        initialRankClassFilter={rankClassFilter as ChampionClass[]}
-        initialSigClassFilter={sigClassFilter as ChampionClass[]}
+        initialRankClassFilter={rankClassFilter}
+        initialSigClassFilter={sigClassFilter}
         initialTags={tags}
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}

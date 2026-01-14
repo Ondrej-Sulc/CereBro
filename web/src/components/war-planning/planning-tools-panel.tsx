@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import type { Champion, Player, Roster, ChampionClass, Tag } from "@prisma/client";
+import type { Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Shield, Star, X, CircleOff, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { usePlayerColor } from "./player-color-context"; 
 import { getChampionClassColors } from "@/lib/championClassHelper"; 
-import { ChampionImages } from "@/types/champion";
+import { Champion, ChampionImages } from "@/types/champion";
 
 interface PlanningToolsPanelProps {
   players: Player[];
@@ -93,7 +93,7 @@ export default function PlanningToolsPanel({
     try {
       const results = await getPlayerRoster(playerId);
       if (reqId === rosterReqSeq.current) {
-        setRosterResults(results as RosterWithChampion[]);
+        setRosterResults(results as unknown as RosterWithChampion[]);
       }
     } catch (error) {
       console.error("Failed to fetch roster", error);

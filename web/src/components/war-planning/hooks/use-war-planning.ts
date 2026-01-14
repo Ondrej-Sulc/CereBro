@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag, Champion } from "@prisma/client";
-import { ChampionImages } from "@/types/champion";
+import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
+import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan } from "@/app/planning/actions";
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
@@ -184,7 +184,7 @@ export function useWarPlanning({
             ]);
 
             if (fightsRes.ok) {
-                const rawFights: FightWithNode[] = await fightsRes.ok ? await fightsRes.json() : [];
+                const rawFights: FightWithNode[] = await fightsRes.json();
                 
                  // Merge static node data into fights
                 const newFights: FightWithNode[] = rawFights.map(f => {

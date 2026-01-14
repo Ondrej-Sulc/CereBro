@@ -63,7 +63,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const hasVideo = getSingleParam("hasVideo") === 'true';
 
   // Fetch champions for filters
-  const champions = await getCachedChampions();
+  const rawChampions = await getCachedChampions();
+  const champions = rawChampions.map(c => ({
+    ...c,
+    images: c.images as unknown as ChampionImages
+  }));
   
   // TODO: Fetch a Set of champion IDs that have associated WarFight records (as attacker or defender) to pass to SearchFilters as `activeChampionIds` for smarter filtering.
   
@@ -167,7 +171,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
           </div>
         </div>
 
-        <SearchFilters champions={champions as unknown as (Champion & { group?: string })[]} availableSeasons={availableSeasons} currentUser={currentUser} />
+        <SearchFilters champions={champions} availableSeasons={availableSeasons} currentUser={currentUser} />
       </div>
 
       {/* Fights Content */}

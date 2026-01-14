@@ -20,7 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Champion, ChampionImages } from "@/types/champion"
+import { Champion } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
 
 interface MultiChampionComboboxProps {
@@ -79,7 +79,7 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                     <Badge key={champion.id} variant="secondary" className="pl-1 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
                          <div className="relative h-5 w-5 rounded-full overflow-hidden bg-slate-900 flex-shrink-0">
                             <Image 
-                            src={getChampionImageUrl(champion.images as unknown as ChampionImages, '64')}
+                            src={getChampionImageUrl(champion.images, '64')}
                             alt={champion.name}
                             fill
                             className="object-cover"
@@ -129,7 +129,7 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
                         >
                             <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
                               <Image 
-                                src={getChampionImageUrl(champion.images as unknown as ChampionImages, '64')}
+                                src={getChampionImageUrl(champion.images, '64')}
                                 alt={champion.name}
                                 fill
                                 className="object-cover"

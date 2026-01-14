@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"; // Import SheetTitle and SheetDescription
 import { PanelRightOpen } from "lucide-react";
 import PlanningToolsPanel from "./planning-tools-panel";
-import { Champion, Player, Tag } from "@prisma/client";
+import { Player, Tag } from "@prisma/client";
+import { Champion } from "@/types/champion";
 
 
 interface PlanningToolsProps {
