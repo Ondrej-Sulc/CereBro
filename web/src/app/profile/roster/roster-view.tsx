@@ -154,9 +154,9 @@ export function RosterView({
       if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank) return false;
 
       // Pre-compute sets once per item for performance
-      const abilityEntries = item.champion.abilities.filter(a => a.type === 'ABILITY');
-      const immunityEntries = item.champion.abilities.filter(a => a.type === 'IMMUNITY');
-      const champTags = item.champion.tags.map(t => t.name);
+      const abilityEntries = (item.champion.abilities || []).filter(a => a.type === 'ABILITY');
+      const immunityEntries = (item.champion.abilities || []).filter(a => a.type === 'IMMUNITY');
+      const champTags = (item.champion.tags || []).map(t => t.name);
       
       if (tagFilter.length > 0) {
           if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }

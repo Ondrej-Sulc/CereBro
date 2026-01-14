@@ -132,7 +132,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                     return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion details.</div>;
                                 }
 
-                                const relevantAbilities = isFilteringAbilities ? item.champion.abilities.filter(a => {
+                                const relevantAbilities = isFilteringAbilities ? (item.champion.abilities || []).filter(a => {
                                     if (filters.abilities.length > 0 && a.type === 'ABILITY' && filters.abilities.includes(a.ability.name)) return true;
                                     if (filters.immunities.length > 0 && a.type === 'IMMUNITY' && filters.immunities.includes(a.ability.name)) return true;
                                     if (filters.categories.length > 0 && a.type === 'ABILITY' && a.ability.categories.some(c => filters.categories.includes(c.name))) return true;
@@ -142,7 +142,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                 const abilities = relevantAbilities.filter(a => a.type === 'ABILITY');
                                 const immunities = relevantAbilities.filter(a => a.type === 'IMMUNITY');
                                 const tags = isFilteringTags 
-                                    ? item.champion.tags.filter(t => filters.tags.includes(t.name)) 
+                                    ? (item.champion.tags || []).filter(t => filters.tags.includes(t.name)) 
                                     : [];
 
                                 if (abilities.length === 0 && immunities.length === 0 && tags.length === 0) {

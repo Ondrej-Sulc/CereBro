@@ -47,7 +47,24 @@ export async function PUT(req: Request) {
         sigLevel,
       },
       include: {
-        champion: true,
+        champion: {
+          include: {
+            tags: { select: { id: true, name: true } },
+            abilities: {
+              include: {
+                ability: {
+                  select: {
+                    name: true,
+                    categories: { select: { name: true } }
+                  }
+                },
+                synergyChampions: {
+                  include: { champion: { select: { name: true, images: true } } }
+                }
+              }
+            }
+          }
+        },
       },
     });
 
