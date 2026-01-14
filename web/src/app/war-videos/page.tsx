@@ -1,18 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Search, Play, Calendar, User, Shield, Swords, CircleDot, EyeOff, Filter, Skull } from "lucide-react";
+import { Play, User, Shield, Swords, EyeOff, Skull } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
-import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarTactic, WarMapType } from "@prisma/client";
+import { ChampionImages } from "@/types/champion";
+import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarMapType } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
 
 import { SearchFilters } from "@/components/SearchFilters";
 import { UploadFightButton } from "@/components/UploadFightButton";
@@ -67,7 +63,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const hasVideo = getSingleParam("hasVideo") === 'true';
 
   // Fetch champions for filters
-  const champions = await getCachedChampions();
+  const rawChampions = await getCachedChampions();
+  const champions = rawChampions.map(c => ({
+    ...c,
+    images: c.images as unknown as ChampionImages
+  }));
   
   // TODO: Fetch a Set of champion IDs that have associated WarFight records (as attacker or defender) to pass to SearchFilters as `activeChampionIds` for smarter filtering.
   
@@ -171,7 +171,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
           </div>
         </div>
 
-        <SearchFilters champions={champions as any} availableSeasons={availableSeasons} currentUser={currentUser} />
+        <SearchFilters champions={champions} availableSeasons={availableSeasons} currentUser={currentUser} />
       </div>
 
       {/* Fights Content */}
@@ -237,7 +237,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 <div className="relative">
                                     <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
                                     <Image 
-                                        src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
+                                        src={getChampionImageUrl(fight.attacker.images as unknown as ChampionImages, '128', 'primary')} 
                                         alt={fight.attacker.name}
                                         width={44} height={44}
                                         sizes="48px"
@@ -273,7 +273,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 <div className="relative">
                                     <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
                                     <Image 
-                                        src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
+                                        src={getChampionImageUrl(fight.defender.images as unknown as ChampionImages, '128', 'primary')} 
                                         alt={fight.defender.name}
                                         width={44} height={44}
                                         sizes="48px"
@@ -293,12 +293,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                         <div className="flex items-center justify-center gap-1.5 mt-1.5 px-2 py-0.5 bg-slate-950/40 rounded-full border border-purple-500/30">
                             <span className="text-[10px] text-purple-300 font-medium">Prefights:</span>
                             <div className="flex -space-x-1 overflow-hidden">
-                                {fight.prefightChampions.map((champ) => (
-                                    <Image
-                                        key={champ.id}
-                                        src={getChampionImageUrl(champ.images as any, '64', 'primary')}
-                                        alt={champ.name}
-                                        width={16}
+                                                                        {fight.prefightChampions.map((champ) => (
+                                                                            <Image
+                                                                                key={champ.id}
+                                                                                src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64', 'primary')}
+                                                                                alt={champ.name}                                        width={16}
                                         height={16}
                                         unoptimized
                                         className="relative inline-block h-4 w-4 rounded-full ring-1 ring-purple-400/50"
@@ -413,7 +412,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                             <div className="relative flex-shrink-0">
                                                 <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
                                                 <Image 
-                                                    src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')} 
+                                                    src={getChampionImageUrl(fight.attacker.images as unknown as ChampionImages, '128', 'primary')} 
                                                     alt={fight.attacker.name}
                                                     width={36} height={36}
                                                     sizes="48px"
@@ -452,7 +451,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                             <div className="relative flex-shrink-0">
                                                 <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
                                                 <Image 
-                                                    src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')} 
+                                                    src={getChampionImageUrl(fight.defender.images as unknown as ChampionImages, '128', 'primary')} 
                                                     alt={fight.defender.name}
                                                     width={36} height={36}
                                                     sizes="48px"
@@ -478,7 +477,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                         {fight.prefightChampions.map((champ) => (
                                             <Image
                                                 key={champ.id}
-                                                src={getChampionImageUrl(champ.images as any, '64', 'primary')}
+                                                src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64', 'primary')}
                                                 alt={champ.name}
                                                 width={28}
                                                 height={28}
@@ -546,11 +545,4 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       </div>
     </div>
   );
-}
-
-function getYouTubeID(url: string | null) {
-   if (!url) return null;
-   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-   const match = url.match(regExp);
-   return (match&&match[7].length==11)? match[7] : null;
 }

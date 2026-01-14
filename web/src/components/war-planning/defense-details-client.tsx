@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
-import { PlayerWithRoster, FightWithNode, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
+import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
 import { useDefensePlanning } from "./hooks/use-defense-planning";
 import { WarTabs } from "./details/war-tabs";
 import DefenseEditor from "./node-editor/defense-editor";
@@ -12,13 +12,12 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Users, Wrench, LayoutGrid, Map as MapIcon, PieChart } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
 import { updateDefensePlanHighlightTag, updateDefensePlanTier } from "@/app/planning/defense-actions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getBattlegroupColor } from "@/lib/battlegroup-colors";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import DefenseStatsPanel from "./defense-stats-panel";
 
 interface DefenseDetailsClientProps {
@@ -42,7 +41,6 @@ function findTargetNode(
   targetPlayerId: string | undefined,
   currentPlacements: PlacementWithNode[],
   nodesMap: Map<number, WarNodeWithAllocations>, // Using any or specific type if imported
-  currentBattlegroup: number
 ): { nodeId: number; nodeNumber: number; placementId?: string } | null {
   const sorted = [...currentPlacements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
   
@@ -108,7 +106,6 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     allPlacements,
     currentBattlegroup,
     loadingPlacements,
-    error,
     
     handleNodeClick,
     handleNavigateNode,
@@ -124,15 +121,20 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [activeTagId, setActiveTagId] = useState<number | null>(props.plan.highlightTagId);
   const [activeTier, setActiveTier] = useState<number | null>(props.plan.tier ?? null);
 
-  const activeTag = props.availableTags.find(t => t.id === activeTagId);
-
-  useEffect(() => {
+  // Sync state with props during render
+  const [prevHighlightTagId, setPrevHighlightTagId] = useState(props.plan.highlightTagId);
+  if (props.plan.highlightTagId !== prevHighlightTagId) {
+    setPrevHighlightTagId(props.plan.highlightTagId);
     setActiveTagId(props.plan.highlightTagId);
-  }, [props.plan.highlightTagId]);
+  }
 
-  useEffect(() => {
+  const [prevTier, setPrevTier] = useState(props.plan.tier);
+  if (props.plan.tier !== prevTier) {
+    setPrevTier(props.plan.tier);
     setActiveTier(props.plan.tier ?? null);
-  }, [props.plan.tier]);
+  }
+
+  const activeTag = props.availableTags.find(t => t.id === activeTagId);
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
@@ -235,7 +237,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         };
     } else {
         // 2. Auto-Targeting
-        target = findTargetNode(targetPlayerId ?? undefined, currentPlacements, nodesMap, currentBattlegroup);
+        target = findTargetNode(targetPlayerId ?? undefined, currentPlacements, nodesMap);
     }
 
     if (!target) {

@@ -15,7 +15,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +44,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { createDefensePlan, deleteDefensePlan } from "@/app/planning/defense-actions";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStatus } from "react-dom";
@@ -54,7 +52,6 @@ interface DefenseDashboardProps {
   plans: WarDefensePlan[];
   userTimezone?: string | null;
   isOfficer?: boolean;
-  bgColors?: Record<number, string>;
 }
 
 // Separate component for submit button to use useFormStatus
@@ -81,7 +78,6 @@ export default function DefenseDashboard({
   plans,
   userTimezone,
   isOfficer,
-  bgColors
 }: DefenseDashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
@@ -193,7 +189,7 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
         return new Date(plan.updatedAt).toLocaleDateString(undefined, {
             timeZone: userTimezone || undefined
         });
-    } catch (e) {
+    } catch {
         // Fallback if timezone is invalid
         return new Date(plan.updatedAt).toLocaleDateString();
     }

@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Video already approved' }, { status: 200 });
     }
 
-    const updatedVideo = await prisma.warVideo.update({
+    await prisma.warVideo.update({
       where: { id: videoId },
       data: { status: 'PUBLISHED' },
     });

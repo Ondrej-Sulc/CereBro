@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Image from 'next/image';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Swords, Shield, Skull, Diamond } from 'lucide-react';

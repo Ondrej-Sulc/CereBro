@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         } else {
             try {
                 fightIdsToLink = JSON.parse(existingFightIdsJson);
-            } catch (e) { throw new Error("Invalid existing fight IDs format"); }
+            } catch { throw new Error("Invalid existing fight IDs format"); }
         }
         if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) throw new Error("Existing fight IDs must be an array");
     } else {
@@ -93,8 +93,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Video linked successfully', videoIds: [warVideo.id] }, { status: 200 });
 
-  } catch (error: any) {
-    logger.error({ error }, 'Link error');
-    return NextResponse.json({ error: error.message || 'Link failed' }, { status: 500 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error({ error: err }, 'Link error');
+    return NextResponse.json({ error: err.message || 'Link failed' }, { status: 500 });
   }
 }

@@ -100,7 +100,6 @@ const WarMap = memo(function WarMap({
 
     const contentTop = minNodeY * scale;
     const contentBottom = maxNodeY * scale;
-    const contentHeight = contentBottom - contentTop;
 
     const visibleRatio = 0.5;
     const minVisibleWidth = stageSize.width * visibleRatio;

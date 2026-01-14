@@ -11,7 +11,7 @@ export default function TermsOfServicePage() {
           <p><strong>Last Updated:</strong> November 10, 2025</p>
 
           <p>
-            Please read these Terms of Service ("Terms") carefully before using the CereBro Discord bot and associated web services (the "Service"). Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms.
+            Please read these Terms of Service (&quot;Terms&quot;) carefully before using the CereBro Discord bot and associated web services (the &quot;Service&quot;). Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms.
           </p>
 
           <div className="space-y-2">
@@ -50,14 +50,14 @@ export default function TermsOfServicePage() {
               The Service uses the YouTube Data API to upload videos to a designated YouTube channel. By using the video upload feature, you agree to be bound by the <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">YouTube Terms of Service</a>.
             </p>
             <p>
-              We are not responsible for any issues, content strikes, or account actions taken by YouTube. Videos are uploaded as "unlisted" by default unless you specify otherwise, meaning they are not publicly searchable on YouTube but are accessible via a direct link.
+              We are not responsible for any issues, content strikes, or account actions taken by YouTube. Videos are uploaded as &quot;unlisted&quot; by default unless you specify otherwise, meaning they are not publicly searchable on YouTube but are accessible via a direct link.
             </p>
           </div>
 
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-foreground">5. Disclaimers</h2>
             <p>
-              The Service is provided on an "AS IS" and "AS AVAILABLE" basis. We make no warranty that the Service will be uninterrupted, timely, secure, or error-free. CereBro is a fan-made project and is not affiliated with Marvel, Kabam, or Netmarble.
+              The Service is provided on an &quot;AS IS&quot; and &quot;AS AVAILABLE&quot; basis. We make no warranty that the Service will be uninterrupted, timely, secure, or error-free. CereBro is a fan-made project and is not affiliated with Marvel, Kabam, or Netmarble.
             </p>
           </div>
 

@@ -5,7 +5,7 @@ import { ChevronsUpDown, X, Users, Loader2 } from "lucide-react"
 import Image from "next/image";
 
 import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -44,6 +44,7 @@ export function AsyncPlayerCombobox({
   const [search, setSearch] = React.useState(value);
   const [results, setResults] = React.useState<PlayerResult[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const listboxId = React.useId();
   
   const debouncedSearch = useDebounce(search, 300);
   const requestSeqRef = React.useRef(0);
@@ -112,6 +113,8 @@ export function AsyncPlayerCombobox({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls={listboxId}
+          aria-haspopup="listbox"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -150,6 +153,7 @@ export function AsyncPlayerCombobox({
         </div>
       </PopoverTrigger>
       <PopoverContent
+        id={listboxId}
         sideOffset={4}
         className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}

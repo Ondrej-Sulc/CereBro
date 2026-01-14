@@ -1,4 +1,5 @@
 import { Player, WarFight, WarNode, WarNodeAllocation, NodeModifier, ChampionClass, SeasonBan, WarBan, WarDefensePlacement } from "@prisma/client";
+import { ChampionImages } from "../../utils/championHelper";
 
 export type PlayerWithRoster = Player & {
   roster: {
@@ -11,11 +12,11 @@ export type PlayerWithRoster = Player & {
 };
 
 export type SeasonBanWithChampion = SeasonBan & {
-  champion: { id: number; name: string; images: any };
+  champion: { id: number; name: string; images: ChampionImages };
 };
 
 export type WarBanWithChampion = WarBan & {
-  champion: { id: number; name: string; images: any };
+  champion: { id: number; name: string; images: ChampionImages };
 };
 
 export interface FightWithNode extends WarFight {
@@ -23,13 +24,13 @@ export interface FightWithNode extends WarFight {
   node: WarNode & {
       allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
   };
-  attacker: { id: number; name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
-  defender: { id: number; name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  attacker: { id: number; name: string; images: ChampionImages; class: ChampionClass; tags: { name: string }[] } | null;
+  defender: { id: number; name: string; images: ChampionImages; class: ChampionClass; tags: { name: string }[] } | null;
   player: { id: string; ingameName: string; avatar: string | null } | null;
   prefightChampions?: { 
       id: number; // Champion ID
       name: string; 
-      images: any;
+      images: ChampionImages;
       fightPrefightId?: string;
       player?: { id: string; ingameName: string; avatar: string | null } | null;
   }[];
@@ -40,7 +41,7 @@ export interface PlacementWithNode extends WarDefensePlacement {
   node: WarNode & {
       allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
   };
-  defender: { id: number; name: string; images: any; class: ChampionClass; tags: { name: string }[] } | null;
+  defender: { id: number; name: string; images: ChampionImages; class: ChampionClass; tags: { name: string }[] } | null;
   player: { id: string; ingameName: string; avatar: string | null } | null;
   // Attack-specific fields are missing or null
   attacker?: null;

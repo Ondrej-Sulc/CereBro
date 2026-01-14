@@ -113,25 +113,28 @@ export default function DefenseEditor({
 
         return true;
     }).map(a => a.nodeModifier);
-  }, [nodeData?.allocations, mapType, tier]);
+  }, [nodeData, mapType, tier]);
 
-  // Load initial state when placement changes
-  useEffect(() => {
+  // Sync state with props during render
+  const [prevPlacement, setPrevPlacement] = useState(currentPlacement);
+  if (currentPlacement !== prevPlacement) {
+    setPrevPlacement(currentPlacement);
+    
     const newDefenderId = currentPlacement?.defenderId || undefined;
-    setDefenderId(prev => prev !== newDefenderId ? newDefenderId : prev);
+    if (newDefenderId !== defenderId) setDefenderId(newDefenderId);
 
     const newPlayerId = currentPlacement?.playerId || undefined;
-    setPlayerId(prev => prev !== newPlayerId ? newPlayerId : prev);
+    if (newPlayerId !== playerId) setPlayerId(newPlayerId);
 
     const newStarLevel = currentPlacement?.starLevel || undefined;
-    setStarLevel(prev => prev !== newStarLevel ? newStarLevel : prev);
+    if (newStarLevel !== starLevel) setStarLevel(newStarLevel);
     
     if (currentPlacement && !currentPlacement.defenderId) {
         setIsDefenderOpen(true);
     } else {
         setIsDefenderOpen(false);
     }
-  }, [currentPlacement]);
+  }
 
   // Keyboard Navigation
   useEffect(() => {

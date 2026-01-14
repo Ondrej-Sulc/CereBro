@@ -6,9 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChampionClass } from "@prisma/client";
-import { Filter, CircleOff, Trophy, Check, ChevronsUpDown, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as TagIcon } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { ChampionClass, Tag, AbilityCategory, Ability } from "@prisma/client";
+import { CircleOff, Trophy, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as TagIcon } from "lucide-react";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrl } from "@/lib/championHelper";
@@ -16,30 +15,25 @@ import { ChampionImages } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FlipToggle } from "@/components/ui/flip-toggle";
 import { FilterGroup, MultiSelectFilter } from "@/components/ui/filters";
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
 interface ClientPageProps {
     data: AllianceRosterEntry[];
-    initialTactics: any[];
-    initialTags: any[];
-    initialAbilityCategories: any[];
-    initialAbilities: any[];
-    initialImmunities: any[];
-    season: number;
+    initialTags: Tag[];
+    initialAbilityCategories: AbilityCategory[];
+    initialAbilities: Ability[];
+    initialImmunities: Ability[];
     bgColors: Record<number, string>;
 }
 
 export function AllianceRosterMatrix({ 
     data, 
-    initialTactics, 
     initialTags, 
     initialAbilityCategories,
     initialAbilities,
     initialImmunities,
-    season, 
     bgColors 
 }: ClientPageProps) {
     // Filters
@@ -216,7 +210,7 @@ export function AllianceRosterMatrix({
                                             {/* Portrait */}
                                             {champ.championImages && (
                                                 <Image 
-                                                    src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/icons/unknown.png'} 
                                                     alt={champ.championName}
                                                     fill
                                                     sizes="48px"
@@ -246,7 +240,7 @@ export function AllianceRosterMatrix({
                                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                                             {champ.championImages && (
                                                 <Image 
-                                                    src={getChampionImageUrl(champ.championImages as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/icons/unknown.png'} 
                                                     alt={champ.championName}
                                                     fill
                                                     className="object-cover"
@@ -286,15 +280,28 @@ export function AllianceRosterMatrix({
                                                         acc[key] = { 
                                                             name: curr.name,
                                                             type: curr.type,
-                                                            instances: [] as { source: string | null, synergyChampions: any[] }[] 
+                                                            instances: [] as { 
+                                                                source: string | null, 
+                                                                synergyChampions: { name: string; images: ChampionImages }[] 
+                                                            }[] 
                                                         };
                                                     }
                                                     acc[key].instances.push({
                                                         source: curr.source,
-                                                        synergyChampions: curr.synergyChampions || []
+                                                        synergyChampions: curr.synergyChampions.map(sc => ({
+                                                            name: sc.name,
+                                                            images: sc.images
+                                                        }))
                                                     });
                                                     return acc;
-                                                }, {} as Record<string, { name: string, type: string, instances: { source: string | null, synergyChampions: any[] }[] }>);
+                                                }, {} as Record<string, { 
+                                                    name: string, 
+                                                    type: string, 
+                                                    instances: { 
+                                                        source: string | null, 
+                                                        synergyChampions: { name: string; images: ChampionImages }[] 
+                                                    }[] 
+                                                }>);
 
                                                 const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
                                                 const displayImmunities = Object.values(groupedItems).filter(a => a.type === 'IMMUNITY');
@@ -304,7 +311,14 @@ export function AllianceRosterMatrix({
                                                     return <div className="text-xs text-slate-500 text-center italic">No matching details found.</div>;
                                                 }
 
-                                                const renderBadgeContent = (item: typeof displayAbilities[0]) => {
+                                                const renderBadgeContent = (item: { 
+                                                    name: string, 
+                                                    type: string, 
+                                                    instances: { 
+                                                        source: string | null, 
+                                                        synergyChampions: { name: string; images: ChampionImages }[] 
+                                                    }[] 
+                                                }) => {
                                                     const validInstances = item.instances.filter(inst => inst.source || inst.synergyChampions.length > 0);
                                                     
                                                     return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { WarFight, WarTactic, War, WarMapType } from "@prisma/client";
+import { WarFight, War, WarMapType } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
 import { PrefightSelector } from "./prefight-selector";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { X } from "lucide-react";
-import Image from "next/image";
 import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
@@ -111,48 +110,52 @@ export default function NodeEditor({
         
         return tierMatch && seasonMatch && mapTypeMatch;
     }).map(a => a.nodeModifier);
-  }, [currentFight?.node?.allocations, currentWar]);
+  }, [currentFight, currentWar]);
 
-  // Load initial state when fight changes
-  useEffect(() => {
-    isUserEdit.current = false;
+  // Sync state with props during render
+  const [prevFight, setPrevFight] = useState(currentFight);
+  if (currentFight !== prevFight) {
+    setPrevFight(currentFight);
+    
     const newDefenderId = currentFight?.defenderId || undefined;
-    setDefenderId(prev => prev !== newDefenderId ? newDefenderId : prev);
+    if (newDefenderId !== defenderId) setDefenderId(newDefenderId);
 
     const newAttackerId = currentFight?.attackerId || undefined;
-    setAttackerId(prev => prev !== newAttackerId ? newAttackerId : prev);
+    if (newAttackerId !== attackerId) setAttackerId(newAttackerId);
 
     const newPlayerId = currentFight?.playerId || undefined;
-    setPlayerId(prev => prev !== newPlayerId ? newPlayerId : prev);
+    if (newPlayerId !== playerId) setPlayerId(newPlayerId);
 
     const newDeaths = currentFight?.death || 0;
-    setDeaths(prev => prev !== newDeaths ? newDeaths : prev);
+    if (newDeaths !== deaths) setDeaths(newDeaths);
 
     const newNotes = currentFight?.notes || "";
-    setNotes(prev => prev !== newNotes ? newNotes : prev);
+    if (newNotes !== notes) setNotes(newNotes);
 
     const newPrefights = currentFight?.prefightChampions?.map(c => ({
         championId: c.id,
         playerId: c.player?.id || null
     })) || [];
     
-    setPrefights(prev => {
-        const prefightsEqual = (a: typeof newPrefights, b: typeof newPrefights) => 
-            a.length === b.length && a.every((val, index) => 
-                val.championId === b[index].championId && val.playerId === b[index].playerId
-            );
-        
-        if (!prefightsEqual(newPrefights, prev)) {
-            return newPrefights;
-        }
-        return prev;
-    });
+    const prefightsEqual = (a: typeof newPrefights, b: typeof newPrefights) => 
+        a.length === b.length && a.every((val, index) => 
+            val.championId === b[index].championId && val.playerId === b[index].playerId
+        );
+    
+    if (!prefightsEqual(newPrefights, prefights)) {
+        setPrefights(newPrefights);
+    }
     
     if (currentFight && !currentFight.defenderId) {
         setIsDefenderOpen(true);
     } else {
         setIsDefenderOpen(false);
     }
+  }
+
+  // Reset user edit flag when fight changes
+  useEffect(() => {
+    isUserEdit.current = false;
   }, [currentFight]);
 
   // Keyboard Navigation
@@ -187,7 +190,7 @@ export default function NodeEditor({
 
   const availablePlayers = useMemo(() => {
     // Filter by BG first
-    let filtered = [...bgPlayers]; // Clone to avoid mutating memoized array if we push
+    const filtered = [...bgPlayers]; // Clone to avoid mutating memoized array if we push
 
     // Ensure currently assigned player is in the list (if any), even if moved BG
     if (currentFight?.playerId) {
@@ -225,7 +228,7 @@ export default function NodeEditor({
         if (rosterA.isAscended !== rosterB.isAscended) return (rosterA.isAscended ? 1 : 0) - (rosterB.isAscended ? 1 : 0);
         return a.ingameName.localeCompare(b.ingameName);
     });
-  }, [players, attackerId, battlegroup, currentFight?.playerId, playerId]);
+  }, [bgPlayers, players, attackerId, currentFight, playerId]);
 
   // 2. Display Champions (Filtered by Player + Rank Info + BANS)
   const displayChampions = useMemo(() => {
@@ -268,9 +271,10 @@ export default function NodeEditor({
         if (ex.playerId === playerId && ex.battlegroup === battlegroup) warTeamIds.add(ex.championId);
     });
 
-    const warTeam: any[] = [];
-    const roster: any[] = [];
-    const others: any[] = [];
+    type RosterEntry = PlayerWithRoster['roster'][number];
+    const warTeam: (Champion & { group: string; originalName: string; rankData: RosterEntry | null })[] = [];
+    const roster: (Champion & { group: string; originalName: string; rankData: RosterEntry | null })[] = [];
+    const others: (Champion & { group: string; originalName: string; rankData: RosterEntry | null })[] = [];
 
     allowedChampions.forEach(c => {
         const r = rosterMap.get(c.id);
@@ -290,6 +294,7 @@ export default function NodeEditor({
 
     // Sort Roster by Rank Desc
     roster.sort((a, b) => {
+        if (!a.rankData || !b.rankData) return a.originalName.localeCompare(b.originalName);
         if (a.rankData.stars !== b.rankData.stars) return b.rankData.stars - a.rankData.stars;
         if (a.rankData.rank !== b.rankData.rank) return b.rankData.rank - a.rankData.rank;
         return a.originalName.localeCompare(b.originalName);
@@ -307,7 +312,7 @@ export default function NodeEditor({
   // 3. Optimized Prefight List
   const prefightChampionsList = useMemo(() => {
     const champs = champions.filter((champ) =>
-      champ.abilities?.some((link: any) => link.ability.name === "Pre-Fight Ability")
+      champ.abilities?.some((link) => link.ability.name === "Pre-Fight Ability")
     );
     return champs.sort((a, b) => {
       const priorityNames = ["Magneto (House Of X)", "Odin"];
@@ -322,7 +327,7 @@ export default function NodeEditor({
   }, [champions]);
 
   // Helper to trigger save
-  const triggerSave = useCallback((updates: Partial<any>) => {
+  const triggerSave = useCallback((updates: Partial<WarFight> & { prefightUpdates?: { championId: number; playerId?: string | null }[] }) => {
     if (nodeId === null) return;
     
     const payload = {

@@ -87,14 +87,15 @@ export async function POST(req: NextRequest) {
                 duration: Date.now() - fileStartTime 
             }, "Successfully processed roster screenshot");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as Error;
         logger.error({ 
-            error: err.message, 
-            stack: err.stack,
+            error: error.message, 
+            stack: error.stack,
             playerId: player.id,
             fileName: file.name 
         }, "Error processing roster screenshot file");
-        errors.push(`File ${file.name}: ${err.message || "Unknown error"}`);
+        errors.push(`File ${file.name}: ${error.message || "Unknown error"}`);
       }
     }
 
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ count: totalCount, added: allAdded, errors });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error({ error: err }, "API Error");
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

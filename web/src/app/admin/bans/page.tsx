@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminBansManagerClient from "@/components/admin/admin-bans-manager-client";
 import { getCachedChampions } from "@/lib/data/champions";
+import { SeasonBanWithChampion } from "@cerebro/core/data/war-planning/types";
 
 export default async function AdminBansPage() {
   const session = await auth();
@@ -45,6 +46,6 @@ export default async function AdminBansPage() {
   const champions = await getCachedChampions();
 
   return (
-    <AdminBansManagerClient initialBans={bans} champions={champions} />
+    <AdminBansManagerClient initialBans={bans as unknown as SeasonBanWithChampion[]} champions={champions} />
   );
 }

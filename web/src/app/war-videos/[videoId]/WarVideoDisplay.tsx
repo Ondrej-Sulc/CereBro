@@ -6,14 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getChampionImageUrl } from '@/lib/championHelper';
+import { ChampionImages } from '@/types/champion';
 import { WarNode, Player, ChampionClass, War, WarTactic, Tag } from '@prisma/client';
-import { Check, Trash, Swords, Shield, Diamond, CircleDot, Info, Play } from 'lucide-react';
+import { Check, Trash, Swords, Shield, Diamond, Info, Play } from 'lucide-react';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
 import { useState } from 'react';
 
-interface WarFight {
+export interface WarFight {
   id: string;
   death: number;
   battlegroup: number | null;
@@ -25,7 +26,7 @@ interface WarFight {
   war: War; // Added back
 }
 
-interface WarVideo {
+export interface WarVideo {
   id: string;
   url: string | null;
   description: string | null;
@@ -70,7 +71,7 @@ function getYouTubeVideoId(url: string | null): string | null {
       if (potentialId && potentialId.length === 11) {
         videoId = potentialId;
       }
-    } catch (e) {
+    } catch {
       // Ignore URL parsing errors if regex fails
     }
   }
@@ -273,7 +274,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                   <div className="relative shrink-0">
                     {fight.attacker && <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />}
                     {fight.attacker && <Image
-                      src={getChampionImageUrl(fight.attacker.images as any, '128', 'primary')}
+                      src={getChampionImageUrl(fight.attacker.images as unknown as ChampionImages, '128', 'primary')}
                       alt={fight.attacker.name}
                       width={56}
                       height={56}
@@ -315,7 +316,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                   <div className="relative shrink-0">
                     {fight.defender && <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />}
                     {fight.defender && <Image
-                      src={getChampionImageUrl(fight.defender.images as any, '128', 'primary')}
+                      src={getChampionImageUrl(fight.defender.images as unknown as ChampionImages, '128', 'primary')}
                       alt={fight.defender.name}
                       width={56}
                       height={56}
@@ -337,7 +338,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
                     <div className="flex flex-wrap gap-2">
                       {fight.prefightChampions.map((pf) => (
                         <div key={pf.champion.id} className="flex items-center gap-2 bg-purple-900/20 border border-purple-500/20 rounded-full pr-3 py-1 pl-1">
-                          <Image src={getChampionImageUrl(pf.champion.images as any, '64', 'primary')} alt={pf.champion.name} width={24} height={24} className="rounded-full" unoptimized />
+                          <Image src={getChampionImageUrl(pf.champion.images as unknown as ChampionImages, '64', 'primary')} alt={pf.champion.name} width={24} height={24} className="rounded-full" unoptimized />
                           <span className="text-xs font-medium text-purple-200">{pf.champion.name}</span>
                         </div>
                       ))}

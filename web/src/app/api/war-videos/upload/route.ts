@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     } else if (existingFightIdsJson) {
         try {
             fightIdsToLink = JSON.parse(existingFightIdsJson);
-        } catch (e) { throw new Error("Invalid existing fight IDs"); }
+        } catch { throw new Error("Invalid existing fight IDs"); }
         if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) throw new Error("Existing fight IDs must be an array");
     } else {
         if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
@@ -112,18 +112,30 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Videos uploaded successfully', videoIds: [newWarVideo.id] }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    interface ApiError extends Error {
+        meta?: unknown;
+        errors?: { reason: string; message: string }[];
+        response?: {
+            data?: {
+                error?: {
+                    errors?: { reason: string; message: string }[];
+                }
+            }
+        };
+    }
+    const err = error as ApiError;
     logger.error({ 
-      error,
-      message: error.message,
-      meta: error.meta,
-      stack: error.stack 
+      error: err,
+      message: err.message,
+      meta: err.meta,
+      stack: err.stack 
     }, 'Upload error detail');
     
     if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
     
     // Check for specific YouTube API quota error
-    const errors = error.errors || error.response?.data?.error?.errors;
+    const errors = err.errors || err.response?.data?.error?.errors;
     if (errors && Array.isArray(errors) && errors.length > 0) {
       const youtubeError = errors[0];
       if (youtubeError.reason === 'uploadLimitExceeded' || youtubeError.reason === 'quotaExceeded') {
@@ -131,6 +143,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Upload failed' }, { status: 500 });
   }
 }

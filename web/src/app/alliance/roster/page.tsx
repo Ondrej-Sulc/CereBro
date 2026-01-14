@@ -34,12 +34,10 @@ export default async function AllianceRosterPage() {
     return (
         <AllianceRosterMatrix 
             data={rosterData}
-            initialTactics={metaData.tactics}
             initialTags={metaData.tags}
             initialAbilityCategories={metaData.abilityCategories}
             initialAbilities={metaData.abilities}
             initialImmunities={metaData.immunities}
-            season={metaData.season}
             bgColors={bgColors}
         />
     );

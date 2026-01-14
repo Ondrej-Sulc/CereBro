@@ -7,6 +7,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { ChampionClass } from "@prisma/client";
+import { ChampionImages } from "@/types/champion";
+import { ProfileRosterEntry } from "./types";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +17,32 @@ export const metadata: Metadata = {
   title: "My Roster | CereBro",
   description: "Manage and view your MCOC champion roster.",
 };
+
+interface Recommendation {
+    championId: number;
+    championName: string;
+    championClass: ChampionClass;
+    championImage: ChampionImages;
+    stars: number;
+    fromRank: number;
+    toRank: number;
+    prestigeGain: number;
+    accountGain: number;
+}
+
+interface SigRecommendation {
+    championId: number;
+    championName: string;
+    championClass: ChampionClass;
+    championImage: ChampionImages;
+    stars: number;
+    rank: number;
+    fromSig: number;
+    toSig: number;
+    prestigeGain: number;
+    accountGain: number;
+    prestigePerSig: number;
+}
 
 export default async function RosterPage(props: {
   searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string }>;
@@ -65,8 +94,8 @@ export default async function RosterPage(props: {
 
   // Calculate Top 30 Average Prestige
   let top30Average = 0;
-  let recommendations: any[] = [];
-  let sigRecommendations: any[] = [];
+  let recommendations: Recommendation[] = [];
+  let sigRecommendations: SigRecommendation[] = [];
   const rosterPrestigeMap: Record<string, number> = {};
   
   // Determine Simulation Cap
@@ -80,8 +109,13 @@ export default async function RosterPage(props: {
   
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : defaultTarget;
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
-  const rankClassFilter = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
-  const sigClassFilter = searchParams.sigClassFilter ? searchParams.sigClassFilter.split(',') : [];
+  
+  const validClasses = Object.values(ChampionClass);
+  const rankClassFilterRaw = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
+  const sigClassFilterRaw = searchParams.sigClassFilter ? searchParams.sigClassFilter.split(',') : [];
+
+  const rankClassFilter = rankClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
+  const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
 
   if (roster.length > 0) {
       const championIds = Array.from(new Set(roster.map(r => r.championId)));
@@ -184,7 +218,8 @@ export default async function RosterPage(props: {
                          return {
                              championId: c.championId,
                              championName: c.champion.name,
-                             championClass: c.champion.class,              championImage: c.champion.images,
+                             championClass: c.champion.class,
+                             championImage: c.champion.images as unknown as ChampionImages,
               stars: c.stars,
               fromRank: c.rank,
               toRank: c.rank + 1,
@@ -223,7 +258,6 @@ export default async function RosterPage(props: {
               // Sort current state to find Top 30 threshold quickly
               // (Optimization: Maintain sorted list, but for N<500 array.sort is fast enough per iteration)
               const sortedState = [...simState].sort((a, b) => b.currentPrestige - a.currentPrestige);
-              const currentTop30Sum = sortedState.slice(0, 30).reduce((s, r) => s + r.currentPrestige, 0);
               
               // Evaluate +1 sig for each candidate
               for (const cand of sigCandidates) {
@@ -279,12 +313,6 @@ export default async function RosterPage(props: {
                // Calculate Average Efficiency (Account Gain / Stones Used)
                const totalPrestigeGain = finalPrestige - original.prestige;
                
-               // Account Gain (Final State vs Initial State)
-               // Re-sort final state
-               const finalSimList = simState.map(r => r.currentPrestige).sort((a, b) => b - a);
-               const finalSum = finalSimList.slice(0, 30).reduce((s, p) => s + p, 0);
-               const finalAvg = Math.round(finalSum / Math.min(30, finalSimList.length));
-
                // Note: This logic computes total account gain for the whole batch, 
                // but we want per-champion contribution roughly?
                // Actually, for the list, we can just show the efficiency and the total added.
@@ -303,7 +331,7 @@ export default async function RosterPage(props: {
                    championId: original.championId,
                    championName: original.champion.name,
                    championClass: original.champion.class,
-                   championImage: original.champion.images,
+                   championImage: original.champion.images as unknown as ChampionImages,
                    stars: original.stars,
                    rank: original.rank,
                    fromSig: original.sigLevel || 0,
@@ -342,7 +370,7 @@ export default async function RosterPage(props: {
                    championId: c.championId,
                    championName: c.champion.name,
                    championClass: c.champion.class,
-                   championImage: c.champion.images,
+                   championImage: c.champion.images as unknown as ChampionImages,
                    stars: c.stars,
                    rank: c.rank,
                    fromSig: c.sigLevel || 0,
@@ -379,7 +407,7 @@ export default async function RosterPage(props: {
       </div>
 
       <RosterView 
-        initialRoster={roster as any} 
+        initialRoster={rosterEntries as unknown as ProfileRosterEntry[]} 
         allChampions={allChampions}
         top30Average={top30Average}
         prestigeMap={rosterPrestigeMap}
@@ -387,8 +415,8 @@ export default async function RosterPage(props: {
         sigRecommendations={sigRecommendations}
         simulationTargetRank={targetRank}
         initialSigBudget={sigBudget}
-        initialRankClassFilter={rankClassFilter as any}
-        initialSigClassFilter={sigClassFilter as any}
+        initialRankClassFilter={rankClassFilter}
+        initialSigClassFilter={sigClassFilter}
         initialTags={tags}
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}

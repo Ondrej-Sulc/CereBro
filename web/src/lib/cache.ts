@@ -3,7 +3,7 @@ interface CacheEntry<T> {
   expires: number;
 }
 
-const cache = new Map<string, CacheEntry<any>>();
+const cache = new Map<string, CacheEntry<unknown>>();
 
 /**
  * A simple in-memory cache.
@@ -17,7 +17,7 @@ export async function getFromCache<T>(key: string, ttl: number, fetchData: () =>
 
   if (existing && now < existing.expires) {
     // Return from cache
-    return existing.data;
+    return existing.data as T;
   }
 
   // Fetch new data

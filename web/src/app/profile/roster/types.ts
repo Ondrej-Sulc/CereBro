@@ -1,4 +1,4 @@
-import { Champion, ChampionClass, Roster } from "@prisma/client";
+import { Champion, ChampionClass } from "@prisma/client";
 import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionImages } from "@/types/champion";
 

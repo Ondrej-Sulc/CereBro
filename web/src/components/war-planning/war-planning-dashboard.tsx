@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { War, WarStatus, WarMapType } from "@prisma/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { 
   Plus, 
   Swords, 
@@ -11,16 +10,13 @@ import {
   Calendar, 
   ArrowRight, 
   LayoutDashboard,
-  Archive,
-  Trophy,
   History,
   Rocket,
   Trash2,
   Settings,
   Ban,
   Map as MapIcon,
-  Grid3x3,
-  ChevronDown
+  Grid3x3
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -85,22 +81,22 @@ export default function WarPlanningDashboard({
   userTimezone,
   isBotAdmin,
   isOfficer,
-  bgColors
 }: WarPlanningDashboardProps) {
-  const router = useRouter();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
+  const [selectedMapType, setSelectedMapType] = useState<WarMapType>(wars[0]?.mapType || WarMapType.STANDARD);
   const [isOffSeason, setIsOffSeason] = useState(false);
+
+  // Sync selectedMapType with props when wars change
+  const [prevWars, setPrevWars] = useState(wars);
+  if (wars !== prevWars) {
+    setPrevWars(wars);
+    if (wars.length > 0 && wars[0].mapType !== selectedMapType) {
+      setSelectedMapType(wars[0].mapType);
+    }
+  }
 
   const activeWars = wars.filter((w) => w.status === WarStatus.PLANNING);
   const archivedWars = wars.filter((w) => w.status === WarStatus.FINISHED);
-
-  // Pre-fill logic based on last war if available
-  useEffect(() => {
-      if (wars.length > 0) {
-          setSelectedMapType(wars[0].mapType);
-      }
-  }, [wars]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -318,9 +314,11 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
 
   useEffect(() => {
      const date = new Date(war.createdAt);
-     setDateString(date.toLocaleDateString(undefined, { 
+     const formatted = date.toLocaleDateString(undefined, { 
        timeZone: userTimezone || undefined 
-     }));
+     });
+     const timer = setTimeout(() => setDateString(formatted), 0);
+     return () => clearTimeout(timer);
   }, [war.createdAt, userTimezone]);
 
   return (

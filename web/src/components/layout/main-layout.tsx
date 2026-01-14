@@ -5,21 +5,19 @@ import { UserButton } from '@/components/UserButton';
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export async function MainLayout({ children }: { children: React.ReactNode }) {
-  let isOfficer = false;
   let isInAlliance = false;
   let canUploadFiles = false;
 
   const player = await getUserPlayerWithAlliance();
 
   if (player) {
-    isOfficer = player.isOfficer || player.isBotAdmin || false;
     isInAlliance = !!player.allianceId;
     canUploadFiles = player.alliance?.canUploadFiles || false;
   }
 
   return (
     <div className="relative z-10 min-h-screen flex flex-col">
-      <Header userButton={<UserButton />} isOfficer={isOfficer} isInAlliance={isInAlliance} canUploadFiles={canUploadFiles} />
+      <Header userButton={<UserButton />} isInAlliance={isInAlliance} canUploadFiles={canUploadFiles} />
       <main className="flex-grow">
         {children}
       </main>

@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 let buildId = 'dev';
 try {
   buildId = execSync('git rev-parse HEAD').toString().trim();
-} catch (e) {
+} catch {
   buildId = Date.now().toString();
 }
 

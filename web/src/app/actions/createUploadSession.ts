@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import crypto from 'crypto';
 import { add } from 'date-fns';
 

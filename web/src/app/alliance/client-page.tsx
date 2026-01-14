@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updatePlayerRole, updateAllianceColors } from "../actions/alliance";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users, HelpCircle, Settings, Save } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 
-type PlayerWithRoster = Player & { roster: any[] };
+type PlayerWithRoster = Player & { roster: unknown[] };
 
 interface ClientPageProps {
     members: PlayerWithRoster[];
@@ -49,8 +49,9 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         try {
             await updateAllianceColors(colors);
             toast({ title: "Colors Updated", description: "Alliance theme colors saved." });
-        } catch (e: any) {
-             if (e.message?.includes("Failed to find Server Action")) {
+        } catch (e: unknown) {
+             const error = e as Error;
+             if (error.message?.includes("Failed to find Server Action")) {
                  toast({ 
                     title: "Update Required", 
                     description: "Application updated. Reloading...", 
@@ -72,8 +73,9 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             // We pass undefined for isOfficer to only update battlegroup
             await updatePlayerRole(playerId, { battlegroup: bgValue });
             toast({ title: "Updated", description: "Player battlegroup updated." });
-        } catch (e: any) {
-            if (e.message?.includes("Failed to find Server Action")) {
+        } catch (e: unknown) {
+            const error = e as Error;
+            if (error.message?.includes("Failed to find Server Action")) {
                  toast({ 
                     title: "Update Required", 
                     description: "Application updated. Reloading...", 
@@ -95,7 +97,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         bg3: members.filter(m => m.battlegroup === 3),
     };
 
-    const renderColumn = (title: string, players: PlayerWithRoster[], bgId: string, icon: any, accentColor?: string) => (
+    const renderColumn = (title: string, players: PlayerWithRoster[], bgId: string, icon: React.ReactNode, accentColor?: string) => (
         <div className="flex-1 min-w-[300px] flex flex-col gap-3">
             <div 
                 className="flex items-center gap-2 pb-1.5 border-b transition-colors"
@@ -178,7 +180,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                         </DialogHeader>
                                         <div className="space-y-4 text-sm">
                                             <p>
-                                                When you change a player's Battlegroup here, CereBro attempts to update their roles in your Discord server automatically.
+                                                When you change a player&apos;s Battlegroup here, CereBro attempts to update their roles in your Discord server automatically.
                                             </p>
                                             <div className="bg-yellow-950/20 border border-yellow-900/30 p-3 rounded-md space-y-2">
                                                 <p className="font-semibold text-yellow-500">If updates fail:</p>

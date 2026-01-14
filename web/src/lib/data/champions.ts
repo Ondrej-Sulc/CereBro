@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getFromCache } from "@/lib/cache";
+import { Champion } from "@/types/champion";
 
 // Cache for 1 hour
 const CACHE_TTL = 3600;
 
-export async function getCachedChampions() {
+export async function getCachedChampions(): Promise<Champion[]> {
   return await getFromCache("all-champions-full", CACHE_TTL, async () => {
-    return await prisma.champion.findMany({
+    const champions = await prisma.champion.findMany({
       orderBy: { name: 'asc' },
       select: {
         id: true,
@@ -32,5 +33,6 @@ export async function getCachedChampions() {
         }
       }
     });
+    return champions as unknown as Champion[];
   });
 }

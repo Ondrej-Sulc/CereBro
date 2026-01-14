@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React, { useMemo } from "react";
 import { Users, ChevronLeft, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { War, WarMapType, ChampionClass } from "@prisma/client";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox"; 
-import { Champion } from "@/types/champion";
+import { Champion, ChampionImages } from "@/types/champion";
 import { motion } from "framer-motion";
 import { usePlayerColor } from "../player-color-context";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -50,12 +51,12 @@ export const PlayerListContent = ({
   // Calculate player usage stats
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
-      champions: { id: number; name: string; images: any; class: ChampionClass; isExtra?: boolean; extraId?: string }[], // Updated type to include class
+      champions: { id: number; name: string; images: ChampionImages; class: ChampionClass; isExtra?: boolean; extraId?: string }[], // Updated type to include class
       uniqueCount: number
     }>();
 
     // Helper to add champ
-    const addChamp = (pid: string, cid: number, cname: string, cimages: any, champClass: ChampionClass, isExtra = false, extraId?: string) => { // Updated signature
+    const addChamp = (pid: string, cid: number, cname: string, cimages: ChampionImages, champClass: ChampionClass, isExtra = false, extraId?: string) => { // Updated signature
         if (!stats.has(pid)) {
             stats.set(pid, { champions: [], uniqueCount: 0 });
         }
@@ -114,7 +115,7 @@ export const PlayerListContent = ({
         .sort((a, b) => {
             return a.ingameName.localeCompare(b.ingameName);
         });
-  }, [players, playerStats, currentBattlegroup]);
+  }, [players, currentBattlegroup]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -202,11 +203,13 @@ export const PlayerListContent = ({
                               <div className="flex gap-1 pl-11 flex-wrap">
                                   {stat?.champions.map(champ => (
                                       <div key={champ.id} className="relative group/champ">
-                                          <img 
+                                          <Image 
                                               src={getChampionImageUrl(champ.images, '64')} 
                                               alt={champ.name}
+                                              width={28}
+                                              height={28}
                                               className={cn(
-                                                  "w-7 h-7 rounded-full border-2",
+                                                  "rounded-full border-2",
                                                   champ.isExtra ? "border-pink-500 ring-1 ring-pink-500/30" : getChampionClassColors(champ.class).border
                                               )}
                                               title={champ.isExtra ? "Extra Assignment" : "Assigned to Fight/Prefight"}
@@ -241,10 +244,12 @@ export const PlayerListContent = ({
                                               const classColors = getChampionClassColors(champ.class);
                                               return (
                                                   <div key={champ.id} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
-                                                      <img 
+                                                      <Image 
                                                           src={getChampionImageUrl(champ.images, '64')} 
                                                           alt={champ.name}
-                                                          className={cn("w-8 h-8 rounded-full border-2", classColors.border)} 
+                                                          width={32}
+                                                          height={32}
+                                                          className={cn("rounded-full border-2", classColors.border)} 
                                                       />
                                                       <div className="flex-1 min-w-0">
                                                           <div className={cn("text-xs font-bold truncate", classColors.text)}>{champ.name}</div>
@@ -285,10 +290,12 @@ export const PlayerListContent = ({
                                               return (
                                               <div key={ex.id} className="flex items-center justify-between bg-slate-950/50 p-1.5 rounded border border-pink-900/30">
                                                   <div className="flex items-center gap-2 overflow-hidden">
-                                                      <img 
+                                                      <Image 
                                                           src={getChampionImageUrl(ex.champion.images, '64')} 
                                                           alt={ex.champion.name}
-                                                          className={cn("w-8 h-8 rounded-full border-2", classColors.border)} 
+                                                          width={32}
+                                                          height={32}
+                                                          className={cn("rounded-full border-2", classColors.border)} 
                                                       />
                                                       <div className="flex-1 min-w-0">
                                                           <div className={cn("text-xs font-bold truncate", classColors.text)}>{ex.champion.name}</div>

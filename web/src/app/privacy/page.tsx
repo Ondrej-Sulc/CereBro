@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
           <p><strong>Last Updated:</strong> November 10, 2025</p>
 
           <p>
-            This Privacy Policy describes how CereBro ("we," "us," or "our") collects, uses, and discloses your information when you use our Discord bot and associated web services (collectively, the "Service").
+            This Privacy Policy describes how CereBro (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and discloses your information when you use our Discord bot and associated web services (collectively, the &quot;Service&quot;).
           </p>
 
           <div className="space-y-2">
@@ -62,7 +62,7 @@ export default function PrivacyPolicyPage() {
           <div className="space-y-2">
             <h2 className="text-xl font-semibold text-foreground">5. Your Rights</h2>
             <p>
-              You have the right to request the deletion of your personal data associated with the bot. You can do this by contacting the bot administrator. Please note that videos uploaded to YouTube may be subject to YouTube's policies.
+              You have the right to request the deletion of your personal data associated with the bot. You can do this by contacting the bot administrator. Please note that videos uploaded to YouTube may be subject to YouTube&apos;s policies.
             </p>
           </div>
 

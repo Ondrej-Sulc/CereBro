@@ -8,8 +8,8 @@ import { Champion } from '@/types/champion';
 import { War, WarFight, Player as PrismaPlayer, WarNode as PrismaWarNode } from '@prisma/client';
 
 // Define types for fetched data
-interface WarNode extends PrismaWarNode { }
-interface Player extends PrismaPlayer { }
+type WarNode = PrismaWarNode;
+type Player = PrismaPlayer;
 
 interface InitialFormData {
   champions: Champion[];
@@ -79,9 +79,10 @@ export default function UploadWarVideoPage() {
           setPreFilledFights(null); // No pre-filled fights in this flow
         }
         setPageStatus('ready');
-      } catch (error: any) {
-        console.error('Failed to fetch data:', error);
-        setErrorMessage(error.message || 'An unknown error occurred.');
+      } catch (error: unknown) {
+        const err = error as Error;
+        console.error('Failed to fetch data:', err);
+        setErrorMessage(err.message || 'An unknown error occurred.');
         setPageStatus('error');
       }
     };

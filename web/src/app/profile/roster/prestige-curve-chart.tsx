@@ -8,9 +8,6 @@ import { getChampionClassColors } from "@/lib/championClassHelper"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import {
   ChartConfig,
@@ -27,9 +24,6 @@ interface PrestigePoint {
 interface PrestigeCurveChartProps {
   data: PrestigePoint[];
   currentSig: number;
-  championName: string;
-  rarity: number;
-  rank: number;
   championClass: ChampionClass;
 }
 
@@ -40,7 +34,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function PrestigeCurveChart({ data, currentSig, championName, rarity, rank, championClass }: PrestigeCurveChartProps) {
+export function PrestigeCurveChart({ data, currentSig, championClass }: PrestigeCurveChartProps) {
   
   // Find min/max for domain
   const minPrestige = Math.min(...data.map(d => d.prestige));

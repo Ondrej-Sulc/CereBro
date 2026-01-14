@@ -5,7 +5,7 @@ import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
-import { Champion } from "@prisma/client";
+import { Champion } from "@/types/champion";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
@@ -117,7 +117,7 @@ export function RosterView({
         setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
         setPendingSection('all');
         startTransition(() => { router.refresh(); });
-      } catch (error) {
+      } catch {
           toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
       }
   };
@@ -129,7 +129,7 @@ export function RosterView({
         if (!res.ok) throw new Error("Failed to fetch prestige data");
         const data = await res.json();
         setChartData({ data, rec });
-      } catch (error) {
+      } catch {
         toast({ title: "Error", description: "Could not load prestige curve", variant: "destructive" });
       } finally {
         setLoadingChart(false);
@@ -206,7 +206,7 @@ export function RosterView({
         setEditingItem(null);
         setPendingSection('all');
         startTransition(() => { router.refresh(); });
-    } catch (error) {
+    } catch {
         toast({ title: "Error", description: "Failed to update champion", variant: "destructive" });
     }
   };
@@ -224,7 +224,7 @@ export function RosterView({
         setEditingItem(null);
         setPendingSection('all');
         startTransition(() => { router.refresh(); });
-      } catch (error) {
+      } catch {
           toast({ title: "Error", description: "Failed to remove champion", variant: "destructive" });
       }
   };

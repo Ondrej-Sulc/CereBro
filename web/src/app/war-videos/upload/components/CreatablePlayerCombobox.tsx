@@ -75,7 +75,7 @@ export function CreatablePlayerCombobox({
                         }}
                     >
                         <UserPlus className="h-4 w-4" />
-                        <span>Use "{search}"</span>
+                        <span>Use &quot;{search}&quot;</span>
                     </div>
                 )}
                 {!search && <span className="text-slate-500 text-sm px-2">No player found.</span>}

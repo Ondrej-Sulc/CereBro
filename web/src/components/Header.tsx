@@ -22,10 +22,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function Header({ userButton, isOfficer, isInAlliance, canUploadFiles }: { userButton: React.ReactNode; isOfficer: boolean; isInAlliance: boolean; canUploadFiles: boolean }) {
+export default function Header({ userButton, isInAlliance, canUploadFiles }: { userButton: React.ReactNode; isInAlliance: boolean; canUploadFiles: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  // Automatically close mobile menu on route change using the render-sync pattern
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,11 +43,6 @@ export default function Header({ userButton, isOfficer, isInAlliance, canUploadF
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Automatically close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [pathname]);
 
   return (
     <header className={`sticky top-0 inset-x-0 z-30 nav-blur transition-colors duration-300 ${isScrolled ? 'bg-slate-950/80 border-b border-slate-800/70' : 'bg-transparent border-b border-transparent'}`}>

@@ -45,7 +45,7 @@ export default async function Home() {
               </span>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] mb-6">
-                Your Alliance's <br className="hidden lg:block"/>
+                Your Alliance&apos;s <br className="hidden lg:block"/>
                 <span className="gradient-text">Tactical Advantage</span>
               </h1>
               
@@ -120,7 +120,7 @@ export default async function Home() {
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-4">Interactive War Map</h3>
                             <p className="text-slate-400 text-lg leading-relaxed">
-                                Plan your Attacks and Defense with player's rosters right at your fingertips, assign nodes, see the whole board. It’s the easiest way to plan.
+                                Plan your Attacks and Defense with player&apos;s rosters right at your fingertips, assign nodes, see the whole board. It&apos;s the easiest way to plan.
                             </p>
                         </ScrollReveal>
                         <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
@@ -189,7 +189,7 @@ export default async function Home() {
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-4">Alliance Roster Overview</h3>
                             <p className="text-slate-400 text-lg leading-relaxed">
-                                Officers get a bird's-eye view of the entire alliance. Filter champions by Battlegroup, Class, or Rank to find the perfect defenders or counters for war.
+                                Officers get a bird&apos;s-eye view of the entire alliance. Filter champions by Battlegroup, Class, or Rank to find the perfect defenders or counters for war.
                             </p>
                         </ScrollReveal>
                         <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
@@ -375,18 +375,18 @@ export default async function Home() {
                   {/* Bio Content */}
                   <div className="text-center md:text-left">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
-                      <h2 className="text-3xl font-bold text-white">Hi, I'm Solomon</h2>
+                      <h2 className="text-3xl font-bold text-white">Hi, I&apos;m Solomon</h2>
                       <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
                         Creator of CereBro
                       </span>
                     </div>
                     
                     <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                      I'm a developer from Czechia and a passionate MCOC player since 2018. I've been a member of my alliance <strong className="text-white">Night Guardians</strong> from the start of my journey. The last few years we have been competing in <strong className="text-white">Tier 1</strong> Alliance Wars.
+                      I&apos;m a developer from Czechia and a passionate MCOC player since 2018. I&apos;ve been a member of my alliance <strong className="text-white">Night Guardians</strong> from the start of my journey. The last few years we have been competing in <strong className="text-white">Tier 1</strong> Alliance Wars.
                     </p>
                     
                     <p className="text-slate-400 leading-relaxed">
-                      I've been creating spreadsheets for our alliance since the beginning — for defense planning, Alliance Quest, war attack planning, and roster tracking. Manual roster updates became tedious, so I built a Discord bot to parse game screenshots. What started as a small internal tool for the Night Guardians grew into a full-featured bot and, eventually, the platform you see today: CereBro. It's the result of years spent collecting champion data and building tools to make alliance management less of a chore and more of a tactical advantage.
+                      I&apos;ve been creating spreadsheets for our alliance since the beginning — for defense planning, Alliance Quest, war attack planning, and roster tracking. Manual roster updates became tedious, so I built a Discord bot to parse game screenshots. What started as a small internal tool for the Night Guardians grew into a full-featured bot and, eventually, the platform you see today: CereBro. It&apos;s the result of years spent collecting champion data and building tools to make alliance management less of a chore and more of a tactical advantage.
                     </p>
 
                     <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-6 opacity-60 italic text-sm">

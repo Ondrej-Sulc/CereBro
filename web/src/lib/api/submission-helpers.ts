@@ -1,12 +1,25 @@
-import { PrismaClient, WarMapType } from '@prisma/client';
+import { PrismaClient, WarMapType, Player, UploadToken, Alliance } from '@prisma/client';
 import logger from '@cerebro/core/services/loggerService';
 import crypto from 'crypto';
 
 export type ValidationResult = 
-  | { success: true; player: any; uploadToken: any }
+  | { success: true; player: Player & { alliance: Alliance | null }; uploadToken: UploadToken }
   | { success: false; error: string; status: number };
 
 const GLOBAL_ALLIANCE_ID = "GLOBAL";
+
+interface FightInput {
+    nodeId: string;
+    attackerId: string;
+    defenderId: string;
+    death: number;
+    prefightChampionIds?: string[];
+}
+
+interface FightUpdate extends FightInput {
+    id: string;
+    battlegroup?: string;
+}
 
 export async function validateUploadToken(
   prisma: PrismaClient, 
@@ -55,7 +68,7 @@ export async function processNewFights(
         warTier: number;
         battlegroup: number;
         mapType: WarMapType;
-        fights: any[];
+        fights: FightInput[];
         playerId: string;
         customPlayerName?: string;
         isGlobal?: boolean; // New param
@@ -183,7 +196,7 @@ export async function processNewFights(
     }
 
     // 2. Create Fights
-    const createdFights = await Promise.all(fights.map(async (fight: any) => {
+    const createdFights = await Promise.all(fights.map(async (fight: FightInput) => {
         const fightData = {
             warId: war.id,
             playerId: finalPlayerId, // Use resolved player ID
@@ -245,10 +258,10 @@ export async function processNewFights(
     return createdFights.map(f => f.id);
 }
 
-export async function processFightUpdates(prisma: PrismaClient, updates: any[]): Promise<string[]> {
+export async function processFightUpdates(prisma: PrismaClient, updates: FightUpdate[]): Promise<string[]> {
     const ids: string[] = [];
     logger.info({ count: updates.length }, "Processing fight updates");
-    await Promise.all(updates.map(async (update: any) => {
+    await Promise.all(updates.map(async (update: FightUpdate) => {
         await prisma.warFight.update({
             where: { id: update.id },
             data: {

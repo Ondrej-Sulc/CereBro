@@ -33,7 +33,6 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
     battlegroup,
     setBattlegroup,
     playerInVideoId,
-    setPlayerInVideoId,
     customPlayerName,
     handlePlayerChange,
     contextMode,

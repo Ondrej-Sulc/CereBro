@@ -232,10 +232,10 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         playerWarStat.fightDetails.push({
             defenderName: fight.defender?.name || 'Unknown',
             defenderClass: fight.defender?.class || 'UNKNOWN',
-            defenderImageUrl: getChampionImageUrl(fight.defender?.images as ChampionImages, '64'),
+            defenderImageUrl: getChampionImageUrl(fight.defender?.images as unknown as ChampionImages, '64'),
             attackerName: fight.attacker?.name || 'Unknown',
             attackerClass: fight.attacker?.class || 'UNKNOWN',
-            attackerImageUrl: getChampionImageUrl(fight.attacker?.images as ChampionImages, '64'),
+            attackerImageUrl: getChampionImageUrl(fight.attacker?.images as unknown as ChampionImages, '64'),
             nodeNumber: fight.node?.nodeNumber || 0,
             isSolo: fight.death === 0,
             deaths: fight.death
