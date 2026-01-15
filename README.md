@@ -95,6 +95,7 @@ The flagship feature of the platform.
   - **Custom Identity:** Customize Battlegroup colors to theming Web UI maps and Discord plan messages.
   - **Roster Explorer:** A dense, spreadsheet-style view (`/alliance/roster`) for filtering the entire alliance's champions. Now features **Advanced Logic Filters (AND/OR)** for Tags, Abilities, and Immunities. Clicking a champion reveals detailed source information, including specific synergies and ability origins.
 - **Web Onboarding:** A streamlined process for new alliances to get started. Users can create an alliance on the web, which can later be linked to a Discord server if desired.
+  - **Discord Linking:** Securely connect a web-managed alliance to a Discord server using a generated **Link Code** (`CB-XXXXXX`) and the `/alliance link` command. Includes intelligent server merging to prevent data duplication.
 - **Role Sync:** Automatically maps Discord Roles to Database permissions (Officer, Battlegroup 1-3).
 - **Channel Configuration:** Customizable Discord channels for specific battlegroup plans and general war video notifications.
 - **AQ Management:** Scheduling and tracking for Alliance Quest timers.
