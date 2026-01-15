@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, User, Shield, Swords, EyeOff, Skull } from "lucide-react";
+import { Play, User, Shield, Swords, EyeOff, Skull, UploadCloud } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
@@ -163,11 +163,18 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       {/* Header & Search */}
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight">War Archive</h1>
               <p className="text-slate-400">Browse and search community uploaded war videos and fight logs.</p>
             </div>
+            
+            <Link href="/war-videos/upload/init">
+              <Button variant="outline" className="flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors">
+                <UploadCloud className="w-4 h-4" />
+                {currentUser?.alliance?.canUploadFiles ? "Upload Video" : "Add Video"}
+              </Button>
+            </Link>
           </div>
         </div>
 

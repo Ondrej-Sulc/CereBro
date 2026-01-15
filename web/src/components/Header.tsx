@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, UploadCloud, Trophy, ChevronDown, LayoutGrid, Users } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function Header({ userButton, isInAlliance, canUploadFiles }: { userButton: React.ReactNode; isInAlliance: boolean; canUploadFiles: boolean }) {
+export default function Header({ userButton, isInAlliance }: { userButton: React.ReactNode; isInAlliance: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -125,11 +125,9 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
                 </Link>
             )}
 
-            <Link href="/war-videos/upload/init">
-              <Button variant="outline" className="flex items-center gap-2 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors h-9 px-3">
-                <UploadCloud className="w-4 h-4" />
-                <span className="hidden lg:inline">{canUploadFiles ? "Upload Video" : "Add Video"}</span>
-              </Button>
+            <Link href="/about" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+              <Heart className="w-4 h-4" />
+              About & Support
             </Link>
           </nav>
 
@@ -168,6 +166,14 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
                     >
                       <Book className="w-5 h-5" />
                       War Archive
+                    </Link>
+
+                    <Link 
+                        href="/about" 
+                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                    >
+                      <Heart className="w-5 h-5" />
+                      About
                     </Link>
                     
                     {isInAlliance ? (
@@ -224,11 +230,11 @@ export default function Header({ userButton, isInAlliance, canUploadFiles }: { u
                     )}
 
                     <Link 
-                        href="/war-videos/upload/init" 
+                        href="/about" 
                         className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                     >
-                      <UploadCloud className="w-5 h-5" />
-                      {canUploadFiles ? "Upload Video" : "Add Video"}
+                      <Heart className="w-5 h-5" />
+                      About
                     </Link>
                   </div>
                   

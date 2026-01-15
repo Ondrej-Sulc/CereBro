@@ -28,9 +28,9 @@ interface MembershipRequest {
         id: string;
         name: string;
     };
-    inviter: {
+    inviter?: {
         ingameName: string;
-    };
+    } | null;
 }
 
 interface AllianceSearchResult {
@@ -137,7 +137,7 @@ export function AllianceOnboardingClient({ invitations, sentRequests }: Onboardi
                                     <div key={invite.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-800">
                                         <div>
                                             <p className="font-bold text-white">{invite.alliance.name}</p>
-                                            <p className="text-xs text-slate-400">Invited by: {invite.inviter.ingameName}</p>
+                                            {invite.inviter && <p className="text-xs text-slate-400">Invited by: {invite.inviter.ingameName}</p>}
                                         </div>
                                         <div className="flex gap-2">
                                             <Button 
