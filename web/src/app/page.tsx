@@ -26,7 +26,7 @@ export default async function Home() {
       <PageBackground />
       <main>
         {/* Hero Section */}
-        <section className="pt-12 lg:pt-16 pb-20 lg:pb-32 relative">
+        <section className="pt-12 lg:pt-16 pb-20 lg:pb-32 relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="flex flex-col justify-center order-1 lg:order-1 relative z-10">
