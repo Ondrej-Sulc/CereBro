@@ -6,6 +6,7 @@ import { handleAllianceName } from './name';
 import { handleAllianceConfigRoles } from './config-roles';
 import { handleAllianceConfigChannels } from './config-channels';
 import { handleAllianceSyncRoles } from './sync-roles';
+import { handleAllianceLink } from './link';
 import { handleAllianceView } from './view';
 import { handleAllianceManageRemove } from './manage/remove';
 import { handleAllianceManageList } from './manage/list';
@@ -95,6 +96,17 @@ export const command: Command = {
     )
     .addSubcommand((subcommand) =>
       subcommand
+        .setName('link')
+        .setDescription('Link this Discord server to an existing web-managed alliance.')
+        .addStringOption(option => 
+            option
+                .setName('code')
+                .setDescription('The link code from the CereBro website.')
+                .setRequired(true)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
         .setName('view')
         .setDescription('Display an overview of the alliance.')
     )
@@ -155,15 +167,26 @@ export const command: Command = {
         }
     }
 
-    if (subcommand === 'toggle-feature' || subcommand === 'name' || subcommand === 'config-roles' || subcommand === 'config-channels' || subcommand === 'sync-roles' || subcommandGroup === 'manage') {
+    if (subcommand === 'toggle-feature' || subcommand === 'name' || subcommand === 'config-roles' || subcommand === 'config-channels' || subcommand === 'sync-roles' || subcommand === 'link' || subcommandGroup === 'manage') {
       const member = interaction.member;
-      if (!member || typeof member.permissions === 'string' || !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-        // Also check for officer role
+      const isAdmin = member && typeof member.permissions !== 'string' && member.permissions.has(PermissionsBitField.Flags.Administrator);
+      
+      if (!isAdmin) {
+        // Also check for bot admin or officer role
         const { prisma } = await import('../../services/prismaService.js');
-        const player = await prisma.player.findFirst({ where: { discordId: interaction.user.id, alliance: { guildId: interaction.guildId! } } });
-        if (!player || !player.isOfficer) {
-            await interaction.reply({ content: 'You must be an administrator or an officer to use this command.', flags: [MessageFlags.Ephemeral] });
-            return;
+        const botUser = await prisma.botUser.findUnique({ where: { discordId: interaction.user.id } });
+        
+        if (!botUser?.isBotAdmin) {
+            const player = await prisma.player.findFirst({ 
+                where: { 
+                    discordId: interaction.user.id, 
+                    alliance: { guildId: interaction.guildId! } 
+                } 
+            });
+            if (!player || !player.isOfficer) {
+                await interaction.reply({ content: 'You must be an administrator or an officer to use this command.', flags: [MessageFlags.Ephemeral] });
+                return;
+            }
         }
       }
     }
@@ -186,6 +209,9 @@ export const command: Command = {
           break;
         case 'join':
           await handleAllianceJoin(interaction);
+          break;
+        case 'link':
+          await handleAllianceLink(interaction);
           break;
         case 'name':
           await handleAllianceName(interaction);

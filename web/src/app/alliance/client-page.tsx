@@ -6,9 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance } from "../actions/alliance";
+import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode } from "../actions/alliance";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,10 +52,13 @@ interface PlayerSearchResult {
 interface AllianceWithRequests {
     id: string;
     name: string;
+    guildId: string | null;
     battlegroup1Color: string;
     battlegroup2Color: string;
     battlegroup3Color: string;
     membershipRequests: MembershipRequest[];
+    linkCode: string | null;
+    linkCodeExpires: Date | null;
 }
 
 type PlayerWithRoster = Player & { roster: unknown[] };
@@ -79,6 +82,26 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         bg3: alliance.battlegroup3Color || "#3b82f6",
     });
     const [isSavingColors, setIsSavingColors] = useState(false);
+
+    // Discord Linking
+    const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+    const [linkCode, setLinkCode] = useState(alliance.linkCode);
+    const [linkExpires, setLinkExpires] = useState(alliance.linkCodeExpires);
+
+    const handleGenerateLinkCode = async () => {
+        setIsGeneratingCode(true);
+        try {
+            const { code, expires } = await generateAllianceLinkCode();
+            setLinkCode(code);
+            setLinkExpires(expires);
+            toast({ title: "Link Code Generated", description: "Use this code in Discord to link your server." });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to generate code";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setIsGeneratingCode(false);
+        }
+    };
 
     // Search for inviting players
     const [playerSearchQuery, setPlayerSearchQuery] = useState("");
@@ -342,63 +365,139 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                     </DialogTrigger>
                                     <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
                                         <DialogHeader>
-                                            <DialogTitle>Alliance Theme Settings</DialogTitle>
+                                            <DialogTitle>Alliance Settings</DialogTitle>
                                             <DialogDescription className="text-slate-400">
-                                                Customize battlegroup identity colors.
+                                                Manage your alliance configuration.
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="bg1" className="text-right">
-                                                    BG 1
-                                                </Label>
-                                                <div className="col-span-3 flex items-center gap-3">
-                                                    <Input
-                                                        id="bg1"
-                                                        type="color"
-                                                        value={colors.bg1}
-                                                        onChange={(e) => setColors({ ...colors, bg1: e.target.value })}
-                                                        className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
-                                                    />
-                                                    <span className="text-xs text-slate-500 uppercase">{colors.bg1}</span>
+                                        
+                                        <Tabs defaultValue="theme" className="w-full">
+                                            <TabsList className="bg-slate-950 border-slate-800 mb-4">
+                                                <TabsTrigger value="theme">Theme</TabsTrigger>
+                                                <TabsTrigger value="discord">Discord Integration</TabsTrigger>
+                                            </TabsList>
+
+                                            <TabsContent value="theme" className="space-y-4">
+                                                <div className="grid gap-4 py-4">
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label htmlFor="bg1" className="text-right">
+                                                            BG 1
+                                                        </Label>
+                                                        <div className="col-span-3 flex items-center gap-3">
+                                                            <Input
+                                                                id="bg1"
+                                                                type="color"
+                                                                value={colors.bg1}
+                                                                onChange={(e) => setColors({ ...colors, bg1: e.target.value })}
+                                                                className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
+                                                            />
+                                                            <span className="text-xs text-slate-500 uppercase">{colors.bg1}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label htmlFor="bg2" className="text-right">
+                                                            BG 2
+                                                        </Label>
+                                                        <div className="col-span-3 flex items-center gap-3">
+                                                            <Input
+                                                                id="bg2"
+                                                                type="color"
+                                                                value={colors.bg2}
+                                                                onChange={(e) => setColors({ ...colors, bg2: e.target.value })}
+                                                                className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
+                                                            />
+                                                            <span className="text-xs text-slate-500 uppercase">{colors.bg2}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-4 items-center gap-4">
+                                                        <Label htmlFor="bg3" className="text-right">
+                                                            BG 3
+                                                        </Label>
+                                                        <div className="col-span-3 flex items-center gap-3">
+                                                            <Input
+                                                                id="bg3"
+                                                                type="color"
+                                                                value={colors.bg3}
+                                                                onChange={(e) => setColors({ ...colors, bg3: e.target.value })}
+                                                                className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
+                                                            />
+                                                            <span className="text-xs text-slate-500 uppercase">{colors.bg3}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="bg2" className="text-right">
-                                                    BG 2
-                                                </Label>
-                                                <div className="col-span-3 flex items-center gap-3">
-                                                    <Input
-                                                        id="bg2"
-                                                        type="color"
-                                                        value={colors.bg2}
-                                                        onChange={(e) => setColors({ ...colors, bg2: e.target.value })}
-                                                        className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
-                                                    />
-                                                    <span className="text-xs text-slate-500 uppercase">{colors.bg2}</span>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-4 items-center gap-4">
-                                                <Label htmlFor="bg3" className="text-right">
-                                                    BG 3
-                                                </Label>
-                                                <div className="col-span-3 flex items-center gap-3">
-                                                    <Input
-                                                        id="bg3"
-                                                        type="color"
-                                                        value={colors.bg3}
-                                                        onChange={(e) => setColors({ ...colors, bg3: e.target.value })}
-                                                        className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
-                                                    />
-                                                    <span className="text-xs text-slate-500 uppercase">{colors.bg3}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button onClick={handleSaveColors} disabled={isSavingColors}>
-                                                {isSavingColors ? "Saving..." : "Save Changes"}
-                                            </Button>
-                                        </DialogFooter>
+                                                <DialogFooter>
+                                                    <Button onClick={handleSaveColors} disabled={isSavingColors}>
+                                                        {isSavingColors ? "Saving..." : "Save Changes"}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </TabsContent>
+
+                                            <TabsContent value="discord" className="space-y-6 py-4">
+                                                {alliance.guildId ? (
+                                                    <div className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-lg flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                                            <Check className="w-6 h-6" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-emerald-400">Discord Linked</p>
+                                                            <p className="text-xs text-slate-400">Your alliance is successfully integrated with Discord.</p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        <div className="bg-sky-950/20 border border-sky-900/30 p-4 rounded-lg space-y-3">
+                                                            <div className="flex items-center gap-3 text-sky-400">
+                                                                <LinkIcon className="w-5 h-5" />
+                                                                <p className="font-bold">Link Discord Server</p>
+                                                            </div>
+                                                            <p className="text-sm text-slate-300 leading-relaxed">
+                                                                To use CereBro in Discord, you need to link your server. Invite the bot to your server, then use the link code below.
+                                                            </p>
+                                                            
+                                                            <div className="pt-2">
+                                                                <a 
+                                                                    href="https://discord.com/oauth2/authorize?client_id=1184180809771520091" 
+                                                                    target="_blank" 
+                                                                    className="inline-flex items-center gap-2 text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md transition-colors"
+                                                                >
+                                                                    <Bot className="w-4 h-4" />
+                                                                    Invite Bot to Server
+                                                                </a>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            <Label className="text-slate-400 text-xs uppercase tracking-wider">Linking Code</Label>
+                                                            {linkCode && linkExpires && new Date(linkExpires) > new Date() ? (
+                                                                <div className="flex flex-col gap-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 font-mono text-2xl tracking-widest text-sky-400 flex-1 text-center">
+                                                                            {linkCode}
+                                                                        </div>
+                                                                        <Button variant="ghost" onClick={handleGenerateLinkCode} disabled={isGeneratingCode}>
+                                                                            <RotateCcw className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                    <p className="text-[10px] text-slate-500 text-center">
+                                                                        Run <code className="text-slate-300">/alliance link code:{linkCode}</code> in your Discord server.
+                                                                        Expires in {Math.round((new Date(linkExpires).getTime() - Date.now()) / 60000)}m.
+                                                                    </p>
+                                                                </div>
+                                                            ) : (
+                                                                <Button 
+                                                                    className="w-full gap-2" 
+                                                                    onClick={handleGenerateLinkCode}
+                                                                    disabled={isGeneratingCode}
+                                                                >
+                                                                    <Plus className="w-4 h-4" />
+                                                                    Generate Link Code
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </TabsContent>
+                                        </Tabs>
                                     </DialogContent>
                                 </Dialog>
                             )}

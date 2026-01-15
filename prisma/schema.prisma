@@ -362,6 +362,9 @@ model Alliance {
   battlegroup2Color      String   @default("#22c55e") // Green
   battlegroup3Color      String   @default("#3b82f6") // Blue
 
+  linkCode               String?  @unique
+  linkCodeExpires        DateTime?
+
   members            Player[]
   config             AllianceConfig?
   aqSchedules        AQSchedule[]

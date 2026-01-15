@@ -246,3 +246,24 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
     revalidatePath('/');
     return { success: true };
 }
+
+export async function generateAllianceLinkCode() {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
+    if (!actingUser.isOfficer && !actingUser.isBotAdmin) throw new Error("Insufficient permissions");
+
+    // Generate CB-XXXXXX code
+    const code = `CB-${Math.floor(100000 + Math.random() * 900000)}`;
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    await prisma.alliance.update({
+        where: { id: actingUser.allianceId },
+        data: {
+            linkCode: code,
+            linkCodeExpires: expires
+        }
+    });
+
+    revalidatePath('/alliance');
+    return { code, expires };
+}
