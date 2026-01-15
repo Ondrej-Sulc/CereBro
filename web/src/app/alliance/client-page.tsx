@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ColorPicker } from "@/components/alliance/ColorPicker";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -413,16 +414,10 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                                     Battlegroup {num}
                                                                 </Label>
                                                             </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <span className="text-[10px] font-mono text-slate-500 uppercase">
-                                                                    {colors[`bg${num}` as keyof typeof colors]}
-                                                                </span>
-                                                                <Input
-                                                                    id={`bg${num}`}
-                                                                    type="color"
-                                                                    value={colors[`bg${num}` as keyof typeof colors]}
-                                                                    onChange={(e) => setColors({ ...colors, [`bg${num}`]: e.target.value })}
-                                                                    className="h-8 w-12 p-0.5 bg-slate-950 border-slate-800 cursor-pointer"
+                                                            <div className="w-32">
+                                                                <ColorPicker 
+                                                                    color={colors[`bg${num}` as keyof typeof colors]} 
+                                                                    onChange={(newColor) => setColors({ ...colors, [`bg${num}`]: newColor })}
                                                                 />
                                                             </div>
                                                         </div>
