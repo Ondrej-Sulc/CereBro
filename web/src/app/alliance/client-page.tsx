@@ -377,57 +377,61 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                 <TabsTrigger value="discord">Discord Integration</TabsTrigger>
                                             </TabsList>
 
-                                            <TabsContent value="theme" className="space-y-4">
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="bg1" className="text-right">
-                                                            BG 1
-                                                        </Label>
-                                                        <div className="col-span-3 flex items-center gap-3">
-                                                            <Input
-                                                                id="bg1"
-                                                                type="color"
-                                                                value={colors.bg1}
-                                                                onChange={(e) => setColors({ ...colors, bg1: e.target.value })}
-                                                                className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
-                                                            />
-                                                            <span className="text-xs text-slate-500 uppercase">{colors.bg1}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="bg2" className="text-right">
-                                                            BG 2
-                                                        </Label>
-                                                        <div className="col-span-3 flex items-center gap-3">
-                                                            <Input
-                                                                id="bg2"
-                                                                type="color"
-                                                                value={colors.bg2}
-                                                                onChange={(e) => setColors({ ...colors, bg2: e.target.value })}
-                                                                className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
-                                                            />
-                                                            <span className="text-xs text-slate-500 uppercase">{colors.bg2}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-4 items-center gap-4">
-                                                        <Label htmlFor="bg3" className="text-right">
-                                                            BG 3
-                                                        </Label>
-                                                        <div className="col-span-3 flex items-center gap-3">
-                                                            <Input
-                                                                id="bg3"
-                                                                type="color"
-                                                                value={colors.bg3}
-                                                                onChange={(e) => setColors({ ...colors, bg3: e.target.value })}
-                                                                className="h-10 w-20 p-1 bg-slate-950 border-slate-800"
-                                                            />
-                                                            <span className="text-xs text-slate-500 uppercase">{colors.bg3}</span>
-                                                        </div>
+                                            <TabsContent value="theme" className="space-y-6">
+                                                <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 space-y-4">
+                                                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Visual Preview</p>
+                                                    <div className="flex flex-wrap gap-6 justify-center">
+                                                        {[1, 2, 3].map((num) => {
+                                                            const color = colors[`bg${num}` as keyof typeof colors];
+                                                            return (
+                                                                <div key={num} className="flex flex-col items-center gap-2">
+                                                                    <div 
+                                                                        className="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300"
+                                                                        style={{ 
+                                                                            borderColor: color,
+                                                                            backgroundColor: `${color}15`,
+                                                                            boxShadow: `0 0 20px ${color}20`
+                                                                        }}
+                                                                    >
+                                                                        <Shield className="w-6 h-6" style={{ color }} />
+                                                                    </div>
+                                                                    <span className="text-[10px] font-bold text-slate-400">BG {num}</span>
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
+
+                                                <div className="space-y-3">
+                                                    {[1, 2, 3].map((num) => (
+                                                        <div key={num} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-800">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 rounded-md bg-slate-950 flex items-center justify-center">
+                                                                    <Shield className="w-4 h-4" style={{ color: colors[`bg${num}` as keyof typeof colors] }} />
+                                                                </div>
+                                                                <Label htmlFor={`bg${num}`} className="font-bold text-slate-300">
+                                                                    Battlegroup {num}
+                                                                </Label>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-[10px] font-mono text-slate-500 uppercase">
+                                                                    {colors[`bg${num}` as keyof typeof colors]}
+                                                                </span>
+                                                                <Input
+                                                                    id={`bg${num}`}
+                                                                    type="color"
+                                                                    value={colors[`bg${num}` as keyof typeof colors]}
+                                                                    onChange={(e) => setColors({ ...colors, [`bg${num}`]: e.target.value })}
+                                                                    className="h-8 w-12 p-0.5 bg-slate-950 border-slate-800 cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
                                                 <DialogFooter>
-                                                    <Button onClick={handleSaveColors} disabled={isSavingColors}>
-                                                        {isSavingColors ? "Saving..." : "Save Changes"}
+                                                    <Button onClick={handleSaveColors} className="w-full sm:w-auto" disabled={isSavingColors}>
+                                                        {isSavingColors ? "Saving..." : "Save Theme Changes"}
                                                     </Button>
                                                 </DialogFooter>
                                             </TabsContent>
