@@ -84,8 +84,7 @@ export async function handleAllianceLink(interaction: ChatInputCommandInteractio
     const embed = new EmbedBuilder()
       .setColor(0x00FF00)
       .setTitle('Alliance Linked Successfully')
-      .setDescription(`The alliance **${targetAlliance.name}** is now linked to this Discord server.\n\nAutomatic role synchronization has been triggered.`) // Corrected 
- to \n
+      .setDescription(`The alliance **${targetAlliance.name}** is now linked to this Discord server.\n\nAutomatic role synchronization has been triggered.`) 
       .setTimestamp();
 
     await interaction.editReply({ embeds: [embed] });

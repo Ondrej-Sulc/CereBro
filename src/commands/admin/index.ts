@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
 import { handleAdminAutocomplete } from "./autocomplete";
-import { handleChampionAdd, handleChampionUpdateImages, handleChampionUpdateTags, handleChampionSyncSheet } from "./champion/handlers";
+import { handleChampionAdd, handleChampionUpdateImages, handleChampionUpdateTags, handleChampionSyncSheet, handleChampionUploadTagsCsv } from "./champion/handlers";
 import { handleAbilityAdd, handleAbilityRemove, handleAbilityDraft } from "./ability/handlers";
 import { showAttackModal } from "./attack/add";
 import { AbilityLinkType, DuelSource } from "@prisma/client";
@@ -74,6 +74,17 @@ export const command: Command = {
               option
                 .setName("tags_image")
                 .setDescription("URL of the new tags image.")
+                .setRequired(true)
+            )
+        )
+        .addSubcommand((subcommand) =>
+          subcommand
+            .setName("upload-tags")
+            .setDescription("Uploads champion tags from a CSV file.")
+            .addAttachmentOption((option) =>
+              option
+                .setName("csv")
+                .setDescription("The CSV file to upload.")
                 .setRequired(true)
             )
         )
@@ -423,6 +434,8 @@ export const command: Command = {
         await handleChampionUpdateImages(interaction);
       } else if (subcommand === "update_tags") {
         await handleChampionUpdateTags(interaction);
+      } else if (subcommand === "upload-tags") {
+        await handleChampionUploadTagsCsv(interaction);
       } else if (subcommand === "sync-sheet") {
         await handleChampionSyncSheet(interaction);
       }
