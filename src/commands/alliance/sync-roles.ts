@@ -122,24 +122,22 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
             // Mark as processed
             dbMembersMap.delete(member.id);
 
-            // Do not downgrade Bot Admins
+            // Do not remove Bot Admins from the alliance even if they don't have roles
             if (existingAllianceMember.botUser?.isBotAdmin) {
                 continue;
             }
 
             // They are in the DB as part of this alliance, but don't have relevant roles in Discord.
-            // Update their DB state to reflect no BG and no Officer status,
-            // BUT KEEP THEM in the alliance (supports web-managed members).
-            if (existingAllianceMember.battlegroup !== null || existingAllianceMember.isOfficer) {
-                await prisma.player.update({
-                    where: { id: existingAllianceMember.id },
-                    data: {
-                        battlegroup: null,
-                        isOfficer: false,
-                    },
-                });
-                updatedCount++;
-            }
+            // Since this alliance has roles configured, we treat Discord as the source of truth.
+            await prisma.player.update({
+                where: { id: existingAllianceMember.id },
+                data: {
+                    allianceId: null,
+                    battlegroup: null,
+                    isOfficer: false,
+                },
+            });
+            removedCount++;
         }
         // If they don't have roles and aren't in the DB for this alliance, we do nothing.
       }
@@ -153,13 +151,35 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
     }
   }
 
-  // 3. Handle "Leavers" (DISABLED)
-  // We no longer automatically remove players from the alliance if they leave the Discord server.
-  // This allows for hybrid alliances and web-only members to persist.
-  // Removal must now be handled manually via the web UI or bot command.
+  // 3. Handle "Leavers"
+  // Any players remaining in dbMembersMap were not found in the guild member list.
+  // They have left the server, so we remove them from the alliance.
+  for (const [discordId, player] of dbMembersMap) {
+      try {
+          // Do not remove Bot Admins
+          if (player.botUser?.isBotAdmin) {
+              continue;
+          }
+
+          await prisma.player.update({
+              where: { id: player.id },
+              data: {
+                  allianceId: null,
+                  battlegroup: null,
+                  isOfficer: false,
+              },
+          });
+          removedCount++;
+      } catch (error) {
+          loggerService.error(
+            { error, discordId },
+            'Failed to remove leaver from alliance'
+          );
+      }
+  }
   
-  loggerService.info(`Alliance roles synced for guild ${guild.id}. Updated: ${updatedCount}, Created: ${createdCount}.`);
-  return { updated: updatedCount, created: createdCount, removed: 0 };
+  loggerService.info(`Alliance roles synced for guild ${guild.id}. Updated: ${updatedCount}, Created: ${createdCount}, Removed: ${removedCount}.`);
+  return { updated: updatedCount, created: createdCount, removed: removedCount };
 }
 
 
@@ -176,7 +196,7 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
       `Role synchronization complete.\n` +
       `✅ **${result.created}** new profiles created.\n` +
       `🔄 **${result.updated}** existing profiles updated.\n` +
-      `ℹ️ Members are no longer automatically removed if they leave the server or lose roles. Use \`/alliance manage remove\` or the Web UI to manage your roster.`
+      `❌ **${result.removed}** profiles removed (lost roles or left server).`
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
