@@ -17,8 +17,9 @@ The project is structured as a **TypeScript Monorepo** managing two primary serv
 A modern interface built for complex visualization and management tasks.
 
 - **Framework:** Next.js (App Router), React, Tailwind CSS, shadcn/ui.
-- **Authentication:** NextAuth.js (Discord OAuth2) with role-based access control linked to in-game alliance hierarchy.
+- **Authentication:** NextAuth.js (Discord OAuth2) with role-based access control linked to in-game alliance hierarchy. **Now features auto-registration where logging in for the first time automatically creates a BotUser and a default Player profile.**
 - **Key Engineering Features:**
+  - **Alliance Onboarding:** A new web-first flow (`/alliance/onboarding`) allowing users to create their own alliance or search and request to join existing ones without needing a Discord server first.
   - **Interactive War Planner:** A **Canvas-based map (react-konva)** capable of rendering 60fps animations on mobile devices. **Features role-based access control where all alliance members can view live plans, while editing is restricted to Officers and Bot Admins.**
   - **Performance:** Implements **virtualized lists (react-virtuoso)** to handle heavy roster rendering without DOM thrashing. **Utilizes server-side in-memory caching for static data (like champions) to significantly reduce database load and improve response times.**
   - **Real-time Collab:** Optimistic UI updates with polling synchronization to allow multiple officers to plan wars simultaneously.
@@ -87,9 +88,13 @@ The flagship feature of the platform.
 ### 🛡️ Alliance Operations
 
 - **Web Management:** A dedicated dashboard (`/alliance`) for Officers to manage member rosters and battlegroup assignments.
+  - **Recruitment:** Officers can search for unaligned players and invite them directly to the alliance.
+  - **Membership Requests:** A centralized system for managing incoming join requests from players.
+  - **Member Controls:** Easily promote members to Officers, demote them, or remove them from the alliance.
   - **Auto-Sync:** Changes made on the web automatically update Discord roles via a background job queue.
   - **Custom Identity:** Customize Battlegroup colors to theming Web UI maps and Discord plan messages.
   - **Roster Explorer:** A dense, spreadsheet-style view (`/alliance/roster`) for filtering the entire alliance's champions. Now features **Advanced Logic Filters (AND/OR)** for Tags, Abilities, and Immunities. Clicking a champion reveals detailed source information, including specific synergies and ability origins.
+- **Web Onboarding:** A streamlined process for new alliances to get started. Users can create an alliance on the web, which can later be linked to a Discord server if desired.
 - **Role Sync:** Automatically maps Discord Roles to Database permissions (Officer, Battlegroup 1-3).
 - **Channel Configuration:** Customizable Discord channels for specific battlegroup plans and general war video notifications.
 - **AQ Management:** Scheduling and tracking for Alliance Quest timers.

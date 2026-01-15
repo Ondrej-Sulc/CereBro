@@ -443,17 +443,23 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
 
                                     <div className="p-6 h-[400px]">
                                         <TabsContent value="recruit" className="m-0 h-full flex flex-col gap-4">
-                                            <div className="flex gap-2">
-                                                <Input 
-                                                    placeholder="Search by In-Game Name..." 
-                                                    value={playerSearchQuery}
-                                                    onChange={(e) => setPlayerSearchQuery(e.target.value)}
-                                                    onKeyDown={(e) => e.key === 'Enter' && handlePlayerSearch()}
-                                                    className="bg-slate-950 border-slate-800"
-                                                />
-                                                <Button variant="secondary" onClick={handlePlayerSearch} disabled={isSearchingPlayers}>
-                                                    {isSearchingPlayers ? "..." : <Search className="w-4 h-4" />}
-                                                </Button>
+                                            <div className="space-y-3">
+                                                <div className="flex gap-2">
+                                                    <Input 
+                                                        placeholder="Search by In-Game Name..." 
+                                                        value={playerSearchQuery}
+                                                        onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handlePlayerSearch()}
+                                                        className="bg-slate-950 border-slate-800"
+                                                    />
+                                                    <Button variant="secondary" onClick={handlePlayerSearch} disabled={isSearchingPlayers}>
+                                                        {isSearchingPlayers ? "..." : <Search className="w-4 h-4" />}
+                                                    </Button>
+                                                </div>
+                                                <p className="text-[10px] text-slate-500 flex items-center gap-1.5 px-1">
+                                                    <HelpCircle className="w-3 h-3" />
+                                                    Only players not currently in an alliance can be invited.
+                                                </p>
                                             </div>
                                             <ScrollArea className="flex-1 pr-4">
                                                 <div className="space-y-2">
@@ -466,7 +472,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                                 </Avatar>
                                                                 <div>
                                                                     <p className="text-sm font-medium">{player.ingameName}</p>
-                                                                    <p className="text-[10px] text-slate-500">{player.alliance?.name || 'No Alliance'}</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="text-[10px] text-slate-500">{player.alliance?.name || 'No Alliance'}</p>
+                                                                        {player.allianceId && (
+                                                                            <Badge variant="outline" className="text-[8px] h-3 px-1 uppercase border-slate-800 text-slate-600">In Alliance</Badge>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <Button 
@@ -487,49 +498,56 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                         <TabsContent value="requests" className="m-0 h-full">
                                             <ScrollArea className="h-full pr-4">
                                                 <div className="space-y-3">
-                                                    {alliance.membershipRequests?.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST').length === 0 && (
-                                                        <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-3 py-12">
-                                                            <Mail className="w-12 h-12 opacity-10" />
-                                                            <p>No pending join requests</p>
-                                                        </div>
-                                                    )}
-                                                    {alliance.membershipRequests?.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST').map((req: MembershipRequest) => (
-                                                        <div key={req.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-800 bg-slate-950/50">
-                                                            <div className="flex items-center gap-3">
-                                                                <Avatar>
-                                                                    <AvatarImage src={req.player.avatar || undefined} />
-                                                                    <AvatarFallback>{req.player.ingameName[0]}</AvatarFallback>
-                                                                </Avatar>
-                                                                <div>
-                                                                    <p className="font-bold">{req.player.ingameName}</p>
-                                                                    <p className="text-xs text-slate-400 flex items-center gap-1">
-                                                                        <Clock className="w-3 h-3" />
-                                                                        {new Date(req.createdAt).toLocaleDateString()}
-                                                                    </p>
+                                                    {(() => {
+                                                        const pendingRequests = alliance.membershipRequests?.filter((r: MembershipRequest) => r.status === 'PENDING' && r.type === 'REQUEST') || [];
+                                                        
+                                                        if (pendingRequests.length === 0) {
+                                                            return (
+                                                                <div className="h-full flex flex-col items-center justify-center text-slate-500 gap-3 py-20">
+                                                                    <Mail className="w-12 h-12 opacity-10" />
+                                                                    <p>No pending join requests</p>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        return pendingRequests.map((req: MembershipRequest) => (
+                                                            <div key={req.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-800 bg-slate-950/50">
+                                                                <div className="flex items-center gap-3">
+                                                                    <Avatar>
+                                                                        <AvatarImage src={req.player.avatar || undefined} />
+                                                                        <AvatarFallback>{req.player.ingameName[0]}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <div>
+                                                                        <p className="font-bold">{req.player.ingameName}</p>
+                                                                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                                                                            <Clock className="w-3 h-3" />
+                                                                            {new Date(req.createdAt).toLocaleDateString()}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <Button 
+                                                                        size="sm" 
+                                                                        variant="secondary"
+                                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 h-8"
+                                                                        onClick={() => handleRespondToRequest(req.id, 'ACCEPTED')}
+                                                                        disabled={loadingId === req.id}
+                                                                    >
+                                                                        Accept
+                                                                    </Button>
+                                                                    <Button 
+                                                                        size="sm" 
+                                                                        variant="ghost" 
+                                                                        className="text-slate-400 hover:text-white h-8"
+                                                                        onClick={() => handleRespondToRequest(req.id, 'REJECTED')}
+                                                                        disabled={loadingId === req.id}
+                                                                    >
+                                                                        Decline
+                                                                    </Button>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex gap-2">
-                                                                <Button 
-                                                                    size="sm" 
-                                                                    variant="secondary"
-                                                                    className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 h-8"
-                                                                    onClick={() => handleRespondToRequest(req.id, 'ACCEPTED')}
-                                                                    disabled={loadingId === req.id}
-                                                                >
-                                                                    Accept
-                                                                </Button>
-                                                                <Button 
-                                                                    size="sm" 
-                                                                    variant="ghost" 
-                                                                    className="text-slate-400 hover:text-white h-8"
-                                                                    onClick={() => handleRespondToRequest(req.id, 'REJECTED')}
-                                                                    disabled={loadingId === req.id}
-                                                                >
-                                                                    Decline
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        ));
+                                                    })()}
                                                 </div>
                                             </ScrollArea>
                                         </TabsContent>
