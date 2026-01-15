@@ -51,6 +51,11 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
   const [search, setSearch] = React.useState("");
   const [showOnlyActive, setShowOnlyActive] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   React.useEffect(() => {
     if (!open) {
@@ -224,6 +229,9 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                   ),
                 }}
               >
+                {!mounted ? (
+                  <div className="p-4 text-center text-xs text-muted-foreground">Loading...</div>
+                ) : (
                 <GroupedVirtuoso
                   style={{
                     height: Math.min(
@@ -277,6 +285,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                     );
                   }}
                 />
+                )}
               </div>
             </CommandGroup>
           </CommandList>

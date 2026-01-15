@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingRoot: path.join(__dirname, '../../'),
   images: {
+    qualities: [10, 75, 90],
     remotePatterns: [
       {
         protocol: 'https',

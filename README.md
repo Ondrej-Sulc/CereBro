@@ -187,13 +187,15 @@ Documentation for individual commands is auto-generated from the source code.
    ```
 1. Run locally
 
-   ```bash # start DB + services via Docker Compose
+   ```bash
+   # start DB + services via Docker Compose
    docker-compose up --build
+   ```
 
-    # or run just web (from /web) and bot (from /src) during development
-
-    pnpm --filter web dev
-    pnpm --filter @cerebro/bot dev
+   ```bash
+   # Or run just the web and bot during development
+   pnpm --filter web dev
+   pnpm --filter @cerebro/bot dev
    ```
 
 _Built with ❤️ for the MCOC Community._
