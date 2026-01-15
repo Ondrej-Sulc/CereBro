@@ -29,7 +29,7 @@ export default async function Home() {
         <section className="pt-12 lg:pt-16 pb-20 lg:pb-32 relative">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
-            <div className="flex flex-col justify-center order-2 lg:order-1 relative z-10">
+            <div className="flex flex-col justify-center order-1 lg:order-1 relative z-10">
               <span className="inline-flex items-center gap-2 text-xs bg-slate-900/50 border border-slate-700/50 rounded-full px-3 py-1 w-fit mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 Ready for Battle
@@ -76,7 +76,7 @@ export default async function Home() {
             </div>
 
             {/* Hero Visual */}
-            <div className="relative order-1 lg:order-2 flex items-center justify-center min-h-[400px]">
+            <div className="relative order-2 lg:order-2 flex items-center justify-center min-h-[400px]">
                <HeroVisual />
             </div>
           </div>
@@ -105,7 +105,7 @@ export default async function Home() {
                 <div className="space-y-24">
                     {/* Feature 1: Map */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                        <ScrollReveal direction="right" className="order-1 lg:order-1">
                             <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
                                 <Map className="w-6 h-6" />
                             </div>
@@ -114,7 +114,7 @@ export default async function Home() {
                                 Plan your Attacks and Defense with player&apos;s rosters right at your fingertips, assign nodes, see the whole board. It&apos;s the easiest way to plan.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                             <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={['/war-map.png']}
@@ -128,7 +128,7 @@ export default async function Home() {
 
                     {/* Feature 2: Archive (Swapped) */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="left" className="order-2 lg:order-2">
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
                             <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
                                 <Video className="w-6 h-6" />
                             </div>
@@ -137,7 +137,7 @@ export default async function Home() {
                                 Upload your fights and tag them. Search the archive later to find the best counters for any defender.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1 flex justify-center">
                              <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={['/war-archive.png']}
@@ -151,7 +151,7 @@ export default async function Home() {
 
                     {/* Feature 3: Smart Roster & Prestige */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                        <ScrollReveal direction="right" className="order-1 lg:order-1">
                             <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
                                 <Award className="w-6 h-6" />
                             </div>
@@ -160,7 +160,7 @@ export default async function Home() {
                                 Visualize your roster with advanced filtering. Simulate prestige rank-ups and optimize your signature stone usage with our intelligent budget calculator.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                              <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={['/web-roster.png']}
@@ -174,7 +174,7 @@ export default async function Home() {
 
                     {/* Feature 4: Alliance Roster Overview */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="left" className="order-2 lg:order-2">
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
                             <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
                                 <Users className="w-6 h-6" />
                             </div>
@@ -183,7 +183,7 @@ export default async function Home() {
                                 Officers get a bird&apos;s-eye view of the entire alliance. Filter champions by Battlegroup, Class, or Rank to find the perfect defenders or counters for war.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1 flex justify-center">
                              <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={['/web-alliance-roster.png']}
@@ -221,7 +221,7 @@ export default async function Home() {
                 <div className="space-y-24">
                      {/* Feature 1: Champion Intel */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                        <ScrollReveal direction="right" className="order-1 lg:order-1">
                             <div className="w-12 h-12 rounded-xl bg-indigo-900/50 border border-indigo-800 flex items-center justify-center text-indigo-400 mb-6">
                                 <Search className="w-6 h-6" />
                             </div>
@@ -230,7 +230,7 @@ export default async function Home() {
                                 Get abilities, immunities, and duel targets instantly. Powerful search tools let you query the game glossary or find the perfect counter in your roster.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                             <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={[
@@ -249,7 +249,7 @@ export default async function Home() {
 
                     {/* Feature 2: Roster & Prestige (Swapped) */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="left" className="order-2 lg:order-2">
+                        <ScrollReveal direction="left" className="order-1 lg:order-2">
                             <div className="w-12 h-12 rounded-xl bg-indigo-900/50 border border-indigo-800 flex items-center justify-center text-indigo-400 mb-6">
                                 <Award className="w-6 h-6" />
                             </div>
@@ -258,7 +258,7 @@ export default async function Home() {
                                 Update your roster in seconds. Just upload screenshots, and our image processing technology adds your champions automatically.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="right" className="order-1 lg:order-1 flex justify-center">
+                        <ScrollReveal direction="right" className="order-2 lg:order-1 flex justify-center">
                             <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={[
@@ -276,7 +276,7 @@ export default async function Home() {
 
                     {/* Feature 3: War & Quest Support */}
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <ScrollReveal direction="right" className="order-2 lg:order-1">
+                        <ScrollReveal direction="right" className="order-1 lg:order-1">
                             <div className="w-12 h-12 rounded-xl bg-indigo-900/50 border border-indigo-800 flex items-center justify-center text-indigo-400 mb-6">
                                 <Swords className="w-6 h-6" />
                             </div>
@@ -285,7 +285,7 @@ export default async function Home() {
                                 Receive your War assignments directly in your DMs. Track Alliance Quest movement and stay coordinated with smart alerts.
                             </p>
                         </ScrollReveal>
-                        <ScrollReveal direction="left" className="order-1 lg:order-2 flex justify-center">
+                        <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                             <div className="w-full max-w-[600px]">
                                 <InteractiveScreenshotDeck 
                                     images={[
