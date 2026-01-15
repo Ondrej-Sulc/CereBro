@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.9.x"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.22.0
+
+      - name: Resolve pnpm store path
+        id: pnpm-store-path
+        run: |
+          STORE_PATH=$(pnpm store path)
+          echo "pnpm_store_path=$STORE_PATH" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store-path.outputs.pnpm_store_path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm run prisma:generate
+
+      - name: Build Bot (src)
+        run: pnpm run build-only
+
+      - name: Build Web (web)
+        run: pnpm --filter ./web... run build
+
+      - name: Run tests (src)
+        run: pnpm -w -r test
+
+      # TODO Figure out web test lib and add web tests
+      # - name: Run tests (web)
+      #   run: pnpm -w -r test
