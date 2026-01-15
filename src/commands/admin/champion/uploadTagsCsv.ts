@@ -159,7 +159,22 @@ export async function handleChampionUploadTagsCsv(interaction: CommandInteractio
       updatedCount++;
     }
 
+    // 4. Cleanup Unused Tags
+    // We only delete tags that are not attached to any Champion AND not used in any Tactic or Plan.
+    const { count: deletedTagsCount } = await prisma.tag.deleteMany({
+      where: {
+        champions: { none: {} },
+        attackTactics: { none: {} },
+        defenseTactics: { none: {} },
+        highlightedInPlans: { none: {} },
+      },
+    });
+    logger.info(`Deleted ${deletedTagsCount} unused tags.`);
+
     let summary = `Successfully updated tags for ${updatedCount} champions.`;
+    if (deletedTagsCount > 0) {
+      summary += `\nCleaned up ${deletedTagsCount} unused tags.`;
+    }
     if (notFoundCount > 0) {
       summary += `\nWarning: ${notFoundCount} champions from CSV were not found in the database.`;
       if (notFoundNames.length <= 5) {
