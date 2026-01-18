@@ -102,6 +102,20 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     }
   }, [props.warId, toast]);
 
+  const handleAddExtraWithToast = useCallback((playerId: string, championId: number, starLevel?: number) => {
+      handleAddExtra(playerId, championId);
+      
+      const champ = props.champions.find(c => c.id === championId);
+      const player = props.players.find(p => p.id === playerId);
+      
+      if (champ && player) {
+           toast({
+              title: "Champion Added",
+              description: `Added ${champ.name} to ${player.ingameName}'s extra assignments.`,
+          });
+      }
+  }, [handleAddExtra, props.champions, props.players, toast]);
+
   const isRosterVisible = isDesktop ? isPlayerPanelOpen : rightPanelState === 'roster';
 
   useEffect(() => {
@@ -148,7 +162,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           players={props.players}
           currentFights={currentFights}
           extraChampions={extraChampions} 
-          onAddExtra={handleAddExtra} 
+          onAddExtra={handleAddExtraWithToast} 
           onRemoveExtra={handleRemoveExtra} 
           champions={props.champions} 
           highlightedPlayerId={selectedPlayerId}
@@ -184,7 +198,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               warBans={warBans}
               onAddWarBan={handleAddWarBan}
               onRemoveWarBan={handleRemoveWarBan}
-              onAddExtra={handleAddExtra}
+              onAddExtra={handleAddExtraWithToast}
               onDistribute={handleDistribute}
               assignedChampions={currentFights
                   .filter(f => f.player?.id && f.attackerId)
@@ -239,7 +253,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onSave={handleSaveFight}
             seasonBans={seasonBans}
             warBans={warBans}
-            onAddExtra={handleAddExtra}
+            onAddExtra={handleAddExtraWithToast}
             currentFights={currentFights}
             extraChampions={extraChampions}
             isReadOnly={isReadOnly}
@@ -270,7 +284,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onSelectPlayer={setSelectedPlayerId}
             currentBattlegroup={currentBattlegroup}
             extraChampions={extraChampions}
-            onAddExtra={handleAddExtra}
+            onAddExtra={handleAddExtraWithToast}
             onRemoveExtra={handleRemoveExtra}
             isReadOnly={isReadOnly}
           />

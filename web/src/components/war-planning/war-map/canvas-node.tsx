@@ -158,6 +158,7 @@ interface CanvasNodeProps {
     showHistory: boolean;
     history: HistoricalFightStat[] | undefined | null;
     activeTactic: WarTactic | null | undefined;
+    activeTag?: { name: string } | null; // Added activeTag prop
     highlightedPlayerId: string | null;
     accentColor?: string;
 }
@@ -170,6 +171,7 @@ export const CanvasNode = memo(function CanvasNode({
     showHistory,
     history,
     activeTactic,
+    activeTag, // Destructure activeTag
     highlightedPlayerId,
     accentColor
 }: CanvasNodeProps) {
@@ -221,7 +223,12 @@ export const CanvasNode = memo(function CanvasNode({
     const defenderChampionForTactic = defender as ChampionWithTagsForTactic | undefined;
 
     const isAttackerTactic = activeTacticWithTags?.attackTag && attackerChampionForTactic?.tags?.some((t: { name: string }) => t.name === activeTacticWithTags.attackTag!.name);
-    const isDefenderTactic = activeTacticWithTags?.defenseTag && defenderChampionForTactic?.tags?.some((t: { name: string }) => t.name === activeTacticWithTags.defenseTag!.name);
+    
+    // Updated Logic for Defender Tactic: Check either WarTactic.defenseTag OR activeTag (generic)
+    const isDefenderTactic = (
+        (activeTacticWithTags?.defenseTag && defenderChampionForTactic?.tags?.some((t: { name: string }) => t.name === activeTacticWithTags.defenseTag!.name)) ||
+        (activeTag && defenderChampionForTactic?.tags?.some((t: { name: string }) => t.name === activeTag.name))
+    );
     
     // Player Logic
     const isPlayerHighlighted = player?.id && player.id === highlightedPlayerId;

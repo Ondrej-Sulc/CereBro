@@ -22,6 +22,7 @@ interface WarTabsProps {
       minSeason: number | undefined;
   };
   activeTactic: WarTactic | null;
+  activeTag?: { name: string } | null; // Added activeTag prop
   onNodeClick: (nodeId: number, fight?: WarPlacement) => void;
   onToggleFullscreen: () => void;
   rightPanelState: RightPanelState;
@@ -44,6 +45,7 @@ export const WarTabs = memo(function WarTabs({
   selectedNodeId,
   historyFilters,
   activeTactic,
+  activeTag, // Destructure activeTag
   onNodeClick,
   onToggleFullscreen,
   rightPanelState,
@@ -102,6 +104,7 @@ export const WarTabs = memo(function WarTabs({
                     historyFilters={historyFilters}
                     fights={currentFights} 
                     activeTactic={activeTactic}
+                    activeTag={activeTag} // Pass activeTag
                     isFullscreen={isFullscreen}
                     onToggleFullscreen={onToggleFullscreen}
                     highlightedPlayerId={highlightedPlayerId}

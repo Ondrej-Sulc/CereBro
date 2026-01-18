@@ -29,6 +29,7 @@ interface WarMapProps {
   };
   fights: WarPlacement[];
   activeTactic?: WarTactic | null;
+  activeTag?: { name: string } | null; // Added activeTag
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
   highlightedPlayerId: string | null;
@@ -45,6 +46,7 @@ const WarMap = memo(function WarMap({
   historyFilters,
   fights,
   activeTactic,
+  activeTag, // Destructure activeTag
   isFullscreen,
   onToggleFullscreen,
   highlightedPlayerId,
@@ -485,6 +487,7 @@ const WarMap = memo(function WarMap({
                   showHistory={showHistory}
                   history={history}
                   activeTactic={activeTactic}
+                  activeTag={activeTag} // Pass activeTag to CanvasNode
                   highlightedPlayerId={highlightedPlayerId}
                   accentColor={accentColor}
                 />

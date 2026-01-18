@@ -136,10 +136,6 @@ export default function PlanningToolsPanel({
   const handleAddChampion = (item: RosterWithChampion) => {
       if (onAddExtra && selectedPlayerId) {
           onAddExtra(selectedPlayerId, item.champion.id, item.stars);
-          toast({
-              title: "Champion Added",
-              description: `Added ${item.champion.name} to extra assignments.`,
-          });
       }
   };
 
@@ -151,10 +147,6 @@ export default function PlanningToolsPanel({
     
     if (onAddExtra && champion) {
         onAddExtra(item.player.id, champion.id, item.stars);
-        toast({
-            title: "Champion Added",
-            description: `Added ${champion.name} to ${item.player.ingameName}'s extra assignments.`,
-        });
     }
   };
 

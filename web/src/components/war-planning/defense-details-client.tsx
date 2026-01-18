@@ -56,7 +56,7 @@ function findTargetNode(
     }
   }
   
-  // Priority B: First empty node
+  // Priority B: First empty node (No Player, No Defender)
   const empty = sorted.find(p => !p.playerId && !p.defenderId);
   if (empty) {
     return {
@@ -65,8 +65,20 @@ function findTargetNode(
       placementId: empty.id
     };
   }
+
+  // Priority C: Steal empty slot from another player (Has Player, No Defender)
+  // This handles the case where all nodes have a player assigned (e.g., initialized plan),
+  // but some players have > 5 nodes assigned with no defenders on them.
+  const stealable = sorted.find(p => p.playerId && !p.defenderId);
+  if (stealable) {
+      return {
+          nodeId: stealable.nodeId,
+          nodeNumber: stealable.node.nodeNumber,
+          placementId: stealable.id
+      };
+  }
   
-  // Priority C: Unoccupied node from map (Fallback for empty/incomplete placements)
+  // Priority D: Unoccupied node from map (Fallback for empty/incomplete placements)
   if (sorted.length < nodesMap.size) {
     const occupiedNodeNumbers = new Set(sorted.map(p => p.node.nodeNumber));
     const freeNodeNumber = Array.from(nodesMap.keys())
@@ -142,6 +154,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
+
+  const handleViewModeChange = (mode: 'roster' | 'map') => {
+      setViewMode(mode);
+      handleEditorClose(); // Clear selection when switching views
+  };
 
   const getButtonStyle = (bgId: number, isActive: boolean) => {
       const color = props.bgColors?.[bgId];
@@ -477,7 +494,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     <Button
                         variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
                         size="sm"
-                        onClick={() => setViewMode('roster')}
+                        onClick={() => handleViewModeChange('roster')}
                         className="h-7 px-2 text-xs"
                     >
                         <LayoutGrid className="h-3.5 w-3.5" />
@@ -485,7 +502,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     <Button
                         variant={viewMode === 'map' ? 'secondary' : 'ghost'}
                         size="sm"
-                        onClick={() => setViewMode('map')}
+                        onClick={() => handleViewModeChange('map')}
                         className="h-7 px-2 text-xs"
                     >
                         <MapIcon className="h-3.5 w-3.5" />
@@ -539,7 +556,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     <Button
                         variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
                         size="sm"
-                        onClick={() => setViewMode('roster')}
+                        onClick={() => handleViewModeChange('roster')}
                         className="h-7 px-2.5 gap-2 text-xs"
                         title="Roster View"
                     >
@@ -549,7 +566,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     <Button
                         variant={viewMode === 'map' ? 'secondary' : 'ghost'}
                         size="sm"
-                        onClick={() => setViewMode('map')}
+                        onClick={() => handleViewModeChange('map')}
                         className="h-7 px-2.5 gap-2 text-xs"
                         title="Map View"
                     >
@@ -594,11 +611,9 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                   mapType={props.plan.mapType}
                   selectedNodeId={selectedNodeId}
                   historyFilters={{ onlyCurrentTier: false, onlyAlliance: false, minSeason: undefined }}
-                                    // activeTactic={activeTactic || null} // WarTabs expects Tactic object. We have Tag. 
-                                    // WarTabs highlighting logic needs update if we want map highlighting.
-                                    // For now, pass null or update WarTabs later.
-                                    // TODO: Align WarTabs/DefenseEditor to support Tag-based highlighting or map Tag to Tactic type.
-                                    activeTactic={null}                    onNodeClick={handleNodeClick}
+                  activeTactic={null}
+                  activeTag={activeTag || null} // Pass activeTag
+                  onNodeClick={handleNodeClick}
                   onToggleFullscreen={handleToggleFullscreen}
                   rightPanelState={rightPanelState}
                   highlightedPlayerId={selectedPlayerId}
