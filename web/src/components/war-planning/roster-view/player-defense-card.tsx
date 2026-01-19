@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Shield } from "lucide-react";
+import { Plus, X, Shield, AlertTriangle } from "lucide-react";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -92,6 +92,7 @@ interface PlayerDefenseCardProps {
   activeTag?: Tag | null;
   onMove?: (placementId: string, targetNodeNumber: number) => void;
   isReadOnly?: boolean;
+  duplicateDefenders?: Set<number>;
 }
 
 export const PlayerDefenseCard = ({
@@ -105,7 +106,8 @@ export const PlayerDefenseCard = ({
   onSelect,
   activeTag,
   onMove,
-  isReadOnly = false
+  isReadOnly = false,
+  duplicateDefenders
 }: PlayerDefenseCardProps) => {
   const { getPlayerColor } = usePlayerColor();
   const playerColor = getPlayerColor(player.id);
@@ -208,19 +210,16 @@ export const PlayerDefenseCard = ({
                     const champ = placement.defender!;
                     const colors = getChampionClassColors(champ.class);
                     const hasTactic = Boolean(activeTag && champ.tags.some((t) => t.name === activeTag.name));
-                    
-                    // Find Roster Entry
-                    const rosterEntry = player.roster.find(r => 
-                        r.championId === champ.id && 
-                        (!placement.starLevel || r.stars === placement.starLevel)
-                    );
+                    const isDuplicate = duplicateDefenders?.has(champ.id);
 
                     return (
                         <div 
                             key={placement.id} 
                             className={cn(
                                 "group flex items-center gap-2 p-1.5 rounded border transition-colors",
-                                hasTactic ? "bg-teal-950/20 border-teal-500/40" : "bg-slate-950 border-slate-800 hover:border-slate-700"
+                                hasTactic ? "bg-teal-950/20 border-teal-500/40" : 
+                                isDuplicate ? "bg-orange-950/10 border-orange-500/40" :
+                                "bg-slate-950 border-slate-800 hover:border-slate-700"
                             )}
                         >
                             {/* Node Badge (Interactive) */}
@@ -262,6 +261,7 @@ export const PlayerDefenseCard = ({
                                             {champ.name}
                                         </div>
                                         {hasTactic && <Shield className="h-3 w-3 text-teal-400 flex-shrink-0" />}
+                                        {isDuplicate && <AlertTriangle className="h-3 w-3 text-orange-400 flex-shrink-0" />}
                                     </div>
                                     <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                                         {placement.starLevel && (

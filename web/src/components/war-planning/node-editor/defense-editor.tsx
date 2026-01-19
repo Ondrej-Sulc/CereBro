@@ -291,12 +291,14 @@ export default function DefenseEditor({
 
                   {/* Duplicate Warning */}
                   {duplicateWarning && (
-                      <Alert variant="destructive" className="py-2 px-3">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle className="text-xs font-bold ml-2">Duplicate Defender</AlertTitle>
-                          <AlertDescription className="text-xs ml-2">
-                              Already placed on Node(s): {duplicateWarning.join(", ")}
-                          </AlertDescription>
+                      <Alert variant="destructive" className="py-2 px-3 [&>svg]:relative [&>svg]:left-auto [&>svg]:top-auto flex gap-2 items-start">
+                          <AlertTriangle className="h-4 w-4 mt-0.5" />
+                          <div>
+                              <AlertTitle className="text-xs font-bold mb-0.5">Duplicate Defender</AlertTitle>
+                              <AlertDescription className="text-xs">
+                                  Already placed on Node(s): {duplicateWarning.join(", ")}
+                              </AlertDescription>
+                          </div>
                       </Alert>
                   )}
               </div>
