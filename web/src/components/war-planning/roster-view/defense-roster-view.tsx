@@ -56,6 +56,23 @@ export const DefenseRosterView = ({
       return map;
   }, [placements, currentBattlegroup]);
 
+  // Calculate duplicate defenders
+  const duplicateDefenders = useMemo(() => {
+    const counts = new Map<number, number>();
+    placements
+        .filter(p => p.battlegroup === currentBattlegroup && p.defenderId)
+        .forEach(p => {
+            const id = p.defenderId!;
+            counts.set(id, (counts.get(id) || 0) + 1);
+        });
+
+    const duplicates = new Set<number>();
+    counts.forEach((count, id) => {
+        if (count > 1) duplicates.add(id);
+    });
+    return duplicates;
+  }, [placements, currentBattlegroup]);
+
   return (
     <ScrollArea className="h-full bg-slate-950">
         <div className="p-4">
@@ -88,6 +105,7 @@ export const DefenseRosterView = ({
                             activeTag={activeTag}
                             onMove={onMove}
                             isReadOnly={isReadOnly}
+                            duplicateDefenders={duplicateDefenders}
                         />
                     ))}
                 </div>
