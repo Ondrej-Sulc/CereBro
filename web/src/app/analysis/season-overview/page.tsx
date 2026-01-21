@@ -14,6 +14,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import logger from "@/lib/logger";
 import { SeasonOverviewView, PlayerStats } from "./season-overview-view";
+import { SeasonDeepDive, DetailedPlacementStat } from "./season-deep-dive";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -185,6 +186,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
     const defenderStats = new Map<number, ChampionStat>();
     const attackerStats = new Map<number, ChampionStat>();
     const nodeStats = new Map<number, NodeStat>();
+    const placementStats: DetailedPlacementStat[] = [];
   
     const totalWars = wars.length;
     const mapTypes = new Set<string>();
@@ -196,6 +198,19 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         
         const bg = fight.battlegroup;
         if (!bg || bg < 1 || bg > 3) continue;
+
+        // Collect Deep Dive Stats
+        if (fight.defender && fight.node) {
+            placementStats.push({
+                nodeNumber: fight.node.nodeNumber,
+                defenderId: fight.defender.id,
+                defenderName: fight.defender.name,
+                defenderClass: fight.defender.class,
+                defenderImages: fight.defender.images as unknown as ChampionImages,
+                fights: 1,
+                deaths: fight.death
+            });
+        }
   
         // Player Stats
         const pid = fight.player.id;
@@ -555,6 +570,9 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                 </Card>
             </div>
         </div>
+
+        {/* Deep Dive Analysis */}
+        <SeasonDeepDive placementStats={placementStats} />
       </div>
     );
   }
