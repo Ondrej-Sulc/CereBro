@@ -432,8 +432,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                             <tr>
                                                 <th className="px-6 py-4">Defender</th>
                                                 <th className="px-6 py-4 text-center">Fights</th>
-                                                <th className="px-6 py-4 text-center">Lethality</th>
-                                                <th className="px-6 py-4 text-right">Avg Deaths</th>
+                                                <th className="px-6 py-4 text-right">Lethality</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-800/40 text-sm">
@@ -457,8 +456,8 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex flex-col gap-1.5 min-w-[80px] sm:min-w-[120px]">
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex flex-col gap-1.5 min-w-[80px] sm:min-w-[120px] ml-auto">
                                                                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                                                                     <span>{stat.deaths} DEATHS</span>
                                                                     <span>{Math.min(100, lethality * 100).toFixed(0)}%</span>
@@ -469,11 +468,6 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                     indicatorStyle={{ backgroundColor: lethality > 0.5 ? '#ef4444' : '#f59e0b' }} 
                                                                 />
                                                             </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <span className={cn("font-mono font-bold px-2 py-1 rounded-md text-xs", stat.deaths > 0 ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20")}>
-                                                                {lethality.toFixed(2)}
-                                                            </span>
                                                         </td>
                                                     </tr>
                                                 );
@@ -551,8 +545,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                         <tr>
                                                             <th className="px-8 py-4">Node</th>
                                                             <th className="px-8 py-4 text-center">Fights</th>
-                                                            <th className="px-8 py-4 text-center">Threat Level</th>
-                                                            <th className="px-8 py-4 text-right">Avg Deaths</th>
+                                                            <th className="px-8 py-4 text-right">Threat Level</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-800/40 text-sm">
@@ -564,19 +557,14 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-5 text-center font-mono text-slate-400 font-bold">{stat.fights}</td>
-                                                                <td className="px-8 py-5">
-                                                                    <div className="flex flex-col gap-1.5 w-full max-w-[140px] mx-auto">
+                                                                <td className="px-8 py-5 text-right">
+                                                                    <div className="flex flex-col gap-1.5 w-full max-w-[140px] ml-auto">
                                                                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                                                                             <span className="flex items-center gap-1"><Skull className="w-2.5 h-2.5" /> {stat.deaths}</span>
                                                                             <span>{(stat.deaths / (stat.fights || 1) * 100).toFixed(0)}%</span>
                                                                         </div>
                                                                         <Progress value={(stat.deaths / (stat.fights || 1)) * 100} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: stat.deaths > 0 ? '#ef4444' : '#334155' }} />
                                                                     </div>
-                                                                </td>
-                                                                <td className="px-8 py-5 text-right">
-                                                                    <Badge variant="outline" className={cn("font-mono font-bold border-none bg-slate-900", (stat.deaths / (stat.fights || 1)) > 0.5 ? "text-red-400" : "text-slate-500")}>
-                                                                        {(stat.deaths / (stat.fights || 1)).toFixed(2)}
-                                                                    </Badge>
                                                                 </td>
                                                             </tr>
                                                         ))}
