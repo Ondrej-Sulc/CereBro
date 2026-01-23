@@ -466,7 +466,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                 <Progress 
                                                                     value={Math.min(100, lethality * 100)} 
                                                                     className="h-1.5 bg-slate-800"
-                                                                    style={{ ["--primary" as any]: lethality > 0.5 ? '#ef4444' : '#f59e0b' }} 
+                                                                    indicatorStyle={{ backgroundColor: lethality > 0.5 ? '#ef4444' : '#f59e0b' }} 
                                                                 />
                                                             </div>
                                                         </td>
@@ -539,7 +539,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                 <span className="text-[9px] text-slate-500 uppercase font-black">Lethality</span>
                                                                 <span className="text-[10px] font-mono font-bold text-amber-400">{(avgLethality * 10).toFixed(1)}/10</span>
                                                             </div>
-                                                            <Progress value={Math.min(100, avgLethality * 100)} className="h-1 bg-slate-800" style={{ ["--primary" as any]: classColors.color }} />
+                                                            <Progress value={Math.min(100, avgLethality * 100)} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: classColors.color }} />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -570,7 +570,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                             <span className="flex items-center gap-1"><Skull className="w-2.5 h-2.5" /> {stat.deaths}</span>
                                                                             <span>{(stat.deaths / (stat.fights || 1) * 100).toFixed(0)}%</span>
                                                                         </div>
-                                                                        <Progress value={(stat.deaths / (stat.fights || 1)) * 100} className="h-1 bg-slate-800" style={{ ["--primary" as any]: stat.deaths > 0 ? '#ef4444' : '#334155' }} />
+                                                                        <Progress value={(stat.deaths / (stat.fights || 1)) * 100} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: stat.deaths > 0 ? '#ef4444' : '#334155' }} />
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-5 text-right">
@@ -655,7 +655,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                             <span className="text-[9px] text-slate-500 uppercase font-black">Efficiency</span>
                                                             <span className="text-[10px] font-mono font-bold text-emerald-400">{globalSoloRate.toFixed(1)}%</span>
                                                         </div>
-                                                        <Progress value={globalSoloRate} className="h-1 bg-slate-800" style={{ ["--primary" as any]: globalSoloRate >= 90 ? '#10b981' : '#f59e0b' }} />
+                                                        <Progress value={globalSoloRate} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: globalSoloRate >= 90 ? '#10b981' : '#f59e0b' }} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -692,7 +692,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                 <td className="px-8 py-4">
                                                                     <div className="flex flex-col gap-1.5 w-full max-w-[80px] sm:max-w-[120px] mx-auto">
                                                                         <span className={cn("text-[10px] font-black text-center mb-0.5", soloRate >= 90 ? "text-emerald-400" : "text-amber-400")}>{soloRate.toFixed(0)}% SOLO</span>
-                                                                        <Progress value={soloRate} className="h-1 bg-slate-800" style={{ ["--primary" as any]: soloRate >= 90 ? '#10b981' : '#f59e0b' }} />
+                                                                        <Progress value={soloRate} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: soloRate >= 90 ? '#10b981' : '#f59e0b' }} />
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-4 text-right">
@@ -790,7 +790,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                                 <span className={attColors.text}>{soloRate.toFixed(0)}% SOLO</span>
                                                                                 <Trophy className={cn("w-3 h-3", soloRate >= 90 ? "text-yellow-500" : "text-slate-600")} />
                                                                             </div>
-                                                                            <Progress value={soloRate} className="h-1 bg-slate-800" style={{ ["--primary" as any]: attColors.color }} />
+                                                                            <Progress value={soloRate} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: attColors.color }} />
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-8 py-4 text-right font-mono font-bold">
