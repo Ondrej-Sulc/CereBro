@@ -9,11 +9,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
 interface WarFightDetail {
   defenderName: string;
@@ -61,9 +62,11 @@ export function SeasonOverviewView({
   const [expandedWars, setExpandedWars] = useState<Record<string, boolean>>({});
 
   const toggleWar = (warId: string) => {
+    // Current state is either false (collapsed), true (expanded), or undefined (meaning default expanded)
+    const isCurrentlyExpanded = expandedWars[warId] ?? true;
     setExpandedWars(prev => ({
       ...prev,
-      [warId]: !prev[warId]
+      [warId]: !isCurrentlyExpanded
     }));
   };
 
@@ -328,7 +331,7 @@ export function SeasonOverviewView({
                 {selectedPlayer.warStats
                     .sort((a, b) => b.warNumber - a.warNumber)
                     .map((war) => {
-                        const isExpanded = expandedWars[war.warId] ?? false;
+                        const isExpanded = expandedWars[war.warId] ?? true;
                         return (
                             <Card
                                 key={war.warId}
@@ -437,13 +440,14 @@ export function SeasonOverviewView({
             )}
           </div>
           
-          <div className="p-4 border-t border-slate-800/60 bg-slate-950 relative z-20 shrink-0 flex justify-end">
-            <button 
-                onClick={() => setSelectedPlayer(null)}
-                className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-6 py-2 rounded-lg text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-all hover:text-white"
-            >
-                Close Dossier
-            </button>
+          <div className="p-4 border-t border-slate-800/60 bg-slate-950 relative z-50 shrink-0 flex justify-end">
+            <DialogClose asChild>
+                <button 
+                    className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-6 py-2 rounded-lg text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-all hover:text-white"
+                >
+                    Close Dossier
+                </button>
+            </DialogClose>
           </div>
         </DialogContent>
       </Dialog>
