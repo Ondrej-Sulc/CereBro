@@ -56,11 +56,14 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 overflow-hidden">
-                    <div className={cn(
-                        "transition-all duration-300",
-                        showAllDefenders ? "max-h-[400px] overflow-y-auto custom-scrollbar" : "max-h-none"
-                    )}>
-                        <table className="w-full text-sm">
+                    <div 
+                        className={cn(
+                            "transition-all duration-300",
+                            showAllDefenders ? "max-h-[400px] overflow-y-auto" : "max-h-none"
+                        )}
+                        style={{ scrollbarGutter: 'stable' }}
+                    >
+                        <table className="w-full text-sm table-fixed">
                         <tbody className="divide-y divide-slate-800/40 text-sm">
                             {displayedDefenders.map((champ, i) => {
                                 const classColors = getChampionClassColors(champ.class);
@@ -71,10 +74,10 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     onClick={() => onSelect({ tab: "defense", subTab: "defender", id: champ.id })}
                                 >
                                     <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 max-w-0">
                                         <div className="flex items-center gap-3">
                                             <Avatar 
-                                                className={cn("h-8 w-8 border-none transition-transform group-hover:scale-110", classColors.bg)}
+                                                className={cn("h-8 w-8 border-none shrink-0 transition-transform group-hover:scale-110", classColors.bg)}
                                                 style={{ boxShadow: `0 0 0 1.5px ${classColors.color}` }}
                                             >
                                                 <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
@@ -85,7 +88,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-4 py-3 w-24 text-right">
                                         <div className="flex flex-col items-end">
                                             <span className="text-red-400 font-bold font-mono flex items-center gap-1 text-sm">
                                                 <Skull className="w-3.5 h-3.5" /> {champ.deaths}
@@ -135,11 +138,14 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 overflow-hidden">
-                    <div className={cn(
-                        "transition-all duration-300",
-                        showAllAttackers ? "max-h-[400px] overflow-y-auto custom-scrollbar" : "max-h-none"
-                    )}>
-                        <table className="w-full text-sm">
+                    <div 
+                        className={cn(
+                            "transition-all duration-300",
+                            showAllAttackers ? "max-h-[400px] overflow-y-auto" : "max-h-none"
+                        )}
+                        style={{ scrollbarGutter: 'stable' }}
+                    >
+                        <table className="w-full text-sm table-fixed">
                         <tbody className="divide-y divide-slate-800/40 text-sm">
                             {displayedAttackers.map((champ, i) => {
                                 const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
@@ -151,24 +157,24 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     onClick={() => onSelect({ tab: "matchups", subTab: "attacker", id: champ.id })}
                                 >
                                     <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 max-w-0">
                                         <div className="flex items-center gap-3">
                                             <Avatar 
-                                                className={cn("h-8 w-8 border-none transition-transform group-hover:scale-110", classColors.bg)}
+                                                className={cn("h-8 w-8 border-none shrink-0 transition-transform group-hover:scale-110", classColors.bg)}
                                                 style={{ boxShadow: `0 0 0 1.5px ${classColors.color}` }}
                                             >
                                                 <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
                                                 <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
                                             </Avatar>
-                                            <div className="flex flex-col">
+                                            <div className="flex flex-col min-w-0 truncate">
                                                 <span className={cn("font-bold truncate", classColors.text)}>
                                                     {champ.name}
                                                 </span>
-                                                <span className="text-[10px] text-slate-500 font-mono">{champ.count} uses</span>
+                                                <span className="text-[10px] text-slate-500 font-mono truncate">{champ.count} uses</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-4 py-3 w-20 text-right">
                                         <span className={cn(
                                             "font-mono font-bold text-sm",
                                             soloRate >= 95 ? "text-emerald-400" : "text-amber-500"
@@ -216,11 +222,14 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 flex-1 overflow-hidden">
-                    <div className={cn(
-                        "transition-all duration-300",
-                        showAllNodes ? "max-h-[400px] overflow-y-auto custom-scrollbar" : "max-h-none"
-                    )}>
-                        <table className="w-full text-sm">
+                    <div 
+                        className={cn(
+                            "transition-all duration-300",
+                            showAllNodes ? "max-h-[400px] overflow-y-auto" : "max-h-none"
+                        )}
+                        style={{ scrollbarGutter: 'stable' }}
+                    >
+                        <table className="w-full text-sm table-fixed">
                         <tbody className="divide-y divide-slate-800/40 text-sm">
                             {displayedNodes.map((node, i) => (
                                 <tr 
@@ -229,12 +238,12 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     onClick={() => onSelect({ tab: "defense", subTab: "node", id: node.nodeNumber })}
                                 >
                                     <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
-                                    <td className="px-4 py-3">
+                                    <td className="px-4 py-3 max-w-0">
                                         <Badge variant="outline" className="bg-slate-900 text-amber-500 border-amber-500/30 font-mono text-sm group-hover:bg-amber-500/10 transition-colors">
                                             Node {node.nodeNumber}
                                         </Badge>
                                     </td>
-                                    <td className="px-4 py-3 text-right">
+                                    <td className="px-4 py-3 w-24 text-right">
                                         <div className="flex flex-col items-end">
                                             <span className="text-red-400 font-bold font-mono flex items-center gap-1 text-sm">
                                                 <Skull className="w-3.5 h-3.5" /> {node.deaths}
