@@ -500,8 +500,8 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                         <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
                                             {/* Header Background Effects */}
                                             <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
-                                                <div className="absolute inset-0 opacity-[0.03] flex justify-end items-center">
-                                                    <img src={getChampionImageUrl(def.images, 'full')} className="h-[150%] object-cover grayscale brightness-200 -mr-20" alt="" />
+                                                <div className="absolute inset-0 opacity-[0.15] flex justify-end items-center">
+                                                    <img src={getChampionImageUrl(def.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
                                                 </div>
                                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
                                             </div>
@@ -616,8 +616,8 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                 return (
                                     <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
                                         <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
-                                            <div className="absolute inset-0 opacity-[0.03] flex justify-end items-center">
-                                                <img src={getChampionImageUrl(att.images, 'full')} className="h-[150%] object-cover grayscale brightness-200 -mr-20" alt="" />
+                                            <div className="absolute inset-0 opacity-[0.15] flex justify-end items-center">
+                                                <img src={getChampionImageUrl(att.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
                                             </div>
                                             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
                                         </div>
@@ -724,8 +724,8 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                     <div className="space-y-6">
                                         <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
                                             <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
-                                                <div className="absolute inset-0 opacity-[0.03] flex justify-end items-center">
-                                                    <img src={getChampionImageUrl(def.images, 'full')} className="h-[150%] object-cover grayscale brightness-200 -mr-20" alt="" />
+                                                <div className="absolute inset-0 opacity-[0.15] flex justify-end items-center">
+                                                    <img src={getChampionImageUrl(def.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
                                                 </div>
                                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
                                             </div>
