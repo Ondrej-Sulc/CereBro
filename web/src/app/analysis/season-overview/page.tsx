@@ -14,7 +14,8 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import logger from "@/lib/logger";
 import { SeasonOverviewView, PlayerStats } from "./season-overview-view";
-import { SeasonDeepDive, DetailedPlacementStat } from "./season-deep-dive";
+import { DetailedPlacementStat } from "./season-deep-dive";
+import { SeasonAnalysisContainer } from "./season-analysis-container";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -200,13 +201,17 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         if (!bg || bg < 1 || bg > 3) continue;
 
         // Collect Deep Dive Stats
-        if (fight.defender && fight.node) {
+        if (fight.defender && fight.node && fight.attacker) {
             placementStats.push({
                 nodeNumber: fight.node.nodeNumber,
                 defenderId: fight.defender.id,
                 defenderName: fight.defender.name,
                 defenderClass: fight.defender.class,
                 defenderImages: fight.defender.images as unknown as ChampionImages,
+                attackerId: fight.attacker.id,
+                attackerName: fight.attacker.name,
+                attackerClass: fight.attacker.class,
+                attackerImages: fight.attacker.images as unknown as ChampionImages,
                 fights: 1,
                 deaths: fight.death
             });
@@ -323,16 +328,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
 
     // Sort Insights
     const topDefenders = Array.from(defenderStats.values())
-        .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights)
-        .slice(0, 5);
+        .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights);
     
     const topAttackers = Array.from(attackerStats.values())
-        .sort((a, b) => b.count - a.count || a.deaths - b.deaths)
-        .slice(0, 5);
+        .sort((a, b) => b.count - a.count || a.deaths - b.deaths);
 
     const hardestNodes = Array.from(nodeStats.values())
-        .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights)
-        .slice(0, 5);
+        .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights);
 
     // Global Stats Calculation
     const globalFights = bgTotals[1].fights + bgTotals[2].fights + bgTotals[3].fights;
@@ -415,164 +417,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             bgColors={bgColors} 
         />
 
-        {/* Season Insights */}
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                <BarChart2 className="w-6 h-6 text-sky-400" />
-                Season Insights
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Deadly Defenders */}
-                <Card className="bg-slate-950/50 border-slate-800/60">
-                    <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
-                        <CardTitle className="text-lg font-mono text-slate-200 flex items-center gap-2">
-                            <Shield className="w-5 h-5 text-red-400" />
-                            Deadliest Defenders
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <table className="w-full text-sm">
-                            <tbody className="divide-y divide-slate-800/40 text-sm">
-                                {topDefenders.map((champ, i) => {
-                                    const classColors = getChampionClassColors(champ.class);
-                                    return (
-                                    <tr key={champ.id} className="hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className={cn("h-8 w-8 border-none ring-1.5", classColors.border)}>
-                                                    <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
-                                                    <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
-                                                </Avatar>
-                                                <span className={cn("font-bold truncate", classColors.text)}>
-                                                    {champ.name}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-red-400 font-bold font-mono flex items-center gap-1 text-sm">
-                                                    <Skull className="w-3.5 h-3.5" /> {champ.deaths}
-                                                </span>
-                                                <span className="text-[10px] text-slate-500 font-mono">
-                                                    {(champ.deaths / (champ.fights || 1)).toFixed(2)} / fight
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )})}
-                                {topDefenders.length === 0 && (
-                                    <tr>
-                                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">
-                                            No defender data recorded.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </CardContent>
-                </Card>
-
-                {/* Top Attackers */}
-                <Card className="bg-slate-950/50 border-slate-800/60">
-                    <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
-                        <CardTitle className="text-lg font-mono text-slate-200 flex items-center gap-2">
-                            <Swords className="w-5 h-5 text-emerald-400" />
-                            Top Attackers
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <table className="w-full text-sm">
-                            <tbody className="divide-y divide-slate-800/40 text-sm">
-                                {topAttackers.map((champ, i) => {
-                                    const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
-                                    const classColors = getChampionClassColors(champ.class);
-                                    return (
-                                    <tr key={champ.id} className="hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className={cn("h-8 w-8 border-none ring-1.5", classColors.border)}>
-                                                    <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
-                                                    <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex flex-col">
-                                                    <span className={cn("font-bold truncate", classColors.text)}>
-                                                        {champ.name}
-                                                    </span>
-                                                    <span className="text-[10px] text-slate-500 font-mono">{champ.count} uses</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <span className={cn(
-                                                "font-mono font-bold text-sm",
-                                                soloRate >= 95 ? "text-emerald-400" : "text-amber-500"
-                                            )}>
-                                                {soloRate.toFixed(0)}% Solo
-                                            </span>
-                                        </td>
-                                    </tr>
-                                )})}
-                                {topAttackers.length === 0 && (
-                                    <tr>
-                                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">
-                                            No attacker data recorded.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </CardContent>
-                </Card>
-
-                {/* Hardest Nodes */}
-                <Card className="bg-slate-950/50 border-slate-800/60">
-                    <CardHeader className="pb-3 border-b border-slate-800/60 bg-slate-900/20">
-                        <CardTitle className="text-lg font-mono text-slate-200 flex items-center gap-2">
-                            <Target className="w-5 h-5 text-amber-500" />
-                            Hardest Nodes
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <table className="w-full text-sm">
-                            <tbody className="divide-y divide-slate-800/40 text-sm">
-                                {hardestNodes.map((node, i) => (
-                                    <tr key={node.nodeNumber} className="hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
-                                        <td className="px-4 py-3">
-                                            <Badge variant="outline" className="bg-slate-900 text-amber-500 border-amber-500/30 font-mono text-sm">
-                                                Node {node.nodeNumber}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex flex-col items-end">
-                                                <span className="text-red-400 font-bold font-mono flex items-center gap-1 text-sm">
-                                                    <Skull className="w-3.5 h-3.5" /> {node.deaths}
-                                                </span>
-                                                <span className="text-[10px] text-slate-500 font-mono">
-                                                    {node.fights} fights
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {hardestNodes.length === 0 && (
-                                    <tr>
-                                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 italic">
-                                            No node data recorded.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-
-        {/* Deep Dive Analysis */}
-        <SeasonDeepDive placementStats={placementStats} />
+        {/* Combined Insights & Deep Dive */}
+        <SeasonAnalysisContainer 
+            topDefenders={topDefenders}
+            topAttackers={topAttackers}
+            hardestNodes={hardestNodes}
+            placementStats={placementStats}
+        />
       </div>
     );
   }
