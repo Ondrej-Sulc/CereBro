@@ -62,7 +62,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             Deadliest Defenders
                         </CardTitle>
                         <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/30 text-[9px] font-black uppercase italic">
-                            Top Threat
+                            Most Kills
                         </Badge>
                     </div>
                 </CardHeader>
@@ -105,7 +105,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 </span>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <Progress value={Math.min(100, lethality * 50)} className="h-1 w-12 bg-slate-800" indicatorStyle={{ backgroundColor: classColors.color }} />
-                                                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Level {(lethality * 10).toFixed(1)}</span>
+                                                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Lethality {(lethality * 10).toFixed(1)}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -116,7 +116,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 <Skull className="w-3.5 h-3.5" /> {champ.deaths}
                                             </span>
                                             <span className="text-[10px] text-slate-500 font-black uppercase tracking-tighter mt-1 opacity-70">
-                                                K/D {lethality.toFixed(2)}
+                                                Avg {lethality.toFixed(2)}
                                             </span>
                                         </div>
                                     </td>
@@ -126,7 +126,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                 <tr>
                                     <td colSpan={3} className="px-4 py-12 text-center">
                                         <Shield className="w-8 h-8 text-slate-800 mx-auto mb-2 opacity-20" />
-                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No deployment data</p>
+                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No defender data</p>
                                     </td>
                                 </tr>
                             )}
@@ -144,9 +144,9 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             onClick={() => setShowAllDefenders(!showAllDefenders)}
                         >
                             {showAllDefenders ? (
-                                <><ChevronUp className="w-3 h-3 mr-2" /> Compress View</>
+                                <><ChevronUp className="w-3 h-3 mr-2" /> Show Less</>
                             ) : (
-                                <><ChevronDown className="w-3 h-3 mr-2" /> Expand Dossier ({topDefenders.length - 5})</>
+                                <><ChevronDown className="w-3 h-3 mr-2" /> Show More ({topDefenders.length - 5})</>
                             )}
                         </Button>
                     </div>
@@ -164,10 +164,10 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-300 flex items-center gap-2.5">
                             <Swords className="w-4 h-4 text-sky-500" />
-                            Elite Attackers
+                            Top Attackers
                         </CardTitle>
                         <Badge variant="outline" className="bg-sky-500/10 text-sky-400 border-sky-400/30 text-[9px] font-black uppercase italic">
-                            MVPs
+                            Highest Solo %
                         </Badge>
                     </div>
                 </CardHeader>
@@ -209,7 +209,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                     {champ.name}
                                                 </span>
                                                 <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{champ.count} MISSIONS</span>
+                                                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{champ.fights} FIGHTS</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -223,7 +223,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 {soloRate.toFixed(0)}%
                                             </span>
                                             <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter mt-1 opacity-70">
-                                                SUCCESS
+                                                SOLO %
                                             </span>
                                         </div>
                                     </td>
@@ -233,7 +233,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                 <tr>
                                     <td colSpan={3} className="px-4 py-12 text-center">
                                         <Swords className="w-8 h-8 text-slate-800 mx-auto mb-2 opacity-20" />
-                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No engagement data</p>
+                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No attacker data</p>
                                     </td>
                                 </tr>
                             )}
@@ -251,9 +251,9 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             onClick={() => setShowAllAttackers(!showAllAttackers)}
                         >
                             {showAllAttackers ? (
-                                <><ChevronUp className="w-3 h-3 mr-2" /> Compress View</>
+                                <><ChevronUp className="w-3 h-3 mr-2" /> Show Less</>
                             ) : (
-                                <><ChevronDown className="w-3 h-3 mr-2" /> Expand Dossier ({topAttackers.length - 5})</>
+                                <><ChevronDown className="w-3 h-3 mr-2" /> Show More ({topAttackers.length - 5})</>
                             )}
                         </Button>
                     </div>
@@ -271,10 +271,10 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-black uppercase tracking-[0.2em] text-slate-300 flex items-center gap-2.5">
                             <Target className="w-4 h-4 text-amber-500" />
-                            Critical Sectors
+                            Hardest Nodes
                         </CardTitle>
                         <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-[9px] font-black uppercase italic">
-                            High Alert
+                            Dangerous
                         </Badge>
                     </div>
                 </CardHeader>
@@ -302,10 +302,10 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 {node.nodeNumber}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="font-black uppercase italic tracking-tight text-sm text-slate-200">Sector {node.nodeNumber}</span>
+                                                <span className="font-black uppercase italic tracking-tight text-sm text-slate-200">Node {node.nodeNumber}</span>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
                                                     <TrendingUp className="w-3 h-3 text-red-400 opacity-50" />
-                                                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{node.fights} DEPLOYMENTS</span>
+                                                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{node.fights} FIGHTS</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -316,7 +316,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 <Skull className="w-3.5 h-3.5" /> {node.deaths}
                                             </span>
                                             <span className="text-[10px] text-slate-500 font-black uppercase tracking-tighter mt-1 opacity-70">
-                                                LETHAL LOSS
+                                                DEATHS
                                             </span>
                                         </div>
                                     </td>
@@ -326,7 +326,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                 <tr>
                                     <td colSpan={3} className="px-4 py-12 text-center">
                                         <Target className="w-8 h-8 text-slate-800 mx-auto mb-2 opacity-20" />
-                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No intelligence reports</p>
+                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No fight data</p>
                                     </td>
                                 </tr>
                             )}
@@ -344,9 +344,9 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             onClick={() => setShowAllNodes(!showAllNodes)}
                         >
                             {showAllNodes ? (
-                                <><ChevronUp className="w-3 h-3 mr-2" /> Compress View</>
+                                <><ChevronUp className="w-3 h-3 mr-2" /> Show Less</>
                             ) : (
-                                <><ChevronDown className="w-3 h-3 mr-2" /> Expand Dossier ({hardestNodes.length - 5})</>
+                                <><ChevronDown className="w-3 h-3 mr-2" /> Show More ({hardestNodes.length - 5})</>
                             )}
                         </Button>
                     </div>
