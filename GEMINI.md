@@ -1,5 +1,7 @@
 # Gemini Code Assistant Context
 
+**CRITICAL: Always keep this context file updated with new features and architectural changes.**
+
 This document provides context for the Gemini code assistant to understand the CereBro project.
 
 ## Project Overview
@@ -170,10 +172,16 @@ The platform now features a dedicated analytics dashboard at `/analysis/season-o
     *   **Battlegroup Ranking:** Players are organized by battlegroup and ranked primarily by **least deaths**, with total fights used as a tie-breaker.
     *   **Solo % Calculation:** A success rate metric is displayed for every player, providing critical context for performance on "Big Thing" maps where fight counts are restricted.
     *   **Group Totals:** Each battlegroup card displays aggregate statistics (Total Solo % and Total Deaths) for easy inter-BG comparison.
-*   **Deep Dive Analysis:** A powerful interactive tool for granular performance review.
-    *   **By Node:** Select any node to see a breakdown of every champion placed on it throughout the season, including total fights, deaths, and average deaths per placement.
-    *   **By Defender:** Select a champion to see every node they were placed on, with aggregated performance stats.
-    *   **Visuals:** Features high-resolution champion portraits and clear, sortable metrics tables.
+*   **Deep Dive Analysis:** A powerful interactive tool for granular performance review and strategy development.
+    *   **Defense Analysis:**
+        *   **By Node:** Detailed breakdown of every champion placed on a specific node, including total fights, deaths, and lethality progress bars.
+        *   **By Defender:** Comprehensive placement history for any champion, highlighting node sector performance and efficiency ratings.
+    *   **Matchup Analysis:**
+        *   **By Attacker:** Full combat history for an attacker, showing their success rates (Solo %) and win probability against various defenders encountered during the season.
+        *   **By Counter:** Identifies the best counters for a specific defender based on historical alliance fight logs.
+    *   **Interactivity:** Clicking any item in the **Season Insights** cards (Deadliest Defenders, Top Attackers, Hardest Nodes) automatically scrolls to the Deep Dive section and pre-selects the relevant entity.
+    *   **Visuals:** Features a premium "Combat Report" aesthetic with hero-style headers, high-resolution portraits with class-colored rings (dynamic boxShadow), glassmorphism, and animated progress indicators.
+    *   **Expandable Insights:** The top performers lists feature "Show More" functionality with internal scrolling to handle large datasets without cluttering the main UI.
 *   **Season Insights:** A specialized analytics section at the bottom of the dashboard highlights:
     *   **Deadliest Defenders:** Top 5 champions causing the most deaths, with "deaths per fight" metrics.
     *   **Top Attackers:** Most frequently used attackers and their success rates.
