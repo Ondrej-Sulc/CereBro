@@ -451,7 +451,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                         <AvatarFallback>{stat.defenderName.substring(0,2)}</AvatarFallback>
                                                                     </Avatar>
                                                                 </div>
-                                                                <span className={cn("font-bold text-base truncate max-w-[120px] sm:max-w-none", classColors.text)}>{stat.defenderName}</span>
+                                                                <span className={cn("font-black uppercase italic tracking-tight text-base truncate max-w-[120px] sm:max-w-none pr-2", classColors.text)}>{stat.defenderName}</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
@@ -515,7 +515,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                             <div className={cn("w-2 h-2 rounded-full animate-pulse")} style={{ backgroundColor: classColors.color }} />
                                                             <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{def.class}</span>
                                                         </div>
-                                                        <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">{def.name}</CardTitle>
+                                                        <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic pr-4">{def.name}</CardTitle>
                                                     </div>
                                                     
                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -628,7 +628,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                         <div className={cn("w-2 h-2 rounded-full")} style={{ backgroundColor: classColors.color }} />
                                                         <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{att.class}</span>
                                                     </div>
-                                                    <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic">{att.name}</CardTitle>
+                                                    <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic pr-4">{att.name}</CardTitle>
                                                 </div>
                                                 
                                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -675,7 +675,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                                 <AvatarFallback>{stat.defenderName.substring(0,2)}</AvatarFallback>
                                                                             </Avatar>
                                                                         </div>
-                                                                        <span className={cn("font-bold text-base truncate max-w-[120px] sm:max-w-none", targetColors.text)}>{stat.defenderName}</span>
+                                                                        <span className={cn("font-black uppercase italic tracking-tight text-base truncate max-w-[120px] sm:max-w-none pr-2", targetColors.text)}>{stat.defenderName}</span>
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
@@ -736,7 +736,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                             <div className={cn("w-2 h-2 rounded-full shadow-[0_0_10px_currentColor]")} style={{ backgroundColor: classColors.color }} />
                                                             <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{def.class}</span>
                                                         </div>
-                                                        <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic mb-4">{def.name}</CardTitle>
+                                                        <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic pr-4 mb-4">{def.name}</CardTitle>
                                                         <div className="flex items-center justify-center sm:justify-start">
                                                             <div className="bg-slate-900/60 border border-slate-800/60 px-4 py-2 rounded-xl backdrop-blur-sm">
                                                                 <div className="text-sm font-black text-slate-400 uppercase tracking-tight">Fights Recorded This Season</div>
@@ -770,7 +770,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                                     <AvatarFallback>{stat.attackerName!.substring(0,2)}</AvatarFallback>
                                                                                 </Avatar>
                                                                             </div>
-                                                                            <span className={cn("font-black text-base italic uppercase tracking-tight truncate max-w-[120px] sm:max-w-none", attColors.text)}>{stat.attackerName}</span>
+                                                                            <span className={cn("font-black text-base italic uppercase tracking-tight truncate max-w-[120px] sm:max-w-none pr-2", attColors.text)}>{stat.attackerName}</span>
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-8 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
