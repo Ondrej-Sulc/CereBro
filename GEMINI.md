@@ -170,6 +170,10 @@ The platform now features a dedicated analytics dashboard at `/analysis/season-o
     *   **Battlegroup Ranking:** Players are organized by battlegroup and ranked primarily by **least deaths**, with total fights used as a tie-breaker.
     *   **Solo % Calculation:** A success rate metric is displayed for every player, providing critical context for performance on "Big Thing" maps where fight counts are restricted.
     *   **Group Totals:** Each battlegroup card displays aggregate statistics (Total Solo % and Total Deaths) for easy inter-BG comparison.
+*   **Deep Dive Analysis:** A powerful interactive tool for granular performance review.
+    *   **By Node:** Select any node to see a breakdown of every champion placed on it throughout the season, including total fights, deaths, and average deaths per placement.
+    *   **By Defender:** Select a champion to see every node they were placed on, with aggregated performance stats.
+    *   **Visuals:** Features high-resolution champion portraits and clear, sortable metrics tables.
 *   **Season Insights:** A specialized analytics section at the bottom of the dashboard highlights:
     *   **Deadliest Defenders:** Top 5 champions causing the most deaths, with "deaths per fight" metrics.
     *   **Top Attackers:** Most frequently used attackers and their success rates.
