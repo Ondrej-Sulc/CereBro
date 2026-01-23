@@ -75,7 +75,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         )}
                         style={{ scrollbarGutter: 'stable' }}
                     >
-                        <table className="w-full text-sm table-fixed">
+                        <table className="w-full text-sm">
                         <tbody className="divide-y divide-slate-800/30 text-sm">
                             {displayedDefenders.map((champ, i) => {
                                 const classColors = getChampionClassColors(champ.class);
@@ -86,8 +86,8 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     className="hover:bg-red-500/[0.03] transition-all duration-300 cursor-pointer group/row border-l-2 border-l-transparent hover:border-l-red-500"
                                     onClick={() => onSelect({ tab: "defense", subTab: "defender", id: champ.id })}
                                 >
-                                    <td className="px-4 py-4 w-10 text-slate-600 font-mono text-[10px] font-black italic">{i + 1}</td>
-                                    <td className="px-2 py-4 max-w-0">
+                                    <td className="px-4 py-4 w-8 text-slate-600 font-mono text-[10px] font-black italic">{i + 1}</td>
+                                    <td className="px-2 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="relative shrink-0">
                                                 <Avatar 
@@ -99,7 +99,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 </Avatar>
                                                 {i === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-950 animate-pulse" />}
                                             </div>
-                                            <div className="flex flex-col min-w-0 truncate">
+                                            <div className="flex flex-col min-w-0 overflow-hidden">
                                                 <span className={cn("font-black uppercase italic tracking-tight text-sm truncate group-hover/row:translate-x-1 transition-transform duration-300", classColors.text)}>
                                                     {champ.name}
                                                 </span>
@@ -110,7 +110,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 w-24 text-right">
+                                    <td className="px-4 py-4 w-fit whitespace-nowrap text-right">
                                         <div className="flex flex-col items-end">
                                             <span className="text-red-400 font-black font-mono flex items-center gap-1 text-base italic leading-none">
                                                 <Skull className="w-3.5 h-3.5" /> {champ.deaths}
@@ -180,7 +180,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         )}
                         style={{ scrollbarGutter: 'stable' }}
                     >
-                        <table className="w-full text-sm table-fixed">
+                        <table className="w-full text-sm">
                         <tbody className="divide-y divide-slate-800/30 text-sm">
                             {displayedAttackers.map((champ, i) => {
                                 const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
@@ -191,8 +191,8 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     className="hover:bg-sky-500/[0.03] transition-all duration-300 cursor-pointer group/row border-l-2 border-l-transparent hover:border-l-sky-500"
                                     onClick={() => onSelect({ tab: "matchups", subTab: "attacker", id: champ.id })}
                                 >
-                                    <td className="px-4 py-4 w-10 text-slate-600 font-mono text-[10px] font-black italic">{i + 1}</td>
-                                    <td className="px-2 py-4 max-w-0">
+                                    <td className="px-4 py-4 w-8 text-slate-600 font-mono text-[10px] font-black italic">{i + 1}</td>
+                                    <td className="px-2 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="relative shrink-0">
                                                 <Avatar 
@@ -204,7 +204,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                 </Avatar>
                                                 {i < 3 && <div className="absolute -top-1 -right-1"><Trophy className={cn("w-4 h-4", i === 0 ? "text-yellow-500" : i === 1 ? "text-slate-300" : "text-amber-600")} /></div>}
                                             </div>
-                                            <div className="flex flex-col min-w-0 truncate">
+                                            <div className="flex flex-col min-w-0 overflow-hidden">
                                                 <span className={cn("font-black uppercase italic tracking-tight text-sm truncate group-hover/row:translate-x-1 transition-transform duration-300", classColors.text)}>
                                                     {champ.name}
                                                 </span>
@@ -214,7 +214,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 w-20 text-right">
+                                    <td className="px-4 py-4 w-fit whitespace-nowrap text-right">
                                         <div className="flex flex-col items-end">
                                             <span className={cn(
                                                 "font-mono font-black text-base italic leading-none",
@@ -287,7 +287,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         )}
                         style={{ scrollbarGutter: 'stable' }}
                     >
-                        <table className="w-full text-sm table-fixed">
+                        <table className="w-full text-sm">
                         <tbody className="divide-y divide-slate-800/30 text-sm">
                             {displayedNodes.map((node, i) => (
                                 <tr 
@@ -295,14 +295,14 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     className="hover:bg-amber-500/[0.03] transition-all duration-300 cursor-pointer group/row border-l-2 border-l-transparent hover:border-l-amber-500"
                                     onClick={() => onSelect({ tab: "defense", subTab: "node", id: node.nodeNumber })}
                                 >
-                                    <td className="px-4 py-4 w-10 text-slate-600 font-mono text-[10px] font-black italic">{i + 1}</td>
-                                    <td className="px-2 py-4 max-w-0">
+                                    <td className="px-4 py-4 w-8 text-slate-600 font-mono text-[10px] font-black italic">{i + 1}</td>
+                                    <td className="px-2 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-black text-amber-500 group-hover/row:border-amber-500/50 transition-all duration-300 group-hover/row:scale-110 shadow-lg group-hover/row:shadow-amber-500/10">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-black text-amber-500 group-hover/row:border-amber-500/50 transition-all duration-300 group-hover/row:scale-110 shadow-lg group-hover/row:shadow-amber-500/10 shrink-0">
                                                 {node.nodeNumber}
                                             </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="font-black uppercase italic tracking-tight text-sm text-slate-200">Node {node.nodeNumber}</span>
+                                            <div className="flex flex-col min-w-0 overflow-hidden">
+                                                <span className="font-black uppercase italic tracking-tight text-sm text-slate-200 truncate">Node {node.nodeNumber}</span>
                                                 <div className="flex items-center gap-1.5 mt-0.5">
                                                     <TrendingUp className="w-3 h-3 text-red-400 opacity-50" />
                                                     <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{node.fights} FIGHTS</span>
@@ -310,7 +310,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-4 w-24 text-right">
+                                    <td className="px-4 py-4 w-fit whitespace-nowrap text-right">
                                         <div className="flex flex-col items-end">
                                             <span className="text-red-400 font-black font-mono flex items-center gap-1 text-base italic leading-none">
                                                 <Skull className="w-3.5 h-3.5" /> {node.deaths}
