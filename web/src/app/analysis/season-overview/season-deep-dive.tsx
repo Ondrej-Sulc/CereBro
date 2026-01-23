@@ -343,7 +343,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                           const classColors = getChampionClassColors(def.class);
                           return (
                             <div className="flex flex-col items-center gap-3 mb-6">
-                              <div className={cn("relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.text.replace('text-', 'ring-'))}>
+                              <div 
+                                className="relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300"
+                                style={{ ringColor: classColors.color, borderColor: classColors.color } as any}
+                              >
                                 <Avatar className={cn("h-28 w-28 border-none", classColors.bg)}>
                                   <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-cover" />
                                   <AvatarFallback className="text-xl bg-transparent">{def.name.substring(0,2)}</AvatarFallback>
@@ -435,7 +438,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                           const classColors = getChampionClassColors(att.class);
                           return (
                             <div className="flex flex-col items-center gap-3 mb-6">
-                              <div className={cn("relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.text.replace('text-', 'ring-'))}>
+                              <div 
+                                className="relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300"
+                                style={{ ringColor: classColors.color, borderColor: classColors.color } as any}
+                              >
                                 <Avatar className={cn("h-28 w-28 border-none", classColors.bg)}>
                                   <AvatarImage src={getChampionImageUrl(att.images, 'full')} className="object-cover" />
                                   <AvatarFallback className="text-xl bg-transparent">{att.name.substring(0,2)}</AvatarFallback>
@@ -521,7 +527,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                           const classColors = getChampionClassColors(def.class);
                           return (
                             <div className="flex flex-col items-center gap-3 mb-6">
-                              <div className={cn("relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.text.replace('text-', 'ring-'))}>
+                              <div 
+                                className="relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300"
+                                style={{ ringColor: classColors.color, borderColor: classColors.color } as any}
+                              >
                                 <Avatar className={cn("h-28 w-28 border-none", classColors.bg)}>
                                   <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-cover" />
                                   <AvatarFallback className="text-xl bg-transparent">{def.name.substring(0,2)}</AvatarFallback>

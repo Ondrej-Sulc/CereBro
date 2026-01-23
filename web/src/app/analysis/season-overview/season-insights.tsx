@@ -55,8 +55,12 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         Deadliest Defenders
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 flex-1">
-                    <table className="w-full text-sm">
+                <CardContent className="p-0 flex-1 overflow-hidden">
+                    <div className={cn(
+                        "transition-all duration-300",
+                        showAllDefenders ? "max-h-[400px] overflow-y-auto custom-scrollbar" : "max-h-none"
+                    )}>
+                        <table className="w-full text-sm">
                         <tbody className="divide-y divide-slate-800/40 text-sm">
                             {displayedDefenders.map((champ, i) => {
                                 const classColors = getChampionClassColors(champ.class);
@@ -126,8 +130,12 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         Top Attackers
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 flex-1">
-                    <table className="w-full text-sm">
+                <CardContent className="p-0 flex-1 overflow-hidden">
+                    <div className={cn(
+                        "transition-all duration-300",
+                        showAllAttackers ? "max-h-[400px] overflow-y-auto custom-scrollbar" : "max-h-none"
+                    )}>
+                        <table className="w-full text-sm">
                         <tbody className="divide-y divide-slate-800/40 text-sm">
                             {displayedAttackers.map((champ, i) => {
                                 const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
@@ -199,8 +207,12 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         Hardest Nodes
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 flex-1">
-                    <table className="w-full text-sm">
+                <CardContent className="p-0 flex-1 overflow-hidden">
+                    <div className={cn(
+                        "transition-all duration-300",
+                        showAllNodes ? "max-h-[400px] overflow-y-auto custom-scrollbar" : "max-h-none"
+                    )}>
+                        <table className="w-full text-sm">
                         <tbody className="divide-y divide-slate-800/40 text-sm">
                             {displayedNodes.map((node, i) => (
                                 <tr 
