@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ShieldAlert } from "lucide-react";
-import { useState } from "react";
+import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useMemo } from "react";
 
 interface WarFightDetail {
   defenderName: string;
@@ -58,6 +58,14 @@ export function SeasonOverviewView({
   bgColors,
 }: SeasonOverviewViewProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerStats | null>(null);
+  const [expandedWars, setExpandedWars] = useState<Record<string, boolean>>({});
+
+  const toggleWar = (warId: string) => {
+    setExpandedWars(prev => ({
+      ...prev,
+      [warId]: !prev[warId]
+    }));
+  };
 
   const getRank = (
     player: PlayerStats,
@@ -168,7 +176,11 @@ export function SeasonOverviewView({
                             key={player.playerId}
                             className="group/row hover:bg-slate-800/30 transition-all duration-300 cursor-pointer border-l-2 border-l-transparent"
                             style={{ borderLeftColor: index === 0 ? accentColor : 'transparent' }}
-                            onClick={() => setSelectedPlayer(player)}
+                            onClick={() => {
+                                // Reset expanded wars for new player
+                                setExpandedWars({});
+                                setSelectedPlayer(player);
+                            }}
                           >
                             <td className="px-4 py-4 text-center">
                               {isTop3 ? (
@@ -258,10 +270,10 @@ export function SeasonOverviewView({
         open={!!selectedPlayer}
         onOpenChange={(open) => !open && setSelectedPlayer(null)}
       >
-        <DialogContent className="bg-slate-950/95 border-slate-800 text-slate-200 max-w-2xl max-h-[85vh] overflow-y-auto backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] p-0 gap-0 overflow-hidden">
+        <DialogContent className="bg-slate-950/95 border-slate-800 text-slate-200 max-w-2xl max-h-[90vh] flex flex-col backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] p-0 gap-0 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-slate-900/50 via-transparent to-transparent pointer-events-none" />
           
-          <DialogHeader className="p-6 pb-4 border-b border-slate-800/60 relative z-10 bg-slate-900/40">
+          <DialogHeader className="p-6 pb-4 border-b border-slate-800/60 relative z-10 bg-slate-900/40 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     {selectedPlayer && (
@@ -310,114 +322,122 @@ export function SeasonOverviewView({
             </div>
           </DialogHeader>
 
-          <div className="p-6 relative z-10">
+          <div className="p-6 relative z-10 overflow-y-auto flex-1 custom-scrollbar">
             {selectedPlayer && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                 {selectedPlayer.warStats
                     .sort((a, b) => b.warNumber - a.warNumber)
-                    .map((war) => (
-                    <Card
-                        key={war.warId}
-                        className="bg-slate-950/40 border-slate-800/60 overflow-hidden shadow-lg group/war hover:border-slate-700 transition-colors"
-                    >
-                        <CardHeader className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/40 group-hover/war:bg-slate-900/60 transition-colors">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-xs text-amber-500">
-                                    {war.warNumber}
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target Alliance</span>
-                                    <span className="text-sm font-black uppercase italic text-slate-200 tracking-tight">
-                                        {war.opponent || "Unknown"}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-6">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[9px] font-black text-slate-500 uppercase">Mission Result</span>
-                                    <div className={cn(
-                                        "text-sm font-mono font-black italic flex items-center gap-1.5",
-                                        war.deaths === 0 ? "text-emerald-400" : "text-red-400"
-                                    )}>
-                                        {war.deaths > 0 && <Skull className="w-3 h-3" />}
-                                        {war.deaths === 0 ? "SOLO" : `${war.deaths} LOSS`}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                        <div className="divide-y divide-slate-800/30">
-                            {war.fightDetails.map((fight, idx) => (
-                            <div
-                                key={idx}
-                                className="flex items-center justify-between py-3 px-4 hover:bg-slate-800/20 transition-colors"
+                    .map((war) => {
+                        const isExpanded = expandedWars[war.warId] ?? false;
+                        return (
+                            <Card
+                                key={war.warId}
+                                className="bg-slate-950/40 border-slate-800/60 overflow-hidden shadow-lg group/war hover:border-slate-700 transition-colors"
                             >
-                                <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-slate-500 shrink-0">
-                                    {fight.nodeNumber}
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    {/* Attacker vs Defender Pill */}
-                                    <div className="flex items-center bg-slate-900/80 rounded-full pl-1 pr-4 py-1 border border-slate-800 shadow-inner group/pill">
-                                        <div className="relative shrink-0">
-                                            <Avatar className="h-8 w-8 border-none ring-1 ring-slate-700 bg-slate-950 shadow-md">
-                                                <AvatarImage src={fight.attackerImageUrl} />
-                                                <AvatarFallback className="text-[10px] font-black">
-                                                    {fight.attackerName.substring(0, 2)}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500/20 p-0.5 rounded-full ring-1 ring-slate-950">
-                                                <Swords className="w-2 h-2 text-emerald-400" />
-                                            </div>
+                                <CardHeader 
+                                    className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/40 group-hover/war:bg-slate-900/60 transition-colors cursor-pointer"
+                                    onClick={() => toggleWar(war.warId)}
+                                >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-xs text-amber-500">
+                                            {war.warNumber}
                                         </div>
-                                        
-                                        <div className="mx-2 flex flex-col items-center">
-                                            <span className="text-[8px] font-black text-slate-600 uppercase">VS</span>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="h-8 w-8 border-none ring-1 ring-slate-700 bg-slate-950 shadow-md">
-                                                <AvatarImage src={fight.defenderImageUrl} />
-                                                <AvatarFallback className="text-[10px] font-black">
-                                                    {fight.defenderName.substring(0, 2)}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <span className="text-xs font-black uppercase italic tracking-tighter text-slate-300 pr-2">
-                                                {fight.defenderName}
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target Alliance</span>
+                                            <span className="text-sm font-black uppercase italic text-slate-200 tracking-tight">
+                                                {war.opponent || "Unknown"}
                                             </span>
                                         </div>
                                     </div>
-                                </div>
-                                </div>
-                                
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[9px] font-black text-slate-600 uppercase">Engagement</span>
-                                    {fight.deaths > 0 ? (
-                                        <div className="flex items-center gap-1 text-red-400 text-xs font-black uppercase italic tracking-tighter">
-                                            <Skull className="w-3 h-3" />
-                                            {fight.deaths} Loss{fight.deaths > 1 ? "es" : ""}
+                                    <div className="flex items-center gap-6">
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[9px] font-black text-slate-500 uppercase">Mission Result</span>
+                                            <div className={cn(
+                                                "text-sm font-mono font-black italic flex items-center gap-1.5",
+                                                war.deaths === 0 ? "text-emerald-400" : "text-red-400"
+                                            )}>
+                                                {war.deaths > 0 && <Skull className="w-3 h-3" />}
+                                                {war.deaths === 0 ? "SOLO" : `${war.deaths} LOSS`}
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <div className="flex items-center gap-1.5 text-emerald-500 text-xs font-black uppercase italic tracking-tighter">
-                                            <Trophy className="w-3 h-3" />
-                                            Solo
-                                        </div>
-                                    )}
+                                        {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-600" /> : <ChevronRight className="w-4 h-4 text-slate-600" />}
+                                    </div>
                                 </div>
-                            </div>
-                            ))}
-                        </div>
-                        </CardContent>
-                    </Card>
-                    ))}
+                                </CardHeader>
+                                {isExpanded && (
+                                    <CardContent className="p-0 animate-in slide-in-from-top-2 duration-300">
+                                        <div className="divide-y divide-slate-800/30">
+                                            {war.fightDetails.map((fight, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="flex items-center justify-between py-3 px-4 hover:bg-slate-800/20 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-slate-500 shrink-0">
+                                                    {fight.nodeNumber}
+                                                </div>
+
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex items-center bg-slate-900/80 rounded-full pl-1 pr-4 py-1 border border-slate-800 shadow-inner group/pill">
+                                                        <div className="relative shrink-0">
+                                                            <Avatar className="h-8 w-8 border-none ring-1 ring-slate-700 bg-slate-950 shadow-md">
+                                                                <AvatarImage src={fight.attackerImageUrl} />
+                                                                <AvatarFallback className="text-[10px] font-black">
+                                                                    {fight.attackerName.substring(0, 2)}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500/20 p-0.5 rounded-full ring-1 ring-slate-950">
+                                                                <Swords className="w-2 h-2 text-emerald-400" />
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="mx-2 flex flex-col items-center">
+                                                            <span className="text-[8px] font-black text-slate-600 uppercase">VS</span>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2">
+                                                            <Avatar className="h-8 w-8 border-none ring-1 ring-slate-700 bg-slate-950 shadow-md">
+                                                                <AvatarImage src={fight.defenderImageUrl} />
+                                                                <AvatarFallback className="text-[10px] font-black">
+                                                                    {fight.defenderName.substring(0, 2)}
+                                                                </AvatarFallback>
+                                                            </Avatar>
+                                                            <span className="text-xs font-black uppercase italic tracking-tighter text-slate-300 pr-2">
+                                                                {fight.defenderName}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                                
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[9px] font-black text-slate-600 uppercase">Engagement</span>
+                                                    {fight.deaths > 0 ? (
+                                                        <div className="flex items-center gap-1 text-red-400 text-xs font-black uppercase italic tracking-tighter">
+                                                            <Skull className="w-3 h-3" />
+                                                            {fight.deaths} Loss{fight.deaths > 1 ? "es" : ""}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 text-emerald-500 text-xs font-black uppercase italic tracking-tighter">
+                                                            <Trophy className="w-3 h-3" />
+                                                            Solo
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                )}
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
           </div>
           
-          <div className="p-4 border-t border-slate-800/60 bg-slate-950 relative z-10 flex justify-end">
+          <div className="p-4 border-t border-slate-800/60 bg-slate-950 relative z-20 shrink-0 flex justify-end">
             <button 
                 onClick={() => setSelectedPlayer(null)}
                 className="bg-slate-900 hover:bg-slate-800 border border-slate-800 px-6 py-2 rounded-lg text-xs font-black uppercase tracking-[0.2em] text-slate-400 transition-all hover:text-white"
