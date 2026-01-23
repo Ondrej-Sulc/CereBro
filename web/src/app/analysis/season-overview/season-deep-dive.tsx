@@ -406,14 +406,13 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                 </div>
                                 <div className="absolute inset-0 h-40 bg-gradient-to-r from-amber-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
                                 <CardHeader className="relative z-10 flex flex-col sm:flex-row items-center gap-6 border-b border-slate-800/60 bg-slate-900/20 pb-6">
-                                    <div className="flex flex-col items-center shrink-0">
+                                    <div className="shrink-0">
                                         <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-amber-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:scale-105 transition-transform duration-500">
                                             <span className="text-3xl font-mono font-bold text-amber-500">{selectedNode}</span>
                                         </div>
-                                        <Badge className="mt-2 bg-amber-500 text-slate-950 font-bold border-none uppercase text-[10px]">Node</Badge>
                                     </div>
                                     <div className="flex-1 text-center sm:text-left">
-                                        <CardTitle className="text-3xl font-bold text-white tracking-tight">Node {selectedNode} Stats</CardTitle>
+                                        <CardTitle className="text-3xl font-bold text-white tracking-tight">Node Stats</CardTitle>
                                         <div className="flex items-center justify-center sm:justify-start gap-6 mt-3">
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Fights</span>
@@ -552,8 +551,11 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                         {defenderPlacementStats.map((stat) => (
                                                             <tr key={stat.nodeNumber} className="hover:bg-slate-800/20 transition-all group/node">
                                                                 <td className="px-8 py-5">
-                                                                    <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-amber-500 group-hover/node:border-amber-500/50 transition-colors">
-                                                                        {stat.nodeNumber}
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-amber-500 group-hover/node:border-amber-500/50 transition-colors">
+                                                                            {stat.nodeNumber}
+                                                                        </div>
+                                                                        <span className="font-bold text-slate-200">Node {stat.nodeNumber}</span>
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-5 text-center font-mono text-slate-400 font-bold">{stat.fights}</td>
