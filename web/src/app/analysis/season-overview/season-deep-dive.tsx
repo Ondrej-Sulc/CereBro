@@ -559,11 +559,8 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                         {defenderPlacementStats.map((stat) => (
                                                             <tr key={stat.nodeNumber} className="hover:bg-slate-800/20 transition-all group/node">
                                                                 <td className="px-8 py-5">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-amber-500 group-hover/node:border-amber-500/50 transition-colors">
-                                                                            {stat.nodeNumber}
-                                                                        </div>
-                                                                        <span className="font-bold text-slate-200">Sector {stat.nodeNumber}</span>
+                                                                    <div className="w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center font-mono font-bold text-amber-500 group-hover/node:border-amber-500/50 transition-colors">
+                                                                        {stat.nodeNumber}
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-5 text-center font-mono text-slate-400 font-bold">{stat.fights}</td>
