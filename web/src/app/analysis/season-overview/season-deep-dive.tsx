@@ -777,10 +777,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                     <td className="px-8 py-4">
                                                                         <div className="flex flex-col gap-1.5 w-full max-w-[80px] sm:max-w-[140px] mx-auto">
                                                                             <div className="flex items-center justify-between text-[10px] font-black">
-                                                                                <span className={attColors.text}>{soloRate.toFixed(0)}% SOLO</span>
+                                                                                <span className={soloRate >= 90 ? "text-emerald-400" : "text-amber-400"}>{soloRate.toFixed(0)}% SOLO</span>
                                                                                 <Trophy className={cn("w-3 h-3", soloRate >= 90 ? "text-yellow-500" : "text-slate-600")} />
                                                                             </div>
-                                                                            <Progress value={soloRate} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: attColors.color }} />
+                                                                            <Progress value={soloRate} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: soloRate >= 90 ? '#10b981' : '#f59e0b' }} />
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-8 py-4 text-right font-mono font-bold">
