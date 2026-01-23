@@ -73,7 +73,10 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <Avatar className={cn("h-8 w-8 border-none ring-1.5 transition-transform group-hover:scale-110", classColors.border)}>
+                                            <Avatar 
+                                                className={cn("h-8 w-8 border-none transition-transform group-hover:scale-110", classColors.bg)}
+                                                style={{ boxShadow: `0 0 0 1.5px ${classColors.color}` }}
+                                            >
                                                 <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
                                                 <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
                                             </Avatar>
@@ -103,6 +106,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </CardContent>
                 {topDefenders.length > 5 && (
                     <div className="p-2 border-t border-slate-800/40 bg-slate-900/10">
@@ -149,7 +153,10 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                     <td className="px-4 py-3 w-8 text-slate-500 font-mono text-xs">{i + 1}</td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <Avatar className={cn("h-8 w-8 border-none ring-1.5 transition-transform group-hover:scale-110", classColors.border)}>
+                                            <Avatar 
+                                                className={cn("h-8 w-8 border-none transition-transform group-hover:scale-110", classColors.bg)}
+                                                style={{ boxShadow: `0 0 0 1.5px ${classColors.color}` }}
+                                            >
                                                 <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
                                                 <AvatarFallback>{champ.name.substring(0, 2)}</AvatarFallback>
                                             </Avatar>
@@ -180,6 +187,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </CardContent>
                 {topAttackers.length > 5 && (
                     <div className="p-2 border-t border-slate-800/40 bg-slate-900/10">
@@ -247,6 +255,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                             )}
                         </tbody>
                     </table>
+                    </div>
                 </CardContent>
                 {hardestNodes.length > 5 && (
                     <div className="p-2 border-t border-slate-800/40 bg-slate-900/10">
