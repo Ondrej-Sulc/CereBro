@@ -343,9 +343,13 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                           const classColors = getChampionClassColors(def.class);
                           return (
                             <div className="flex flex-col items-center gap-3 mb-6">
-                              <Avatar className={cn("h-28 w-28 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.ring)}><AvatarImage src={getChampionImageUrl(def.images, 'full')} /><AvatarFallback className="text-xl">{def.name.substring(0,2)}</AvatarFallback></Avatar>
+                              <div className={cn("relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.text.replace('text-', 'ring-'))}>
+                                <Avatar className={cn("h-28 w-28 border-none", classColors.bg)}>
+                                  <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-cover" />
+                                  <AvatarFallback className="text-xl bg-transparent">{def.name.substring(0,2)}</AvatarFallback>
+                                </Avatar>
+                              </div>
                               <span className={cn("text-2xl font-bold tracking-tight", classColors.text)}>{def.name}</span>
-                              <Badge variant="outline" className={cn("bg-slate-900 border-opacity-50", classColors.border, classColors.text)}>{def.class}</Badge>
                             </div>
                           );
                         })()}
@@ -431,9 +435,13 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                           const classColors = getChampionClassColors(att.class);
                           return (
                             <div className="flex flex-col items-center gap-3 mb-6">
-                              <Avatar className={cn("h-28 w-28 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.ring)}><AvatarImage src={getChampionImageUrl(att.images, 'full')} /><AvatarFallback className="text-xl">{att.name.substring(0,2)}</AvatarFallback></Avatar>
+                              <div className={cn("relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.text.replace('text-', 'ring-'))}>
+                                <Avatar className={cn("h-28 w-28 border-none", classColors.bg)}>
+                                  <AvatarImage src={getChampionImageUrl(att.images, 'full')} className="object-cover" />
+                                  <AvatarFallback className="text-xl bg-transparent">{att.name.substring(0,2)}</AvatarFallback>
+                                </Avatar>
+                              </div>
                               <span className={cn("text-2xl font-bold tracking-tight", classColors.text)}>{att.name}</span>
-                              <Badge variant="outline" className={cn("bg-slate-900 border-opacity-50", classColors.border, classColors.text)}>{att.class}</Badge>
                             </div>
                           );
                         })()}
@@ -513,9 +521,13 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                           const classColors = getChampionClassColors(def.class);
                           return (
                             <div className="flex flex-col items-center gap-3 mb-6">
-                              <Avatar className={cn("h-28 w-28 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.ring)}><AvatarImage src={getChampionImageUrl(def.images, 'full')} /><AvatarFallback className="text-xl">{def.name.substring(0,2)}</AvatarFallback></Avatar>
+                              <div className={cn("relative rounded-full p-1 ring-4 ring-offset-4 ring-offset-slate-950 shadow-2xl transition-transform hover:scale-105 duration-300", classColors.text.replace('text-', 'ring-'))}>
+                                <Avatar className={cn("h-28 w-28 border-none", classColors.bg)}>
+                                  <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-cover" />
+                                  <AvatarFallback className="text-xl bg-transparent">{def.name.substring(0,2)}</AvatarFallback>
+                                </Avatar>
+                              </div>
                               <span className={cn("text-2xl font-bold tracking-tight", classColors.text)}>{def.name}</span>
-                              <Badge variant="outline" className={cn("bg-slate-900 border-opacity-50", classColors.border, classColors.text)}>{def.class}</Badge>
                             </div>
                           );
                         })()}
