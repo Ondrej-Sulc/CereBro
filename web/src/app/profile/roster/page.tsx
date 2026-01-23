@@ -45,7 +45,7 @@ interface SigRecommendation {
 }
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string }>;
+  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
@@ -116,6 +116,8 @@ export default async function RosterPage(props: {
 
   const rankClassFilter = rankClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
   const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
+  const rankSagaFilter = searchParams.rankSagaFilter === 'true';
+  const sigSagaFilter = searchParams.sigSagaFilter === 'true';
 
   if (roster.length > 0) {
       const championIds = Array.from(new Set(roster.map(r => r.championId)));
@@ -188,6 +190,9 @@ export default async function RosterPage(props: {
           // Check Class Filter
           if (rankClassFilter.length > 0 && !rankClassFilter.includes(r.champion.class)) return false;
 
+          // Check Saga Filter
+          if (rankSagaFilter && !r.champion.tags.some(t => t.name === '#Saga Champions')) return false;
+
           // Check 7* up to targetRank (but max 6)
           if (r.stars === 7) return r.rank < Math.min(targetRank, 6); 
           // Check 6* and 5* up to Rank 5 (Max), regardless of higher targetRank
@@ -236,6 +241,9 @@ export default async function RosterPage(props: {
       const sigCandidates = roster.filter(r => {
           // Check Class Filter
           if (sigClassFilter.length > 0 && !sigClassFilter.includes(r.champion.class)) return false;
+
+          // Check Saga Filter
+          if (sigSagaFilter && !r.champion.tags.some(t => t.name === '#Saga Champions')) return false;
 
           if ((r.sigLevel || 0) >= 200) return false;
           // Focus on 7* and High Rank 6*
@@ -417,6 +425,8 @@ export default async function RosterPage(props: {
         initialSigBudget={sigBudget}
         initialRankClassFilter={rankClassFilter}
         initialSigClassFilter={sigClassFilter}
+        initialRankSagaFilter={rankSagaFilter}
+        initialSigSagaFilter={sigSagaFilter}
         initialTags={tags}
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}

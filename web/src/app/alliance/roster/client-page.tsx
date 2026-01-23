@@ -167,12 +167,39 @@ export function AllianceRosterMatrix({
         return groups;
     }, [filteredPlayers]);
 
-    const activeFilters = [
-        ...tagFilter.map(t => ({ label: t, type: 'Tag', onRemove: () => setTagFilter(tagFilter.filter(x => x !== t)) })),
-        ...abilityCategoryFilter.map(c => ({ label: c, type: 'Category', onRemove: () => setAbilityCategoryFilter(abilityCategoryFilter.filter(x => x !== c)) })),
-        ...abilityFilter.map(a => ({ label: a, type: 'Ability', onRemove: () => setAbilityFilter(abilityFilter.filter(x => x !== a)) })),
-        ...immunityFilter.map(i => ({ label: i, type: 'Immunity', onRemove: () => setImmunityFilter(immunityFilter.filter(x => x !== i)) })),
-    ];
+    const activeFilters = useMemo(() => {
+        const filters: { label: string, type: string, onRemove: () => void }[] = [];
+
+        if (starFilter !== "ALL") {
+            filters.push({ label: `${starFilter} ★`, type: 'Stars', onRemove: () => setStarFilter("ALL") });
+        }
+
+        if (minRankFilter !== "0") {
+            filters.push({ label: `R${minRankFilter}+`, type: 'Rank', onRemove: () => setMinRankFilter("0") });
+        }
+
+        classFilter.forEach(cls => {
+            filters.push({ label: cls.charAt(0) + cls.slice(1).toLowerCase(), type: 'Class', onRemove: () => setClassFilter(classFilter.filter(c => c !== cls)) });
+        });
+
+        tagFilter.forEach(t => {
+            filters.push({ label: t, type: 'Tag', onRemove: () => setTagFilter(tagFilter.filter(x => x !== t)) });
+        });
+
+        abilityCategoryFilter.forEach(c => {
+            filters.push({ label: c, type: 'Category', onRemove: () => setAbilityCategoryFilter(abilityCategoryFilter.filter(x => x !== c)) });
+        });
+
+        abilityFilter.forEach(a => {
+            filters.push({ label: a, type: 'Ability', onRemove: () => setAbilityFilter(abilityFilter.filter(x => x !== a)) });
+        });
+
+        immunityFilter.forEach(i => {
+            filters.push({ label: i, type: 'Immunity', onRemove: () => setImmunityFilter(immunityFilter.filter(x => x !== i)) });
+        });
+
+        return filters;
+    }, [starFilter, minRankFilter, classFilter, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
 
     const renderPlayerRow = (player: typeof players[0]) => {
         const champions = getFilteredChampionsForPlayer(player.id);
@@ -630,6 +657,10 @@ export function AllianceRosterMatrix({
                                             size="sm" 
                                             className="h-6 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
                                             onClick={() => {
+                                                setBgFilter("ALL");
+                                                setStarFilter("ALL");
+                                                setMinRankFilter("0");
+                                                setClassFilter([]);
                                                 setTagFilter([]);
                                                 setAbilityCategoryFilter([]);
                                                 setAbilityFilter([]);

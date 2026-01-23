@@ -192,10 +192,10 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                         <Badge 
                                                             key={i} 
                                                             variant="secondary" 
-                                                            className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
+                                                            className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[11px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                         >
                                                             <div className="flex items-start gap-1.5">
-                                                                <span className="font-semibold whitespace-nowrap mt-1">{imm.name}</span>
+                                                                <span className="font-semibold whitespace-nowrap">{imm.name}</span>
                                                                 {imm.instances.some(inst => inst.source || inst.synergyChampions.length > 0) && (
                                                                     <div className="flex flex-col pl-1.5 border-l border-white/10">
                                                                         {imm.instances.map((inst, idx) => (
@@ -203,13 +203,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                                                 {inst.synergyChampions.length > 0 && (
                                                                                     <div className="flex -space-x-1.5">
                                                                                         {inst.synergyChampions.map((sc, scIdx) => (
-                                                                                                <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
+                                                                                                <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
                                                                                                     <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
                                                                                                 </div>
                                                                                         ))}
                                                                                     </div>
                                                                                 )}
-                                                                                {inst.source && <span className="font-normal opacity-70 text-[9px] leading-tight">{inst.source}</span>}
+                                                                                {inst.source && <span className="font-normal opacity-70 text-[10px] leading-tight">{inst.source}</span>}
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -232,10 +232,10 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                         <Badge 
                                                             key={i} 
                                                             variant="secondary" 
-                                                            className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
+                                                            className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[11px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                         >
                                                             <div className="flex items-start gap-1.5">
-                                                                <span className="font-semibold whitespace-nowrap mt-1">{ab.name}</span>
+                                                                <span className="font-semibold whitespace-nowrap">{ab.name}</span>
                                                                 {ab.instances.some(inst => inst.source || inst.synergyChampions.length > 0) && (
                                                                     <div className="flex flex-col pl-1.5 border-l border-white/10">
                                                                         {ab.instances.map((inst, idx) => (
@@ -243,13 +243,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                                                 {inst.synergyChampions.length > 0 && (
                                                                                     <div className="flex -space-x-1.5">
                                                                                         {inst.synergyChampions.map((sc, scIdx) => (
-                                                                                                <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
+                                                                                                <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
                                                                                                     <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
                                                                                                 </div>
                                                                                         ))}
                                                                                     </div>
                                                                                 )}
-                                                                                {inst.source && <span className="font-normal opacity-70 text-[9px] leading-tight">{inst.source}</span>}
+                                                                                {inst.source && <span className="font-normal opacity-70 text-[10px] leading-tight">{inst.source}</span>}
                                                                             </div>
                                                                         ))}
                                                                     </div>

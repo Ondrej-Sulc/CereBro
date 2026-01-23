@@ -27,6 +27,8 @@ interface RosterViewProps {
   initialSigBudget?: number;
   initialRankClassFilter: ChampionClass[];
   initialSigClassFilter: ChampionClass[];
+  initialRankSagaFilter: boolean;
+  initialSigSagaFilter: boolean;
   initialTags: { id: string | number, name: string }[];
   initialAbilityCategories: { id: string | number, name: string }[];
   initialAbilities: { id: string | number, name: string }[];
@@ -43,6 +45,7 @@ GridList.displayName = "GridList";
 export function RosterView({
     initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations,
     simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
+    initialRankSagaFilter, initialSigSagaFilter,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities
 }: RosterViewProps) {
   const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
@@ -69,6 +72,8 @@ export function RosterView({
 
   const [rankUpClassFilter, setRankUpClassFilter] = useState<ChampionClass[]>(initialRankClassFilter);
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
+  const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
+  const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
   
   const [isPending, startTransition] = useTransition();
   const [chartData, setChartData] = useState<{data: PrestigePoint[], rec: SigRecommendation} | null>(null);
@@ -102,6 +107,16 @@ export function RosterView({
   const handleSigClassFilterChange = (classes: ChampionClass[]) => {
       setSigClassFilter(classes); setPendingSection('sig');
       updateUrlParams({ sigClassFilter: classes.length > 0 ? classes.join(',') : null });
+  };
+
+  const handleRankSagaFilterChange = (val: boolean) => {
+      setRankUpSagaFilter(val); setPendingSection('rank');
+      updateUrlParams({ rankSagaFilter: val ? 'true' : null });
+  };
+
+  const handleSigSagaFilterChange = (val: boolean) => {
+      setSigSagaFilter(val); setPendingSection('sig');
+      updateUrlParams({ sigSagaFilter: val ? 'true' : null });
   };
 
   const handleAddChampion = async () => {
@@ -248,6 +263,8 @@ export function RosterView({
         sigBudget={sigBudget} onSigBudgetChange={setSigBudget}
         rankUpClassFilter={rankUpClassFilter} onRankUpClassFilterChange={handleRankClassFilterChange}
         sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
+        rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
+        sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
         isPending={isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 

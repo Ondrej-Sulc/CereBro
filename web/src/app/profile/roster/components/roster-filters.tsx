@@ -1,11 +1,13 @@
 "use client";
 
-import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2 } from "lucide-react";
+import { useMemo } from "react";
+import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -59,6 +61,44 @@ export function RosterFilters({
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities
 }: RosterFiltersProps) {
+    const activeFilters = useMemo(() => {
+        const filters: { label: string, type: string, onRemove: () => void }[] = [];
+
+        if (search) {
+            filters.push({ label: search, type: 'Search', onRemove: () => onSearchChange("") });
+        }
+
+        filterStars.forEach(star => {
+            filters.push({ label: `${star} ★`, type: 'Stars', onRemove: () => onFilterStarsChange(filterStars.filter(s => s !== star)) });
+        });
+
+        filterRanks.forEach(rank => {
+            filters.push({ label: `R${rank}`, type: 'Rank', onRemove: () => onFilterRanksChange(filterRanks.filter(r => r !== rank)) });
+        });
+
+        filterClasses.forEach(cls => {
+            filters.push({ label: cls.charAt(0) + cls.slice(1).toLowerCase(), type: 'Class', onRemove: () => onFilterClassesChange(filterClasses.filter(c => c !== cls)) });
+        });
+
+        tagFilter.forEach(tag => {
+            filters.push({ label: tag, type: 'Tag', onRemove: () => onTagFilterChange(tagFilter.filter(t => t !== tag)) });
+        });
+
+        abilityCategoryFilter.forEach(cat => {
+            filters.push({ label: cat, type: 'Category', onRemove: () => onAbilityCategoryFilterChange(abilityCategoryFilter.filter(c => c !== cat)) });
+        });
+
+        abilityFilter.forEach(ab => {
+            filters.push({ label: ab, type: 'Ability', onRemove: () => onAbilityFilterChange(abilityFilter.filter(a => a !== ab)) });
+        });
+
+        immunityFilter.forEach(imm => {
+            filters.push({ label: imm, type: 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
+        });
+
+        return filters;
+    }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange]);
+
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-4 z-40 backdrop-blur-md shadow-lg">
             <div className="flex flex-col gap-4">
@@ -182,22 +222,55 @@ export function RosterFilters({
                 {/* Row 3: Advanced Filters */}
                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
                     <div className="flex flex-wrap gap-2 items-center w-full">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Advanced Filters:</span>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Advanced:</span>
                         <MultiSelectFilter title="Tags" icon={TagIcon} options={initialTags} selectedValues={tagFilter} onSelect={onTagFilterChange} logic={tagLogic} onLogicChange={onTagLogicChange} />
                         <MultiSelectFilter title="Categories" icon={BookOpen} options={initialAbilityCategories} selectedValues={abilityCategoryFilter} onSelect={onAbilityCategoryFilterChange} logic={abilityCategoryLogic} onLogicChange={onAbilityCategoryLogicChange} />
                         <MultiSelectFilter title="Abilities" icon={Zap} options={initialAbilities} selectedValues={abilityFilter} onSelect={onAbilityFilterChange} logic={abilityLogic} onLogicChange={onAbilityLogicChange} />
                         <MultiSelectFilter title="Immunities" icon={Shield} options={initialImmunities} selectedValues={immunityFilter} onSelect={onImmunityFilterChange} logic={immunityLogic} onLogicChange={onImmunityLogicChange} />
-                        
-                        {(tagFilter.length > 0 || abilityCategoryFilter.length > 0 || abilityFilter.length > 0 || immunityFilter.length > 0) && (
-                            <Button 
-                                variant="ghost" size="sm" className="h-9 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 ml-auto"
-                                onClick={() => { onTagFilterChange([]); onAbilityCategoryFilterChange([]); onAbilityFilterChange([]); onImmunityFilterChange([]); }}
-                            >
-                                <Trash2 className="w-3.5 h-3.5 mr-1" /> Clear Filters
-                            </Button>
-                        )}
                     </div>
                 </div>
+
+                {/* Row 4: Active Filters Badges */}
+                {activeFilters.length > 0 && (
+                    <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4 items-center">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Active Filters:</span>
+                        {activeFilters.map((filter, index) => (
+                            <Badge 
+                                key={`${filter.type}-${filter.label}-${index}`}
+                                variant="outline"
+                                className="bg-slate-950/50 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-7"
+                            >
+                                <span className="text-slate-500 font-normal mr-0.5">{filter.type}:</span>
+                                {filter.label}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-4 w-4 ml-1 hover:bg-slate-800 hover:text-red-400 rounded-full shrink-0"
+                                    onClick={filter.onRemove}
+                                >
+                                    <X className="h-3 w-3" />
+                                </Button>
+                            </Badge>
+                        ))}
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 ml-auto"
+                            onClick={() => {
+                                onSearchChange("");
+                                onFilterStarsChange([]);
+                                onFilterRanksChange([]);
+                                onFilterClassesChange([]);
+                                onTagFilterChange([]);
+                                onAbilityCategoryFilterChange([]);
+                                onAbilityFilterChange([]);
+                                onImmunityFilterChange([]);
+                            }}
+                        >
+                            <Trash2 className="w-3.5 h-3.5 mr-1" /> Clear All
+                        </Button>
+                    </div>
+                )}
             </div>
         </Card>
     );
