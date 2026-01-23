@@ -255,7 +255,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                 
                                 <TabsContent value="node" className="m-0">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Node Number</label>
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Node</label>
                                         <Popover open={nodeOpen} onOpenChange={setNodeOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-between bg-slate-900/50 border-slate-700/50 text-slate-200 hover:bg-slate-800">
@@ -285,7 +285,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
 
                                 <TabsContent value="defender" className="m-0">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Champion</label>
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Defender</label>
                                         <Popover open={defenderOpen} onOpenChange={setDefenderOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-between bg-slate-900/50 border-slate-700/50 text-slate-200 hover:bg-slate-800">
@@ -326,7 +326,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                 
                                 <TabsContent value="attacker" className="m-0">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Your Attacker</label>
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Attacker</label>
                                         <Popover open={attackerOpen} onOpenChange={setAttackerOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-between bg-slate-900/50 border-slate-700/50 text-slate-200 hover:bg-slate-800">
@@ -358,7 +358,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
 
                                 <TabsContent value="counter" className="m-0">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Enemy Defender</label>
+                                        <label className="text-[10px] uppercase font-bold text-slate-500 ml-1">Select Defender</label>
                                         <Popover open={counterDefenderOpen} onOpenChange={setCounterDefenderOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-between bg-slate-900/50 border-slate-700/50 text-slate-200 hover:bg-slate-800">
@@ -405,23 +405,23 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                     <Target className="w-32 h-32 text-amber-500 rotate-12" />
                                 </div>
                                 <div className="absolute inset-0 h-40 bg-gradient-to-r from-amber-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
-                                <CardHeader className="relative z-10 flex flex-row items-center gap-6 border-b border-slate-800/60 bg-slate-900/20 pb-6">
-                                    <div className="flex flex-col items-center">
+                                <CardHeader className="relative z-10 flex flex-col sm:flex-row items-center gap-6 border-b border-slate-800/60 bg-slate-900/20 pb-6">
+                                    <div className="flex flex-col items-center shrink-0">
                                         <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-amber-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.15)] group-hover:scale-105 transition-transform duration-500">
                                             <span className="text-3xl font-mono font-bold text-amber-500">{selectedNode}</span>
                                         </div>
                                         <Badge className="mt-2 bg-amber-500 text-slate-950 font-bold border-none uppercase text-[10px]">Node</Badge>
                                     </div>
-                                    <div className="flex-1">
-                                        <CardTitle className="text-3xl font-bold text-white tracking-tight">Node {selectedNode} Intelligence</CardTitle>
-                                        <div className="flex items-center gap-6 mt-3">
+                                    <div className="flex-1 text-center sm:text-left">
+                                        <CardTitle className="text-3xl font-bold text-white tracking-tight">Node {selectedNode} Stats</CardTitle>
+                                        <div className="flex items-center justify-center sm:justify-start gap-6 mt-3">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Encounters</span>
+                                                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Fights</span>
                                                 <span className="text-xl font-mono font-bold text-slate-200">{nodeStats.reduce((acc, curr) => acc + curr.fights, 0)}</span>
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Lethality</span>
-                                                <span className="text-xl font-mono font-bold text-red-400">{nodeStats.reduce((acc, curr) => acc + curr.deaths, 0)} Deaths</span>
+                                                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Deaths</span>
+                                                <span className="text-xl font-mono font-bold text-red-400">{nodeStats.reduce((acc, curr) => acc + curr.deaths, 0)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -430,9 +430,9 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                     <table className="w-full text-left">
                                         <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/40 font-bold tracking-widest border-b border-slate-800/60">
                                             <tr>
-                                                <th className="px-6 py-4">Placement History</th>
-                                                <th className="px-6 py-4 text-center">Wars</th>
-                                                <th className="px-6 py-4 text-center">Threat Level</th>
+                                                <th className="px-6 py-4">Defender</th>
+                                                <th className="px-6 py-4 text-center">Fights</th>
+                                                <th className="px-6 py-4 text-center">Lethality</th>
                                                 <th className="px-6 py-4 text-right">Avg Deaths</th>
                                             </tr>
                                         </thead>
@@ -445,7 +445,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-4">
                                                                 <div 
-                                                                    className="relative rounded-full p-0.5 shadow-lg group-hover/row:scale-110 transition-transform duration-300"
+                                                                    className="relative rounded-full p-0.5 shrink-0 shadow-lg group-hover/row:scale-110 transition-transform duration-300"
                                                                     style={{ boxShadow: `0 0 10px ${classColors.color}40`, border: `1.5px solid ${classColors.color}` }}
                                                                 >
                                                                     <Avatar className={cn("h-10 w-10 border-none", classColors.bg)}>
@@ -453,12 +453,12 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                         <AvatarFallback>{stat.defenderName.substring(0,2)}</AvatarFallback>
                                                                     </Avatar>
                                                                 </div>
-                                                                <span className={cn("font-bold text-base", classColors.text)}>{stat.defenderName}</span>
+                                                                <span className={cn("font-bold text-base truncate max-w-[120px] sm:max-w-none", classColors.text)}>{stat.defenderName}</span>
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
                                                         <td className="px-6 py-4">
-                                                            <div className="flex flex-col gap-1.5 min-w-[120px]">
+                                                            <div className="flex flex-col gap-1.5 min-w-[80px] sm:min-w-[120px]">
                                                                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                                                                     <span>{stat.deaths} DEATHS</span>
                                                                     <span>{Math.min(100, lethality * 100).toFixed(0)}%</span>
@@ -506,10 +506,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
                                             </div>
                                             
-                                            <CardHeader className="relative z-10 flex flex-col md:flex-row md:items-center gap-8 pb-8 pt-8 px-8">
+                                            <CardHeader className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-8 pb-8 pt-8 px-8 text-center sm:text-left">
                                                 <div 
-                                                    className="relative shrink-0 rounded-full p-1.5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
-                                                    style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}` }}
+                                                    className="relative shrink-0 mx-auto sm:mx-0 rounded-full p-1.5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
+                                                    style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}`, width: 'fit-content' }}
                                                 >
                                                     <Avatar className={cn("h-32 w-32 border-none", classColors.bg)}>
                                                         <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-contain" />
@@ -518,7 +518,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                 </div>
                                                 <div className="flex-1 space-y-4">
                                                     <div>
-                                                        <div className="flex items-center gap-2 mb-1">
+                                                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                                                             <div className={cn("w-2 h-2 rounded-full animate-pulse")} style={{ backgroundColor: classColors.color }} />
                                                             <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{def.class}</span>
                                                         </div>
@@ -527,7 +527,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                     
                                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                                         <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 backdrop-blur-sm">
-                                                            <span className="text-[9px] text-slate-500 uppercase font-black block mb-1">Total Placed</span>
+                                                            <span className="text-[9px] text-slate-500 uppercase font-black block mb-1">Season Fights</span>
                                                             <span className="text-xl font-mono font-bold text-white leading-none">{totalFights}</span>
                                                         </div>
                                                         <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 backdrop-blur-sm">
@@ -536,7 +536,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                         </div>
                                                         <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 backdrop-blur-sm col-span-2">
                                                             <div className="flex items-center justify-between mb-1">
-                                                                <span className="text-[9px] text-slate-500 uppercase font-black">Lethality Index</span>
+                                                                <span className="text-[9px] text-slate-500 uppercase font-black">Lethality</span>
                                                                 <span className="text-[10px] font-mono font-bold text-amber-400">{(avgLethality * 10).toFixed(1)}/10</span>
                                                             </div>
                                                             <Progress value={Math.min(100, avgLethality * 100)} className="h-1 bg-slate-800" style={{ ["--primary" as any]: classColors.color }} />
@@ -549,10 +549,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                 <table className="w-full text-left border-collapse">
                                                     <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/40 font-black tracking-widest border-b border-slate-800/60">
                                                         <tr>
-                                                            <th className="px-8 py-4">Node Sector</th>
-                                                            <th className="px-8 py-4 text-center">Deployment Count</th>
+                                                            <th className="px-8 py-4">Node</th>
+                                                            <th className="px-8 py-4 text-center">Fights</th>
                                                             <th className="px-8 py-4 text-center">Threat Level</th>
-                                                            <th className="px-8 py-4 text-right">Efficiency</th>
+                                                            <th className="px-8 py-4 text-right">Avg Deaths</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-800/40 text-sm">
@@ -566,7 +566,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                         <span className="font-bold text-slate-200">Sector {stat.nodeNumber}</span>
                                                                     </div>
                                                                 </td>
-                                                                <td className="px-8 py-5 text-center font-mono text-slate-400 font-bold">{stat.fights} Wars</td>
+                                                                <td className="px-8 py-5 text-center font-mono text-slate-400 font-bold">{stat.fights}</td>
                                                                 <td className="px-8 py-5">
                                                                     <div className="flex flex-col gap-1.5 w-full max-w-[140px] mx-auto">
                                                                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
@@ -578,7 +578,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                 </td>
                                                                 <td className="px-8 py-5 text-right">
                                                                     <Badge variant="outline" className={cn("font-mono font-bold border-none bg-slate-900", (stat.deaths / (stat.fights || 1)) > 0.5 ? "text-red-400" : "text-slate-500")}>
-                                                                        {(stat.deaths / (stat.fights || 1)).toFixed(2)} K/W
+                                                                        {(stat.deaths / (stat.fights || 1)).toFixed(2)}
                                                                     </Badge>
                                                                 </td>
                                                             </tr>
@@ -618,7 +618,6 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
 
                                 return (
                                     <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
-                                        {/* Header Background Effects */}
                                         <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
                                             <div className="absolute inset-0 opacity-[0.03] flex justify-end items-center">
                                                 <img src={getChampionImageUrl(att.images, 'full')} className="h-[150%] object-cover grayscale brightness-200 -mr-20" alt="" />
@@ -626,10 +625,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
                                         </div>
                                         
-                                        <CardHeader className="relative z-10 flex flex-col md:flex-row md:items-center gap-8 pb-8 pt-8 px-8">
+                                        <CardHeader className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-8 pb-8 pt-8 px-8 text-center sm:text-left">
                                             <div 
-                                                className="relative shrink-0 rounded-full p-1.5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
-                                                style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}` }}
+                                                className="relative shrink-0 mx-auto sm:mx-0 rounded-full p-1.5 shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-transform duration-700 hover:scale-105"
+                                                style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}`, width: 'fit-content' }}
                                             >
                                                 <Avatar className={cn("h-32 w-32 border-none", classColors.bg)}>
                                                     <AvatarImage src={getChampionImageUrl(att.images, 'full')} className="object-contain" />
@@ -638,7 +637,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                             </div>
                                             <div className="flex-1 space-y-4">
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-1">
+                                                    <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                                                         <div className={cn("w-2 h-2 rounded-full")} style={{ backgroundColor: classColors.color }} />
                                                         <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{att.class}</span>
                                                     </div>
@@ -656,7 +655,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                     </div>
                                                     <div className="bg-slate-900/60 border border-slate-800/60 rounded-xl p-3 backdrop-blur-sm col-span-2">
                                                         <div className="flex items-center justify-between mb-1">
-                                                            <span className="text-[9px] text-slate-500 uppercase font-black">Combat Efficiency</span>
+                                                            <span className="text-[9px] text-slate-500 uppercase font-black">Efficiency</span>
                                                             <span className="text-[10px] font-mono font-bold text-emerald-400">{globalSoloRate.toFixed(1)}%</span>
                                                         </div>
                                                         <Progress value={globalSoloRate} className="h-1 bg-slate-800" style={{ ["--primary" as any]: globalSoloRate >= 90 ? '#10b981' : '#f59e0b' }} />
@@ -669,9 +668,9 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                             <table className="w-full text-left">
                                                 <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/40 font-black tracking-widest border-b border-slate-800/60">
                                                     <tr>
-                                                        <th className="px-8 py-4">Engagement Target</th>
+                                                        <th className="px-8 py-4">Defender</th>
                                                         <th className="px-8 py-4 text-center">Fights</th>
-                                                        <th className="px-8 py-4 text-center">Win Prob.</th>
+                                                        <th className="px-8 py-4 text-center">Win Rate</th>
                                                         <th className="px-8 py-4 text-right">Deaths</th>
                                                     </tr>
                                                 </thead>
@@ -683,18 +682,18 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                             <tr key={stat.defenderId} className="hover:bg-slate-800/20 transition-all group/target">
                                                                 <td className="px-8 py-4">
                                                                     <div className="flex items-center gap-4">
-                                                                        <div className="relative rounded-lg p-0.5" style={{ border: `1px solid ${targetColors.color}40`, backgroundColor: `${targetColors.color}10` }}>
+                                                                        <div className="relative rounded-lg p-0.5 shrink-0" style={{ border: `1px solid ${targetColors.color}40`, backgroundColor: `${targetColors.color}10` }}>
                                                                             <Avatar className="h-10 w-10 border-none">
                                                                                 <AvatarImage src={getChampionImageUrl(stat.defenderImages, '64')} />
                                                                                 <AvatarFallback>{stat.defenderName.substring(0,2)}</AvatarFallback>
                                                                             </Avatar>
                                                                         </div>
-                                                                        <span className={cn("font-bold text-base", targetColors.text)}>{stat.defenderName}</span>
+                                                                        <span className={cn("font-bold text-base truncate max-w-[120px] sm:max-w-none", targetColors.text)}>{stat.defenderName}</span>
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-8 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
                                                                 <td className="px-8 py-4">
-                                                                    <div className="flex flex-col gap-1.5 w-full max-w-[120px] mx-auto">
+                                                                    <div className="flex flex-col gap-1.5 w-full max-w-[80px] sm:max-w-[120px] mx-auto">
                                                                         <span className={cn("text-[10px] font-black text-center mb-0.5", soloRate >= 90 ? "text-emerald-400" : "text-amber-400")}>{soloRate.toFixed(0)}% SOLO</span>
                                                                         <Progress value={soloRate} className="h-1 bg-slate-800" style={{ ["--primary" as any]: soloRate >= 90 ? '#10b981' : '#f59e0b' }} />
                                                                     </div>
@@ -702,7 +701,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                 <td className="px-8 py-4 text-right">
                                                                     <span className={cn("font-mono font-bold flex items-center justify-end gap-1.5", stat.deaths > 0 ? "text-red-400" : "text-emerald-500")}>
                                                                         {stat.deaths > 0 && <Skull className="w-3.5 h-3.5" />}
-                                                                        {stat.deaths === 0 ? "PERFECT" : `${stat.deaths} KILLS`}
+                                                                        {stat.deaths === 0 ? "SOLO" : `${stat.deaths} DEATHS`}
                                                                     </span>
                                                                 </td>
                                                             </tr>
@@ -727,7 +726,6 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                 return (
                                     <div className="space-y-6">
                                         <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
-                                            {/* Header Background Effects */}
                                             <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
                                                 <div className="absolute inset-0 opacity-[0.03] flex justify-end items-center">
                                                     <img src={getChampionImageUrl(def.images, 'full')} className="h-[150%] object-cover grayscale brightness-200 -mr-20" alt="" />
@@ -735,25 +733,27 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
                                             </div>
                                             
-                                            <CardHeader className="relative z-10 flex flex-col md:flex-row md:items-center gap-8 pb-8 pt-8 px-8">
+                                            <CardHeader className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-8 pb-8 pt-8 px-8 text-center sm:text-left">
                                                 <div 
-                                                    className="relative shrink-0 rounded-full p-1.5 transition-transform duration-700 hover:scale-105"
-                                                    style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}` }}
+                                                    className="relative shrink-0 mx-auto sm:mx-0 rounded-full p-1.5 transition-transform duration-700 hover:scale-105"
+                                                    style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}`, width: 'fit-content' }}
                                                 >
                                                     <Avatar className={cn("h-32 w-32 border-none", classColors.bg)}>
                                                         <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-contain" />
                                                         <AvatarFallback>{def.name.substring(0,2)}</AvatarFallback>
                                                     </Avatar>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <div className={cn("w-2 h-2 rounded-full shadow-[0_0_10px_currentColor]")} style={{ backgroundColor: classColors.color }} />
-                                                        <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{def.class}</span>
-                                                    </div>
-                                                    <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic mb-4">{def.name}</CardTitle>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl backdrop-blur-sm">
-                                                            <div className="text-xl font-black text-emerald-400 uppercase tracking-tighter">Recommended Counters</div>
+                                                <div className="flex-1 space-y-4">
+                                                    <div>
+                                                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                                                            <div className={cn("w-2 h-2 rounded-full shadow-[0_0_10px_currentColor]")} style={{ backgroundColor: classColors.color }} />
+                                                            <span className={cn("text-xs font-black uppercase tracking-[0.3em]", classColors.text)}>{def.class}</span>
+                                                        </div>
+                                                        <CardTitle className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase italic mb-4">{def.name}</CardTitle>
+                                                        <div className="flex items-center justify-center sm:justify-start">
+                                                            <div className="bg-slate-900/60 border border-slate-800/60 px-4 py-2 rounded-xl backdrop-blur-sm">
+                                                                <div className="text-sm font-black text-slate-400 uppercase tracking-tight">Fights Recorded This Season</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -763,10 +763,10 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                 <table className="w-full text-left">
                                                     <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/40 font-black tracking-widest border-b border-slate-800/60">
                                                         <tr>
-                                                            <th className="px-8 py-4">Counter-Operative</th>
-                                                            <th className="px-8 py-4 text-center">Engagements</th>
-                                                            <th className="px-8 py-4 text-center">Efficiency Rating</th>
-                                                            <th className="px-8 py-4 text-right">Combat Log</th>
+                                                            <th className="px-8 py-4">Attacker</th>
+                                                            <th className="px-8 py-4 text-center">Fights</th>
+                                                            <th className="px-8 py-4 text-center">Win Rate</th>
+                                                            <th className="px-8 py-4 text-right">Result</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody className="divide-y divide-slate-800/40 text-sm">
@@ -777,28 +777,28 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                                                                 <tr key={stat.attackerId} className="hover:bg-slate-800/20 transition-all group/counter">
                                                                     <td className="px-8 py-4">
                                                                         <div className="flex items-center gap-4">
-                                                                            <div className="relative rounded-lg p-0.5 shadow-lg group-hover/counter:scale-110 transition-transform" style={{ border: `1.5px solid ${attColors.color}`, backgroundColor: attColors.bg }}>
+                                                                            <div className="relative rounded-lg p-0.5 shrink-0 shadow-lg group-hover/counter:scale-110 transition-transform" style={{ border: `1.5px solid ${attColors.color}`, backgroundColor: attColors.bg }}>
                                                                                 <Avatar className="h-10 w-10 border-none">
                                                                                     <AvatarImage src={getChampionImageUrl(stat.attackerImages!, '64')} />
                                                                                     <AvatarFallback>{stat.attackerName!.substring(0,2)}</AvatarFallback>
                                                                                 </Avatar>
                                                                             </div>
-                                                                            <span className={cn("font-black text-base italic uppercase tracking-tight", attColors.text)}>{stat.attackerName}</span>
+                                                                            <span className={cn("font-black text-base italic uppercase tracking-tight truncate max-w-[120px] sm:max-w-none", attColors.text)}>{stat.attackerName}</span>
                                                                         </div>
                                                                     </td>
-                                                                    <td className="px-8 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights} Wars</td>
+                                                                    <td className="px-8 py-4 text-center font-mono text-slate-300 font-bold">{stat.fights}</td>
                                                                     <td className="px-8 py-4">
-                                                                        <div className="flex flex-col gap-1.5 w-full max-w-[140px] mx-auto">
+                                                                        <div className="flex flex-col gap-1.5 w-full max-w-[80px] sm:max-w-[140px] mx-auto">
                                                                             <div className="flex items-center justify-between text-[10px] font-black">
-                                                                                <span className={attColors.text}>{soloRate.toFixed(0)}% SUCCESS</span>
+                                                                                <span className={attColors.text}>{soloRate.toFixed(0)}% SOLO</span>
                                                                                 <Trophy className={cn("w-3 h-3", soloRate >= 90 ? "text-yellow-500" : "text-slate-600")} />
                                                                             </div>
                                                                             <Progress value={soloRate} className="h-1 bg-slate-800" style={{ ["--primary" as any]: attColors.color }} />
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-8 py-4 text-right font-mono font-bold">
-                                                                        <span className={cn("px-2 py-1 rounded text-xs", stat.deaths > 0 ? "text-red-400" : "text-emerald-400 bg-emerald-500/5")}>
-                                                                            {stat.deaths === 0 ? "SOLO VERIFIED" : `${stat.deaths} DEATHS`}
+                                                                        <span className={cn("px-2 py-1 rounded text-xs", stat.deaths > 0 ? "text-red-400" : "text-emerald-400")}>
+                                                                            {stat.deaths === 0 ? "SOLO" : `${stat.deaths} DEATHS`}
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -819,7 +819,7 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
                             <div className="p-4 rounded-full bg-slate-900/50">
                                 <Swords className="w-12 h-12 opacity-20" />
                             </div>
-                            <p className="font-bold tracking-tight text-lg">Select an Attacker or Counter-Target to begin analysis</p>
+                            <p className="font-bold tracking-tight text-lg">Select an Attacker or Defender to begin analysis</p>
                         </div>
                     )}
                 </>
