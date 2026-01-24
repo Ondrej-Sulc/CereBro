@@ -134,6 +134,10 @@ The project now includes a dedicated "War Planning" feature within the web inter
     *   **Mechanism:** The build process generates a unique ID (Git Commit Hash or Timestamp) injected via `next.config.ts`.
     *   **Client Polling:** A client-side component polls a lightweight `/api/version` endpoint. If the server version differs from the client's initial version, a persistent Toast notification prompts the user to refresh the page.
 *   **Optimized Planning Workflow:**
+    *   **Unified War Editing:** A consistent `EditWarDialog` component is used across both the dashboard and the individual war plan views. This allows Officers to update war metadata (Name, Opponent, Season, Tier) at any time.
+        *   **Enemy Deaths Tracking:** Officers can now manually track "Enemy Deaths" alongside the automatically calculated alliance deaths.
+        *   **War Results:** Finished wars can be marked with a result (Win/Loss), visually indicated by green/red themes in the dashboard.
+        *   **Locked Map Type:** To preserve data integrity for existing fight assignments, the **Map Type** (Standard vs Big Thing) is locked once a war is created.
     *   **Node Editing:** Clicking a node opens an optimized "Inspector Panel".
         *   **Virtualization:** The Champion and Player selection dropdowns (`ChampionCombobox`, `PlayerCombobox`) use `react-virtuoso` to virtualize their lists, rendering only visible items. This eliminates the massive render storms caused by mounting hundreds of DOM nodes for large rosters.
         *   **Smart Roster Integration (Defense):** The Defense Editor actively cross-references the selected Player's roster with the chosen Defender. If matches are found, it presents precise "Smart Select" buttons (e.g., "7★ R3 (Ascended)") to ensure accurate placement tracking, replacing generic dropdowns. The Player selection list also displays the rank/star level of the currently selected champion for each player.
