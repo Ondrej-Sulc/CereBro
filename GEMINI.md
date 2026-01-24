@@ -23,7 +23,7 @@ The platform provides a variety of features, including:
     *   **War Defense Planner:** A specialized interface for strategizing alliance defense placements, supporting multiple battlegroups, map types (Standard/Big Thing), and player roster management. **Follows the same permission model as Attack Planning (view-only for members, full access for officers).**
     *   **Season Overview:** A comprehensive analytics dashboard for tracking player and alliance performance across entire war seasons.
     *   **War Archive:** A searchable database of uploaded Alliance War videos and fight logs.
-    *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI. **The system now features enhanced profile resolution that automatically falls back to the most recent profile if no "active" one is set, ensuring seamless access for all registered users.**
+    *   **Profile & Roster Management:** Users can view and update their profiles and rosters through the web UI. **The system features an interactive Profile Manager for switching, renaming, deleting, and creating profiles, with enhanced resolution that automatically falls back to the most recent profile if no "active" one is set. It also includes "Auto-Prestige Sync," which automatically updates the profile's champion prestige if the real-time roster calculation exceeds the stored value.**
     *   **Alliance Management:**
         *   **Overview:** A dedicated `/alliance` page for officers to manage member battlegroup assignments. Changes are synced to Discord roles automatically via background jobs. Includes troubleshooting help for permission hierarchy issues.
         *   **Custom Battlegroup Colors:** Officers can customize the identity color for each Battlegroup. These colors are used throughout the Web UI (Roster Overview headers, War Map paths/portals) and in Discord War Plan messages/maps for a unified theme.
@@ -324,8 +324,9 @@ The web interface features a "War Archive" that allows users to browse and searc
 
 ### Profile & Roster Management
 The web interface now includes a comprehensive Profile section.
-*   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, and prestige history. **The roster summary has been redesigned into a clear, table-based breakdown showing champion counts by Rank and Class for each Star level.**
+*   **View Profile:** Authenticated users can view their profile details, including registered name, alliance, and prestige history. **The Profile Manager allows for seamless switching, renaming, deleting, and creating of multiple in-game accounts. The roster summary has been redesigned into a clear, table-based breakdown showing champion counts by Rank and Class for each Star level.**
 *   **Interactive Roster Page:** A dedicated `/profile/roster` page features a high-performance, virtualized grid (`react-virtuoso`) capable of displaying hundreds of champions.
+    *   **Auto-Prestige Sync:** To ensure accuracy, the system automatically synchronizes the profile's champion prestige whenever the roster is viewed if the real-time calculated Top 30 average is higher than the currently stored value.
     *   **Modular Architecture:** The roster view has been refactored into a modular component architecture (`roster-filters`, `roster-insights`, `champion-card`), separating view logic from UI presentation.
     *   **Consolidated Filter Bar:** A sticky, comprehensive filter interface featuring separate **View** and **Edit** modes.
     *   **Standard Filters:** Includes robust filtering for **Sort By** (Prestige/Name), **Stars** (7, 6, 5), **Ranks** (1-6), and **Class** (multi-select with icons).

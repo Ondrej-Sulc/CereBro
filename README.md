@@ -73,7 +73,7 @@ The flagship feature of the platform.
   - **Sig Stone Optimizer:** Simulates optimal stone allocation based on a user-defined budget, supporting specific **Class Filters** (e.g., "Best use of 50 Science stones").
   - **Interactive Visualizations:** Clicking on a recommendation opens a detailed **Prestige Curve Chart**, visualizing the champion's prestige growth potential.
 - **Smart Import:** Users can upload screenshots of their game roster. The system uses image processing to identify champions, star levels, ranks, and ascension status, syncing the data to the central DB.
-- **Profile Analysis:** The main profile view now includes a detailed, table-based breakdown of the roster by Rank and Class for each Star level, alongside Prestige history and timezone management.
+- **Profile Analysis:** The main profile view features a detailed table-based breakdown of the roster by Rank and Class, alongside Prestige history and timezone management. **Includes an interactive Profile Manager for managing multiple in-game accounts and "Auto-Prestige Sync" to keep profile data accurate via real-time roster calculations.**
 
 ### 🧠 Knowledge Base
 

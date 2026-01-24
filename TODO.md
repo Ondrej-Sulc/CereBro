@@ -5,7 +5,7 @@
     - separate some tables into a different database. seperate tables that are environment dependent and static data (champions data thats same for both ?)
     - using admin / debug commands only in dev version of bot
 - handle pagination in schedule view for 40+ components
-- reduce /profile commands, add interactive stuff (halfway done)
+- reduce /profile commands, add interactive stuff (Done)
 - alternate screenshot roster processing (different view in game, from the battlegrouds roster, which also includes sig levels. generaly includes more details but doesnt have champion names, we would rely only on image processing to diferentiate champions)
 - In the AQ tracker, disable buttons after they are clicked.
     - investigate AQ tracker sending, its not working properly.
