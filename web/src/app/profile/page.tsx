@@ -15,6 +15,8 @@ import { PrestigeHistoryChart } from "./prestige-chart";
 import { Upload, LayoutGrid } from "lucide-react";
 import logger from "@/lib/logger";
 
+import { ProfileManager } from "./components/profile-manager";
+
 const CLASS_ICONS: Record<Exclude<ChampionClass, 'SUPERIOR'>, string> = {
     SCIENCE: "/icons/Science.png",
     SKILL: "/icons/Skill.png",
@@ -74,28 +76,8 @@ export default async function ProfilePage() {
           </p>
         </div>
 
-        {/* Profile Selector (Multiple Profiles) */}
-        {allProfiles.length > 1 && (
-            <div className="flex items-center gap-3">
-                <span className="text-sm text-slate-400 font-medium">Switch Profile:</span>
-                <div className="flex flex-wrap gap-2 p-1 bg-slate-900/50 border border-slate-800 rounded-lg w-fit">
-                    {allProfiles.map(p => (
-                        <Link key={p.id} href={`/api/profile/switch?name=${encodeURIComponent(p.ingameName)}`}>
-                            <Button 
-                                variant={p.id === player.id ? "secondary" : "ghost"} 
-                                size="sm"
-                                className={cn(
-                                    "h-8 text-xs font-bold transition-all",
-                                    p.id === player.id ? "bg-slate-800 text-white shadow-sm" : "text-slate-500 hover:text-slate-300"
-                                )}
-                            >
-                                {p.ingameName}
-                            </Button>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-        )}
+        {/* Profile Manager */}
+        <ProfileManager profiles={allProfiles} activeProfileId={player.id} />
       </div>
 
       <Separator className="bg-slate-800" />

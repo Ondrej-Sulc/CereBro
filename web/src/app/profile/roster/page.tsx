@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "./types";
+import logger from "@/lib/logger";
 
 export const dynamic = 'force-dynamic';
 
@@ -184,6 +185,15 @@ export default async function RosterPage(props: {
       const top30 = rosterWithPrestige.slice(0, 30);
       const sum = top30.reduce((s, r) => s + r.prestige, 0);
       top30Average = top30.length > 0 ? Math.round(sum / top30.length) : 0;
+
+      // Update player profile if calculated prestige is higher
+      if (top30Average > (player.championPrestige || 0)) {
+        await prisma.player.update({
+          where: { id: player.id },
+          data: { championPrestige: top30Average }
+        });
+        logger.info({ playerId: player.id, oldPrestige: player.championPrestige, newPrestige: top30Average }, "Auto-updated champion prestige from roster calculation");
+      }
 
       // Smart Recommendations Simulation
       const candidates = roster.filter(r => {
