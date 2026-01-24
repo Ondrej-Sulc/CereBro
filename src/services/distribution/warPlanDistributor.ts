@@ -457,10 +457,6 @@ export async function distributeWarPlan(
         const playerObj = fights[0].player; // For capitalization and ID
         
         const thread = await getThread(bg, playerName);
-        if (!thread) {
-            result.notFound.push(playerName); // Failed to find OR create
-            continue;
-        }
 
         const myPrefights = playerPrefightTasks.get(playerObj.id) || [];
         const myExtras = playerExtras.get(playerName) || [];
@@ -621,25 +617,48 @@ export async function distributeWarPlan(
 
         try {
             const files = mapAttachment ? [mapAttachment] : [];
-            await thread.send({
-                components: [container],
-                flags: [MessageFlags.IsComponentsV2],
-                files: files
-            });
             
-            // Add player to thread if they have a discord ID and are not already in it? 
-            // Private threads need members added.
-            if (playerObj.discordId) {
-                try {
-                    await thread.members.add(playerObj.discordId);
-                } catch (e) {
-                   // Ignore if already member or cant add
+            if (thread) {
+                await thread.send({
+                    components: [container],
+                    flags: [MessageFlags.IsComponentsV2],
+                    files: files
+                });
+                
+                // Add player to thread if they have a discord ID and are not already in it
+                if (playerObj.discordId) {
+                    try {
+                        await thread.members.add(playerObj.discordId);
+                    } catch (e) {
+                       // Ignore if already member or cant add
+                    }
                 }
+            } else if (playerObj.discordId) {
+                // FALLBACK: Send via DM
+                try {
+                    const user = await client.users.fetch(playerObj.discordId);
+                    if (user) {
+                        await user.send({
+                            components: [container],
+                            flags: [MessageFlags.IsComponentsV2],
+                            files: files
+                        });
+                        logger.info({ playerName }, "Sent war plan via DM (fallback)");
+                    } else {
+                        throw new Error("User not found for DM");
+                    }
+                } catch (dmErr) {
+                    logger.error({ err: dmErr, playerName }, "Failed to send DM fallback");
+                    throw new Error(`Thread unavailable and DM failed: ${dmErr instanceof Error ? dmErr.message : String(dmErr)}`);
+                }
+            } else {
+                result.notFound.push(playerObj.ingameName);
+                continue;
             }
 
             result.sent.push(playerObj.ingameName);
         } catch (e) {
-            result.errors.push(`Failed to send to ${playerName}`);
+            result.errors.push(`Failed to send to ${playerName}: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

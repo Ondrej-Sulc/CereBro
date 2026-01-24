@@ -12,12 +12,23 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
-import { updateDefensePlanHighlightTag, updateDefensePlanTier } from "@/app/planning/defense-actions";
+import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan } from "@/app/planning/defense-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import DefenseStatsPanel from "./defense-stats-panel";
 
 interface DefenseDetailsClientProps {
@@ -132,6 +143,36 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [viewMode, setViewMode] = useState<'roster' | 'map'>('roster');
   const [activeTagId, setActiveTagId] = useState<number | null>(props.plan.highlightTagId);
   const [activeTier, setActiveTier] = useState<number | null>(props.plan.tier ?? null);
+
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [newName, setNewName] = useState(props.plan.name);
+
+  // Sync name from props
+  const [prevPlanName, setPrevPlanName] = useState(props.plan.name);
+  if (props.plan.name !== prevPlanName) {
+      setPrevPlanName(props.plan.name);
+      setNewName(props.plan.name);
+  }
+
+  const handleRename = async () => {
+    if (!newName.trim() || newName === props.plan.name) {
+        setIsRenameOpen(false);
+        return;
+    }
+    
+    setIsRenaming(true);
+    try {
+        await renameDefensePlan(props.planId, newName);
+        toast({ title: "Plan Renamed" });
+        setIsRenameOpen(false);
+    } catch (e) {
+        console.error(e);
+        toast({ title: "Failed to rename plan", variant: "destructive" });
+    } finally {
+        setIsRenaming(false);
+    }
+  };
 
   // Sync state with props during render
   const [prevHighlightTagId, setPrevHighlightTagId] = useState(props.plan.highlightTagId);
@@ -440,6 +481,47 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                       <div className="flex items-center gap-2">
                          <Shield className="h-4 w-4 text-indigo-500 flex-shrink-0" />
                          <h1 className="text-base sm:text-lg font-bold text-slate-100 truncate">{props.plan.name}</h1>
+                         {!isReadOnly && (
+                            <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10">
+                                        <Pencil className="h-3 w-3" />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-slate-950 border-slate-800 sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Rename Defense Plan</DialogTitle>
+                                        <DialogDescription>
+                                            Enter a new name for your defense plan.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-4">
+                                        <Label htmlFor="rename-input" className="text-right mb-2 block">
+                                            Plan Name
+                                        </Label>
+                                        <Input
+                                            id="rename-input"
+                                            value={newName}
+                                            onChange={(e) => setNewName(e.target.value)}
+                                            className="bg-slate-900 border-slate-800"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsRenameOpen(false)} className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:text-white">
+                                            Cancel
+                                        </Button>
+                                        <Button 
+                                            onClick={handleRename}
+                                            disabled={isRenaming || !newName.trim() || newName === props.plan.name}
+                                            className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                                        >
+                                            {isRenaming ? "Renaming..." : "Save Changes"}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap overflow-x-auto no-scrollbar mask-linear-fade">
                          <span>{props.plan.mapType === WarMapType.BIG_THING ? 'Big Thing' : 'Standard'}</span>

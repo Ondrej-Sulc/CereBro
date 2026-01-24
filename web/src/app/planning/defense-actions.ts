@@ -242,3 +242,32 @@ export async function updateDefensePlanTier(planId: string, tier: number | null)
   
   revalidatePath(`/planning/defense/${planId}`);
 }
+
+export async function renameDefensePlan(planId: string, newName: string) {
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
+  }
+
+  const isBotAdmin = player.isBotAdmin;
+
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
+      throw new Error("Unauthorized");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({ where: { id: planId } });
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized");
+  }
+
+  await prisma.warDefensePlan.update({
+      where: { id: planId },
+      data: { name: newName }
+  });
+  
+  revalidatePath("/planning/defense");
+  revalidatePath(`/planning/defense/${planId}`);
+}

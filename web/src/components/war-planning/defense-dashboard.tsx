@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { WarDefensePlan, WarMapType } from "@prisma/client";
 import Link from "next/link";
 import { 
@@ -10,7 +10,8 @@ import {
   ArrowRight, 
   LayoutDashboard,
   Trash2,
-  Rocket
+  Rocket,
+  Pencil
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -44,7 +46,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { createDefensePlan, deleteDefensePlan } from "@/app/planning/defense-actions";
+import { createDefensePlan, deleteDefensePlan, renameDefensePlan } from "@/app/planning/defense-actions";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStatus } from "react-dom";
 
@@ -183,8 +185,43 @@ export default function DefenseDashboard({
 function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; userTimezone?: string | null; isOfficer?: boolean }) {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(plan.name);
+  const [isRenameOpen, setIsRenameOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleRename = async () => {
+    if (!newName.trim() || newName === plan.name) {
+        setIsRenameOpen(false);
+        return;
+    }
+    
+    setIsRenaming(true);
+    try {
+        await renameDefensePlan(plan.id, newName);
+        toast({
+            title: "Plan Renamed",
+            description: `Defense plan has been renamed to "${newName}".`
+        });
+        setIsRenameOpen(false);
+    } catch (error) {
+        console.error("Failed to rename plan:", error);
+        toast({
+            title: "Rename Failed",
+            description: "Could not rename the plan. Please try again.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsRenaming(false);
+    }
+  };
 
   const dateString = useMemo(() => {
+    if (!isMounted) return "";
     try {
         return new Date(plan.updatedAt).toLocaleDateString(undefined, {
             timeZone: userTimezone || undefined
@@ -193,7 +230,7 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
         // Fallback if timezone is invalid
         return new Date(plan.updatedAt).toLocaleDateString();
     }
-  }, [plan.updatedAt, userTimezone]);
+  }, [plan.updatedAt, userTimezone, isMounted]);
 
   return (
     <Card className="bg-slate-950/40 hover:bg-slate-950/60 hover:border-indigo-500/50 border-slate-800 overflow-hidden transition-all duration-300 group shadow-lg hover:shadow-indigo-500/10">
@@ -227,7 +264,48 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
         </Link>
         
         {isOfficer && (
-            <AlertDialog>
+            <div className="flex gap-2">
+                <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10">
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-slate-950 border-slate-800 sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Rename Defense Plan</DialogTitle>
+                            <DialogDescription>
+                                Enter a new name for your defense plan.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                            <Label htmlFor="rename-input" className="text-right mb-2 block">
+                                Plan Name
+                            </Label>
+                            <Input
+                                id="rename-input"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                className="bg-slate-900 border-slate-800"
+                                autoFocus
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setIsRenameOpen(false)} className="bg-slate-900 border-slate-800 hover:bg-slate-800 hover:text-white">
+                                Cancel
+                            </Button>
+                            <Button 
+                                onClick={handleRename}
+                                disabled={isRenaming || !newName.trim() || newName === plan.name}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white"
+                            >
+                                {isRenaming ? "Renaming..." : "Save Changes"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <AlertDialog>
             <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-500 hover:bg-red-500/10">
                 <Trash2 className="h-4 w-4" />
@@ -271,6 +349,7 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
                 </AlertDialogFooter>
             </AlertDialogContent>
             </AlertDialog>
+            </div>
         )}
       </CardFooter>
     </Card>
