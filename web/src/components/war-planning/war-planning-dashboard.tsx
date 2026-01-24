@@ -16,7 +16,11 @@ import {
   Settings,
   Ban,
   Map as MapIcon,
-  Grid3x3
+  Grid3x3,
+  Pencil,
+  Skull,
+  Trophy,
+  XCircle
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +36,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -59,11 +64,17 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { createWar, deleteWar } from "@/app/planning/actions";
+import { createWar, deleteWar, updateWarDetails } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
+import { EditWarDialog } from "./edit-war-dialog";
+import { WarResult } from "@prisma/client";
+
+interface ExtendedWar extends War {
+    fights?: { death: number }[];
+}
 
 interface WarPlanningDashboardProps {
-  wars: War[];
+  wars: ExtendedWar[];
   defaultSeason: number;
   defaultWarNumber: number;
   defaultTier: number;
@@ -279,16 +290,29 @@ export default function WarPlanningDashboard({
               }, {} as Record<number, War[]>)
             )
             .sort(([seasonA], [seasonB]) => Number(seasonB) - Number(seasonA))
-            .map(([season, seasonWars]) => (
-              <AccordionItem key={season} value={season} className="border border-slate-800 rounded-lg bg-slate-950/20 px-4">
-                <AccordionTrigger className="hover:no-underline py-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold text-slate-200">Season {season}</span>
-                    <Badge variant="secondary" className="bg-slate-800 text-slate-400 border-slate-700">
-                      {seasonWars.length} Wars
-                    </Badge>
-                  </div>
-                </AccordionTrigger>
+            .map(([season, seasonWars]) => {
+              const regularCount = seasonWars.filter(w => w.warNumber !== null).length;
+              const offSeasonCount = seasonWars.filter(w => w.warNumber === null).length;
+              
+              return (
+                <AccordionItem key={season} value={season} className="border border-slate-800 rounded-lg bg-slate-950/20 px-4">
+                  <AccordionTrigger className="hover:no-underline py-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-lg font-semibold text-slate-200">Season {season}</span>
+                      <div className="flex items-center gap-2">
+                        {regularCount > 0 && (
+                            <Badge variant="secondary" className="bg-slate-800 text-slate-400 border-slate-700">
+                                {regularCount} Season Wars
+                            </Badge>
+                        )}
+                        {offSeasonCount > 0 && (
+                            <Badge variant="secondary" className="bg-slate-900 text-slate-500 border-slate-800">
+                                {offSeasonCount} Offseason
+                            </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </AccordionTrigger>
                 <AccordionContent className="pt-2 pb-6">
                   <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
                     {seasonWars
@@ -300,7 +324,8 @@ export default function WarPlanningDashboard({
                   </div>
                 </AccordionContent>
               </AccordionItem>
-            ))}
+            )
+            })}
           </Accordion>
         )}
       </section>
@@ -308,25 +333,33 @@ export default function WarPlanningDashboard({
   );
 }
 
-function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War; isActive?: boolean; userTimezone?: string | null; isOfficer?: boolean }) {
+function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: ExtendedWar; isActive?: boolean; userTimezone?: string | null; isOfficer?: boolean }) {
   const [dateString, setDateString] = useState<string>("");
   const { toast } = useToast();
+  const [isMounted, setIsMounted] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
+     setIsMounted(true);
      const date = new Date(war.createdAt);
      const formatted = date.toLocaleDateString(undefined, { 
        timeZone: userTimezone || undefined 
      });
-     const timer = setTimeout(() => setDateString(formatted), 0);
-     return () => clearTimeout(timer);
+     setDateString(formatted);
   }, [war.createdAt, userTimezone]);
+
+  const totalDeaths = war.fights?.reduce((sum, fight) => sum + fight.death, 0) || 0;
 
   return (
     <Card className={cn(
       "overflow-hidden transition-all duration-300 group border-slate-800",
       isActive 
         ? "bg-slate-950/80 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10" 
-        : "bg-slate-950/40 hover:bg-slate-950/60 hover:border-slate-700"
+        : war.result === WarResult.WIN
+            ? "bg-green-950/10 hover:bg-green-950/20 border-green-900/30 hover:border-green-500/50"
+            : war.result === WarResult.LOSS
+                ? "bg-red-950/10 hover:bg-red-950/20 border-red-900/30 hover:border-red-500/50"
+                : "bg-slate-950/40 hover:bg-slate-950/60 hover:border-slate-700"
     )}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
@@ -336,17 +369,39 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
                isActive ? "text-white" : "text-slate-300"
              )}>
                 <Swords className={cn("h-5 w-5", isActive ? "text-red-500" : "text-slate-500")} />
-                {war.enemyAlliance}
+                {war.name || war.enemyAlliance}
              </CardTitle>
              <CardDescription className="flex items-center gap-2">
-                Season {war.season} <span className="text-slate-600">•</span> War {war.warNumber || '?'}
+                Season {war.season} <span className="text-slate-600">•</span> {war.warNumber ? `War ${war.warNumber}` : "Offseason"}
+                {war.name && war.enemyAlliance && (
+                    <span className="text-slate-500 italic truncate max-w-[120px]">({war.enemyAlliance})</span>
+                )}
              </CardDescription>
            </div>
-           {isActive && (
-             <Badge variant="outline" className="border-green-500/50 text-green-400 bg-green-500/10 animate-pulse">
-               Active
-             </Badge>
-           )}
+           <div className="flex flex-col items-end gap-1.5">
+            {isActive ? (
+                <Badge variant="outline" className="border-green-500/50 text-green-400 bg-green-500/10 animate-pulse">
+                Active
+                </Badge>
+            ) : war.result !== WarResult.UNKNOWN && (
+                <Badge variant="outline" className={cn(
+                    "border-none px-2 py-0.5",
+                    war.result === WarResult.WIN ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                )}>
+                    {war.result === WarResult.WIN ? (
+                        <span className="flex items-center gap-1"><Trophy className="h-3 w-3" /> Win</span>
+                    ) : (
+                        <span className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Loss</span>
+                    )}
+                </Badge>
+            )}
+            {(totalDeaths > 0 || (war.enemyDeaths ?? 0) > 0) && (
+                 <Badge variant="outline" className="bg-red-950/30 text-red-400 border-red-900/50 flex items-center gap-1.5">
+                    <Skull className="h-3 w-3" />
+                    <span>{totalDeaths} / {war.enemyDeaths ?? 0}</span>
+                </Badge>
+            )}
+           </div>
         </div>
       </CardHeader>
       <CardContent className="pb-3">
@@ -372,7 +427,7 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
           </div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500 pl-1">
              <Calendar className="h-3 w-3" />
-             <span>{dateString || "Loading..."}</span>
+             <span>{isMounted ? (dateString || "Loading...") : ""}</span>
           </div>
         </div>
       </CardContent>
@@ -388,7 +443,20 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
         </Link>
         
         {isOfficer && (
-          <AlertDialog>
+          <div className="flex gap-1.5">
+            <EditWarDialog 
+                war={war}
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                isFinished={!isActive}
+                trigger={
+                    <Button variant="ghost" size="icon" className="text-slate-500 hover:text-sky-400 hover:bg-sky-400/10">
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                }
+            />
+
+            <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-500 hover:bg-red-500/10">
                 <Trash2 className="h-4 w-4" />
@@ -426,9 +494,11 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: War;
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </CardFooter>
+                      </AlertDialog>
+                    </div>
+                  )}
+                </CardFooter>
+          
     </Card>
   );
 }

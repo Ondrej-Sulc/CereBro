@@ -40,6 +40,12 @@ enum AttackType {
   S2
 }
 
+enum WarResult {
+  WIN
+  LOSS
+  UNKNOWN
+}
+
 enum WarVideoStatus {
   PLANNING
   UPLOADED
@@ -482,11 +488,14 @@ model Roster {
 
 model War {
   id            String    @id @default(cuid())
+  name          String?
   season        Int
   warNumber     Int?
   warTier       Int
   enemyAlliance String?
   status        WarStatus @default(PLANNING)
+  result        WarResult @default(UNKNOWN)
+  enemyDeaths   Int?
   mapType       WarMapType @default(STANDARD)
   createdAt     DateTime  @default(now())
 

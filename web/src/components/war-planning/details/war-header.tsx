@@ -1,7 +1,7 @@
-import { War, WarStatus, Tag } from "@prisma/client";
+import { War, WarStatus, Tag, WarResult, WarMapType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft } from "lucide-react";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle } from "lucide-react";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
@@ -20,6 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EditWarDialog } from "../edit-war-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface WarHeaderProps {
   war: War;
@@ -70,7 +72,9 @@ export function WarHeader({
   isReadOnly = false,
   bgColors
 }: WarHeaderProps) {
+  const { toast } = useToast();
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Filter out champions already banned
   const availableChampions = champions.filter(c => 
@@ -104,10 +108,41 @@ export function WarHeader({
               </Button>
            </Link>
            <h1 className="text-2xl sm:text-3xl font-bold truncate flex items-center gap-2">
-              {war.enemyAlliance} <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">AW S{war.season} War {war.warNumber || 'Off-Season'} T{war.warTier}</span>
+              {war.name || war.enemyAlliance} 
+              <span className="text-lg font-normal text-muted-foreground whitespace-nowrap">AW S{war.season} {war.warNumber ? `War ${war.warNumber}` : 'Off-Season'} T{war.warTier}</span>
+              {war.name && war.enemyAlliance && (
+                    <span className="text-sm font-normal text-slate-500 italic truncate hidden lg:inline">({war.enemyAlliance})</span>
+              )}
+              {!isReadOnly && (
+                <EditWarDialog 
+                    war={war}
+                    open={isEditDialogOpen}
+                    onOpenChange={setIsEditDialogOpen}
+                    isFinished={status === 'FINISHED'}
+                    trigger={
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-sky-400 hover:bg-sky-400/10 shrink-0">
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    }
+                />
+              )}
            </h1>
            {status === 'FINISHED' && (
-               <Badge variant="outline" className="border-green-500 text-green-500 bg-green-500/10">Finished</Badge>
+               <div className="flex items-center gap-2">
+                   <Badge variant="outline" className="border-green-500 text-green-500 bg-green-500/10">Finished</Badge>
+                   {war.result !== WarResult.UNKNOWN && (
+                        <Badge variant="outline" className={cn(
+                            "border-none px-2 py-0.5",
+                            war.result === WarResult.WIN ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                        )}>
+                            {war.result === WarResult.WIN ? (
+                                <span className="flex items-center gap-1"><Trophy className="h-3 w-3" /> Win</span>
+                            ) : (
+                                <span className="flex items-center gap-1"><XCircle className="h-3 w-3" /> Loss</span>
+                            )}
+                        </Badge>
+                    )}
+               </div>
            )}
         </div>
         

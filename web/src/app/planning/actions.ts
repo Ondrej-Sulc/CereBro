@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
-import { WarFight, WarMapType, War, Alliance } from "@prisma/client";
+import { WarFight, WarMapType, War, Alliance, WarResult } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -512,4 +512,40 @@ export async function distributePlan(warId: string, battlegroup?: number) {
   });
 
   return { success: true };
+}
+
+export async function updateWarDetails(warId: string, data: Partial<War>) {
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player || (!player.allianceId && !player.isBotAdmin)) {
+      throw new Error("Unauthorized");
+  }
+
+  if (!player.isOfficer && !player.isBotAdmin) {
+    throw new Error("You must be an Alliance Officer or Bot Admin to update war details.");
+  }
+
+  const war = await prisma.war.findUnique({ where: { id: warId } });
+  if (!war) throw new Error("War not found");
+
+  if (!player.isBotAdmin && war.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized: Cannot update wars outside your alliance.");
+  }
+
+  await prisma.war.update({
+    where: { id: warId },
+    data: {
+        name: data.name,
+        enemyAlliance: data.enemyAlliance,
+        season: data.season,
+        warNumber: data.warNumber,
+        warTier: data.warTier,
+        mapType: data.mapType,
+        result: data.result,
+        enemyDeaths: data.enemyDeaths,
+    },
+  });
+
+  revalidatePath("/planning");
+  revalidatePath(`/planning/${warId}`);
 }

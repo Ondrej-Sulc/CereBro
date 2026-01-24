@@ -27,6 +27,11 @@ export default async function WarPlanningPage() {
     where: {
       allianceId: player.allianceId,
     },
+    include: {
+      fights: {
+        select: { death: true }
+      }
+    },
     orderBy: {
       createdAt: "desc",
     },
