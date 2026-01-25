@@ -7,19 +7,19 @@ import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import logger from "@/lib/logger";
+import { signIn } from "@/auth";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
 }
 
 export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
+  const { warId } = await params;
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
-    redirect("/api/auth/signin?callbackUrl=/planning");
+    await signIn("discord", { redirectTo: `/planning/${warId}` });
   }
-
-  const { warId } = await params;
 
   // 1. Fetch the War
   const war = await prisma.war.findUnique({

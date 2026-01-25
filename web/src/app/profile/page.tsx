@@ -14,6 +14,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { PrestigeHistoryChart } from "./prestige-chart";
 import { Upload, LayoutGrid } from "lucide-react";
 import logger from "@/lib/logger";
+import { signIn } from "@/auth";
 
 import { ProfileManager } from "./components/profile-manager";
 
@@ -30,7 +31,7 @@ export default async function ProfilePage() {
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
-    redirect("/api/auth/signin?callbackUrl=/profile");
+    await signIn("discord", { redirectTo: "/profile" });
   }
 
   logger.info({ userId: player.id }, "User accessing Profile page");

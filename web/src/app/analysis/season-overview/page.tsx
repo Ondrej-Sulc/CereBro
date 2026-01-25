@@ -16,6 +16,7 @@ import logger from "@/lib/logger";
 import { SeasonOverviewView, PlayerStats } from "./season-overview-view";
 import { DetailedPlacementStat } from "./deep-dive-types";
 import { SeasonAnalysisContainer } from "./season-analysis-container";
+import { signIn } from "@/auth";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -47,7 +48,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
-    redirect("/api/auth/signin?callbackUrl=/analysis/season-overview");
+    await signIn("discord", { redirectTo: "/analysis/season-overview" });
   }
 
   if (!player.allianceId) {

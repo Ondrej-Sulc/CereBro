@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { auth, signIn } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminNodeManagerClient from "@/components/admin/admin-node-manager-client";
@@ -6,7 +6,7 @@ import AdminNodeManagerClient from "@/components/admin/admin-node-manager-client
 export default async function AdminNodeManagerPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect("/api/auth/signin");
+    await signIn("discord", { redirectTo: "/admin/nodes" });
   }
 
   const account = await prisma.account.findFirst({
