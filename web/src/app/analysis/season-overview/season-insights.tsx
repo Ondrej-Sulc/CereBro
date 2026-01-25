@@ -11,7 +11,7 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
-import { DeepDiveSelection } from "./season-deep-dive";
+import { DeepDiveSelection } from "./deep-dive-types";
 import { Button } from "@/components/ui/button";
 
 interface ChampionStat {

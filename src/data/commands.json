@@ -71,6 +71,19 @@
           },
           {
             "type": 1,
+            "name": "upload-tags",
+            "description": "Uploads champion tags from a CSV file.",
+            "options": [
+              {
+                "name": "csv",
+                "description": "The CSV file to upload.",
+                "required": true,
+                "type": 11
+              }
+            ]
+          },
+          {
+            "type": 1,
             "name": "sync-sheet",
             "description": "Syncs the champion database with Google Sheets.",
             "options": []
@@ -409,6 +422,10 @@
                   {
                     "name": "CoCPit",
                     "value": "COCPIT"
+                  },
+                  {
+                    "name": "MCOCHUB",
+                    "value": "MCOCHUB"
                   }
                 ],
                 "name": "source",
@@ -573,6 +590,19 @@
         "name": "sync-roles",
         "description": "Sync officer and battlegroup roles from Discord to the bot.",
         "options": []
+      },
+      {
+        "type": 1,
+        "name": "link",
+        "description": "Link this Discord server to an existing web-managed alliance.",
+        "options": [
+          {
+            "type": 3,
+            "name": "code",
+            "description": "The link code from the CereBro website.",
+            "required": true
+          }
+        ]
       },
       {
         "type": 1,

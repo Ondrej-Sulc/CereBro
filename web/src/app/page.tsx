@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HeroVisual } from "@/components/HeroVisual";
 import { LiveSetup } from "@/components/LiveSetup";
-import { 
+import {
   LayoutDashboard,
   Map,
   Video,
@@ -20,7 +20,6 @@ import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDec
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default async function Home() {
-
   return (
     <div className="min-h-screen relative page-container">
       <PageBackground />

@@ -76,7 +76,7 @@ function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: C
 }
 
 export function RosterInsights({
-    showInsights, onToggleInsights, recommendations, sigRecommendations,
+    showInsights, onToggleInsights, recommendations = [], sigRecommendations = [],
     simulationTargetRank, onTargetRankChange, sigBudget, onSigBudgetChange,
     rankUpClassFilter, onRankUpClassFilterChange, sigClassFilter, onSigClassFilterChange,
     rankUpSagaFilter, onRankUpSagaFilterChange, sigSagaFilter, onSigSagaFilterChange,

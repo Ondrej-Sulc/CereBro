@@ -31,10 +31,10 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
-      <PHProvider>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-100 min-h-screen scroll-smooth bg-slate-950`}
-        >
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-100 min-h-screen scroll-smooth bg-slate-950`}
+      >
+        <PHProvider>
           <VersionChecker initialVersion={appVersion} />
           <Suspense>
             <PostHogPageview />
@@ -43,8 +43,8 @@ export default function RootLayout({
             {children}
           </MainLayout>
           <Toaster />
-        </body>
-      </PHProvider>
+        </PHProvider>
+      </body>
     </html>
   );
 }

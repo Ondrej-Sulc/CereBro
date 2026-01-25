@@ -14,7 +14,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import logger from "@/lib/logger";
 import { SeasonOverviewView, PlayerStats } from "./season-overview-view";
-import { DetailedPlacementStat } from "./season-deep-dive";
+import { DetailedPlacementStat } from "./deep-dive-types";
 import { SeasonAnalysisContainer } from "./season-analysis-container";
 
 // Force dynamic rendering to ensure up-to-date data

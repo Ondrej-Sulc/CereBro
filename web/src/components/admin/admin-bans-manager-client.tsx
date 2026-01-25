@@ -8,8 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { useToast } from "@/hooks/use-toast";
+import dynamic from "next/dynamic";
+
+const ChampionCombobox = dynamic(
+  () => import("@/components/comboboxes/ChampionCombobox").then((mod) => mod.ChampionCombobox),
+  { ssr: false }
+);
 import { Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";

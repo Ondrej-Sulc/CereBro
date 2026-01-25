@@ -12,8 +12,6 @@ import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "./types";
 import logger from "@/lib/logger";
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: "My Roster | CereBro",
   description: "Manage and view your MCOC champion roster.",

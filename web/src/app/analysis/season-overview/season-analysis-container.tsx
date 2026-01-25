@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { SeasonInsights } from "./season-insights";
-import { SeasonDeepDive, DetailedPlacementStat, DeepDiveSelection } from "./season-deep-dive";
+import { SeasonDeepDive } from "./season-deep-dive";
+import { DetailedPlacementStat, DeepDiveSelection } from "./deep-dive-types";
 import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { BarChart2 } from "lucide-react";
