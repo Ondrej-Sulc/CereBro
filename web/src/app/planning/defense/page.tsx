@@ -13,6 +13,7 @@ export default async function DefensePlanningPage() {
 
   if (!player) {
     await signIn("discord", { redirectTo: "/planning/defense" });
+    return null;
   }
 
   if (!player.allianceId) {

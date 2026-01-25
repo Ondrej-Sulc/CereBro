@@ -9,6 +9,7 @@ export default async function AllianceOnboardingPage() {
     
     if (!player) {
         await signIn("discord", { redirectTo: "/alliance/onboarding" });
+        return null;
     }
 
     if (player.allianceId) {

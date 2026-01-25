@@ -6,6 +6,7 @@ export default async function RosterUpdatePage() {
     const session = await auth();
     if (!session?.user?.id) {
       await signIn("discord", { redirectTo: "/profile/update" });
+      return null;
     }
     
     return (

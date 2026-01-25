@@ -32,6 +32,7 @@ export default async function ProfilePage() {
   
   if (!player) {
     await signIn("discord", { redirectTo: "/profile" });
+    return null;
   }
 
   logger.info({ userId: player.id }, "User accessing Profile page");

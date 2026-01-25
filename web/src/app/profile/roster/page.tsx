@@ -52,6 +52,7 @@ export default async function RosterPage(props: {
   
   if (!player) {
     await signIn("discord", { redirectTo: "/profile/roster" });
+    return null;
   }
 
   // Parallel fetch for data

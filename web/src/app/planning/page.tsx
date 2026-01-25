@@ -10,6 +10,7 @@ export default async function WarPlanningPage() {
   
   if (!player) {
     await signIn("discord", { redirectTo: "/planning" });
+    return null;
   }
 
   if (!player.isBotAdmin && !player.allianceId) {

@@ -9,6 +9,7 @@ export default async function AdminBansPage() {
   const session = await auth();
   if (!session?.user?.id) {
     await signIn("discord", { redirectTo: "/admin/bans" });
+    return null;
   }
 
   const account = await prisma.account.findFirst({

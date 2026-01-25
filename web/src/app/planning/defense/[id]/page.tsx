@@ -20,6 +20,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
 
   if (!player) {
     await signIn("discord", { redirectTo: `/planning/defense/${id}` });
+    return null;
   }
 
   const isBotAdmin = player.isBotAdmin;

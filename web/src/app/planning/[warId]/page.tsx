@@ -19,6 +19,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
   
   if (!player) {
     await signIn("discord", { redirectTo: `/planning/${warId}` });
+    return null;
   }
 
   // 1. Fetch the War

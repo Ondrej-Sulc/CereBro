@@ -49,6 +49,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   
   if (!player) {
     await signIn("discord", { redirectTo: "/analysis/season-overview" });
+    return null;
   }
 
   if (!player.allianceId) {

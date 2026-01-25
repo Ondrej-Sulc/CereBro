@@ -9,6 +9,7 @@ export default async function InitUploadPage() {
 
   if (!session?.user?.id) {
     await signIn("discord", { redirectTo: "/war-videos/upload/init" });
+    return null;
   }
 
   // Resolve user to Player

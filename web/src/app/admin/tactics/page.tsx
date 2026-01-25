@@ -7,6 +7,7 @@ export default async function AdminTacticsPage() {
   const session = await auth();
   if (!session?.user?.id) {
     await signIn("discord", { redirectTo: "/admin/tactics" });
+    return null;
   }
 
   const account = await prisma.account.findFirst({
