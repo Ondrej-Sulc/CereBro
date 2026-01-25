@@ -306,18 +306,18 @@ export async function queueVideoNotification(
         }
     });
 
-    if (!video || !video.submittedBy.alliance?.warVideosChannelId) {
-        logger.info({ videoId: params.videoId }, "Skipping notification: No channel ID or video not found");
+    if (!video || !video.submittedBy.alliance) {
+        logger.info({ videoId: params.videoId }, "Skipping notification: Video not found or no alliance");
         return;
     }
 
+    const alliance = video.submittedBy.alliance;
     const fights = video.fights;
     // Fallback for season/warNumber if no fights attached (unlikely but possible)
     const season = fights.length > 0 ? fights[0].war.season : 0;
     const warNumber = fights.length > 0 ? fights[0].war.warNumber : null;
 
-    const payload = {
-        channelId: video.submittedBy.alliance.warVideosChannelId,
+    const basePayload = {
         videoId: video.id,
         mediaUrl: video.url || video.gcsUrl,
         title: params.title, // Use title from parameters
@@ -329,15 +329,31 @@ export async function queueVideoNotification(
             attackerName: f.attacker?.name || 'Unknown',
             defenderName: f.defender?.name || 'Unknown',
             nodeNumber: f.node.nodeNumber,
-            playerInVideo: f.player?.ingameName || 'Unknown'
+            playerInVideo: f.player?.ingameName || 'Unknown',
+            death: f.death
         }))
     };
 
-    logger.info({ videoId: video.id, channelId: payload.channelId }, "Queuing video notification job");
-    await prisma.botJob.create({
-        data: {
-            type: 'NOTIFY_WAR_VIDEO',
-            payload
-        }
-    });
+    // 1. Notify War Videos Channel
+    if (alliance.warVideosChannelId) {
+        logger.info({ videoId: video.id, channelId: alliance.warVideosChannelId }, "Queuing video notification job");
+        await prisma.botJob.create({
+            data: {
+                type: 'NOTIFY_WAR_VIDEO',
+                payload: { ...basePayload, channelId: alliance.warVideosChannelId }
+            }
+        });
+    }
+
+    // 2. Notify Death Channel (if applicable)
+    const totalDeaths = fights.reduce((sum, f) => sum + f.death, 0);
+    if (totalDeaths > 0 && alliance.deathChannelId) {
+        logger.info({ videoId: video.id, channelId: alliance.deathChannelId }, "Queuing death notification job");
+        await prisma.botJob.create({
+            data: {
+                type: 'NOTIFY_DEATH_VIDEO',
+                payload: { ...basePayload, channelId: alliance.deathChannelId, totalDeaths }
+            }
+        });
+    }
 }

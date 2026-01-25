@@ -2,6 +2,7 @@ import { Client } from 'discord.js';
 import { prisma } from './prismaService';
 import logger from './loggerService';
 import { handleWarVideoNotification } from './jobHandlers/warVideoNotification';
+import { handleDeathVideoNotification } from './jobHandlers/deathVideoNotification';
 import { handleDistributeWarPlan } from './jobHandlers/distributeWarPlan';
 import { handleUpdateMemberRoles } from './jobHandlers/updateMemberRoles';
 // @ts-ignore - Types might be stale until regen
@@ -38,6 +39,9 @@ export function startJobProcessor(client: Client) {
         switch (job.type) {
           case 'NOTIFY_WAR_VIDEO':
             await handleWarVideoNotification(client, job.payload);
+            break;
+          case 'NOTIFY_DEATH_VIDEO':
+            await handleDeathVideoNotification(client, job.payload);
             break;
           case 'DISTRIBUTE_WAR_PLAN':
             await handleDistributeWarPlan(client, job.payload);

@@ -71,6 +71,12 @@ export const command: Command = {
                 .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         )
         .addChannelOption(option => 
+          option
+              .setName('death-channel')
+              .setDescription('The channel to post death notifications to.')
+              .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+      )
+        .addChannelOption(option => 
             option
                 .setName('bg1-channel')
                 .setDescription('The channel for Battlegroup 1.')

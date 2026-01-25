@@ -8,11 +8,12 @@ export async function handleAllianceConfigChannels(interaction: ChatInputCommand
   }
 
   const warVideosChannel = interaction.options.getChannel('war-videos');
+  const deathChannel = interaction.options.getChannel('death-channel');
   const bg1Channel = interaction.options.getChannel('bg1-channel');
   const bg2Channel = interaction.options.getChannel('bg2-channel');
   const bg3Channel = interaction.options.getChannel('bg3-channel');
 
-  if (!warVideosChannel && !bg1Channel && !bg2Channel && !bg3Channel) {
+  if (!warVideosChannel && !deathChannel && !bg1Channel && !bg2Channel && !bg3Channel) {
     await interaction.editReply('Please specify at least one channel to configure.');
     return;
   }
@@ -32,6 +33,7 @@ export async function handleAllianceConfigChannels(interaction: ChatInputCommand
 
   try {
       await validateAndAdd(warVideosChannel, 'warVideosChannelId', 'War Videos');
+      await validateAndAdd(deathChannel, 'deathChannelId', 'Death Channel');
       await validateAndAdd(bg1Channel, 'battlegroup1ChannelId', 'Battlegroup 1');
       await validateAndAdd(bg2Channel, 'battlegroup2ChannelId', 'Battlegroup 2');
       await validateAndAdd(bg3Channel, 'battlegroup3ChannelId', 'Battlegroup 3');

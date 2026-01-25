@@ -86,6 +86,7 @@ enum BotJobStatus {
 
 enum BotJobType {
   NOTIFY_WAR_VIDEO
+  NOTIFY_DEATH_VIDEO
   DISTRIBUTE_WAR_PLAN
   UPDATE_MEMBER_ROLES
 }
@@ -360,6 +361,7 @@ model Alliance {
   battlegroup2Role       String?
   battlegroup3Role       String?
   warVideosChannelId     String?
+  deathChannelId         String?
   battlegroup1ChannelId  String?
   battlegroup2ChannelId  String?
   battlegroup3ChannelId  String?
