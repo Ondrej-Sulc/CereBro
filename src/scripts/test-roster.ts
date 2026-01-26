@@ -8,7 +8,7 @@ import logger from "../services/loggerService";
 
 // URL from the user
 const imageUrl =
-  "https://media.discordapp.net/attachments/1282672011654725742/1432304131229356053/image.png?ex=690090ab&is=68ff3f2b&hm=7627b9745f9ea9a55c19035d93263aac0bd2a7d2c349bc91ecedabe0bc2e59dc&=&format=webp&quality=lossless&width=2054&height=593";
+  "https://media.discordapp.net/ephemeral-attachments/1422501362201006128/1464713628291961094/Screenshot_20260124_140759_Champions.jpg?ex=69791b5e&is=6977c9de&hm=41ccfac95207c3f3ffa71639e97da425d7fe530296b95c1f1c6ae05ea24dccaa&=&format=webp&width=1739&height=811";
 const stars = 6;
 const rank = 5;
 
