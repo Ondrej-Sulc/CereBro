@@ -1,4 +1,4 @@
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -19,8 +19,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
-    await signIn("discord", { redirectTo: `/planning/defense/${id}` });
-    return null;
+    redirect(`/api/auth/discord-login?redirectTo=/planning/defense/${id}`);
   }
 
   const isBotAdmin = player.isBotAdmin;

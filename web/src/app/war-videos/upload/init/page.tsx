@@ -1,4 +1,4 @@
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import crypto from 'crypto';
@@ -8,8 +8,7 @@ export default async function InitUploadPage() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    await signIn("discord", { redirectTo: "/war-videos/upload/init" });
-    return null;
+    redirect("/api/auth/discord-login?redirectTo=/war-videos/upload/init");
   }
 
   // Resolve user to Player

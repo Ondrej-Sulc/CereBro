@@ -1,12 +1,11 @@
 import { RosterUpdateForm } from "@/components/RosterUpdateForm";
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 export default async function RosterUpdatePage() {
     const session = await auth();
     if (!session?.user?.id) {
-      await signIn("discord", { redirectTo: "/profile/update" });
-      return null;
+      redirect("/api/auth/discord-login?redirectTo=/profile/update");
     }
     
     return (

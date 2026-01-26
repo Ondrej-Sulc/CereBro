@@ -1,4 +1,4 @@
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminBansManagerClient from "@/components/admin/admin-bans-manager-client";
@@ -8,8 +8,7 @@ import { SeasonBanWithChampion } from "@cerebro/core/data/war-planning/types";
 export default async function AdminBansPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    await signIn("discord", { redirectTo: "/admin/bans" });
-    return null;
+    redirect("/api/auth/discord-login?redirectTo=/admin/bans");
   }
 
   const account = await prisma.account.findFirst({

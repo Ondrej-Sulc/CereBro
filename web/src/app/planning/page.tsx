@@ -3,14 +3,12 @@ import { prisma } from "@/lib/prisma";
 import WarPlanningDashboard from "@/components/war-planning/war-planning-dashboard";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
-import { signIn } from "@/auth";
 
 export default async function WarPlanningPage() {
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
-    await signIn("discord", { redirectTo: "/planning" });
-    return null;
+    redirect("/api/auth/discord-login?redirectTo=/planning");
   }
 
   if (!player.isBotAdmin && !player.allianceId) {

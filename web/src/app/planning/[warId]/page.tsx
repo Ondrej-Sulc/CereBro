@@ -7,7 +7,6 @@ import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import logger from "@/lib/logger";
-import { signIn } from "@/auth";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
@@ -18,8 +17,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
-    await signIn("discord", { redirectTo: `/planning/${warId}` });
-    return null;
+    redirect(`/api/auth/discord-login?redirectTo=/planning/${warId}`);
   }
 
   // 1. Fetch the War

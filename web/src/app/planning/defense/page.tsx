@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
-import { signIn } from "@/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +11,7 @@ export default async function DefensePlanningPage() {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
-    await signIn("discord", { redirectTo: "/planning/defense" });
-    return null;
+    redirect("/api/auth/discord-login?redirectTo=/planning/defense");
   }
 
   if (!player.allianceId) {

@@ -2,14 +2,12 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AllianceOnboardingClient } from "./client-page";
-import { signIn } from "@/auth";
 
 export default async function AllianceOnboardingPage() {
     const player = await getUserPlayerWithAlliance();
     
     if (!player) {
-        await signIn("discord", { redirectTo: "/alliance/onboarding" });
-        return null;
+        redirect("/api/auth/discord-login?redirectTo=/alliance/onboarding");
     }
 
     if (player.allianceId) {

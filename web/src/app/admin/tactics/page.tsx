@@ -1,4 +1,4 @@
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminTacticManagerClient from "@/components/admin/admin-tactic-manager-client";
@@ -6,8 +6,7 @@ import AdminTacticManagerClient from "@/components/admin/admin-tactic-manager-cl
 export default async function AdminTacticsPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    await signIn("discord", { redirectTo: "/admin/tactics" });
-    return null;
+    redirect("/api/auth/discord-login?redirectTo=/admin/tactics");
   }
 
   const account = await prisma.account.findFirst({

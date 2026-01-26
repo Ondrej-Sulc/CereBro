@@ -11,7 +11,6 @@ import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "./types";
 import logger from "@/lib/logger";
-import { signIn } from "@/auth";
 
 export const metadata: Metadata = {
   title: "My Roster | CereBro",
@@ -51,8 +50,7 @@ export default async function RosterPage(props: {
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
-    await signIn("discord", { redirectTo: "/profile/roster" });
-    return null;
+    redirect("/api/auth/discord-login?redirectTo=/profile/roster");
   }
 
   // Parallel fetch for data
