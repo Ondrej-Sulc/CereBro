@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 
 interface InteractiveScreenshotDeckProps {
   images: string[];
@@ -15,6 +16,35 @@ interface InteractiveScreenshotDeckProps {
   overlap?: string;
   orientation?: "portrait" | "landscape";
 }
+
+const ZoomControls = () => {
+  const { zoomIn, zoomOut, resetTransform } = useControls();
+  return (
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 backdrop-blur-sm p-1.5 rounded-full z-50 pointer-events-auto">
+      <button
+        onClick={() => zoomOut()}
+        className="p-1.5 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-colors"
+        title="Zoom Out"
+      >
+        <ZoomOut className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => resetTransform()}
+        className="p-1.5 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-colors"
+        title="Reset Zoom"
+      >
+        <RotateCcw className="w-4 h-4" />
+      </button>
+      <button
+        onClick={() => zoomIn()}
+        className="p-1.5 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-colors"
+        title="Zoom In"
+      >
+        <ZoomIn className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
 
 export function InteractiveScreenshotDeck({
   images,
@@ -153,22 +183,40 @@ export function InteractiveScreenshotDeck({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-5xl max-h-[90vh] flex items-center justify-center"
+              className="relative w-full max-w-6xl max-h-[90vh] flex items-center justify-center pointer-events-none"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={images[selectedIndex]}
-                alt={`${alt} Full View`}
-                width={1920}
-                height={1080}
-                className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
-                quality={90}
-                priority
-              />
+              <div className="pointer-events-auto relative w-full h-full flex items-center justify-center">
+                <TransformWrapper
+                  initialScale={1}
+                  minScale={0.5}
+                  maxScale={4}
+                  centerOnInit
+                  wheel={{ step: 0.2 }}
+                >
+                  <React.Fragment>
+                    <ZoomControls />
+                    <TransformComponent
+                      wrapperClass="!w-full !h-full flex items-center justify-center"
+                      contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Image
+                        src={images[selectedIndex]}
+                        alt={`${alt} Full View`}
+                        width={1920}
+                        height={1080}
+                        className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        quality={90}
+                        priority
+                      />
+                    </TransformComponent>
+                  </React.Fragment>
+                </TransformWrapper>
+              </div>
               
                {/* Mobile Navigation Areas (invisible touch targets) */}
-               <div className="absolute inset-y-0 left-0 w-1/4 md:hidden" onClick={showPrev} />
-               <div className="absolute inset-y-0 right-0 w-1/4 md:hidden" onClick={showNext} />
+               <div className="absolute inset-y-0 left-0 w-12 z-[60] md:hidden pointer-events-auto" onClick={showPrev} />
+               <div className="absolute inset-y-0 right-0 w-12 z-[60] md:hidden pointer-events-auto" onClick={showNext} />
             </motion.div>
             
             {/* Counter */}
