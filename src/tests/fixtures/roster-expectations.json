@@ -1,0 +1,2922 @@
+{
+  "Screenshot_20260126-223815.png": [
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Woman (Jessica Drew)",
+      "stars": 7,
+      "rank": 4,
+      "sig": 120,
+      "ascended": false,
+      "pi": 43572
+    },
+    {
+      "class": "TECH",
+      "name": "Spider-Man (Stark Enhanced)",
+      "stars": 7,
+      "rank": 4,
+      "sig": 40,
+      "ascended": false,
+      "pi": 43303
+    },
+    {
+      "class": "COSMIC",
+      "name": "Karolina Dean",
+      "stars": 7,
+      "rank": 4,
+      "sig": 60,
+      "ascended": false,
+      "pi": 43012
+    },
+    {
+      "class": "MUTANT",
+      "name": "Mister Sinister",
+      "stars": 7,
+      "rank": 4,
+      "sig": 180,
+      "ascended": false,
+      "pi": 42836
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Scorpion",
+      "stars": 7,
+      "rank": 4,
+      "sig": 60,
+      "ascended": false,
+      "pi": 42442
+    },
+    {
+      "class": "TECH",
+      "name": "Guillotine 2099",
+      "stars": 7,
+      "rank": 3,
+      "sig": 180,
+      "ascended": false,
+      "pi": 40086
+    },
+    {
+      "class": "TECH",
+      "name": "Arnim Zola",
+      "stars": 7,
+      "rank": 4,
+      "sig": 20,
+      "ascended": false,
+      "pi": 39157
+    },
+    {
+      "class": "SKILL",
+      "name": "Okoye",
+      "stars": 7,
+      "rank": 4,
+      "sig": 20,
+      "ascended": false,
+      "pi": 39148
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Tigra",
+      "stars": 7,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 38904
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kushala",
+      "stars": 7,
+      "rank": 3,
+      "sig": 160,
+      "ascended": false,
+      "pi": 37906
+    },
+    {
+      "class": "MUTANT",
+      "name": "Gentle",
+      "stars": 7,
+      "rank": 3,
+      "sig": 120,
+      "ascended": false,
+      "pi": 37034
+    },
+    {
+      "class": "SKILL",
+      "name": "Blade",
+      "stars": 7,
+      "rank": 3,
+      "sig": 160,
+      "ascended": false,
+      "pi": 36742
+    },
+    {
+      "class": "SCIENCE",
+      "name": "She-Hulk (Deathless)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 36696
+    },
+    {
+      "class": "MUTANT",
+      "name": "Wolverine (Weapon X)",
+      "stars": 7,
+      "rank": 4,
+      "sig": 0,
+      "ascended": false,
+      "pi": 36582
+    },
+    {
+      "class": "TECH",
+      "name": "Bastion",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 35846
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Silk",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 35611
+    }
+  ],
+  "Screenshot_20260126-223825.png": [
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Ham",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 47762
+    },
+    {
+      "class": "TECH",
+      "name": "Sentinel",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 47541
+    },
+    {
+      "class": "TECH",
+      "name": "Nimrod",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 47530
+    },
+    {
+      "class": "COSMIC",
+      "name": "Dark Phoenix",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 47406
+    },
+    {
+      "class": "SKILL",
+      "name": "Yelena Belova",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 47137
+    },
+    {
+      "class": "MUTANT",
+      "name": "Dazzler",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 46290
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Enchantress",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 45906
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Absorbing Man",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 45519
+    },
+    {
+      "class": "SKILL",
+      "name": "Crossbones",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 45409
+    },
+    {
+      "class": "COSMIC",
+      "name": "Cull Obsidian",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 45222
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Spider-Man (Pavitr Prabhakar)",
+      "stars": 7,
+      "rank": 4,
+      "sig": 80,
+      "ascended": false,
+      "pi": 44716
+    },
+    {
+      "class": "COSMIC",
+      "name": "Knull",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 44492
+    },
+    {
+      "class": "COSMIC",
+      "name": "The Serpent",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 44348
+    },
+    {
+      "class": "SCIENCE",
+      "name": "High Evolutionary",
+      "stars": 7,
+      "rank": 4,
+      "sig": 140,
+      "ascended": false,
+      "pi": 44259
+    },
+    {
+      "class": "COSMIC",
+      "name": "Thanos (Deathless)",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 44019
+    },
+    {
+      "class": "MUTANT",
+      "name": "Jean Grey",
+      "stars": 7,
+      "rank": 4,
+      "sig": 153,
+      "ascended": false,
+      "pi": 43828
+    }
+  ],
+  "Screenshot_20260127-141514.png": [
+    {
+      "class": "TECH",
+      "name": "Shocker",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 35067
+    },
+    {
+      "class": "MYSTIC",
+      "name": "White Tiger",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 34948
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Man-Thing",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 34798
+    },
+    {
+      "class": "SKILL",
+      "name": "Attuma",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 34796
+    },
+    {
+      "class": "MYSTIC",
+      "name": "America Chavez",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 34752
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Photon",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 34704
+    },
+    {
+      "class": "MUTANT",
+      "name": "Negasonic Teenage Warhead",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 34622
+    },
+    {
+      "class": "SKILL",
+      "name": "Valkyrie",
+      "stars": 7,
+      "rank": 3,
+      "sig": 120,
+      "ascended": false,
+      "pi": 34380
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Hulk",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 34376
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Abomination (Immortal)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 34287
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Count Nefaria",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 34079
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Doctor Doom",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 34032
+    },
+    {
+      "class": "SKILL",
+      "name": "Chee'Ilth",
+      "stars": 7,
+      "rank": 3,
+      "sig": 60,
+      "ascended": false,
+      "pi": 33672
+    },
+    {
+      "class": "COSMIC",
+      "name": "Galan",
+      "stars": 7,
+      "rank": 3,
+      "sig": 78,
+      "ascended": false,
+      "pi": 33637
+    },
+    {
+      "class": "TECH",
+      "name": "Jack O'Lantern",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 33632
+    },
+    {
+      "class": "SKILL",
+      "name": "Killmonger",
+      "stars": 7,
+      "rank": 3,
+      "sig": 120,
+      "ascended": false,
+      "pi": 33581
+    }
+  ],
+  "Screenshot_20260127-141522.png": [
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 33575
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Titania",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 33536
+    },
+    {
+      "class": "SKILL",
+      "name": "Patriot",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 33504
+    },
+    {
+      "class": "SKILL",
+      "name": "Bullseye",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 33325
+    },
+    {
+      "class": "MUTANT",
+      "name": "Onslaught",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 33016
+    },
+    {
+      "class": "COSMIC",
+      "name": "Cosmic Ghost Rider",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 32927
+    },
+    {
+      "class": "MUTANT",
+      "name": "Kitty Pryde",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 32904
+    },
+    {
+      "class": "MUTANT",
+      "name": "Dust",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 32604
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Photon",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 32420
+    },
+    {
+      "class": "SKILL",
+      "name": "Shang-Chi",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 32395
+    },
+    {
+      "class": "TECH",
+      "name": "Red Skull",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 32336
+    },
+    {
+      "class": "TECH",
+      "name": "Warlock",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 32014
+    },
+    {
+      "class": "COSMIC",
+      "name": "Venom",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 31992
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Spiral",
+      "stars": 7,
+      "rank": 3,
+      "sig": 1,
+      "ascended": false,
+      "pi": 31983
+    },
+    {
+      "class": "TECH",
+      "name": "Darkhawk",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31962
+    },
+    {
+      "class": "SKILL",
+      "name": "Masacre",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31923
+    }
+  ],
+  "Screenshot_20260127-141531.png": [
+    {
+      "class": "SKILL",
+      "name": "Nick Fury",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31617
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Shathra",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31578
+    },
+    {
+      "class": "COSMIC",
+      "name": "Hyperion",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 31481
+    },
+    {
+      "class": "SKILL",
+      "name": "Lumatrix",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 31350
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Black Widow (Claire Voyant)",
+      "stars": 6,
+      "rank": 5,
+      "sig": 160,
+      "ascended": true,
+      "pi": 31295
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Sasquatch",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 31242
+    },
+    {
+      "class": "TECH",
+      "name": "Nimrod",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31223
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Thing",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31221
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Tigra",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 31160
+    },
+    {
+      "class": "SKILL",
+      "name": "Shang-Chi",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30947
+    },
+    {
+      "class": "SKILL",
+      "name": "Korg",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30910
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Absorbing Man",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30904
+    },
+    {
+      "class": "COSMIC",
+      "name": "Hulkling",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30893
+    },
+    {
+      "class": "COSMIC",
+      "name": "Hercules",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30802
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Werewolf By Night",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30706
+    },
+    {
+      "class": "SKILL",
+      "name": "Baron Zemo",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30400
+    }
+  ],
+  "Screenshot_20260127-141539.png": [
+    {
+      "class": "MUTANT",
+      "name": "Omega Red",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30284
+    },
+    {
+      "class": "SKILL",
+      "name": "Kate Bishop",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30144
+    },
+    {
+      "class": "SKILL",
+      "name": "Aegon",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30133
+    },
+    {
+      "class": "MUTANT",
+      "name": "Archangel",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 30096
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Human Torch",
+      "stars": 6,
+      "rank": 5,
+      "sig": 180,
+      "ascended": true,
+      "pi": 30002
+    },
+    {
+      "class": "TECH",
+      "name": "Spider-Man (Stark Enhanced)",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29931
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Mojo",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29652
+    },
+    {
+      "class": "COSMIC",
+      "name": "Maestro",
+      "stars": 7,
+      "rank": 3,
+      "sig": 1,
+      "ascended": false,
+      "pi": 29513
+    },
+    {
+      "class": "TECH",
+      "name": "Ant-Man (Future)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 29495
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Ebony Maw",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 29384
+    },
+    {
+      "class": "COSMIC",
+      "name": "The Serpent",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29310
+    },
+    {
+      "class": "TECH",
+      "name": "Ghost",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29293
+    },
+    {
+      "class": "COSMIC",
+      "name": "Corvus Glaive",
+      "stars": 6,
+      "rank": 5,
+      "sig": 120,
+      "ascended": true,
+      "pi": 29245
+    },
+    {
+      "class": "COSMIC",
+      "name": "Nova",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29190
+    },
+    {
+      "class": "MUTANT",
+      "name": "Sunspot",
+      "stars": 7,
+      "rank": 2,
+      "sig": 80,
+      "ascended": false,
+      "pi": 29112
+    },
+    {
+      "class": "MUTANT",
+      "name": "Domino",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29112
+    }
+  ],
+  "Screenshot_20260127-141544.png": [
+    {
+      "class": "TECH",
+      "name": "Ant-Man (Future)",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 29020
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Void",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 28873
+    },
+    {
+      "class": "SKILL",
+      "name": "Kingpin",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 28701
+    },
+    {
+      "class": "TECH",
+      "name": "Ironheart",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 28682
+    },
+    {
+      "class": "COSMIC",
+      "name": "Galan",
+      "stars": 6,
+      "rank": 5,
+      "sig": 160,
+      "ascended": true,
+      "pi": 28659
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Rintrah",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 28529
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Woman (Jessica Drew)",
+      "stars": 6,
+      "rank": 5,
+      "sig": 81,
+      "ascended": true,
+      "pi": 28452
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Mister Negative",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 28448
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 27844
+    },
+    {
+      "class": "MUTANT",
+      "name": "Mister Sinister",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 27767
+    },
+    {
+      "class": "SKILL",
+      "name": "Jabari Panther",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 27682
+    },
+    {
+      "class": "MUTANT",
+      "name": "Bishop",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 27653
+    },
+    {
+      "class": "COSMIC",
+      "name": "Gamora",
+      "stars": 7,
+      "rank": 2,
+      "sig": 40,
+      "ascended": false,
+      "pi": 27568
+    },
+    {
+      "class": "TECH",
+      "name": "Shuri",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 27530
+    },
+    {
+      "class": "MUTANT",
+      "name": "Havok",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 27293
+    },
+    {
+      "class": "COSMIC",
+      "name": "Dark Phoenix",
+      "stars": 6,
+      "rank": 5,
+      "sig": 20,
+      "ascended": true,
+      "pi": 27083
+    }
+  ],
+  "Screenshot_20260127-141553.png": [
+    {
+      "class": "SKILL",
+      "name": "Mr. Knight",
+      "stars": 7,
+      "rank": 2,
+      "sig": 20,
+      "ascended": false,
+      "pi": 26912
+    },
+    {
+      "class": "TECH",
+      "name": "Vision (Deathless)",
+      "stars": 7,
+      "rank": 2,
+      "sig": 20,
+      "ascended": false,
+      "pi": 26774
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Wong",
+      "stars": 7,
+      "rank": 2,
+      "sig": 40,
+      "ascended": false,
+      "pi": 26704
+    },
+    {
+      "class": "MUTANT",
+      "name": "Magneto (House Of X)",
+      "stars": 7,
+      "rank": 2,
+      "sig": 40,
+      "ascended": false,
+      "pi": 26620
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Symbiote Supreme",
+      "stars": 7,
+      "rank": 2,
+      "sig": 40,
+      "ascended": false,
+      "pi": 26550
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Electro",
+      "stars": 6,
+      "rank": 5,
+      "sig": 80,
+      "ascended": true,
+      "pi": 26060
+    },
+    {
+      "class": "COSMIC",
+      "name": "Nova",
+      "stars": 7,
+      "rank": 2,
+      "sig": 60,
+      "ascended": false,
+      "pi": 26050
+    },
+    {
+      "class": "MUTANT",
+      "name": "Magneto",
+      "stars": 6,
+      "rank": 5,
+      "sig": 140,
+      "ascended": true,
+      "pi": 25840
+    },
+    {
+      "class": "SKILL",
+      "name": "Valkyrie",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": true,
+      "pi": 25825
+    },
+    {
+      "class": "TECH",
+      "name": "Warlock",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": false,
+      "pi": 25689
+    },
+    {
+      "class": "COSMIC",
+      "name": "Medusa",
+      "stars": 7,
+      "rank": 2,
+      "sig": 20,
+      "ascended": false,
+      "pi": 25592
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Purgatory",
+      "stars": 7,
+      "rank": 2,
+      "sig": 21,
+      "ascended": false,
+      "pi": 25519
+    },
+    {
+      "class": "MUTANT",
+      "name": "Platinumpool",
+      "stars": 7,
+      "rank": 2,
+      "sig": 20,
+      "ascended": false,
+      "pi": 25473
+    },
+    {
+      "class": "MUTANT",
+      "name": "Apocalypse",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": true,
+      "pi": 25200
+    },
+    {
+      "class": "MUTANT",
+      "name": "Storm",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 25026
+    },
+    {
+      "class": "COSMIC",
+      "name": "Venom The Duck",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 25014
+    }
+  ],
+  "Screenshot_20260127-141601.png": [
+    {
+      "class": "SKILL",
+      "name": "Nick Fury",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 24970
+    },
+    {
+      "class": "TECH",
+      "name": "Solvarch",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 24460
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Void",
+      "stars": 7,
+      "rank": 2,
+      "sig": 20,
+      "ascended": false,
+      "pi": 24456
+    },
+    {
+      "class": "MUTANT",
+      "name": "Gambit",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 23880
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Scarlet Witch (Classic)",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 23796
+    },
+    {
+      "class": "MUTANT",
+      "name": "Cassandra Nova",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 23790
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Spider-Man (Supreme)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 23745
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Jessica Jones",
+      "stars": 6,
+      "rank": 5,
+      "sig": 0,
+      "ascended": true,
+      "pi": 23280
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Mordo",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 23220
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Man (Miles Morales)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 200,
+      "ascended": false,
+      "pi": 23190
+    },
+    {
+      "class": "TECH",
+      "name": "Yondu",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 23080
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Wiccan",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 23000
+    },
+    {
+      "class": "SKILL",
+      "name": "Black Widow (Deadly Origin)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 22910
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Mangog",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 22810
+    },
+    {
+      "class": "COSMIC",
+      "name": "Captain Marvel",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 22660
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Sorcerer Supreme",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 22630
+    }
+  ],
+  "Screenshot_20260127-141605.png": [
+    {
+      "class": "MYSTIC",
+      "name": "Isophyne",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 22570
+    },
+    {
+      "class": "TECH",
+      "name": "Lady Deathstrike",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 22375
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Dragon Man",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 22370
+    },
+    {
+      "class": "COSMIC",
+      "name": "Terrax",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 22240
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Man (Classic)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 22220
+    },
+    {
+      "class": "TECH",
+      "name": "Rocket Raccoon",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 22130
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Thing",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 22090
+    },
+    {
+      "class": "COSMIC",
+      "name": "Silver Surfer",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21950
+    },
+    {
+      "class": "TECH",
+      "name": "Omega Sentinel",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 21890
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Shathra",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 21760
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Dracula",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 21760
+    },
+    {
+      "class": "COSMIC",
+      "name": "Ronan",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": true,
+      "pi": 21730
+    },
+    {
+      "class": "SKILL",
+      "name": "Korg",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 21730
+    },
+    {
+      "class": "TECH",
+      "name": "Peni Parker",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 21680
+    },
+    {
+      "class": "MUTANT",
+      "name": "Storm (Pyramid X)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 21670
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 21660
+    }
+  ],
+  "Screenshot_20260127-141609.png": [
+    {
+      "class": "SCIENCE",
+      "name": "Abomination (Immortal)",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 21650
+    },
+    {
+      "class": "MUTANT",
+      "name": "Colossus",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 21560
+    },
+    {
+      "class": "SKILL",
+      "name": "Elsa Bloodstone",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21490
+    },
+    {
+      "class": "COSMIC",
+      "name": "Adam Warlock",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 21490
+    },
+    {
+      "class": "TECH",
+      "name": "Hulkbuster",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 21470
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Ebony Maw",
+      "stars": 6,
+      "rank": 4,
+      "sig": 120,
+      "ascended": false,
+      "pi": 21420
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Luke Cage",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21390
+    },
+    {
+      "class": "MUTANT",
+      "name": "Stryfe",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 21260
+    },
+    {
+      "class": "TECH",
+      "name": "Mysterio",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21240
+    },
+    {
+      "class": "COSMIC",
+      "name": "Vox",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 21200
+    },
+    {
+      "class": "SKILL",
+      "name": "Falcon",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21130
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Punk",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21080
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Joe Fixit",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 21080
+    },
+    {
+      "class": "TECH",
+      "name": "Iron Man (Infamous)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21080
+    },
+    {
+      "class": "MYSTIC",
+      "name": "The Hood",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 21040
+    },
+    {
+      "class": "MUTANT",
+      "name": "Sauron",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 21020
+    }
+  ],
+  "Screenshot_20260127-141613.png": [
+    {
+      "class": "COSMIC",
+      "name": "Vision (Aarkus)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 21000
+    },
+    {
+      "class": "TECH",
+      "name": "Iron Man (Infinity War)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 80,
+      "ascended": false,
+      "pi": 20960
+    },
+    {
+      "class": "MUTANT",
+      "name": "Professor X",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20950
+    },
+    {
+      "class": "TECH",
+      "name": "Guardian",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20885
+    },
+    {
+      "class": "SKILL",
+      "name": "Silver Sable",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20880
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Man 2099",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 20870
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Falcon (Joaquin Torres)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20820
+    },
+    {
+      "class": "SKILL",
+      "name": "Mantis",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20810
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Morbius",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20800
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Quicksilver",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20740
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Cassie Lang",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 20660
+    },
+    {
+      "class": "TECH",
+      "name": "Arcade",
+      "stars": 7,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 20660
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Guillotine (Deathless)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20650
+    },
+    {
+      "class": "COSMIC",
+      "name": "Sersi",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 20600
+    },
+    {
+      "class": "COSMIC",
+      "name": "Knull",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 20600
+    },
+    {
+      "class": "SKILL",
+      "name": "Spider-Man (Stealth Suit)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 20590
+    }
+  ],
+  "Screenshot_20260127-141616.png": [
+    {
+      "class": "SKILL",
+      "name": "Ronin",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20560
+    },
+    {
+      "class": "COSMIC",
+      "name": "Odin",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20520
+    },
+    {
+      "class": "TECH",
+      "name": "Captain America (Sam Wilson)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20520
+    },
+    {
+      "class": "SKILL",
+      "name": "Misty Knight",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20510
+    },
+    {
+      "class": "COSMIC",
+      "name": "Gorr",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20440
+    },
+    {
+      "class": "SKILL",
+      "name": "Night Thrasher",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20340
+    },
+    {
+      "class": "TECH",
+      "name": "The Maker",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20310
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spot",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 20300
+    },
+    {
+      "class": "COSMIC",
+      "name": "King Groot (Deathless)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20290
+    },
+    {
+      "class": "TECH",
+      "name": "Iron Man",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20280
+    },
+    {
+      "class": "TECH",
+      "name": "War Machine",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20260
+    },
+    {
+      "class": "COSMIC",
+      "name": "Red Goblin",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20190
+    },
+    {
+      "class": "COSMIC",
+      "name": "Gladiator",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20160
+    },
+    {
+      "class": "TECH",
+      "name": "Ultron",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20140
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Sasquatch",
+      "stars": 6,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 20140
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spot",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 20130
+    }
+  ],
+  "Screenshot_20260127-141621.png": [
+    {
+      "class": "TECH",
+      "name": "Lady Deathstrike",
+      "stars": 6,
+      "rank": 4,
+      "sig": 100,
+      "ascended": false,
+      "pi": 20110
+    },
+    {
+      "class": "SKILL",
+      "name": "Masacre",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 20040
+    },
+    {
+      "class": "SCIENCE",
+      "name": "The Overseer",
+      "stars": 7,
+      "rank": 1,
+      "sig": 100,
+      "ascended": false,
+      "pi": 20030
+    },
+    {
+      "class": "MUTANT",
+      "name": "Cyclops (Blue Team)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 20020
+    },
+    {
+      "class": "MUTANT",
+      "name": "Iceman",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 20000
+    },
+    {
+      "class": "COSMIC",
+      "name": "Adam Warlock",
+      "stars": 7,
+      "rank": 4,
+      "sig": 80,
+      "ascended": false,
+      "pi": 19980
+    },
+    {
+      "class": "COSMIC",
+      "name": "Carnage",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19940
+    },
+    {
+      "class": "MUTANT",
+      "name": "Wolverine (X-23)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19930
+    },
+    {
+      "class": "SKILL",
+      "name": "Black Panther",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19930
+    },
+    {
+      "class": "MUTANT",
+      "name": "Domino",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19860
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Mojo",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19830
+    },
+    {
+      "class": "COSMIC",
+      "name": "Silver Surfer",
+      "stars": 7,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 19780
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Red Hulk",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 19700
+    },
+    {
+      "class": "TECH",
+      "name": "Howard The Duck",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19700
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Lizard",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19690
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Gwen",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 19670
+    }
+  ],
+  "Screenshot_20260127-141627.png": [
+    {
+      "class": "COSMIC",
+      "name": "Corvus Glaive",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 19670
+    },
+    {
+      "class": "COSMIC",
+      "name": "Beta Ray Bill",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19660
+    },
+    {
+      "class": "SKILL",
+      "name": "Kraven",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19630
+    },
+    {
+      "class": "SKILL",
+      "name": "Mole Man",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19600
+    },
+    {
+      "class": "SKILL",
+      "name": "Black Widow",
+      "stars": 7,
+      "rank": 4,
+      "sig": 200,
+      "ascended": false,
+      "pi": 19590
+    },
+    {
+      "class": "SKILL",
+      "name": "Franken-Castle",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19530
+    },
+    {
+      "class": "SKILL",
+      "name": "Black Panther (Civil War)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19450
+    },
+    {
+      "class": "MUTANT",
+      "name": "Iceman",
+      "stars": 7,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 19380
+    },
+    {
+      "class": "SCIENCE",
+      "name": "The Leader",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 19340
+    },
+    {
+      "class": "MUTANT",
+      "name": "Sabretooth",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 19310
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Man 2099",
+      "stars": 7,
+      "rank": 3,
+      "sig": 140,
+      "ascended": false,
+      "pi": 19250
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Silk",
+      "stars": 7,
+      "rank": 4,
+      "sig": 61,
+      "ascended": false,
+      "pi": 19250
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Mister Fantastic",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 19180
+    },
+    {
+      "class": "COSMIC",
+      "name": "Angela",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 19170
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Invisible Woman",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 19010
+    },
+    {
+      "class": "SKILL",
+      "name": "Baron Zemo",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 19010
+    }
+  ],
+  "Screenshot_20260127-141634.png": [
+    {
+      "class": "SKILL",
+      "name": "Black Widow (Deadly Origin)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 165,
+      "ascended": false,
+      "pi": 18970
+    },
+    {
+      "class": "COSMIC",
+      "name": "Dark Phoenix",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18960
+    },
+    {
+      "class": "MUTANT",
+      "name": "Northstar",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18930
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Ant-Man",
+      "stars": 7,
+      "rank": 4,
+      "sig": 80,
+      "ascended": false,
+      "pi": 18870
+    },
+    {
+      "class": "SKILL",
+      "name": "Gwenpool",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18860
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Sandman",
+      "stars": 7,
+      "rank": 4,
+      "sig": 20,
+      "ascended": false,
+      "pi": 18780
+    },
+    {
+      "class": "SKILL",
+      "name": "Okoye",
+      "stars": 7,
+      "rank": 4,
+      "sig": 60,
+      "ascended": false,
+      "pi": 18770
+    },
+    {
+      "class": "COSMIC",
+      "name": "Super-Skrull",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18720
+    },
+    {
+      "class": "TECH",
+      "name": "Civil Warrior",
+      "stars": 7,
+      "rank": 1,
+      "sig": 20,
+      "ascended": false,
+      "pi": 18700
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Ant-Man",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18700
+    },
+    {
+      "class": "MUTANT",
+      "name": "Emma Frost",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18680
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Doctor Voodoo",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18670
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Diablo",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18610
+    },
+    {
+      "class": "COSMIC",
+      "name": "Superior Iron Man",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18590
+    },
+    {
+      "class": "TECH",
+      "name": "Prowler",
+      "stars": 7,
+      "rank": 3,
+      "sig": 140,
+      "ascended": false,
+      "pi": 18440
+    },
+    {
+      "class": "MUTANT",
+      "name": "Apocalypse",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18440
+    }
+  ],
+  "Screenshot_20260127-141638.png": [
+    {
+      "class": "MUTANT",
+      "name": "Kitty Pryde",
+      "stars": 7,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 18410
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Anti-Venom",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18410
+    },
+    {
+      "class": "MUTANT",
+      "name": "Omega Red",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18360
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Spider-Man (Supreme)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 18320
+    },
+    {
+      "class": "COSMIC",
+      "name": "Scream",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18310
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Captain America (Infinity War)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18310
+    },
+    {
+      "class": "TECH",
+      "name": "Shuri",
+      "stars": 7,
+      "rank": 4,
+      "sig": 20,
+      "ascended": false,
+      "pi": 18300
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Cassie Lang",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18290
+    },
+    {
+      "class": "MUTANT",
+      "name": "Silver Samurai",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18260
+    },
+    {
+      "class": "TECH",
+      "name": "Shocker",
+      "stars": 7,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 18260
+    },
+    {
+      "class": "MUTANT",
+      "name": "Nightcrawler",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18250
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Wiccan",
+      "stars": 7,
+      "rank": 3,
+      "sig": 120,
+      "ascended": false,
+      "pi": 18220
+    },
+    {
+      "class": "SKILL",
+      "name": "Kingpin",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18210
+    },
+    {
+      "class": "MUTANT",
+      "name": "Deadpool (X-Force)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18210
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Longshot",
+      "stars": 6,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 18180
+    },
+    {
+      "class": "SKILL",
+      "name": "Thor (Ragnarok)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 18100
+    }
+  ],
+  "Screenshot_20260127-141647.png": [
+    {
+      "class": "SCIENCE",
+      "name": "Sentry",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18060
+    },
+    {
+      "class": "SKILL",
+      "name": "Hawkeye",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 18040
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Quicksilver",
+      "stars": 6,
+      "rank": 3,
+      "sig": 120,
+      "ascended": false,
+      "pi": 17900
+    },
+    {
+      "class": "SKILL",
+      "name": "Attuma",
+      "stars": 7,
+      "rank": 4,
+      "sig": 40,
+      "ascended": false,
+      "pi": 17870
+    },
+    {
+      "class": "MUTANT",
+      "name": "Namor",
+      "stars": 7,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 17680
+    },
+    {
+      "class": "TECH",
+      "name": "Iron Man (Infamous)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 17600
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Hulk (Immortal)",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 17570
+    },
+    {
+      "class": "COSMIC",
+      "name": "Thanos",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 17530
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Mister Negative",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 17510
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Rintrah",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 17380
+    },
+    {
+      "class": "SCIENCE",
+      "name": "M.O.D.O.K.",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 17380
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Quake",
+      "stars": 5,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 17310
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 17240
+    },
+    {
+      "class": "COSMIC",
+      "name": "Thor",
+      "stars": 6,
+      "rank": 3,
+      "sig": 200,
+      "ascended": false,
+      "pi": 17100
+    },
+    {
+      "class": "TECH",
+      "name": "Omega Sentinel",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 17070
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Spider-Man (Miles Morales)",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 16960
+    }
+  ],
+  "Screenshot_20260127-141653.png": [
+    {
+      "class": "MUTANT",
+      "name": "Stryfe",
+      "stars": 6,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16930
+    },
+    {
+      "class": "TECH",
+      "name": "Peni Parker",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16930
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Guillotine",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16930
+    },
+    {
+      "class": "MUTANT",
+      "name": "Havok",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16920
+    },
+    {
+      "class": "TECH",
+      "name": "Ultron",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16810
+    },
+    {
+      "class": "TECH",
+      "name": "Guardian",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16790
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Nico Minoru",
+      "stars": 7,
+      "rank": 4,
+      "sig": 0,
+      "ascended": false,
+      "pi": 16720
+    },
+    {
+      "class": "TECH",
+      "name": "Spider-Man (Stark Enhanced)",
+      "stars": 5,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 16590
+    },
+    {
+      "class": "SKILL",
+      "name": "Moondragon",
+      "stars": 7,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 16590
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kushala",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 16540
+    },
+    {
+      "class": "TECH",
+      "name": "Viv Vision",
+      "stars": 7,
+      "rank": 2,
+      "sig": 200,
+      "ascended": false,
+      "pi": 16490
+    },
+    {
+      "class": "SKILL",
+      "name": "Agent Venom",
+      "stars": 7,
+      "rank": 3,
+      "sig": 120,
+      "ascended": false,
+      "pi": 16430
+    },
+    {
+      "class": "MUTANT",
+      "name": "Rogue",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 16380
+    },
+    {
+      "class": "COSMIC",
+      "name": "Sersi",
+      "stars": 7,
+      "rank": 3,
+      "sig": 60,
+      "ascended": false,
+      "pi": 16080
+    },
+    {
+      "class": "MUTANT",
+      "name": "Namor",
+      "stars": 6,
+      "rank": 2,
+      "sig": 200,
+      "ascended": false,
+      "pi": 15980
+    },
+    {
+      "class": "COSMIC",
+      "name": "Heimdall",
+      "stars": 7,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 15980
+    }
+  ],
+  "Screenshot_20260127-152046.png": [
+    {
+      "class": "MYSTIC",
+      "name": "Isophyne",
+      "stars": 3,
+      "rank": 4,
+      "sig": 8,
+      "ascended": false,
+      "pi": 2742
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Isophyne",
+      "stars": 5,
+      "rank": 1,
+      "sig": 0,
+      "ascended": false,
+      "pi": 3775
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Isophyne",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 10760
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Isophyne",
+      "stars": 7,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 22570
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 1,
+      "rank": 2,
+      "sig": 0,
+      "ascended": false,
+      "pi": 412
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 2,
+      "rank": 3,
+      "sig": 99,
+      "ascended": false,
+      "pi": 862
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 3,
+      "rank": 4,
+      "sig": 99,
+      "ascended": false,
+      "pi": 2212
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 4,
+      "rank": 5,
+      "sig": 99,
+      "ascended": false,
+      "pi": 5479
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 7,
+      "rank": 5,
+      "sig": 160,
+      "ascended": false,
+      "pi": 12659
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 6,
+      "rank": 5,
+      "sig": 200,
+      "ascended": true,
+      "pi": 27844
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Juggernaut",
+      "stars": 7,
+      "rank": 3,
+      "sig": 100,
+      "ascended": false,
+      "pi": 33575
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 3,
+      "rank": 4,
+      "sig": 99,
+      "ascended": false,
+      "pi": 2754
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 5,
+      "rank": 1,
+      "sig": 40,
+      "ascended": false,
+      "pi": 3846
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 4,
+      "rank": 5,
+      "sig": 99,
+      "ascended": false,
+      "pi": 6871
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 6,
+      "rank": 3,
+      "sig": 80,
+      "ascended": false,
+      "pi": 17240
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Kindred",
+      "stars": 7,
+      "rank": 1,
+      "sig": 60,
+      "ascended": false,
+      "pi": 21660
+    }
+  ]
+}
