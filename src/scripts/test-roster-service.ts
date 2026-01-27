@@ -1,6 +1,6 @@
 
-import { rosterImageService } from '../services/rosterImageService.js';
-import { getGoogleVisionService } from '../services/googleVisionService.js';
+import { rosterImageService } from '../services/rosterImageService';
+import { getGoogleVisionService } from '../services/googleVisionService';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -29,7 +29,14 @@ async function testProcessing() {
       delete result.debugImage; // Don't log the buffer
     }
 
-    // console.log("Result:", JSON.stringify(result, null, 2));
+    // Clean up buffers from logging to avoid massive output
+    result.grid.forEach(cell => {
+      if (cell.debugInfo?.bestMatchBuffer) {
+        delete cell.debugInfo.bestMatchBuffer;
+      }
+    });
+
+    console.log("Result:", JSON.stringify(result, null, 2));
     console.log("Success! Grid size:", result.grid.length);
   } catch (error) {
     console.error("Error:", error);

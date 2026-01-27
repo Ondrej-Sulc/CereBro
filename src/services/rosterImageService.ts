@@ -10,9 +10,11 @@ import { getImageHash, compareHashes, downloadImage } from '../commands/roster/o
 // Types
 export interface GridCell {
   bounds: { x: number; y: number; width: number; height: number };
+  piBounds?: { x: number; y: number; width: number; height: number };
   rank?: number;
   sigLevel?: number;
   stars?: number;
+  isAscended?: boolean;
   powerRating?: number;
   class?: ChampionClass;
   championName?: string;
@@ -32,22 +34,29 @@ interface ProcessingOptions {
 
 // Configuration Constants (Relative Ratios)
 const CONFIG = {
-  MIN_PI_VALUE: 2500,
+  MIN_PI_VALUE: 300,
   
   // Grid Structure Ratios (relative to avgColDist)
   CELL_WIDTH_RATIO: 0.93,
   CELL_HEIGHT_RATIO: 1.16,
   
   // Anchor Offsets (relative to avgColDist)
-  PI_OFFSET_X_RATIO: -0.04, 
+  PI_OFFSET_X_RATIO: 0.20, 
   PI_OFFSET_Y_RATIO: 0.065,
 
   // Crop Regions (relative to Cell Width/Height)
   CLASS_ICON_RATIO: {
     x: 0.04,    
     y: 0.82,    
-    width: 0.17, 
-    height: 0.16 
+    width: 0.18, 
+    height: 0.14 
+  },
+
+  ASCENSION_ICON_RATIO: {
+    x: 0.78,    
+    y: 0.84,    
+    width: 0.16, 
+    height: 0.10
   },
 
   PORTRAIT_RATIO: {
@@ -57,12 +66,12 @@ const CONFIG = {
     height: 0.4 
   },
 
-  // Region to sample for Star Level detection
+  // Region to sample for Star Level detection (Star Row)
   STARS_CHECK_RATIO: {
-    x: 0.85,
-    y: 0.1,
-    width: 0.1,
-    height: 0.1
+    x: 0.02,
+    y: 0.64, 
+    width: 0.96,
+    height: 0.05
   },
 
   // Crop to apply to the reference champion image (p_128)
@@ -124,7 +133,7 @@ export class RosterImageService {
                 width: 32,
                 height: 32,
                 channels: 4,
-                background: { r: 34, g: 34, b: 34, alpha: 1 }
+                background: { r: 40, g: 40, b: 40, alpha: 1 }
             }
         })
         .composite([{ input: resizedIcon }]) 
@@ -173,6 +182,8 @@ export class RosterImageService {
         cell.class = await this.identifyClass(rawImage, rawImageOpts, cell);
         // Identify Stars
         cell.stars = await this.identifyStars(rawImage, rawImageOpts, cell);
+        // Identify Ascension
+        cell.isAscended = await this.identifyAscension(rawImage, rawImageOpts, cell);
     }));
 
     // 3. Pre-fetch Champions for detected classes
@@ -197,11 +208,17 @@ export class RosterImageService {
   private async estimateGridFromStats(detections: any[], imageBuffer: Buffer): Promise<{ grid: GridCell[], avgColDist: number, cellDims: {width: number, height: number} }> {
     const cells: GridCell[] = [];
     
+    const metadata = await sharp(imageBuffer).metadata();
+    const imageWidth = metadata.width || 1000;
+    const imageHeight = metadata.height || 1000;
+
     const piCandidates = detections.slice(1).filter((text) => {
       const cleanText = text.description?.replace(/[^\d]/g, '');
       const value = parseInt(cleanText || '0', 10);
       return value > CONFIG.MIN_PI_VALUE;
     });
+
+    logger.info({ candidateCount: piCandidates.length }, "PI Candidates Found");
 
     if (piCandidates.length === 0) {
       throw new Error("No Power Ratings found to anchor grid.");
@@ -211,8 +228,21 @@ export class RosterImageService {
         const vertices = pi.boundingPoly.vertices;
         const width = vertices[2].x - vertices[0].x;
         const height = vertices[2].y - vertices[0].y;
+        
+        let x = vertices[0].x;
+        const text = pi.description || '';
+        const firstDigitIndex = text.search(/\d/);
+
+        // Heuristic: If text starts with non-digits (e.g. icon detected as "T12345"), 
+        // shift the x-anchor rightwards.
+        if (firstDigitIndex > 0 && text.length > 0) {
+             // The prefix is likely the Class Icon which is roughly square and height-proportional
+             // plus a small gap. We use height as a proxy for the icon width.
+             x += (height * 1.15); 
+        }
+
         return {
-            x: vertices[0].x + width / 2,
+            x: x, 
             y: vertices[2].y, 
             pi
         };
@@ -229,9 +259,6 @@ export class RosterImageService {
         }
     }
 
-    const metadata = await sharp(imageBuffer).metadata();
-    const imageWidth = metadata.width || 1000;
-
     let avgColDist = 0;
     if (uniqueCols.length > 1) {
         avgColDist = (uniqueCols[uniqueCols.length - 1] - uniqueCols[0]) / (uniqueCols.length - 1);
@@ -245,7 +272,7 @@ export class RosterImageService {
 
     for (const pos of positions) {
       const powerRating = parseInt(pos.pi.description?.replace(/[^\d]/g, '') || '0', 10);
-      const cellX = pos.x - (cellWidth / 2) - (avgColDist * CONFIG.PI_OFFSET_X_RATIO);
+      const cellX = pos.x - (avgColDist * CONFIG.PI_OFFSET_X_RATIO);
       const cellY = pos.y - cellHeight + (cellHeight * CONFIG.PI_OFFSET_Y_RATIO);
 
       const cellBounds = {
@@ -277,8 +304,13 @@ export class RosterImageService {
       if (rankMatch) rank = parseInt(rankMatch[1], 10);
       if (sigMatch) sigLevel = parseInt(sigMatch[1], 10);
 
+      const v = pos.pi.boundingPoly.vertices;
+      const piW = v[2].x - v[0].x;
+      const piH = v[2].y - v[0].y;
+
       cells.push({
         bounds: cellBounds,
+        piBounds: { x: v[0].x, y: v[0].y, width: piW, height: piH },
         powerRating: powerRating,
         rank,
         sigLevel
@@ -392,31 +424,134 @@ export class RosterImageService {
         height: Math.round(height * CONFIG.STARS_CHECK_RATIO.height)
       };
 
+      // Boundary check
+      if (cropRegion.left < 0) cropRegion.left = 0;
+      if (cropRegion.top < 0) cropRegion.top = 0;
       if (cropRegion.left + cropRegion.width > rawOpts.raw.width) {
-          cropRegion.left = rawOpts.raw.width - cropRegion.width - 1;
+          cropRegion.width = rawOpts.raw.width - cropRegion.left;
+      }
+      if (cropRegion.top + cropRegion.height > rawOpts.raw.height) {
+          cropRegion.height = rawOpts.raw.height - cropRegion.top;
       }
 
-      const stats = await sharp(rawImage, rawOpts).extract(cropRegion).stats();
+      // Extract and convert to grayscale raw buffer
+      const starStrip = await sharp(rawImage, rawOpts)
+          .extract(cropRegion)
+          .grayscale()
+          .raw()
+          .toBuffer();
+
+      // Analyze the strip to find the width of the "bright" content
+      let minX = cropRegion.width;
+      let maxX = 0;
+      let hasBrightPixels = false;
+      const threshold = 120; // Luminance threshold for stars
+
+      for (let r = 0; r < cropRegion.height; r++) {
+          for (let c = 0; c < cropRegion.width; c++) {
+              const val = starStrip[r * cropRegion.width + c];
+              if (val > threshold) {
+                  if (c < minX) minX = c;
+                  if (c > maxX) maxX = c;
+                  hasBrightPixels = true;
+              }
+          }
+      }
+
+      let starWidthRatio = 0;
+      if (hasBrightPixels) {
+          const contentWidth = maxX - minX;
+          // Normalize against the cell width (approx) or the crop width
+          // cropRegion.width is ~96% of cell width.
+          starWidthRatio = contentWidth / cropRegion.width;
+      }
+
+      cell.debugInfo = {
+        ...cell.debugInfo,
+        // @ts-ignore
+        starWidthRatio: starWidthRatio.toFixed(3),
+        // @ts-ignore
+        starContentWidth: (maxX - minX)
+      };
+
+      // Heuristic mapping (calibration needed)
+      // 7 stars: fills almost 100% of the row
+      // 6 stars: fills ~85%?
+      // 5 stars: fills ~70%?
+      
+      if (starWidthRatio > 0.90) return 7;
+      if (starWidthRatio > 0.75) return 6;
+      if (starWidthRatio > 0.60) return 5;
+      if (starWidthRatio > 0.45) return 4;
+      if (starWidthRatio > 0.30) return 3;
+      if (starWidthRatio > 0.15) return 2;
+      
+      return 1; // Fallback
+    } catch (err) {
+      logger.error({ err }, "Error identifying stars");
+      return 6; // Default
+    }
+  }
+
+  private async identifyAscension(rawImage: Buffer, rawOpts: any, cell: GridCell): Promise<boolean> {
+    try {
+      const { x, y, width, height } = cell.bounds;
+      const cropRegion = {
+        left: Math.round(x + (width * CONFIG.ASCENSION_ICON_RATIO.x)),
+        top: Math.round(y + (height * CONFIG.ASCENSION_ICON_RATIO.y)),
+        width: Math.round(width * CONFIG.ASCENSION_ICON_RATIO.width),
+        height: Math.round(height * CONFIG.ASCENSION_ICON_RATIO.height)
+      };
+
+      // Boundary check
+      if (cropRegion.left < 0) cropRegion.left = 0;
+      if (cropRegion.top < 0) cropRegion.top = 0;
+      if (cropRegion.left + cropRegion.width > rawOpts.raw.width) {
+          cropRegion.width = rawOpts.raw.width - cropRegion.left;
+      }
+      if (cropRegion.top + cropRegion.height > rawOpts.raw.height) {
+          cropRegion.height = rawOpts.raw.height - cropRegion.top;
+      }
+
+      const cropBuffer = await sharp(rawImage, rawOpts)
+          .extract(cropRegion)
+          .raw()
+          .toBuffer();
+
+      let sumR = 0, sumG = 0, sumB = 0;
+      for (let i = 0; i < cropBuffer.length; i += 4) {
+          sumR += cropBuffer[i];
+          sumG += cropBuffer[i+1];
+          sumB += cropBuffer[i+2];
+      }
+      const numPixels = cropBuffer.length / 4 || 1;
       const avgColor = {
-        r: stats.channels[0].mean,
-        g: stats.channels[1].mean,
-        b: stats.channels[2].mean
+        r: sumR / numPixels,
+        g: sumG / numPixels,
+        b: sumB / numPixels
       };
 
       const { h, s, l } = this.rgbToHsl(avgColor.r, avgColor.g, avgColor.b);
+
+      // Gold color definition:
+      // Hue: Yellow/Orange is around 30-50 degrees. 
+      // Saturation: Should be significant (grey bg is < 10%).
+      // Lightness: Gold is bright.
+      
+      const isGold = (h >= 25 && h <= 65) && (s > 0.20) && (l > 0.20);
       
       cell.debugInfo = {
         ...cell.debugInfo,
-        starColor: avgColor,
-        hsl: { h, s, l }
+        // @ts-ignore
+        ascensionColor: avgColor,
+        // @ts-ignore
+        ascensionHsl: { h: h.toFixed(0), s: s.toFixed(2), l: l.toFixed(2) }
       };
 
-      if (h >= 260 && h <= 320) {
-          return 7;
-      }
-      return 6;
+      return isGold;
+
     } catch (err) {
-      return 6;
+      return false;
     }
   }
 
@@ -598,13 +733,42 @@ export class RosterImageService {
         top: Math.round(py),
       });
 
+      // 3b. Star Crop (Cyan)
+      const sx = x + (width * CONFIG.STARS_CHECK_RATIO.x);
+      const sy = y + (height * CONFIG.STARS_CHECK_RATIO.y);
+      const sw = width * CONFIG.STARS_CHECK_RATIO.width;
+      const sh = height * CONFIG.STARS_CHECK_RATIO.height;
+      const starRect = `<svg width="${sw}" height="${sh}"><rect x="0" y="0" width="${sw}" height="${sh}" stroke="cyan" stroke-width="2" fill="none" /></svg>`;
+      overlayElements.push({
+        input: Buffer.from(starRect),
+        left: Math.round(sx),
+        top: Math.round(sy),
+      });
+
+      // 3c. Ascension Crop (Orange)
+      const ax = x + (width * CONFIG.ASCENSION_ICON_RATIO.x);
+      const ay = y + (height * CONFIG.ASCENSION_ICON_RATIO.y);
+      const aw = width * CONFIG.ASCENSION_ICON_RATIO.width;
+      const ah = height * CONFIG.ASCENSION_ICON_RATIO.height;
+      const ascRect = `<svg width="${aw}" height="${ah}"><rect x="0" y="0" width="${aw}" height="${ah}" stroke="orange" stroke-width="2" fill="none" /></svg>`;
+      overlayElements.push({
+        input: Buffer.from(ascRect),
+        left: Math.round(ax),
+        top: Math.round(ay),
+      });
+
       // 4. Text Label
-       if (cell.championName || cell.class || cell.rank !== undefined) {
+      if (cell.championName || cell.class || cell.rank !== undefined) {
         const rankSig = cell.rank !== undefined ? `R${cell.rank} S${cell.sigLevel || 0}` : '';
         const starStr = cell.stars ? `${cell.stars}*` : '';
+        const ascStr = cell.isAscended ? '(ASC)' : '';
+        // @ts-ignore
+        const starRatio = cell.debugInfo?.starWidthRatio || '';
+        // @ts-ignore
+        const ascHsl = cell.debugInfo?.ascensionHsl ? `H:${cell.debugInfo.ascensionHsl.h} S:${cell.debugInfo.ascensionHsl.s}` : '';
         
         const line1 = `${cell.championName || '?'}`;
-        const line2 = `${starStr} ${rankSig} (${cell.class || '?'})`;
+        const line2 = `${starStr} ${rankSig} ${ascStr} [${starRatio}] ${ascHsl}`;
 
         const svgText = `
           <svg width="${width}" height="50">
@@ -615,8 +779,24 @@ export class RosterImageService {
         overlayElements.push({
           input: Buffer.from(svgText),
           left: Math.round(x),
-          top: Math.round(y + height - 50),
+          top: Math.round(y + height/4),
         });
+
+        // Get class icon for overlay if it exists
+        if (cell.class && this.classIcons.has(cell.class)) {
+            const classIconBuffer = await sharp(this.classIcons.get(cell.class)!, {
+                raw: { width: 32, height: 32, channels: 4 }
+            })
+                .resize(32, 32)
+                .png()
+                .toBuffer();
+            
+            overlayElements.push({
+                input: classIconBuffer,
+                left: Math.round(x + 5),
+                top: Math.round(y + 5)
+            });
+        }
       }
 
       // 5. Best Match Reference Image (Top Right)
@@ -631,6 +811,17 @@ export class RosterImageService {
               left: Math.round(x + width - 45), // Top right corner with 5px padding
               top: Math.round(y + 5)
           });
+      }
+
+      // 6. PI Bounds (Magenta)
+      if (cell.piBounds) {
+        const { x: px, y: py, width: pw, height: ph } = cell.piBounds;
+        const piRect = `<svg width="${pw}" height="${ph}"><rect x="0" y="0" width="${pw}" height="${ph}" stroke="magenta" stroke-width="2" fill="none" /></svg>`;
+        overlayElements.push({
+            input: Buffer.from(piRect),
+            left: Math.round(px),
+            top: Math.round(py),
+        });
       }
     }
 
