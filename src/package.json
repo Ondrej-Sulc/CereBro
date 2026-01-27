@@ -1,6 +1,7 @@
 {
   "name": "@cerebro/core",
   "version": "1.0.0",
+  "license": "AGPL-3.0-or-later",
   "main": "index.ts",
   "dependencies": {
     "csv-parse": "^6.1.0",

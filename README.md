@@ -157,6 +157,16 @@ Documentation for individual commands is auto-generated from the source code.
 
 ---
 
+## ⚖️ License
+
+CereBro is open-source software licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. 
+
+The AGPL-3.0 is a strong copyleft license specifically designed for network-over-a-network software. If you run a modified version of CereBro on a server and let the public access it, you **must** make your source code available to your users.
+
+See the [LICENSE](LICENSE) file for the full text.
+
+---
+
 ## Developer Getting Started
 
 1. Make sure you're using node >= 20.9.0
