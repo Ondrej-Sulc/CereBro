@@ -1,6 +1,6 @@
 
-import { rosterImageService } from './rosterImageService.js';
-import { getGoogleVisionService } from './googleVisionService.js';
+import { rosterImageService } from '../services/rosterImageService.js';
+import { getGoogleVisionService } from '../services/googleVisionService.js';
 import fs from 'fs/promises';
 import path from 'path';
 
