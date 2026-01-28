@@ -5,6 +5,7 @@ import { RosterFeatureService } from './roster/rosterFeatures.js';
 import { RosterChampionService } from './roster/rosterChampion.js';
 import { RosterDebugService } from './roster/rosterDebug.js';
 import { GridCell } from './roster/types.js';
+import { getMinPrestigeThresholds } from './championService.js';
 import logger from './loggerService.js';
 import { performance } from 'perf_hooks';
 
@@ -36,7 +37,7 @@ export class RosterImageService {
     }
 
     // 1. Estimate Grid
-    const { grid, avgColDist, cellDims, headerMinY } = await this.layoutService.estimateGridFromStats(detections, imageBuffer);
+    let { grid, avgColDist, cellDims, headerMinY } = await this.layoutService.estimateGridFromStats(detections, imageBuffer);
     
     const t2 = performance.now(); // Layout done
 
@@ -83,6 +84,36 @@ export class RosterImageService {
     }));
 
     const t6 = performance.now(); // Champion Matching done
+
+    // 5. Sanity Check: Filter out nonsense records based on Prestige Thresholds
+    const prestigeThresholds = await getMinPrestigeThresholds();
+    const originalCount = grid.length;
+    // Allow for some variance (e.g. masteries not accounted for, or DB missing the absolute lowest prestige char)
+    // We mainly want to catch gross errors like 4* detected as 7* (5k PI vs 20k Min).
+    const PRESTIGE_TOLERANCE = 0.9; 
+
+    grid = grid.filter(cell => {
+        if (cell.stars && cell.rank && cell.powerRating) {
+            const key = `${cell.stars}-${cell.rank}`;
+            const minPrestige = prestigeThresholds.get(key);
+            // If the detected PI is significantly lower than the minimum possible base prestige, it's likely a parsing error (e.g. 7* detected as 4*)
+            if (minPrestige && cell.powerRating < (minPrestige * PRESTIGE_TOLERANCE)) {
+                logger.warn({ 
+                    cellStars: cell.stars, 
+                    cellRank: cell.rank, 
+                    cellPI: cell.powerRating, 
+                    minPrestige,
+                    threshold: minPrestige * PRESTIGE_TOLERANCE
+                }, "Discarding nonsense record (PI < MinPrestige * Tolerance)");
+                return false;
+            }
+        }
+        return true;
+    });
+
+    if (grid.length < originalCount) {
+        logger.info({ removed: originalCount - grid.length }, "Filtered invalid roster entries.");
+    }
 
     let debugImage: Buffer | undefined;
     if (options.debugMode) {

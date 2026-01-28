@@ -2339,7 +2339,7 @@
     {
       "class": "MUTANT",
       "name": "Kitty Pryde",
-      "stars": 7,
+      "stars": 5,
       "rank": 5,
       "sig": 200,
       "ascended": true,
@@ -2393,7 +2393,7 @@
     {
       "class": "TECH",
       "name": "Shuri",
-      "stars": 7,
+      "stars": 6,
       "rank": 4,
       "sig": 20,
       "ascended": false,
@@ -2512,7 +2512,7 @@
     {
       "class": "SKILL",
       "name": "Attuma",
-      "stars": 7,
+      "stars": 6,
       "rank": 4,
       "sig": 40,
       "ascended": false,
@@ -2521,7 +2521,7 @@
     {
       "class": "MUTANT",
       "name": "Namor",
-      "stars": 7,
+      "stars": 5,
       "rank": 5,
       "sig": 200,
       "ascended": true,
@@ -2685,7 +2685,7 @@
     {
       "class": "MYSTIC",
       "name": "Nico Minoru",
-      "stars": 7,
+      "stars": 6,
       "rank": 4,
       "sig": 0,
       "ascended": false,
@@ -2849,7 +2849,7 @@
     {
       "class": "MYSTIC",
       "name": "Juggernaut",
-      "stars": 7,
+      "stars": 5,
       "rank": 5,
       "sig": 160,
       "ascended": false,

@@ -103,4 +103,35 @@ export async function getChampionData(
   }) as Promise<ChampionWithAllRelations | null>;
 }
 
+let _prestigeThresholdsCache: Map<string, number> | null = null;
+
+export async function getMinPrestigeThresholds() {
+  if (_prestigeThresholdsCache) {
+    return _prestigeThresholdsCache;
+  }
+
+  const thresholds = await prisma.championPrestige.groupBy({
+    by: ['rarity', 'rank'],
+    where: {
+      sig: 0,
+      NOT: [
+        { rarity: 1 }
+      ]
+    },
+    _min: {
+      prestige: true
+    }
+  });
+
+  const thresholdMap = new Map<string, number>();
+  thresholds.forEach(t => {
+    if (t._min.prestige) {
+      thresholdMap.set(`${t.rarity}-${t.rank}`, t._min.prestige);
+    }
+  });
+
+  _prestigeThresholdsCache = thresholdMap;
+  return thresholdMap;
+}
+
 
