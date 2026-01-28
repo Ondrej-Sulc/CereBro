@@ -415,7 +415,7 @@ export default async function RosterPage(props: {
           </p>
         </div>
         <Link href="/profile/update">
-          <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20 flex items-center gap-2">
+          <Button className="bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2">
             <Upload className="w-4 h-4" />
             Update Roster
           </Button>

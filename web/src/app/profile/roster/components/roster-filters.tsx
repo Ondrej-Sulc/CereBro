@@ -139,7 +139,7 @@ export function RosterFilters({
                                 <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString('en-US')}</span>
                             </div>
                         )}
-                        <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20" onClick={onAddClick}>
+                        <Button className="bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20" onClick={onAddClick}>
                             <Plus className="w-4 h-4 mr-2" /> Add Champion
                         </Button>
                     </div>

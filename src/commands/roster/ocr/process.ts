@@ -169,6 +169,117 @@ export async function processRosterScreenshot(
   };
 }
 
+export async function processStatsViewScreenshot(
+  imageInput: string | Buffer,
+  debugMode: boolean = false,
+  playerId?: string
+): Promise<RosterUpdateResult | RosterDebugResult> {
+  const { rosterImageService } = await import("../../../services/rosterImageService.js");
+  
+  const logContext = { playerId, mode: 'stats-view' };
+  
+  if (debugMode) logger.debug(logContext, "Starting stats view processing");
+
+  let imageBuffer: Buffer;
+  if (typeof imageInput === 'string') {
+      imageBuffer = await downloadImage(imageInput);
+  } else {
+      imageBuffer = imageInput;
+  }
+
+  const { grid, debugImage } = await rosterImageService.processStatsView(imageBuffer, { debugMode });
+
+  if (debugMode) {
+      return {
+          message: `Stats View Processed. Found ${grid.length} champions.`,
+          imageBuffer,
+          debugImageBuffer: debugImage
+      };
+  }
+
+  if (!playerId) throw new Error("playerId required");
+
+  const { champions, errors } = await saveStatsViewRoster(grid, playerId);
+  const count = champions.flat().length;
+
+  return {
+      champions: [champions], // saveStatsViewRoster returns flat array, wrap in [] to match interface
+      count,
+      errors
+  };
+}
+
+async function saveStatsViewRoster(
+    grid: import("../../../services/roster/types.js").GridCell[],
+    playerId: string
+): Promise<{ champions: RosterWithChampion[], errors: string[] }> {
+    const { prisma } = await import("../../../services/prismaService.js");
+    const savedChampions: RosterWithChampion[] = [];
+    const errors: string[] = [];
+    const allChampions = await prisma.champion.findMany();
+    const championMap = new Map(allChampions.map((c) => [c.name, c]));
+
+    logger.info({ 
+        totalCells: grid.length, 
+        cellsWithNames: grid.filter(c => c.championName).length 
+    }, "Saving stats view roster");
+
+    for (const cell of grid) {
+        if (cell.championName && cell.class && cell.stars && cell.rank) {
+            const champion = championMap.get(cell.championName);
+            if (champion) {
+                // ... existing upsert code ...
+                const rosterEntry = await prisma.roster.upsert({
+                    where: {
+                        playerId_championId_stars: {
+                            playerId,
+                            championId: champion.id,
+                            stars: cell.stars,
+                        },
+                    },
+                    update: {
+                        rank: cell.rank,
+                        isAwakened: !!((cell.sigLevel || 0) > 0 || cell.isAscended), 
+                        sigLevel: cell.sigLevel || 0,
+                        isAscended: cell.isAscended || false,
+                        powerRating: cell.powerRating || null,
+                    },
+                    create: {
+                        playerId,
+                        championId: champion.id,
+                        stars: cell.stars,
+                        rank: cell.rank,
+                        isAwakened: !!((cell.sigLevel || 0) > 0 || cell.isAscended),
+                        sigLevel: cell.sigLevel || 0,
+                        isAscended: cell.isAscended || false,
+                        powerRating: cell.powerRating || null,
+                    },
+                    include: { champion: true },
+                });
+                savedChampions.push(rosterEntry as RosterWithChampion);
+            } else {
+                 const msg = `Champion '${cell.championName}' not found in DB`;
+                 logger.warn({ championName: cell.championName }, msg);
+                 errors.push(msg);
+            }
+        } else {
+            if (cell.championName) {
+                const msg = `Skipped '${cell.championName}': Missing Class(${!!cell.class}), Stars(${cell.stars}), or Rank(${cell.rank})`;
+                logger.warn({ 
+                    championName: cell.championName, 
+                    hasName: !!cell.championName,
+                    hasClass: !!cell.class,
+                    stars: cell.stars,
+                    rank: cell.rank
+                }, msg);
+                errors.push(msg);
+            }
+        }
+    }
+
+    return { champions: savedChampions, errors };
+}
+
 async function saveRoster(
   grid: ChampionGridCell[][],
   playerId: string,
@@ -224,119 +335,7 @@ async function saveRoster(
     }
   }
 
-  // Fetch player with alliance and alliance config to check for sheet integration
-  const player = await prisma.player.findUnique({
-    where: { id: playerId },
-    include: { alliance: { include: { config: true } } },
-  });
-
-  if (player?.alliance?.config?.sheetId) {
-    await updateRosterInSheet(
-      playerId,
-      stars,
-      rank,
-      isAscended,
-      savedChampions,
-      player.alliance.config.sheetId
-    );
-  }
-
   return savedChampions;
-}
-
-async function updateRosterInSheet(
-  playerId: string,
-  stars: number,
-  rank: number,
-  isAscended: boolean,
-  updatedChampions: RosterWithChampion[][],
-  sheetId: string
-) {
-  const { prisma } = await import("../../../services/prismaService.js");
-  const { sheetsService } = await import("../../../services/sheetsService.js");
-  if (stars !== 6 && stars !== 7) {
-    logger.debug({ playerId, stars }, "Skipping sheet update for non-6/7* champions");
-    return;
-  }
-
-  const player = await prisma.player.findUnique({ where: { id: playerId } });
-  if (!player) {
-    logger.error({ playerId }, "Player not found during sheet update");
-    return;
-  }
-
-  const sheetName = "Roster";
-  const headerRange = `${sheetName}!B2:BI2`;
-  const championNamesRange = `${sheetName}!A5:A`;
-
-  const [playerNames, championNames] = await sheetsService.readSheets(
-    sheetId,
-    [headerRange, championNamesRange]
-  );
-
-  if (!playerNames || !championNames) {
-    logger.error({ playerId, sheetId }, "Failed to read player or champion names from sheet");
-    return;
-  }
-
-  const playerIndex = playerNames[0].findIndex(
-    (name: string) => name.toLowerCase() === player.ingameName.toLowerCase()
-  );
-
-  if (playerIndex === -1) {
-    logger.debug({ playerId, ingameName: player.ingameName }, "Player not found in sheet");
-    return;
-  }
-
-  const columnIndex = playerIndex + (stars === 6 ? 1 : 2);
-  const columnLetter = String.fromCharCode(65 + (columnIndex % 26));
-  const columnPrefix =
-    columnIndex >= 26
-      ? String.fromCharCode(65 + Math.floor(columnIndex / 26) - 1)
-      : "";
-  const targetColumn = `${columnPrefix}${columnLetter}`;
-
-  const targetRange = `${sheetName}!${targetColumn}5:${targetColumn}`;
-
-  const existingRosterData = await sheetsService.readSheet(
-    sheetId,
-    targetRange
-  );
-  const newRosterData = existingRosterData ? [...existingRosterData] : [];
-
-  const flatUpdatedChampions = updatedChampions.flat();
-
-  for (let i = 0; i < championNames.length; i++) {
-    const sheetChampionName = championNames[i][0];
-    const updatedChampion = flatUpdatedChampions.find(
-      (c) => c.champion.name.toLowerCase() === sheetChampionName.toLowerCase()
-    );
-
-    if (updatedChampion) {
-      if (i >= newRosterData.length) {
-        for (let j = newRosterData.length; j <= i; j++) {
-          newRosterData.push([]);
-        }
-      }
-      let sheetRank = rank;
-      if (isAscended && stars === 6) {
-        sheetRank += 1;
-      }
-      newRosterData[i] = [
-        `${sheetRank}${updatedChampion.isAwakened ? "*" : ""}`,
-      ];
-    }
-  }
-
-  await sheetsService.writeSheet(
-    sheetId,
-    targetRange,
-    newRosterData
-  );
-  logger.info(
-    { playerId, stars, count: flatUpdatedChampions.length },
-    "Successfully updated roster in sheet"
-  );
 }
 
 async function gridToString(grid: ChampionGridCell[][]): Promise<string> {

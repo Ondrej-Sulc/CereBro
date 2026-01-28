@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef, HTMLAttributes, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,15 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload, X, Check, ImagePlus, Sparkles, Star } from "lucide-react";
+import { Loader2, Upload, X, Check, ImagePlus, Sparkles, Star, Cpu } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VirtuosoGrid } from "react-virtuoso";
 import axios from "axios";
 
 // Define local types matching what the API returns
@@ -44,11 +46,69 @@ interface UpdateResult {
     errors: string[];
 }
 
+const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
+  <div 
+    ref={ref} 
+    {...props} 
+    style={style} 
+    className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3"
+  >
+    {children}
+  </div>
+));
+GridList.displayName = "GridList";
+
+const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion }) => {
+  return (
+    <div className="relative aspect-square rounded-md overflow-hidden border border-slate-700 bg-slate-900 group">
+      <Image 
+          src={getChampionImageUrl(item.champion.images, '128')}
+          alt={item.champion.name}
+          width={128}
+          height={128}
+          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+      />
+      
+      {/* Rank & Star Badge */}
+      <div className="absolute top-1 right-1 z-10 flex flex-col items-end gap-0.5">
+          <span className="text-[10px] font-bold text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">
+              {item.stars}★ R{item.rank}
+          </span>
+      </div>
+
+      <div className="absolute top-1 left-1 z-10">
+          {item.isAwakened ? (
+              <div className="bg-black/80 rounded p-0.5">
+                  <Sparkles className="w-3 h-3 text-slate-100 fill-slate-300 drop-shadow-md" />
+              </div>
+          ) : null}
+      </div>
+
+      {/* Stats Overlay */}
+      <div className="absolute bottom-0 inset-x-0 bg-black/90 p-1 border-t border-white/5">
+          <div className="flex justify-between items-end">
+              <span className="text-[10px] text-white font-medium truncate">
+                  {item.champion.name}
+              </span>
+          </div>
+          <div className="flex justify-between text-[9px] text-slate-400 leading-tight">
+              {item.powerRating && <span>{item.powerRating.toLocaleString()}</span>}
+              {(item.isAwakened && typeof (item as any).sigLevel === 'number') && (
+                  <span className="text-sky-300">S{(item as any).sigLevel}</span>
+              )}
+          </div>
+      </div>
+    </div>
+  );
+});
+UpdatedChampionItem.displayName = "UpdatedChampionItem";
+
 export function RosterUpdateForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UpdateResult | null>(null);
   
+  const [mode, setMode] = useState<"stats-view" | "grid-view">("stats-view");
   const [stars, setStars] = useState("6");
   const [rank, setRank] = useState("3");
   const [isAscended, setIsAscended] = useState(false);
@@ -164,6 +224,7 @@ export function RosterUpdateForm() {
     setStatusMessage("Preparing images...");
 
     const formData = new FormData();
+    formData.append("mode", mode);
     formData.append("stars", stars);
     formData.append("rank", rank);
     formData.append("isAscended", String(isAscended));
@@ -230,44 +291,71 @@ export function RosterUpdateForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Configuration Row */}
-            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-slate-950/30 rounded-lg border border-slate-800/50">
-                <div className="flex-1 space-y-2">
-                    <Label htmlFor="stars">Star Level</Label>
-                    <Select value={stars} onValueChange={setStars}>
-                    <SelectTrigger id="stars" className="bg-slate-900 border-slate-700">
-                        <SelectValue placeholder="Select Stars" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {[1, 2, 3, 4, 5, 6, 7].map((s) => (
-                        <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>
-                        ))}
-                    </SelectContent>
-                    </Select>
+            
+            <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-950/50">
+                    <TabsTrigger value="stats-view">Battlegrounds View (Battle Deck)</TabsTrigger>
+                    <TabsTrigger value="grid-view">Champions View (My Champions)</TabsTrigger>
+                </TabsList>
+                
+                <div className="bg-slate-950/30 rounded-b-lg border-x border-b border-slate-800/50 p-4 space-y-4">
+                    <TabsContent value="stats-view" className="space-y-4 mt-0">
+                        <div className="bg-sky-950/20 border border-sky-900/30 rounded-md p-3">
+                            <p className="text-sm text-sky-200/80">
+                                <strong>Recommended:</strong> Go to Battlegrounds → Deck → Clear Deck (so no champions are greyed out). 
+                                Take screenshots of the grid showing clearly the stats and profile pictures of each champion.
+                                Everything is detected automatically!
+                            </p>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="grid-view" className="space-y-4 mt-0">
+                        <div className="bg-slate-900/50 rounded-md p-3 mb-4">
+                            <p className="text-sm text-slate-400">
+                                Use this for standard "My Champions" screen. Since the game hides stats in this view, 
+                                you must manually specify the Star Level and Rank for all champions in the screenshots and submit each rank separately.
+                            </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1 space-y-2">
+                                <Label htmlFor="stars">Star Level</Label>
+                                <Select value={stars} onValueChange={setStars}>
+                                <SelectTrigger id="stars" className="bg-slate-900 border-slate-700">
+                                    <SelectValue placeholder="Select Stars" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+                                    <SelectItem key={s} value={String(s)}>{s}-Star</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex-1 space-y-2">
+                                <Label htmlFor="rank">Rank</Label>
+                                <Select value={rank} onValueChange={setRank}>
+                                <SelectTrigger id="rank" className="bg-slate-900 border-slate-700">
+                                    <SelectValue placeholder="Select Rank" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[1, 2, 3, 4, 5, 6].map((r) => (
+                                    <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center space-x-2 pt-8 sm:pt-0">
+                                <Checkbox 
+                                    id="ascended" 
+                                    checked={isAscended} 
+                                    onCheckedChange={(c) => setIsAscended(!!c)} 
+                                    className="border-slate-600 data-[state=checked]:bg-sky-600"
+                                />
+                                <Label htmlFor="ascended" className="cursor-pointer font-normal text-slate-300">Is Ascended?</Label>
+                            </div>
+                        </div>
+                    </TabsContent>
                 </div>
-                <div className="flex-1 space-y-2">
-                    <Label htmlFor="rank">Rank</Label>
-                    <Select value={rank} onValueChange={setRank}>
-                    <SelectTrigger id="rank" className="bg-slate-900 border-slate-700">
-                        <SelectValue placeholder="Select Rank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {[1, 2, 3, 4, 5, 6].map((r) => (
-                        <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
-                        ))}
-                    </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex items-center space-x-2 pt-8 sm:pt-0">
-                    <Checkbox 
-                        id="ascended" 
-                        checked={isAscended} 
-                        onCheckedChange={(c) => setIsAscended(!!c)} 
-                        className="border-slate-600 data-[state=checked]:bg-sky-600"
-                    />
-                    <Label htmlFor="ascended" className="cursor-pointer font-normal text-slate-300">Is Ascended?</Label>
-                </div>
-            </div>
+            </Tabs>
 
             {/* Dropzone & Preview Area */}
             <div className="space-y-4">
@@ -298,7 +386,7 @@ export function RosterUpdateForm() {
 
                 {/* Image Previews */}
                 <AnimatePresence>
-                    {previews.map((src, index) => (
+                    {previews.slice(0, 11).map((src, index) => (
                         <motion.div 
                             key={src}
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -316,6 +404,12 @@ export function RosterUpdateForm() {
                             </button>
                         </motion.div>
                     ))}
+                    {previews.length > 11 && (
+                      <div className="relative aspect-video rounded-lg overflow-hidden border border-slate-700 border-dashed bg-slate-900/50 flex flex-col items-center justify-center text-slate-500">
+                         <span className="text-xl font-bold">+{previews.length - 11}</span>
+                         <span className="text-xs">more images</span>
+                      </div>
+                    )}
                 </AnimatePresence>
               </div>
 
@@ -330,7 +424,7 @@ export function RosterUpdateForm() {
                <Button type="button" variant="ghost" onClick={() => router.push('/profile')}>
                  Cancel
                </Button>
-               <Button type="submit" className="bg-sky-600 hover:bg-sky-700 min-w-[140px]" disabled={loading || files.length === 0}>
+               <Button type="submit" className="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white shadow-lg shadow-sky-500/20 border-0 min-w-[160px]" disabled={loading || files.length === 0}>
                   {loading ? (
                     <div className="flex items-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -354,19 +448,33 @@ export function RosterUpdateForm() {
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4"
              >
-                <div className="relative w-24 h-24 mb-8">
+                <div className="relative w-28 h-28 mb-8">
+                    {/* Base Glow */}
+                    <div className="absolute inset-0 bg-sky-500/20 blur-2xl rounded-full" />
+                    
+                    {/* Outer Ring 1 */}
                     <motion.div 
-                        className="absolute inset-0 border-4 border-sky-500 rounded-lg"
+                        className="absolute inset-0 border-2 border-sky-500/30 rounded-full border-t-sky-400"
                         animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    />
+                    
+                    {/* Outer Ring 2 (Counter) */}
+                    <motion.div 
+                        className="absolute inset-2 border-2 border-indigo-500/30 rounded-full border-b-indigo-400"
+                        animate={{ rotate: -360 }}
                         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                     />
-                     <motion.div 
-                        className="absolute inset-0 border-4 border-sky-500/30 rounded-lg rotate-45"
-                        animate={{ rotate: -360 }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                    />
+                    
+                    {/* Center Tech */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Upload className="w-10 h-10 text-sky-400 animate-pulse" />
+                        <motion.div
+                            animate={{ scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="bg-slate-900 rounded-full p-4 border border-sky-500/50 shadow-[0_0_15px_rgba(14,165,233,0.3)]"
+                        >
+                            <Cpu className="w-8 h-8 text-sky-400" />
+                        </motion.div>
                     </div>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2 text-center">{statusMessage}</h3>
@@ -388,50 +496,24 @@ export function RosterUpdateForm() {
             >
                 {/* Success Summary */}
                 {result.success > 0 && (
-                     <Card className="border-green-900/50 bg-green-950/10">
+                     <Card className="border-green-900/50 bg-green-950/10 overflow-hidden">
                         <CardHeader className="pb-3">
                             <CardTitle className="text-green-400 flex items-center gap-2">
                                 <Check className="w-5 h-5" />
                                 Updated {result.success} Champions
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-                                {result.added.map((item, i) => (
-                                    <motion.div 
-                                        key={`${item.champion.id}-${i}`}
-                                        initial={{ opacity: 0, scale: 0.5 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        className="relative aspect-square rounded-md overflow-hidden border border-slate-700 bg-slate-900 group"
-                                    >
-                                        <Image 
-                                            src={getChampionImageUrl(item.champion.images, '128')}
-                                            alt={item.champion.name}
-                                            width={128}
-                                            height={128}
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute top-0.5 left-0.5 z-10">
-                                            {item.isAwakened ? (
-                                                <Sparkles className="w-3.5 h-3.5 text-slate-100 fill-slate-300 drop-shadow-md" />
-                                            ) : (
-                                                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-500 drop-shadow-md" />
-                                            )}
-                                        </div>
-                                        {item.powerRating && (
-                                            <span className="absolute bottom-0 left-0 z-10 text-[9px] text-slate-300 bg-black/70 px-1 py-0.5 rounded-tr-md">
-                                                PR: {item.powerRating}
-                                            </span>
-                                        )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-end p-1">
-                                            <span className="text-[10px] text-white font-medium truncate w-full text-center">
-                                                {item.champion.name}
-                                            </span>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
+                        <CardContent className="p-4">
+                            <VirtuosoGrid 
+                                useWindowScroll
+                                totalCount={result.added.length}
+                                overscan={200}
+                                computeItemKey={(index) => `${result.added[index].champion.id}-${index}`}
+                                components={{ List: GridList }}
+                                itemContent={(index) => (
+                                    <UpdatedChampionItem item={result.added[index]} />
+                                )}
+                            />
                         </CardContent>
                      </Card>
                 )}

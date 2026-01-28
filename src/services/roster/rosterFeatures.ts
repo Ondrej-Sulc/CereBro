@@ -15,7 +15,20 @@ export class RosterFeatureService {
   }
 
   private async loadClassIcons() {
-    const iconsPath = path.join(process.cwd(), 'web', 'public', 'icons');
+    let iconsPath = path.join(process.cwd(), 'web', 'public', 'icons');
+    
+    // Check if we are already in the web directory (Next.js server context)
+    if (process.cwd().endsWith('web') || process.cwd().endsWith('web' + path.sep)) {
+        const localPath = path.join(process.cwd(), 'public', 'icons');
+        try {
+            await fs.access(localPath);
+            iconsPath = localPath;
+        } catch (e) {
+            // Fallback to standard path if check fails, or maybe we are in a different 'web' folder?
+            // But usually this means we are in CereBro/web, so icons are in ./public/icons
+        }
+    }
+
     const classMap: Record<string, ChampionClass> = {
       'Cosmic.png': 'COSMIC',
       'Tech.png': 'TECH',

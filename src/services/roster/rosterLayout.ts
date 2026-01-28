@@ -116,8 +116,15 @@ export class RosterLayoutService {
 
       const combinedText = candidateDetections.map(d => d.description).join(' ');
       
-      const rankMatch = combinedText.match(/Rank\s*(\d+)/i);
-      const sigMatch = combinedText.match(/Sig[.\s]*(\d+)/i);
+      let rankMatch = combinedText.match(/Rank\s*(\d+)/i);
+      if (!rankMatch) {
+          rankMatch = combinedText.match(/\bR(\d+)\b/i);
+      }
+      
+      let sigMatch = combinedText.match(/Sig[.\s]*(\d+)/i);
+      if (!sigMatch) {
+          sigMatch = combinedText.match(/\bS(\d+)\b/i);
+      }
 
       if (rankMatch) rank = parseInt(rankMatch[1], 10);
       if (sigMatch) sigLevel = parseInt(sigMatch[1], 10);

@@ -30,6 +30,7 @@ export interface ChampionData {
 export interface RosterUpdateResult {
   champions: RosterWithChampion[][];
   count: number;
+  errors?: string[];
 }
 
 export interface RosterDebugResult {

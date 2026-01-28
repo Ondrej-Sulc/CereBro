@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import logger from "@cerebro/core/services/loggerService";
 import { NextRequest, NextResponse } from "next/server";
-import { processRosterScreenshot } from "@cerebro/core/commands/roster/ocr/process";
+import { processRosterScreenshot, processStatsViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const formData = await req.formData();
+    const mode = formData.get("mode") as string || "grid-view"; // Default to old 'grid-view'
     const stars = parseInt(formData.get("stars") as string);
     const rank = parseInt(formData.get("rank") as string);
     const isAscended = formData.get("isAscended") === "true";
@@ -39,12 +40,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No images provided" }, { status: 400 });
     }
 
-    if (isNaN(stars) || isNaN(rank)) {
-        return NextResponse.json({ error: "Invalid stars or rank" }, { status: 400 });
+    if (mode === 'grid-view' && (isNaN(stars) || isNaN(rank))) {
+        return NextResponse.json({ error: "Invalid stars or rank for Grid View" }, { status: 400 });
     }
 
     logger.info({ 
         playerId: player.id, 
+        mode,
         stars, 
         rank, 
         isAscended, 
@@ -66,14 +68,24 @@ export async function POST(req: NextRequest) {
         logger.info({ playerId: player.id, fileName: file.name, fileSize: buffer.length }, "Processing roster screenshot");
 
         // Call the core processing logic
-        const result = await processRosterScreenshot(
-          buffer,
-          stars,
-          rank,
-          isAscended,
-          false, // debugMode
-          player.id
-        );
+        let result;
+        
+        if (mode === 'stats-view') {
+             result = await processStatsViewScreenshot(
+                buffer,
+                false, // debugMode
+                player.id
+             );
+        } else {
+             result = await processRosterScreenshot(
+                buffer,
+                stars,
+                rank,
+                isAscended,
+                false, // debugMode
+                player.id
+             );
+        }
 
         if ('champions' in result) {
             const updateResult = result as RosterUpdateResult;
