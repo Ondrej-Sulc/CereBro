@@ -44,50 +44,48 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
-            <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                <div className="flex items-center gap-1 bg-black/80 px-2 py-0.5 rounded border border-white/10">
-                        <span className="text-white text-xs font-black leading-none">{item.stars}</span>
-                        <span className="text-yellow-500 text-[10px]">★</span>
-                </div>
-                    {item.isAscended && (
-                    <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30" title="Ascended">
-                        <Trophy className="w-4 h-4 text-yellow-400" />
-                    </div>
+            <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
+                <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none backdrop-blur-sm">
+                    {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
+                </Badge>
+                {item.isAwakened && (
+                    <Badge variant="outline" className="bg-sky-950/80 border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none backdrop-blur-sm">
+                        S{item.sigLevel}
+                    </Badge>
                 )}
             </div>
 
-                            <div className="absolute top-1.5 left-1.5">
-                                <div className={cn("p-1.5 rounded-full bg-black/80 border border-white/10", classColors.text)}>
-                                <div className="relative w-5 h-5">
-                                    <Image 
-                                        src={CLASS_ICONS[item.champion.class as Exclude<ChampionClass, 'SUPERIOR'>]} 
-                                        alt={item.champion.class} 
-                                        fill
-                                        sizes="20px"
-                                        className="object-contain"
-                                    />
-                                </div>
-                                </div>
-                            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                <div className="flex items-center justify-between mb-1">
-                    <div className="flex gap-1 items-center">
-                        <Badge variant="outline" className="bg-slate-900/90 border-slate-700 text-[10px] px-1.5 py-0 h-4 font-bold text-slate-100">
-                            R{item.rank}
-                        </Badge>
-                        {item.isAwakened && (
-                             <Badge variant="outline" className="bg-sky-950/40 border-sky-500/30 text-[10px] px-1.5 py-0 h-4 font-bold text-sky-400">
-                                S{item.sigLevel}
-                            </Badge>
-                        )}
+            <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
+                {item.isAscended && (
+                    <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm backdrop-blur-sm" title="Ascended">
+                        <Trophy className="w-3 h-3 text-yellow-400" />
                     </div>
-                    {prestige && (
-                         <span className="text-[10px] font-mono font-medium text-slate-300 bg-black/40 px-1 rounded">
+                )}
+                
+                <div className="hidden sm:block">
+                    <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm backdrop-blur-sm", classColors.text)}>
+                        <div className="relative w-4 h-4">
+                            <Image 
+                                src={CLASS_ICONS[item.champion.class as Exclude<ChampionClass, 'SUPERIOR'>]} 
+                                alt={item.champion.class} 
+                                fill
+                                sizes="16px"
+                                className="object-contain"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+                {prestige && (
+                     <div className="hidden sm:flex justify-end mb-0.5">
+                        <span className="text-[9px] font-mono font-bold text-slate-300 bg-black/60 px-1 rounded border border-white/5">
                             {prestige.toLocaleString('en-US')}
                         </span>
-                    )}
-                </div>
-                <p className="text-[11px] sm:text-xs font-bold text-white leading-tight truncate">{item.champion.name}</p>
+                     </div>
+                )}
+                <p className="text-[10px] sm:text-xs font-bold text-white leading-tight truncate text-center sm:text-left drop-shadow-sm">{item.champion.name}</p>
             </div>
 
             {mode === 'edit' && (

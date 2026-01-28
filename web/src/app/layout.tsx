@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CereBro - MCOC Discord Bot",
-  description: "CereBro is the ultimate MCOC Discord bot, offering cutting-edge image processing for roster management, in-depth champion data, a comprehensive glossary, automated AQ tracking, and prestige tracking for a tactical advantage.",
+  title: "CereBro — MCOC Alliance Operating System",
+  description: "CereBro is a comprehensive management platform for MCOC Alliances, offering advanced roster tracking via image processing, strategic war planning, automated AQ management, and deep champion insights.",
 };
 
 export default function RootLayout({

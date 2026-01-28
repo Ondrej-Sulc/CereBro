@@ -51,7 +51,7 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
     ref={ref} 
     {...props} 
     style={style} 
-    className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3"
+    className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3"
   >
     {children}
   </div>
@@ -293,9 +293,19 @@ export function RosterUpdateForm() {
           <form onSubmit={handleSubmit} className="space-y-6">
             
             <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-950/50">
-                    <TabsTrigger value="stats-view">Battlegrounds View (Battle Deck)</TabsTrigger>
-                    <TabsTrigger value="grid-view">Champions View (My Champions)</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-slate-950 p-1 border border-slate-800 rounded-lg h-auto">
+                    <TabsTrigger 
+                        value="stats-view"
+                        className="data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-900/20 py-2.5 transition-all duration-300"
+                    >
+                        Battlegrounds View (Battle Deck)
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="grid-view"
+                        className="data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-900/20 py-2.5 transition-all duration-300"
+                    >
+                        Champions View (My Champions)
+                    </TabsTrigger>
                 </TabsList>
                 
                 <div className="bg-slate-950/30 rounded-b-lg border-x border-b border-slate-800/50 p-4 space-y-4">
