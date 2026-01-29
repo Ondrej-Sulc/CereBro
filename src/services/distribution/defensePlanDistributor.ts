@@ -17,7 +17,8 @@ export interface DistributeResult {
 export async function distributeDefensePlan(
     client: Client, 
     allianceId: string, 
-    targetBattlegroup?: number
+    targetBattlegroup?: number,
+    planId?: string
 ): Promise<DistributeResult> {
     const result: DistributeResult = { sent: [], notFound: [], noData: [], errors: [] };
 
@@ -27,30 +28,46 @@ export async function distributeDefensePlan(
         return result;
     }
 
-    // Find the latest Defense Plan
-    const plan = await prisma.warDefensePlan.findFirst({
-        where: { allianceId: alliance.id },
-        orderBy: { createdAt: 'desc' },
-        include: {
-            placements: {
-                where: targetBattlegroup ? { battlegroup: targetBattlegroup } : undefined,
-                include: {
-                    defender: {
-                        include: {
-                            tags: true
-                        }
-                    },
-                    player: true,
-                    node: true
-                }
-            },
-            tactic: {
-                include: {
-                    defenseTag: true
-                }
+    // Find the Defense Plan (Specific ID or Latest)
+    let plan;
+    const include = {
+        placements: {
+            where: targetBattlegroup ? { battlegroup: targetBattlegroup } : undefined,
+            include: {
+                defender: {
+                    include: {
+                        tags: true
+                    }
+                },
+                player: true,
+                node: true
+            }
+        },
+        tactic: {
+            include: {
+                defenseTag: true
             }
         }
-    });
+    };
+
+    if (planId) {
+        plan = await prisma.warDefensePlan.findUnique({
+            where: { id: planId },
+            include
+        });
+        
+        // Security check: Ensure plan belongs to alliance
+        if (plan && plan.allianceId !== allianceId) {
+             result.errors.push("Plan does not belong to this alliance");
+             return result;
+        }
+    } else {
+        plan = await prisma.warDefensePlan.findFirst({
+            where: { allianceId: alliance.id },
+            orderBy: { createdAt: 'desc' },
+            include
+        });
+    }
 
     if (!plan) {
         result.errors.push("No defense plan found");

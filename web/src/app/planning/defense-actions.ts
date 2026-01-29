@@ -298,7 +298,8 @@ export async function distributeDefensePlanToDiscord(planId: string, battlegroup
           status: "PENDING",
           payload: {
               allianceId: plan.allianceId,
-              battlegroup: battlegroup
+              battlegroup: battlegroup,
+              planId: plan.id
           }
       }
   });
