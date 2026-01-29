@@ -18,6 +18,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditWarDialog } from "../edit-war-dialog";
@@ -148,27 +149,28 @@ export function WarHeader({
         
         <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
           {!isReadOnly && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                      <Share className="h-4 w-4" /> <span className="hidden sm:inline">Distribute</span>
-                  </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onDistribute()}>
-                      Distribute All
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDistribute(1)}>
-                      Distribute BG1
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDistribute(2)}>
-                      Distribute BG2
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDistribute(3)}>
-                      Distribute BG3
-                  </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Share className="h-4 w-4" /> <span className="hidden sm:inline">Share</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onDistribute()}>
+                Share All
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onDistribute(1)}>
+                Share BG1
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDistribute(2)}>
+                Share BG2
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDistribute(3)}>
+                Share BG3
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           )}
 
           {!isReadOnly && (

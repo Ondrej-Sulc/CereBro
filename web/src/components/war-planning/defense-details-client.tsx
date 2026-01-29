@@ -12,11 +12,11 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil, Share2 } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
-import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan } from "@/app/planning/defense-actions";
+import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan, distributeDefensePlanToDiscord } from "@/app/planning/defense-actions";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import {
     Dialog,
@@ -27,6 +27,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import DefenseStatsPanel from "./defense-stats-panel";
@@ -433,6 +440,17 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       await handleMoveDefender(placementId, targetNode.id);
   }, [nodesMap, handleMoveDefender, toast]);
 
+  const handleDistribute = async (battlegroup?: number) => {
+      try {
+          await distributeDefensePlanToDiscord(props.planId, battlegroup);
+          const target = battlegroup ? `BG${battlegroup}` : "all battlegroups";
+          toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
+      } catch (e) {
+          console.error(e);
+          toast({ title: "Distribution Failed", description: "Failed to start distribution.", variant: "destructive" });
+      }
+  };
+
   return (
     <PlayerColorProvider players={props.players}>
       <div className={cn(
@@ -668,6 +686,37 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     <PieChart className="h-3.5 w-3.5" />
                     <span className="hidden lg:inline">Stats</span>
                  </Button>
+
+                 {!isReadOnly && (
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex gap-2 h-8"
+                                title="Send to Discord"
+                             >
+                                <Share2 className="h-3.5 w-3.5" />
+                                <span className="hidden lg:inline">Share</span>
+                             </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleDistribute()}>
+                                Share All
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDistribute(1)}>
+                                Share BG1
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDistribute(2)}>
+                                Share BG2
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDistribute(3)}>
+                                Share BG3
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                     </DropdownMenu>
+                 )}
 
                  <Button
                     variant={rightPanelState === 'tools' ? "secondary" : "outline"}

@@ -271,3 +271,37 @@ export async function renameDefensePlan(planId: string, newName: string) {
   revalidatePath("/planning/defense");
   revalidatePath(`/planning/defense/${planId}`);
 }
+
+export async function distributeDefensePlanToDiscord(planId: string, battlegroup?: number) {
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
+  }
+
+  const isBotAdmin = player.isBotAdmin;
+
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
+      throw new Error("Unauthorized");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({ where: { id: planId } });
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized");
+  }
+
+  await prisma.botJob.create({
+      data: {
+          type: "DISTRIBUTE_DEFENSE_PLAN",
+          status: "PENDING",
+          payload: {
+              allianceId: plan.allianceId,
+              battlegroup: battlegroup
+          }
+      }
+  });
+
+  return { success: true };
+}

@@ -9,6 +9,8 @@ import { handleDetails } from "./details.js";
 import { handleSearchSubcommand, handleSearchAutocomplete } from "./search.js";
 import { handleUploadSubcommand } from "./upload.js";
 
+import { handleDefensePlan } from "./defensePlan";
+
 export const command: Command = {
   data: new SlashCommandBuilder()
     .setName("aw")
@@ -38,6 +40,19 @@ export const command: Command = {
             .setRequired(false)
         )
     )
+    .addSubcommand((subcommand) =>
+        subcommand
+          .setName("defense-plan")
+          .setDescription("Sends defense plan layout to battlegroup channels.")
+          .addIntegerOption((option) =>
+            option
+              .setName("battlegroup")
+              .setDescription("Optional: Specific battlegroup to send to.")
+              .setRequired(false)
+              .setMinValue(1)
+              .setMaxValue(3)
+          )
+      )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("details")
@@ -91,6 +106,9 @@ export const command: Command = {
     switch (subcommand) {
       case "plan":
         await handlePlan(interaction);
+        break;
+      case "defense-plan":
+        await handleDefensePlan(interaction);
         break;
       case "details":
         await handleDetails(interaction);

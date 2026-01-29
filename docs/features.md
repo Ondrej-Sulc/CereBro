@@ -48,14 +48,23 @@ A unified suite of tools for managing Alliance War.
 *   **Defense Planner:** Supports Tier-based filtering of **Node Modifiers** so planners only see relevant rules.
 *   **Search Tools:** Find specific champions across the alliance or view a player's top roster options.
 
-#### 3. Plan Distribution (`/aw plan`)
-*   **Workflow:** Officer creates plan in Web UI -> Distributes via Discord command.
-*   **Async Job:** Uses `DISTRIBUTE_WAR_PLAN` job to send personalized DMs to all members.
+#### 3. Plan Distribution (`/aw plan` or Web "Share")
+*   **Workflow:** Officer creates plan in Web UI -> Distributes via Discord command or Web "Share" button.
+*   **Targeting:** Send to specific Battlegroups (BG1-3) or the entire alliance.
+*   **Async Job:** Uses `DISTRIBUTE_WAR_PLAN` job to send personalized private threads (or DMs) to members.
 *   **Message Content:**
     *   **Visual Map:** Dynamic PNG generation (Pill style fights, Prefight highlighting).
     *   **Text:** Assignments list, notes, and specific "Pre-fights to Place" instructions.
     *   **Upload Button:** Direct link to generate an upload session token.
 *   **Channel Config:** Admins can route plans to specific BG channels (`/alliance config-channels`).
+
+#### 4. Defense Plan Distribution (`/aw defense-plan` or Web "Share")
+*   **Workflow:** Officer creates defense placement in Web UI -> Distributes via Discord command or Web "Share" button.
+*   **Targeting:** Share specific Battlegroup layouts or all at once.
+*   **Output:** Sends a high-quality "Overview Map" image to the respective Battlegroup channels.
+*   **Content:**
+    *   **Visual Map:** Full defense map with champion avatars, assigned player colors, and Tactic indicators.
+    *   **Links:** Direct link back to the full interactive plan on the website.
 
 ### War Video Archive
 *   **Data Model:** `War` -> `WarFight` -> `WarVideo`.
