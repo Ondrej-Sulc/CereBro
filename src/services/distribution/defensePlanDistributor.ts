@@ -1,4 +1,4 @@
-import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder } from 'discord.js';
+import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SeparatorBuilder, ChannelType, ThreadChannel } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import { MapImageService, NodeAssignment, LegendItem } from '../mapImageService';
 import { warNodesData, warNodesDataBig } from '../../data/war-planning/nodes-data';
@@ -6,6 +6,7 @@ import { WarMapType } from '@prisma/client';
 import logger from '../loggerService';
 import { getChampionImageUrl } from '../../utils/championHelper';
 import { config } from '../../config';
+import { capitalize, getEmoji } from '../../commands/aw/utils';
 
 export interface DistributeResult {
     sent: string[];
@@ -255,6 +256,187 @@ export async function distributeDefensePlan(
         } catch (e) {
             logger.error({ err: e, bg }, "Failed to distribute defense overview map");
             result.errors.push(`BG ${bg}: ${e instanceof Error ? e.message : String(e)}`);
+        }
+    }
+
+    // --- Individual Player Distribution ---
+    // 1. Group Placements by Player
+    const playerPlacements = new Map<string, any[]>();
+    plan.placements.forEach(p => {
+        if (!p.player) return;
+        const name = p.player.ingameName.toLowerCase();
+        if (!playerPlacements.has(name)) playerPlacements.set(name, []);
+        playerPlacements.get(name)!.push(p);
+    });
+
+    // 2. Thread Cache Helper
+    const threadCache = new Map<string, Map<string, ThreadChannel>>();
+    
+    const getThread = async (bg: number, playerName: string): Promise<ThreadChannel | null> => {
+        const channelId = channelMap[bg as keyof typeof channelMap];
+        if (!channelId) return null;
+
+        if (!threadCache.has(channelId)) {
+            try {
+                const channel = await getChannel(bg);
+                if (!channel) {
+                    threadCache.set(channelId, new Map());
+                    return null;
+                }
+                const active = await channel.threads.fetch();
+                const map = new Map<string, ThreadChannel>();
+                active.threads.forEach(t => map.set(t.name.toLowerCase(), t));
+                threadCache.set(channelId, map);
+            } catch (e) {
+                threadCache.set(channelId, new Map());
+                return null;
+            }
+        }
+        
+        const existing = threadCache.get(channelId)?.get(playerName.toLowerCase());
+        if (existing) return existing;
+
+        try {
+            const channel = await getChannel(bg);
+            if (channel) {
+                const newThread = await channel.threads.create({
+                    name: capitalize(playerName),
+                    type: ChannelType.PrivateThread,
+                    autoArchiveDuration: 10080,
+                });
+                threadCache.get(channelId)?.set(playerName.toLowerCase(), newThread);
+                return newThread;
+            }
+        } catch (e) {
+            logger.error({ err: e, playerName }, `Failed to create thread for ${playerName}`);
+        }
+        return null;
+    };
+
+    // 3. Process Each Player
+    for (const [playerName, placements] of playerPlacements) {
+        // Skip if not in target BG
+        if (targetBattlegroup && placements[0].battlegroup !== targetBattlegroup) continue;
+
+        const bg = placements[0].battlegroup;
+        const playerObj = placements[0].player;
+        const thread = await getThread(bg, playerName);
+        
+        // --- Generate Personalized Map ---
+        const bgMap = bgNodeMaps.get(bg);
+        const assignments = new Map<number, NodeAssignment>();
+        
+        // Copy base state (everyone colored)
+        if (bgMap) {
+            bgMap.forEach((val, key) => assignments.set(key, { ...val }));
+        }
+
+        // Highlight Player's Nodes
+        placements.forEach((p: any) => {
+            const existing = assignments.get(p.node.nodeNumber) || { isTarget: false };
+            assignments.set(p.node.nodeNumber, { ...existing, isTarget: true });
+        });
+
+        const accentColor = bgColors[bg];
+        let mapAttachment: AttachmentBuilder | undefined;
+        let mapMediaGallery: MediaGalleryBuilder | undefined;
+
+        try {
+            // Generate map with highlighting
+            const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, undefined, accentColor);
+            const mapFileName = `defense-plan-${playerObj.id}.png`;
+            mapAttachment = new AttachmentBuilder(mapBuffer, { name: mapFileName });
+            
+            mapMediaGallery = new MediaGalleryBuilder().addItems(
+                new MediaGalleryItemBuilder()
+                    .setDescription(`**${playerObj.ingameName}'s Defense Assignments**`)
+                    .setURL(`attachment://${mapFileName}`)
+            );
+        } catch (e) {
+            logger.error({ err: e }, "Failed to generate individual defense map");
+        }
+
+        // --- Build Message ---
+        const container = new ContainerBuilder().setAccentColor(parseInt(accentColor.replace('#', ''), 16));
+        
+        if (mapMediaGallery) {
+            container.addMediaGalleryComponents(mapMediaGallery);
+        }
+
+        const mapName = plan.mapType === WarMapType.BIG_THING ? "Big Thing" : "Standard";
+        const planLink = `${config.botBaseUrl}/planning/defense/${plan.id}`;
+
+        container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+                `## 🛡️ Defense Plan for ${playerObj.ingameName}\n` +
+                `**${plan.name}** (BG${bg})\n` +
+                `🗺️ ${mapName} | [View Full Plan on Web](${planLink})`
+            )
+        );
+        container.addSeparatorComponents(new SeparatorBuilder());
+
+        // Assignments List
+        // Sort by node number
+        const sortedPlacements = [...placements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+        
+        const lines = await Promise.all(sortedPlacements.map(async (p) => {
+            const champName = p.defender?.name || "Unknown Champion";
+            const stars = p.starLevel ? `${p.starLevel}★` : "";
+            // We don't have rank in placement directly unless it comes from defender data or we fetch roster...
+            // Use champion emoji
+            const emoji = await getEmoji(champName, client);
+            
+            return `- **Node ${p.node.nodeNumber}**: ${emoji} **${champName}** ${stars}`;
+        }));
+
+        container.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+                "**Your Assignments:**\n" + lines.join("\n")
+            )
+        );
+
+        // Send Message
+        try {
+            const files = mapAttachment ? [mapAttachment] : [];
+            let sent = false;
+
+            if (thread) {
+                await thread.send({
+                    components: [container],
+                    flags: [MessageFlags.IsComponentsV2],
+                    files: files
+                });
+                
+                // Add member to thread
+                if (playerObj.discordId) {
+                    try { await thread.members.add(playerObj.discordId); } catch {}
+                }
+                sent = true;
+            } else if (playerObj.discordId) {
+                // Fallback DM
+                try {
+                    const user = await client.users.fetch(playerObj.discordId);
+                    if (user) {
+                        await user.send({
+                            components: [container],
+                            flags: [MessageFlags.IsComponentsV2],
+                            files: files
+                        });
+                        sent = true;
+                    }
+                } catch (dmErr) {
+                    logger.error({ err: dmErr, playerName }, "Failed to send DM fallback for defense plan");
+                }
+            }
+
+            if (sent) {
+                result.sent.push(playerObj.ingameName);
+            } else {
+                result.notFound.push(playerObj.ingameName);
+            }
+
+        } catch (e) {
+            result.errors.push(`Failed to send to ${playerName}: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

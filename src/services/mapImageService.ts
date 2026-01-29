@@ -319,7 +319,7 @@ export class MapImageService {
             let badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
             let badgeStrokeVal = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
 
-            if (assignment?.assignedColor) {
+            if (assignment?.assignedColor && !isTarget) {
                 borderProps = `class="node-fill" style="stroke: ${assignment.assignedColor}; stroke-width: 3"`;
                 badgeStrokeVal = assignment.assignedColor;
                 // Keep text color default unless target, or maybe make it white?
