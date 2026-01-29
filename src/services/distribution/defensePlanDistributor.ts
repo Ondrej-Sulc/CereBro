@@ -154,9 +154,16 @@ export async function distributeDefensePlan(
 
     for (const bg of distinctBgs) {
         try {
+            // Check config first
+            const channelId = channelMap[bg as keyof typeof channelMap];
+            if (!channelId) {
+                result.errors.push(`BG ${bg} channel not configured (use /alliance config-channels)`);
+                continue;
+            }
+
             const channel = await getChannel(bg);
             if (!channel) {
-                result.notFound.push(`Channel for BG ${bg}`);
+                result.errors.push(`BG ${bg} channel (ID: ${channelId}) not found or inaccessible`);
                 continue;
             }
 

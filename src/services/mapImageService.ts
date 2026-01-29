@@ -338,12 +338,11 @@ export class MapImageService {
             let innerContent = '';
             
             // --- A. Main Node (Pill or Circle) ---
-            if (assignment?.attackerImage && assignment?.defenderImage && 
-                imageCache.has(assignment.attackerImage) && imageCache.has(assignment.defenderImage)) {
-                
-                // PILL
-                const attImg = imageCache.get(assignment.attackerImage);
-                const defImg = imageCache.get(assignment.defenderImage);
+            const attImg = assignment?.attackerImage ? imageCache.get(assignment.attackerImage) : undefined;
+            const defImg = assignment?.defenderImage ? imageCache.get(assignment.defenderImage) : undefined;
+
+            if (attImg) {
+                // PILL (Render if Attacker exists, even if Defender image is missing)
                 const pillW = r * 4;
                 
                 innerContent += `
@@ -359,26 +358,34 @@ export class MapImageService {
 
                     <!-- Defender -->
                     <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
+                    ${defImg ? `
                     <g clip-path="url(#clip-${node.id}-R)">
                         <image href="${defImg}" x="${pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
                     <defs><clipPath id="clip-${node.id}-R"><circle cx="${pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
+                    ` : ''}
                     <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
                 `;
 
             } else {
                 // CIRCLE (Defender Only)
-                if (assignment?.defenderImage && imageCache.has(assignment.defenderImage)) {
-                    const base64 = imageCache.get(assignment.defenderImage);
+                if (defImg) {
                     innerContent += `
                         <circle r="${r}" ${borderProps} />
                         
                         <circle cx="0" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
                         <g clip-path="url(#clip-${node.id})">
-                            <image href="${base64}" x="${-(r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
+                            <image href="${defImg}" x="${-(r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
                         </g>
                         <defs><clipPath id="clip-${node.id}"><circle cx="0" cy="0" r="${r-4}" /></clipPath></defs>
                         <circle cx="0" cy="0" r="${r-4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
+                    `;
+                } else if (assignment?.defenderImage || assignment?.defenderName) {
+                    // Fallback: Defender assigned but image missing/failed
+                    innerContent += `
+                        <circle r="${r}" ${borderProps} />
+                        <circle cx="0" cy="0" r="${r-4}" fill="${defColor}" opacity="0.8" />
+                        <text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="rgba(0,0,0,0.5)" font-family="sans-serif" font-size="24" font-weight="bold">?</text>
                     `;
                 } else {
                     // Empty node
