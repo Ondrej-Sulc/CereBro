@@ -3,7 +3,7 @@ import Link from "next/link";
 import { 
   Coffee, 
   Server, 
-  HardDrive, 
+  Sparkles, 
   Code,
   Gamepad2,
   Github,
@@ -157,6 +157,17 @@ export default function AboutPage() {
 
               <div className="grid md:grid-cols-3 gap-6 mb-12">
                 <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-pink-400 mb-3 shadow-lg shadow-pink-900/20">
+                    <Code className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-white font-semibold mb-1">
+                    Active Development
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    Continuous feature updates and game data maintenance.
+                  </p>
+                </div>
+                <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
                   <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-sky-400 mb-3 shadow-lg shadow-sky-900/20">
                     <Server className="w-6 h-6" />
                   </div>
@@ -169,24 +180,13 @@ export default function AboutPage() {
                 </div>
                 <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
                   <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3 shadow-lg shadow-indigo-900/20">
-                    <HardDrive className="w-6 h-6" />
+                    <Sparkles className="w-6 h-6" />
                   </div>
                   <h3 className="text-white font-semibold mb-1">
-                    Data Storage
+                    Image Processing
                   </h3>
                   <p className="text-sm text-slate-400">
-                    Database storage for thousands of champion records.
-                  </p>
-                </div>
-                <div className="flex flex-col items-center text-center p-4 rounded-2xl bg-slate-950/30 border border-slate-800/50">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-pink-400 mb-3 shadow-lg shadow-pink-900/20">
-                    <Code className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-white font-semibold mb-1">
-                    Active Development
-                  </h3>
-                  <p className="text-sm text-slate-400">
-                    Continuous feature updates and game data maintenance.
+                    Smart screenshot processing for simple roster tracking.
                   </p>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function AboutPage() {
                         Support on Ko-fi
                       </div>
                       <div className="text-xs text-white/90 mt-1 font-medium">
-                        One-time donation
+                        One-time/recurring donation
                       </div>
                     </div>
                   </div>
