@@ -177,6 +177,17 @@ export function useWarVideoForm({
     }
   }, [isSolo, contextMode, initialPlayers, initialUserId, battlegroup]);
 
+  // Effect to set default visibility based on source mode
+  useEffect(() => {
+    if (contextMode === 'alliance' && !isSolo) {
+      if (sourceMode === 'upload') {
+        setVisibility('alliance');
+      } else {
+        setVisibility('public');
+      }
+    }
+  }, [sourceMode, contextMode, isSolo]);
+
   // Effect to update battlegroup if playerInVideoId changes and not pre-filled
   useEffect(() => {
     if (!preFilledFights && contextMode === 'alliance' && playerInVideoId) { 
