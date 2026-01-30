@@ -105,6 +105,12 @@ export async function distributeDefensePlan(
         });
     }
 
+    if (plan.tactic) {
+        logger.info({ tactic: plan.tactic.name, defenseTag: plan.tactic.defenseTag?.name }, "Applied tactic to defense plan distribution");
+    } else {
+        logger.warn("No tactic linked to defense plan, badges will not appear");
+    }
+
     // Preload Images
     const globalImageCache = await MapImageService.preloadImages(Array.from(uniqueImageUrls));
 

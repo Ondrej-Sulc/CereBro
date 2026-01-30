@@ -35,7 +35,7 @@ export class MapImageService {
     private static readonly HIGHLIGHT_PREFIGHT = '#ffffff'; // purple-400
     private static readonly HIGHLIGHT_TEXT = '#ffffff'; // white
 
-    private static readonly SWORD_PATH = "M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2";
+    private static readonly SWORD_PATH = "M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M14.5 6.5L18 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2";
     private static readonly SHIELD_PATH = "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z";
 
     private static readonly CLASS_COLORS: Record<string, string> = {
@@ -457,7 +457,7 @@ export class MapImageService {
                         <circle r="${badgeR}" fill="#022c22" stroke="#10b981" stroke-width="1" />
                         <!-- Icon -->
                         <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
-                             <path d="${MapImageService.SWORD_PATH}" fill="#34d399" />
+                             <path d="${MapImageService.SWORD_PATH}" stroke="#34d399" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
                         </g>
                     </g>
                 `;
