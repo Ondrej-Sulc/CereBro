@@ -44,8 +44,11 @@ A unified suite of tools for managing Alliance War.
 *   **Node Inspector:**
     *   **Virtualization:** Dropdowns (`ChampionCombobox`) use `react-virtuoso` for performance.
     *   **Smart Select:** Defense editor cross-references the selected player's roster to show "Smart Select" buttons (e.g., "7★ R3") for accurate tracking.
+    *   **Conflict Detection:** When planning attacks, the editor warns if the selected attacker is already placed on defense in the **Active Defense Plan**.
     *   **Historical Data:** Shows matchup history, solos, deaths, and links to sample videos.
-*   **Defense Planner:** Supports Tier-based filtering of **Node Modifiers** so planners only see relevant rules.
+*   **Defense Planner:**
+    *   **Active Status:** Set a specific plan as "Active" to enable conflict checking during attack planning.
+    *   **Filtering:** Supports Tier-based filtering of **Node Modifiers** so planners only see relevant rules.
 *   **Search Tools:** Find specific champions across the alliance or view a player's top roster options.
 
 #### 3. Plan Distribution (`/aw plan` or Web "Share")
@@ -101,6 +104,7 @@ A unified suite of tools for managing Alliance War.
 
 ### Alliance Management (Web)
 *   **Roster Overview:** Spreadsheet-like view of the entire alliance's champions (`/alliance/roster`).
+*   **Conflict Visuals:** Player lists show warning icons for champions that are currently placed on defense.
 *   **Battlegroup Colors:** Customize BG identity colors (used in Discord maps and Web headers).
 *   **Discord Linking:**
     *   Officers generate `CB-XXXXXX` code on web.

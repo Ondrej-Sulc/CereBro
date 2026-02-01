@@ -11,6 +11,7 @@
 
 ## Quick Start
 *   **Verify Code:** `pnpm exec tsc`
+*   **Announce Updates:** `npm run changelog` (Interactive CLI for posting to Discord).
 
 ## Documentation Index
 *   [📂 Architecture & Patterns](docs/architecture.md) - Controller/View, Job Queue, Caching, Identity.

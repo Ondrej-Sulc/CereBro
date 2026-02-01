@@ -24,7 +24,8 @@ export interface Config {
   GCS_BUCKET_NAME: string;
   POSTHOG_API_KEY?: string;
   POSTHOG_HOST?: string;
-  botBaseUrl: string; // Added botBaseUrl
+  botBaseUrl: string;
+  CHANGELOG_CHANNEL_ID: string;
 
   // Alliance War Settings
   allianceWar: {
@@ -148,7 +149,8 @@ const createConfig = (): Config => {
     DEV_USER_IDS: getEnv("DEV_USER_IDS", "").split(",").filter(Boolean),
     POSTHOG_API_KEY: getEnv("POSTHOG_API_KEY", ""),
     POSTHOG_HOST: getEnv("POSTHOG_HOST", ""),
-    botBaseUrl: getEnv("BOT_BASE_URL"), // Retrieved BOT_BASE_URL
+    botBaseUrl: getEnv("BOT_BASE_URL"),
+    CHANGELOG_CHANNEL_ID: getEnv("CHANGELOG_CHANNEL_ID", "1449771844474503199"),
 
     // Alliance War Settings
     allianceWar: {
