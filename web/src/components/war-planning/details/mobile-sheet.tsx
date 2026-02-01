@@ -41,6 +41,7 @@ interface MobileSheetProps {
   onAddExtra: (playerId: string, championId: number) => void;
   onRemoveExtra: (extraId: string) => void;
   isReadOnly?: boolean;
+  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
 }
 
 export function MobileSheet({
@@ -68,7 +69,8 @@ export function MobileSheet({
   extraChampions,
   onAddExtra,
   onRemoveExtra,
-  isReadOnly = false
+  isReadOnly = false,
+  activeDefensePlan,
 }: MobileSheetProps) {
   const controls = useAnimation();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -226,6 +228,7 @@ export function MobileSheet({
                     currentFights={currentFights}
                     extraChampions={extraChampions}
                     isReadOnly={isReadOnly}
+                    activeDefensePlan={activeDefensePlan}
                 />
                ) : (
                  <PlayerListContent

@@ -381,6 +381,9 @@ model Alliance {
   aqReminderSettings AQReminderSettings?
   wars               War[]
   defensePlans       WarDefensePlan[]
+  activeDefensePlanId String? @unique
+  activeDefensePlan   WarDefensePlan? @relation("ActiveDefensePlan", fields: [activeDefensePlanId], references: [id], onDelete: SetNull)
+
   membershipRequests AllianceMembershipRequest[]
 
   createdAt DateTime @default(now())
@@ -534,6 +537,8 @@ model WarDefensePlan {
 
   highlightTagId Int?
   highlightTag   Tag? @relation(fields: [highlightTagId], references: [id])
+
+  activeForAlliance Alliance? @relation("ActiveDefensePlan")
 
   @@index([allianceId])
 }

@@ -100,6 +100,21 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       3: war.alliance.battlegroup3Color || "#3b82f6",
   };
 
+  const activeDefensePlan = await prisma.alliance.findUnique({
+    where: { id: war.allianceId },
+    select: {
+      activeDefensePlan: {
+        include: {
+          placements: {
+             select: {
+                 defenderId: true
+             }
+          }
+        }
+      }
+    }
+  });
+
   return (
     <WarDetailsClient
       war={war}
@@ -112,6 +127,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       warBans={warBans}
       isOfficer={isOfficer}
       bgColors={bgColors}
+      activeDefensePlan={activeDefensePlan?.activeDefensePlan}
     />
   );
 }

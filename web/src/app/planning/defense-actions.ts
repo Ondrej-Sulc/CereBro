@@ -306,3 +306,31 @@ export async function distributeDefensePlanToDiscord(planId: string, battlegroup
 
   return { success: true };
 }
+
+export async function setDefensePlanActive(planId: string) {
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
+  }
+
+  const isBotAdmin = player.isBotAdmin;
+
+  if (!isBotAdmin && (!player.allianceId || !player.isOfficer)) {
+      throw new Error("Unauthorized: Only officers can set active plans.");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({ where: { id: planId } });
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized: Cannot set plan from another alliance.");
+  }
+
+  await prisma.alliance.update({
+      where: { id: plan.allianceId },
+      data: { activeDefensePlanId: planId }
+  });
+  
+  revalidatePath("/planning/defense");
+}

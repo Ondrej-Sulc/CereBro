@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React, { useMemo } from "react";
-import { Users, ChevronLeft, X, Star } from "lucide-react";
+import { Users, ChevronLeft, X, Star, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -29,6 +29,7 @@ interface PlayerListContentProps {
   onClose?: () => void; 
   war: War; // Add war prop
   isReadOnly?: boolean;
+  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
 }
 
 export const PlayerListContent = ({
@@ -43,11 +44,16 @@ export const PlayerListContent = ({
   champions,
   onClose,
   war, // Destructure war prop
-  isReadOnly = false
+  isReadOnly = false,
+  activeDefensePlan
 }: PlayerListContentProps) => {
   const { getPlayerColor } = usePlayerColor();
   // Determine champion limit based on map type
   const championLimit = war.mapType === WarMapType.BIG_THING ? 2 : 3;
+
+  const isChampionOnDefense = (championId: number) => {
+      return activeDefensePlan?.placements?.some(p => p.defenderId === championId) ?? false;
+  };
 
   // Calculate player usage stats
   const playerStats = useMemo(() => {
@@ -301,6 +307,11 @@ export const PlayerListContent = ({
                                                               </div>
                                                           )}
                                                       </div>
+                                                      {isChampionOnDefense(champ.id) && (
+                                                          <div className="text-amber-500" title="Placed on Defense">
+                                                              <TriangleAlert className="h-4 w-4" />
+                                                          </div>
+                                                      )}
                                                   </div>
                                               );
                                           })}
@@ -347,6 +358,11 @@ export const PlayerListContent = ({
                                                           )}
                                                       </div>
                                                   </div>
+                                                  {isChampionOnDefense(ex.championId) && (
+                                                      <div className="text-amber-500 mr-2" title="Placed on Defense">
+                                                          <TriangleAlert className="h-4 w-4" />
+                                                      </div>
+                                                  )}
                                                   {!isReadOnly && (
                                                     <Button 
                                                         size="icon" 

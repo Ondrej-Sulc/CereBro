@@ -29,6 +29,11 @@ export default async function DefensePlanningPage() {
     orderBy: { updatedAt: "desc" },
   });
 
+  const alliance = await prisma.alliance.findUnique({
+    where: { id: player.allianceId },
+    select: { activeDefensePlanId: true }
+  });
+
   return (
     <div className="min-h-screen text-slate-200 font-sans selection:bg-indigo-500/30 relative">
       <FormPageBackground />
@@ -37,6 +42,7 @@ export default async function DefensePlanningPage() {
           plans={plans}
           userTimezone={player.timezone}
           isOfficer={player.isOfficer || player.isBotAdmin}
+          activeDefensePlanId={alliance?.activeDefensePlanId}
         />
       </main>
     </div>

@@ -12,7 +12,7 @@ import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
 import { PrefightSelector } from "./prefight-selector";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { X } from "lucide-react";
+import { X, TriangleAlert } from "lucide-react";
 import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
@@ -52,6 +52,7 @@ interface NodeEditorProps {
   currentFights: FightWithNode[];
   extraChampions: ExtraChampion[];
   isReadOnly?: boolean;
+  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
 }
 
 export default function NodeEditor({
@@ -74,6 +75,7 @@ export default function NodeEditor({
   currentFights,
   extraChampions,
   isReadOnly = false,
+  activeDefensePlan,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -84,6 +86,12 @@ export default function NodeEditor({
   
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
   const isUserEdit = useRef(false);
+
+  // Check if attacker is placed on defense in active plan
+  const isAttackerOnDefense = useMemo(() => {
+    if (!attackerId || !activeDefensePlan?.placements) return false;
+    return activeDefensePlan.placements.some(p => p.defenderId === attackerId);
+  }, [attackerId, activeDefensePlan]);
 
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
@@ -459,6 +467,12 @@ export default function NodeEditor({
                           <Badge variant="outline" className="border-emerald-500 text-emerald-400 bg-emerald-500/10 text-[10px] px-1.5 py-0 h-5">
                               Tactic: {activeTactic?.attackTag?.name}
                           </Badge>
+                      </div>
+                  )}
+                  {isAttackerOnDefense && (
+                      <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 text-amber-500 text-xs font-medium">
+                          <TriangleAlert className="h-3.5 w-3.5" />
+                          <span>Placed on Defense</span>
                       </div>
                   )}
               </div>

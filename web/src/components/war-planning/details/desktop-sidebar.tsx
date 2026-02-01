@@ -38,6 +38,7 @@ interface DesktopSidebarProps {
   currentFights: FightWithNode[];
   extraChampions: ExtraChampion[];
   isReadOnly?: boolean;
+  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
 }
 
 export function DesktopSidebar({
@@ -61,7 +62,8 @@ export function DesktopSidebar({
   onAddExtra,
   currentFights,
   extraChampions,
-  isReadOnly = false
+  isReadOnly = false,
+  activeDefensePlan,
 }: DesktopSidebarProps) {
   return (
     <div 
@@ -111,6 +113,7 @@ export function DesktopSidebar({
               currentFights={currentFights}
               extraChampions={extraChampions}
               isReadOnly={isReadOnly}
+              activeDefensePlan={activeDefensePlan}
           />
         )}
       </div>

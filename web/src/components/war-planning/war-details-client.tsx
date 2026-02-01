@@ -26,6 +26,7 @@ interface WarDetailsClientProps {
   warBans: WarBanWithChampion[];
   isOfficer?: boolean;
   bgColors?: Record<number, string>;
+  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
@@ -171,6 +172,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           currentBattlegroup={currentBattlegroup}
           war={props.war}
           isReadOnly={isReadOnly}
+          activeDefensePlan={props.activeDefensePlan}
         />
 
         {/* Main Content Area (WarHeader + WarTabs/WarMap) */}
@@ -257,6 +259,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             currentFights={currentFights}
             extraChampions={extraChampions}
             isReadOnly={isReadOnly}
+            activeDefensePlan={props.activeDefensePlan}
           />
         ) : (
           // MobileSheet now rendered directly within the flex-col layout
@@ -287,6 +290,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onAddExtra={handleAddExtraWithToast}
             onRemoveExtra={handleRemoveExtra}
             isReadOnly={isReadOnly}
+            activeDefensePlan={props.activeDefensePlan}
           />
         )}
       </div>

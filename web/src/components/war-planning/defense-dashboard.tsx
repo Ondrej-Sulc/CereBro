@@ -46,7 +46,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { createDefensePlan, deleteDefensePlan, renameDefensePlan } from "@/app/planning/defense-actions";
+import { createDefensePlan, deleteDefensePlan, renameDefensePlan, setDefensePlanActive } from "@/app/planning/defense-actions";
 import { useToast } from "@/hooks/use-toast";
 import { useFormStatus } from "react-dom";
 
@@ -54,6 +54,7 @@ interface DefenseDashboardProps {
   plans: WarDefensePlan[];
   userTimezone?: string | null;
   isOfficer?: boolean;
+  activeDefensePlanId?: string | null;
 }
 
 // Separate component for submit button to use useFormStatus
@@ -80,6 +81,7 @@ export default function DefenseDashboard({
   plans,
   userTimezone,
   isOfficer,
+  activeDefensePlanId,
 }: DefenseDashboardProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(WarMapType.STANDARD);
@@ -173,7 +175,13 @@ export default function DefenseDashboard({
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {sortedPlans.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} userTimezone={userTimezone} isOfficer={isOfficer} />
+              <PlanCard 
+                key={plan.id} 
+                plan={plan} 
+                userTimezone={userTimezone} 
+                isOfficer={isOfficer} 
+                isActive={activeDefensePlanId === plan.id}
+              />
             ))}
           </div>
         )}
@@ -182,10 +190,11 @@ export default function DefenseDashboard({
   );
 }
 
-function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; userTimezone?: string | null; isOfficer?: boolean }) {
+function PlanCard({ plan, userTimezone, isOfficer, isActive }: { plan: WarDefensePlan; userTimezone?: string | null; isOfficer?: boolean; isActive?: boolean }) {
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+  const [isSettingActive, setIsSettingActive] = useState(false);
   const [newName, setNewName] = useState(plan.name);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -193,6 +202,27 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const handleSetActive = async () => {
+    if (isSettingActive || isActive) return;
+    setIsSettingActive(true);
+    try {
+        await setDefensePlanActive(plan.id);
+        toast({
+            title: "Plan Activated",
+            description: `${plan.name} is now the active defense plan.`
+        });
+    } catch (error) {
+        console.error("Failed to activate plan:", error);
+        toast({
+            title: "Activation Failed",
+            description: "Could not activate the plan. Please try again.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsSettingActive(false);
+    }
+  };
 
   const handleRename = async () => {
     if (!newName.trim() || newName === plan.name) {
@@ -255,8 +285,8 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-3 border-t border-slate-800/50 bg-slate-900/20 gap-2">
-        <Link href={`/planning/defense/${plan.id}`} className="flex-1">
+      <CardFooter className="pt-3 border-t border-slate-800/50 bg-slate-900/20 gap-2 flex-wrap">
+        <Link href={`/planning/defense/${plan.id}`} className="flex-1 min-w-[120px]">
           <Button variant="secondary" className="w-full gap-2 transition-all bg-indigo-600/10 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-600/30 hover:border-indigo-500">
             Open Planner
             <ArrowRight className="h-4 w-4" />
@@ -265,6 +295,23 @@ function PlanCard({ plan, userTimezone, isOfficer }: { plan: WarDefensePlan; use
         
         {isOfficer && (
             <div className="flex gap-2">
+                {isActive ? (
+                   <div className="flex items-center justify-center px-3 py-2 bg-emerald-950/50 border border-emerald-900/50 rounded-md text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                     Active
+                   </div>
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSetActive}
+                    disabled={isSettingActive}
+                    className="text-slate-500 hover:text-emerald-400 hover:bg-emerald-400/10"
+                    title="Set as Active Plan"
+                  >
+                     {isSettingActive ? "..." : "Set Active"}
+                  </Button>
+                )}
+
                 <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
                     <DialogTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10">
