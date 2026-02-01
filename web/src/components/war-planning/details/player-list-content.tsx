@@ -14,6 +14,7 @@ import { Champion, ChampionImages } from "@/types/champion";
 import { motion } from "framer-motion";
 import { usePlayerColor } from "../player-color-context";
 import { getChampionClassColors } from "@/lib/championClassHelper";
+import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
 
 interface PlayerListContentProps {
   players: PlayerWithRoster[];
@@ -52,13 +53,14 @@ export const PlayerListContent = ({
   const playerStats = useMemo(() => {
     const stats = new Map<string, {
       champions: { id: number; name: string; images: ChampionImages; class: ChampionClass; isExtra?: boolean; extraId?: string }[], // Updated type to include class
-      uniqueCount: number
+      uniqueCount: number;
+      assignedNodes: Set<number>;
     }>();
 
     // Helper to add champ
     const addChamp = (pid: string, cid: number, cname: string, cimages: ChampionImages, champClass: ChampionClass, isExtra = false, extraId?: string) => { // Updated signature
         if (!stats.has(pid)) {
-            stats.set(pid, { champions: [], uniqueCount: 0 });
+            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set() });
         }
         const stat = stats.get(pid)!;
         if (!stat.champions.some(c => c.id === cid)) {
@@ -74,10 +76,21 @@ export const PlayerListContent = ({
         }
     };
 
+    // Helper to add node assignment
+    const addNode = (pid: string, nodeNumber: number) => {
+        if (!stats.has(pid)) {
+            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set() });
+        }
+        stats.get(pid)!.assignedNodes.add(nodeNumber);
+    };
+
     currentFights.forEach(fight => {
         // 1. Count Attacker
         if (fight.player && fight.attacker) {
             addChamp(fight.player.id, fight.attacker.id, fight.attacker.name, fight.attacker.images, fight.attacker.class);
+            if (fight.node) {
+                addNode(fight.player.id, fight.node.nodeNumber);
+            }
         }
 
         // 2. Count Prefights
@@ -117,6 +130,30 @@ export const PlayerListContent = ({
         });
   }, [players, currentBattlegroup]);
 
+  const getAssignmentLabel = (assignedNodes: Set<number> | undefined) => {
+      if (!assignedNodes || assignedNodes.size === 0) return "Unassigned";
+
+      if (war.mapType === WarMapType.BIG_THING) {
+          const nodes = Array.from(assignedNodes).sort((a, b) => a - b);
+          return `Node ${nodes.join(", ")}`;
+      }
+
+      // Standard Map Logic
+      const s1Paths = new Set<number>();
+      const s2Paths = new Set<number>();
+      
+      assignedNodes.forEach(node => {
+          const pathInfo = getPathInfo(node);
+          if (pathInfo?.section === 1) s1Paths.add(pathInfo.path);
+          if (pathInfo?.section === 2) s2Paths.add(pathInfo.path);
+      });
+
+      const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a,b)=>a-b).join(",")}` : "-";
+      const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a,b)=>a-b).join(",")}` : "-";
+
+      return `${s1Str} / ${s2Str}`;
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
@@ -152,6 +189,7 @@ export const PlayerListContent = ({
                   const playerColor = getPlayerColor(player.id);
 
                   const assignedChampions = stat?.champions.filter(c => !c.isExtra) || [];
+                  const assignmentLabel = getAssignmentLabel(stat?.assignedNodes);
 
                   return (
                       <div
@@ -189,12 +227,12 @@ export const PlayerListContent = ({
                               </div>
 
                               <div className={cn(
-                                  "text-xs font-bold px-1.5 py-0.5 rounded",
+                                  "text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap",
                                   count > championLimit ? "bg-red-900/50 text-red-400" :
                                   isFull ? "bg-green-900/50 text-green-400" : 
                                   count > 0 ? "bg-blue-900/50 text-blue-400" : "bg-slate-800 text-slate-500"
                               )}>
-                                  {count}/{championLimit}
+                                  {assignmentLabel}
                               </div>
                           </div>
 

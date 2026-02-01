@@ -1,13 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skull, Trophy, AlertTriangle, Shield, Swords, Target, BarChart2, Lock } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Skull, Trophy, AlertTriangle, BarChart2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeasonSelector } from "./season-selector";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
-import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionClass } from "@prisma/client";
 import { getFromCache } from "@/lib/cache";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -16,6 +13,7 @@ import logger from "@/lib/logger";
 import { SeasonOverviewView, PlayerStats } from "./season-overview-view";
 import { DetailedPlacementStat } from "./deep-dive-types";
 import { SeasonAnalysisContainer } from "./season-analysis-container";
+import { getNodeCategory } from "@cerebro/core/data/war-planning/path-logic";
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';
@@ -183,6 +181,12 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
       3: { fights: 0, deaths: 0 }
     };
 
+    const deathDistribution = {
+        path: 0,
+        miniBoss: 0,
+        boss: 0
+    };
+
     // Insight Aggregators
     const defenderStats = new Map<number, ChampionStat>();
     const attackerStats = new Map<number, ChampionStat>();
@@ -226,6 +230,12 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             avatar: fight.player.avatar,
             fights: 0,
             deaths: 0,
+            pathFights: 0,
+            pathDeaths: 0,
+            miniBossFights: 0,
+            miniBossDeaths: 0,
+            bossFights: 0,
+            bossDeaths: 0,
             battlegroup: bg,
             warStats: []
           };
@@ -233,6 +243,26 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         bgStats[bg][pid].fights += 1;
         bgStats[bg][pid].deaths += fight.death;
         
+        // Node Category Stats
+        if (fight.node) {
+            const category = getNodeCategory(fight.node.nodeNumber);
+            
+            // Player Counts & Deaths
+            if (category === 'boss') {
+                bgStats[bg][pid].bossFights++;
+                bgStats[bg][pid].bossDeaths += fight.death;
+                deathDistribution.boss += fight.death;
+            } else if (category === 'mini-boss') {
+                bgStats[bg][pid].miniBossFights++;
+                bgStats[bg][pid].miniBossDeaths += fight.death;
+                deathDistribution.miniBoss += fight.death;
+            } else {
+                bgStats[bg][pid].pathFights++;
+                bgStats[bg][pid].pathDeaths += fight.death;
+                deathDistribution.path += fight.death;
+            }
+        }
+
         // War Stats Aggregation
         let playerWarStat = bgStats[bg][pid].warStats.find(w => w.warId === war.id);
         if (!playerWarStat) {
@@ -315,15 +345,10 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
       }
     }
   
-    // Convert to arrays and sort for BG Tables
-    const sortedBgs: Record<number, PlayerStats[]> = {};
+    // Flatten players for Unified Table
+    const allPlayers: PlayerStats[] = [];
     [1, 2, 3].forEach(bg => {
-      const players = Object.values(bgStats[bg]);
-      players.sort((a, b) => {
-        if (a.deaths !== b.deaths) return a.deaths - b.deaths;
-        return b.fights - a.fights;
-      });
-      sortedBgs[bg] = players;
+      allPlayers.push(...Object.values(bgStats[bg]));
     });
 
     // Sort Insights
@@ -408,12 +433,42 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                  </div>
               </Card>
           </div>
+
+          {/* Death Distribution Bar */}
+          <div className="grid grid-cols-3 gap-4">
+              <Card className="bg-slate-900/40 border-slate-800/60 p-3 flex items-center justify-between border-l-4 border-l-slate-700">
+                  <span className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Path Deaths</span>
+                  <div className="flex items-center gap-2">
+                      <span className="text-lg font-mono font-black italic text-slate-300">{deathDistribution.path}</span>
+                      <span className="text-[10px] text-slate-600 font-mono">
+                        {globalDeaths > 0 ? ((deathDistribution.path / globalDeaths) * 100).toFixed(0) : 0}%
+                      </span>
+                  </div>
+              </Card>
+              <Card className="bg-slate-900/40 border-slate-800/60 p-3 flex items-center justify-between border-l-4 border-l-amber-900/50">
+                  <span className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Mini-Boss Deaths</span>
+                  <div className="flex items-center gap-2">
+                      <span className="text-lg font-mono font-black italic text-slate-300">{deathDistribution.miniBoss}</span>
+                      <span className="text-[10px] text-slate-600 font-mono">
+                        {globalDeaths > 0 ? ((deathDistribution.miniBoss / globalDeaths) * 100).toFixed(0) : 0}%
+                      </span>
+                  </div>
+              </Card>
+              <Card className="bg-slate-900/40 border-slate-800/60 p-3 flex items-center justify-between border-l-4 border-l-red-900/50">
+                  <span className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Boss Deaths</span>
+                  <div className="flex items-center gap-2">
+                      <span className="text-lg font-mono font-black italic text-slate-300">{deathDistribution.boss}</span>
+                      <span className="text-[10px] text-slate-600 font-mono">
+                        {globalDeaths > 0 ? ((deathDistribution.boss / globalDeaths) * 100).toFixed(0) : 0}%
+                      </span>
+                  </div>
+              </Card>
+          </div>
         </div>
   
-        {/* Interactive Battlegroup Grids */}
+        {/* Interactive Unified Roster Grid */}
         <SeasonOverviewView 
-            sortedBgs={sortedBgs} 
-            bgTotals={bgTotals} 
+            allPlayers={allPlayers} 
             bgColors={bgColors} 
         />
 
@@ -426,4 +481,4 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         />
       </div>
     );
-  }
+}

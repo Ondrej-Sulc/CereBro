@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ChevronDown, ChevronRight, Activity } from "lucide-react";
+import { useState, useMemo } from "react";
 
 interface WarFightDetail {
   defenderName: string;
@@ -43,26 +43,29 @@ export interface PlayerStats {
   avatar: string | null;
   fights: number;
   deaths: number;
+  pathFights: number;
+  pathDeaths: number;
+  miniBossFights: number;
+  miniBossDeaths: number;
+  bossFights: number;
+  bossDeaths: number;
   battlegroup: number;
   warStats: PlayerWarStat[];
 }
 
 interface SeasonOverviewViewProps {
-  sortedBgs: Record<number, PlayerStats[]>;
-  bgTotals: Record<number, { fights: number; deaths: number }>;
+  allPlayers: PlayerStats[];
   bgColors: { 1: string; 2: string; 3: string };
 }
 
 export function SeasonOverviewView({
-  sortedBgs,
-  bgTotals,
+  allPlayers,
   bgColors,
 }: SeasonOverviewViewProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerStats | null>(null);
   const [expandedWars, setExpandedWars] = useState<Record<string, boolean>>({});
 
   const toggleWar = (warId: string) => {
-    // Current state is either false (collapsed), true (expanded), or undefined (meaning default expanded)
     const isCurrentlyExpanded = expandedWars[warId] ?? true;
     setExpandedWars(prev => ({
       ...prev,
@@ -70,19 +73,43 @@ export function SeasonOverviewView({
     }));
   };
 
+  const bgStats = useMemo(() => {
+    const stats = {
+      1: { fights: 0, deaths: 0, players: 0 },
+      2: { fights: 0, deaths: 0, players: 0 },
+      3: { fights: 0, deaths: 0, players: 0 },
+    };
+    allPlayers.forEach(p => {
+      if (p.battlegroup >= 1 && p.battlegroup <= 3) {
+        const bg = p.battlegroup as 1|2|3;
+        stats[bg].fights += p.fights;
+        stats[bg].deaths += p.deaths;
+        stats[bg].players += 1;
+      }
+    });
+    return stats;
+  }, [allPlayers]);
+
+  const sortedPlayers = [...allPlayers].sort((a, b) => {
+      // Primary: Deaths (Ascending)
+      if (a.deaths !== b.deaths) return a.deaths - b.deaths;
+      // Secondary: Fights (Descending)
+      return b.fights - a.fights;
+  });
+
   const getRank = (
     player: PlayerStats,
     index: number,
-    allPlayers: PlayerStats[]
+    players: PlayerStats[]
   ) => {
     if (index === 0) return 1;
-    const prev = allPlayers[index - 1];
+    const prev = players[index - 1];
     if (player.deaths === prev.deaths && player.fights === prev.fights) {
       let i = index - 1;
       while (
         i >= 0 &&
-        allPlayers[i].deaths === player.deaths &&
-        allPlayers[i].fights === player.fights
+        players[i].deaths === player.deaths &&
+        players[i].fights === player.fights
       ) {
         i--;
       }
@@ -91,180 +118,285 @@ export function SeasonOverviewView({
     return index + 1;
   };
 
+  const StatCell = ({ fights, deaths }: { fights: number; deaths: number }) => (
+      <div className="flex items-center justify-center gap-1.5">
+          <span className="font-mono font-bold text-xs text-slate-300">{fights}</span>
+          {deaths > 0 && (
+              <span className="text-[10px] font-black text-red-400 flex items-center gap-0.5">
+                  <Skull className="w-2.5 h-2.5" /> {deaths}
+              </span>
+          )}
+      </div>
+  );
+
   return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="space-y-6">
+      {/* Battlegroup Intelligence Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((bgNum) => {
-          const bg = bgNum as 1 | 2 | 3;
-          const totalFights = bgTotals[bg].fights;
-          const totalDeaths = bgTotals[bg].deaths;
-          const totalSoloRate =
-            totalFights > 0
-              ? ((totalFights - totalDeaths) / totalFights) * 100
-              : 0;
+            const bg = bgNum as 1|2|3;
+            const stat = bgStats[bg];
+            const accent = bgColors[bg];
+            const soloRate = stat.fights > 0 ? ((stat.fights - stat.deaths) / stat.fights) * 100 : 0;
 
-          const accentColor = bgColors[bg];
-
-          return (
-            <Card
-              key={bg}
-              className="bg-slate-950/40 border-slate-800/60 flex flex-col transition-all duration-500 hover:border-slate-700 relative overflow-hidden group/card shadow-2xl backdrop-blur-md"
-              style={{ borderTop: `4px solid ${accentColor}` }}
-            >
-              {/* Ghost BG Number */}
-              <div className="absolute top-0 right-0 p-4 opacity-[0.03] select-none pointer-events-none group-hover/card:scale-110 transition-transform duration-1000">
-                <span className="text-9xl font-black italic" style={{ color: accentColor }}>{bg}</span>
-              </div>
-
-              <CardHeader
-                className="pb-4 border-b border-slate-800/60 bg-slate-900/40 relative z-10"
-              >
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3" style={{ color: accentColor }}>
-                        <Users className="w-6 h-6" />
-                        BG {bg}
-                    </CardTitle>
-                    <Badge variant="outline" className="bg-slate-950/50 text-slate-400 border-slate-800 text-[10px] font-black uppercase px-2 py-0.5">
-                        {sortedBgs[bg].length} Players
-                    </Badge>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 flex flex-col items-center justify-center gap-1 backdrop-blur-sm">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Group Solo %</span>
-                        <span className={cn(
-                            "text-lg font-mono font-black italic",
-                            totalSoloRate >= 90 ? "text-emerald-400" : "text-amber-500"
-                        )}>
-                            {totalSoloRate.toFixed(0)}%
-                        </span>
-                    </div>
-                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3 flex flex-col items-center justify-center gap-1 backdrop-blur-sm">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Loss</span>
-                        <div className="flex items-center gap-2 text-red-400">
-                            <Skull className="w-4 h-4" />
-                            <span className="text-lg font-mono font-black italic">{totalDeaths}</span>
+            return (
+                <Card key={bg} className="bg-slate-950/40 border-slate-800/60 overflow-hidden relative group/bgcard">
+                    <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: accent }} />
+                    <div className="p-4 flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-black italic uppercase tracking-tighter text-lg flex items-center gap-2" style={{ color: accent }}>
+                                <Users className="w-4 h-4" />
+                                BG {bg}
+                            </h3>
+                            <Badge variant="outline" className="bg-slate-900/50 border-slate-800 text-[10px] font-mono text-slate-400">
+                                {stat.players} PLAYERS
+                            </Badge>
+                        </div>
+                        
+                        <div className="flex items-end justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Performance</span>
+                                <span className={cn(
+                                    "text-3xl font-black italic font-mono leading-none",
+                                    soloRate >= 95 ? "text-emerald-400" : soloRate >= 80 ? "text-slate-200" : "text-amber-500"
+                                )}>
+                                    {soloRate.toFixed(1)}%
+                                </span>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                                <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-400">
+                                    <span>{stat.fights} Fights</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-sm font-mono font-black text-red-400">
+                                    <Skull className="w-3.5 h-3.5" />
+                                    <span>{stat.deaths}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-              </CardHeader>
+                </Card>
+            );
+        })}
+      </div>
 
-              <CardContent className="p-0 flex-1 relative z-10">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left table-fixed">
-                    <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/40 font-black tracking-widest border-b border-slate-800/60">
-                      <tr>
-                        <th className="px-4 py-3 w-10 text-center">#</th>
-                        <th className="px-2 py-3">Player</th>
-                        <th className="px-2 py-3 w-16 text-center">Fights</th>
-                        <th className="px-2 py-3 w-24 text-right">Result</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/30 text-sm">
-                      {sortedBgs[bg].map((player, index) => {
-                        const rank = getRank(player, index, sortedBgs[bg]);
-                        const isTop3 = rank <= 3;
-                        const soloRate =
-                          player.fights > 0
-                            ? Math.max(
-                                0,
-                                ((player.fights - player.deaths) /
-                                  player.fights) *
-                                  100
-                              )
-                            : 0;
+      <Card className="bg-slate-950/40 border-slate-800/60 flex flex-col shadow-2xl backdrop-blur-md overflow-hidden">
+          <CardHeader className="pb-4 border-b border-slate-800/60 bg-slate-900/40 relative z-10">
+            <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tighter flex items-center gap-3 text-slate-200">
+                    <Users className="w-6 h-6" />
+                    Alliance Roster Performance
+                </CardTitle>
+                <Badge variant="outline" className="bg-slate-950/50 text-slate-400 border-slate-800 text-[10px] font-black uppercase px-2 py-0.5">
+                    {sortedPlayers.length} Members
+                </Badge>
+            </div>
+          </CardHeader>
 
-                        return (
-                          <tr
+          <CardContent className="p-0 flex-1 relative z-10">
+            {/* Mobile View (Cards) */}
+            <div className="md:hidden flex flex-col gap-2 p-2">
+                {sortedPlayers.map((player, index) => {
+                    const rank = getRank(player, index, sortedPlayers);
+                    const isTop3 = rank <= 3;
+                    const soloRate = player.fights > 0 ? ((player.fights - player.deaths) / player.fights) * 100 : 0;
+                    const bgAccent = bgColors[player.battlegroup as 1|2|3] || "#94a3b8";
+
+                    return (
+                        <div 
                             key={player.playerId}
-                            className="group/row hover:bg-slate-800/30 transition-all duration-300 cursor-pointer border-l-2 border-l-transparent"
-                            style={{ borderLeftColor: index === 0 ? accentColor : 'transparent' }}
                             onClick={() => {
-                                // Reset expanded wars for new player
                                 setExpandedWars({});
                                 setSelectedPlayer(player);
                             }}
-                          >
-                            <td className="px-4 py-4 text-center">
-                              {isTop3 ? (
-                                <div className="relative inline-flex items-center justify-center">
-                                    <Trophy className={cn(
-                                        "w-6 h-6 opacity-20 absolute",
-                                        rank === 1 ? "text-yellow-500" : rank === 2 ? "text-slate-300" : "text-amber-600"
-                                    )} />
-                                    <span className={cn(
-                                        "relative font-black italic font-mono text-xs",
-                                        rank === 1 ? "text-yellow-400" : rank === 2 ? "text-slate-200" : "text-amber-500"
-                                    )}>
-                                        {rank}
-                                    </span>
+                            className="bg-slate-900/40 border border-slate-800/60 rounded-lg p-3 flex flex-col gap-3 active:bg-slate-800/60 transition-colors"
+                            style={{ borderLeft: `4px solid ${index < 3 ? '#f59e0b' : 'transparent'}` }}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 flex justify-center shrink-0">
+                                    {isTop3 ? (
+                                        <div className="relative inline-flex items-center justify-center">
+                                            <Trophy className={cn("w-5 h-5 opacity-20 absolute", rank === 1 ? "text-yellow-500" : rank === 2 ? "text-slate-300" : "text-amber-600")} />
+                                            <span className={cn("relative font-black font-mono text-[10px]", rank === 1 ? "text-yellow-400" : rank === 2 ? "text-slate-200" : "text-amber-500")}>{rank}</span>
+                                        </div>
+                                    ) : (
+                                        <span className="font-mono text-slate-600 font-black text-[10px]">{rank}</span>
+                                    )}
                                 </div>
-                              ) : (
-                                <span className="font-mono text-slate-600 font-black italic text-xs">{rank}</span>
-                              )}
-                            </td>
-                            <td className="px-2 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="relative shrink-0">
-                                    <Avatar className="h-9 w-9 border-none shadow-lg bg-slate-900 ring-1 ring-slate-800 transition-transform duration-500 group-hover/row:scale-110">
-                                        <AvatarImage src={player.avatar || undefined} />
-                                        <AvatarFallback className="text-[10px] bg-slate-800 text-slate-400 font-black">
-                                            {player.playerName.substring(0, 2).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
+                                <Avatar className="h-8 w-8 border-none bg-slate-900">
+                                    <AvatarImage src={player.avatar || undefined} />
+                                    <AvatarFallback className="text-[10px]">{player.playerName.substring(0, 2)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                    <span className="font-black uppercase tracking-tighter text-sm truncate text-slate-300">{player.playerName}</span>
+                                    <span className={cn("text-[10px] font-black uppercase tracking-tighter", soloRate >= 90 ? "text-emerald-500/70" : "text-amber-500/70")}>{soloRate.toFixed(0)}% SOLO</span>
                                 </div>
-                                <div className="flex flex-col min-w-0 overflow-hidden pr-2">
+                                <Badge variant="outline" className="bg-slate-950 border-slate-800 font-black font-mono text-[9px] px-1.5 h-5" style={{ color: bgAccent, borderColor: `${bgAccent}40` }}>BG{player.battlegroup}</Badge>
+                            </div>
+
+                            <div className="grid grid-cols-4 gap-2 bg-slate-950/30 rounded p-2 border border-slate-800/30">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[8px] uppercase font-bold text-slate-600 mb-1">Path</span>
+                                    <StatCell fights={player.pathFights} deaths={player.pathDeaths} />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[8px] uppercase font-bold text-slate-600 mb-1">MB</span>
+                                    <StatCell fights={player.miniBossFights} deaths={player.miniBossDeaths} />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[8px] uppercase font-bold text-slate-600 mb-1">Boss</span>
+                                    <StatCell fights={player.bossFights} deaths={player.bossDeaths} />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-[8px] uppercase font-bold text-slate-600 mb-1">Total</span>
+                                    <span className="font-mono font-black text-xs text-slate-300">{player.fights}</span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <span className={cn(
+                                    "font-mono font-black text-xs flex items-center gap-1.5",
+                                    player.deaths === 0 ? "text-emerald-400" : "text-red-400"
+                                )}>
+                                    {player.deaths > 0 && <Skull className="w-3 h-3" />}
+                                    {player.deaths === 0 ? "PERFECT SEASON" : `${player.deaths} DEATH${player.deaths > 1 ? "S" : ""}`}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Desktop View (Table) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="text-left table-auto min-w-[800px] ml-4 mb-4">
+                <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/40 font-black tracking-widest border-b border-slate-800/60">
+                  <tr>
+                    <th className="px-4 py-2 w-12 text-center">#</th>
+                    <th className="px-2 py-2 w-48">Player</th>
+                    <th className="px-2 py-2 w-16 text-center">BG</th>
+                    <th className="px-4 py-2 text-center" title="Path Fights / Deaths">Path</th>
+                    <th className="px-4 py-2 text-center" title="Mini-Boss Fights / Deaths">MB</th>
+                    <th className="px-4 py-2 text-center" title="Boss Fights / Deaths">Boss</th>
+                    <th className="px-4 py-2 text-center">Total</th>
+                    <th className="px-6 py-2 text-right">Result</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/30 text-sm">
+                  {sortedPlayers.map((player, index) => {
+                    const rank = getRank(player, index, sortedPlayers);
+                    const isTop3 = rank <= 3;
+                    const soloRate =
+                      player.fights > 0
+                        ? Math.max(
+                            0,
+                            ((player.fights - player.deaths) /
+                              player.fights) *
+                              100
+                          )
+                        : 0;
+                    
+                    const bgAccent = bgColors[player.battlegroup as 1|2|3] || "#94a3b8";
+
+                    return (
+                      <tr
+                        key={player.playerId}
+                        className="group/row hover:bg-slate-800/30 transition-all duration-300 cursor-pointer border-l-4 border-l-transparent"
+                        style={{ borderLeftColor: index < 3 ? '#f59e0b' : 'transparent' }}
+                        onClick={() => {
+                            setExpandedWars({});
+                            setSelectedPlayer(player);
+                        }}
+                      >
+                        <td className="px-4 py-1.5 text-center">
+                          {isTop3 ? (
+                            <div className="relative inline-flex items-center justify-center">
+                                <Trophy className={cn(
+                                    "w-5 h-5 opacity-20 absolute",
+                                    rank === 1 ? "text-yellow-500" : rank === 2 ? "text-slate-300" : "text-amber-600"
+                                )} />
+                                <span className={cn(
+                                    "relative font-black font-mono text-[10px]",
+                                    rank === 1 ? "text-yellow-400" : rank === 2 ? "text-slate-200" : "text-amber-500"
+                                )}>
+                                    {rank}
+                                </span>
+                            </div>
+                          ) : (
+                            <span className="font-mono text-slate-600 font-black text-[10px]">{rank}</span>
+                          )}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <div className="flex items-center gap-3">
+                            <div className="relative shrink-0">
+                                <Avatar className="h-7 w-7 border-none shadow-lg bg-slate-900 ring-1 ring-slate-800 transition-transform duration-500 group-hover/row:scale-110">
+                                    <AvatarImage src={player.avatar || undefined} />
+                                    <AvatarFallback className="text-[8px] bg-slate-800 text-slate-400 font-black">
+                                        {player.playerName.substring(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </div>
+                            <div className="flex flex-col min-w-0 overflow-hidden pr-2">
+                                <div className="flex items-center gap-2">
                                     <span className={cn(
-                                        "font-black uppercase italic tracking-tighter text-sm truncate transition-transform duration-300 group-hover/row:translate-x-1",
+                                        "font-black uppercase tracking-tighter text-xs truncate transition-transform duration-300 group-hover/row:translate-x-1",
                                         isTop3 ? "text-slate-100" : "text-slate-400"
                                     )}>
                                         {player.playerName}
                                     </span>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <Progress value={soloRate} className="h-1 w-12 bg-slate-800" indicatorStyle={{ backgroundColor: soloRate >= 90 ? '#10b981' : '#f59e0b' }} />
-                                        <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter">{soloRate.toFixed(0)}% S</span>
-                                    </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-2 py-4 text-center">
-                              <span className="font-mono font-black italic text-base text-slate-200">
-                                {player.fights}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4 text-right">
-                                <div className="flex flex-col items-end">
                                     <span className={cn(
-                                        "font-mono font-black italic text-sm leading-none flex items-center gap-1",
-                                        player.deaths === 0 ? "text-emerald-400" : "text-red-400"
+                                        "text-[9px] font-black uppercase tracking-tighter shrink-0",
+                                        soloRate >= 90 ? "text-emerald-500/70" : "text-amber-500/70"
                                     )}>
-                                        {player.deaths > 0 && <Skull className="w-3 h-3" />}
-                                        {player.deaths === 0 ? "SOLO" : `${player.deaths} DEATHS`}
-                                    </span>
-                                    <span className="text-[9px] text-slate-500 font-black uppercase tracking-tighter mt-1 opacity-70">
-                                        {(player.deaths / (player.fights || 1)).toFixed(2)} AVG
+                                        {soloRate.toFixed(0)}% S
                                     </span>
                                 </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {sortedBgs[bg].length === 0 && (
-                        <tr>
-                          <td colSpan={4} className="px-4 py-12 text-center">
-                            <BarChart3 className="w-8 h-8 text-slate-800 mx-auto mb-2 opacity-20" />
-                            <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No intelligence data</p>
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-2 py-1.5 text-center">
+                            <Badge variant="outline" className="bg-slate-950 border-slate-800 font-black font-mono text-[9px] px-1.5 h-4" style={{ color: bgAccent, borderColor: `${bgAccent}40` }}>
+                                BG{player.battlegroup}
+                            </Badge>
+                        </td>
+                        <td className="px-4 py-1.5 text-center">
+                            <StatCell fights={player.pathFights} deaths={player.pathDeaths} />
+                        </td>
+                        <td className="px-4 py-1.5 text-center">
+                            <StatCell fights={player.miniBossFights} deaths={player.miniBossDeaths} />
+                        </td>
+                        <td className="px-4 py-1.5 text-center">
+                            <StatCell fights={player.bossFights} deaths={player.bossDeaths} />
+                        </td>
+                        <td className="px-4 py-1.5 text-center">
+                          <span className="font-mono font-black text-sm text-slate-300">
+                            {player.fights}
+                          </span>
+                        </td>
+                        <td className="px-6 py-1.5 text-right">
+                            <span className={cn(
+                                "font-mono font-black text-[11px] leading-none flex items-center justify-end gap-1",
+                                player.deaths === 0 ? "text-emerald-400" : "text-red-400"
+                            )}>
+                                {player.deaths > 0 && <Skull className="w-2.5 h-2.5" />}
+                                {player.deaths === 0 ? "SOLO" : `${player.deaths} DEATH${player.deaths > 1 ? "S" : ""}`}
+                            </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {sortedPlayers.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-12 text-center">
+                        <BarChart3 className="w-8 h-8 text-slate-800 mx-auto mb-2 opacity-20" />
+                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">No intelligence data</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+      </Card>
 
       <Dialog
         open={!!selectedPlayer}
@@ -448,6 +580,6 @@ export function SeasonOverviewView({
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
