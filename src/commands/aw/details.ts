@@ -4,12 +4,11 @@ import {
   ContainerBuilder,
   TextDisplayBuilder,
 } from "discord.js";
-import { getMergedData, getNodesData } from "./handlers";
-import { capitalize, formatAssignment, getEmoji } from "./utils";
+import { capitalize, getEmoji } from "./utils";
+import { prisma } from "../../services/prismaService";
 
 export async function handleDetails(interaction: ChatInputCommandInteraction) {
   const { config } = await import("../../config.js");
-  const { prisma } = await import("../../services/prismaService.js");
   await interaction.deferReply();
 
   if (!interaction.guild) {
@@ -17,18 +16,15 @@ export async function handleDetails(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  // 1. Fetch Alliance and determine Battlegroup from Channel
   const alliance = await prisma.alliance.findUnique({
     where: { guildId: interaction.guild.id },
-    include: { config: true },
   });
 
-  if (!alliance?.config?.sheetId) {
-    await interaction.editReply(
-      "This command is not configured for this server. Please set a Google Sheet ID."
-    );
+  if (!alliance) {
+    await interaction.editReply("This server is not registered as an alliance.");
     return;
   }
-  const sheetId = alliance.config.sheetId;
 
   if (!interaction.channel || !interaction.channel.isThread()) {
     await interaction.editReply(
@@ -37,71 +33,128 @@ export async function handleDetails(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const playerName = interaction.channel.name.toLowerCase();
   const parentChannelId = interaction.channel.parentId;
-
   if (!parentChannelId) {
     await interaction.editReply("This thread is not in a valid channel.");
     return;
   }
 
-  const bgConfig =
-    config.allianceWar.battlegroupChannelMappings[parentChannelId];
-  if (!bgConfig) {
+  let bgNumber = 0;
+  let bgColor = 0x808080; // Default gray
+
+  if (parentChannelId === alliance.battlegroup1ChannelId) {
+    bgNumber = 1;
+    bgColor = parseInt(alliance.battlegroup1Color.replace("#", ""), 16);
+  } else if (parentChannelId === alliance.battlegroup2ChannelId) {
+    bgNumber = 2;
+    bgColor = parseInt(alliance.battlegroup2Color.replace("#", ""), 16);
+  } else if (parentChannelId === alliance.battlegroup3ChannelId) {
+    bgNumber = 3;
+    bgColor = parseInt(alliance.battlegroup3Color.replace("#", ""), 16);
+  } else {
+    // Fallback to config if DB mapping fails (backward compatibility)
+    const legacyConfig =
+      config.allianceWar.battlegroupChannelMappings[parentChannelId];
+    if (legacyConfig) {
+      bgColor = legacyConfig.color;
+      // We can't determine bgNumber safely from legacy config keys reliably without mapping,
+      // but if we are here, we might fail on DB lookups anyway.
+      // Let's assume we need DB setup.
+      await interaction.editReply(
+        "This channel is not configured as a Battlegroup channel in the database settings."
+      );
+      return;
+    }
+
     await interaction.editReply(
       "This thread is not in a recognized battlegroup channel."
     );
     return;
   }
 
-  const nodeLookup = await getNodesData(sheetId, bgConfig.sheet);
-  const mergedData = await getMergedData(sheetId, bgConfig.sheet);
-
-  const assignmentPromises = mergedData.map(async (assignment) => {
-    const { node, prefightPlayer, prefightChampion } = assignment;
-    let formattedAssignment = await formatAssignment(assignment);
-
-    if (
-      prefightPlayer &&
-      prefightChampion &&
-      assignment.playerName === playerName
-    ) {
-      const prefightEmoji = await getEmoji(prefightChampion);
-      const prefightNote = ` (Prefight: ${prefightEmoji} ${prefightChampion})`;
-      formattedAssignment += prefightNote;
-    }
-
-    if (assignment.playerName === playerName) {
-      return {
-        node: node,
-        value: formattedAssignment,
-      };
-    }
-    return null;
+  // 2. Identify Player
+  const threadName = interaction.channel.name.toLowerCase().trim();
+  // Find player in alliance whose name matches thread name
+  const player = await prisma.player.findFirst({
+    where: {
+      allianceId: alliance.id,
+      ingameName: {
+        mode: "insensitive",
+        equals: threadName,
+      },
+    },
   });
 
-  const resolvedAssignments = await Promise.all(assignmentPromises);
-  const playerAssignments = resolvedAssignments.filter(
-    (a) => a !== null
-  ) as { node: string; value: string }[];
-
-  let filteredAssignments = playerAssignments;
-  const targetNodeOption = interaction.options.getString("node");
-  if (targetNodeOption) {
-    filteredAssignments = playerAssignments.filter(
-      (a) => a.node === targetNodeOption
-    );
-  }
-
-  if (filteredAssignments.length === 0) {
+  if (!player) {
     await interaction.editReply(
-      targetNodeOption
-        ? `No assignment for node '${targetNodeOption}'.`
-        : `No assignments found for you in ${bgConfig.sheet}.`
+      `Could not find a player named "${interaction.channel.name}" in this alliance.`
     );
     return;
   }
 
+  // 3. Fetch Active War
+  const war = await prisma.war.findFirst({
+    where: {
+      allianceId: alliance.id,
+      status: "PLANNING",
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!war) {
+    await interaction.editReply("There is no active war in Planning phase.");
+    return;
+  }
+
+  // 4. Fetch Fights
+  const fights = await prisma.warFight.findMany({
+    where: {
+      warId: war.id,
+      playerId: player.id,
+    },
+    include: {
+      node: {
+        include: {
+          allocations: {
+            include: {
+              nodeModifier: true,
+            },
+          },
+        },
+      },
+      defender: true,
+      attacker: true,
+      prefightChampions: {
+        include: {
+          champion: true,
+        },
+      },
+    },
+    orderBy: {
+      node: {
+        nodeNumber: "asc",
+      },
+    },
+  });
+
+  const targetNodeOption = interaction.options.getString("node");
+  let filteredFights = fights;
+  if (targetNodeOption) {
+    filteredFights = fights.filter(
+      (f) => f.node.nodeNumber.toString() === targetNodeOption
+    );
+  }
+
+  if (filteredFights.length === 0) {
+    await interaction.editReply(
+      targetNodeOption
+        ? `No assignment for node '${targetNodeOption}'.`
+        : `No assignments found for ${player.ingameName} in the current war.`
+    );
+    return;
+  }
+
+  // 5. Build Response
   const MAX_LENGTH = 3800;
   let components: TextDisplayBuilder[] = [];
   let currentLength = 0;
@@ -111,7 +164,7 @@ export async function handleDetails(interaction: ChatInputCommandInteraction) {
     if (components.length === 0) return;
 
     const container = new ContainerBuilder()
-      .setAccentColor(bgConfig.color)
+      .setAccentColor(bgColor)
       .addTextDisplayComponents(...components);
 
     if (isFirstMessage) {
@@ -132,11 +185,59 @@ export async function handleDetails(interaction: ChatInputCommandInteraction) {
   components.push(new TextDisplayBuilder().setContent(title));
   currentLength += title.length;
 
-  for (const assignment of filteredAssignments) {
-    let assignmentText = `**Node ${assignment.node}**\n- ${assignment.value}\n`;
-    const nodeDetails = nodeLookup[assignment.node];
-    if (nodeDetails) {
-      assignmentText += nodeDetails;
+  for (const fight of filteredFights) {
+    const nodeNumber = fight.node.nodeNumber;
+    const defenderName = fight.defender?.name || "Unknown";
+    const defenderEmoji = await getEmoji(defenderName);
+
+    const attackerName = fight.attacker?.name || "Any";
+    const attackerEmoji = await getEmoji(attackerName);
+
+    let assignmentText = `**Node ${nodeNumber}**\n`;
+    assignmentText += `- ${attackerEmoji} **${attackerName}** vs ${defenderEmoji} **${defenderName}**`;
+
+    // Add Prefights
+    if (fight.prefightChampions.length > 0) {
+      const prefightNames = await Promise.all(
+        fight.prefightChampions.map(async (p) => {
+          const emoji = await getEmoji(p.champion.name);
+          return `${emoji} ${p.champion.name}`;
+        })
+      );
+      assignmentText += ` (Prefight: ${prefightNames.join(", ")})`;
+    }
+
+    assignmentText += "\n";
+
+    // Add Note if exists
+    if (fight.notes) {
+      assignmentText += `- Note: ${fight.notes}\n`;
+    }
+
+    // Add Node Details (Static + Modifiers)
+    let nodeDetailsText = "";
+    if (fight.node.description) {
+      nodeDetailsText += `${fight.node.description}\n`;
+    }
+
+    // Filter and add modifiers
+    const activeAllocations = fight.node.allocations.filter((a) => {
+      // Check map type
+      if (a.mapType !== war.mapType) return false;
+      // Check season (if allocation has season, it must match)
+      if (a.season !== null && a.season !== war.season) return false;
+      // Check tier
+      if (a.minTier !== null && war.warTier < a.minTier) return false;
+      if (a.maxTier !== null && war.warTier > a.maxTier) return false;
+      return true;
+    });
+
+    for (const alloc of activeAllocations) {
+      nodeDetailsText += `\n**${alloc.nodeModifier.name}**: ${alloc.nodeModifier.description}`;
+    }
+
+    if (nodeDetailsText) {
+      assignmentText += `\n**Node Details:**\n${nodeDetailsText}\n`;
     }
 
     if (currentLength + assignmentText.length > MAX_LENGTH) {
