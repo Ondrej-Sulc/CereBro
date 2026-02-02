@@ -3,6 +3,7 @@ import { prisma } from '../prismaService';
 import { getEmoji, capitalize } from '../../commands/aw/utils';
 import { MapImageService, NodeAssignment, LegendItem } from '../mapImageService';
 import { warNodesData, warNodesDataBig } from '../../data/war-planning/nodes-data';
+import { getPathInfo } from '../../data/war-planning/path-logic';
 import { WarMapType } from '@prisma/client';
 import logger from '../loggerService';
 import { getChampionImageUrl } from '../../utils/championHelper';
@@ -405,11 +406,35 @@ export async function distributeWarPlan(
                 // Sort for legend display (alphabetical is fine for legend, color is already fixed)
                 distinctPlayers.sort().forEach((name) => {
                     const pObj = bgFights.find(f => f.player?.ingameName === name)?.player;
+                    const pFights = bgFights.filter(f => f.player?.ingameName === name);
+                    
+                    let pathLabel = "";
+                    if (pFights.length > 0) {
+                        if (mapType === WarMapType.BIG_THING) {
+                            const nodes = pFights.map(f => f.node.nodeNumber).sort((a, b) => a - b);
+                            pathLabel = `Node ${nodes.join(", ")}`;
+                        } else {
+                            const s1Paths = new Set<number>();
+                            const s2Paths = new Set<number>();
+                            
+                            pFights.forEach(f => {
+                                const info = getPathInfo(f.node.nodeNumber);
+                                if (info?.section === 1) s1Paths.add(info.path);
+                                if (info?.section === 2) s2Paths.add(info.path);
+                            });
+
+                            const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a,b)=>a-b).join(",")}` : "-";
+                            const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a,b)=>a-b).join(",")}` : "-";
+                            pathLabel = `${s1Str} / ${s2Str}`;
+                        }
+                    }
+
                     if (pObj && globalColorMap.has(pObj.id)) {
                         legend.push({
                             name: name!,
                             color: globalColorMap.get(pObj.id)!,
-                            championImage: pObj.avatar || undefined
+                            championImage: pObj.avatar || undefined,
+                            pathLabel
                         });
                     }
                 });

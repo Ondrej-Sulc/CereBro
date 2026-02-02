@@ -20,6 +20,7 @@ export interface LegendItem {
     name: string;
     color: string;
     championImage?: string; // Optional avatar
+    pathLabel?: string; // e.g. "P1 / P2"
 }
 
 export class MapImageService {
@@ -540,11 +541,23 @@ export class MapImageService {
                     legendSvg += `
                         <text x="${legendX + 85}" y="${legendY + 6}" font-family="sans-serif" font-size="18" fill="#cbd5e1">${item.name}</text>
                     `;
+                    // Path Label
+                    if (item.pathLabel) {
+                        legendSvg += `
+                            <text x="${legendX + 85}" y="${legendY + 24}" font-family="sans-serif" font-size="14" fill="#64748b">${item.pathLabel}</text>
+                        `;
+                    }
                 } else {
                     // Name without avatar
                      legendSvg += `
                         <text x="${legendX + 35}" y="${legendY + 6}" font-family="sans-serif" font-size="18" fill="#cbd5e1">${item.name}</text>
                     `;
+                    // Path Label
+                    if (item.pathLabel) {
+                        legendSvg += `
+                            <text x="${legendX + 35}" y="${legendY + 24}" font-family="sans-serif" font-size="14" fill="#64748b">${item.pathLabel}</text>
+                        `;
+                    }
                 }
                 
                 legendY += 60;
