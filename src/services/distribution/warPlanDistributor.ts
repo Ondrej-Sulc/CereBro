@@ -254,6 +254,55 @@ export async function distributeWarPlan(
         return result;
     }
 
+    // --- Fetch Roster Data for Attackers ---
+    const allAttackerPlayerIds = new Set<string>();
+    const allAttackerChampionIds = new Set<number>();
+
+    war.fights.forEach(f => {
+        if (f.playerId) allAttackerPlayerIds.add(f.playerId);
+        if (f.attackerId) allAttackerChampionIds.add(f.attackerId);
+    });
+    war.extraChampions.forEach(e => {
+        if (e.playerId) allAttackerPlayerIds.add(e.playerId);
+        if (e.championId) allAttackerChampionIds.add(e.championId);
+    });
+    // Prefights can also have different players
+    war.fights.forEach(f => {
+        f.prefightChampions.forEach(pf => {
+            if (pf.playerId) allAttackerPlayerIds.add(pf.playerId);
+            if (pf.championId) allAttackerChampionIds.add(pf.championId);
+        });
+    });
+
+    const rosterEntries = await prisma.roster.findMany({
+        where: {
+            playerId: { in: Array.from(allAttackerPlayerIds) },
+            championId: { in: Array.from(allAttackerChampionIds) }
+        },
+        select: {
+            playerId: true,
+            championId: true,
+            stars: true,
+            rank: true,
+            sigLevel: true
+        },
+        orderBy: [
+            { stars: 'desc' },
+            { rank: 'desc' }
+        ]
+    });
+
+    // Map: playerId -> Map: championId -> { stars, rank, sigLevel } (Best one)
+    const bestRosterMap = new Map<string, Map<number, { stars: number, rank: number, sigLevel: number }>>();
+    rosterEntries.forEach(r => {
+        if (!bestRosterMap.has(r.playerId)) bestRosterMap.set(r.playerId, new Map());
+        const playerMap = bestRosterMap.get(r.playerId)!;
+        if (!playerMap.has(r.championId)) {
+            // Since it's ordered by stars desc, rank desc, the first one we see is the best
+            playerMap.set(r.championId, { stars: r.stars, rank: r.rank, sigLevel: r.sigLevel });
+        }
+    });
+
     // Pre-process Prefights (Who places what)
     // Map<PlayerID, PrefightTask[]>
     const playerPrefightTasks = new Map<string, any[]>();
@@ -269,6 +318,7 @@ export async function distributeWarPlan(
 
                     if (!playerPrefightTasks.has(placerId)) playerPrefightTasks.set(placerId, []);
                     playerPrefightTasks.get(placerId)!.push({
+                        championId: pf.champion.id,
                         championName: pf.champion.name,
                         championClass: pf.champion.class,
                         championImage,
@@ -464,12 +514,13 @@ export async function distributeWarPlan(
                 const mapName = war.mapType === WarMapType.BIG_THING ? "Big Thing" : "Standard";
                 const seasonInfo = `📅 Season ${war.season} | War ${war.warNumber || '?'} | Tier ${war.warTier}`;
                 const matchInfo = `⚔️ ${alliance.name} vs ${war.enemyAlliance || 'Unknown Opponent'}`;
+                const planLink = `${config.botBaseUrl}/planning/${war.id}`;
                 
                 const container = new ContainerBuilder().setAccentColor(parseInt(accentColor.replace('#', ''), 16));
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
                      `## 🗺️ Battlegroup ${bg} War Plan\n` +
                      `**${matchInfo}**\n` +
-                     `${seasonInfo} (🗺️ ${mapName})`
+                     `${seasonInfo} (🗺️ ${mapName}) | [View Full Plan on Web](${planLink})`
                 ));
                  container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(
                     new MediaGalleryItemBuilder()
@@ -546,30 +597,41 @@ export async function distributeWarPlan(
         const mapName = war.mapType === WarMapType.BIG_THING ? "Big Thing" : "Standard";
         const seasonInfo = `📅 Season ${war.season} | War ${war.warNumber || '?'} | Tier ${war.warTier}`;
         const matchInfo = `⚔️ ${alliance.name} vs ${war.enemyAlliance || 'Unknown Opponent'}`;
+        const planLink = `${config.botBaseUrl}/planning/${war.id}`;
 
         container.addTextDisplayComponents(
             new TextDisplayBuilder().setContent(
                 `## AW Plan for ${playerObj.ingameName}\n` +
                 `**${matchInfo}**\n` +
-                `${seasonInfo} (🗺️ ${mapName})`
+                `${seasonInfo} (🗺️ ${mapName}) | [View Full Plan on Web](${planLink})`
             )
         );
         container.addSeparatorComponents(new SeparatorBuilder());
 
         // 2. Team (Unique Attackers + Prefight Champs + Extra Champs)
-        const attackers = new Set<string>();
+        const attackers = new Map<number, string>(); // championId -> name
         fights.forEach((f: any) => {
-            if (f.attacker?.name) attackers.add(f.attacker.name);
+            if (f.attacker) attackers.set(f.attacker.id, f.attacker.name);
         });
-        myPrefights.forEach((p: any) => attackers.add(p.championName));
+        myPrefights.forEach((p: any) => attackers.set(p.championId, p.championName));
         myExtras.forEach((e: any) => {
-            if (e.champion?.name) attackers.add(e.champion.name);
+            if (e.champion) attackers.set(e.champion.id, e.champion.name);
         });
 
         if (attackers.size > 0) {
-            const attackerNames = Array.from(attackers);
-            const emojis = await Promise.all(attackerNames.map(n => getEmoji(n, client)));
-            const teamString = "**Your Team:**\n" + attackerNames.map((n, i) => `${emojis[i]} **${n}**`).join(" ");
+            const attackerEntries = Array.from(attackers.entries());
+            const teamLines = await Promise.all(attackerEntries.map(async ([id, name]) => {
+                const emoji = await getEmoji(name, client);
+                const roster = bestRosterMap.get(playerObj.id)?.get(id);
+                let info = "";
+                if (roster) {
+                    const starSymbol = roster.sigLevel > 0 ? "★" : "☆";
+                    info = ` ${roster.stars}${starSymbol} R${roster.rank}`;
+                }
+                return `${emoji} **${name}**${info}`;
+            }));
+
+            const teamString = "**Your Team:**\n" + teamLines.join(" ");
             container.addTextDisplayComponents(
                 new TextDisplayBuilder().setContent(teamString)
             );

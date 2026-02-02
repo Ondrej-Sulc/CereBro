@@ -75,6 +75,29 @@ export async function distributeDefensePlan(
         return result;
     }
 
+    // --- Fetch Roster Data for Ranks ---
+    const placementPlayerIds = Array.from(new Set(plan.placements.map(p => p.playerId).filter(Boolean))) as string[];
+    const placementChampionIds = Array.from(new Set(plan.placements.map(p => p.defenderId).filter(Boolean))) as number[];
+
+    const rosterEntries = await prisma.roster.findMany({
+        where: {
+            playerId: { in: placementPlayerIds },
+            championId: { in: placementChampionIds }
+        },
+        select: {
+            playerId: true,
+            championId: true,
+            stars: true,
+            rank: true,
+            sigLevel: true
+        }
+    });
+
+    const rosterMap = new Map<string, { rank: number, sigLevel: number }>(); // "playerId-championId-stars" -> {rank, sigLevel}
+    rosterEntries.forEach(r => {
+        rosterMap.set(`${r.playerId}-${r.championId}-${r.stars}`, { rank: r.rank, sigLevel: r.sigLevel });
+    });
+
     // 1. Prepare Global Node & Image Data
     const bgNodeMaps = new Map<number, Map<number, NodeAssignment>>();
     const uniqueImageUrls = new Set<string>();
@@ -387,12 +410,23 @@ export async function distributeDefensePlan(
         
         const lines = await Promise.all(sortedPlacements.map(async (p) => {
             const champName = p.defender?.name || "Unknown Champion";
-            const stars = p.starLevel ? `${p.starLevel}★` : "";
-            // We don't have rank in placement directly unless it comes from defender data or we fetch roster...
+            const starsNum = p.starLevel;
+            
+            let stars = "";
+            let rank = "";
+            if (p.playerId && p.defenderId && starsNum) {
+                const r = rosterMap.get(`${p.playerId}-${p.defenderId}-${starsNum}`);
+                const starSymbol = (r && r.sigLevel > 0) ? "★" : "☆";
+                stars = starsNum ? `${starsNum}${starSymbol}` : "";
+                if (r) rank = ` R${r.rank}`;
+            } else if (starsNum) {
+                stars = `${starsNum}☆`;
+            }
+
             // Use champion emoji
             const emoji = await getEmoji(champName, client);
             
-            return `- **Node ${p.node.nodeNumber}**: ${emoji} **${champName}** ${stars}`;
+            return `- **Node ${p.node.nodeNumber}**: ${emoji} **${champName}** ${stars}${rank}`;
         }));
 
         container.addTextDisplayComponents(
