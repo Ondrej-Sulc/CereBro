@@ -79,7 +79,12 @@ export default function NodeEditor({
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
-  const [prefights, setPrefights] = useState<{ championId: number; playerId: string | null }[]>([]);
+  const [prefights, setPrefights] = useState<{ championId: number; playerId: string | null }[]>(
+    currentFight?.prefightChampions?.map(c => ({
+        championId: c.id,
+        playerId: c.player?.id || null
+    })) || []
+  );
   const [playerId, setPlayerId] = useState<string | undefined>(currentFight?.playerId || undefined);
   const [deaths, setDeaths] = useState<number>(currentFight?.death || 0);
   const [notes, setNotes] = useState<string>(currentFight?.notes || "");
@@ -486,7 +491,8 @@ export default function NodeEditor({
               <PrefightSelector
                 prefights={prefights}
                 onChange={handlePrefightsChange}
-                champions={prefightChampionsList}
+                availableChampions={prefightChampionsList}
+                allChampions={champions}
                 players={bgPlayers}
                 disabled={isReadOnly}
               />

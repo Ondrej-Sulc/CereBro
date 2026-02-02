@@ -40,7 +40,7 @@ export async function distributeWarPlan(
                     defender: { include: { tags: true } },
                     node: true,
                     player: true,
-                    prefightChampions: { include: { champion: true } }
+                    prefightChampions: { include: { champion: true, player: true } }
                 }
             },
             extraChampions: {
@@ -83,6 +83,32 @@ export async function distributeWarPlan(
         }
     });
 
+    // --- Global Color Assignment (Moved Up) ---
+    // 1. Collect all unique players involved in the war
+    const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
+    war.fights.forEach(f => {
+        if (f.player) {
+            allPlayers.set(f.player.id, { 
+                id: f.player.id, 
+                name: f.player.ingameName, 
+                bg: f.battlegroup 
+            });
+        }
+    });
+
+    // 2. Sort them: BG (asc), then Name (asc)
+    const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => {
+        if (a.bg !== b.bg) return a.bg - b.bg;
+        return a.name.localeCompare(b.name);
+    });
+
+    // 3. Assign Colors
+    const globalColorMap = new Map<string, string>(); // PlayerID -> Color
+    sortedPlayers.forEach((p, index) => {
+        const color = MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length];
+        globalColorMap.set(p.id, color);
+    });
+
     // 1. Prepare Global Node & Image Data
     const bgNodeMaps = new Map<number, Map<number, NodeAssignment>>();
     const uniqueImageUrls = new Set<string>();
@@ -104,12 +130,16 @@ export async function distributeWarPlan(
             uniqueImageUrls.add(attackerImage);
         }
 
-        // Collect Prefight Images
+        // Collect Prefight Images with Border Colors
+        const prefightImages: { url: string; borderColor: string }[] = [];
         if (fight.prefightChampions?.length > 0) {
             for (const pf of fight.prefightChampions) {
                 if (pf.champion?.images) {
                     const pfImg = getChampionImageUrl(pf.champion.images, '128', 'primary');
                     uniqueImageUrls.add(pfImg);
+                    
+                    const borderColor = (pf.player?.id && globalColorMap.get(pf.player.id)) || '#94a3b8';
+                    prefightImages.push({ url: pfImg, borderColor });
                 }
             }
         }
@@ -125,6 +155,7 @@ export async function distributeWarPlan(
             attackerImage,
             attackerClass: fight.attacker?.class,
             isTarget: false, // Default
+            prefightImages, // Added
             isAttackerTactic,
             isDefenderTactic
         });
@@ -339,32 +370,6 @@ export async function distributeWarPlan(
         3: alliance.battlegroup3Color || "#3b82f6"
     };
 
-    // --- Global Color Assignment (Mirrors Web UI) ---
-    // 1. Collect all unique players involved in the war
-    const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
-    war.fights.forEach(f => {
-        if (f.player) {
-            allPlayers.set(f.player.id, { 
-                id: f.player.id, 
-                name: f.player.ingameName, 
-                bg: f.battlegroup 
-            });
-        }
-    });
-
-    // 2. Sort them: BG (asc), then Name (asc)
-    const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => {
-        if (a.bg !== b.bg) return a.bg - b.bg;
-        return a.name.localeCompare(b.name);
-    });
-
-    // 3. Assign Colors
-    const globalColorMap = new Map<string, string>(); // PlayerID -> Color
-    sortedPlayers.forEach((p, index) => {
-        const color = MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length];
-        globalColorMap.set(p.id, color);
-    });
-
     // --- Overview Map Distribution ---
     if (!targetPlayerId) {
         // Iterate over unique BGs in the current scope
@@ -484,18 +489,6 @@ export async function distributeWarPlan(
         fights.forEach((f: any) => {
             const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
             assignments.set(f.node.nodeNumber, { ...existing, isTarget: true });
-        });
-
-        // Mark player Prefights
-        myPrefights.forEach((pf: any) => {
-            const existing = assignments.get(pf.targetNode);
-            if (existing) {
-                assignments.set(pf.targetNode, {
-                    ...existing,
-                    prefightImage: pf.championImage,
-                    prefightClass: pf.championClass
-                });
-            }
         });
 
         let mapAttachment: AttachmentBuilder | undefined;

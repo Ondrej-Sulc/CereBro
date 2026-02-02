@@ -163,6 +163,14 @@ interface CanvasNodeProps {
     accentColor?: string;
 }
 
+// Helper to mute color (Hex -> RGBA)
+const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 export const CanvasNode = memo(function CanvasNode({
     node,
     fight,
@@ -258,7 +266,7 @@ export const CanvasNode = memo(function CanvasNode({
         shadowBlur = 10;
     } else if (isPlayerHighlighted && playerColor) {
         borderColor = playerColor;
-        borderWidth = 4;
+        borderWidth = 5;
         shadowColor = playerColor;
         shadowBlur = 15;
     } else if (isPrefightHighlighted) {
@@ -268,10 +276,23 @@ export const CanvasNode = memo(function CanvasNode({
         shadowBlur = 15;
     } else if (playerColor) {
         borderColor = playerColor;
-        borderWidth = 2;
+        borderWidth = 3;
     }
 
-    const pillFill = "rgba(15, 23, 42, 0.95)";
+    const defaultPillFill = "rgba(15, 23, 42, 0.95)";
+    
+    // Calculate fill opacity based on state
+    let fillOpacity = 0.25;
+    if (isPlayerHighlighted) fillOpacity = 0.6;
+    
+    const currentPillFill = playerColor ? hexToRgba(playerColor, fillOpacity) : defaultPillFill;
+    
+    // New Logic for Node Tag Visualization
+    const nodeTagFill = playerColor || defaultPillFill;
+    const nodeTagStroke = isSelected ? borderColor : (playerColor || borderColor);
+    // If assigned (playerColor exists), use Dark text on the bright background. 
+    // Otherwise use existing logic (White if selected, Cyan if prefight, or Slate if default)
+    const nodeTagTextFill = playerColor ? "#0f172a" : (isSelected ? "#ffffff" : (isPrefightHighlighted ? prefightHighlightColor : "#cbd5e1"));
 
     return (
         <Group 
@@ -296,8 +317,8 @@ export const CanvasNode = memo(function CanvasNode({
                     width={28}
                     height={18}
                     cornerRadius={4}
-                    fill={pillFill}
-                    stroke={borderColor}
+                    fill={nodeTagFill}
+                    stroke={nodeTagStroke}
                     strokeWidth={borderWidth}
                 />
                 <Text
@@ -305,7 +326,7 @@ export const CanvasNode = memo(function CanvasNode({
                     fontSize={11}
                     fontFamily="monospace"
                     fontStyle="bold"
-                    fill={isSelected ? "#ffffff" : (isPlayerHighlighted && playerColor ? playerColor : (isPrefightHighlighted ? prefightHighlightColor : (playerColor || "#cbd5e1")))}
+                    fill={nodeTagTextFill}
                     align="center"
                     width={28}
                     y={-9 + 4} // Vertical center adjustment
@@ -320,7 +341,7 @@ export const CanvasNode = memo(function CanvasNode({
                 width={pillWidth}
                 height={pillHeight}
                 cornerRadius={nodeRadius}
-                fill={pillFill}
+                fill={currentPillFill}
                 stroke={borderColor}
                 strokeWidth={borderWidth}
                 shadowColor={shadowColor}
@@ -373,18 +394,20 @@ export const CanvasNode = memo(function CanvasNode({
 
             {/* Prefights */}
             {hasPrefight && prefightChampions && (
-                <Group y={nodeRadius + 8} x={-(prefightChampions.length * 10) + 10}>
+                <Group y={nodeRadius + 12} x={-(prefightChampions.length * 13) + 13}>
                     {prefightChampions.map((champ, i: number) => {
                         const isPlacedByHighlight = champ.player?.id === highlightedPlayerId;
+                        const pfPlayerColor = getPlayerColor(champ.player?.id);
+                        
                         return (
                         <CircularImage
                             key={`pf-${i}`}
                             src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64')}
-                            x={i * 20}
+                            x={i * 26}
                             y={0}
-                            radius={9}
-                            border={isPlacedByHighlight ? 2 : 1}
-                            borderColor={isPlacedByHighlight ? prefightHighlightColor : "#94a3b8"}
+                            radius={12}
+                            border={isPlacedByHighlight ? 3 : 2}
+                            borderColor={pfPlayerColor || (isPlacedByHighlight ? prefightHighlightColor : "#94a3b8")}
                         />
                     )})}
                 </Group>

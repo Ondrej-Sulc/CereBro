@@ -18,7 +18,8 @@ interface PrefightEntry {
 interface PrefightSelectorProps {
   prefights: PrefightEntry[];
   onChange: (newPrefights: PrefightEntry[]) => void;
-  champions: Champion[];
+  availableChampions: Champion[];
+  allChampions: Champion[];
   players: PlayerWithRoster[];
   disabled?: boolean;
 }
@@ -26,7 +27,8 @@ interface PrefightSelectorProps {
 export function PrefightSelector({
   prefights,
   onChange,
-  champions,
+  availableChampions,
+  allChampions,
   players,
   disabled = false
 }: PrefightSelectorProps) {
@@ -61,7 +63,8 @@ export function PrefightSelector({
       {/* List of existing prefights */}
       <div className="space-y-2">
         {prefights.map((p) => {
-          const champ = champions.find(c => c.id === p.championId);
+          // Use allChampions for lookup to ensure we display even if not in available list
+          const champ = allChampions.find(c => c.id === p.championId) || availableChampions.find(c => c.id === p.championId);
           if (!champ) return null;
 
           // Filter players who own this champion vs those who don't
@@ -127,7 +130,7 @@ export function PrefightSelector({
           <div className="flex gap-2 items-center animate-in fade-in zoom-in-95 duration-200">
               <div className="flex-1">
                   <ChampionCombobox
-                      champions={champions}
+                      champions={availableChampions}
                       value=""
                       onSelect={handleAdd}
                       placeholder="Search champion..."

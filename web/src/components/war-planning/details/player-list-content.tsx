@@ -106,7 +106,7 @@ export const PlayerListContent = ({
                     // Need to find class for prefight champion
                     const fullChamp = champions.find(c => c.id === pf.id);
                     if (fullChamp) {
-                        addChamp(pf.player.id, pf.id, pf.name, pf.images, fullChamp.class);
+                        addChamp(pf.player.id, pf.id, fullChamp.name, fullChamp.images, fullChamp.class);
                     }
                 }
             });

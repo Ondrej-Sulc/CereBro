@@ -10,8 +10,7 @@ export interface NodeAssignment {
     attackerImage?: string;
     attackerClass?: ChampionClass;
     isTarget: boolean; // True if assigned to the player receiving the plan
-    prefightImage?: string; // Image of the prefight champion placed by the player
-    prefightClass?: ChampionClass;
+    prefightImages?: { url: string; borderColor: string }[]; // Updated to support multiple prefights with colors
     assignedColor?: string; // Color for the node border (for overview map)
     isAttackerTactic?: boolean;
     isDefenderTactic?: boolean;
@@ -128,6 +127,13 @@ export class MapImageService {
             if (assignment.attackerImage && !imageCache.has(assignment.attackerImage)) {
                 uniqueUrls.add(assignment.attackerImage);
             }
+            if (assignment.prefightImages) {
+                assignment.prefightImages.forEach(pf => {
+                    if (pf.url && !imageCache.has(pf.url)) {
+                        uniqueUrls.add(pf.url);
+                    }
+                });
+            }
         });
 
         if (legend) {
@@ -174,6 +180,13 @@ export class MapImageService {
             .toBuffer();
 
         return buffer;
+    }
+
+    private static hexToRgba(hex: string, alpha: number): string {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
     private static buildSvg(
@@ -249,6 +262,7 @@ export class MapImageService {
                     dominant-baseline: central;
                 }
                 .badge-text-highlight { fill: ${this.HIGHLIGHT_TEXT}; }
+                .badge-text-dark { fill: #0f172a; }
                 .border-default { stroke: ${this.LINE_COLOR}; stroke-width: 2; }
                 .border-highlight { stroke: ${this.HIGHLIGHT_BORDER}; stroke-width: 4; filter: url(#glow); }
                 .border-prefight { stroke: ${this.HIGHLIGHT_PREFIGHT}; stroke-width: 3; filter: url(#glow); }
@@ -312,26 +326,33 @@ export class MapImageService {
 
             const assignment = assignments.get(Number(node.id));
             const isTarget = assignment?.isTarget;
-            const prefightImg = assignment?.prefightImage;
+            const prefightImages = assignment?.prefightImages || [];
             
             // Colors
             let borderProps = isTarget ? `class="node-fill border-highlight"` : `class="node-fill border-default"`;
             let badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
             let badgeStrokeVal = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
-
-            if (assignment?.assignedColor && !isTarget) {
-                borderProps = `class="node-fill" style="stroke: ${assignment.assignedColor}; stroke-width: 3"`;
+            let badgeFillVal = "rgba(15, 23, 42, 0.95)"; // Default dark fill
+            
+            // Override fill for assigned player
+            if (assignment?.assignedColor) {
+                const mutedFill = MapImageService.hexToRgba(assignment.assignedColor, 0.25);
+                borderProps = `style="fill: ${mutedFill}; stroke: ${assignment.assignedColor}; stroke-width: 3"`;
                 badgeStrokeVal = assignment.assignedColor;
-                // Keep text color default unless target, or maybe make it white?
-                if (!isTarget) {
-                     badgeTextColorClass = "badge-text"; // Keep default
-                }
+                
+                // For badge, use solid color for fill
+                badgeFillVal = assignment.assignedColor;
+                
+                // For badge text, use dark color
+                badgeTextColorClass = "badge-text badge-text-dark";
+            } else if (isTarget) {
+                 // Keep target logic if needed, but usually assignedColor covers it
+                 // If isTarget but no assignedColor (e.g. self target in my-plan?)
             }
 
             // Class Colors
             const attColor = assignment?.attackerClass ? MapImageService.CLASS_COLORS[assignment.attackerClass] : '#94a3b8';
             const defColor = assignment?.defenderClass ? MapImageService.CLASS_COLORS[assignment.defenderClass] : '#94a3b8';
-            const pfColor = assignment?.prefightClass ? MapImageService.CLASS_COLORS[assignment.prefightClass] : '#94a3b8';
 
             const r = 32; 
             const pillH = r * 2;
@@ -400,62 +421,59 @@ export class MapImageService {
 
             innerContent += `
                 <g transform="translate(0, ${badgeY})">
-                    <rect x="${-badgeW/2}" y="${-badgeH/2}" width="${badgeW}" height="${badgeH}" rx="4" class="node-fill" stroke="${badgeStrokeVal}" stroke-width="2" />
+                    <rect x="${-badgeW/2}" y="${-badgeH/2}" width="${badgeW}" height="${badgeH}" rx="4" fill="${badgeFillVal}" stroke="${badgeStrokeVal}" stroke-width="2" />
                     <text x="0" y="0" class="${badgeTextColorClass}">${node.id}</text>
                 </g>
             `;
 
-            // --- C. Prefight Badge (Bottom) ---
-            if (prefightImg && imageCache.has(prefightImg)) {
-                const pfBase64 = imageCache.get(prefightImg);
-                const pfR = 18; 
-                const pfY = r;
+            // --- C. Prefight Badges (Bottom) ---
+            if (prefightImages.length > 0) {
+                const pfR = 12; // Radius 12
+                const spacing = 26; // 26px spacing
+                // Start X to center the group
+                const startX = -((prefightImages.length * spacing) / 2) + (spacing / 2);
+                const pfY = r + 12;
+
+                innerContent += `<g transform="translate(0, ${pfY})">`;
                 
-                innerContent += `
-                    <g transform="translate(0, ${pfY})">
-                        <circle r="${pfR}" class="node-fill border-prefight" />
-                        
-                        <circle cx="0" cy="0" r="${pfR-2}" fill="${pfColor}" opacity="0.4" />
-                        <g clip-path="url(#clip-${node.id}-PF)">
-                            <image href="${pfBase64}" x="${-pfR+2}" y="${-pfR+2}" width="${(pfR-2)*2}" height="${(pfR-2)*2}" preserveAspectRatio="xMidYMid slice" />
-                        </g>
-                        <defs><clipPath id="clip-${node.id}-PF"><circle cx="0" cy="0" r="${pfR-2}" /></clipPath></defs>
-                        <circle cx="0" cy="0" r="${pfR-2}" fill="none" stroke="${pfColor}" stroke-width="1.5" />
-                    </g>
-                `;
+                prefightImages.forEach((pf, i) => {
+                    if (pf.url && imageCache.has(pf.url)) {
+                        const pfBase64 = imageCache.get(pf.url);
+                        const xPos = startX + (i * spacing);
+                        const borderColor = pf.borderColor || '#94a3b8';
+
+                        innerContent += `
+                            <g transform="translate(${xPos}, 0)">
+                                <circle r="${pfR}" fill="#0f172a" stroke="${borderColor}" stroke-width="2" />
+                                <g clip-path="url(#clip-${node.id}-PF-${i})">
+                                    <image href="${pfBase64}" x="${-pfR}" y="${-pfR}" width="${pfR*2}" height="${pfR*2}" preserveAspectRatio="xMidYMid slice" />
+                                </g>
+                                <defs><clipPath id="clip-${node.id}-PF-${i}"><circle cx="0" cy="0" r="${pfR}" /></clipPath></defs>
+                            </g>
+                        `;
+                    }
+                });
+
+                innerContent += `</g>`;
             }
 
             // --- D. Tactic Badges (Attack/Defense) ---
             const badgeOffset = Math.floor(r * 0.7); // 45 deg approx
-            const badgeR = 8;
-            const iconSize = 10;
+            const badgeR = 11;
+            const iconSize = 14;
             
-            // Attacker Badge (Left-Top relative to node center, or shifted if pill)
+            // Attacker Badge
             if (assignment?.isAttackerTactic) {
-                // If pill, shift further left. If circle, standard offset.
-                // The pill center is at 0,0. Left side is at -pillW/4 = -32.
-                // Attacker img center is -32. 
-                // In canvas-node, xPos = -offset - 6. Here we need to account for pill layout.
-                
-                let badgeX = -badgeOffset - 6;
-                // If Attacker Image exists (Pill layout), attacker is at x = -r*4/4 = -r = -32.
+                let badgeX = -badgeOffset - 8;
                 if (assignment.attackerImage && assignment.defenderImage) {
-                    badgeX = (-r * 4 / 4) - badgeOffset - 6 + 32; // -32 - 22 - 6 = -60 relative to center... wait.
-                    // Actually, let's stick to the visual logic: Top-Left of the Attacker Image.
-                    // Attacker Circle center is (-32, 0).
-                    // Badge should be at (-32 - offset, -offset).
-                    badgeX = -32 - badgeOffset;
+                    badgeX = -32 - badgeOffset - 4;
                 }
-                
-                const badgeY = -badgeOffset - 6;
+                const badgeY = -badgeOffset - 8;
 
                 innerContent += `
                     <g transform="translate(${badgeX}, ${badgeY})">
-                        <!-- Shadow -->
                         <circle cx="1" cy="1" r="${badgeR}" fill="rgba(0,0,0,0.6)" />
-                        <!-- Background -->
                         <circle r="${badgeR}" fill="#022c22" stroke="#10b981" stroke-width="1" />
-                        <!-- Icon -->
                         <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
                              <path d="${MapImageService.SWORD_PATH}" stroke="#34d399" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
                         </g>
@@ -463,26 +481,18 @@ export class MapImageService {
                 `;
             }
 
-            // Defender Badge (Right-Top)
+            // Defender Badge
             if (assignment?.isDefenderTactic) {
-                let badgeX = badgeOffset + 6;
-                // If Pill layout, Defender is at x = 32.
+                let badgeX = badgeOffset + 8;
                 if (assignment.attackerImage && assignment.defenderImage) {
-                    badgeX = 32 + badgeOffset;
-                } else if (assignment.defenderImage) {
-                    // Standard Circle (Defender only) -> Center 0,0.
-                    // Badge at offset.
+                    badgeX = 32 + badgeOffset + 4;
                 }
-
-                const badgeY = -badgeOffset - 6;
+                const badgeY = -badgeOffset - 8;
 
                 innerContent += `
                     <g transform="translate(${badgeX}, ${badgeY})">
-                        <!-- Shadow -->
                         <circle cx="1" cy="1" r="${badgeR}" fill="rgba(0,0,0,0.6)" />
-                        <!-- Background -->
                         <circle r="${badgeR}" fill="#450a0a" stroke="#ef4444" stroke-width="1" />
-                        <!-- Icon -->
                         <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
                              <path d="${MapImageService.SHIELD_PATH}" fill="#f87171" />
                         </g>
