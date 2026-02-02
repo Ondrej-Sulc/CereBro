@@ -46,6 +46,11 @@ A unified suite of tools for managing Alliance War.
     *   **Smart Select:** Defense editor cross-references the selected player's roster to show "Smart Select" buttons (e.g., "7★ R3") for accurate tracking.
     *   **Conflict Detection:** When planning attacks, the editor warns if the selected attacker is already placed on defense in the **Active Defense Plan**.
     *   **Historical Data:** Shows matchup history, solos, deaths, and links to sample videos.
+*   **Enhanced Player Overview:**
+    *   **Assignment Tracking:** Real-time visual tracking of assigned attackers per player.
+    *   **Context-Aware:** Adapts to the map type:
+        *   **Standard Map:** Shows logic-based "Section/Path" assignments (e.g., `P1 / P9`).
+        *   **Big Thing:** Shows specific assigned node numbers (e.g., `Node 5`).
 *   **Defense Planner:**
     *   **Active Status:** Set a specific plan as "Active" to enable conflict checking during attack planning.
     *   **Filtering:** Supports Tier-based filtering of **Node Modifiers** so planners only see relevant rules.
@@ -53,7 +58,7 @@ A unified suite of tools for managing Alliance War.
 
 #### 3. Plan Distribution (`/aw plan` or Web "Share")
 *   **Workflow:** Officer creates plan in Web UI -> Distributes via Discord command or Web "Share" button.
-*   **Targeting:** Send to specific Battlegroups (BG1-3) or the entire alliance.
+*   **Targeting:** Send to specific Battlegroup (BG1-3) or the entire alliance.
 *   **Async Job:** Uses `DISTRIBUTE_WAR_PLAN` job to send personalized private threads (or DMs) to members.
 *   **Message Content:**
     *   **Visual Map:** Dynamic PNG generation (Pill style fights, Prefight highlighting).
@@ -81,13 +86,15 @@ A unified suite of tools for managing Alliance War.
 
 ### Season Overview & Analytics
 *   **Dashboard:** `/analysis/season-overview` tracks performance across the season.
-*   **Metrics:**
-    *   **Solo %:** Success rate calculation (vital for limited-fight maps).
-    *   **Deaths:** Tracked per player and alliance-wide (including manual "Enemy Deaths" tracking).
+*   **Unified Roster Table:** A compact, high-density view ranking all players across the alliance by performance (Deaths ascending, Fights descending).
+*   **Detailed Breakdown:**
+    *   **Categorization:** Tracks "Fights / Deaths" separately for **Path**, **Mini-Boss**, and **Boss** nodes.
+    *   **Battlegroup Intelligence:** Summary cards for each BG showing Group Solo%, Total Deaths, and Player counts.
+    *   **Death Distribution:** Global breakdown of where the alliance is losing points (e.g., "70% Path Deaths").
+*   **Mobile Experience:** Fully responsive layout that switches to detailed "Player Cards" on mobile devices, ensuring all stats are accessible without scrolling.
 *   **Deep Dive:**
     *   **Defense:** Analyze performance by Node (lethality) or Defender (placement history).
     *   **Matchups:** Analyze Attacker success rates and find "Best Counters".
-*   **Visuals:** "Combat Report" aesthetic with class-colored rings and animated progress bars.
 
 ### Profile & Roster Manager
 *   **Profile:** Switch/create/delete multiple MCOC accounts per user.
