@@ -89,8 +89,8 @@ A unified suite of tools for managing Alliance War.
 *   **Unified Roster Table:** A compact, high-density view ranking all players across the alliance by performance (Deaths ascending, Fights descending).
 *   **Detailed Breakdown:**
     *   **Categorization:** Tracks "Fights / Deaths" separately for **Path**, **Mini-Boss**, and **Boss** nodes.
-    *   **Battlegroup Intelligence:** Summary cards for each BG showing Group Solo%, Total Deaths, and Player counts.
-    *   **Death Distribution:** Global breakdown of where the alliance is losing points (e.g., "70% Path Deaths").
+    *   **Battlegroup Intelligence:** Integrated dashboard header for each BG showing Efficiency, Total Deaths, and Player counts.
+    *   **Death Distribution:** Visual breakdown of Path/Mini-Boss/Boss deaths integrated into the Global Performance card.
 *   **Mobile Experience:** Fully responsive layout that switches to detailed "Player Cards" on mobile devices, ensuring all stats are accessible without scrolling.
 *   **Deep Dive:**
     *   **Defense:** Analyze performance by Node (lethality) or Defender (placement history).

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
-import { Skull, Trophy, AlertTriangle, BarChart2, Lock } from "lucide-react";
+import { Skull, Trophy, AlertTriangle, BarChart2, Lock, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SeasonSelector } from "./season-selector";
 import { getChampionImageUrl } from "@/lib/championHelper";
@@ -368,102 +368,108 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
     
     return (
       <div className="container mx-auto p-4 sm:p-6 max-w-7xl space-y-8">
-        {/* Header */}
-        <div className="flex flex-col gap-6">
-          {/* Top Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                    <Trophy className="h-6 w-6 text-yellow-500" />
+        
+        {/* Unified Season Header */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Column: Context (Season Identity) */}
+            <Card className="lg:col-span-7 bg-slate-950/40 border-slate-800/60 p-6 flex flex-col justify-between gap-6 relative overflow-hidden group">
+                {/* Background Accent */}
+                <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-yellow-500/5 to-transparent pointer-events-none" />
+                
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 z-10">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                            <Trophy className="h-8 w-8 text-yellow-500" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black italic uppercase text-white tracking-tighter leading-none">
+                                Season Overview
+                            </h1>
+                            <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                {player.alliance?.name}
+                            </p>
+                        </div>
+                    </div>
+                    <SeasonSelector seasons={seasons} currentSeason={selectedSeason} />
                 </div>
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                        Season Overview
-                    </h1>
-                    <p className="text-sm text-slate-400 font-medium">
-                        {player.alliance?.name}
-                    </p>
+
+                <div className="grid grid-cols-3 gap-4 z-10 pt-4 border-t border-slate-800/60">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Current Season</span>
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-xl font-mono font-black text-slate-200">S{selectedSeason}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Wars Logged</span>
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-xl font-mono font-black text-slate-200">{totalWars}</span>
+                            <span className="text-[10px] text-slate-500 font-bold">WARS</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Active Map</span>
+                        <div className="flex items-center gap-2">
+                            {mapTypes.has("BIG_THING") ? (
+                                <span className="text-sm font-black text-purple-400 uppercase italic">Big Thing</span>
+                            ) : (
+                                <span className="text-sm font-black text-slate-400 uppercase italic">Standard</span>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <SeasonSelector seasons={seasons} currentSeason={selectedSeason} />
-          </div>
+            </Card>
 
-          {/* Stats Overview Bar */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
-                 <span className="text-xs text-slate-500 uppercase font-medium">Season</span>
-                 <span className="text-xl font-mono font-bold text-slate-200">{selectedSeason}</span>
-              </Card>
-              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
-                 <span className="text-xs text-slate-500 uppercase font-medium">Wars</span>
-                 <span className="text-xl font-mono font-bold text-slate-200">{totalWars}</span>
-              </Card>
-              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
-                 <span className="text-xs text-slate-500 uppercase font-medium">Global Solo %</span>
-                 <span className={cn(
-                     "text-xl font-mono font-bold",
-                     globalSoloRate >= 95 ? "text-emerald-400" : globalSoloRate >= 80 ? "text-slate-300" : "text-amber-500"
-                 )}>
-                     {globalSoloRate.toFixed(1)}%
-                 </span>
-              </Card>
-              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1">
-                 <span className="text-xs text-slate-500 uppercase font-medium">Total Deaths</span>
-                 <div className="flex items-center gap-2 text-red-400">
-                    <Skull className="w-4 h-4" />
-                    <span className="text-xl font-mono font-bold">{globalDeaths}</span>
-                 </div>
-              </Card>
-              <Card className="bg-slate-900/40 border-slate-800/60 p-4 flex flex-col justify-center items-center gap-1 col-span-2 lg:col-span-1">
-                 <span className="text-xs text-slate-500 uppercase font-medium">Map Type</span>
-                 <div className="flex items-center gap-2">
-                     {mapTypes.has("BIG_THING") && mapTypes.has("STANDARD") ? (
-                         <>
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
-                            <span className="text-sm font-bold text-amber-500">Mixed</span>
-                         </>
-                     ) : mapTypes.has("BIG_THING") ? (
-                         <>
-                            <AlertTriangle className="h-4 w-4 text-purple-400" />
-                            <span className="text-sm font-bold text-purple-400">Big Thing</span>
-                         </>
-                     ) : (
-                         <span className="text-sm font-bold text-slate-400">Standard</span>
-                     )}
-                 </div>
-              </Card>
-          </div>
+            {/* Right Column: Performance (Global Stats) */}
+            <Card className="lg:col-span-5 bg-slate-950/40 border-slate-800/60 p-6 flex flex-col justify-between gap-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-1 h-full bg-emerald-500/50" />
+                
+                <div className="flex justify-between items-start z-10">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-black uppercase text-slate-500 tracking-widest mb-1">Global Efficiency</span>
+                        <span className={cn(
+                            "text-4xl font-black italic font-mono leading-none tracking-tighter",
+                            globalSoloRate >= 95 ? "text-emerald-400" : globalSoloRate >= 80 ? "text-slate-200" : "text-amber-500"
+                        )}>
+                            {globalSoloRate.toFixed(1)}%
+                        </span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Total Deaths</span>
+                        <div className="flex items-center gap-2 text-red-400 bg-red-950/20 px-3 py-1 rounded border border-red-900/30">
+                            <Skull className="w-4 h-4" />
+                            <span className="text-xl font-mono font-black">{globalDeaths}</span>
+                        </div>
+                    </div>
+                </div>
 
-          {/* Death Distribution Bar */}
-          <div className="grid grid-cols-3 gap-4">
-              <Card className="bg-slate-900/40 border-slate-800/60 p-3 flex items-center justify-between border-l-4 border-l-slate-700">
-                  <span className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Path Deaths</span>
-                  <div className="flex items-center gap-2">
-                      <span className="text-lg font-mono font-black italic text-slate-300">{deathDistribution.path}</span>
-                      <span className="text-[10px] text-slate-600 font-mono">
-                        {globalDeaths > 0 ? ((deathDistribution.path / globalDeaths) * 100).toFixed(0) : 0}%
-                      </span>
-                  </div>
-              </Card>
-              <Card className="bg-slate-900/40 border-slate-800/60 p-3 flex items-center justify-between border-l-4 border-l-amber-900/50">
-                  <span className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Mini-Boss Deaths</span>
-                  <div className="flex items-center gap-2">
-                      <span className="text-lg font-mono font-black italic text-slate-300">{deathDistribution.miniBoss}</span>
-                      <span className="text-[10px] text-slate-600 font-mono">
-                        {globalDeaths > 0 ? ((deathDistribution.miniBoss / globalDeaths) * 100).toFixed(0) : 0}%
-                      </span>
-                  </div>
-              </Card>
-              <Card className="bg-slate-900/40 border-slate-800/60 p-3 flex items-center justify-between border-l-4 border-l-red-900/50">
-                  <span className="text-[10px] sm:text-xs font-black uppercase text-slate-500">Boss Deaths</span>
-                  <div className="flex items-center gap-2">
-                      <span className="text-lg font-mono font-black italic text-slate-300">{deathDistribution.boss}</span>
-                      <span className="text-[10px] text-slate-600 font-mono">
-                        {globalDeaths > 0 ? ((deathDistribution.boss / globalDeaths) * 100).toFixed(0) : 0}%
-                      </span>
-                  </div>
-              </Card>
-          </div>
+                <div className="flex items-center justify-between gap-2 pt-4 border-t border-slate-800/60 z-10">
+                    <div className="flex flex-col items-center flex-1">
+                        <span className="text-[9px] font-black uppercase text-slate-600 mb-1">Path</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-mono font-black text-slate-300">{deathDistribution.path}</span>
+                            <span className="text-[9px] text-slate-600">({globalDeaths > 0 ? ((deathDistribution.path / globalDeaths) * 100).toFixed(0) : 0}%)</span>
+                        </div>
+                    </div>
+                    <div className="w-px h-8 bg-slate-800/60" />
+                    <div className="flex flex-col items-center flex-1">
+                        <span className="text-[9px] font-black uppercase text-slate-600 mb-1">Mini-Boss</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-mono font-black text-slate-300">{deathDistribution.miniBoss}</span>
+                            <span className="text-[9px] text-slate-600">({globalDeaths > 0 ? ((deathDistribution.miniBoss / globalDeaths) * 100).toFixed(0) : 0}%)</span>
+                        </div>
+                    </div>
+                    <div className="w-px h-8 bg-slate-800/60" />
+                    <div className="flex flex-col items-center flex-1">
+                        <span className="text-[9px] font-black uppercase text-slate-600 mb-1">Boss</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-mono font-black text-slate-300">{deathDistribution.boss}</span>
+                            <span className="text-[9px] text-slate-600">({globalDeaths > 0 ? ((deathDistribution.boss / globalDeaths) * 100).toFixed(0) : 0}%)</span>
+                        </div>
+                    </div>
+                </div>
+            </Card>
         </div>
   
         {/* Interactive Unified Roster Grid */}
