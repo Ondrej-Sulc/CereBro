@@ -21,7 +21,7 @@ interface PlayerListPanelProps {
   champions: Champion[];
   war: War; // Add war prop
   isReadOnly?: boolean;
-  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
+  activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
 
 export const PlayerListPanel = ({

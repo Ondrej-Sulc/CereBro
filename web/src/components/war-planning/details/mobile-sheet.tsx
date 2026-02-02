@@ -41,7 +41,7 @@ interface MobileSheetProps {
   onAddExtra: (playerId: string, championId: number) => void;
   onRemoveExtra: (extraId: string) => void;
   isReadOnly?: boolean;
-  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
+  activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
 
 export function MobileSheet({
@@ -244,6 +244,7 @@ export function MobileSheet({
                     onClose={onClose}
                     war={war}
                     isReadOnly={isReadOnly}
+                    activeDefensePlan={activeDefensePlan}
                  />
                )}
             </div>

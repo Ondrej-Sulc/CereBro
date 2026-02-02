@@ -107,7 +107,8 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
         include: {
           placements: {
              select: {
-                 defenderId: true
+                 defenderId: true,
+                 playerId: true
              }
           }
         }

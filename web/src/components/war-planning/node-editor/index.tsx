@@ -52,7 +52,7 @@ interface NodeEditorProps {
   currentFights: FightWithNode[];
   extraChampions: ExtraChampion[];
   isReadOnly?: boolean;
-  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
+  activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
 
 export default function NodeEditor({
@@ -89,9 +89,9 @@ export default function NodeEditor({
 
   // Check if attacker is placed on defense in active plan
   const isAttackerOnDefense = useMemo(() => {
-    if (!attackerId || !activeDefensePlan?.placements) return false;
-    return activeDefensePlan.placements.some(p => p.defenderId === attackerId);
-  }, [attackerId, activeDefensePlan]);
+    if (!attackerId || !activeDefensePlan?.placements || !playerId) return false;
+    return activeDefensePlan.placements.some(p => p.defenderId === attackerId && p.playerId === playerId);
+  }, [attackerId, activeDefensePlan, playerId]);
 
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {

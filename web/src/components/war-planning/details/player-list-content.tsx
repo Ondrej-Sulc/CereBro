@@ -29,7 +29,7 @@ interface PlayerListContentProps {
   onClose?: () => void; 
   war: War; // Add war prop
   isReadOnly?: boolean;
-  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
+  activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
 
 export const PlayerListContent = ({
@@ -51,8 +51,8 @@ export const PlayerListContent = ({
   // Determine champion limit based on map type
   const championLimit = war.mapType === WarMapType.BIG_THING ? 2 : 3;
 
-  const isChampionOnDefense = (championId: number) => {
-      return activeDefensePlan?.placements?.some(p => p.defenderId === championId) ?? false;
+  const isChampionOnDefense = (championId: number, playerId: string) => {
+      return activeDefensePlan?.placements?.some(p => p.defenderId === championId && p.playerId === playerId) ?? false;
   };
 
   // Calculate player usage stats
@@ -258,6 +258,11 @@ export const PlayerListContent = ({
                                               )}
                                               title={champ.isExtra ? "Extra Assignment" : "Assigned to Fight/Prefight"}
                                           />
+                                          {isChampionOnDefense(champ.id, player.id) && (
+                                              <div className="absolute -top-1 -right-1 bg-slate-950 rounded-full z-10" title="Placed on Defense">
+                                                  <TriangleAlert className="h-3 w-3 text-amber-500 fill-amber-500/10" />
+                                              </div>
+                                          )}
                                       </div>
                                   ))}
                               </div>
@@ -307,7 +312,7 @@ export const PlayerListContent = ({
                                                               </div>
                                                           )}
                                                       </div>
-                                                      {isChampionOnDefense(champ.id) && (
+                                                      {isChampionOnDefense(champ.id, player.id) && (
                                                           <div className="text-amber-500" title="Placed on Defense">
                                                               <TriangleAlert className="h-4 w-4" />
                                                           </div>
@@ -358,7 +363,7 @@ export const PlayerListContent = ({
                                                           )}
                                                       </div>
                                                   </div>
-                                                  {isChampionOnDefense(ex.championId) && (
+                                                  {isChampionOnDefense(ex.championId, player.id) && (
                                                       <div className="text-amber-500 mr-2" title="Placed on Defense">
                                                           <TriangleAlert className="h-4 w-4" />
                                                       </div>

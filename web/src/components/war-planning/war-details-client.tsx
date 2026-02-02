@@ -26,7 +26,7 @@ interface WarDetailsClientProps {
   warBans: WarBanWithChampion[];
   isOfficer?: boolean;
   bgColors?: Record<number, string>;
-  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
+  activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {

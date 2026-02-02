@@ -93,7 +93,7 @@ export const command: Command = {
         .addIntegerOption(option => option.setName('season').setDescription('War Season').setAutocomplete(true))
         .addBooleanOption(option => option.setName('has_video').setDescription('Filter for fights with video'))
     ),
-  access: CommandAccess.FEATURE,
+  access: CommandAccess.PUBLIC,
   help: {
     group: "Alliance Tools",
     color: "sky",

@@ -38,7 +38,7 @@ interface DesktopSidebarProps {
   currentFights: FightWithNode[];
   extraChampions: ExtraChampion[];
   isReadOnly?: boolean;
-  activeDefensePlan?: { placements: { defenderId: number | null }[] } | null;
+  activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
 
 export function DesktopSidebar({
