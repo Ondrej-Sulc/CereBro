@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
 import { handleUpdate } from "./update";
+import { handleScan } from "./scan";
 import { handleView } from "./view";
 import { handleDelete } from "./delete";
 import { handleSummary } from "./summary";
@@ -15,6 +16,19 @@ export const command: Command = {
   data: new SlashCommandBuilder()
     .setName("roster")
     .setDescription("Manage your MCOC roster.")
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("scan")
+        .setDescription("Auto-scan Battlegrounds View screenshots (interactive mode).")
+        .addUserOption((option) =>
+          option
+            .setName("player")
+            .setDescription(
+              "The player to update the roster for (defaults to you)."
+            )
+            .setRequired(false)
+        )
+    )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("update")
@@ -224,7 +238,9 @@ export const command: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
-    if (subcommand === "update") {
+    if (subcommand === "scan") {
+      await handleScan(interaction);
+    } else if (subcommand === "update") {
       await handleUpdate(interaction);
     } else if (subcommand === "view") {
       await handleView(interaction);
