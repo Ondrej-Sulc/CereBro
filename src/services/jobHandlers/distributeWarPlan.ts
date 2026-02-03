@@ -11,7 +11,11 @@ export async function handleDistributeWarPlan(client: Client, payload: any) {
 
     logger.info(`Starting plan distribution for war ${warId} (BG: ${battlegroup || 'All'})`);
 
-    const result = await distributeWarPlan(client, allianceId, warId, battlegroup);
-    
-    logger.info({ result }, "Distributed War Plan Result");
+    try {
+        const result = await distributeWarPlan(client, allianceId, warId, battlegroup);
+        logger.info({ result }, "Distributed War Plan Result");
+    } catch (error) {
+        logger.error({ error, allianceId, warId, battlegroup }, "Failed to distribute war plan");
+        throw error;
+    }
 }
