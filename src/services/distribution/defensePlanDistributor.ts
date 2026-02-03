@@ -89,13 +89,14 @@ export async function distributeDefensePlan(
             championId: true,
             stars: true,
             rank: true,
-            sigLevel: true
+            sigLevel: true,
+            isAwakened: true
         }
     });
 
-    const rosterMap = new Map<string, { rank: number, sigLevel: number }>(); // "playerId-championId-stars" -> {rank, sigLevel}
+    const rosterMap = new Map<string, { rank: number, sigLevel: number, isAwakened: boolean }>(); // "playerId-championId-stars" -> data
     rosterEntries.forEach(r => {
-        rosterMap.set(`${r.playerId}-${r.championId}-${r.stars}`, { rank: r.rank, sigLevel: r.sigLevel });
+        rosterMap.set(`${r.playerId}-${r.championId}-${r.stars}`, { rank: r.rank, sigLevel: r.sigLevel, isAwakened: r.isAwakened });
     });
 
     // 1. Prepare Global Node & Image Data
@@ -416,7 +417,8 @@ export async function distributeDefensePlan(
             let rank = "";
             if (p.playerId && p.defenderId && starsNum) {
                 const r = rosterMap.get(`${p.playerId}-${p.defenderId}-${starsNum}`);
-                const starSymbol = (r && r.sigLevel > 0) ? "★" : "☆";
+                const awakened = r ? (r.isAwakened || r.sigLevel > 0) : false;
+                const starSymbol = awakened ? "★" : "☆";
                 stars = starsNum ? `${starsNum}${starSymbol}` : "";
                 if (r) rank = ` R${r.rank}`;
             } else if (starsNum) {

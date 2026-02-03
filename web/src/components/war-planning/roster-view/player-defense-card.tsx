@@ -271,7 +271,10 @@ export const PlayerDefenseCard = ({
                                     </div>
                                     <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                                         {placement.starLevel && (
-                                            <span className="flex items-center text-yellow-500">
+                                            <span className={cn(
+                                                "flex items-center",
+                                                rosterEntry?.isAwakened ? "text-slate-300" : "text-yellow-500"
+                                            )}>
                                                 {placement.starLevel}<Star className="h-2 w-2 fill-current ml-0.5" />
                                             </span>
                                         )}

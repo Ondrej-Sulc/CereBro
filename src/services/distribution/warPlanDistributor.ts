@@ -284,7 +284,8 @@ export async function distributeWarPlan(
             championId: true,
             stars: true,
             rank: true,
-            sigLevel: true
+            sigLevel: true,
+            isAwakened: true
         },
         orderBy: [
             { stars: 'desc' },
@@ -292,14 +293,14 @@ export async function distributeWarPlan(
         ]
     });
 
-    // Map: playerId -> Map: championId -> { stars, rank, sigLevel } (Best one)
-    const bestRosterMap = new Map<string, Map<number, { stars: number, rank: number, sigLevel: number }>>();
+    // Map: playerId -> Map: championId -> { stars, rank, sigLevel, isAwakened } (Best one)
+    const bestRosterMap = new Map<string, Map<number, { stars: number, rank: number, sigLevel: number, isAwakened: boolean }>>();
     rosterEntries.forEach(r => {
         if (!bestRosterMap.has(r.playerId)) bestRosterMap.set(r.playerId, new Map());
         const playerMap = bestRosterMap.get(r.playerId)!;
         if (!playerMap.has(r.championId)) {
             // Since it's ordered by stars desc, rank desc, the first one we see is the best
-            playerMap.set(r.championId, { stars: r.stars, rank: r.rank, sigLevel: r.sigLevel });
+            playerMap.set(r.championId, { stars: r.stars, rank: r.rank, sigLevel: r.sigLevel, isAwakened: r.isAwakened });
         }
     });
 
@@ -625,7 +626,8 @@ export async function distributeWarPlan(
                 const roster = bestRosterMap.get(playerObj.id)?.get(id);
                 let info = "";
                 if (roster) {
-                    const starSymbol = roster.sigLevel > 0 ? "★" : "☆";
+                    const awakened = roster.isAwakened || roster.sigLevel > 0;
+                    const starSymbol = awakened ? "★" : "☆";
                     info = ` ${roster.stars}${starSymbol} R${roster.rank}`;
                 }
                 return `${emoji} **${name}**${info}`;

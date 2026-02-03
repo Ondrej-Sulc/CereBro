@@ -340,7 +340,10 @@ export default function DefenseEditor({
                                 disabled={isReadOnly}
                              >
                                  <div className="flex items-center gap-1 text-xs font-bold">
-                                    {entry.stars}<Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                                    {entry.stars}<Star className={cn(
+                                        "h-3 w-3 fill-current",
+                                        entry.isAwakened ? "text-slate-300" : "text-yellow-500"
+                                    )} />
                                     <span className="text-slate-300 font-normal ml-1">R{entry.rank}</span>
                                  </div>
                                  {(entry.isAscended || entry.isAwakened) && (
