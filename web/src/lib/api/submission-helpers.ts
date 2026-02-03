@@ -261,35 +261,51 @@ export async function processNewFights(
 export async function processFightUpdates(prisma: PrismaClient, updates: FightUpdate[]): Promise<string[]> {
     const ids: string[] = [];
     logger.info({ count: updates.length }, "Processing fight updates");
-    await Promise.all(updates.map(async (update: FightUpdate) => {
-        await prisma.warFight.update({
-            where: { id: update.id },
-            data: {
-                nodeId: parseInt(update.nodeId),
-                attackerId: parseInt(update.attackerId),
-                defenderId: parseInt(update.defenderId),
-                death: update.death,
-                battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
-                prefightChampions: {
-                    deleteMany: {},
-                    create: update.prefightChampionIds 
-                        ? update.prefightChampionIds
-                            .map((id: string) => parseInt(id))
-                            .filter((id: number) => !isNaN(id))
-                            .map((id: number) => ({ championId: id })) 
-                        : []
+    
+    try {
+        await Promise.all(updates.map(async (update: FightUpdate) => {
+            logger.debug({ 
+                fightId: update.id, 
+                nodeId: update.nodeId, 
+                attackerId: update.attackerId, 
+                defenderId: update.defenderId 
+            }, "Updating fight record");
+
+            await prisma.warFight.update({
+                where: { id: update.id },
+                data: {
+                    nodeId: parseInt(update.nodeId),
+                    attackerId: parseInt(update.attackerId),
+                    defenderId: parseInt(update.defenderId),
+                    death: update.death,
+                    battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
+                    prefightChampions: {
+                        deleteMany: {},
+                        create: update.prefightChampionIds 
+                            ? update.prefightChampionIds
+                                .map((id: string) => parseInt(id))
+                                .filter((id: number) => !isNaN(id))
+                                .map((id: number) => ({ championId: id })) 
+                            : []
+                    }
                 }
-            }
-        });
-        ids.push(update.id);
-    }));
-    return ids;
+            });
+            ids.push(update.id);
+        }));
+        logger.info({ count: ids.length }, "Successfully processed all fight updates");
+        return ids;
+    } catch (error) {
+        logger.error({ error, updates }, "Failed to process fight updates");
+        throw error;
+    }
 }
 
 export async function queueVideoNotification(
     prisma: PrismaClient, 
     params: { videoId: string; title: string; }
 ) {
+    logger.info({ videoId: params.videoId }, "Starting notification queue process");
+
     const video = await prisma.warVideo.findUnique({
         where: { id: params.videoId },
         include: {
@@ -306,8 +322,13 @@ export async function queueVideoNotification(
         }
     });
 
-    if (!video || !video.submittedBy.alliance) {
-        logger.info({ videoId: params.videoId }, "Skipping notification: Video not found or no alliance");
+    if (!video) {
+        logger.warn({ videoId: params.videoId }, "Skipping notification: Video not found");
+        return;
+    }
+
+    if (!video.submittedBy.alliance) {
+        logger.info({ videoId: params.videoId, uploader: video.submittedBy.ingameName }, "Skipping notification: Uploader has no alliance");
         return;
     }
 
@@ -336,24 +357,38 @@ export async function queueVideoNotification(
 
     // 1. Notify War Videos Channel
     if (alliance.warVideosChannelId) {
-        logger.info({ videoId: video.id, channelId: alliance.warVideosChannelId }, "Queuing video notification job");
+        logger.info({ 
+            videoId: video.id, 
+            channelId: alliance.warVideosChannelId, 
+            allianceName: alliance.name 
+        }, "Queuing NOTIFY_WAR_VIDEO job");
+        
         await prisma.botJob.create({
             data: {
                 type: 'NOTIFY_WAR_VIDEO',
                 payload: { ...basePayload, channelId: alliance.warVideosChannelId }
             }
         });
+        logger.debug("NOTIFY_WAR_VIDEO job created successfully");
+    } else {
+        logger.info({ allianceId: alliance.id, allianceName: alliance.name }, "No war videos channel configured for this alliance");
     }
 
     // 2. Notify Death Channel (if applicable)
     const totalDeaths = fights.reduce((sum, f) => sum + f.death, 0);
     if (totalDeaths > 0 && alliance.deathChannelId) {
-        logger.info({ videoId: video.id, channelId: alliance.deathChannelId }, "Queuing death notification job");
+        logger.info({ 
+            videoId: video.id, 
+            channelId: alliance.deathChannelId,
+            deaths: totalDeaths
+        }, "Queuing NOTIFY_DEATH_VIDEO job");
+        
         await prisma.botJob.create({
             data: {
                 type: 'NOTIFY_DEATH_VIDEO',
                 payload: { ...basePayload, channelId: alliance.deathChannelId, totalDeaths }
             }
         });
+        logger.debug("NOTIFY_DEATH_VIDEO job created successfully");
     }
 }
