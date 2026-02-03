@@ -8,6 +8,8 @@ interface UpdateMemberRolesPayload {
 
 export async function handleUpdateMemberRoles(client: Client, payload: unknown) {
   const { playerId } = payload as UpdateMemberRolesPayload;
+  
+  logger.info({ playerId }, 'Starting member role update job');
     
   const player = await prisma.player.findUnique({
       where: { id: playerId },
