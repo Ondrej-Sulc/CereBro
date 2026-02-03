@@ -84,8 +84,13 @@ export async function POST(req: NextRequest) {
 
     // 3. Upload Video
     const youTubeService = getYouTubeService();
+    
+    logger.info({ title, tempFilePath }, "YouTube upload started");
     const youtubeVideoId = await youTubeService.uploadVideo(tempFilePath, title, description, 'unlisted');
+    
     if (!youtubeVideoId) throw new Error('YouTube upload failed');
+    logger.info({ youtubeVideoId }, "YouTube upload completed");
+    
     const youtubeUrl = youTubeService.getVideoUrl(youtubeVideoId);
 
     // 4. Create WarVideo & Link
