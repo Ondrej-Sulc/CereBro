@@ -12,7 +12,7 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil, Share2 } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil, Share2, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
@@ -589,24 +589,64 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     </div>
                  </div>
 
-                 {/* Mobile View Toggle */}
-                 <div className="flex md:hidden items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800 shrink-0">
-                    <Button
-                        variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        onClick={() => handleViewModeChange('roster')}
-                        className="h-7 px-2 text-xs"
-                    >
-                        <LayoutGrid className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                        variant={viewMode === 'map' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        onClick={() => handleViewModeChange('map')}
-                        className="h-7 px-2 text-xs"
-                    >
-                        <MapIcon className="h-3.5 w-3.5" />
-                    </Button>
+                 {/* Mobile Controls */}
+                 <div className="flex md:hidden items-center gap-2">
+                     {/* View Toggle */}
+                     <div className="flex items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800 shrink-0">
+                        <Button
+                            variant={viewMode === 'roster' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            onClick={() => handleViewModeChange('roster')}
+                            className="h-7 px-2 text-xs"
+                        >
+                            <LayoutGrid className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                            variant={viewMode === 'map' ? 'secondary' : 'ghost'}
+                            size="sm"
+                            onClick={() => handleViewModeChange('map')}
+                            className="h-7 px-2 text-xs"
+                        >
+                            <MapIcon className="h-3.5 w-3.5" />
+                        </Button>
+                     </div>
+
+                     {/* Actions Menu */}
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-white hover:bg-slate-800">
+                                <MoreVertical className="h-5 w-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-slate-950 border-slate-800 text-slate-200">
+                            <DropdownMenuItem onClick={toggleStats} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                <PieChart className="mr-2 h-4 w-4" />
+                                <span>Stats</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={toggleTools} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                <Wrench className="mr-2 h-4 w-4" />
+                                <span>Tools</span>
+                            </DropdownMenuItem>
+                            {!isReadOnly && (
+                                <>
+                                    <DropdownMenuSeparator className="bg-slate-800" />
+                                    <DropdownMenuItem onClick={() => handleDistribute()} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Share2 className="mr-2 h-4 w-4" />
+                                        <span>Share All</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDistribute(1)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
+                                        <span>Share BG1</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDistribute(2)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
+                                        <span>Share BG2</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDistribute(3)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
+                                        <span>Share BG3</span>
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                        </DropdownMenuContent>
+                     </DropdownMenu>
                  </div>
              </div>
 
