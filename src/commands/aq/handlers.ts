@@ -51,6 +51,25 @@ async function handleSectionClear(
     return;
   }
 
+  if (which === "Miniboss") {
+    if (section === 1 && state.minibossS1) {
+      await interaction.reply({
+        content: "Miniboss S1 already defeated.",
+        flags: [MessageFlags.Ephemeral],
+      });
+      return;
+    }
+    if (section === 2 && state.minibossS2) {
+      await interaction.reply({
+        content: "Miniboss S2 already defeated.",
+        flags: [MessageFlags.Ephemeral],
+      });
+      return;
+    }
+    if (section === 1) state.minibossS1 = true;
+    if (section === 2) state.minibossS2 = true;
+  }
+
   await interaction.deferUpdate();
 
   const targetChannel = state.threadId

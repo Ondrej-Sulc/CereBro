@@ -87,11 +87,13 @@ export function buildAQContainer(
     new ButtonBuilder()
       .setCustomId("aq:boss:s1")
       .setLabel("Miniboss S1")
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(!!state.minibossS1),
     new ButtonBuilder()
       .setCustomId("aq:boss:s2")
       .setLabel("Miniboss S2")
-      .setStyle(ButtonStyle.Primary),
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(!!state.minibossS2),
     new ButtonBuilder()
       .setCustomId("aq:map_clear")
       .setLabel("MAP Complete")

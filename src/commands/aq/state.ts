@@ -23,6 +23,8 @@ export interface AQState {
   section2PingSent?: boolean;
   finalPingSent?: boolean;
   allianceId: string;
+  minibossS1?: boolean;
+  minibossS2?: boolean;
 }
 
 export async function getState(channelId: string): Promise<AQState | null> {
