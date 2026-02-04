@@ -2,6 +2,7 @@
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
+import os from 'os';
 import logger from '../loggerService.js';
 import { prisma } from '../prismaService.js';
 import { ChampionClass, Champion } from '@prisma/client';
@@ -10,7 +11,7 @@ import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
 
 export class RosterChampionService {
-  private CACHE_DIR = path.join(process.cwd(), 'temp', 'champion-cache');
+  private CACHE_DIR = path.join(os.tmpdir(), 'cerebro', 'champion-cache');
   private championCache: Map<string, { champion: Champion; hash: string }> = new Map();
   private classCache: Map<ChampionClass, Champion[]> = new Map();
 
