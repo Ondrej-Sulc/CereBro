@@ -5,15 +5,19 @@ import {
   TextChannel,
   MessageFlags,
   Attachment,
+  ContainerBuilder,
+  TextDisplayBuilder,
 } from "discord.js";
 import { getPlayer } from "../../utils/playerHelper";
 import { processStatsViewScreenshot } from "./ocr/process";
-import { RosterUpdateResult } from "./ocr/types";
+import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleError } from "../../utils/errorHandler";
+import { config } from "../../config";
 import logger from "../../services/loggerService";
 
 const SCAN_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_LIST_DISPLAY_CHAMPS = 40;
 
 export async function handleScan(
   interaction: ChatInputCommandInteraction
@@ -58,24 +62,16 @@ export async function handleScan(
     }
   });
 
-  // 5. Handle End
+  // 5. Handle End - No timeout message
   collector.on("end", async (collected, reason) => {
-    if (reason === "time") {
-      try {
-        await interaction.followUp({
-          content: `🛑 **Scan session ended.** I am no longer listening for screenshots. Run \\\`/roster scan\\\` again if you have more.`,
-          flags: [MessageFlags.Ephemeral],
-        });
-      } catch (e) {
-        // Interaction might be expired or channel deleted
-      }
-    }
+     // Silent end
   });
 }
 
 async function processMessage(message: Message, playerId: string, client: any) {
   // Acknowledge receipt
   const processingMsg = await message.reply("⏳ Processing images...");
+  const resolveEmojis = createEmojiResolver(client);
 
   const images = Array.from(message.attachments.values()).filter(
     (att) => att.contentType?.startsWith("image/")
@@ -86,17 +82,13 @@ async function processMessage(message: Message, playerId: string, client: any) {
     return;
   }
 
-  const results: { success: boolean; error?: string; count: number; added: any[] }[] = [];
-  const allAddedChampions: any[] = [];
+  const results: { success: boolean; error?: string; count: number; added: RosterWithChampion[] }[] = [];
+  const allAddedChampions: RosterWithChampion[] = [];
   const globalErrors: string[] = [];
 
   // Process all images in parallel
   const promises = images.map(async (image) => {
     try {
-      // Note: We pass the URL, processStatsViewScreenshot handles downloading
-      // But processStatsViewScreenshot expects Buffer or string URL.
-      // Let's pass URL.
-      
       const result = await processStatsViewScreenshot(
         image.url,
         false, // debugMode
@@ -108,11 +100,8 @@ async function processMessage(message: Message, playerId: string, client: any) {
       }
       
       const updateResult = result as RosterUpdateResult;
-      // In stats view, champions is [RosterWithChampion[]] (one item which is the array)
-      // or simply RosterWithChampion[][]
       const added = updateResult.champions.flat();
       
-      // Check for specific errors in the result object if any (the service returns { champions, errors })
       if ((result as any).errors && Array.isArray((result as any).errors)) {
           (result as any).errors.forEach((e: string) => globalErrors.push(`${image.name}: ${e}`));
       }
@@ -139,7 +128,6 @@ async function processMessage(message: Message, playerId: string, client: any) {
     }
   });
 
-  // Construct Response
   const totalCount = allAddedChampions.length;
   logger.info({ 
       userId: playerId, 
@@ -149,62 +137,76 @@ async function processMessage(message: Message, playerId: string, client: any) {
       errors: globalErrors.length 
   }, "Scan batch complete");
 
-  const resolveEmojis = createEmojiResolver(client);
-  
-  // Format champion list
-  // Grouping by star level for cleaner output? 
-  // Or just listing them as they come. The prompt said "pagination/splitting".
-  
-  let content = `**Scan Complete!**\n` +
-                `✅ **${totalCount}** champions updated/added.\n`;
+  // --- Build Response with Container V2 ---
+  const container = new ContainerBuilder();
 
+  // 1. Summary Header
+  let summaryText = `### Scan Complete! 📸\n` +
+                    `✅ **${totalCount}** champions updated/added.`;
+  
   if (globalErrors.length > 0) {
-      content += `⚠️ **${globalErrors.length}** issues found:\n` + 
-                 globalErrors.map(e => `- ${e}`).slice(0, 5).join("\n") + 
-                 (globalErrors.length > 5 ? `\n...and ${globalErrors.length - 5} more.` : "") + "\n";
+      summaryText += `\n⚠️ **${globalErrors.length}** issues found.`;
   }
 
-  // Generate the visual list
-  const champLines = allAddedChampions.map((entry) => {
-    const awakened = entry.isAwakened ? "★" : ""; // No empty star, just star if awakened? Or keep existing style.
-    // Existing style in update.ts: const awakened = entry.isAwakened ? "★" : "☆";
-    const awakenedStr = entry.isAwakened ? "★" : "☆";
-    const ascendedStr = entry.isAscended ? "🏆" : "";
-    const emoji = entry.champion.discordEmoji || "";
-    const sigStr = entry.sigLevel > 0 ? `(s${entry.sigLevel})` : "";
-    
-    return `${awakenedStr}${emoji}${ascendedStr} ${entry.stars}* R${entry.rank} ${entry.champion.shortName || entry.champion.name} ${sigStr}`;
-  });
-
-  const chunks = chunkString(champLines, 1900); // Leave room for header
-
-  // Send first message (edit the processing message)
-  if (chunks.length === 0) {
-      await processingMsg.edit(content);
-  } else {
-      await processingMsg.edit(content + "\n" + resolveEmojis(chunks[0]));
+  // Grouping Logic
+  if (totalCount > 0) {
+      const groups = new Map<string, number>();
+      allAddedChampions.forEach(c => {
+          const key = `${c.stars}★ R${c.rank}`;
+          groups.set(key, (groups.get(key) || 0) + 1);
+      });
       
-      // Send remaining chunks as follow-ups
-      for (let i = 1; i < chunks.length; i++) {
-          await (message.channel as TextChannel).send(resolveEmojis(chunks[i]));
+      const sortedKeys = Array.from(groups.keys()).sort((a, b) => b.localeCompare(a));
+      summaryText += `\n\n**Summary:**\n` + sortedKeys.map(k => `- **${k}**: ${groups.get(k)}`).join("\n");
+  }
+
+  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(resolveEmojis(summaryText)));
+
+  // 2. Detailed List or Link
+  if (totalCount > MAX_LIST_DISPLAY_CHAMPS) {
+       const linkText = `\n**List is too long to display!**\n` + 
+                        `[View your full roster on the web](${config.botBaseUrl}/profile/roster)`;
+       container.addTextDisplayComponents(new TextDisplayBuilder().setContent(linkText));
+  } else if (totalCount > 0) {
+      const champLines = allAddedChampions.map((entry) => {
+        const awakenedStr = entry.isAwakened ? "★" : "☆";
+        const ascendedStr = entry.isAscended ? "🏆" : "";
+        const emoji = entry.champion.discordEmoji || "";
+        const sigStr = entry.sigLevel > 0 ? `(s${entry.sigLevel})` : "";
+        return `${awakenedStr}${emoji}${ascendedStr} ${entry.stars}* R${entry.rank} ${entry.champion.shortName || entry.champion.name} ${sigStr}`;
+      });
+
+      // Split into chunks if needed (TextDisplay has limits, but here we can add multiple displays)
+      const chunks = chunkLines(champLines, 20); // 20 lines per block
+      
+      for (const chunk of chunks) {
+          container.addTextDisplayComponents(new TextDisplayBuilder().setContent(resolveEmojis(chunk)));
       }
   }
+
+  // 3. Errors (if any)
+  if (globalErrors.length > 0) {
+      const errorText = `**Errors:**\n` + 
+                 globalErrors.map(e => `- ${e}`).slice(0, 5).join("\n") + 
+                 (globalErrors.length > 5 ? `\n...and ${globalErrors.length - 5} more.` : "");
+      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(errorText));
+  }
+
+  // Send the Container
+  try {
+      await processingMsg.delete();
+  } catch {}
+
+  await message.reply({
+      components: [container],
+      flags: [MessageFlags.IsComponentsV2]
+  });
 }
 
-function chunkString(lines: string[], maxChars: number): string[] {
+function chunkLines(lines: string[], chunkSize: number): string[] {
     const chunks: string[] = [];
-    let currentChunk = "";
-
-    for (const line of lines) {
-        if ((currentChunk + "\n" + line).length > maxChars) {
-            chunks.push(currentChunk);
-            currentChunk = line;
-        } else {
-            currentChunk = currentChunk ? (currentChunk + "\n" + line) : line;
-        }
-    }
-    if (currentChunk) {
-        chunks.push(currentChunk);
+    for (let i = 0; i < lines.length; i += chunkSize) {
+        chunks.push(lines.slice(i, i + chunkSize).join("\n"));
     }
     return chunks;
 }
