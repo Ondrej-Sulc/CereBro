@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import logger from "@cerebro/core/services/loggerService";
 import { NextRequest, NextResponse } from "next/server";
-import { processRosterScreenshot, processStatsViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
+import { processRosterScreenshot, processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         let result;
         
         if (mode === 'stats-view') {
-             result = await processStatsViewScreenshot(
+             result = await processBGViewScreenshot(
                 buffer,
                 false, // debugMode
                 player.id

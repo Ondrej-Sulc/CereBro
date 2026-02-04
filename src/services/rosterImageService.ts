@@ -21,7 +21,7 @@ export class RosterImageService {
   private championService = new RosterChampionService();
   private debugService = new RosterDebugService(this.featureService);
 
-  public async processStatsView(
+  public async processBGView(
     imageBuffer: Buffer,
     options: ProcessingOptions = {}
   ): Promise<{ grid: GridCell[]; debugImage?: Buffer }> {
@@ -37,7 +37,7 @@ export class RosterImageService {
     }
 
     // 1. Estimate Grid
-    let { grid, avgColDist, cellDims, headerMinY } = await this.layoutService.estimateGridFromStats(detections, imageBuffer);
+    let { grid, avgColDist, cellDims, headerMinY } = await this.layoutService.estimateGridFromBG(detections, imageBuffer);
     
     const t2 = performance.now(); // Layout done
 

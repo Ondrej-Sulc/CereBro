@@ -169,16 +169,16 @@ export async function processRosterScreenshot(
   };
 }
 
-export async function processStatsViewScreenshot(
+export async function processBGViewScreenshot(
   imageInput: string | Buffer,
   debugMode: boolean = false,
   playerId?: string
 ): Promise<RosterUpdateResult | RosterDebugResult> {
   const { rosterImageService } = await import("../../../services/rosterImageService.js");
   
-  const logContext = { playerId, mode: 'stats-view' };
+  const logContext = { playerId, mode: 'bg-view' };
   
-  if (debugMode) logger.debug(logContext, "Starting stats view processing");
+  if (debugMode) logger.debug(logContext, "Starting BG view processing");
 
   let imageBuffer: Buffer;
   if (typeof imageInput === 'string') {
@@ -187,11 +187,11 @@ export async function processStatsViewScreenshot(
       imageBuffer = imageInput;
   }
 
-  const { grid, debugImage } = await rosterImageService.processStatsView(imageBuffer, { debugMode });
+  const { grid, debugImage } = await rosterImageService.processBGView(imageBuffer, { debugMode });
 
   if (debugMode) {
       return {
-          message: `Stats View Processed. Found ${grid.length} champions.`,
+          message: `BG View Processed. Found ${grid.length} champions.`,
           imageBuffer,
           debugImageBuffer: debugImage
       };
@@ -199,7 +199,7 @@ export async function processStatsViewScreenshot(
 
   if (!playerId) throw new Error("playerId required");
 
-  const { champions, errors } = await saveStatsViewRoster(grid, playerId);
+  const { champions, errors } = await saveBGViewRoster(grid, playerId);
   const count = champions.flat().length;
 
   return {
@@ -209,7 +209,7 @@ export async function processStatsViewScreenshot(
   };
 }
 
-async function saveStatsViewRoster(
+async function saveBGViewRoster(
     grid: import("../../../services/roster/types.js").GridCell[],
     playerId: string
 ): Promise<{ champions: RosterWithChampion[], errors: string[] }> {
@@ -222,7 +222,7 @@ async function saveStatsViewRoster(
     logger.info({ 
         totalCells: grid.length, 
         cellsWithNames: grid.filter(c => c.championName).length 
-    }, "Saving stats view roster");
+    }, "Saving BG view roster");
 
     let unidentifiedCount = 0;
 

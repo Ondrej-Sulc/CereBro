@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { rosterImageService } from "@cerebro/core/services/rosterImageService";
-import { processStatsViewScreenshot } from "@cerebro/core/commands/roster/ocr/process"; // Alternatively use this if easier, but direct service is better for debug
+import { processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process"; // Alternatively use this if easier, but direct service is better for debug
 import logger from "@cerebro/core/services/loggerService";
 
 export const maxDuration = 60; // Allow longer timeout for processing
@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
             const buffer = Buffer.from(await file.arrayBuffer());
             
             try {
-                // We use processStatsView directly to get the debug image
-                const { debugImage } = await rosterImageService.processStatsView(buffer, { debugMode: true });
+                // We use processBGView directly to get the debug image
+                const { debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
                 
                 if (debugImage) {
                     results.push({

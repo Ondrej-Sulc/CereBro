@@ -42,7 +42,7 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 - **Database:** PostgreSQL managed via **Prisma ORM**.
 - **Async Job Queue:** A database-backed task system (`BotJob`) that decouples the Web App from the Bot. This allows the Web App to trigger complex Discord actions (like notifications or distributing war plans) reliability without direct network coupling.
 - **Image Processing Pipeline:** Google Vision API integration for extracting champion data from user-uploaded screenshots.
-- **Smart Import:** Users can upload screenshots of their game roster. The system features a new, high-performance **Stats View** mode that automatically identifies champions, star levels, ranks, ascension, and **signature levels** from Battlegrounds Deck screenshots, eliminating manual data entry.
+- **Smart Import:** Users can upload screenshots of their game roster. The system features a new, high-performance **BG View** mode that automatically identifies champions, star levels, ranks, ascension, and **signature levels** from Battlegrounds Deck screenshots, eliminating manual data entry.
 - **AI Integration:** OpenRouter (LLMs) used for drafting glossary terms and parsing complex abilities.
 - **Analytics:** Deep integration with **PostHog** for feature usage tracking and error analysis.
 
@@ -72,7 +72,7 @@ The flagship feature of the platform.
   - **Rank-up Recommendations:** Identifies high-value rank-ups for Top 30 Prestige, with integrated **Target Rank** and **Class Filters**.
   - **Sig Stone Optimizer:** Simulates optimal stone allocation based on a user-defined budget, supporting specific **Class Filters** (e.g., "Best use of 50 Science stones").
   - **Interactive Visualizations:** Clicking on a recommendation opens a detailed **Prestige Curve Chart**, visualizing the champion's prestige growth potential.
-- **Smart Import:** Users can upload screenshots of their game roster. The system features a new, high-performance **Stats View** mode that automatically identifies champions, star levels, ranks, ascension, and **signature levels** from Battlegrounds Deck screenshots, eliminating manual data entry.
+- **Smart Import:** Users can upload screenshots of their game roster. The system features a new, high-performance **BG View** mode that automatically identifies champions, star levels, ranks, ascension, and **signature levels** from Battlegrounds Deck screenshots, eliminating manual data entry.
 - **Profile Analysis:** The main profile view features a detailed table-based breakdown of the roster by Rank and Class, alongside Prestige history and timezone management. **Includes an interactive Profile Manager for managing multiple in-game accounts and "Auto-Prestige Sync" to keep profile data accurate via real-time roster calculations.**
 
 ### 🧠 Knowledge Base

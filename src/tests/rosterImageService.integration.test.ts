@@ -67,7 +67,7 @@ describe('RosterImageService Integration Tests', () => {
       }
 
       const buffer = await fs.readFile(filePath);
-      const { grid } = await rosterImageService.processStatsView(buffer, { debugMode: false });
+      const { grid } = await rosterImageService.processBGView(buffer, { debugMode: false });
 
       // Transform actual grid to match expectation structure for deep comparison
       const actualSimplified = grid.map(cell => ({

@@ -8,7 +8,7 @@ import {
   MediaGalleryItemBuilder,
   MessageFlags,
 } from "discord.js";
-import { processStatsViewScreenshot } from "../roster/ocr/process";
+import { processBGViewScreenshot } from "../roster/ocr/process";
 import { RosterDebugResult } from "../roster/ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 
@@ -23,7 +23,7 @@ export async function handleRosterScanDebug(
   const resolveEmojis = createEmojiResolver(interaction.client);
 
   try {
-      const result = (await processStatsViewScreenshot(
+      const result = (await processBGViewScreenshot(
         image.url,
         true // debugMode
       )) as RosterDebugResult;
@@ -32,7 +32,7 @@ export async function handleRosterScanDebug(
       const container = new ContainerBuilder();
 
       const title = new TextDisplayBuilder().setContent(
-        `### Debug Result for ${image.name} (Stats View):`
+        `### Debug Result for ${image.name} (BG View):`
       );
       container.addTextDisplayComponents(title);
 

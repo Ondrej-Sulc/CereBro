@@ -20,7 +20,7 @@ async function testProcessing() {
     // const rawDetections = await visionService.detectText(buffer);
     // console.log("Raw OCR Texts:", rawDetections.slice(0, 50).map((d: any) => d.description));
 
-    const result = await rosterImageService.processStatsView(buffer, { debugMode: true });
+    const result = await rosterImageService.processBGView(buffer, { debugMode: true });
     
     if (result.debugImage) {
       const debugPath = path.join(path.dirname(imagePath), 'debug-' + path.basename(imagePath));

@@ -5,7 +5,7 @@ import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
 
 export class RosterLayoutService {
-  public async estimateGridFromStats(detections: any[], imageBuffer: Buffer): Promise<{ 
+  public async estimateGridFromBG(detections: any[], imageBuffer: Buffer): Promise<{ 
     grid: GridCell[], 
     avgColDist: number, 
     cellDims: {width: number, height: number},

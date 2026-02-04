@@ -106,8 +106,11 @@ A unified suite of tools for managing Alliance War.
     *   **Auto-Sync:** Updates profile prestige if calculated roster average > stored value.
     *   **Insights:** "Rank-up Opportunities" and "Sig Stone Budget" simulations.
 *   **OCR:** Updates roster via screenshot processing.
-    *   **Stats View (New):** Supports "Battlegrounds Deck" screenshots (Attribute view). Automatically detects **Stars, Rank, Ascension, Class, and Sig Level** with high accuracy using optimized pixel-level analysis.
-    *   **Grid View:** Legacy support for "My Champions" grid screenshots (requires manual Star/Rank input).
+    *   **BG View (New):** Supports "Battlegrounds Deck" screenshots (Attribute view).
+        *   **Analysis:** Automatically detects **Stars, Rank, Ascension, Class, and Sig Level** using optimized pixel-level analysis.
+        *   **Feedback:** Provides a grouped summary in Discord (e.g., "7★ R3: 4").
+        *   **UX:** If many champions are detected (>40), the bot provides a direct link to the Web Roster for review instead of a long list, keeping the Discord channel clean.
+    *   **Grid View:** Legacy support for "My Champions" grid screenshots.
 
 ### Alliance Management (Web)
 *   **Roster Overview:** Spreadsheet-like view of the entire alliance's champions (`/alliance/roster`).

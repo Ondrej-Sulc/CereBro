@@ -1,5 +1,11 @@
 # Architecture & Patterns
 
+## Shared Assets
+To maintain consistency between the Discord Bot and Web Application, shared resources (like class icons, fonts, and game data) are stored in a top-level `assets/` directory.
+*   **Icons:** `assets/icons` contains champion class and game-specific icons.
+*   **Fonts:** `assets/fonts` stores branded typography (e.g., Bebas Neue).
+*   **Docker:** The `Dockerfile` is configured to copy the `assets/` folder into the production build, ensuring these resources are available at runtime for both the bot and the web server.
+
 ## Interactive Champion Command (Controller/View)
 For complex interactive commands like `/champion`, we utilize a strict **Controller/View** architecture:
 

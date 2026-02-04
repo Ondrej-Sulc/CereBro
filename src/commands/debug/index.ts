@@ -54,7 +54,7 @@ export const command: Command = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("roster-scan")
-        .setDescription("Debug Stats View roster processing.")
+        .setDescription("Debug BG View roster processing.")
         .addAttachmentOption((option) =>
           option
             .setName("image")

@@ -9,7 +9,7 @@ import {
   TextDisplayBuilder,
 } from "discord.js";
 import { getPlayer } from "../../utils/playerHelper";
-import { processStatsViewScreenshot } from "./ocr/process";
+import { processBGViewScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleError } from "../../utils/errorHandler";
@@ -33,7 +33,7 @@ export async function handleScan(
   await interaction.reply({
     content:
       `**Ready to scan!** 📸\n` +
-      `Please upload your **Battlegrounds View** screenshots now.\n` +
+      `Please upload your **BG View** (Battlegrounds) screenshots now.\n` +
       `- You can upload multiple images at once.\n` +
       `- I will listen in this channel for the next **5 minutes**.\n` +
       `- Make sure you are in the "Battlegrounds" view (not "My Champions").`,
@@ -89,7 +89,7 @@ async function processMessage(message: Message, playerId: string, client: any) {
   // Process all images in parallel
   const promises = images.map(async (image) => {
     try {
-      const result = await processStatsViewScreenshot(
+      const result = await processBGViewScreenshot(
         image.url,
         false, // debugMode
         playerId

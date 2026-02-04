@@ -20,7 +20,12 @@
 *   [📏 Conventions & Standards](docs/conventions.md) - **Critical Rules**, Logging, Code Style.
 
 ## 🚨 Critical Rules
-1.  **Ephemeral Messages:** Never use `ephemeral: true`. Always use `flags: MessageFlags.Ephemeral`.
-2.  **Type Safety:** No `any`. Always verify with `tsc`.
-3.  **Bot Admin:** Check `BotUser.isBotAdmin`, **not** `Player.isBotAdmin`.
-4.  **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
+1.  **Environment:** You are running on **win32 (Windows)**. All shell commands are executed via `powershell.exe`. 
+    *   **NEVER** use `grep`, `&&` (in standard PS), or `mkdir -p`.
+    *   **ALWAYS** use PowerShell equivalents: `;` for command separation, `Select-String` instead of `grep`, and `New-Item -ItemType Directory -Force` for directory creation.
+2.  **Ephemeral Messages:** Never use `ephemeral: true`. Always use `flags: MessageFlags.Ephemeral`.
+3.  **Type Safety:** No `any`. Always verify with `tsc`.
+4.  **Bot Admin:** Check `BotUser.isBotAdmin`, **not** `Player.isBotAdmin`.
+5.  **Caching:** Use `os.tmpdir()` for file-based caches to avoid permission issues in Docker.
+6.  **Assets:** Access shared resources via the top-level `assets/` directory.
+7.  **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
