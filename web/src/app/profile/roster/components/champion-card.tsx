@@ -45,11 +45,11 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
             <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
-                <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none backdrop-blur-sm">
+                <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none">
                     {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
                 </Badge>
                 {item.isAwakened && (
-                    <Badge variant="outline" className="bg-sky-950/80 border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none backdrop-blur-sm">
+                    <Badge variant="outline" className="bg-sky-950/80 border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none">
                         S{item.sigLevel}
                     </Badge>
                 )}
@@ -57,13 +57,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
 
             <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
                 {item.isAscended && (
-                    <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm backdrop-blur-sm" title="Ascended">
+                    <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
                         <Trophy className="w-3 h-3 text-yellow-400" />
                     </div>
                 )}
                 
                 <div className="hidden sm:block">
-                    <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm backdrop-blur-sm", classColors.text)}>
+                    <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm", classColors.text)}>
                         <div className="relative w-4 h-4">
                             <Image 
                                 src={CLASS_ICONS[item.champion.class as Exclude<ChampionClass, 'SUPERIOR'>]} 

@@ -128,8 +128,23 @@ export function RosterInsights({
                                     </Select>
                                 </div>
                             </div>
-                            <div className={cn("p-4 transition-all duration-500", isPending && (pendingSection === 'rank' || pendingSection === 'all') && "blur-[1px] opacity-80 pointer-events-none")}>
-                                {recommendations.length > 0 ? (
+                            <div className={cn("p-4 transition-all duration-500", isPending && recommendations.length > 0 && (pendingSection === 'rank' || pendingSection === 'all') && "blur-[1px] opacity-80 pointer-events-none")}>
+                                {isPending && recommendations.length === 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                        {[1,2,3,4,5].map(i => (
+                                            <div key={i} className="flex items-center gap-3 p-2 pr-3 rounded-xl border border-slate-800 bg-slate-900/20 h-[66px]">
+                                                <div className="w-12 h-12 rounded-lg bg-slate-800/50 animate-pulse shrink-0" />
+                                                <div className="flex flex-col flex-1 gap-2 min-w-0">
+                                                    <div className="flex justify-between gap-2">
+                                                         <div className="w-8 h-2.5 rounded bg-slate-800/50 animate-pulse" />
+                                                         <div className="w-10 h-2.5 rounded bg-slate-800/50 animate-pulse" />
+                                                    </div>
+                                                    <div className="w-3/4 h-3 rounded bg-slate-800/50 animate-pulse" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : recommendations.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                                         {recommendations.map((rec, i) => {
                                             const colors = getChampionClassColors(rec.championClass);
@@ -206,8 +221,23 @@ export function RosterInsights({
                                     />
                                 </div>
                             </div>
-                            <div className={cn("p-4 transition-all duration-500", isPending && (pendingSection === 'sig' || pendingSection === 'all') && "blur-[1px] opacity-80 pointer-events-none")}>
-                                {sigRecommendations.length > 0 ? (
+                            <div className={cn("p-4 transition-all duration-500", isPending && sigRecommendations.length > 0 && (pendingSection === 'sig' || pendingSection === 'all') && "blur-[1px] opacity-80 pointer-events-none")}>
+                                {isPending && sigRecommendations.length === 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                                        {[1,2,3,4,5].map(i => (
+                                            <div key={i} className="flex items-center gap-3 p-2 pr-3 rounded-xl border border-slate-800 bg-slate-900/20 h-[66px]">
+                                                <div className="w-12 h-12 rounded-lg bg-slate-800/50 animate-pulse shrink-0" />
+                                                <div className="flex flex-col flex-1 gap-2 min-w-0">
+                                                    <div className="flex justify-between gap-2">
+                                                         <div className="w-8 h-2.5 rounded bg-slate-800/50 animate-pulse" />
+                                                         <div className="w-10 h-2.5 rounded bg-slate-800/50 animate-pulse" />
+                                                    </div>
+                                                    <div className="w-3/4 h-3 rounded bg-slate-800/50 animate-pulse" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : sigRecommendations.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                                         {sigRecommendations.map((rec, i) => {
                                             const colors = getChampionClassColors(rec.championClass);

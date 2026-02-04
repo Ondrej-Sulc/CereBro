@@ -43,7 +43,7 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 GridList.displayName = "GridList";
 
 export function RosterView({
-    initialRoster, allChampions, top30Average, prestigeMap, recommendations, sigRecommendations,
+    initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
     simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
     initialRankSagaFilter, initialSigSagaFilter,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities
@@ -59,6 +59,13 @@ export function RosterView({
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
   
+  // Data State (Client-Side Fetching)
+  const [prestigeMap, setPrestigeMap] = useState<Record<string, number>>(initialPrestigeMap);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
+  const [sigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
+  const [top30Average, setTop30Average] = useState(initialTop30Average);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(true);
+
   // Filter States
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
   const [tagFilter, setTagFilter] = useState<string[]>([]);
@@ -92,6 +99,47 @@ export function RosterView({
 
   const router = useRouter();
   const { toast } = useToast();
+
+  // Sync Props to State (Handle Navigation)
+  useEffect(() => { setSigBudget(initialSigBudget); }, [initialSigBudget]);
+  useEffect(() => { setRankUpClassFilter(initialRankClassFilter); }, [initialRankClassFilter]);
+  useEffect(() => { setSigClassFilter(initialSigClassFilter); }, [initialSigClassFilter]);
+  useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
+  useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
+
+  // Fetch Recommendations & Prestige
+  useEffect(() => {
+      const fetchData = async () => {
+          setIsLoadingRecommendations(true);
+          setPendingSection('all');
+          try {
+              const params = new URLSearchParams();
+              if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
+              if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
+              if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
+              if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
+              if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
+              if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
+
+              const res = await fetch(`/api/profile/roster/recommendations?${params.toString()}`);
+              if (!res.ok) throw new Error("Failed to load recommendations");
+              
+              const data = await res.json();
+              setPrestigeMap(data.prestigeMap);
+              setRecommendations(data.recommendations);
+              setSigRecommendations(data.sigRecommendations);
+              setTop30Average(data.top30Average);
+          } catch (error) {
+              console.error(error);
+              toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
+          } finally {
+              setIsLoadingRecommendations(false);
+              setPendingSection(null);
+          }
+      };
+      
+      fetchData();
+  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);
@@ -153,11 +201,13 @@ export function RosterView({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-        setPendingSection('sig');
-        updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
+        if (sigBudget !== initialSigBudget) {
+            setPendingSection('sig');
+            updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
+        }
     }, 500);
     return () => clearTimeout(timer);
-  }, [sigBudget, updateUrlParams]);
+  }, [sigBudget, updateUrlParams, initialSigBudget]);
 
   const filteredRoster = useMemo(() => {
     const filtered = roster.filter((item) => {
@@ -265,7 +315,7 @@ export function RosterView({
         sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
         rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
         sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
-        isPending={isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
+        isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 
       <RosterFilters 
