@@ -8,6 +8,7 @@ import {
 import { Command, CommandAccess } from "../../types/command";
 import { autocomplete as prestigeAutocomplete } from "../prestige";
 import { handleRosterDebug } from "./roster";
+import { handleRosterScanDebug } from "./rosterScan";
 import { handlePrestigeDebug } from "./prestige";
 
 export const command: Command = {
@@ -48,6 +49,17 @@ export const command: Command = {
             .setName("image5")
             .setDescription("Another screenshot.")
             .setRequired(false)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("roster-scan")
+        .setDescription("Debug Stats View roster processing.")
+        .addAttachmentOption((option) =>
+          option
+            .setName("image")
+            .setDescription("Screenshot of Battlegrounds Deck View.")
+            .setRequired(true)
         )
     )
     .addSubcommand((subcommand) =>
@@ -94,6 +106,8 @@ export const command: Command = {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === "roster") {
       await handleRosterDebug(interaction);
+    } else if (subcommand === "roster-scan") {
+      await handleRosterScanDebug(interaction);
     } else if (subcommand === "prestige") {
       await handlePrestigeDebug(interaction);
     }
