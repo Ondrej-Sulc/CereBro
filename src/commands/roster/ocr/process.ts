@@ -224,6 +224,8 @@ async function saveStatsViewRoster(
         cellsWithNames: grid.filter(c => c.championName).length 
     }, "Saving stats view roster");
 
+    let unidentifiedCount = 0;
+
     for (const cell of grid) {
         if (cell.championName && cell.class && cell.stars && cell.rank) {
             const champion = championMap.get(cell.championName);
@@ -273,8 +275,14 @@ async function saveStatsViewRoster(
                     rank: cell.rank
                 }, msg);
                 errors.push(msg);
+            } else {
+                unidentifiedCount++;
             }
         }
+    }
+
+    if (unidentifiedCount > 0) {
+        errors.push(`⚠️ Could not identify champions in ${unidentifiedCount} detected slots. (Image might be unclear or cropped)`);
     }
 
     return { champions: savedChampions, errors };
