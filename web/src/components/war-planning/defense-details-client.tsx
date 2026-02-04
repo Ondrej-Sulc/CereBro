@@ -27,6 +27,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { DefenseMobileSheet } from "./defense/defense-mobile-sheet";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -816,7 +817,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         {/* Editor Sidebar */}
         <div className={cn(
             "bg-slate-950 border-l border-slate-800 transition-all duration-300 ease-in-out z-20 flex flex-col",
-            (rightPanelState === 'editor' || rightPanelState === 'tools' || rightPanelState === 'stats') ? "w-full md:w-[400px]" : "w-0 overflow-hidden"
+            (isDesktop && (rightPanelState === 'editor' || rightPanelState === 'tools' || rightPanelState === 'stats')) || 
+            (!isDesktop && rightPanelState === 'editor')
+                ? "w-full md:w-[400px]" 
+                : "w-0 overflow-hidden"
         )}>
              {rightPanelState === 'editor' && (
                  <DefenseEditor 
@@ -838,7 +842,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     bgPlacements={currentPlacements}
                  />
              )}
-             {rightPanelState === 'tools' && (
+             {(isDesktop && rightPanelState === 'tools') && (
                  <PlanningToolsPanel
                     key={currentBattlegroup}
                     players={props.players}
@@ -856,7 +860,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     isReadOnly={isReadOnly}
                  />
              )}
-             {rightPanelState === 'stats' && (
+             {(isDesktop && rightPanelState === 'stats') && (
                  <DefenseStatsPanel
                     onClose={handleEditorClose}
                     placements={currentPlacements}
@@ -865,6 +869,31 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                  />
              )}
         </div>
+
+        {/* Mobile Drawer for Tools and Stats */}
+        <DefenseMobileSheet
+            isDesktop={isDesktop}
+            rightPanelState={rightPanelState}
+            onClose={handleEditorClose}
+            planId={props.planId}
+            currentBattlegroup={currentBattlegroup}
+            champions={props.champions}
+            players={props.players}
+            isReadOnly={isReadOnly}
+            selectedNodeId={selectedNodeId}
+            selectedDbNodeId={selectedDbNodeId}
+            selectedPlacement={selectedPlacement}
+            handleSavePlacement={handleSavePlacement}
+            handleNavigateNode={handleNavigateNode}
+            mapType={props.plan.mapType}
+            activeTier={activeTier}
+            nodesMap={nodesMap}
+            currentPlacements={currentPlacements}
+            allianceId={props.plan.allianceId}
+            handleAddFromTool={handleAddFromTool}
+            selectedPlayerId={selectedPlayerId}
+            activeTag={activeTag || null}
+        />
 
       </div>
     </PlayerColorProvider>
