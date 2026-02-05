@@ -21,7 +21,8 @@ export async function distributeWarPlan(
     allianceId: string, 
     warId: string, 
     targetBattlegroup?: number,
-    targetPlayerId?: string
+    targetPlayerId?: string,
+    targetChannelId?: string
 ): Promise<DistributeResult> {
     const result: DistributeResult = { sent: [], notFound: [], noData: [], errors: [] };
 
@@ -433,17 +434,36 @@ export async function distributeWarPlan(
 
         for (const bg of distinctBgs) {
             try {
-                 // Check config first
-                const channelId = channelMap[bg as keyof typeof channelMap];
-                if (!channelId) {
-                    result.errors.push(`BG ${bg} channel not configured (use /alliance config-channels)`);
-                    continue;
+                let channel: TextChannel | null = null;
+
+                if (targetChannelId) {
+                    try {
+                        const fetched = await client.channels.fetch(targetChannelId);
+                        if (fetched && (fetched.type === ChannelType.GuildText || fetched.type === ChannelType.GuildAnnouncement)) {
+                            channel = fetched as TextChannel;
+                        }
+                    } catch (e) {
+                        result.errors.push(`Target channel ${targetChannelId} not found`);
+                        continue;
+                    }
+                } else {
+                    // Check config first
+                    const channelId = channelMap[bg as keyof typeof channelMap];
+                    if (!channelId) {
+                        result.errors.push(`BG ${bg} channel not configured (use /alliance config-channels)`);
+                        continue;
+                    }
+
+                    channel = await getChannel(bg);
+                    if (!channel) {
+                        result.errors.push(`BG ${bg} channel (ID: ${channelId}) not found or inaccessible`);
+                        continue;
+                    }
                 }
 
-                const channel = await getChannel(bg);
                 if (!channel) {
-                    result.errors.push(`BG ${bg} channel (ID: ${channelId}) not found or inaccessible`);
-                    continue;
+                     result.errors.push(`Could not determine channel for BG ${bg}`);
+                     continue;
                 }
 
                 // Gather players and fights for this BG
@@ -536,12 +556,17 @@ export async function distributeWarPlan(
                 });
                 
                 logger.info(`Sent overview map to BG ${bg} channel`);
+                result.sent.push(`BG ${bg} Map`);
 
             } catch (e) {
                 logger.error({ err: e, bg }, "Failed to distribute overview map");
             }
         }
     }
+    
+    // If we are sharing to a specific channel (e.g. general chat), we stop here.
+    // We don't want to spam individual threads.
+    if (targetChannelId) return result;
 
     // Process each player
     for (const [playerName, fights] of playerFights) {

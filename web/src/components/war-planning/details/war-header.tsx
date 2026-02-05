@@ -1,7 +1,7 @@
 import { War, WarStatus, Tag, WarResult, WarMapType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle } from "lucide-react";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle, Loader2 } from "lucide-react";
 import { RightPanelState } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
@@ -23,6 +23,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditWarDialog } from "../edit-war-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getGuildChannels, DiscordChannel } from "@/app/planning/actions";
 
 interface WarHeaderProps {
   war: War;
@@ -42,7 +45,7 @@ interface WarHeaderProps {
   onAddWarBan: (championId: number) => Promise<void>;
   onRemoveWarBan: (banId: string) => Promise<void>;
   onAddExtra: (playerId: string, championId: number) => void;
-  onDistribute: (battlegroup?: number) => void;
+  onDistribute: (battlegroup?: number, targetChannelId?: string) => void;
   assignedChampions?: { playerId: string; championId: number }[];
   activeTag?: Tag | null;
   isReadOnly?: boolean;
@@ -76,6 +79,35 @@ export function WarHeader({
   const { toast } = useToast();
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Share Dialog State
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [channels, setChannels] = useState<DiscordChannel[]>([]);
+  const [selectedChannel, setSelectedChannel] = useState<string>("");
+  const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+
+  const handleOpenShareDialog = async () => {
+    setIsShareDialogOpen(true);
+    setSelectedChannel("");
+    
+    if (channels.length === 0) {
+        setIsLoadingChannels(true);
+        try {
+            const fetched = await getGuildChannels(war.allianceId);
+            setChannels(fetched);
+        } catch (e) {
+            toast({ title: "Failed to fetch channels", description: "Could not load Discord channels.", variant: "destructive" });
+        } finally {
+            setIsLoadingChannels(false);
+        }
+    }
+  };
+
+  const handleShareToChannel = () => {
+      if (!selectedChannel) return;
+      onDistribute(undefined, selectedChannel);
+      setIsShareDialogOpen(false);
+  };
 
   // Filter out champions already banned
   const availableChampions = champions.filter(c => 
@@ -149,6 +181,7 @@ export function WarHeader({
         
         <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
           {!isReadOnly && (
+          <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2">
@@ -169,8 +202,46 @@ export function WarHeader({
               <DropdownMenuItem onClick={() => onDistribute(3)}>
                 Share BG3
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenShareDialog(); }}>
+                  Share to Channel...
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+            <DialogContent>
+                <DialogHeader>
+                <DialogTitle>Share War Plan</DialogTitle>
+                <DialogDescription>
+                    Select a Discord channel to share the War Plan Overview map to.
+                </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    {isLoadingChannels ? (
+                        <div className="flex items-center justify-center py-4 text-muted-foreground">
+                            <Loader2 className="h-6 w-6 animate-spin mr-2" /> Loading channels...
+                        </div>
+                    ) : (
+                        <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a channel..." />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                                {channels.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>#{c.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsShareDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleShareToChannel} disabled={!selectedChannel || isLoadingChannels}>Share</Button>
+                </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          </>
           )}
 
           {!isReadOnly && (

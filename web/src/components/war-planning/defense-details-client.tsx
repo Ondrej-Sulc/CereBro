@@ -17,7 +17,8 @@ import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { useToast } from "@/hooks/use-toast";
 import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan, distributeDefensePlanToDiscord } from "@/app/planning/defense-actions";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { getGuildChannels } from "@/app/planning/actions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
@@ -155,6 +156,35 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [newName, setNewName] = useState(props.plan.name);
+
+  // Share Dialog State
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [channels, setChannels] = useState<{ id: string; name: string }[]>([]);
+  const [selectedChannel, setSelectedChannel] = useState<string>("");
+  const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+
+  const handleOpenShareDialog = async () => {
+    setIsShareDialogOpen(true);
+    setSelectedChannel("");
+    
+    if (channels.length === 0) {
+        setIsLoadingChannels(true);
+        try {
+            const fetched = await getGuildChannels(props.plan.allianceId);
+            setChannels(fetched);
+        } catch (e) {
+            toast({ title: "Failed to fetch channels", description: "Could not load Discord channels.", variant: "destructive" });
+        } finally {
+            setIsLoadingChannels(false);
+        }
+    }
+  };
+
+  const handleShareToChannel = () => {
+      if (!selectedChannel) return;
+      handleDistribute(undefined, selectedChannel);
+      setIsShareDialogOpen(false);
+  };
 
   // Sync name from props
   const [prevPlanName, setPrevPlanName] = useState(props.plan.name);
@@ -441,9 +471,9 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       await handleMoveDefender(placementId, targetNode.id);
   }, [nodesMap, handleMoveDefender, toast]);
 
-  const handleDistribute = async (battlegroup?: number) => {
+  const handleDistribute = async (battlegroup?: number, targetChannelId?: string) => {
       try {
-          await distributeDefensePlanToDiscord(props.planId, battlegroup);
+          await distributeDefensePlanToDiscord(props.planId, battlegroup, targetChannelId);
           const target = battlegroup ? `BG${battlegroup}` : "all battlegroups";
           toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
       } catch (e) {
@@ -644,6 +674,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                                     <DropdownMenuItem onClick={() => handleDistribute(3)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
                                         <span>Share BG3</span>
                                     </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-slate-800" />
+                                    <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenShareDialog(); }} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Share2 className="mr-2 h-4 w-4" />
+                                        <span>Share to Channel...</span>
+                                    </DropdownMenuItem>
                                 </>
                             )}
                         </DropdownMenuContent>
@@ -755,6 +790,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                             <DropdownMenuItem onClick={() => handleDistribute(3)}>
                                 Share BG3
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenShareDialog(); }}>
+                                Share to Channel...
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>
                  )}
@@ -770,6 +809,39 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                  </Button>
                  {loadingPlacements && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
              </div>
+
+             <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>Share Defense Plan</DialogTitle>
+                    <DialogDescription>
+                        Select a Discord channel to share the Defense Plan Overview map to.
+                    </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        {isLoadingChannels ? (
+                            <div className="flex items-center justify-center py-4 text-muted-foreground">
+                                <Loader2 className="h-6 w-6 animate-spin mr-2" /> Loading channels...
+                            </div>
+                        ) : (
+                            <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a channel..." />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[300px]">
+                                    {channels.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>#{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsShareDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleShareToChannel} disabled={!selectedChannel || isLoadingChannels}>Share</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
           </div>
 
           {/* Main View */}

@@ -272,7 +272,7 @@ export async function renameDefensePlan(planId: string, newName: string) {
   revalidatePath(`/planning/defense/${planId}`);
 }
 
-export async function distributeDefensePlanToDiscord(planId: string, battlegroup?: number) {
+export async function distributeDefensePlanToDiscord(planId: string, battlegroup?: number, targetChannelId?: string) {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -299,7 +299,8 @@ export async function distributeDefensePlanToDiscord(planId: string, battlegroup
           payload: {
               allianceId: plan.allianceId,
               battlegroup: battlegroup,
-              planId: plan.id
+              planId: plan.id,
+              targetChannelId
           }
       }
   });

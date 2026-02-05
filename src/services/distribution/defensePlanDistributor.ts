@@ -19,7 +19,8 @@ export async function distributeDefensePlan(
     client: Client, 
     allianceId: string, 
     targetBattlegroup?: number,
-    planId?: string
+    planId?: string,
+    targetChannelId?: string
 ): Promise<DistributeResult> {
     const result: DistributeResult = { sent: [], notFound: [], noData: [], errors: [] };
 
@@ -202,16 +203,35 @@ export async function distributeDefensePlan(
 
     for (const bg of distinctBgs) {
         try {
-            // Check config first
-            const channelId = channelMap[bg as keyof typeof channelMap];
-            if (!channelId) {
-                result.errors.push(`BG ${bg} channel not configured (use /alliance config-channels)`);
-                continue;
+            let channel: TextChannel | null = null;
+
+            if (targetChannelId) {
+                try {
+                    const fetched = await client.channels.fetch(targetChannelId);
+                    if (fetched && (fetched.type === ChannelType.GuildText || fetched.type === ChannelType.GuildAnnouncement)) {
+                        channel = fetched as TextChannel;
+                    }
+                } catch (e) {
+                    result.errors.push(`Target channel ${targetChannelId} not found`);
+                    continue;
+                }
+            } else {
+                // Check config first
+                const channelId = channelMap[bg as keyof typeof channelMap];
+                if (!channelId) {
+                    result.errors.push(`BG ${bg} channel not configured (use /alliance config-channels)`);
+                    continue;
+                }
+
+                channel = await getChannel(bg);
+                if (!channel) {
+                    result.errors.push(`BG ${bg} channel (ID: ${channelId}) not found or inaccessible`);
+                    continue;
+                }
             }
 
-            const channel = await getChannel(bg);
             if (!channel) {
-                result.errors.push(`BG ${bg} channel (ID: ${channelId}) not found or inaccessible`);
+                result.errors.push(`Could not determine channel for BG ${bg}`);
                 continue;
             }
 
@@ -288,6 +308,8 @@ export async function distributeDefensePlan(
             result.errors.push(`BG ${bg}: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
+
+    if (targetChannelId) return result;
 
     // --- Individual Player Distribution ---
     // 1. Group Placements by Player

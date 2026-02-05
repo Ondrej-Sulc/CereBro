@@ -86,12 +86,12 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     }
   }, [isDesktop, setRightPanelState]);
 
-  const handleDistribute = useCallback(async (battlegroup?: number) => {
+  const handleDistribute = useCallback(async (battlegroup?: number, targetChannelId?: string) => {
     try {
-        await distributePlan(props.warId, battlegroup);
+        await distributePlan(props.warId, battlegroup, targetChannelId);
         toast({
             title: "Plan Distribution Started",
-            description: `Distribution job queued for ${battlegroup ? `Battlegroup ${battlegroup}` : 'all battlegroups'}.`,
+            description: `Distribution job queued for ${battlegroup ? `Battlegroup ${battlegroup}` : 'all battlegroups'}${targetChannelId ? ' to custom channel' : ''}.`,
         });
     } catch (e: unknown) {
         const error = e as Error;

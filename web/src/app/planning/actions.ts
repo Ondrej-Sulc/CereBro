@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { ChampionImages } from "@/types/champion";
+import { config } from "@cerebro/core/config";
 
 export interface ExtraChampion {
   id: string;
@@ -19,6 +20,12 @@ export interface ExtraChampion {
   champion: { id: number; name: string; images: ChampionImages };
 }
 
+export interface DiscordChannel {
+    id: string;
+    name: string;
+    type: number;
+}
+
 const createWarSchema = z.object({
   season: z.number().min(1),
   warNumber: z.number().min(1).optional(),
@@ -26,6 +33,46 @@ const createWarSchema = z.object({
   opponent: z.string().min(1),
   mapType: z.nativeEnum(WarMapType).optional(),
 });
+
+export async function getGuildChannels(allianceId: string): Promise<DiscordChannel[]> {
+    const player = await getUserPlayerWithAlliance();
+    if (!player || (!player.isOfficer && !player.isBotAdmin)) {
+         throw new Error("Unauthorized");
+    }
+    
+    // Determine target alliance
+    let targetAllianceId = player.allianceId;
+    if (player.isBotAdmin && allianceId) {
+        targetAllianceId = allianceId;
+    }
+    
+    if (!targetAllianceId) throw new Error("Alliance not found");
+
+    const alliance = await prisma.alliance.findUnique({
+        where: { id: targetAllianceId },
+        select: { guildId: true }
+    });
+
+    if (!alliance?.guildId) return [];
+
+    const response = await fetch(`https://discord.com/api/v10/guilds/${alliance.guildId}/channels`, {
+        headers: {
+            Authorization: `Bot ${config.BOT_TOKEN}`
+        }
+    });
+
+    if (!response.ok) {
+        // If 403 or 404, maybe bot is not in guild or missing permissions
+        console.error("Failed to fetch channels", await response.text());
+        return [];
+    }
+
+    const channels = await response.json() as DiscordChannel[];
+    // Filter for Guild Text (0) and Announcement (5) channels
+    return channels
+        .filter(c => c.type === 0 || c.type === 5)
+        .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 export async function getActiveTactic(season: number, tier: number) {
     const session = await auth();
@@ -481,7 +528,7 @@ export async function getExtraChampions(warId: string, battlegroup: number): Pro
   }));
 }
 
-export async function distributePlan(warId: string, battlegroup?: number) {
+export async function distributePlan(warId: string, battlegroup?: number, targetChannelId?: string) {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -506,8 +553,9 @@ export async function distributePlan(warId: string, battlegroup?: number) {
       payload: {
         allianceId: war.allianceId,
         warId,
-        battlegroup
-      } as { allianceId: string; warId: string; battlegroup?: number }
+        battlegroup,
+        targetChannelId
+      } as { allianceId: string; warId: string; battlegroup?: number; targetChannelId?: string }
     }
   });
 
