@@ -20,7 +20,7 @@ interface DefenseMobileSheetProps {
   isReadOnly?: boolean;
   // Editor Props
   selectedNodeId: number | null;
-  selectedDbNodeId: string | null;
+  selectedDbNodeId: number | undefined;
   selectedPlacement: PlacementWithNode | null;
   handleSavePlacement: (placement: Partial<WarDefensePlacement>) => Promise<void>;
   handleNavigateNode: (direction: number) => void;
