@@ -8,7 +8,7 @@
 *   **Slash Commands:** All commands are slash commands with clear subcommand structures.
 *   **UI Components:** Prioritize Discord V2 components (`ContainerBuilder`, `ActionRowBuilder`).
 *   **Caching:** Use `os.tmpdir()` for local file caching (e.g., champion images) to ensure write permissions across different environments (Windows dev vs. Linux Docker).
-*   **Assets:** Use the top-level `assets/` directory for shared resources. Services should resolve paths using `path.join(process.cwd(), 'assets', ...)`.
+*   **Assets:** Use the top-level `assets/` directory for shared resources. Services should resolve paths using the `getAssetsPath` utility from `src/utils/assets.ts`.
 *   **Services vs Utils:**
     *   `src/services`: Stateful logic, API connections.
     *   `src/utils`: Stateless helpers.

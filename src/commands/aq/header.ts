@@ -2,6 +2,7 @@ import sharp from "sharp";
 import * as opentype from "opentype.js";
 import { promises as fs } from "fs";
 import path from "path";
+import { getAssetsPath } from "../../utils/assets.js";
 
 export interface AQHeaderOptions {
   day: number;
@@ -28,10 +29,7 @@ function nodeBufferToArrayBuffer(buf: Buffer): ArrayBuffer {
 async function loadTitleFont(): Promise<opentype.Font | null> {
   try {
     if (cachedTitleFont) return cachedTitleFont;
-    const localTtf = path.resolve(
-      process.cwd(),
-      "assets/fonts/BebasNeue-Regular.ttf"
-    );
+    const localTtf = getAssetsPath("fonts/BebasNeue-Regular.ttf");
     const local = await fs.readFile(localTtf);
     const font = opentype.parse(nodeBufferToArrayBuffer(local));
     cachedTitleFont = font;

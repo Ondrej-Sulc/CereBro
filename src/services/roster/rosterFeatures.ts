@@ -5,6 +5,7 @@ import logger from '../loggerService.js';
 import { ChampionClass } from '@prisma/client';
 import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
+import { getAssetsPath } from '../../utils/assets.js';
 
 export class RosterFeatureService {
   private classIcons: Map<ChampionClass, Buffer> = new Map();
@@ -15,7 +16,7 @@ export class RosterFeatureService {
   }
 
   private async loadClassIcons() {
-    const iconsPath = path.join(process.cwd(), 'assets', 'icons');
+    const iconsPath = getAssetsPath('icons');
 
     const classMap: Record<string, ChampionClass> = {
       'Cosmic.png': 'COSMIC',
