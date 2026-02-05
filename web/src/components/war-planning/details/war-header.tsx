@@ -105,7 +105,7 @@ export function WarHeader({
 
   const handleShareToChannel = () => {
       if (!selectedChannel) return;
-      onDistribute(undefined, selectedChannel);
+      onDistribute(currentBattlegroup, selectedChannel);
       setIsShareDialogOpen(false);
   };
 

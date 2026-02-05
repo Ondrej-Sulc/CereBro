@@ -182,7 +182,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
 
   const handleShareToChannel = () => {
       if (!selectedChannel) return;
-      handleDistribute(undefined, selectedChannel);
+      handleDistribute(currentBattlegroup, selectedChannel);
       setIsShareDialogOpen(false);
   };
 
