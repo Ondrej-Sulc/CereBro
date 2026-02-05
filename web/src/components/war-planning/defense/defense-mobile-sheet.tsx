@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useAnimation, useMotionValue } from "framer-motion";
-import { RightPanelState } from "../hooks/use-defense-planning";
+import { RightPanelState } from "../hooks/use-war-planning";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
