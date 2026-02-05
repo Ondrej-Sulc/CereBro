@@ -25,6 +25,11 @@ To decouple the Web App and Discord Bot, we use a database-backed `BotJob` queue
 *   **Consumer (Bot):** `JobProcessor` service polls for `PENDING` jobs and executes Discord API calls.
 *   **Job Types:** `NOTIFY_WAR_VIDEO`, `DISTRIBUTE_WAR_PLAN`, `UPDATE_MEMBER_ROLES`.
 
+## Direct Discord API Access (Web)
+While most Discord actions are handled via the `BotJob` queue, the Web App can directly query the Discord API for read-only operations (e.g., fetching guild channels).
+*   **Pattern:** Server Actions use `fetch` to call the Discord API (v10) with `Bot ${config.BOT_TOKEN}`.
+*   **Use Case:** Providing real-time Discord data to the Web UI that doesn't require complex state management by the bot.
+
 ## Caching Strategy (Web)
 We use a server-side, in-memory caching mechanism to optimize performance:
 *   **`getFromCache`:** Generic utility with TTL.

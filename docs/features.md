@@ -58,7 +58,9 @@ A unified suite of tools for managing Alliance War.
 
 #### 3. Plan Distribution (`/aw plan` or Web "Share")
 *   **Workflow:** Officer creates plan in Web UI -> Distributes via Discord command or Web "Share" button.
-*   **Targeting:** Send to specific Battlegroup (BG1-3) or the entire alliance.
+*   **Targeting:** 
+    *   **Direct:** Send to specific Battlegroup (BG1-3) or the entire alliance (Private Threads/DMs).
+    *   **Custom Channel:** Share the "Overview Map" to any text channel in the Discord server (e.g., `#war-room`, `#general`).
 *   **Async Job:** Uses `DISTRIBUTE_WAR_PLAN` job to send personalized private threads (or DMs) to members.
 *   **Message Content:**
     *   **Visual Map:** Dynamic PNG generation (Pill style fights, Prefight highlighting).
@@ -68,8 +70,8 @@ A unified suite of tools for managing Alliance War.
 
 #### 4. Defense Plan Distribution (`/aw defense-plan` or Web "Share")
 *   **Workflow:** Officer creates defense placement in Web UI -> Distributes via Discord command or Web "Share" button.
-*   **Targeting:** Share specific Battlegroup layouts or all at once.
-*   **Output:** Sends a high-quality "Overview Map" image to the respective Battlegroup channels.
+*   **Targeting:** Share specific Battlegroup layouts or all at once to configured channels, or share an "Overview Map" to any **Custom Channel**.
+*   **Output:** Sends a high-quality "Overview Map" image to the respective Battlegroup channels or the selected custom channel.
 *   **Content:**
     *   **Visual Map:** Full defense map with champion avatars, assigned player colors, and Tactic indicators.
     *   **Links:** Direct link back to the full interactive plan on the website.

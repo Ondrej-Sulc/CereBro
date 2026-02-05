@@ -28,4 +28,5 @@
 4.  **Bot Admin:** Check `BotUser.isBotAdmin`, **not** `Player.isBotAdmin`.
 5.  **Caching:** Use `os.tmpdir()` for file-based caches to avoid permission issues in Docker.
 6.  **Assets:** Access shared resources via the top-level `assets/` directory.
-7.  **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
+7.  **Server Actions:** **NEVER** re-export non-async functions or values from a `"use server"` file. Next.js strictly requires only async function exports for server actions.
+8.  **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
