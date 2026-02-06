@@ -9,26 +9,9 @@ import { cn } from "@/lib/utils";
 import { Shield, Swords, Target, Skull, ChevronDown, ChevronUp, Trophy, TrendingUp } from "lucide-react";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
-import { ChampionClass } from "@prisma/client";
-import { ChampionImages } from "@/types/champion";
 import { DeepDiveSelection } from "./deep-dive-types";
 import { Button } from "@/components/ui/button";
-
-interface ChampionStat {
-    id: number;
-    name: string;
-    class: ChampionClass;
-    images: ChampionImages;
-    count: number;
-    deaths: number;
-    fights: number;
-}
-
-interface NodeStat {
-    nodeNumber: number;
-    deaths: number;
-    fights: number;
-}
+import { ChampionStat, NodeStat } from "./types";
 
 interface SeasonInsightsProps {
     topDefenders: ChampionStat[];

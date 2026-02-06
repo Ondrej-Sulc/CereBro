@@ -4,25 +4,8 @@ import { useState, useRef } from "react";
 import { SeasonInsights } from "./season-insights";
 import { SeasonDeepDive } from "./season-deep-dive";
 import { DetailedPlacementStat, DeepDiveSelection } from "./deep-dive-types";
-import { ChampionClass } from "@prisma/client";
-import { ChampionImages } from "@/types/champion";
 import { BarChart2 } from "lucide-react";
-
-interface ChampionStat {
-    id: number;
-    name: string;
-    class: ChampionClass;
-    images: ChampionImages;
-    count: number;
-    deaths: number;
-    fights: number;
-}
-
-interface NodeStat {
-    nodeNumber: number;
-    deaths: number;
-    fights: number;
-}
+import { ChampionStat, NodeStat } from "./types";
 
 interface SeasonAnalysisContainerProps {
     topDefenders: ChampionStat[];
