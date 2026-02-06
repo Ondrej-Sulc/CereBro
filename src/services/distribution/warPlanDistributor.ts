@@ -500,12 +500,24 @@ export async function distributeWarPlan(
                         }
                     }
 
+                    // Collect assigned champions images
+                    const assignedChampions: string[] = [];
+                    const seenChampIds = new Set<number>();
+                    
+                    pFights.forEach(f => {
+                        if (f.attacker && f.attacker.images && !seenChampIds.has(f.attacker.id)) {
+                             seenChampIds.add(f.attacker.id);
+                             assignedChampions.push(getChampionImageUrl(f.attacker.images, '128', 'primary'));
+                        }
+                    });
+
                     if (pObj && globalColorMap.has(pObj.id)) {
                         legend.push({
                             name: name!,
                             color: globalColorMap.get(pObj.id)!,
                             championImage: pObj.avatar || undefined,
-                            pathLabel
+                            pathLabel,
+                            assignedChampions
                         });
                     }
                 });

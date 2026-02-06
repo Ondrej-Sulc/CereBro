@@ -21,6 +21,7 @@ export interface LegendItem {
     color: string;
     championImage?: string; // Optional avatar
     pathLabel?: string; // e.g. "P1 / P2"
+    assignedChampions?: string[]; // Array of champion image URLs
 }
 
 export class MapImageService {
@@ -112,7 +113,7 @@ export class MapImageService {
         const height = Math.ceil(maxY - minY);
 
         // Adjust for Legend
-        const legendWidth = 350;
+        const legendWidth = 450; // Increased to fit champions
         if (legend && legend.length > 0) {
             width += legendWidth;
         }
@@ -141,6 +142,13 @@ export class MapImageService {
             legend.forEach(item => {
                 if (item.championImage && !imageCache.has(item.championImage)) {
                     uniqueUrls.add(item.championImage);
+                }
+                if (item.assignedChampions) {
+                    item.assignedChampions.forEach(url => {
+                         if (url && !imageCache.has(url)) {
+                             uniqueUrls.add(url);
+                         }
+                    });
                 }
             });
         }
@@ -558,6 +566,29 @@ export class MapImageService {
                             <text x="${legendX + 35}" y="${legendY + 24}" font-family="sans-serif" font-size="14" fill="#64748b">${item.pathLabel}</text>
                         `;
                     }
+                }
+
+                // Render Assigned Champions (Right side)
+                if (item.assignedChampions && item.assignedChampions.length > 0) {
+                    const champSize = 32;
+                    const champGap = 8;
+                    const startX = legendX + 260; // Fixed offset from legendX
+                    
+                    item.assignedChampions.forEach((url, cIndex) => {
+                        if (url && imageCache.has(url)) {
+                            const cImg = imageCache.get(url);
+                            const cx = startX + (cIndex * (champSize + champGap));
+                            const cy = legendY;
+                            
+                            legendSvg += `
+                                <g clip-path="url(#clip-legend-${index}-c-${cIndex})">
+                                    <image href="${cImg}" x="${cx - champSize/2}" y="${cy - champSize/2}" width="${champSize}" height="${champSize}" preserveAspectRatio="xMidYMid slice" />
+                                </g>
+                                <defs><clipPath id="clip-legend-${index}-c-${cIndex}"><circle cx="${cx}" cy="${cy}" r="${champSize/2}" /></clipPath></defs>
+                                <circle cx="${cx}" cy="${cy}" r="${champSize/2}" fill="none" stroke="${item.color}" stroke-width="1.5" opacity="0.5" />
+                            `;
+                        }
+                    });
                 }
                 
                 legendY += 60;
