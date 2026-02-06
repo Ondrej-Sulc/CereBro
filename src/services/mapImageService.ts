@@ -113,7 +113,7 @@ export class MapImageService {
         const height = Math.ceil(maxY - minY);
 
         // Adjust for Legend
-        const legendWidth = 450; // Increased to fit champions
+        const legendWidth = 1200; // Increased significantly for visibility
         if (legend && legend.length > 0) {
             width += legendWidth;
         }
@@ -539,11 +539,11 @@ export class MapImageService {
 
             // Headers
             const colPlayer = 0;
-            const colPath = 320;
-            const colTeam = 480;
+            const colPath = 360; // Shifted right
+            const colTeam = 700; // Shifted right significantly to give path room
             
             legendSvg += `
-                <g font-family="sans-serif" font-weight="bold" font-size="14" fill="#64748b" letter-spacing="1">
+                <g font-family="sans-serif" font-weight="bold" font-size="20" fill="#64748b" letter-spacing="1">
                     <text x="${contentX + colPlayer}" y="${currentY}">PLAYER</text>
                     <text x="${contentX + colPath}" y="${currentY}">PATH</text>
                     <text x="${contentX + colTeam}" y="${currentY}">TEAM</text>
@@ -594,13 +594,13 @@ export class MapImageService {
 
                 // Name
                 legendSvg += `
-                    <text x="${contentX + nameX}" y="${centerY}" font-family="sans-serif" font-weight="600" font-size="20" fill="#f1f5f9" dominant-baseline="central">${item.name}</text>
+                    <text x="${contentX + nameX}" y="${centerY}" font-family="sans-serif" font-weight="600" font-size="24" fill="#f1f5f9" dominant-baseline="central">${item.name}</text>
                 `;
 
                 // --- Col 2: Path ---
                 if (item.pathLabel) {
                     legendSvg += `
-                        <text x="${contentX + colPath}" y="${centerY}" font-family="sans-serif" font-weight="500" font-size="18" fill="#94a3b8" dominant-baseline="central">${item.pathLabel}</text>
+                        <text x="${contentX + colPath}" y="${centerY}" font-family="sans-serif" font-weight="500" font-size="22" fill="#94a3b8" dominant-baseline="central">${item.pathLabel}</text>
                     `;
                 }
 
@@ -611,9 +611,12 @@ export class MapImageService {
                     let startX = contentX + colTeam;
                     
                     item.assignedChampions.forEach((champ, cIndex) => {
+                        const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
+                        const cx = startX + champSize/2;
+                        const cy = centerY;
+
                         if (champ.url && imageCache.has(champ.url)) {
                             const cImg = imageCache.get(champ.url);
-                            const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
                             
                             legendSvg += `
                                 <g transform="translate(${startX}, ${centerY - champSize/2})">
@@ -623,7 +626,7 @@ export class MapImageService {
                                         </clipPath>
                                     </defs>
                                     <!-- Glow -->
-                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2 + 4}" fill="${classColor}" opacity="0.15" />
+                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2 + 4}" fill="${classColor}" opacity="0.4" />
                                     
                                     <!-- Image -->
                                     <g clip-path="url(#clip-leg-${index}-c-${cIndex})">
@@ -634,9 +637,17 @@ export class MapImageService {
                                     <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" />
                                 </g>
                             `;
-                            
-                            startX += champSize + champGap;
+                        } else {
+                            // Fallback if image missing: Colored circle with Initial? Or just empty ring
+                            legendSvg += `
+                                <g transform="translate(${startX}, ${centerY - champSize/2})">
+                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="${classColor}" opacity="0.2" />
+                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" stroke-dasharray="4 2" />
+                                </g>
+                            `;
                         }
+                        
+                        startX += champSize + champGap;
                     });
                 }
                 
