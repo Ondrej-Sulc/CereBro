@@ -114,7 +114,7 @@ export class MapImageService {
         const height = Math.ceil(maxY - minY);
 
         // Adjust for Legend
-        const legendWidth = 800;
+        const legendWidth = 750;
         if (legend && legend.length > 0) {
             width += legendWidth;
         }
