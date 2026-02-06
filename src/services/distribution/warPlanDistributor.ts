@@ -122,13 +122,13 @@ export async function distributeWarPlan(
         
         let defenderImage: string | undefined;
         if (fight.defender?.images) {
-            defenderImage = getChampionImageUrl(fight.defender.images, '128', 'primary');
+            defenderImage = getChampionImageUrl(fight.defender.images, '64', 'primary');
             uniqueImageUrls.add(defenderImage);
         }
 
         let attackerImage: string | undefined;
         if (fight.attacker?.images) {
-            attackerImage = getChampionImageUrl(fight.attacker.images, '128', 'primary');
+            attackerImage = getChampionImageUrl(fight.attacker.images, '64', 'primary');
             uniqueImageUrls.add(attackerImage);
         }
 
@@ -137,7 +137,7 @@ export async function distributeWarPlan(
         if (fight.prefightChampions?.length > 0) {
             for (const pf of fight.prefightChampions) {
                 if (pf.champion?.images) {
-                    const pfImg = getChampionImageUrl(pf.champion.images, '128', 'primary');
+                    const pfImg = getChampionImageUrl(pf.champion.images, '64', 'primary');
                     uniqueImageUrls.add(pfImg);
                     
                     const borderColor = (pf.player?.id && globalColorMap.get(pf.player.id)) || '#94a3b8';
@@ -315,7 +315,7 @@ export async function distributeWarPlan(
                     const placerId = pf.playerId;
                     let championImage: string | undefined;
                     if (pf.champion?.images) {
-                        championImage = getChampionImageUrl(pf.champion.images, '128', 'primary');
+                        championImage = getChampionImageUrl(pf.champion.images, '64', 'primary');
                     }
 
                     if (!playerPrefightTasks.has(placerId)) playerPrefightTasks.set(placerId, []);
@@ -509,7 +509,7 @@ export async function distributeWarPlan(
                         if (f.attacker && f.attacker.images && !seenChampIds.has(f.attacker.id)) {
                              seenChampIds.add(f.attacker.id);
                              assignedChampions.push({
-                                 url: getChampionImageUrl(f.attacker.images, '128', 'primary'),
+                                 url: getChampionImageUrl(f.attacker.images, '64', 'primary'),
                                  class: f.attacker.class
                              });
                         }
@@ -524,7 +524,7 @@ export async function distributeWarPlan(
                                     seenChampIds.add(pf.champion.id);
                                     if (pf.champion.images) {
                                         assignedChampions.push({
-                                            url: getChampionImageUrl(pf.champion.images, '128', 'primary'),
+                                            url: getChampionImageUrl(pf.champion.images, '64', 'primary'),
                                             class: pf.champion.class
                                         });
                                     }
@@ -539,7 +539,7 @@ export async function distributeWarPlan(
                             seenChampIds.add(e.champion.id);
                             if (e.champion.images) {
                                 assignedChampions.push({
-                                    url: getChampionImageUrl(e.champion.images, '128', 'primary'),
+                                    url: getChampionImageUrl(e.champion.images, '64', 'primary'),
                                     class: e.champion.class
                                 });
                             }

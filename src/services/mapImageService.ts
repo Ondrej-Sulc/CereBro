@@ -70,7 +70,8 @@ export class MapImageService {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Failed to fetch ${url}`);
                 const buffer = Buffer.from(await response.arrayBuffer());
-                const resized = await sharp(buffer).resize(128, 128).toBuffer();
+                // Resize to save space in SVG and standardizing
+                const resized = await sharp(buffer).resize(64, 64).toBuffer();
                 const base64 = `data:image/png;base64,${resized.toString('base64')}`;
                 cache.set(url, base64);
             } catch (e) {
@@ -113,7 +114,7 @@ export class MapImageService {
         const height = Math.ceil(maxY - minY);
 
         // Adjust for Legend
-        const legendWidth = 900; // Reduced from 1200 to fit content better
+        const legendWidth = 800;
         if (legend && legend.length > 0) {
             width += legendWidth;
         }
@@ -161,7 +162,8 @@ export class MapImageService {
                 const buffer = Buffer.from(arrayBuffer);
                 
                 // Resize to save space in SVG and standardizing
-                const resized = await sharp(buffer).resize(128, 128).toBuffer();
+                // Resize to save space in SVG and standardizing
+                const resized = await sharp(buffer).resize(64, 64).toBuffer();
                 const base64 = `data:image/png;base64,${resized.toString('base64')}`;
                 imageCache.set(url, base64);
             } catch (e) {
