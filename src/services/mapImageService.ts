@@ -523,13 +523,7 @@ export class MapImageService {
             const contentX = legendX + 40;
             let currentY = 60;
 
-            // 4a. Legend Panel Background
-            legendSvg += `
-                <rect x="${legendX}" y="0" width="${legendWidth}" height="${height}" fill="#020617" />
-                <line x1="${legendX}" y1="0" x2="${legendX}" y2="${height}" stroke="${this.LINE_COLOR}" stroke-width="4" />
-            `;
-
-            // 4b. Title
+            // 4a. Title
             legendSvg += `
                 <text x="${contentX}" y="${currentY}" font-family="sans-serif" font-weight="bold" font-size="32" fill="#f8fafc">
                     Battlegroup Assignments
@@ -540,7 +534,7 @@ export class MapImageService {
             // Headers
             const colPlayer = 0;
             const colPath = 360; // Shifted right
-            const colTeam = 700; // Shifted right significantly to give path room
+            const colTeam = 480; // Compacted path column
             
             legendSvg += `
                 <g font-family="sans-serif" font-weight="bold" font-size="20" fill="#64748b" letter-spacing="1">
