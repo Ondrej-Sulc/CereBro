@@ -500,14 +500,49 @@ export async function distributeWarPlan(
                         }
                     }
 
-                    // Collect assigned champions images
-                    const assignedChampions: string[] = [];
+                    // Collect assigned champions images (All types: Attacker, Prefight, Extra)
+                    const assignedChampions: { url: string; class: any }[] = [];
                     const seenChampIds = new Set<number>();
                     
+                    // 1. Attackers from fights
                     pFights.forEach(f => {
                         if (f.attacker && f.attacker.images && !seenChampIds.has(f.attacker.id)) {
                              seenChampIds.add(f.attacker.id);
-                             assignedChampions.push(getChampionImageUrl(f.attacker.images, '128', 'primary'));
+                             assignedChampions.push({
+                                 url: getChampionImageUrl(f.attacker.images, '128', 'primary'),
+                                 class: f.attacker.class
+                             });
+                        }
+                    });
+
+                    // 2. Prefights assigned to this player
+                    // Need to check ALL fights in the war to see if this player placed a prefight
+                    war.fights.forEach(f => {
+                        if (f.prefightChampions) {
+                            f.prefightChampions.forEach(pf => {
+                                if (pf.playerId === pObj?.id && pf.champion && !seenChampIds.has(pf.champion.id)) {
+                                    seenChampIds.add(pf.champion.id);
+                                    if (pf.champion.images) {
+                                        assignedChampions.push({
+                                            url: getChampionImageUrl(pf.champion.images, '128', 'primary'),
+                                            class: pf.champion.class
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    // 3. Extra Champions
+                    war.extraChampions.forEach(e => {
+                        if (e.playerId === pObj?.id && e.champion && !seenChampIds.has(e.champion.id)) {
+                            seenChampIds.add(e.champion.id);
+                            if (e.champion.images) {
+                                assignedChampions.push({
+                                    url: getChampionImageUrl(e.champion.images, '128', 'primary'),
+                                    class: e.champion.class
+                                });
+                            }
                         }
                     });
 

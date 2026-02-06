@@ -21,7 +21,7 @@ export interface LegendItem {
     color: string;
     championImage?: string; // Optional avatar
     pathLabel?: string; // e.g. "P1 / P2"
-    assignedChampions?: string[]; // Array of champion image URLs
+    assignedChampions?: { url: string; class: ChampionClass }[]; // Array of champion image URLs with class
 }
 
 export class MapImageService {
@@ -144,9 +144,9 @@ export class MapImageService {
                     uniqueUrls.add(item.championImage);
                 }
                 if (item.assignedChampions) {
-                    item.assignedChampions.forEach(url => {
-                         if (url && !imageCache.has(url)) {
-                             uniqueUrls.add(url);
+                    item.assignedChampions.forEach(c => {
+                         if (c.url && !imageCache.has(c.url)) {
+                             uniqueUrls.add(c.url);
                          }
                     });
                 }
@@ -516,82 +516,113 @@ export class MapImageService {
             `;
         });
 
-        // --- 4. Build Legend ---
+        // --- 4. Build Legend (Table Style) ---
         let legendSvg = '';
         if (legend && legend.length > 0) {
-            const legendX = width - legendWidth + 40; // Start inside the new area
-            let legendY = 100;
+            const legendX = width - legendWidth; // Start at the boundary
+            const tablePadding = 40;
+            const tableX = legendX + tablePadding;
+            let currentY = 50;
 
-            // Title
+            // 4a. Legend Background
             legendSvg += `
-                <text x="${legendX}" y="${legendY}" font-family="sans-serif" font-weight="bold" font-size="24" fill="#e2e8f0">
-                    Battlegroup Plan
+                <rect x="${legendX}" y="0" width="${legendWidth}" height="${height}" fill="#0f172a" opacity="0.95" />
+                <line x1="${legendX}" y1="0" x2="${legendX}" y2="${height}" stroke="${this.LINE_COLOR}" stroke-width="2" />
+            `;
+
+            // 4b. Title & Headers
+            legendSvg += `
+                <text x="${tableX}" y="${currentY}" font-family="sans-serif" font-weight="bold" font-size="28" fill="#e2e8f0">
+                    Battlegroup Assignments
                 </text>
             `;
-            legendY += 50;
+            currentY += 50;
 
+            // Headers
+            const colPlayer = 0;
+            const colPath = 300;
+            const colTeam = 450;
+            
+            legendSvg += `
+                <g font-family="sans-serif" font-weight="bold" font-size="16" fill="#94a3b8">
+                    <text x="${tableX + colPlayer}" y="${currentY}">PLAYER</text>
+                    <text x="${tableX + colPath}" y="${currentY}">PATH</text>
+                    <text x="${tableX + colTeam}" y="${currentY}">TEAM</text>
+                </g>
+                <line x1="${tableX}" y1="${currentY + 15}" x2="${width - tablePadding}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" />
+            `;
+            currentY += 40;
+
+            // 4c. Rows
             legend.forEach((item, index) => {
-                // Color Circle
-                legendSvg += `
-                    <circle cx="${legendX + 12}" cy="${legendY}" r="12" fill="${item.color}" />
-                `;
-
-                // Avatar (if available)
-                if (item.championImage && imageCache.has(item.championImage)) {
-                    const img = imageCache.get(item.championImage);
-                    legendSvg += `
-                        <g clip-path="url(#clip-legend-${index})">
-                             <image href="${img}" x="${legendX + 35}" y="${legendY - 20}" width="40" height="40" preserveAspectRatio="xMidYMid slice" />
-                        </g>
-                        <defs><clipPath id="clip-legend-${index}"><circle cx="${legendX + 55}" cy="${legendY}" r="20" /></clipPath></defs>
-                    `;
-                    // Name
-                    legendSvg += `
-                        <text x="${legendX + 85}" y="${legendY + 6}" font-family="sans-serif" font-size="18" fill="#cbd5e1">${item.name}</text>
-                    `;
-                    // Path Label
-                    if (item.pathLabel) {
-                        legendSvg += `
-                            <text x="${legendX + 85}" y="${legendY + 24}" font-family="sans-serif" font-size="14" fill="#64748b">${item.pathLabel}</text>
-                        `;
-                    }
-                } else {
-                    // Name without avatar
-                     legendSvg += `
-                        <text x="${legendX + 35}" y="${legendY + 6}" font-family="sans-serif" font-size="18" fill="#cbd5e1">${item.name}</text>
-                    `;
-                    // Path Label
-                    if (item.pathLabel) {
-                        legendSvg += `
-                            <text x="${legendX + 35}" y="${legendY + 24}" font-family="sans-serif" font-size="14" fill="#64748b">${item.pathLabel}</text>
-                        `;
-                    }
+                const rowHeight = 60;
+                
+                // Row Background (Zebra Striping)
+                if (index % 2 === 0) {
+                    legendSvg += `<rect x="${legendX}" y="${currentY - 25}" width="${legendWidth}" height="${rowHeight}" fill="#1e293b" opacity="0.5" />`;
                 }
 
-                // Render Assigned Champions (Right side)
+                // --- Col 1: Player (Color + Avatar + Name) ---
+                const pCenterY = currentY + 5;
+                
+                // Color Dot
+                legendSvg += `<circle cx="${tableX + 12}" cy="${pCenterY}" r="6" fill="${item.color}" />`;
+
+                // Avatar
+                let nameX = 35;
+                if (item.championImage && imageCache.has(item.championImage)) {
+                    const img = imageCache.get(item.championImage);
+                    const avSize = 40;
+                    legendSvg += `
+                        <g clip-path="url(#clip-leg-av-${index})">
+                             <image href="${img}" x="${tableX + 35}" y="${pCenterY - avSize/2}" width="${avSize}" height="${avSize}" preserveAspectRatio="xMidYMid slice" />
+                        </g>
+                        <defs><clipPath id="clip-leg-av-${index}"><circle cx="${tableX + 35 + avSize/2}" cy="${pCenterY}" r="${avSize/2}" /></clipPath></defs>
+                        <circle cx="${tableX + 35 + avSize/2}" cy="${pCenterY}" r="${avSize/2}" fill="none" stroke="${item.color}" stroke-width="2" />
+                    `;
+                    nameX += 50;
+                }
+
+                // Name
+                legendSvg += `
+                    <text x="${tableX + nameX}" y="${pCenterY}" font-family="sans-serif" font-size="18" fill="#f1f5f9" dominant-baseline="central">${item.name}</text>
+                `;
+
+                // --- Col 2: Path ---
+                if (item.pathLabel) {
+                    legendSvg += `
+                        <text x="${tableX + colPath}" y="${pCenterY}" font-family="sans-serif" font-size="16" fill="#cbd5e1" dominant-baseline="central">${item.pathLabel}</text>
+                    `;
+                }
+
+                // --- Col 3: Team (Champions with Class Rings) ---
                 if (item.assignedChampions && item.assignedChampions.length > 0) {
-                    const champSize = 32;
-                    const champGap = 8;
-                    const startX = legendX + 260; // Fixed offset from legendX
+                    const champSize = 40; // Increased from 32
+                    const champGap = 12;
+                    let startX = tableX + colTeam;
                     
-                    item.assignedChampions.forEach((url, cIndex) => {
-                        if (url && imageCache.has(url)) {
-                            const cImg = imageCache.get(url);
-                            const cx = startX + (cIndex * (champSize + champGap));
-                            const cy = legendY;
+                    item.assignedChampions.forEach((champ, cIndex) => {
+                        if (champ.url && imageCache.has(champ.url)) {
+                            const cImg = imageCache.get(champ.url);
+                            const cx = startX + (champSize/2);
+                            const cy = pCenterY;
+                            const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
                             
                             legendSvg += `
-                                <g clip-path="url(#clip-legend-${index}-c-${cIndex})">
+                                <circle cx="${cx}" cy="${cy}" r="${champSize/2}" fill="${classColor}" opacity="0.2" />
+                                <g clip-path="url(#clip-leg-${index}-c-${cIndex})">
                                     <image href="${cImg}" x="${cx - champSize/2}" y="${cy - champSize/2}" width="${champSize}" height="${champSize}" preserveAspectRatio="xMidYMid slice" />
                                 </g>
-                                <defs><clipPath id="clip-legend-${index}-c-${cIndex}"><circle cx="${cx}" cy="${cy}" r="${champSize/2}" /></clipPath></defs>
-                                <circle cx="${cx}" cy="${cy}" r="${champSize/2}" fill="none" stroke="${item.color}" stroke-width="1.5" opacity="0.5" />
+                                <defs><clipPath id="clip-leg-${index}-c-${cIndex}"><circle cx="${cx}" cy="${cy}" r="${champSize/2}" /></clipPath></defs>
+                                <circle cx="${cx}" cy="${cy}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" />
                             `;
+                            
+                            startX += champSize + champGap;
                         }
                     });
                 }
                 
-                legendY += 60;
+                currentY += rowHeight;
             });
         }
 
