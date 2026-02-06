@@ -13,19 +13,25 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ChevronDown, ChevronRight, Activity } from "lucide-react";
+import { Skull, Swords, Trophy, Users, BarChart3, TrendingUp, ChevronDown, ChevronRight, Activity, Video, Shield } from "lucide-react";
 import { useState, useMemo } from "react";
+import Link from "next/link";
+import { getChampionClassColors } from "@/lib/championClassHelper";
+import { ChampionClass } from "@prisma/client";
 
 interface WarFightDetail {
   defenderName: string;
-  defenderClass: string;
+  defenderClass: ChampionClass;
   defenderImageUrl: string;
   attackerName: string;
-  attackerClass: string;
+  attackerClass: ChampionClass;
   attackerImageUrl: string;
   nodeNumber: number;
   isSolo: boolean;
   deaths: number;
+  videoId: string | null;
+  isAttackerTactic: boolean;
+  isDefenderTactic: boolean;
 }
 
 interface PlayerWarStat {
@@ -128,12 +134,12 @@ export function SeasonOverviewView({
   };
 
   const StatCell = ({ fights, deaths }: { fights: number; deaths: number }) => {
-    if (fights === 0) return <span className="text-slate-700 font-mono text-xs">-</span>;
+    if (fights === 0) return <span className="text-slate-700 font-mono text-sm">-</span>;
     
     return (
       <div className="flex items-center justify-center gap-1.5">
           <span className={cn(
-              "font-mono font-bold text-xs",
+              "font-mono font-black text-sm",
               deaths === 0 ? "text-emerald-500/80" : "text-slate-400"
           )}>{fights}</span>
           {deaths > 0 && (
@@ -187,17 +193,17 @@ export function SeasonOverviewView({
                              <div className="flex items-center gap-3">
                                 <div className="flex flex-col items-center">
                                     <span className="text-[9px] font-black text-slate-600 uppercase leading-none mb-0.5">Path</span>
-                                    <span className={cn("text-xs font-mono font-black", stat.pathDeaths > 0 ? "text-red-400" : "text-slate-500")}>{stat.pathDeaths}</span>
+                                    <span className={cn("text-sm font-mono font-black", stat.pathDeaths > 0 ? "text-red-400" : "text-slate-500")}>{stat.pathDeaths}</span>
                                 </div>
                                 <div className="w-px h-6 bg-slate-800/60" />
                                 <div className="flex flex-col items-center">
                                     <span className="text-[9px] font-black text-slate-600 uppercase leading-none mb-0.5">MB</span>
-                                    <span className={cn("text-xs font-mono font-black", stat.miniBossDeaths > 0 ? "text-red-400" : "text-slate-500")}>{stat.miniBossDeaths}</span>
+                                    <span className={cn("text-sm font-mono font-black", stat.miniBossDeaths > 0 ? "text-red-400" : "text-slate-500")}>{stat.miniBossDeaths}</span>
                                 </div>
                                 <div className="w-px h-6 bg-slate-800/60" />
                                 <div className="flex flex-col items-center">
                                     <span className="text-[9px] font-black text-slate-600 uppercase leading-none mb-0.5">Boss</span>
-                                    <span className={cn("text-xs font-mono font-black", stat.bossDeaths > 0 ? "text-red-400" : "text-slate-500")}>{stat.bossDeaths}</span>
+                                    <span className={cn("text-sm font-mono font-black", stat.bossDeaths > 0 ? "text-red-400" : "text-slate-500")}>{stat.bossDeaths}</span>
                                 </div>
                              </div>
                              <div className="flex items-center gap-2 bg-slate-950/40 rounded px-2 py-1 border border-slate-800/40">
@@ -283,8 +289,12 @@ export function SeasonOverviewView({
                                     <StatCell fights={player.bossFights} deaths={player.bossDeaths} />
                                 </div>
                                 <div className="flex flex-col items-center">
-                                    <span className="text-[10px] uppercase font-bold text-slate-600 mb-1">Deaths</span>
-                                    <span className={cn("font-mono font-black text-xs", player.deaths === 0 ? "text-emerald-400" : "text-red-400")}>{player.deaths}</span>
+                                    <span className="text-[10px] uppercase font-bold text-slate-600 mb-1">Total</span>
+                                    <div className="flex items-center gap-1 font-mono font-black text-xs">
+                                        <span className="text-slate-400">{player.fights}</span>
+                                        <span className="text-slate-600">/</span>
+                                        <span className={cn(player.deaths === 0 ? "text-emerald-400" : "text-red-400")}>{player.deaths}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -303,7 +313,7 @@ export function SeasonOverviewView({
                     <th className="px-4 py-3 text-center" title="Path Fights">Path</th>
                     <th className="px-4 py-3 text-center" title="Mini-Boss Fights">MB</th>
                     <th className="px-4 py-3 text-center" title="Boss Fights">Boss</th>
-                    <th className="px-4 py-3 text-center w-24">Deaths</th>
+                    <th className="px-4 py-3 text-center w-24">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/30 text-sm">
@@ -394,12 +404,13 @@ export function SeasonOverviewView({
                             <StatCell fights={player.bossFights} deaths={player.bossDeaths} />
                         </td>
                         <td className="px-4 py-3 text-center">
-                            <span className={cn(
-                                "font-mono font-black text-base",
-                                player.deaths === 0 ? "text-emerald-400" : "text-red-400"
-                            )}>
-                                {player.deaths}
-                            </span>
+                            <div className="flex items-center justify-center gap-1.5 font-mono font-black text-sm">
+                                <span className="text-slate-400">{player.fights}</span>
+                                <span className="text-slate-600">/</span>
+                                <span className={cn(player.deaths === 0 ? "text-emerald-400" : "text-red-400")}>
+                                    {player.deaths}
+                                </span>
+                            </div>
                         </td>
                       </tr>
                     );
@@ -464,9 +475,11 @@ export function SeasonOverviewView({
                             </div>
                         </div>
                         <div className="text-center bg-slate-950/50 border border-slate-800/60 rounded-lg px-4 py-2 min-w-[100px]">
-                            <div className="text-xs font-black text-slate-500 uppercase mb-0.5">Total Deaths</div>
-                            <div className="text-lg font-black italic text-red-400 font-mono">
-                                {selectedPlayer.deaths}
+                            <div className="text-xs font-black text-slate-500 uppercase mb-0.5">Fights / Deaths</div>
+                            <div className="text-lg font-black italic font-mono">
+                                <span className="text-slate-200">{selectedPlayer.fights}</span>
+                                <span className="text-slate-600 mx-1">/</span>
+                                <span className="text-red-400">{selectedPlayer.deaths}</span>
                             </div>
                         </div>
                     </div>
@@ -502,9 +515,15 @@ export function SeasonOverviewView({
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-8">
+                                    <div className="flex items-center gap-6">
                                         <div className="flex flex-col items-end">
-                                            <span className="text-xs font-black text-slate-500 uppercase">Mission Result</span>
+                                            <span className="text-xs font-black text-slate-500 uppercase">Fights</span>
+                                            <span className="text-base font-mono font-black italic text-slate-300">
+                                                {war.fights}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-xs font-black text-slate-500 uppercase">War Result</span>
                                             <div className={cn(
                                                 "text-base font-mono font-black italic flex items-center gap-1.5",
                                                 war.deaths === 0 ? "text-emerald-400" : "text-red-400"
@@ -523,7 +542,7 @@ export function SeasonOverviewView({
                                             {war.fightDetails.map((fight, idx) => (
                                             <div
                                                 key={idx}
-                                                className="flex items-center justify-between py-4 px-5 hover:bg-slate-800/20 transition-colors"
+                                                className="flex items-center justify-between py-2 px-4 hover:bg-slate-800/20 transition-colors"
                                             >
                                                 <div className="flex items-center gap-5">
                                                 <div className="w-11 h-11 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-base text-slate-500 shrink-0">
@@ -533,15 +552,18 @@ export function SeasonOverviewView({
                                                 <div className="flex items-center gap-4">
                                                     <div className="flex items-center bg-slate-900/80 rounded-full pl-1.5 pr-5 py-1.5 border border-slate-800 shadow-inner group/pill">
                                                         <div className="relative shrink-0">
-                                                            <Avatar className="h-10 w-10 border-none ring-1 ring-slate-700 bg-slate-950 shadow-md">
+                                                            <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.attackerClass).bg)} />
+                                                            <Avatar className={cn("h-10 w-10 border-none bg-slate-950 shadow-md relative", getChampionClassColors(fight.attackerClass).border)}>
                                                                 <AvatarImage src={fight.attackerImageUrl} />
                                                                 <AvatarFallback className="text-xs font-black">
                                                                     {fight.attackerName.substring(0, 2).toUpperCase()}
                                                                 </AvatarFallback>
                                                             </Avatar>
-                                                            <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500/20 p-1 rounded-full ring-1 ring-slate-950">
-                                                                <Swords className="w-3 h-3 text-emerald-400" />
-                                                            </div>
+                                                            {fight.isAttackerTactic && (
+                                                                <div className="absolute -top-1 -left-1 bg-emerald-950/90 rounded-full border border-emerald-500 flex items-center justify-center w-4 h-4 shadow-lg shadow-black z-10">
+                                                                    <Swords className="w-2 h-2 text-emerald-400" />
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         
                                                         <div className="mx-3 flex flex-col items-center">
@@ -549,13 +571,24 @@ export function SeasonOverviewView({
                                                         </div>
 
                                                         <div className="flex items-center gap-3">
-                                                            <Avatar className="h-10 w-10 border-none ring-1 ring-slate-700 bg-slate-950 shadow-md">
-                                                                <AvatarImage src={fight.defenderImageUrl} />
-                                                                <AvatarFallback className="text-xs font-black">
-                                                                    {fight.defenderName.substring(0, 2).toUpperCase()}
-                                                                </AvatarFallback>
-                                                            </Avatar>
-                                                            <span className="text-sm font-black uppercase italic tracking-tighter text-slate-300 pr-2">
+                                                            <div className="relative shrink-0">
+                                                                <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.defenderClass).bg)} />
+                                                                <Avatar className={cn("h-10 w-10 border-none bg-slate-950 shadow-md relative", getChampionClassColors(fight.defenderClass).border)}>
+                                                                    <AvatarImage src={fight.defenderImageUrl} />
+                                                                    <AvatarFallback className="text-xs font-black">
+                                                                        {fight.defenderName.substring(0, 2).toUpperCase()}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
+                                                                {fight.isDefenderTactic && (
+                                                                    <div className="absolute -top-1 -left-1 bg-red-950/90 rounded-full border border-red-500 flex items-center justify-center w-4 h-4 shadow-lg shadow-black z-10">
+                                                                        <Shield className="w-2 h-2 text-red-400" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <span className={cn(
+                                                                "text-sm font-black uppercase italic tracking-tighter pr-2",
+                                                                getChampionClassColors(fight.defenderClass).text
+                                                            )}>
                                                                 {fight.defenderName}
                                                             </span>
                                                         </div>
@@ -563,18 +596,32 @@ export function SeasonOverviewView({
                                                 </div>
                                                 </div>
                                                 
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-xs font-black text-slate-600 uppercase mb-0.5">Engagement</span>
-                                                    {fight.deaths > 0 ? (
-                                                        <div className="flex items-center gap-1.5 text-red-400 text-sm font-black uppercase italic tracking-tighter">
-                                                            <Skull className="w-3.5 h-3.5" />
-                                                            {fight.deaths} Death{fight.deaths > 1 ? "s" : ""}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-2 text-emerald-500 text-sm font-black uppercase italic tracking-tighter">
-                                                            <Trophy className="w-3.5 h-3.5" />
-                                                            Solo
-                                                        </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex items-center">
+                                                        {fight.deaths > 0 ? (
+                                                            <div className="flex items-center gap-1.5 text-red-400 text-sm font-black uppercase italic tracking-tighter">
+                                                                <Skull className="w-3.5 h-3.5" />
+                                                                {fight.deaths} Death{fight.deaths > 1 ? "s" : ""}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2 text-emerald-500 text-sm font-black uppercase italic tracking-tighter">
+                                                                <Trophy className="w-3.5 h-3.5" />
+                                                                Solo
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {fight.videoId && (
+                                                        <Link 
+                                                            href={`/war-videos/${fight.videoId}`} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="p-2 ml-2 bg-sky-600/20 border border-sky-600/50 rounded-full hover:bg-sky-600 text-sky-300 hover:text-white transition-all duration-300 group/video shadow-md shadow-sky-500/10 hover:shadow-sky-500/30"
+                                                            title="Watch Fight Video"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Video className="w-4 h-4 group-hover/video:scale-110 transition-transform" />
+                                                        </Link>
                                                     )}
                                                 </div>
                                             </div>

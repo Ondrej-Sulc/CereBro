@@ -144,29 +144,38 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   }
 
     // 2. Fetch War Data (Cached for 5 minutes per alliance/season)
-    const wars = await getFromCache(`season-wars-${selectedSeason}-${allianceId}`, 300, () => 
-        prisma.war.findMany({
-            where: { 
-                season: selectedSeason,
-                allianceId,
-                status: { not: 'PLANNING' },
-                warNumber: { not: null } // Exclude Offseason wars
-            },
-            include: {
-                fights: {
-                    where: {
-                        player: { isNot: null }
-                    },
-                    include: {
-                        player: true,
-                        attacker: true,
-                        defender: true,
-                        node: true
+    const [wars, allTactics] = await Promise.all([
+        getFromCache(`season-wars-${selectedSeason}-${allianceId}`, 300, () => 
+            prisma.war.findMany({
+                where: { 
+                    season: selectedSeason,
+                    allianceId,
+                    status: { not: 'PLANNING' },
+                    warNumber: { not: null } // Exclude Offseason wars
+                },
+                include: {
+                    fights: {
+                        where: {
+                            player: { isNot: null }
+                        },
+                        include: {
+                            player: true,
+                            attacker: { include: { tags: true } },
+                            defender: { include: { tags: true } },
+                            node: true,
+                            video: true
+                        }
                     }
                 }
-            }
-        })
-    );
+            })
+        ),
+        getFromCache(`season-tactics-${selectedSeason}`, 3600, () => 
+            prisma.warTactic.findMany({
+                where: { season: selectedSeason },
+                include: { attackTag: true, defenseTag: true }
+            })
+        )
+    ]);
   
     // 3. Process Data
     const bgStats: Record<number, Record<string, PlayerStats>> = {
@@ -198,6 +207,13 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
   
     for (const war of wars) {
       mapTypes.add(war.mapType);
+
+      // Determine active tactic for this war
+      const activeTactic = allTactics.find(t => 
+        (!t.minTier || t.minTier <= war.warTier) && 
+        (!t.maxTier || t.maxTier >= war.warTier)
+      );
+
       for (const fight of war.fights) {
         if (!fight.player) continue;
         
@@ -277,18 +293,24 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             bgStats[bg][pid].warStats.push(playerWarStat);
         }
 
+        const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name));
+        const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name));
+
         playerWarStat.fights += 1;
         playerWarStat.deaths += fight.death;
         playerWarStat.fightDetails.push({
             defenderName: fight.defender?.name || 'Unknown',
-            defenderClass: fight.defender?.class || 'UNKNOWN',
+            defenderClass: fight.defender?.class || 'COSMIC',
             defenderImageUrl: getChampionImageUrl(fight.defender?.images as unknown as ChampionImages, '64'),
             attackerName: fight.attacker?.name || 'Unknown',
-            attackerClass: fight.attacker?.class || 'UNKNOWN',
+            attackerClass: fight.attacker?.class || 'COSMIC',
             attackerImageUrl: getChampionImageUrl(fight.attacker?.images as unknown as ChampionImages, '64'),
             nodeNumber: fight.node?.nodeNumber || 0,
             isSolo: fight.death === 0,
-            deaths: fight.death
+            deaths: fight.death,
+            videoId: fight.video?.id || null,
+            isAttackerTactic,
+            isDefenderTactic
         });
 
         bgTotals[bg].fights += 1;
