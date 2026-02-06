@@ -516,105 +516,123 @@ export class MapImageService {
             `;
         });
 
-        // --- 4. Build Legend (Table Style) ---
+        // --- 4. Build Legend (Card/Table Style) ---
         let legendSvg = '';
         if (legend && legend.length > 0) {
-            const legendX = width - legendWidth; // Start at the boundary
-            const tablePadding = 40;
-            const tableX = legendX + tablePadding;
-            let currentY = 50;
+            const legendX = width - legendWidth; 
+            const contentX = legendX + 40;
+            let currentY = 60;
 
-            // 4a. Legend Background
+            // 4a. Legend Panel Background
             legendSvg += `
-                <rect x="${legendX}" y="0" width="${legendWidth}" height="${height}" fill="#0f172a" opacity="0.95" />
-                <line x1="${legendX}" y1="0" x2="${legendX}" y2="${height}" stroke="${this.LINE_COLOR}" stroke-width="2" />
+                <rect x="${legendX}" y="0" width="${legendWidth}" height="${height}" fill="#020617" />
+                <line x1="${legendX}" y1="0" x2="${legendX}" y2="${height}" stroke="${this.LINE_COLOR}" stroke-width="4" />
             `;
 
-            // 4b. Title & Headers
+            // 4b. Title
             legendSvg += `
-                <text x="${tableX}" y="${currentY}" font-family="sans-serif" font-weight="bold" font-size="28" fill="#e2e8f0">
+                <text x="${contentX}" y="${currentY}" font-family="sans-serif" font-weight="bold" font-size="32" fill="#f8fafc">
                     Battlegroup Assignments
                 </text>
             `;
-            currentY += 50;
+            currentY += 60;
 
             // Headers
             const colPlayer = 0;
-            const colPath = 300;
-            const colTeam = 450;
+            const colPath = 320;
+            const colTeam = 480;
             
             legendSvg += `
-                <g font-family="sans-serif" font-weight="bold" font-size="16" fill="#94a3b8">
-                    <text x="${tableX + colPlayer}" y="${currentY}">PLAYER</text>
-                    <text x="${tableX + colPath}" y="${currentY}">PATH</text>
-                    <text x="${tableX + colTeam}" y="${currentY}">TEAM</text>
+                <g font-family="sans-serif" font-weight="bold" font-size="14" fill="#64748b" letter-spacing="1">
+                    <text x="${contentX + colPlayer}" y="${currentY}">PLAYER</text>
+                    <text x="${contentX + colPath}" y="${currentY}">PATH</text>
+                    <text x="${contentX + colTeam}" y="${currentY}">TEAM</text>
                 </g>
-                <line x1="${tableX}" y1="${currentY + 15}" x2="${width - tablePadding}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" />
+                <line x1="${contentX}" y1="${currentY + 15}" x2="${width - 40}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" opacity="0.5" />
             `;
             currentY += 40;
 
             // 4c. Rows
             legend.forEach((item, index) => {
-                const rowHeight = 60;
-                
-                // Row Background (Zebra Striping)
-                if (index % 2 === 0) {
-                    legendSvg += `<rect x="${legendX}" y="${currentY - 25}" width="${legendWidth}" height="${rowHeight}" fill="#1e293b" opacity="0.5" />`;
-                }
+                const rowHeight = 84;
+                const rowY = currentY;
+                const centerY = rowY + (rowHeight / 2);
 
-                // --- Col 1: Player (Color + Avatar + Name) ---
-                const pCenterY = currentY + 5;
+                // Row Background (Card style)
+                legendSvg += `
+                    <rect x="${contentX - 10}" y="${rowY}" width="${legendWidth - 60}" height="${rowHeight - 10}" rx="8" fill="#1e293b" opacity="0.4" />
+                `;
+
+                // --- Col 1: Player (Color Bar + Avatar + Name) ---
                 
-                // Color Dot
-                legendSvg += `<circle cx="${tableX + 12}" cy="${pCenterY}" r="6" fill="${item.color}" />`;
+                // Color Bar Indicator
+                legendSvg += `<rect x="${contentX - 10}" y="${rowY}" width="6" height="${rowHeight - 10}" rx="2" fill="${item.color}" />`;
 
                 // Avatar
-                let nameX = 35;
+                const avSize = 52;
+                let nameX = 15; // Offset from contentX if no avatar
+                
                 if (item.championImage && imageCache.has(item.championImage)) {
                     const img = imageCache.get(item.championImage);
-                    const avSize = 40;
+                    nameX = 15 + avSize + 15;
+                    
                     legendSvg += `
-                        <g clip-path="url(#clip-leg-av-${index})">
-                             <image href="${img}" x="${tableX + 35}" y="${pCenterY - avSize/2}" width="${avSize}" height="${avSize}" preserveAspectRatio="xMidYMid slice" />
+                        <g transform="translate(${contentX + 15}, ${centerY - avSize/2})">
+                            <defs>
+                                <clipPath id="clip-leg-av-${index}">
+                                    <circle cx="${avSize/2}" cy="${avSize/2}" r="${avSize/2}" />
+                                </clipPath>
+                            </defs>
+                            <circle cx="${avSize/2}" cy="${avSize/2}" r="${avSize/2 + 2}" fill="${item.color}" opacity="0.3" />
+                            <g clip-path="url(#clip-leg-av-${index})">
+                                <image href="${img}" x="0" y="0" width="${avSize}" height="${avSize}" preserveAspectRatio="xMidYMid slice" />
+                            </g>
+                            <circle cx="${avSize/2}" cy="${avSize/2}" r="${avSize/2}" fill="none" stroke="${item.color}" stroke-width="2" />
                         </g>
-                        <defs><clipPath id="clip-leg-av-${index}"><circle cx="${tableX + 35 + avSize/2}" cy="${pCenterY}" r="${avSize/2}" /></clipPath></defs>
-                        <circle cx="${tableX + 35 + avSize/2}" cy="${pCenterY}" r="${avSize/2}" fill="none" stroke="${item.color}" stroke-width="2" />
                     `;
-                    nameX += 50;
                 }
 
                 // Name
                 legendSvg += `
-                    <text x="${tableX + nameX}" y="${pCenterY}" font-family="sans-serif" font-size="18" fill="#f1f5f9" dominant-baseline="central">${item.name}</text>
+                    <text x="${contentX + nameX}" y="${centerY}" font-family="sans-serif" font-weight="600" font-size="20" fill="#f1f5f9" dominant-baseline="central">${item.name}</text>
                 `;
 
                 // --- Col 2: Path ---
                 if (item.pathLabel) {
                     legendSvg += `
-                        <text x="${tableX + colPath}" y="${pCenterY}" font-family="sans-serif" font-size="16" fill="#cbd5e1" dominant-baseline="central">${item.pathLabel}</text>
+                        <text x="${contentX + colPath}" y="${centerY}" font-family="sans-serif" font-weight="500" font-size="18" fill="#94a3b8" dominant-baseline="central">${item.pathLabel}</text>
                     `;
                 }
 
-                // --- Col 3: Team (Champions with Class Rings) ---
+                // --- Col 3: Team (Champions) ---
                 if (item.assignedChampions && item.assignedChampions.length > 0) {
-                    const champSize = 40; // Increased from 32
-                    const champGap = 12;
-                    let startX = tableX + colTeam;
+                    const champSize = 48;
+                    const champGap = 16;
+                    let startX = contentX + colTeam;
                     
                     item.assignedChampions.forEach((champ, cIndex) => {
                         if (champ.url && imageCache.has(champ.url)) {
                             const cImg = imageCache.get(champ.url);
-                            const cx = startX + (champSize/2);
-                            const cy = pCenterY;
                             const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
                             
                             legendSvg += `
-                                <circle cx="${cx}" cy="${cy}" r="${champSize/2}" fill="${classColor}" opacity="0.2" />
-                                <g clip-path="url(#clip-leg-${index}-c-${cIndex})">
-                                    <image href="${cImg}" x="${cx - champSize/2}" y="${cy - champSize/2}" width="${champSize}" height="${champSize}" preserveAspectRatio="xMidYMid slice" />
+                                <g transform="translate(${startX}, ${centerY - champSize/2})">
+                                    <defs>
+                                        <clipPath id="clip-leg-${index}-c-${cIndex}">
+                                            <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" />
+                                        </clipPath>
+                                    </defs>
+                                    <!-- Glow -->
+                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2 + 4}" fill="${classColor}" opacity="0.15" />
+                                    
+                                    <!-- Image -->
+                                    <g clip-path="url(#clip-leg-${index}-c-${cIndex})">
+                                        <image href="${cImg}" x="0" y="0" width="${champSize}" height="${champSize}" preserveAspectRatio="xMidYMid slice" />
+                                    </g>
+                                    
+                                    <!-- Border -->
+                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" />
                                 </g>
-                                <defs><clipPath id="clip-leg-${index}-c-${cIndex}"><circle cx="${cx}" cy="${cy}" r="${champSize/2}" /></clipPath></defs>
-                                <circle cx="${cx}" cy="${cy}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" />
                             `;
                             
                             startX += champSize + champGap;
