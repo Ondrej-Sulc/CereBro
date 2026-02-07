@@ -82,6 +82,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   // Combobox States
   const [abilityComboboxOpen, setAbilityComboboxOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAddingInstance, setIsAddingInstance] = useState(false)
 
   // Load data on open
   useEffect(() => {
@@ -150,6 +151,18 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleAddInstance = async (abilityId: number, type: AbilityLinkType) => {
+      setIsAddingInstance(true)
+      try {
+          await updateChampionAbility(undefined, champion.id, abilityId, type, undefined)
+          toast({ title: "Ability instance added" })
+      } catch (error) {
+          toast({ title: "Failed to add instance", variant: "destructive" })
+      } finally {
+          setIsAddingInstance(false)
+      }
   }
 
   const handleRemoveLink = async (linkId: number) => {
@@ -268,7 +281,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                 mode="single"
                                                 selected={releaseDate}
                                                 onSelect={setReleaseDate}
-                                                initialFocus
+                                                autoFocus
                                             />
                                         </PopoverContent>
                                     </Popover>
@@ -414,10 +427,8 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                         variant="ghost" 
                                                         size="sm" 
                                                         className="h-6 text-xs"
-                                                        onClick={() => {
-                                                            // Default to the first type found in the group
-                                                            updateChampionAbility(undefined, champion.id, firstLink.abilityId, firstLink.type, undefined)
-                                                        }}
+                                                        onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
+                                                        disabled={isAddingInstance}
                                                     >
                                                         <Plus className="w-3 h-3 mr-1" /> Add Instance
                                                     </Button>
@@ -716,18 +727,6 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
     const [isSaving, setIsSaving] = useState(false)
     const { toast } = useToast()
 
-    // Sync if server data changes (and we aren't editing? complex. usually just initial load)
-    // We'll skip deep sync for now to avoid overwriting user WIP if data revalidates. 
-    // Just simple init.
-    useEffect(() => {
-        if (existingAttack) {
-            // Only update if we have no groups or simple check. 
-            // Actually, safe to just update on mount or explicit external change.
-            // But if we edit, we drift from `existingAttack`. 
-            // Let's rely on internal state mostly.
-        }
-    }, [existingAttack])
-
     const handleSave = async () => {
         setIsSaving(true)
         const flatHits = flattenGroups(groups)
@@ -752,24 +751,26 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
     const updateGroupCount = (index: number, count: number) => {
         if (count < 1) return
         const newGroups = [...groups]
-        newGroups[index].count = count
+        newGroups[index] = { ...newGroups[index], count }
         setGroups(newGroups)
     }
 
     const toggleGroupProperty = (groupIndex: number, property: string) => {
         const newGroups = [...groups]
         const currentProps = newGroups[groupIndex].properties
+        let newProps: string[]
         if (currentProps.includes(property)) {
-            newGroups[groupIndex].properties = currentProps.filter(p => p !== property).sort()
+            newProps = currentProps.filter(p => p !== property).sort()
         } else {
-            newGroups[groupIndex].properties = [...currentProps, property].sort()
+            newProps = [...currentProps, property].sort()
         }
+        newGroups[groupIndex] = { ...newGroups[groupIndex], properties: newProps }
         setGroups(newGroups)
     }
 
     const totalHits = groups.reduce((acc, g) => acc + g.count, 0)
     const currentFlatHits = flattenGroups(groups)
-    const originalFlatHits = existingAttack?.hits.map(h => ({ properties: h.properties.sort() })) || []
+    const originalFlatHits = existingAttack?.hits.map(h => ({ properties: [...h.properties].sort() })) || []
     const hasChanges = JSON.stringify(currentFlatHits) !== JSON.stringify(originalFlatHits)
 
     return (

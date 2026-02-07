@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import { DefaultSession } from "next-auth"
 
 declare module "next-auth" {
   /**
@@ -7,7 +7,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       /** The user's Discord ID. */
-      discordId: string
+      discordId?: string
       /** Whether the user is a Bot Admin. */
       isBotAdmin: boolean
     } & DefaultSession["user"]

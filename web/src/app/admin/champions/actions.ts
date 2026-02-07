@@ -1,10 +1,12 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { ChampionAbilityLink, AbilityLinkType, AttackType } from "@prisma/client"
+import { ChampionAbilityLink, AbilityLinkType, AttackType, ChampionClass } from "@prisma/client"
 import { revalidatePath } from "next/cache"
+import { ensureAdmin } from "../actions"
 
 export async function getChampions() {
+  await ensureAdmin()
   const champions = await prisma.champion.findMany({
     select: {
       id: true,
@@ -47,6 +49,7 @@ export async function getChampions() {
 }
 
 export async function getAbilities() {
+  await ensureAdmin()
   return await prisma.ability.findMany({
     orderBy: { name: 'asc' }
   })
@@ -62,12 +65,19 @@ export async function updateChampionDetails(
         obtainable: string[]
     }
 ) {
+    await ensureAdmin()
+
+    if (!Object.values(ChampionClass).includes(data.class as ChampionClass)) {
+        throw new Error(`Invalid champion class: ${data.class}`)
+    }
+    const championClassValue = data.class as ChampionClass
+
     await prisma.champion.update({
         where: { id },
         data: {
             name: data.name,
             shortName: data.shortName,
-            class: data.class as any,
+            class: championClassValue,
             releaseDate: data.releaseDate,
             obtainable: data.obtainable
         }
@@ -82,6 +92,7 @@ export async function updateChampionAbility(
     type: AbilityLinkType, 
     source?: string
 ) {
+    await ensureAdmin()
     if (linkId) {
         await prisma.championAbilityLink.update({
             where: { id: linkId },
@@ -104,6 +115,7 @@ export async function updateChampionAbility(
 }
 
 export async function removeChampionAbility(linkId: number) {
+    await ensureAdmin()
     await prisma.championAbilityLink.delete({
         where: { id: linkId }
     })
@@ -111,6 +123,7 @@ export async function removeChampionAbility(linkId: number) {
 }
 
 export async function addSynergy(linkId: number, championId: number) {
+    await ensureAdmin()
     await prisma.championAbilitySynergy.create({
         data: {
             championAbilityLinkId: linkId,
@@ -121,6 +134,7 @@ export async function addSynergy(linkId: number, championId: number) {
 }
 
 export async function removeSynergy(linkId: number, championId: number) {
+    await ensureAdmin()
     await prisma.championAbilitySynergy.deleteMany({
         where: {
             championAbilityLinkId: linkId,
@@ -135,6 +149,7 @@ export async function saveChampionAttacks(
     attackType: AttackType, 
     hits: { properties: string[] }[]
 ) {
+    await ensureAdmin()
     await prisma.$transaction(async (tx) => {
         // 1. Upsert the Attack record
         const attack = await tx.attack.upsert({

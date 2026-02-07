@@ -14,7 +14,7 @@ export type AdminChampionData = {
     name: string
     shortName: string
     class: ChampionClass
-    images: any // Json
+    images: ChampionImages
     releaseDate: Date
     obtainable: string[]
     _count: { abilities: number }
@@ -25,7 +25,7 @@ export type AdminChampionData = {
             champion: {
                 id: number
                 name: string
-                images: any
+                images: ChampionImages
             }
         }[]
     })[]
@@ -38,7 +38,6 @@ interface AdminChampionCardProps {
 
 export function AdminChampionCard({ champion, onClick }: AdminChampionCardProps) {
     const classColors = getChampionClassColors(champion.class)
-    const images = champion.images as unknown as ChampionImages
 
     return (
         <div 
@@ -51,7 +50,7 @@ export function AdminChampionCard({ champion, onClick }: AdminChampionCardProps)
         >
             {/* Background Image */}
             <Image 
-                src={getChampionImageUrl(images, '128')} 
+                src={getChampionImageUrl(champion.images, '128')} 
                 alt={champion.name}
                 fill
                 sizes="(max-width: 768px) 25vw, (max-width: 1200px) 15vw, 10vw"

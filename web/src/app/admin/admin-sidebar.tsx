@@ -27,10 +27,14 @@ export function AdminSidebar() {
       {items.map((item) => (
         <Button
           key={item.href}
-          variant={pathname === item.href ? "secondary" : "ghost"}
+          variant={
+            (item.href === "/admin" ? pathname === item.href : pathname.startsWith(item.href))
+              ? "secondary"
+              : "ghost"
+          }
           className={cn(
             "justify-start",
-            pathname === item.href && "bg-muted"
+            (item.href === "/admin" ? pathname === item.href : pathname.startsWith(item.href)) && "bg-muted"
           )}
           asChild
         >

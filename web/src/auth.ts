@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import Discord from "next-auth/providers/discord"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
+import { getFromCache } from "@/lib/cache"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
   console.error("❌ Missing Discord environment variables in auth.ts");
@@ -75,17 +76,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, user }) {
         if (session.user) {
-          const account = await prisma.account.findFirst({
-            where: { userId: user.id, provider: 'discord' }
-          });
-  
-          if (account?.providerAccountId) {
-            session.user.discordId = account.providerAccountId;
-  
-            const botUser = await prisma.botUser.findUnique({
-              where: { discordId: account.providerAccountId }
-            });
-            session.user.isBotAdmin = botUser?.isBotAdmin || false;
+          // Cache the session extension data for 5 minutes to reduce DB load
+          const extension = await getFromCache(
+            `session_ext_${user.id}`,
+            300,
+            async () => {
+              const account = await prisma.account.findFirst({
+                where: { userId: user.id, provider: 'discord' },
+                select: { providerAccountId: true }
+              });
+      
+              if (!account?.providerAccountId) return null;
+      
+              const botUser = await prisma.botUser.findUnique({
+                where: { discordId: account.providerAccountId },
+                select: { isBotAdmin: true }
+              });
+      
+              return {
+                discordId: account.providerAccountId,
+                isBotAdmin: botUser?.isBotAdmin || false
+              };
+            }
+          );
+      
+          if (extension) {
+            session.user.discordId = extension.discordId;
+            session.user.isBotAdmin = extension.isBotAdmin;
           }
         }
         return session;
