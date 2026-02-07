@@ -516,6 +516,11 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
     const [source, setSource] = useState(link.source || "")
     const [synergyOpen, setSynergyOpen] = useState(false)
 
+    const availableChampions = useMemo(() => {
+        const existingIds = new Set(link.synergyChampions.map(s => s.champion.id))
+        return allChampions.filter(c => !existingIds.has(c.id))
+    }, [allChampions, link.synergyChampions])
+
     // Update local state if prop changes
     useEffect(() => {
         setSource(link.source || "")
@@ -625,18 +630,24 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
                                 <CommandList>
                                     <CommandEmpty>No champion found.</CommandEmpty>
                                     <CommandGroup>
-                                        {allChampions.map((c) => (
-                                            <CommandItem 
-                                                key={c.id} 
-                                                value={c.name}
-                                                onSelect={() => {
-                                                    onAddSynergy(c.id)
-                                                    setSynergyOpen(false)
-                                                }}
-                                            >
-                                                {c.name}
+                                        {availableChampions.length === 0 ? (
+                                            <CommandItem disabled className="text-[10px] text-muted-foreground italic">
+                                                All champions already added
                                             </CommandItem>
-                                        ))}
+                                        ) : (
+                                            availableChampions.map((c) => (
+                                                <CommandItem 
+                                                    key={c.id} 
+                                                    value={c.name}
+                                                    onSelect={() => {
+                                                        onAddSynergy(c.id)
+                                                        setSynergyOpen(false)
+                                                    }}
+                                                >
+                                                    {c.name}
+                                                </CommandItem>
+                                            ))
+                                        )}
                                     </CommandGroup>
                                 </CommandList>
                             </Command>
