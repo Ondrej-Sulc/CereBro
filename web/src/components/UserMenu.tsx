@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, User } from "lucide-react"
+import { LogOut, User, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { signOutAction } from "@/app/actions/auth"
 
@@ -17,6 +17,7 @@ interface UserMenuProps {
   user: {
     name?: string | null
     image?: string | null
+    isBotAdmin?: boolean
   }
 }
 
@@ -38,6 +39,19 @@ export function UserMenu({ user }: UserMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-800" />
+        
+        {user.isBotAdmin && (
+            <>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/champions" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
+                    <LayoutDashboard className="w-4 h-4 text-amber-500" />
+                    <span>Admin Portal</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-800" />
+            </>
+        )}
+
         <DropdownMenuItem asChild>
           <Link href="/profile" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
             <User className="w-4 h-4" />
