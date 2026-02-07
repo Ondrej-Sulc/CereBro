@@ -304,7 +304,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         {/* Image Assets View */}
                         <div className="space-y-3">
                             <Label>Assets</Label>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <span className="text-xs text-muted-foreground">Primary (Full)</span>
                                     <div className="relative aspect-square rounded-lg border border-slate-800 bg-slate-900 overflow-hidden">
@@ -555,7 +555,7 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                     <Button 
                         variant="ghost" 
                         size="icon" 

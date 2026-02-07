@@ -167,6 +167,34 @@ export async function saveChampionAttacks(
     hits: { properties: string[] }[]
 ) {
     await ensureAdmin()
+
+    // Input Validation Limits
+    const MAX_HITS = 100;
+    const MAX_PROPS_PER_HIT = 20;
+    const MAX_PROP_LENGTH = 50;
+
+    if (!Array.isArray(hits)) {
+        throw new Error("Invalid input: hits must be an array");
+    }
+
+    if (hits.length > MAX_HITS) {
+        throw new Error(`Too many hits. Max allowed is ${MAX_HITS}.`);
+    }
+
+    for (const hit of hits) {
+        if (!Array.isArray(hit.properties)) {
+            throw new Error("Invalid input: hit properties must be an array");
+        }
+        if (hit.properties.length > MAX_PROPS_PER_HIT) {
+            throw new Error(`Too many properties on a single hit. Max allowed is ${MAX_PROPS_PER_HIT}.`);
+        }
+        for (const prop of hit.properties) {
+            if (typeof prop !== 'string' || prop.length > MAX_PROP_LENGTH) {
+                throw new Error(`Invalid property value. Must be string under ${MAX_PROP_LENGTH} chars.`);
+            }
+        }
+    }
+
     await prisma.$transaction(async (tx) => {
         // 1. Upsert the Attack record
         const attack = await tx.attack.upsert({
