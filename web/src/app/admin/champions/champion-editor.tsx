@@ -843,7 +843,8 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
                             <div className="ml-auto">
                                 <button 
                                     onClick={() => removeGroup(i)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 hover:text-destructive text-slate-600"
+                                    className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 hover:text-destructive text-slate-600"
+                                    aria-label="Remove hit group"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>
