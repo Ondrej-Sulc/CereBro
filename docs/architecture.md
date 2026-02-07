@@ -39,3 +39,9 @@ We use a server-side, in-memory caching mechanism to optimize performance:
 ## User Identity Model
 *   **`BotUser` (Global):** Represents the Discord user. Stores global permissions (`isBotAdmin`). Linked to NextAuth.
 *   **`Player` (Game Profile):** Represents an MCOC account. Linked to `BotUser`. Stores roster/prestige. Users can have multiple profiles.
+
+## Admin Portal Architecture
+The Admin Portal (`/admin`) is a secure, server-rendered section of the web app.
+*   **Security:** Uses a dedicated `ensureAdmin()` server action that verifies the session user's `isBotAdmin` status against the database before rendering any admin layouts or executing mutations.
+*   **Data Mutation:** Relies heavily on **Server Actions** for CRUD operations (e.g., `updateChampionDetails`, `saveChampionAttacks`), ensuring direct and type-safe database interaction without API routes.
+*   **State Management:** Uses optimistic updates and `revalidatePath` to ensure the UI remains snappy and consistent after edits.

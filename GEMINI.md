@@ -15,7 +15,7 @@
 
 ## Documentation Index
 *   [📂 Architecture & Patterns](docs/architecture.md) - Controller/View, Job Queue, Caching, Identity.
-*   [✨ Features & Domain](docs/features.md) - War Planning, Roster, Translations, Workflows.
+*   [✨ Features & Domain](docs/features.md) - War Planning, Roster, Admin Portal, Translations.
 *   [🚀 Deployment & Docker](docs/deployment.md) - Railway, Dockerfiles, Local Dev.
 *   [📏 Conventions & Standards](docs/conventions.md) - **Critical Rules**, Logging, Code Style.
 

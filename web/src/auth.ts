@@ -73,5 +73,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
+    async session({ session, user }) {
+        if (session.user) {
+          const account = await prisma.account.findFirst({
+            where: { userId: user.id, provider: 'discord' }
+          });
+  
+          if (account?.providerAccountId) {
+            session.user.discordId = account.providerAccountId;
+  
+            const botUser = await prisma.botUser.findUnique({
+              where: { discordId: account.providerAccountId }
+            });
+            session.user.isBotAdmin = botUser?.isBotAdmin || false;
+          }
+        }
+        return session;
+    }
   },
 })

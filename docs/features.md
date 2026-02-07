@@ -121,3 +121,14 @@ A unified suite of tools for managing Alliance War.
 *   **Discord Linking:**
     *   Officers generate `CB-XXXXXX` code on web.
     *   Redeem via `/alliance link` in Discord to bridge the two platforms.
+
+### Admin Portal & Data Management
+A secure, web-based suite for managing core game data, replacing complex Discord commands.
+*   **Access Control:** Strictly protected via RBAC. Only users with the `BotUser.isBotAdmin` flag can access the portal or see the link in the user menu.
+*   **Champion Management:**
+    *   **Visual Grid:** Compact, high-density grid view of all champions with Class Filters and real-time search.
+    *   **Unified Editor:** A powerful modal editor for managing all aspects of a champion:
+        *   **Overview:** Edit metadata (Release Date, Obtainable Source) and verify asset integrity (Primary/Hero images).
+        *   **Abilities:** Drag-and-drop style management of Ability/Immunity links. Features alphabetical sorting, grouping by name, and granular control over sources and synergies.
+        *   **Attacks:** Visual editor for configuring hit counts and properties (Contact, Physical, Energy, Projectile). Grouped by Basic vs. Special attacks.
+    *   **Synergy Mapping:** Deep linking of champions to specific abilities (e.g., "Havok" enhances "Plasma Buildup").
