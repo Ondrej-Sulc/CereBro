@@ -76,33 +76,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, user }) {
         if (session.user) {
-          // Cache the session extension data for 5 minutes to reduce DB load
-          const extension = await getFromCache(
-            `session_ext_${user.id}`,
-            300,
-            async () => {
-              const account = await prisma.account.findFirst({
-                where: { userId: user.id, provider: 'discord' },
-                select: { providerAccountId: true }
-              });
-      
-              if (!account?.providerAccountId) return null;
-      
-              const botUser = await prisma.botUser.findUnique({
-                where: { discordId: account.providerAccountId },
-                select: { isBotAdmin: true }
-              });
-      
-              return {
-                discordId: account.providerAccountId,
-                isBotAdmin: botUser?.isBotAdmin || false
-              };
+          try {
+            // Cache the session extension data for 5 minutes to reduce DB load
+            const extension = await getFromCache(
+                `session_ext_${user.id}`,
+                300,
+                async () => {
+                const account = await prisma.account.findFirst({
+                    where: { userId: user.id, provider: 'discord' },
+                    select: { providerAccountId: true }
+                });
+        
+                if (!account?.providerAccountId) return null;
+        
+                const botUser = await prisma.botUser.findUnique({
+                    where: { discordId: account.providerAccountId },
+                    select: { isBotAdmin: true }
+                });
+        
+                return {
+                    discordId: account.providerAccountId,
+                    isBotAdmin: botUser?.isBotAdmin || false
+                };
+                },
+                (data) => data !== null
+            );
+        
+            if (extension) {
+                session.user.discordId = extension.discordId;
+                session.user.isBotAdmin = extension.isBotAdmin;
             }
-          );
-      
-          if (extension) {
-            session.user.discordId = extension.discordId;
-            session.user.isBotAdmin = extension.isBotAdmin;
+          } catch (error) {
+              console.error("Session extension error:", error);
           }
         }
         return session;

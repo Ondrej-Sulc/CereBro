@@ -5,7 +5,10 @@ import { ChampionAbilityLink, AbilityLinkType, AttackType, ChampionClass } from 
 import { revalidatePath } from "next/cache"
 import { ensureAdmin } from "../actions"
 
-export async function getChampions() {
+import { AdminChampionData } from "./champion-card"
+import { ChampionImages } from "@/types/champion"
+
+export async function getChampions(): Promise<AdminChampionData[]> {
   await ensureAdmin()
   const champions = await prisma.champion.findMany({
     select: {
@@ -45,7 +48,21 @@ export async function getChampions() {
       name: 'asc'
     }
   })
-  return champions
+  
+  return champions.map(c => ({
+      ...c,
+      images: c.images as unknown as ChampionImages,
+      abilities: c.abilities.map(a => ({
+          ...a,
+          synergyChampions: a.synergyChampions.map(s => ({
+              ...s,
+              champion: {
+                  ...s.champion,
+                  images: s.champion.images as unknown as ChampionImages
+              }
+          }))
+      }))
+  }))
 }
 
 export async function getAbilities() {
@@ -93,7 +110,7 @@ export async function updateChampionAbility(
     source?: string
 ) {
     await ensureAdmin()
-    if (linkId) {
+    if (linkId !== undefined) {
         await prisma.championAbilityLink.update({
             where: { id: linkId },
             data: {

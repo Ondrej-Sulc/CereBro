@@ -15,7 +15,7 @@ export default async function AdminChampionsPage() {
       </div>
       
       <ChampionList 
-        initialChampions={champions as unknown as AdminChampionData[]} 
+        initialChampions={champions} 
         allAbilities={abilities} 
       />
     </div>

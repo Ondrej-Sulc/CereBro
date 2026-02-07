@@ -87,11 +87,19 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   // Load data on open
   useEffect(() => {
     if (champion) {
+        // Form Data
         setName(champion.name)
         setShortName(champion.shortName)
         setChampClass(champion.class)
         setReleaseDate(new Date(champion.releaseDate))
         setObtainable(champion.obtainable.join(", "))
+
+        // Reset Editor State
+        setActiveTab("overview")
+        setNewAbilityId(null)
+        setNewType("ABILITY")
+        setAbilityComboboxOpen(false)
+        setIsAddingInstance(false)
     }
   }, [champion])
 
@@ -205,7 +213,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
       }
   }
 
-  const images = champion.images as unknown as ChampionImages
+  const images = champion.images
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -236,7 +244,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
                 <div className="flex-1 bg-slate-950/50 min-h-0 flex flex-col">
                     <TabsContent value="overview" className="mt-0 flex-1 overflow-y-auto p-6 space-y-6">
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div className="space-y-2">
                                     <Label>Name</Label>
@@ -528,7 +536,7 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
                         {link.synergyChampions.length > 0 ? (
                             <div className="flex -space-x-2">
                                 {link.synergyChampions.slice(0, 5).map(synergy => {
-                                    const images = synergy.champion.images as unknown as ChampionImages
+                                    const images = synergy.champion.images
                                     return (
                                         <div key={synergy.champion.id} className="relative w-6 h-6 rounded-full border border-background overflow-hidden ring-1 ring-border" title={synergy.champion.name}>
                                             <Image src={getChampionImageUrl(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
@@ -643,7 +651,7 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
                         </div>
                     )}
                     {link.synergyChampions.map(synergy => {
-                         const images = synergy.champion.images as unknown as ChampionImages
+                         const images = synergy.champion.images
                          return (
                             <Badge key={synergy.champion.id} variant="secondary" className="pl-1 pr-2 py-0.5 h-7 gap-1.5 bg-background border">
                                 <div className="relative w-5 h-5 rounded-full overflow-hidden border border-muted-foreground/20">
@@ -726,6 +734,10 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
     const [groups, setGroups] = useState<HitGroup[]>(() => groupHits(existingAttack?.hits.map(h => ({ properties: h.properties })) || []))
     const [isSaving, setIsSaving] = useState(false)
     const { toast } = useToast()
+
+    useEffect(() => {
+        setGroups(groupHits(existingAttack?.hits.map(h => ({ properties: h.properties })) || []))
+    }, [existingAttack])
 
     const handleSave = async () => {
         setIsSaving(true)
