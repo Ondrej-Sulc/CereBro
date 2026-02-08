@@ -685,7 +685,7 @@ export class MapImageService {
                 // Title
                 legendSvg += `
                     <text x="${contentX}" y="${bannedY}" font-family="sans-serif" font-weight="bold" font-size="28" fill="#f87171">
-                        Banned Defenders
+                        Banned Attackers
                     </text>
                  `;
 
