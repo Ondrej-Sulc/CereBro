@@ -33,6 +33,11 @@ async function main() {
                     champion: true,
                     player: true
                 }
+            },
+            bans: {
+                include: {
+                    champion: true
+                }
             }
         }
     });
@@ -61,14 +66,53 @@ async function main() {
         include: { attackTag: true, defenseTag: true }
     });
 
+    // --- Fetch Season Bans ---
+    const seasonBans = await prisma.seasonBan.findMany({
+        where: {
+            season: war.season,
+            OR: [
+                { minTier: null, maxTier: null },
+                { minTier: { lte: war.warTier }, maxTier: null },
+                { minTier: null, maxTier: { gte: war.warTier } },
+                { minTier: { lte: war.warTier }, maxTier: { gte: war.warTier } }
+            ]
+        },
+        include: { champion: true }
+    });
+
+    // Combine Bans
+    const bannedChampionsMap = new Map<number, { url: string, class: any }>();
+
+    // 1. Season Bans
+    seasonBans.forEach(b => {
+        if (b.champion && b.champion.images) {
+            bannedChampionsMap.set(b.champion.id, {
+                url: getChampionImageUrl(b.champion.images, '64', 'primary'),
+                class: b.champion.class
+            });
+        }
+    });
+
+    // 2. War Bans
+    war.bans.forEach(b => {
+        if (b.champion && b.champion.images) {
+            bannedChampionsMap.set(b.champion.id, {
+                url: getChampionImageUrl(b.champion.images, '64', 'primary'),
+                class: b.champion.class
+            });
+        }
+    });
+
+    const bannedChampions = Array.from(bannedChampionsMap.values());
+
     // --- Global Color Assignment ---
     const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
     war.fights.forEach(f => {
         if (f.player) {
-            allPlayers.set(f.player.id, { 
-                id: f.player.id, 
-                name: f.player.ingameName, 
-                bg: f.battlegroup 
+            allPlayers.set(f.player.id, {
+                id: f.player.id,
+                name: f.player.ingameName,
+                bg: f.battlegroup
             });
         }
     });
@@ -92,12 +136,14 @@ async function main() {
         if (!bgNodeMaps.has(fight.battlegroup)) {
             bgNodeMaps.set(fight.battlegroup, new Map());
         }
-        
+
         let defenderImage: string | undefined;
         if (fight.defender?.images) {
             defenderImage = getChampionImageUrl(fight.defender.images, '128', 'primary');
             uniqueImageUrls.add(defenderImage);
         }
+
+        bannedChampions.forEach(b => uniqueImageUrls.add(b.url));
 
         let attackerImage: string | undefined;
         if (fight.attacker?.images) {
@@ -139,7 +185,7 @@ async function main() {
     // --- Generate Overview Maps ---
     const mapType = war.mapType || WarMapType.STANDARD;
     const nodesData = mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
-    
+
     // Dummy BG Colors since we aren't fetching alliance config fully
     const bgColors: Record<number, string> = {
         1: "#ef4444",
@@ -157,11 +203,11 @@ async function main() {
 
         const legend: LegendItem[] = [];
         const distinctPlayers = Array.from(new Set(bgFights.map(f => f.player?.ingameName))).filter(Boolean);
-        
+
         distinctPlayers.sort().forEach((name) => {
             const pObj = bgFights.find(f => f.player?.ingameName === name)?.player;
             const pFights = bgFights.filter(f => f.player?.ingameName === name);
-            
+
             let pathLabel = "";
             if (pFights.length > 0) {
                 if (mapType === WarMapType.BIG_THING) {
@@ -170,15 +216,15 @@ async function main() {
                 } else {
                     const s1Paths = new Set<number>();
                     const s2Paths = new Set<number>();
-                    
+
                     pFights.forEach(f => {
                         const info = getPathInfo(f.node.nodeNumber);
                         if (info?.section === 1) s1Paths.add(info.path);
                         if (info?.section === 2) s2Paths.add(info.path);
                     });
 
-                    const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a,b)=>a-b).join(",")}` : "-";
-                    const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a,b)=>a-b).join(",")}` : "-";
+                    const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a, b) => a - b).join(",")}` : "-";
+                    const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a, b) => a - b).join(",")}` : "-";
                     pathLabel = `${s1Str} / ${s2Str}`;
                 }
             }
@@ -186,15 +232,15 @@ async function main() {
             // Collect assigned champions images (THIS IS THE NEW PART TO TEST)
             const assignedChampions: { url: string; class: any }[] = [];
             const seenChampIds = new Set<number>();
-            
+
             // 1. Attackers
             pFights.forEach(f => {
                 if (f.attacker && f.attacker.images && !seenChampIds.has(f.attacker.id)) {
-                        seenChampIds.add(f.attacker.id);
-                        assignedChampions.push({
-                            url: getChampionImageUrl(f.attacker.images, '128', 'primary'),
-                            class: f.attacker.class
-                        });
+                    seenChampIds.add(f.attacker.id);
+                    assignedChampions.push({
+                        url: getChampionImageUrl(f.attacker.images, '128', 'primary'),
+                        class: f.attacker.class
+                    });
                 }
             });
 
@@ -245,17 +291,17 @@ async function main() {
 
         bgFights.forEach(f => {
             if (f.player && globalColorMap.has(f.player.id)) {
-                    const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
-                    assignments.set(f.node.nodeNumber, {
-                        ...existing,
-                        assignedColor: globalColorMap.get(f.player.id)
-                    });
+                const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
+                assignments.set(f.node.nodeNumber, {
+                    ...existing,
+                    assignedColor: globalColorMap.get(f.player.id)
+                });
             }
         });
 
         const accentColor = bgColors[bg] || "#ffffff";
-        const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend, accentColor);
-        
+        const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend, accentColor, bannedChampions);
+
         const outFile = path.join(outDir, `war-overview-bg${bg}.png`);
         fs.writeFileSync(outFile, mapBuffer);
         console.log(`Saved ${outFile}`);

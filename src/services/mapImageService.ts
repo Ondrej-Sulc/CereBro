@@ -30,7 +30,7 @@ export class MapImageService {
     private static readonly LINE_COLOR = '#334155'; // slate-700
     private static readonly NODE_COLOR = '#1e293b'; // slate-800
     private static readonly TEXT_COLOR = '#94a3b8'; // slate-400
-    
+
     private static readonly HIGHLIGHT_GLOW = '#0ea5e9'; // sky-500
     private static readonly HIGHLIGHT_BORDER = '#ffffff'; // sky-400
     private static readonly HIGHLIGHT_PREFIGHT = '#ffffff'; // purple-400
@@ -60,25 +60,33 @@ export class MapImageService {
         '#facc15', // Yellow 400
         '#fb923c', // Orange 400
         '#22d3ee', // Cyan 400
+
         '#a3e635', // Lime 400
     ];
 
+    private static globalImageCache = new Map<string, string>();
+
     static async preloadImages(urls: string[]): Promise<Map<string, string>> {
-        const cache = new Map<string, string>();
-        await Promise.all(urls.map(async (url) => {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-                const buffer = Buffer.from(await response.arrayBuffer());
-                // Resize to save space in SVG and standardizing
-                const resized = await sharp(buffer).resize(64, 64).toBuffer();
-                const base64 = `data:image/png;base64,${resized.toString('base64')}`;
-                cache.set(url, base64);
-            } catch (e) {
-                logger.error({ err: e, url }, 'Failed to preload image');
-            }
-        }));
-        return cache;
+        const uniqueUrls = new Set(urls);
+        const missingUrls = Array.from(uniqueUrls).filter(url => !this.globalImageCache.has(url));
+
+        if (missingUrls.length > 0) {
+            await Promise.all(missingUrls.map(async (url) => {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+                    const buffer = Buffer.from(await response.arrayBuffer());
+                    // Resize to save space in SVG and standardizing
+                    const resized = await sharp(buffer).resize(64, 64).toBuffer();
+                    const base64 = `data:image/png;base64,${resized.toString('base64')}`;
+                    this.globalImageCache.set(url, base64);
+                } catch (e) {
+                    logger.error({ err: e, url }, 'Failed to preload image');
+                }
+            }));
+        }
+
+        return new Map(this.globalImageCache); // Return a copy or just the reference? Reference is fine but let's stick to Map<string, string> contract
     }
 
     /**
@@ -90,9 +98,10 @@ export class MapImageService {
         assignments: Map<number, NodeAssignment>,
         preloadedImageCache?: Map<string, string>,
         legend?: LegendItem[],
-        accentColor?: string
+        accentColor?: string,
+        bannedChampions?: { url: string, class: ChampionClass }[]
     ): Promise<Buffer> {
-        
+
         // 1. Calculate Bounding Box
         const padding = 100;
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -120,9 +129,14 @@ export class MapImageService {
         }
 
         // 2. Fetch Images (in parallel) and convert to Base64
-        const imageCache = new Map<string, string>(preloadedImageCache);
+        // Use global cache as base, override with provided cache if any (though usually it's the same)
+        const imageCache = new Map<string, string>(this.globalImageCache);
+        if (preloadedImageCache) {
+            preloadedImageCache.forEach((v, k) => imageCache.set(k, v));
+        }
+
         const uniqueUrls = new Set<string>();
-        
+
         assignments.forEach(assignment => {
             if (assignment.defenderImage && !imageCache.has(assignment.defenderImage)) {
                 uniqueUrls.add(assignment.defenderImage);
@@ -146,10 +160,18 @@ export class MapImageService {
                 }
                 if (item.assignedChampions) {
                     item.assignedChampions.forEach(c => {
-                         if (c.url && !imageCache.has(c.url)) {
-                             uniqueUrls.add(c.url);
-                         }
+                        if (c.url && !imageCache.has(c.url)) {
+                            uniqueUrls.add(c.url);
+                        }
                     });
+                }
+            });
+        }
+
+        if (bannedChampions) {
+            bannedChampions.forEach(c => {
+                if (c.url && !imageCache.has(c.url)) {
+                    uniqueUrls.add(c.url);
                 }
             });
         }
@@ -160,12 +182,15 @@ export class MapImageService {
                 if (!response.ok) throw new Error(`Failed to fetch ${url}`);
                 const arrayBuffer = await response.arrayBuffer();
                 const buffer = Buffer.from(arrayBuffer);
-                
+
                 // Resize to save space in SVG and standardizing
                 // Resize to save space in SVG and standardizing
                 const resized = await sharp(buffer).resize(64, 64).toBuffer();
                 const base64 = `data:image/png;base64,${resized.toString('base64')}`;
+
                 imageCache.set(url, base64);
+                // Also update global cache
+                MapImageService.globalImageCache.set(url, base64);
             } catch (e) {
                 logger.error({ err: e, url }, 'Failed to fetch champion image for map generation');
             }
@@ -173,16 +198,17 @@ export class MapImageService {
 
         // 3. Generate SVG Content
         const svgContent = this.buildSvg(
-            width, 
-            height, 
-            minX, 
-            minY, 
-            nodes, 
-            assignments, 
+            width,
+            height,
+            minX,
+            minY,
+            nodes,
+            assignments,
             imageCache,
             legend,
             legendWidth,
-            accentColor
+            accentColor,
+            bannedChampions
         );
 
         // 4. Convert to PNG
@@ -205,14 +231,15 @@ export class MapImageService {
         height: number,
         offsetX: number,
         offsetY: number,
-        nodes: WarNodePosition[], 
+        nodes: WarNodePosition[],
         assignments: Map<number, NodeAssignment>,
         imageCache: Map<string, string>,
         legend?: LegendItem[],
         legendWidth: number = 0,
-        accentColor?: string
+        accentColor?: string,
+        bannedChampions?: { url: string, class: ChampionClass }[]
     ): string {
-        
+
         // --- 1. Background Elements (Nebulas & Stars) ---
         let starsSvg = '';
         const starCount = 200;
@@ -307,7 +334,7 @@ export class MapImageService {
                         const y1 = node.y - offsetY;
                         const x2 = target.x - offsetX;
                         const y2 = target.y - offsetY;
-                        
+
                         pathsSvg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="path" />\n`;
                         drawnPaths.add(key);
                     }
@@ -317,11 +344,11 @@ export class MapImageService {
 
         // --- 3. Build Nodes ---
         let nodesSvg = '';
-        
+
         nodes.forEach(node => {
             const x = node.x - offsetX;
             const y = node.y - offsetY;
-            
+
             // Render Portals
             if (node.isPortal) {
                 const portalFill = accentColor || "#10B981";
@@ -338,37 +365,37 @@ export class MapImageService {
             const assignment = assignments.get(Number(node.id));
             const isTarget = assignment?.isTarget;
             const prefightImages = assignment?.prefightImages || [];
-            
+
             // Colors
             let borderProps = isTarget ? `class="node-fill border-highlight"` : `class="node-fill border-default"`;
             let badgeTextColorClass = isTarget ? "badge-text badge-text-highlight" : "badge-text";
             let badgeStrokeVal = isTarget ? this.HIGHLIGHT_BORDER : this.LINE_COLOR;
             let badgeFillVal = "rgba(15, 23, 42, 0.95)"; // Default dark fill
-            
+
             // Override fill for assigned player
             if (assignment?.assignedColor) {
                 const mutedFill = MapImageService.hexToRgba(assignment.assignedColor, 0.25);
                 borderProps = `style="fill: ${mutedFill}; stroke: ${assignment.assignedColor}; stroke-width: 3"`;
                 badgeStrokeVal = assignment.assignedColor;
-                
+
                 // For badge, use solid color for fill
                 badgeFillVal = assignment.assignedColor;
-                
+
                 // For badge text, use dark color
                 badgeTextColorClass = "badge-text badge-text-dark";
             } else if (isTarget) {
-                 // Keep target logic if needed, but usually assignedColor covers it
-                 // If isTarget but no assignedColor (e.g. self target in my-plan?)
+                // Keep target logic if needed, but usually assignedColor covers it
+                // If isTarget but no assignedColor (e.g. self target in my-plan?)
             }
 
             // Class Colors
             const attColor = assignment?.attackerClass ? MapImageService.CLASS_COLORS[assignment.attackerClass] : '#94a3b8';
             const defColor = assignment?.defenderClass ? MapImageService.CLASS_COLORS[assignment.defenderClass] : '#94a3b8';
 
-            const r = 32; 
+            const r = 32;
             const pillH = r * 2;
             let innerContent = '';
-            
+
             // --- A. Main Node (Pill or Circle) ---
             const attImg = assignment?.attackerImage ? imageCache.get(assignment.attackerImage) : undefined;
             const defImg = assignment?.defenderImage ? imageCache.get(assignment.defenderImage) : undefined;
@@ -376,27 +403,27 @@ export class MapImageService {
             if (attImg) {
                 // PILL (Render if Attacker exists, even if Defender image is missing)
                 const pillW = r * 4;
-                
+
                 innerContent += `
-                    <rect x="${-pillW/2}" y="${-pillH/2}" width="${pillW}" height="${pillH}" rx="${r}" ${borderProps} />
+                    <rect x="${-pillW / 2}" y="${-pillH / 2}" width="${pillW}" height="${pillH}" rx="${r}" ${borderProps} />
                     
                     <!-- Attacker -->
-                    <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="${attColor}" opacity="0.4" />
+                    <circle cx="${-pillW / 4}" cy="0" r="${r - 4}" fill="${attColor}" opacity="0.4" />
                     <g clip-path="url(#clip-${node.id}-L)">
-                        <image href="${attImg}" x="${-pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
+                        <image href="${attImg}" x="${-pillW / 4 - (r - 4)}" y="${-(r - 4)}" width="${(r - 4) * 2}" height="${(r - 4) * 2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
-                    <defs><clipPath id="clip-${node.id}-L"><circle cx="${-pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
-                    <circle cx="${-pillW/4}" cy="0" r="${r-4}" fill="none" stroke="${attColor}" stroke-width="1.5" />
+                    <defs><clipPath id="clip-${node.id}-L"><circle cx="${-pillW / 4}" cy="0" r="${r - 4}" /></clipPath></defs>
+                    <circle cx="${-pillW / 4}" cy="0" r="${r - 4}" fill="none" stroke="${attColor}" stroke-width="1.5" />
 
                     <!-- Defender -->
-                    <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
+                    <circle cx="${pillW / 4}" cy="0" r="${r - 4}" fill="${defColor}" opacity="0.4" />
                     ${defImg ? `
                     <g clip-path="url(#clip-${node.id}-R)">
-                        <image href="${defImg}" x="${pillW/4 - (r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
+                        <image href="${defImg}" x="${pillW / 4 - (r - 4)}" y="${-(r - 4)}" width="${(r - 4) * 2}" height="${(r - 4) * 2}" preserveAspectRatio="xMidYMid slice" />
                     </g>
-                    <defs><clipPath id="clip-${node.id}-R"><circle cx="${pillW/4}" cy="0" r="${r-4}" /></clipPath></defs>
+                    <defs><clipPath id="clip-${node.id}-R"><circle cx="${pillW / 4}" cy="0" r="${r - 4}" /></clipPath></defs>
                     ` : ''}
-                    <circle cx="${pillW/4}" cy="0" r="${r-4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
+                    <circle cx="${pillW / 4}" cy="0" r="${r - 4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
                 `;
 
             } else {
@@ -405,18 +432,18 @@ export class MapImageService {
                     innerContent += `
                         <circle r="${r}" ${borderProps} />
                         
-                        <circle cx="0" cy="0" r="${r-4}" fill="${defColor}" opacity="0.4" />
+                        <circle cx="0" cy="0" r="${r - 4}" fill="${defColor}" opacity="0.4" />
                         <g clip-path="url(#clip-${node.id})">
-                            <image href="${defImg}" x="${-(r-4)}" y="${-(r-4)}" width="${(r-4)*2}" height="${(r-4)*2}" preserveAspectRatio="xMidYMid slice" />
+                            <image href="${defImg}" x="${-(r - 4)}" y="${-(r - 4)}" width="${(r - 4) * 2}" height="${(r - 4) * 2}" preserveAspectRatio="xMidYMid slice" />
                         </g>
-                        <defs><clipPath id="clip-${node.id}"><circle cx="0" cy="0" r="${r-4}" /></clipPath></defs>
-                        <circle cx="0" cy="0" r="${r-4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
+                        <defs><clipPath id="clip-${node.id}"><circle cx="0" cy="0" r="${r - 4}" /></clipPath></defs>
+                        <circle cx="0" cy="0" r="${r - 4}" fill="none" stroke="${defColor}" stroke-width="1.5" />
                     `;
                 } else if (assignment?.defenderImage || assignment?.defenderName) {
                     // Fallback: Defender assigned but image missing/failed
                     innerContent += `
                         <circle r="${r}" ${borderProps} />
-                        <circle cx="0" cy="0" r="${r-4}" fill="${defColor}" opacity="0.8" />
+                        <circle cx="0" cy="0" r="${r - 4}" fill="${defColor}" opacity="0.8" />
                         <text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="rgba(0,0,0,0.5)" font-family="sans-serif" font-size="24" font-weight="bold">?</text>
                     `;
                 } else {
@@ -428,11 +455,11 @@ export class MapImageService {
             // --- B. Node Number Badge (Top) ---
             const badgeW = 28;
             const badgeH = 18;
-            const badgeY = -r - 12; 
+            const badgeY = -r - 12;
 
             innerContent += `
                 <g transform="translate(0, ${badgeY})">
-                    <rect x="${-badgeW/2}" y="${-badgeH/2}" width="${badgeW}" height="${badgeH}" rx="4" fill="${badgeFillVal}" stroke="${badgeStrokeVal}" stroke-width="2" />
+                    <rect x="${-badgeW / 2}" y="${-badgeH / 2}" width="${badgeW}" height="${badgeH}" rx="4" fill="${badgeFillVal}" stroke="${badgeStrokeVal}" stroke-width="2" />
                     <text x="0" y="0" class="${badgeTextColorClass}">${node.id}</text>
                 </g>
             `;
@@ -446,7 +473,7 @@ export class MapImageService {
                 const pfY = r + 12;
 
                 innerContent += `<g transform="translate(0, ${pfY})">`;
-                
+
                 prefightImages.forEach((pf, i) => {
                     if (pf.url && imageCache.has(pf.url)) {
                         const pfBase64 = imageCache.get(pf.url);
@@ -457,7 +484,7 @@ export class MapImageService {
                             <g transform="translate(${xPos}, 0)">
                                 <circle r="${pfR}" fill="#0f172a" stroke="${borderColor}" stroke-width="2" />
                                 <g clip-path="url(#clip-${node.id}-PF-${i})">
-                                    <image href="${pfBase64}" x="${-pfR}" y="${-pfR}" width="${pfR*2}" height="${pfR*2}" preserveAspectRatio="xMidYMid slice" />
+                                    <image href="${pfBase64}" x="${-pfR}" y="${-pfR}" width="${pfR * 2}" height="${pfR * 2}" preserveAspectRatio="xMidYMid slice" />
                                 </g>
                                 <defs><clipPath id="clip-${node.id}-PF-${i}"><circle cx="0" cy="0" r="${pfR}" /></clipPath></defs>
                             </g>
@@ -472,7 +499,7 @@ export class MapImageService {
             const badgeOffset = Math.floor(r * 0.7); // 45 deg approx
             const badgeR = 11;
             const iconSize = 14;
-            
+
             // Attacker Badge
             if (assignment?.isAttackerTactic) {
                 let badgeX = -badgeOffset - 8;
@@ -485,7 +512,7 @@ export class MapImageService {
                     <g transform="translate(${badgeX}, ${badgeY})">
                         <circle cx="1" cy="1" r="${badgeR}" fill="rgba(0,0,0,0.6)" />
                         <circle r="${badgeR}" fill="#022c22" stroke="#10b981" stroke-width="1" />
-                        <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
+                        <g transform="translate(${-iconSize / 2}, ${-iconSize / 2}) scale(${iconSize / 24})">
                              <path d="${MapImageService.SWORD_PATH}" stroke="#34d399" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
                         </g>
                     </g>
@@ -504,7 +531,7 @@ export class MapImageService {
                     <g transform="translate(${badgeX}, ${badgeY})">
                         <circle cx="1" cy="1" r="${badgeR}" fill="rgba(0,0,0,0.6)" />
                         <circle r="${badgeR}" fill="#450a0a" stroke="#ef4444" stroke-width="1" />
-                        <g transform="translate(${-iconSize/2}, ${-iconSize/2}) scale(${iconSize/24})">
+                        <g transform="translate(${-iconSize / 2}, ${-iconSize / 2}) scale(${iconSize / 24})">
                              <path d="${MapImageService.SHIELD_PATH}" fill="#f87171" />
                         </g>
                     </g>
@@ -521,7 +548,7 @@ export class MapImageService {
         // --- 4. Build Legend (Card/Table Style) ---
         let legendSvg = '';
         if (legend && legend.length > 0) {
-            const legendX = width - legendWidth; 
+            const legendX = width - legendWidth;
             const contentX = legendX + 40;
             let currentY = 60;
 
@@ -537,7 +564,7 @@ export class MapImageService {
             const colPlayer = 0;
             const colPath = 360; // Shifted right
             const colTeam = 480; // Compacted path column
-            
+
             legendSvg += `
                 <g font-family="sans-serif" font-weight="bold" font-size="20" fill="#64748b" letter-spacing="1">
                     <text x="${contentX + colPlayer}" y="${currentY}">PLAYER</text>
@@ -560,30 +587,30 @@ export class MapImageService {
                 `;
 
                 // --- Col 1: Player (Color Bar + Avatar + Name) ---
-                
+
                 // Color Bar Indicator
                 legendSvg += `<rect x="${contentX - 10}" y="${rowY}" width="6" height="${rowHeight - 10}" rx="2" fill="${item.color}" />`;
 
                 // Avatar
                 const avSize = 52;
                 let nameX = 15; // Offset from contentX if no avatar
-                
+
                 if (item.championImage && imageCache.has(item.championImage)) {
                     const img = imageCache.get(item.championImage);
                     nameX = 15 + avSize + 15;
-                    
+
                     legendSvg += `
-                        <g transform="translate(${contentX + 15}, ${centerY - avSize/2})">
+                        <g transform="translate(${contentX + 15}, ${centerY - avSize / 2})">
                             <defs>
                                 <clipPath id="clip-leg-av-${index}">
-                                    <circle cx="${avSize/2}" cy="${avSize/2}" r="${avSize/2}" />
+                                    <circle cx="${avSize / 2}" cy="${avSize / 2}" r="${avSize / 2}" />
                                 </clipPath>
                             </defs>
-                            <circle cx="${avSize/2}" cy="${avSize/2}" r="${avSize/2 + 2}" fill="${item.color}" opacity="0.3" />
+                            <circle cx="${avSize / 2}" cy="${avSize / 2}" r="${avSize / 2 + 2}" fill="${item.color}" opacity="0.3" />
                             <g clip-path="url(#clip-leg-av-${index})">
                                 <image href="${img}" x="0" y="0" width="${avSize}" height="${avSize}" preserveAspectRatio="xMidYMid slice" />
                             </g>
-                            <circle cx="${avSize/2}" cy="${avSize/2}" r="${avSize/2}" fill="none" stroke="${item.color}" stroke-width="2" />
+                            <circle cx="${avSize / 2}" cy="${avSize / 2}" r="${avSize / 2}" fill="none" stroke="${item.color}" stroke-width="2" />
                         </g>
                     `;
                 }
@@ -605,24 +632,24 @@ export class MapImageService {
                     const champSize = 48;
                     const champGap = 16;
                     let startX = contentX + colTeam;
-                    
+
                     item.assignedChampions.forEach((champ, cIndex) => {
                         const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
-                        const cx = startX + champSize/2;
+                        const cx = startX + champSize / 2;
                         const cy = centerY;
 
                         if (champ.url && imageCache.has(champ.url)) {
                             const cImg = imageCache.get(champ.url);
-                            
+
                             legendSvg += `
-                                <g transform="translate(${startX}, ${centerY - champSize/2})">
+                                <g transform="translate(${startX}, ${centerY - champSize / 2})">
                                     <defs>
                                         <clipPath id="clip-leg-${index}-c-${cIndex}">
-                                            <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" />
+                                            <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" />
                                         </clipPath>
                                     </defs>
                                     <!-- Glow -->
-                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2 + 4}" fill="${classColor}" opacity="0.4" />
+                                    <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2 + 4}" fill="${classColor}" opacity="0.4" />
                                     
                                     <!-- Image -->
                                     <g clip-path="url(#clip-leg-${index}-c-${cIndex})">
@@ -630,25 +657,73 @@ export class MapImageService {
                                     </g>
                                     
                                     <!-- Border -->
-                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" />
+                                    <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="none" stroke="${classColor}" stroke-width="2" />
                                 </g>
                             `;
                         } else {
                             // Fallback if image missing: Colored circle with Initial? Or just empty ring
                             legendSvg += `
-                                <g transform="translate(${startX}, ${centerY - champSize/2})">
-                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="${classColor}" opacity="0.2" />
-                                    <circle cx="${champSize/2}" cy="${champSize/2}" r="${champSize/2}" fill="none" stroke="${classColor}" stroke-width="2" stroke-dasharray="4 2" />
+                                <g transform="translate(${startX}, ${centerY - champSize / 2})">
+                                    <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="${classColor}" opacity="0.2" />
+                                    <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="none" stroke="${classColor}" stroke-width="2" stroke-dasharray="4 2" />
                                 </g>
                             `;
                         }
-                        
+
                         startX += champSize + champGap;
                     });
                 }
-                
+
                 currentY += rowHeight;
             });
+
+
+            // 4d. Banned Champions (Below the last row of players)
+            if (bannedChampions && bannedChampions.length > 0) {
+                const bannedY = currentY + 40;
+
+                // Title
+                legendSvg += `
+                    <text x="${contentX}" y="${bannedY}" font-family="sans-serif" font-weight="bold" font-size="28" fill="#f87171">
+                        Banned Defenders
+                    </text>
+                 `;
+
+                const bannedContentY = bannedY + 40;
+                const champSize = 56;
+                const champGap = 16;
+                const maxPerRow = 10;
+
+                bannedChampions.forEach((champ, index) => {
+                    const row = Math.floor(index / maxPerRow);
+                    const col = index % maxPerRow;
+
+                    const x = contentX + (col * (champSize + champGap));
+                    const y = bannedContentY + (row * (champSize + champGap));
+                    const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
+
+                    if (champ.url && imageCache.has(champ.url)) {
+                        const cImg = imageCache.get(champ.url);
+                        legendSvg += `
+                            <g transform="translate(${x}, ${y})">
+                                <defs>
+                                    <clipPath id="clip-ban-${index}">
+                                        <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" />
+                                    </clipPath>
+                                </defs>
+                                <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="#0f172a" opacity="0.8" />
+                                <g clip-path="url(#clip-ban-${index})">
+                                    <image href="${cImg}" x="0" y="0" width="${champSize}" height="${champSize}" preserveAspectRatio="xMidYMid slice" />
+                                </g>
+                                <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="none" stroke="${classColor}" stroke-width="2" />
+                            </g>
+                         `;
+                    }
+                });
+
+                // Update currentY if we were to continue (but we aren't)
+                // currentY = ...
+            }
         }
 
         return `

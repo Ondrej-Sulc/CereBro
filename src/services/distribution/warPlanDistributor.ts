@@ -17,9 +17,9 @@ export interface DistributeResult {
 }
 
 export async function distributeWarPlan(
-    client: Client, 
-    allianceId: string, 
-    warId: string, 
+    client: Client,
+    allianceId: string,
+    warId: string,
     targetBattlegroup?: number,
     targetPlayerId?: string,
     targetChannelId?: string
@@ -50,6 +50,11 @@ export async function distributeWarPlan(
                 include: {
                     champion: true,
                     player: true
+                }
+            },
+            bans: {
+                include: {
+                    champion: true
                 }
             }
         }
@@ -85,15 +90,55 @@ export async function distributeWarPlan(
         }
     });
 
+    // --- Fetch Season Bans ---
+    const seasonBans = await prisma.seasonBan.findMany({
+        where: {
+            season: war.season,
+            OR: [
+                { minTier: null, maxTier: null },
+                { minTier: { lte: war.warTier }, maxTier: null },
+                { minTier: null, maxTier: { gte: war.warTier } },
+                { minTier: { lte: war.warTier }, maxTier: { gte: war.warTier } }
+            ]
+        },
+        include: { champion: true }
+    });
+
+    // Combine Bans
+    const bannedChampionsMap = new Map<number, { url: string, class: any }>();
+
+    // 1. Season Bans
+    seasonBans.forEach(b => {
+        if (b.champion && b.champion.images) {
+            bannedChampionsMap.set(b.champion.id, {
+                url: getChampionImageUrl(b.champion.images, '64', 'primary'),
+                class: b.champion.class
+            });
+        }
+    });
+
+    // 2. War Bans
+    war.bans.forEach(b => {
+        if (b.champion && b.champion.images) {
+            bannedChampionsMap.set(b.champion.id, {
+                url: getChampionImageUrl(b.champion.images, '64', 'primary'),
+                class: b.champion.class
+            });
+        }
+    });
+
+    const bannedChampions = Array.from(bannedChampionsMap.values());
+    bannedChampions.forEach(b => uniqueImageUrls.add(b.url));
+
     // --- Global Color Assignment (Moved Up) ---
     // 1. Collect all unique players involved in the war
     const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
     war.fights.forEach(f => {
         if (f.player) {
-            allPlayers.set(f.player.id, { 
-                id: f.player.id, 
-                name: f.player.ingameName, 
-                bg: f.battlegroup 
+            allPlayers.set(f.player.id, {
+                id: f.player.id,
+                name: f.player.ingameName,
+                bg: f.battlegroup
             });
         }
     });
@@ -119,7 +164,7 @@ export async function distributeWarPlan(
         if (!bgNodeMaps.has(fight.battlegroup)) {
             bgNodeMaps.set(fight.battlegroup, new Map());
         }
-        
+
         let defenderImage: string | undefined;
         if (fight.defender?.images) {
             defenderImage = getChampionImageUrl(fight.defender.images, '64', 'primary');
@@ -139,7 +184,7 @@ export async function distributeWarPlan(
                 if (pf.champion?.images) {
                     const pfImg = getChampionImageUrl(pf.champion.images, '64', 'primary');
                     uniqueImageUrls.add(pfImg);
-                    
+
                     const borderColor = (pf.player?.id && globalColorMap.get(pf.player.id)) || '#94a3b8';
                     prefightImages.push({ url: pfImg, borderColor });
                 }
@@ -174,17 +219,17 @@ export async function distributeWarPlan(
         if (fight.attackerId && fight.defenderId) {
             const key = `${fight.nodeId}-${fight.defenderId}-${fight.attackerId}`;
             fightKeys.add(key);
-            keyMap.set(key, { 
-                nodeId: fight.nodeId, 
-                defenderId: fight.defenderId, 
-                attackerId: fight.attackerId 
+            keyMap.set(key, {
+                nodeId: fight.nodeId,
+                defenderId: fight.defenderId,
+                attackerId: fight.attackerId
             });
         }
     }
 
     // 2. Batch Query
     const videoMap = new Map<string, { url: string, videoId: string, death: number, playerId: string, playerName: string }[]>();
-    
+
     if (fightKeys.size > 0) {
         const criterias = Array.from(keyMap.values());
         // Prisma doesn't support tuple IN natively in findMany without raw where, 
@@ -192,7 +237,7 @@ export async function distributeWarPlan(
         // To avoid massive OR clauses, we can fetch by Node+Defender and then filter in memory if needed, 
         // or just use OR if size is reasonable.
         // Let's assume < 200 items in OR is fine.
-        
+
         // Chunking the query if necessary, but for now simple OR.
         const historicalFights = await prisma.warFight.findMany({
             where: {
@@ -346,17 +391,17 @@ export async function distributeWarPlan(
     const getChannel = async (bg: number): Promise<TextChannel | null> => {
         const channelId = channelMap[bg as keyof typeof channelMap];
         if (!channelId) return null;
-        
+
         if (channelCache.has(channelId)) return channelCache.get(channelId)!;
-        
+
         try {
             const channel = await client.channels.fetch(channelId);
             if (channel && channel.isTextBased()) {
                 channelCache.set(channelId, channel as TextChannel);
                 return channel as TextChannel;
             }
-        } catch(e) {}
-        
+        } catch (e) { }
+
         channelCache.set(channelId, null);
         return null;
     }
@@ -373,10 +418,10 @@ export async function distributeWarPlan(
                     threadCache.set(channelId, new Map());
                     return null;
                 }
-                
+
                 // Fetch active threads
                 const active = await channel.threads.fetch();
-                
+
                 const map = new Map<string, ThreadChannel>();
                 active.threads.forEach(t => map.set(t.name.toLowerCase(), t));
                 threadCache.set(channelId, map);
@@ -385,7 +430,7 @@ export async function distributeWarPlan(
                 return null;
             }
         }
-        
+
         const existing = threadCache.get(channelId)?.get(playerName.toLowerCase());
         if (existing) return existing;
 
@@ -401,7 +446,7 @@ export async function distributeWarPlan(
                     type: ChannelType.PrivateThread,
                     autoArchiveDuration: 10080, // 1 week
                 });
-                
+
                 // Update cache
                 threadCache.get(channelId)?.set(playerName.toLowerCase(), newThread);
                 return newThread;
@@ -409,7 +454,7 @@ export async function distributeWarPlan(
         } catch (e) {
             logger.error({ err: e, playerName }, `Failed to create thread for ${playerName}`);
         }
-        
+
         return null;
     };
 
@@ -462,8 +507,8 @@ export async function distributeWarPlan(
                 }
 
                 if (!channel) {
-                     result.errors.push(`Could not determine channel for BG ${bg}`);
-                     continue;
+                    result.errors.push(`Could not determine channel for BG ${bg}`);
+                    continue;
                 }
 
                 // Gather players and fights for this BG
@@ -473,12 +518,12 @@ export async function distributeWarPlan(
                 // Build Legend & Assignments using Global Colors
                 const legend: LegendItem[] = [];
                 const distinctPlayers = Array.from(new Set(bgFights.map(f => f.player?.ingameName))).filter(Boolean);
-                
+
                 // Sort for legend display (alphabetical is fine for legend, color is already fixed)
                 distinctPlayers.sort().forEach((name) => {
                     const pObj = bgFights.find(f => f.player?.ingameName === name)?.player;
                     const pFights = bgFights.filter(f => f.player?.ingameName === name);
-                    
+
                     let pathLabel = "";
                     if (pFights.length > 0) {
                         if (mapType === WarMapType.BIG_THING) {
@@ -487,15 +532,15 @@ export async function distributeWarPlan(
                         } else {
                             const s1Paths = new Set<number>();
                             const s2Paths = new Set<number>();
-                            
+
                             pFights.forEach(f => {
                                 const info = getPathInfo(f.node.nodeNumber);
                                 if (info?.section === 1) s1Paths.add(info.path);
                                 if (info?.section === 2) s2Paths.add(info.path);
                             });
 
-                            const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a,b)=>a-b).join(",")}` : "-";
-                            const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a,b)=>a-b).join(",")}` : "-";
+                            const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a, b) => a - b).join(",")}` : "-";
+                            const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a, b) => a - b).join(",")}` : "-";
                             pathLabel = `${s1Str} / ${s2Str}`;
                         }
                     }
@@ -503,15 +548,15 @@ export async function distributeWarPlan(
                     // Collect assigned champions images (All types: Attacker, Prefight, Extra)
                     const assignedChampions: { url: string; class: any }[] = [];
                     const seenChampIds = new Set<number>();
-                    
+
                     // 1. Attackers from fights
                     pFights.forEach(f => {
                         if (f.attacker && f.attacker.images && !seenChampIds.has(f.attacker.id)) {
-                             seenChampIds.add(f.attacker.id);
-                             assignedChampions.push({
-                                 url: getChampionImageUrl(f.attacker.images, '64', 'primary'),
-                                 class: f.attacker.class
-                             });
+                            seenChampIds.add(f.attacker.id);
+                            assignedChampions.push({
+                                url: getChampionImageUrl(f.attacker.images, '64', 'primary'),
+                                class: f.attacker.class
+                            });
                         }
                     });
 
@@ -564,17 +609,17 @@ export async function distributeWarPlan(
 
                 bgFights.forEach(f => {
                     if (f.player && globalColorMap.has(f.player.id)) {
-                         const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
-                         assignments.set(f.node.nodeNumber, {
-                             ...existing,
-                             assignedColor: globalColorMap.get(f.player.id)
-                         });
+                        const existing = assignments.get(f.node.nodeNumber) || { isTarget: false };
+                        assignments.set(f.node.nodeNumber, {
+                            ...existing,
+                            assignedColor: globalColorMap.get(f.player.id)
+                        });
                     }
                 });
 
                 // Generate Image with Accent Color
                 const accentColor = bgColors[bg];
-                const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend, accentColor);
+                const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, legend, accentColor, bannedChampions);
                 const mapFileName = `war-overview-bg${bg}.png`;
                 const mapAttachment = new AttachmentBuilder(mapBuffer, { name: mapFileName });
 
@@ -583,25 +628,25 @@ export async function distributeWarPlan(
                 const seasonInfo = `📅 Season ${war.season} | War ${war.warNumber || '?'} | Tier ${war.warTier}`;
                 const matchInfo = `⚔️ ${alliance.name} vs ${war.enemyAlliance || 'Unknown Opponent'}`;
                 const planLink = `${config.botBaseUrl}/planning/${war.id}`;
-                
+
                 const container = new ContainerBuilder().setAccentColor(parseInt(accentColor.replace('#', ''), 16));
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
-                     `## 🗺️ Battlegroup ${bg} War Plan\n` +
-                     `**${matchInfo}**\n` +
-                     `${seasonInfo} (🗺️ ${mapName}) | [View Full Plan on Web](${planLink})`
+                    `## 🗺️ Battlegroup ${bg} War Plan\n` +
+                    `**${matchInfo}**\n` +
+                    `${seasonInfo} (🗺️ ${mapName}) | [View Full Plan on Web](${planLink})`
                 ));
-                 container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(
+                container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(
                     new MediaGalleryItemBuilder()
                         .setDescription(`**Battlegroup ${bg} Overview**`)
                         .setURL(`attachment://${mapFileName}`)
                 ));
 
-                 await channel.send({
+                await channel.send({
                     components: [container],
                     flags: [MessageFlags.IsComponentsV2],
                     files: [mapAttachment]
                 });
-                
+
                 logger.info(`Sent overview map to BG ${bg} channel`);
                 result.sent.push(`BG ${bg} Map`);
 
@@ -610,7 +655,7 @@ export async function distributeWarPlan(
             }
         }
     }
-    
+
     // If we are sharing to a specific channel (e.g. general chat), we stop here.
     // We don't want to spam individual threads.
     if (targetChannelId) return result;
@@ -619,7 +664,7 @@ export async function distributeWarPlan(
     for (const [playerName, fights] of playerFights) {
         const bg = fights[0].battlegroup;
         const playerObj = fights[0].player; // For capitalization and ID
-        
+
         const thread = await getThread(bg, playerName);
 
         const myPrefights = playerPrefightTasks.get(playerObj.id) || [];
@@ -628,7 +673,7 @@ export async function distributeWarPlan(
         // --- Generate Map Image ---
         const bgMap = bgNodeMaps.get(bg);
         const assignments = new Map<number, NodeAssignment>();
-        
+
         // Copy BG map base state
         if (bgMap) {
             bgMap.forEach((val, key) => assignments.set(key, { ...val }));
@@ -648,7 +693,7 @@ export async function distributeWarPlan(
             const mapBuffer = await MapImageService.generateMapImage(mapType, nodesData, assignments, globalImageCache, undefined, accentColor);
             const mapFileName = `war-plan-${playerObj.id}.png`; // Unique file name
             mapAttachment = new AttachmentBuilder(mapBuffer, { name: mapFileName });
-            
+
             mapMediaGallery = new MediaGalleryBuilder().addItems(
                 new MediaGalleryItemBuilder()
                     .setDescription(`**${playerObj.ingameName}'s War Plan Map**`)
@@ -660,7 +705,7 @@ export async function distributeWarPlan(
 
         // --- Build Message ---
         const container = new ContainerBuilder().setAccentColor(parseInt(accentColor.replace('#', ''), 16));
-        
+
         // Add Media Gallery to the container if map was generated
         if (mapMediaGallery) {
             container.addMediaGalleryComponents(mapMediaGallery);
@@ -713,43 +758,43 @@ export async function distributeWarPlan(
 
         // 3. Assignments
         const assignmentLines = await Promise.all(fights.sort((a: any, b: any) => a.node.nodeNumber - b.node.nodeNumber).map(async (f: any) => {
-             const attackerEmoji = await getEmoji(f.attacker?.name || '', client);
-             const defenderEmoji = await getEmoji(f.defender?.name || '', client);
-             const node = f.node.nodeNumber;
-             
-             let line = `- Node ${node}: ${attackerEmoji} **${f.attacker?.name || 'Unknown'}** vs ${defenderEmoji} **${f.defender?.name || 'Unknown'}**`;
-             
-             if (f.prefightChampions.length > 0) {
-                 const prefightEmojis = await Promise.all(f.prefightChampions.map((p: any) => getEmoji(p.champion.name, client)));
-                 line += ` (Prefight: ${prefightEmojis.join(' ')})`;
-             }
+            const attackerEmoji = await getEmoji(f.attacker?.name || '', client);
+            const defenderEmoji = await getEmoji(f.defender?.name || '', client);
+            const node = f.node.nodeNumber;
 
-             // Video Link Logic
-             if (f.attackerId && f.defenderId) {
-                 const key = `${f.nodeId}-${f.defenderId}-${f.attackerId}`;
-                 const videos = videoMap.get(key);
-                 if (videos) {
-                     // Filter out this player's own videos, take top 3
-                     const validVideos = videos
+            let line = `- Node ${node}: ${attackerEmoji} **${f.attacker?.name || 'Unknown'}** vs ${defenderEmoji} **${f.defender?.name || 'Unknown'}**`;
+
+            if (f.prefightChampions.length > 0) {
+                const prefightEmojis = await Promise.all(f.prefightChampions.map((p: any) => getEmoji(p.champion.name, client)));
+                line += ` (Prefight: ${prefightEmojis.join(' ')})`;
+            }
+
+            // Video Link Logic
+            if (f.attackerId && f.defenderId) {
+                const key = `${f.nodeId}-${f.defenderId}-${f.attackerId}`;
+                const videos = videoMap.get(key);
+                if (videos) {
+                    // Filter out this player's own videos, take top 3
+                    const validVideos = videos
                         .filter(v => v.playerId !== playerObj.id)
                         .slice(0, 3);
-                     
-                     if (validVideos.length > 0) {
-                         const videoLinks = validVideos.map(v => {
-                             const deathNote = v.death > 0 ? ` (💀 ${v.death})` : '';
-                             const videoLink = `${config.botBaseUrl}/war-videos/${v.videoId}`;
-                             return `🎥 [${v.playerName}${deathNote}](${videoLink})`;
-                         });
-                         line += ` | ${videoLinks.join(' ')}`;
-                     }
-                 }
-             }
-             
-             if (f.notes) line += `\n  > *${f.notes}*`;
-             
-             return line;
+
+                    if (validVideos.length > 0) {
+                        const videoLinks = validVideos.map(v => {
+                            const deathNote = v.death > 0 ? ` (💀 ${v.death})` : '';
+                            const videoLink = `${config.botBaseUrl}/war-videos/${v.videoId}`;
+                            return `🎥 [${v.playerName}${deathNote}](${videoLink})`;
+                        });
+                        line += ` | ${videoLinks.join(' ')}`;
+                    }
+                }
+            }
+
+            if (f.notes) line += `\n  > *${f.notes}*`;
+
+            return line;
         }));
-        
+
         container.addTextDisplayComponents(
             new TextDisplayBuilder().setContent("**Assignments**\n" + assignmentLines.join("\n"))
         );
@@ -759,11 +804,10 @@ export async function distributeWarPlan(
             const pfLines = await Promise.all(myPrefights.map(async (p: any) => {
                 const champEmoji = await getEmoji(p.championName, client);
                 const defenderEmoji = await getEmoji(p.targetDefender, client);
-                return `- ${champEmoji} **${p.championName}** for ${
-                    p.targetPlayer.toLowerCase() === playerObj.ingameName.toLowerCase()
-                        ? `my ${defenderEmoji} **${p.targetDefender}**`
-                        : `${p.targetPlayer}'s ${defenderEmoji} **${p.targetDefender}**`
-                } on Node ${p.targetNode}`;
+                return `- ${champEmoji} **${p.championName}** for ${p.targetPlayer.toLowerCase() === playerObj.ingameName.toLowerCase()
+                    ? `my ${defenderEmoji} **${p.targetDefender}**`
+                    : `${p.targetPlayer}'s ${defenderEmoji} **${p.targetDefender}**`
+                    } on Node ${p.targetNode}`;
             }));
             container.addTextDisplayComponents(
                 new TextDisplayBuilder().setContent("**Pre-Fights to Place**\n" + pfLines.join("\n"))
@@ -772,29 +816,29 @@ export async function distributeWarPlan(
         container.addSeparatorComponents(new SeparatorBuilder());
         // 5. Upload Button
         const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`generate_upload_link:${war.id}:${playerObj.id}`)
-            .setLabel("Add/Upload Video(s) to CereBro")
-            .setStyle(ButtonStyle.Primary)
+            new ButtonBuilder()
+                .setCustomId(`generate_upload_link:${war.id}:${playerObj.id}`)
+                .setLabel("Add/Upload Video(s) to CereBro")
+                .setStyle(ButtonStyle.Primary)
         );
         container.addActionRowComponents(actionRow);
 
         try {
             const files = mapAttachment ? [mapAttachment] : [];
-            
+
             if (thread) {
                 await thread.send({
                     components: [container],
                     flags: [MessageFlags.IsComponentsV2],
                     files: files
                 });
-                
+
                 // Add player to thread if they have a discord ID and are not already in it
                 if (playerObj.discordId) {
                     try {
                         await thread.members.add(playerObj.discordId);
                     } catch (e) {
-                       // Ignore if already member or cant add
+                        // Ignore if already member or cant add
                     }
                 }
             } else if (playerObj.discordId) {
