@@ -106,6 +106,7 @@ export async function distributeWarPlan(
 
     // Combine Bans
     const bannedChampionsMap = new Map<number, { url: string, class: any }>();
+    const uniqueImageUrls = new Set<string>(); // Initialized here
 
     // 1. Season Bans
     seasonBans.forEach(b => {
@@ -158,7 +159,6 @@ export async function distributeWarPlan(
 
     // 1. Prepare Global Node & Image Data
     const bgNodeMaps = new Map<number, Map<number, NodeAssignment>>();
-    const uniqueImageUrls = new Set<string>();
 
     for (const fight of war.fights) {
         if (!bgNodeMaps.has(fight.battlegroup)) {
