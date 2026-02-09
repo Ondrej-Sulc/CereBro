@@ -49,7 +49,15 @@ export function EditWarDialog({
 
   const [isEditing, setIsEditing] = useState(false);
   const [isOffSeasonEdit, setIsOffSeasonEdit] = useState(war.warNumber === null);
-  const [editData, setEditData] = useState({
+  const [editData, setEditData] = useState<{
+      name: string;
+      enemyAlliance: string;
+      season: number | "";
+      warNumber: number;
+      warTier: number;
+      result: WarResult;
+      enemyDeaths: number | "";
+  }>({
       name: war.name || "",
       enemyAlliance: war.enemyAlliance || "",
       season: war.season,
@@ -64,6 +72,8 @@ export function EditWarDialog({
       try {
           await updateWarDetails(war.id, {
               ...editData,
+              season: editData.season === "" ? war.season : editData.season,
+              enemyDeaths: editData.enemyDeaths === "" ? 0 : editData.enemyDeaths,
               warNumber: isOffSeasonEdit ? null : editData.warNumber
           });
           toast({ title: "War Updated", description: "Details have been successfully updated." });
@@ -129,7 +139,11 @@ export function EditWarDialog({
                             id="edit-season"
                             type="number"
                             value={editData.season}
-                            onChange={(e) => setEditData({ ...editData, season: parseInt(e.target.value) })}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setEditData({ ...editData, season: val === "" ? "" : parseInt(val) });
+                            }}
+                            onFocus={(e) => e.target.select()}
                             className="bg-slate-900 border-slate-800 no-spin-buttons"
                         />
                     </div>
@@ -183,7 +197,11 @@ export function EditWarDialog({
                             id="edit-enemyDeaths"
                             type="number"
                             value={editData.enemyDeaths}
-                            onChange={(e) => setEditData({ ...editData, enemyDeaths: parseInt(e.target.value) || 0 })}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setEditData({ ...editData, enemyDeaths: val === "" ? "" : parseInt(val) });
+                            }}
+                            onFocus={(e) => e.target.select()}
                             className="bg-slate-900 border-slate-800 no-spin-buttons"
                         />
                     </div>

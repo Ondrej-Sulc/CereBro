@@ -86,7 +86,7 @@ export default function NodeEditor({
     })) || []
   );
   const [playerId, setPlayerId] = useState<string | undefined>(currentFight?.playerId || undefined);
-  const [deaths, setDeaths] = useState<number>(currentFight?.death || 0);
+  const [deaths, setDeaths] = useState<number | "">(currentFight?.death ?? 0);
   const [notes, setNotes] = useState<string>(currentFight?.notes || "");
   
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
@@ -379,7 +379,7 @@ export default function NodeEditor({
   useEffect(() => {
     if (currentFight && isUserEdit.current && deaths !== currentFight.death) {
         const timer = setTimeout(() => {
-            triggerSave({ death: deaths });
+            triggerSave({ death: deaths === "" ? 0 : deaths });
             isUserEdit.current = false;
         }, 1000); 
         return () => clearTimeout(timer);
@@ -508,8 +508,10 @@ export default function NodeEditor({
               value={deaths}
               onChange={(e) => {
                   isUserEdit.current = true;
-                  setDeaths(parseInt(e.target.value, 10) || 0);
+                  const val = e.target.value;
+                  setDeaths(val === "" ? "" : parseInt(val, 10));
               }}
+              onFocus={(e) => e.target.select()}
               className="col-span-3 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               readOnly={isReadOnly}
               disabled={isReadOnly}

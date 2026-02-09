@@ -171,6 +171,7 @@ export default function WarPlanningDashboard({
                           type="number"
                           required
                           defaultValue={defaultSeason}
+                          onFocus={(e) => e.target.select()}
                           className="bg-slate-900 border-slate-800 no-spin-buttons"
                       />
                       </div>
@@ -182,6 +183,7 @@ export default function WarPlanningDashboard({
                           type="number"
                           disabled={isOffSeason}
                           defaultValue={defaultWarNumber}
+                          onFocus={(e) => e.target.select()}
                           className="bg-slate-900 border-slate-800 no-spin-buttons disabled:opacity-50"
                       />
                       </div>
@@ -209,6 +211,7 @@ export default function WarPlanningDashboard({
                       type="number"
                       required
                       defaultValue={defaultTier}
+                      onFocus={(e) => e.target.select()}
                       className="bg-slate-900 border-slate-800 no-spin-buttons"
                       />
                   </div>
