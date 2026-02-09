@@ -19,53 +19,88 @@ import logger from "../../services/loggerService";
 const SCAN_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_LIST_DISPLAY_CHAMPS = 40;
 
+const activeScans = new Set<string>();
+
 export async function handleScan(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  // 1. Authenticate / Get Player
-  const player = await getPlayer(interaction);
-  if (!player) {
-    // getPlayer handles the reply if player is not found
+  const userId = interaction.user.id;
+
+  if (activeScans.has(userId)) {
+    await interaction.reply({
+      content:
+        `❌ **You already have an active scan session.**\n` +
+        `Please finish that session or wait for it to expire (5 minutes).`,
+      flags: [MessageFlags.Ephemeral],
+    });
     return;
   }
 
-  // 2. Initial Reply
-  await interaction.reply({
-    content:
-      `**Ready to scan!** 📸\n` +
-      `Please upload your **BG View** (Battlegrounds) screenshots now.\n` +
-      `- You can upload multiple images at once.\n` +
-      `- I will listen in this channel for the next **5 minutes**.\n` +
-      `- Make sure you are in the "Battlegrounds" view (not "My Champions").`,
-  });
+  activeScans.add(userId);
 
-  const channel = interaction.channel as TextChannel;
-  if (!channel) return;
-
-  logger.info({ userId: player.id }, "Starting roster scan session");
-
-  // 3. Setup Collector
-  const collector = channel.createMessageCollector({
-    filter: (m: Message) =>
-      m.author.id === interaction.user.id && m.attachments.size > 0,
-    time: SCAN_DURATION_MS,
-  });
-
-  // 4. Handle Collected Messages
-  collector.on("collect", async (message: Message) => {
-    logger.info({ userId: player.id, msgId: message.id, attachmentCount: message.attachments.size }, "Processing scan message");
-    try {
-        await processMessage(message, player.id, interaction.client);
-    } catch (error) {
-        logger.error({ error, msgId: message.id }, "Error processing scan message");
-        await message.reply({ content: "❌ An unexpected error occurred while processing this message." });
+  try {
+    // 1. Authenticate / Get Player
+    const player = await getPlayer(interaction);
+    if (!player) {
+      // getPlayer handles the reply if player is not found
+      activeScans.delete(userId);
+      return;
     }
-  });
 
-  // 5. Handle End - No timeout message
-  collector.on("end", async (collected, reason) => {
-     // Silent end
-  });
+    // 2. Initial Reply
+    await interaction.reply({
+      content:
+        `**Ready to scan!** 📸\n` +
+        `Please upload your **BG View** (Battlegrounds) screenshots now.\n` +
+        `- You can upload multiple images at once.\n` +
+        `- I will listen in this channel for the next **5 minutes**.\n` +
+        `- Make sure you are in the "Battlegrounds" view (not "My Champions").`,
+    });
+
+    const channel = interaction.channel as TextChannel;
+    if (!channel) {
+      activeScans.delete(userId);
+      return;
+    }
+
+    logger.info({ userId: player.id }, "Starting roster scan session");
+
+    // 3. Setup Collector
+    const collector = channel.createMessageCollector({
+      filter: (m: Message) =>
+        m.author.id === interaction.user.id && m.attachments.size > 0,
+      time: SCAN_DURATION_MS,
+    });
+
+    // 4. Handle Collected Messages
+    collector.on("collect", async (message: Message) => {
+      logger.info(
+        {
+          userId: player.id,
+          msgId: message.id,
+          attachmentCount: message.attachments.size,
+        },
+        "Processing scan message"
+      );
+      try {
+        await processMessage(message, player.id, interaction.client);
+      } catch (error) {
+        logger.error({ error, msgId: message.id }, "Error processing scan message");
+        await message.reply({
+          content: "❌ An unexpected error occurred while processing this message.",
+        });
+      }
+    });
+
+    // 5. Handle End - No timeout message
+    collector.on("end", async (collected, reason) => {
+      activeScans.delete(userId);
+      logger.info({ userId: player.id, reason }, "Roster scan session ended");
+    });
+  } catch (error) {
+    activeScans.delete(userId);
+    throw error;
+  }
 }
 
 async function processMessage(message: Message, playerId: string, client: any) {
