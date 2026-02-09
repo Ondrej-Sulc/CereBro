@@ -765,8 +765,14 @@ export async function distributeWarPlan(
             let line = `- Node ${node}: ${attackerEmoji} **${f.attacker?.name || 'Unknown'}** vs ${defenderEmoji} **${f.defender?.name || 'Unknown'}**`;
 
             if (f.prefightChampions.length > 0) {
-                const prefightEmojis = await Promise.all(f.prefightChampions.map((p: any) => getEmoji(p.champion.name, client)));
-                line += ` (Prefight: ${prefightEmojis.join(' ')})`;
+                const prefightInfos = await Promise.all(f.prefightChampions.map(async (p: any) => {
+                    const emoji = await getEmoji(p.champion.name, client);
+                    if (p.player && p.player.id !== playerObj.id) {
+                        return `${emoji} (by ${p.player.ingameName})`;
+                    }
+                    return emoji;
+                }));
+                line += ` (Prefight: ${prefightInfos.join(' ')})`;
             }
 
             // Video Link Logic
