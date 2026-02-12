@@ -26,7 +26,7 @@ export function VideoInputSection({
   if (uploadMode !== "single") return null;
 
   return (
-    <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 bg-slate-900/50 bg-gradient-to-br from-fuchsia-950/50 via-slate-950/50 to-slate-900/50">
+    <div className="glass rounded-xl border border-slate-800/60 p-4 sm:p-6 bg-slate-950/30 shadow-sm">
       {sourceMode === 'upload' ? (
         <>
           <Label htmlFor="videoFile" className="text-sm font-bold text-slate-300 mb-3 block">Video File</Label>

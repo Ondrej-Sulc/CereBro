@@ -18,6 +18,7 @@ import { WarNode } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { Champion } from "@/types/champion";
 import { Input } from "./ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface FightData {
   id: string;
@@ -29,6 +30,7 @@ export interface FightData {
   videoFile?: File | null;
   videoUrl?: string;
   battlegroup?: number;
+  description?: string;
 }
 
 interface FightBlockProps {
@@ -227,9 +229,9 @@ export function FightBlock({
 
         {/* Individual Video Input (Multiple Mode Only) */}
         {uploadMode === "multiple" && (
-          <div className="pt-1">
+          <div className="pt-1 space-y-2">
             {sourceMode === "upload" ? (
-              <div className="relative group/upload shadow-lg shadow-fuchsia-950/50">
+              <div className="relative group/upload shadow-lg shadow-sky-950/20">
                 <Label
                   htmlFor={`videoFile-${fight.id}`}
                   className={cn(
@@ -266,12 +268,19 @@ export function FightBlock({
                   onChange={(e) => updateFight({ videoUrl: e.target.value })}
                   placeholder="Paste YouTube URL..."
                   className={cn(
-                    "h-9 pl-9 bg-slate-950/30 border-white/5 text-xs focus:border-fuchsia-500/50 placeholder:text-slate-600 rounded-md shadow-lg shadow-fuchsia-950/50",
+                    "h-9 pl-9 bg-slate-950/30 border-white/5 text-xs focus:border-sky-500/50 placeholder:text-slate-600 rounded-md shadow-lg shadow-sky-950/20",
                     errors?.[`videoUrl-${fight.id}`] && "border-red-500"
                   )}
                 />
               </div>
             )}
+            
+            <Textarea
+              placeholder="Fight description (optional)..."
+              value={fight.description || ""}
+              onChange={(e) => updateFight({ description: e.target.value })}
+              className="bg-slate-950/30 border-white/5 min-h-[60px] text-xs resize-none"
+            />
           </div>
         )}
 

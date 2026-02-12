@@ -465,9 +465,12 @@ export function useWarVideoForm({
               const fight = fights[i];
               setCurrentUpload(`Linking fight ${i + 1} of ${fights.length}...`);
 
+              const fightDescription = fight.description || description;
+
               if (preFilledFights) {
                 const result = await linkVideo({
                   ...commonPayloadLoop,
+                  description: fightDescription,
                   videoUrl: fight.videoUrl,
                   fightUpdates: [fight],
                 });
@@ -478,6 +481,7 @@ export function useWarVideoForm({
                 // New: send full fight data for creation
                 const result = await linkVideo({
                   ...commonPayloadLoop,
+                  description: fightDescription,
                   videoUrl: fight.videoUrl,
                   fights: [fight], // send single fight
                   season: season,
@@ -556,7 +560,7 @@ export function useWarVideoForm({
               formData.append("token", token);
               formData.append("videoFile", fight.videoFile!);
               formData.append("visibility", visibility);
-              formData.append("description", description);
+              formData.append("description", fight.description || description);
               if (playerInVideoId) formData.append("playerId", playerInVideoId);
               if (customPlayerName) formData.append("customPlayerName", customPlayerName);
               if (isGlobal) formData.append("isGlobal", "true");

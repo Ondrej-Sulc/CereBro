@@ -20,7 +20,7 @@ export function WarVideoHeader({
   canUploadFiles,
 }: WarVideoHeaderProps) {
   return (
-    <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 flex flex-col gap-4 bg-slate-900/50 bg-gradient-to-br from-fuchsia-950/50 via-slate-950/50 to-slate-900/50">
+    <div className="glass rounded-xl border border-slate-800/60 p-4 sm:p-6 flex flex-col gap-4 bg-slate-950/30 shadow-sm">
       <h3 className="text-xl font-bold text-white flex items-center gap-3">
         <UploadCloud className="h-6 w-6 text-sky-400" />
         Upload War Video

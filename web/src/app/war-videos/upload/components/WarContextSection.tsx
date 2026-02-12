@@ -43,6 +43,7 @@ interface WarContextSectionProps {
   contextMode: "alliance" | "global";
   setContextMode: (mode: "alliance" | "global") => void;
   hasAlliance: boolean;
+  uploadMode?: "single" | "multiple";
 }
 
 export function WarContextSection({
@@ -74,9 +75,10 @@ export function WarContextSection({
   contextMode,
   setContextMode,
   hasAlliance,
+  uploadMode = "single",
 }: WarContextSectionProps) {
   return (
-    <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6 space-y-6 bg-slate-900/50 bg-gradient-to-br from-teal-950/50 via-slate-950/50 to-slate-900/50">
+    <div className="glass rounded-xl border border-slate-800/60 p-4 sm:p-6 space-y-6 bg-slate-950/30 shadow-sm">
       <h3 className="text-lg font-semibold text-white flex items-center gap-2">
         <Map className="h-5 w-5 text-sky-400" />
         War Context
@@ -235,12 +237,17 @@ export function WarContextSection({
 
       {/* Video Description */}
       <div>
-        <Label htmlFor="description" className="text-sm font-medium text-slate-300 mb-2 block">Video Description (Optional)</Label>
+        <Label htmlFor="description" className="text-sm font-medium text-slate-300 mb-2 block">
+          {uploadMode === "multiple" ? "Shared Description (Optional)" : "Video Description (Optional)"}
+        </Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Add any relevant details about the fight, prefights used, etc."
+          placeholder={uploadMode === "multiple" 
+            ? "Add details that apply to ALL fights. Individual descriptions will override this."
+            : "Add any relevant details about the fight, prefights used, etc."
+          }
           className="bg-slate-900/50 border-slate-700/50 min-h-[80px]"
         />
       </div>

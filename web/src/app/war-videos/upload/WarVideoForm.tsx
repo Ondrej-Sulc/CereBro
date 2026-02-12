@@ -129,6 +129,7 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           setVisibility={setVisibility}
           description={description}
           setDescription={setDescription}
+          uploadMode={uploadMode}
         />
       </div>
 
