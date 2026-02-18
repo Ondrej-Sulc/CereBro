@@ -45,6 +45,59 @@ export function getColorDistance(
   );
 }
 
+/**
+ * Safely extracts a region from an image, clamping coordinates and dimensions to stay within the image boundaries.
+ */
+export async function safeExtract(
+  imageBuffer: Buffer,
+  options: { left: number; top: number; width: number; height: number }
+): Promise<sharp.Sharp> {
+  const metadata = await sharp(imageBuffer).metadata();
+  const imgWidth = metadata.width || 0;
+  const imgHeight = metadata.height || 0;
+
+  let { left, top, width, height } = options;
+
+  // 1. Clamp negative values and adjust dimensions accordingly
+  if (left < 0) {
+    width += left;
+    left = 0;
+  }
+  if (top < 0) {
+    height += top;
+    top = 0;
+  }
+
+  // 2. Clamp dimensions to image boundaries
+  if (imgWidth > 0) {
+    if (left >= imgWidth) {
+        left = imgWidth - 1;
+        width = 1;
+    }
+    if (left + width > imgWidth) {
+        width = imgWidth - left;
+    }
+  }
+  
+  if (imgHeight > 0) {
+    if (top >= imgHeight) {
+        top = imgHeight - 1;
+        height = 1;
+    }
+    if (top + height > imgHeight) {
+        height = imgHeight - top;
+    }
+  }
+
+  // 3. Ensure positive dimensions (sharp requires > 0)
+  width = Math.max(1, Math.floor(width));
+  height = Math.max(1, Math.floor(height));
+  left = Math.floor(left);
+  top = Math.floor(top);
+
+  return sharp(imageBuffer).extract({ left, top, width, height });
+}
+
 export async function getImageHash(imageBuffer: Buffer): Promise<string> {
   try {
     // 1. Resize to 8x8 and convert to grayscale

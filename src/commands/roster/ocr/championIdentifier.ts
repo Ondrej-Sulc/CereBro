@@ -17,6 +17,7 @@ import {
   getImageHash,
   compareHashes,
   getColorDistance,
+  safeExtract,
 } from "./imageUtils";
 
 export async function solveShortNames(
@@ -93,8 +94,7 @@ export async function solveShortNames(
             continue;
           }
 
-          const championImageBuffer = await sharp(imageBuffer)
-            .extract(extractOptions)
+          const championImageBuffer = await (await safeExtract(imageBuffer, extractOptions))
             .toBuffer();
 
           // Second crop - 15% from all sides
@@ -128,13 +128,12 @@ export async function solveShortNames(
             { x: abs_left, y: abs_bottom },
           ];
 
-          const innerChampionImageBuffer = await sharp(championImageBuffer)
-            .extract({
+          const innerChampionImageBuffer = await (await safeExtract(championImageBuffer, {
               left: champCropLeft,
               top: champCropTop,
               width: champCropWidth,
               height: champCropHeight,
-            })
+            }))
             .toBuffer();
 
           const championHash = await getImageHash(innerChampionImageBuffer);
@@ -180,13 +179,12 @@ export async function solveShortNames(
               officialHeight * INNER_PORTRAIT_WIDTH_RATIO
             );
 
-            const innerOfficialImageBuffer = await sharp(officialImageBuffer)
-              .extract({
+            const innerOfficialImageBuffer = await (await safeExtract(officialImageBuffer, {
                 left: officialCropLeft,
                 top: officialCropTop,
                 width: officialCropWidth,
                 height: officialCropHeight,
-              })
+              }))
               .toBuffer();
 
             const officialImageHash = await getImageHash(
@@ -280,13 +278,12 @@ export async function isChampionAwakened(
     return { isAwakened: false, awakenedCheckBounds };
   }
 
-  const strip = await sharp(imageBuffer)
-    .extract({
+  const strip = await (await safeExtract(imageBuffer, {
       left: stripX,
       top: stripY,
       width: stripWidth,
       height: stripHeight,
-    })
+    }))
     .toColorspace('srgb') // Ensure standard RGB
     .raw()
     .toBuffer();
