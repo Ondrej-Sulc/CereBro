@@ -35,7 +35,24 @@ async function syncAllAllianceRoles(client: Client) {
   for (const alliance of alliances) {
     try {
       if (!alliance.guildId) continue;
-      const guild = await client.guilds.fetch(alliance.guildId);
+      
+      let guild = client.guilds.cache.get(alliance.guildId);
+      if (!guild) {
+        try {
+          guild = await client.guilds.fetch(alliance.guildId);
+        } catch (fetchError: any) {
+          if (fetchError.code === 10004) { // Unknown Guild
+            loggerService.warn({ allianceId: alliance.id, guildId: alliance.guildId }, `Bot is not in guild for alliance ${alliance.name}. Clearing guildId association.`);
+            await prisma.alliance.update({
+              where: { id: alliance.id },
+              data: { guildId: null }
+            });
+            continue;
+          }
+          throw fetchError;
+        }
+      }
+
       await syncRolesForGuild(guild);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

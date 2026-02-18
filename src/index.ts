@@ -191,6 +191,21 @@ client.on(Events.GuildCreate, async (guild) => {
   }
 });
 
+client.on(Events.GuildDelete, async (guild) => {
+  logger.info(`👋 Left guild: ${guild.name} (${guild.id})`);
+  try {
+    // We don't delete the alliance record, but we clear the guild association
+    // so it doesn't try to sync roles for a guild we are no longer in.
+    await prisma.alliance.updateMany({
+      where: { guildId: guild.id },
+      data: { guildId: null }
+    });
+    logger.info(`✅ Cleared guildId for alliance of ${guild.name}`);
+  } catch (error) {
+    logger.error({ error: String(error) }, `❌ Error clearing guildId for ${guild.name}:`);
+  }
+});
+
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
   await handleTranslationReaction(reaction, user);
 });
