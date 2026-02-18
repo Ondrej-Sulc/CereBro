@@ -540,7 +540,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                     </div>
 
                                     <div className="p-6 h-[400px]">
-                                        <TabsContent value="recruit" className="m-0 h-full flex flex-col gap-4">
+                                        <TabsContent value="recruit" className="m-0 h-full data-[state=active]:flex flex-col gap-4">
                                             <div className="space-y-3">
                                                 <div className="flex gap-2">
                                                     <Input 

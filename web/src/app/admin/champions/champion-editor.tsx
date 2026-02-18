@@ -243,7 +243,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                 </div>
 
                 <div className="flex-1 bg-slate-950/50 min-h-0 flex flex-col">
-                    <TabsContent value="overview" className="mt-0 flex-1 overflow-y-auto p-6 space-y-6">
+                    <TabsContent value="overview" className="mt-0 data-[state=active]:flex-1 overflow-y-auto p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div className="space-y-2">
@@ -331,7 +331,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="abilities" className="mt-0 flex-1 p-6 data-[state=active]:flex flex-col h-full min-h-0">
+                    <TabsContent value="abilities" className="mt-0 data-[state=active]:flex-1 p-6 flex-col h-full min-h-0">
                         {/* Add New Ability Bar */}
                         <div className="p-4 border rounded-lg bg-background/50 space-y-4 shrink-0 shadow-sm mb-6">
                             <div className="flex items-end gap-3">
@@ -463,7 +463,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="attacks" className="mt-0 flex-1 p-6 h-full min-h-0">
+                    <TabsContent value="attacks" className="mt-0 data-[state=active]:flex-1 p-6 h-full min-h-0">
                         <ScrollArea className="h-full pr-4 -mr-4">
                             <div className="space-y-8 pb-10 pr-4">
                                 <section>
