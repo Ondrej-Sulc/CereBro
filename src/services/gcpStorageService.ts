@@ -14,7 +14,7 @@ class GcpStorageService {
       projectId: config.GOOGLE_CREDENTIALS.project_id,
     });
 
-    this.bucketName = process.env.GCS_BUCKET_NAME || "champion-images";
+    this.bucketName = config.GCS_BUCKET_NAME || "champion-images";
   }
 
   async uploadBuffer(
@@ -25,6 +25,28 @@ class GcpStorageService {
     await file.save(buffer);
     const publicUrl = `https://storage.googleapis.com/${this.bucketName}/${destinationPath}`;
     return publicUrl;
+  }
+
+  async uploadJson(
+    data: any,
+    destinationPath: string
+  ): Promise<void> {
+    const file = this.storage.bucket(this.bucketName).file(destinationPath);
+    await file.save(JSON.stringify(data, null, 2), {
+      contentType: "application/json",
+    });
+  }
+
+  async downloadJson<T>(path: string): Promise<T> {
+    const file = this.storage.bucket(this.bucketName).file(path);
+    const [content] = await file.download();
+    return JSON.parse(content.toString("utf8")) as T;
+  }
+
+  async downloadBuffer(path: string): Promise<Buffer> {
+    const file = this.storage.bucket(this.bucketName).file(path);
+    const [content] = await file.download();
+    return content;
   }
 }
 
