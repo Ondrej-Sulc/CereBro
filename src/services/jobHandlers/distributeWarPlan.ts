@@ -13,7 +13,13 @@ export async function handleDistributeWarPlan(client: Client, payload: any) {
 
     try {
         const result = await distributeWarPlan(client, allianceId, warId, battlegroup, undefined, targetChannelId);
+        
+        if (result.errors.length > 0) {
+            throw new Error(`Errors during distribution: ${result.errors.join(', ')}`);
+        }
+
         logger.info({ result }, "Distributed War Plan Result");
+        return result;
     } catch (error) {
         logger.error({ error, allianceId, warId, battlegroup }, "Failed to distribute war plan");
         throw error;

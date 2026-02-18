@@ -285,11 +285,42 @@ export async function distributeDefensePlanToDiscord(planId: string, battlegroup
       throw new Error("Unauthorized");
   }
 
-  const plan = await prisma.warDefensePlan.findUnique({ where: { id: planId } });
+  const plan = await prisma.warDefensePlan.findUnique({ 
+    where: { id: planId },
+    include: {
+      alliance: true,
+      placements: {
+        select: { battlegroup: true }
+      }
+    }
+  });
   if (!plan) throw new Error("Plan not found");
 
   if (!isBotAdmin && plan.allianceId !== player.allianceId) {
       throw new Error("Unauthorized");
+  }
+
+  const alliance = plan.alliance;
+  if (!alliance) throw new Error("Alliance not found");
+
+  // If distributing to a specific channel (e.g. current web view), skip config check
+  if (!targetChannelId) {
+      const requiredBgs = battlegroup ? [battlegroup] : Array.from(new Set(plan.placements.map(p => p.battlegroup)));
+      const missingChannels = [];
+
+      for (const bg of requiredBgs) {
+          const channelId = bg === 1 ? alliance.battlegroup1ChannelId :
+                            bg === 2 ? alliance.battlegroup2ChannelId :
+                            bg === 3 ? alliance.battlegroup3ChannelId : null;
+          
+          if (!channelId) {
+              missingChannels.push(`BG ${bg}`);
+          }
+      }
+
+      if (missingChannels.length > 0) {
+          throw new Error(`Cannot distribute plan: Discord channels for ${missingChannels.join(', ')} are not configured. Use /alliance config-channels in Discord.`);
+      }
   }
 
   await prisma.botJob.create({
