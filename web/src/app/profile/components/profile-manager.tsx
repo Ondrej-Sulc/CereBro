@@ -52,7 +52,15 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
   const handleSwitch = (id: string) => {
     startTransition(async () => {
       try {
-        await switchProfile(id);
+        const result = await switchProfile(id);
+        if (result && 'error' in result) {
+            toast({ 
+                title: "Failed to switch profile",
+                description: result.error,
+                variant: "destructive"
+            });
+            return;
+        }
         toast({ title: "Profile switched successfully" });
         router.refresh();
       } catch (error) {
@@ -70,7 +78,15 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
     
     startTransition(async () => {
       try {
-        await createProfile(newProfileName);
+        const result = await createProfile(newProfileName);
+        if ('error' in result) {
+            toast({ 
+                title: "Failed to create profile",
+                description: result.error,
+                variant: "destructive"
+            });
+            return;
+        }
         setNewProfileName("");
         setIsCreateOpen(false);
         toast({ title: "Profile created successfully" });
@@ -90,7 +106,15 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
 
     startTransition(async () => {
       try {
-        await renameProfile(editingProfile.id, editingProfile.name);
+        const result = await renameProfile(editingProfile.id, editingProfile.name);
+        if (result && 'error' in result) {
+            toast({ 
+                title: "Failed to rename profile",
+                description: result.error,
+                variant: "destructive"
+            });
+            return;
+        }
         setEditingProfile(null);
         setIsEditOpen(false);
         toast({ title: "Profile renamed successfully" });
@@ -108,7 +132,15 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
   const handleDelete = (id: string) => {
     startTransition(async () => {
       try {
-        await deleteProfile(id);
+        const result = await deleteProfile(id);
+        if (result && 'error' in result) {
+            toast({ 
+                title: "Failed to delete profile",
+                description: result.error,
+                variant: "destructive"
+            });
+            return;
+        }
         toast({ title: "Profile deleted successfully" });
         router.refresh();
       } catch (error) {

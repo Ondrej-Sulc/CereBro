@@ -60,7 +60,11 @@ export function AllianceOnboardingClient({ invitations, sentRequests }: Onboardi
         if (!allianceName.trim()) return;
         setIsCreating(true);
         try {
-            await createAlliance(allianceName);
+            const result = await createAlliance(allianceName);
+            if (result && 'error' in result) {
+                toast({ title: "Error", description: result.error, variant: "destructive" });
+                return;
+            }
             toast({ title: "Alliance Created", description: `Welcome to ${allianceName}!` });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Failed to create alliance";
@@ -87,7 +91,11 @@ export function AllianceOnboardingClient({ invitations, sentRequests }: Onboardi
     const handleJoinRequest = async (allianceId: string) => {
         setLoadingAction(allianceId);
         try {
-            await requestToJoinAlliance(allianceId);
+            const result = await requestToJoinAlliance(allianceId);
+            if (result && 'error' in result) {
+                toast({ title: "Error", description: result.error, variant: "destructive" });
+                return;
+            }
             toast({ title: "Request Sent", description: "Your request to join has been sent to alliance officers." });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Failed to send request";
@@ -100,7 +108,11 @@ export function AllianceOnboardingClient({ invitations, sentRequests }: Onboardi
     const handleInviteResponse = async (requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
         setLoadingAction(requestId);
         try {
-            await respondToMembershipRequest(requestId, status);
+            const result = await respondToMembershipRequest(requestId, status);
+            if (result && 'error' in result) {
+                toast({ title: "Error", description: result.error, variant: "destructive" });
+                return;
+            }
             toast({ title: status === 'ACCEPTED' ? "Joined Alliance" : "Invite Declined" });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Failed to respond to invite";

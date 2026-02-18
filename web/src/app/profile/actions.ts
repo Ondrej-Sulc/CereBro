@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import logger from "@/lib/logger";
 
 async function getAuthenticatedUser() {
   const session = await auth();
@@ -36,9 +37,11 @@ export async function createProfile(name: string) {
   // Check for duplicates
   const existing = user.profiles.find(p => p.ingameName.toLowerCase() === data.name.toLowerCase());
   if (existing) {
-    throw new Error(`You already have a profile named "${data.name}"`);
+    logger.warn({ userId: user.id, profileName: data.name }, "Attempted to create duplicate profile name");
+    return { error: `You already have a profile named "${data.name}"` };
   }
 
+  logger.info({ userId: user.id, profileName: data.name }, "Creating new profile");
   const newProfile = await prisma.player.create({
     data: {
       discordId: user.discordId,
@@ -73,14 +76,19 @@ export async function renameProfile(profileId: string, newName: string) {
 
   // Verify ownership
   const profile = user.profiles.find(p => p.id === profileId);
-  if (!profile) throw new Error("Profile not found");
+  if (!profile) {
+    logger.warn({ userId: user.id, profileId }, "Profile not found for rename");
+    return { error: "Profile not found" };
+  }
 
   // Check for duplicates (excluding self)
   const existing = user.profiles.find(p => p.ingameName.toLowerCase() === data.name.toLowerCase() && p.id !== profileId);
   if (existing) {
-    throw new Error(`You already have a profile named "${data.name}"`);
+    logger.warn({ userId: user.id, profileName: data.name }, "Attempted to rename to duplicate profile name");
+    return { error: `You already have a profile named "${data.name}"` };
   }
 
+  logger.info({ userId: user.id, profileId, oldName: profile.ingameName, newName: data.name }, "Renaming profile");
   await prisma.player.update({
     where: { id: profileId },
     data: { ingameName: data.name }
@@ -96,13 +104,18 @@ export async function deleteProfile(profileId: string) {
 
   // Verify ownership
   const profile = user.profiles.find(p => p.id === profileId);
-  if (!profile) throw new Error("Profile not found");
+  if (!profile) {
+    logger.warn({ userId: user.id, profileId }, "Profile not found for delete");
+    return { error: "Profile not found" };
+  }
 
   // Don't allow deleting the last profile
   if (user.profiles.length <= 1) {
-    throw new Error("You cannot delete your only profile.");
+    logger.warn({ userId: user.id, profileId }, "Attempted to delete the only profile");
+    return { error: "You cannot delete your only profile." };
   }
 
+  logger.info({ userId: user.id, profileId, profileName: profile.ingameName }, "Deleting profile");
   await prisma.player.delete({
     where: { id: profileId }
   });
@@ -138,8 +151,12 @@ export async function switchProfile(profileId: string) {
 
   // Verify ownership
   const profile = user.profiles.find(p => p.id === profileId);
-  if (!profile) throw new Error("Profile not found");
+  if (!profile) {
+    logger.warn({ userId: user.id, profileId }, "Profile not found for switch");
+    return { error: "Profile not found" };
+  }
 
+  logger.info({ userId: user.id, profileId, profileName: profile.ingameName }, "Switching profile");
   await prisma.botUser.update({
     where: { id: user.id },
     data: { activeProfileId: profileId }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
 import { BotJobType } from "@prisma/client";
+import logger from "@/lib/logger";
 
 export async function updatePlayerRole(targetPlayerId: string, data: { battlegroup?: number | null, isOfficer?: boolean }) {
     const actingUser = await getUserPlayerWithAlliance();
@@ -76,8 +77,12 @@ export async function updateAllianceColors(colors: { bg1: string, bg2: string, b
 export async function createAlliance(name: string) {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
-    if (actingUser.allianceId) throw new Error("Already in an alliance");
+    if (actingUser.allianceId) {
+        logger.warn({ userId: actingUser.id, allianceName: name }, "Attempted to create alliance while already in one");
+        return { error: "Already in an alliance" };
+    }
 
+    logger.info({ userId: actingUser.id, allianceName: name }, "Creating new alliance");
     const alliance = await prisma.alliance.create({
         data: {
             name,
@@ -140,7 +145,10 @@ export async function removeMember(playerId: string) {
 export async function requestToJoinAlliance(allianceId: string) {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
-    if (actingUser.allianceId) throw new Error("Already in an alliance");
+    if (actingUser.allianceId) {
+        logger.warn({ userId: actingUser.id, allianceId }, "Attempted to join alliance while already in one");
+        return { error: "Already in an alliance" };
+    }
 
     // Check for existing pending request
     const existing = await prisma.allianceMembershipRequest.findFirst({
@@ -151,8 +159,12 @@ export async function requestToJoinAlliance(allianceId: string) {
         }
     });
 
-    if (existing) throw new Error("Request already pending");
+    if (existing) {
+        logger.warn({ userId: actingUser.id, allianceId }, "Attempted to join alliance with pending request");
+        return { error: "Request already pending" };
+    }
 
+    logger.info({ userId: actingUser.id, allianceId }, "Requesting to join alliance");
     await prisma.allianceMembershipRequest.create({
         data: {
             allianceId,
@@ -170,8 +182,14 @@ export async function invitePlayerToAlliance(playerId: string) {
     if (!actingUser.isOfficer && !actingUser.isBotAdmin) throw new Error("Insufficient permissions");
 
     const targetPlayer = await prisma.player.findUnique({ where: { id: playerId } });
-    if (!targetPlayer) throw new Error("Player not found");
-    if (targetPlayer.allianceId) throw new Error("Player already in an alliance");
+    if (!targetPlayer) {
+        logger.warn({ userId: actingUser.id, targetPlayerId: playerId }, "Player not found for invite");
+        return { error: "Player not found" };
+    }
+    if (targetPlayer.allianceId) {
+        logger.warn({ userId: actingUser.id, targetPlayerId: playerId }, "Attempted to invite player already in an alliance");
+        return { error: "Player already in an alliance" };
+    }
 
     // Check for existing pending invite
     const existing = await prisma.allianceMembershipRequest.findFirst({
@@ -182,8 +200,12 @@ export async function invitePlayerToAlliance(playerId: string) {
         }
     });
 
-    if (existing) throw new Error("Invite already pending");
+    if (existing) {
+        logger.warn({ userId: actingUser.id, targetPlayerId: playerId }, "Attempted to invite player with pending invite");
+        return { error: "Invite already pending" };
+    }
 
+    logger.info({ userId: actingUser.id, targetPlayerId: playerId }, "Inviting player to alliance");
     await prisma.allianceMembershipRequest.create({
         data: {
             allianceId: actingUser.allianceId,
@@ -205,20 +227,26 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
         include: { alliance: true, player: true }
     });
 
-    if (!request || request.status !== 'PENDING') throw new Error("Invalid request");
+    if (!request || request.status !== 'PENDING') {
+        logger.warn({ userId: actingUser.id, requestId }, "Attempted to respond to invalid or non-pending request");
+        return { error: "Invalid request" };
+    }
 
     if (request.type === 'REQUEST') {
         // Only officers can accept/reject join requests
         if (!actingUser.allianceId || actingUser.allianceId !== request.allianceId || (!actingUser.isOfficer && !actingUser.isBotAdmin)) {
-            throw new Error("Insufficient permissions");
+            logger.warn({ userId: actingUser.id, requestId, type: 'REQUEST' }, "Unauthorized response to join request");
+            return { error: "Insufficient permissions" };
         }
     } else {
         // Only the invited player can accept/reject invitations
         if (actingUser.id !== request.playerId) {
-            throw new Error("Insufficient permissions");
+            logger.warn({ userId: actingUser.id, requestId, type: 'INVITE' }, "Unauthorized response to invitation");
+            return { error: "Insufficient permissions" };
         }
     }
 
+    logger.info({ userId: actingUser.id, requestId, status, type: request.type }, "Responding to membership request");
     if (status === 'ACCEPTED') {
         // Add player to alliance
         await prisma.player.update({
