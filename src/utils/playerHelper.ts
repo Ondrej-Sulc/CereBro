@@ -1,10 +1,9 @@
 import { User, ChatInputCommandInteraction, ButtonInteraction, ApplicationCommandOptionType } from "discord.js";
 import { Player } from "@prisma/client";
 import { safeReply } from "./errorHandler";
+import { prisma } from "../services/prismaService.js";
 
 export async function getActivePlayer(discordId: string): Promise<Player | null> {
-  const { prisma } = await import("../services/prismaService.js");
-  
   // 1. Fetch the BotUser for global permissions
   const botUser = await prisma.botUser.findUnique({
     where: { discordId }

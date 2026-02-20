@@ -8,7 +8,7 @@ import {
   ContainerBuilder,
   TextDisplayBuilder,
 } from "discord.js";
-import { getPlayer } from "../../utils/playerHelper";
+import { getPlayer, getActivePlayer } from "../../utils/playerHelper";
 import { processBGViewScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
@@ -26,12 +26,14 @@ export async function handleScan(
 ): Promise<void> {
   const userId = interaction.user.id;
 
+  // 1. Defer immediately to prevent timeout (3s window)
+  await interaction.deferReply();
+
   if (activeScans.has(userId)) {
-    await interaction.reply({
+    await interaction.editReply({
       content:
         `❌ **You already have an active scan session.**\n` +
         `Please finish that session or wait for it to expire (5 minutes).`,
-      flags: [MessageFlags.Ephemeral],
     });
     return;
   }
@@ -39,16 +41,18 @@ export async function handleScan(
   activeScans.add(userId);
 
   try {
-    // 1. Authenticate / Get Player
-    const player = await getPlayer(interaction);
+    // 2. Get Player (already verified by index.ts access check)
+    const player = await getActivePlayer(userId);
     if (!player) {
-      // getPlayer handles the reply if player is not found
+      await interaction.editReply({
+        content: "❌ Player profile not found. Please register first.",
+      });
       activeScans.delete(userId);
       return;
     }
 
-    // 2. Initial Reply
-    await interaction.reply({
+    // 3. Initial Reply via editReply
+    await interaction.editReply({
       content:
         `**Ready to scan!** 📸\n` +
         `Please upload your **BG View** (Battlegrounds) screenshots now.\n` +

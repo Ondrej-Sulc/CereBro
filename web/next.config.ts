@@ -11,6 +11,7 @@ try {
 }
 
 const nextConfig: NextConfig = {
+  deploymentId: buildId,
   env: {
     APP_VERSION: buildId,
   },
