@@ -4,15 +4,16 @@ import { useMemo } from "react";
 import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
-import { getChampionClassColors } from "@/lib/championClassHelper";
+import { ClassFilterToggle } from "./class-filter-toggle";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
-import { CLASSES, CLASS_ICONS } from "../constants";
+import { CLASSES } from "../constants";
 
 interface RosterFiltersProps {
     search: string;
@@ -104,12 +105,12 @@ export function RosterFilters({
                 <div className="flex flex-wrap gap-2.5 items-center justify-between">
                     <div className="flex gap-2 flex-1 min-w-[200px] max-w-md">
                         <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                            <input 
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 z-10" />
+                            <Input 
                                 placeholder="Search..." 
                                 value={search} 
                                 onChange={(e) => onSearchChange(e.target.value)}
-                                className="w-full pl-8 h-8 bg-slate-950/50 border border-slate-700 rounded-md text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 transition-all"
+                                className="w-full pl-8 h-8 bg-slate-950/50 border border-slate-700 rounded-md text-xs text-slate-200 placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-sky-500/50 transition-all border-none"
                             />
                         </div>
                     </div>
@@ -168,27 +169,7 @@ export function RosterFilters({
                         />
                     </div>
 
-                    <div className="flex items-center gap-1 bg-slate-950/40 p-1 rounded-lg border border-slate-800/50">
-                        {CLASSES.map(c => {
-                            const colors = getChampionClassColors(c);
-                            const isSelected = filterClasses.includes(c);
-                            return (
-                                <Button
-                                    key={c} variant="ghost" size="icon"
-                                    className={cn("h-7 w-7 p-1 rounded-md transition-all border shrink-0", isSelected ? cn(colors.bg, colors.border, "shadow-sm") : "bg-transparent border-transparent hover:bg-slate-800")}
-                                    onClick={() => {
-                                        if (isSelected) onFilterClassesChange(filterClasses.filter(x => x !== c));
-                                        else onFilterClassesChange([...filterClasses, c]);
-                                    }}
-                                    title={c}
-                                >
-                                    <div className="relative w-3.5 h-3.5">
-                                        <Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="14px" className="object-contain" />
-                                    </div>
-                                </Button>
-                            );
-                        })}
-                    </div>
+                    <ClassFilterToggle selectedClasses={filterClasses} onChange={onFilterClassesChange} />
 
                     <div className="h-6 w-px bg-slate-800 hidden sm:block mx-1" />
 

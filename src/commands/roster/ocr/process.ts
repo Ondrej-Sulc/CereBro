@@ -231,10 +231,10 @@ async function saveBGViewRoster(
             const champion = championMap.get(cell.championName);
             if (champion) {
                 // Sanitize OCR values to prevent INT4 overflow and nonsense data
-                const sanitizedPowerRating = cell.powerRating 
+                const sanitizedPowerRating = (cell.powerRating !== undefined && !Number.isNaN(cell.powerRating))
                     ? Math.max(0, Math.min(100000, Math.floor(cell.powerRating))) 
                     : null;
-                const sanitizedSigLevel = cell.sigLevel 
+                const sanitizedSigLevel = (cell.sigLevel !== undefined && !Number.isNaN(cell.sigLevel))
                     ? Math.max(0, Math.min(200, Math.floor(cell.sigLevel))) 
                     : 0;
 
@@ -248,7 +248,7 @@ async function saveBGViewRoster(
                     },
                     update: {
                         rank: cell.rank,
-                        isAwakened: !!((sanitizedSigLevel || 0) > 0 || cell.isAscended), 
+                        isAwakened: sanitizedSigLevel > 0 || !!cell.isAscended, 
                         sigLevel: sanitizedSigLevel,
                         isAscended: cell.isAscended || false,
                         powerRating: sanitizedPowerRating,
@@ -258,7 +258,7 @@ async function saveBGViewRoster(
                         championId: champion.id,
                         stars: cell.stars,
                         rank: cell.rank,
-                        isAwakened: !!((sanitizedSigLevel || 0) > 0 || cell.isAscended),
+                        isAwakened: sanitizedSigLevel > 0 || !!cell.isAscended,
                         sigLevel: sanitizedSigLevel,
                         isAscended: cell.isAscended || false,
                         powerRating: sanitizedPowerRating,
@@ -318,7 +318,7 @@ async function saveRoster(
             : undefined;
 
           // Sanitize OCR value to prevent INT4 overflow and nonsense data
-          if (powerRatingInt !== undefined && Number.isFinite(powerRatingInt)) {
+          if (powerRatingInt !== undefined && !Number.isNaN(powerRatingInt)) {
               powerRatingInt = Math.max(0, Math.min(100000, powerRatingInt));
           } else {
               powerRatingInt = undefined;

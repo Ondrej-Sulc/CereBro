@@ -11,6 +11,7 @@ try {
 }
 
 const nextConfig: NextConfig = {
+  generateBuildId: async () => buildId,
   deploymentId: buildId,
   env: {
     APP_VERSION: buildId,

@@ -9,7 +9,7 @@ import {
   TextDisplayBuilder,
   Client,
 } from "discord.js";
-import { getPlayer, getActivePlayer } from "../../utils/playerHelper";
+import { getActivePlayer } from "../../utils/playerHelper";
 import { processBGViewScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
@@ -65,6 +65,7 @@ export async function handleScan(
     const channel = interaction.channel as TextChannel;
     if (!channel) {
       activeScans.delete(userId);
+      await interaction.editReply({ content: "❌ Could not access this channel." });
       return;
     }
 
@@ -122,7 +123,6 @@ async function processMessage(message: Message, playerId: string, client: Client
     return;
   }
 
-  const results: { success: boolean; error?: string; count: number; added: RosterWithChampion[] }[] = [];
   const allAddedChampions: RosterWithChampion[] = [];
   const globalErrors: string[] = [];
 

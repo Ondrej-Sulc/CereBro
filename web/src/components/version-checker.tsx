@@ -22,7 +22,16 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
       }
     };
 
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+        const msg = event.reason?.message || String(event.reason || "");
+        if (msg.includes("Failed to find Server Action")) {
+          console.warn("Detected Server Action mismatch (unhandled rejection), reloading...", msg);
+          window.location.reload();
+        }
+    };
+
     window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     // 2. Helper to check version
     const checkVersion = async (forceRefresh = false) => {
@@ -37,14 +46,11 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
         const data = await res.json();
         
         if (data.version && data.version !== initialVersion) {
-          if (forceRefresh) {
-            window.location.reload();
-            return;
-          }
-          
+          // If forceRefresh is true, we still show the toast so user can save work,
+          // but we might want to mark it as more urgent.
           setHasNotified(true);
           toast({
-            title: "Update Available",
+            title: forceRefresh ? "Critical Update Available" : "Update Available",
             description: "A new version has been deployed. Please refresh to avoid errors.",
             duration: Infinity, 
             action: (
@@ -77,6 +83,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
 
     return () => {
       window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
