@@ -82,18 +82,17 @@ export function RosterInsights({
     rankUpSagaFilter, onRankUpSagaFilterChange, sigSagaFilter, onSigSagaFilterChange,
     isPending, pendingSection, onRecommendationClick
 }: RosterInsightsProps) {
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <Button variant="ghost" onClick={onToggleInsights} className="flex items-center gap-2 px-0 hover:bg-transparent text-slate-300 hover:text-white">
-                    <div className={cn("p-1 bg-slate-800 rounded transition-transform duration-200", showInsights && "rotate-180")}><ChevronDown className="w-4 h-4" /></div>
-                    <h2 className="font-bold text-lg">Prestige Suggestions</h2>
-                </Button>
-            </div>
+    if (!showInsights) return null;
 
-            {showInsights && (
-                <div className="space-y-6 animate-in slide-in-from-top-2 fade-in duration-300">
-                    <Card className="bg-gradient-to-br from-indigo-950/40 via-slate-900/50 to-slate-950 border-indigo-500/20 overflow-hidden">
+    return (
+        <div className="space-y-4 animate-in slide-in-from-top-2 fade-in duration-300">
+            <div className="flex items-center gap-2 mb-2">
+                <div className="p-1 bg-indigo-500/20 rounded-md"><TrendingUp className="w-4 h-4 text-indigo-400" /></div>
+                <h2 className="font-bold text-lg text-slate-100">Prestige Suggestions</h2>
+            </div>
+            
+            <div className="space-y-6">
+                <Card className="bg-gradient-to-br from-indigo-950/40 via-slate-900/50 to-slate-950 border-indigo-500/20 overflow-hidden">
                             <div className="px-4 py-3 border-b border-indigo-500/10 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="p-1.5 bg-indigo-500/20 rounded-lg"><TrendingUp className="w-4 h-4 text-indigo-400" /></div>
@@ -280,7 +279,6 @@ export function RosterInsights({
                             </div>
                         </Card>
                 </div>
-            )}
         </div>
     );
 }

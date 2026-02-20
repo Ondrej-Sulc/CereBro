@@ -230,7 +230,14 @@ async function saveBGViewRoster(
         if (cell.championName && cell.class && cell.stars && cell.rank) {
             const champion = championMap.get(cell.championName);
             if (champion) {
-                // ... existing upsert code ...
+                // Sanitize OCR values to prevent INT4 overflow and nonsense data
+                const sanitizedPowerRating = cell.powerRating 
+                    ? Math.max(0, Math.min(100000, Math.floor(cell.powerRating))) 
+                    : null;
+                const sanitizedSigLevel = cell.sigLevel 
+                    ? Math.max(0, Math.min(200, Math.floor(cell.sigLevel))) 
+                    : 0;
+
                 const rosterEntry = await prisma.roster.upsert({
                     where: {
                         playerId_championId_stars: {
@@ -241,20 +248,20 @@ async function saveBGViewRoster(
                     },
                     update: {
                         rank: cell.rank,
-                        isAwakened: !!((cell.sigLevel || 0) > 0 || cell.isAscended), 
-                        sigLevel: cell.sigLevel || 0,
+                        isAwakened: !!((sanitizedSigLevel || 0) > 0 || cell.isAscended), 
+                        sigLevel: sanitizedSigLevel,
                         isAscended: cell.isAscended || false,
-                        powerRating: cell.powerRating || null,
+                        powerRating: sanitizedPowerRating,
                     },
                     create: {
                         playerId,
                         championId: champion.id,
                         stars: cell.stars,
                         rank: cell.rank,
-                        isAwakened: !!((cell.sigLevel || 0) > 0 || cell.isAscended),
-                        sigLevel: cell.sigLevel || 0,
+                        isAwakened: !!((sanitizedSigLevel || 0) > 0 || cell.isAscended),
+                        sigLevel: sanitizedSigLevel,
                         isAscended: cell.isAscended || false,
-                        powerRating: cell.powerRating || null,
+                        powerRating: sanitizedPowerRating,
                     },
                     include: { champion: true },
                 });
@@ -306,9 +313,15 @@ async function saveRoster(
       if (cell.championName) {
         const champion = championMap.get(cell.championName);
         if (champion) {
-          const powerRatingInt = cell.powerRating
+          let powerRatingInt = cell.powerRating
             ? parseInt(cell.powerRating.replace(/[,.]/g, ""), 10)
             : undefined;
+
+          // Sanitize OCR value to prevent INT4 overflow and nonsense data
+          if (powerRatingInt !== undefined) {
+              powerRatingInt = Math.max(0, Math.min(100000, powerRatingInt));
+          }
+
           const rosterEntry = await prisma.roster.upsert({
             where: {
               playerId_championId_stars: {

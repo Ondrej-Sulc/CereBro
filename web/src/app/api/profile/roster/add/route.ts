@@ -23,21 +23,21 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { championId, stars, rank, sigLevel, isAwakened, isAscended } = addSchema.parse(body);
 
-    // Check if already exists
-    const existing = await prisma.roster.findFirst({
+    const newRoster = await prisma.roster.upsert({
       where: {
-        playerId: player.id,
-        championId,
-        stars,
+        playerId_championId_stars: {
+          playerId: player.id,
+          championId,
+          stars,
+        },
       },
-    });
-
-    if (existing) {
-      return NextResponse.json({ error: "Champion already in roster" }, { status: 409 });
-    }
-
-    const newRoster = await prisma.roster.create({
-      data: {
+      update: {
+        rank,
+        sigLevel,
+        isAwakened,
+        isAscended,
+      },
+      create: {
         playerId: player.id,
         championId,
         stars,

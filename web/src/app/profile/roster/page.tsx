@@ -106,24 +106,7 @@ export default async function RosterPage(props: {
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
 
   return (
-    <div className="container mx-auto p-4 sm:p-8 space-y-8">
-       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            My Roster
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Manage your champions, update stats, and track your progress.
-          </p>
-        </div>
-        <Link href="/profile/update">
-          <Button className="bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2">
-            <Upload className="w-4 h-4" />
-            Update Roster
-          </Button>
-        </Link>
-      </div>
-
+    <div className="container mx-auto p-4 sm:p-8">
       <RosterView 
         initialRoster={rosterEntries as unknown as ProfileRosterEntry[]} 
         allChampions={allChampions}

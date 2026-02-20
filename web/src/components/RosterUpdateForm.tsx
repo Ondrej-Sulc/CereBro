@@ -322,8 +322,8 @@ export function RosterUpdateForm() {
                     <TabsContent value="grid-view" className="space-y-4 mt-0">
                         <div className="bg-slate-900/50 rounded-md p-3 mb-4">
                             <p className="text-sm text-slate-400">
-                                Use this for standard "My Champions" screen. Since the game hides stats in this view, 
-                                you must manually specify the Star Level and Rank for all champions in the screenshots and submit each rank separately.
+                                Use this for standard "My Champions" screen. Since you can only see champion names and rating in this view, 
+                                you must manually specify the Star Level and Rank for all champions in the screenshots and submit each rank separately. It will detect if champion is awakened, but you have to specify sig level manually if you want it to be added to the roster. This method is more time consuming, but can be used as a fallback if the Battlegrounds view doesn't work for some reason.
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-4">
