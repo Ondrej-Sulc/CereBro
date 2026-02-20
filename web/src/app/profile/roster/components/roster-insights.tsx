@@ -18,7 +18,6 @@ import { CLASSES, CLASS_ICONS } from "../constants";
 
 interface RosterInsightsProps {
     showInsights: boolean;
-    onToggleInsights: () => void;
     recommendations?: Recommendation[];
     sigRecommendations?: SigRecommendation[];
     simulationTargetRank: number;
@@ -76,7 +75,7 @@ function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: C
 }
 
 export function RosterInsights({
-    showInsights, onToggleInsights, recommendations = [], sigRecommendations = [],
+    showInsights, recommendations = [], sigRecommendations = [],
     simulationTargetRank, onTargetRankChange, sigBudget, onSigBudgetChange,
     rankUpClassFilter, onRankUpClassFilterChange, sigClassFilter, onSigClassFilterChange,
     rankUpSagaFilter, onRankUpSagaFilterChange, sigSagaFilter, onSigSagaFilterChange,

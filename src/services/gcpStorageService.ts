@@ -28,15 +28,23 @@ class GcpStorageService {
   }
 
   async uploadJson(
-    data: any,
+    data: unknown,
     destinationPath: string
   ): Promise<void> {
+    if (data === undefined) {
+      throw new Error("Cannot upload undefined as JSON");
+    }
     const file = this.storage.bucket(this.bucketName).file(destinationPath);
     await file.save(JSON.stringify(data, null, 2), {
       contentType: "application/json",
     });
   }
 
+  /**
+   * Downloads and parses a JSON file from GCS.
+   * Note: This method performs an unchecked cast to T. 
+   * Callers are responsible for ensuring the stored JSON matches the expected shape.
+   */
   async downloadJson<T>(path: string): Promise<T> {
     const file = this.storage.bucket(this.bucketName).file(path);
     const [content] = await file.download();

@@ -7,6 +7,7 @@ import {
   Attachment,
   ContainerBuilder,
   TextDisplayBuilder,
+  Client,
 } from "discord.js";
 import { getPlayer, getActivePlayer } from "../../utils/playerHelper";
 import { processBGViewScreenshot } from "./ocr/process";
@@ -107,7 +108,7 @@ export async function handleScan(
   }
 }
 
-async function processMessage(message: Message, playerId: string, client: any) {
+async function processMessage(message: Message, playerId: string, client: Client) {
   // Acknowledge receipt
   const processingMsg = await message.reply("⏳ Processing images...");
   const resolveEmojis = createEmojiResolver(client);
@@ -141,8 +142,8 @@ async function processMessage(message: Message, playerId: string, client: any) {
       const updateResult = result as RosterUpdateResult;
       const added = updateResult.champions.flat();
       
-      if ((result as any).errors && Array.isArray((result as any).errors)) {
-          (result as any).errors.forEach((e: string) => globalErrors.push(`${image.name}: ${e}`));
+      if (updateResult.errors && Array.isArray(updateResult.errors)) {
+          updateResult.errors.forEach((e: string) => globalErrors.push(`${image.name}: ${e}`));
       }
 
       return { success: true, count: updateResult.count, added };

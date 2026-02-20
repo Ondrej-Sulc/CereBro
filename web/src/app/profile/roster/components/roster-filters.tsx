@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, TrendingUp } from "lucide-react";
+import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";

@@ -28,11 +28,11 @@ type StaticTableName = (typeof STATIC_TABLES)[number];
 
 async function exportToGCS() {
   logger.info("🚀 Starting export of static tables to GCS...");
-  const data: Record<string, any[]> = {};
+  const data: Record<string, unknown[]> = {};
 
   for (const table of STATIC_TABLES) {
     logger.info(`📦 Fetching ${table}...`);
-    // @ts-ignore - Dynamically accessing prisma models
+    // @ts-expect-error - Dynamically accessing prisma models
     data[table] = await prisma[table].findMany();
     logger.info(`✅ Fetched ${data[table].length} records from ${table}`);
   }
@@ -41,22 +41,25 @@ async function exportToGCS() {
   logger.info(`✨ Export complete! Uploaded to GCS: ${SYNC_FILE_PATH}`);
 }
 
-async function importFromGCS() {
+export async function importFromGCS() {
   logger.info("🚀 Starting import of static tables from GCS...");
-  const data = await gcpStorageService.downloadJson<Record<string, any[]>>(
+  const data = await gcpStorageService.downloadJson<Record<string, Record<string, unknown>[]>>(
     SYNC_FILE_PATH
   );
+
+  let totalFailureCount = 0;
 
   for (const table of STATIC_TABLES) {
     const records = data[table];
     if (!records) continue;
 
     logger.info(`💾 Upserting ${records.length} records into ${table}...`);
+    let failureCount = 0;
 
     for (const record of records) {
       try {
         // Handling primary keys correctly for each table
-        let where: any = { id: record.id };
+        let where: Record<string, unknown> | undefined = { id: record.id };
 
         // Some tables use composite unique keys or strings
         if (table === "championPrestige") {
@@ -135,17 +138,27 @@ async function importFromGCS() {
           };
         }
 
-        // @ts-ignore - Dynamically accessing prisma models
+        // Create a separate object for updates, stripping read-only fields
+        const { id: _id, createdAt: _ca, updatedAt: _ua, ...updatePayload } = record;
+
+        // @ts-expect-error - Dynamically accessing prisma models
         await prisma[table].upsert({
           where,
-          update: record,
+          update: updatePayload,
           create: record,
         });
-      } catch (e: any) {
-        logger.error({ error: e.message, table, record }, "Error during upsert");
+      } catch (e: unknown) {
+        failureCount++;
+        totalFailureCount++;
+        const message = e instanceof Error ? e.message : String(e);
+        logger.error({ error: message, table, record }, "Error during upsert");
       }
     }
-    logger.info(`✅ Finished ${table}`);
+    logger.info(`✅ Finished ${table}. Records: ${records.length}, Failures: ${failureCount}`);
+  }
+
+  if (totalFailureCount > 0) {
+    throw new Error(`Import completed with ${totalFailureCount} total failures.`);
   }
 
   logger.info("✨ Import complete!");
@@ -159,14 +172,15 @@ async function main() {
   } else if (action === "import") {
     await importFromGCS();
   } else {
-    console.log("Usage: tsx src/scripts/db-sync.ts [export|import]");
+    logger.info("Usage: tsx src/scripts/db-sync.ts [export|import]");
   }
 
   await prisma.$disconnect();
 }
 
-main().catch(async (e) => {
-  console.error(e);
+main().catch(async (e: unknown) => {
+  const message = e instanceof Error ? e.message : String(e);
+  logger.error(message);
   await prisma.$disconnect();
   process.exit(1);
 });

@@ -16,7 +16,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     // 1. Listen for Server Action failures (common Next.js error message)
     const handleGlobalError = (event: ErrorEvent) => {
       const msg = event.message || "";
-      if (msg.includes("Failed to find Server Action") || msg.includes("NEXT_NOT_FOUND")) {
+      if (msg.includes("Failed to find Server Action")) {
         console.warn("Detected Server Action mismatch, reloading...", msg);
         window.location.reload();
       }

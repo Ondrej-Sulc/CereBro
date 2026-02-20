@@ -318,8 +318,10 @@ async function saveRoster(
             : undefined;
 
           // Sanitize OCR value to prevent INT4 overflow and nonsense data
-          if (powerRatingInt !== undefined) {
+          if (powerRatingInt !== undefined && Number.isFinite(powerRatingInt)) {
               powerRatingInt = Math.max(0, Math.min(100000, powerRatingInt));
+          } else {
+              powerRatingInt = undefined;
           }
 
           const rosterEntry = await prisma.roster.upsert({
