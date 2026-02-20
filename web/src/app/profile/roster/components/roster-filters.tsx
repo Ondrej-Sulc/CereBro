@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X } from "lucide-react";
+import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,6 @@ interface RosterFiltersProps {
     viewMode: 'view' | 'edit';
     onViewModeChange: (mode: 'view' | 'edit') => void;
     onAddClick: () => void;
-    top30Average: number;
     sortBy: "PRESTIGE" | "NAME";
     onSortByChange: (val: "PRESTIGE" | "NAME") => void;
     filterStars: number[];
@@ -53,7 +52,7 @@ interface RosterFiltersProps {
 }
 
 export function RosterFilters({
-    search, onSearchChange, viewMode, onViewModeChange, onAddClick, top30Average,
+    search, onSearchChange, viewMode, onViewModeChange, onAddClick,
     sortBy, onSortByChange, filterStars, onFilterStarsChange, filterRanks, onFilterRanksChange,
     filterClasses, onFilterClassesChange, tagFilter, onTagFilterChange, tagLogic, onTagLogicChange,
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
@@ -100,81 +99,69 @@ export function RosterFilters({
     }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange]);
 
     return (
-        <Card className="bg-slate-900/50 border-slate-800 p-4 z-40 backdrop-blur-md shadow-lg">
-            <div className="flex flex-col gap-4">
-                {/* Row 1: Search + View Toggle + Actions */}
-                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="flex gap-2 flex-1 w-full max-w-2xl">
+        <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
+            <div className="flex flex-col gap-2.5">
+                {/* Row 1: Search + View Toggle + Sort + Add */}
+                <div className="flex flex-wrap gap-2.5 items-center justify-between">
+                    <div className="flex gap-2 flex-1 min-w-[200px] max-w-md">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                            <Input 
-                                placeholder="Search champions..." 
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                            <input 
+                                placeholder="Search..." 
                                 value={search} 
                                 onChange={(e) => onSearchChange(e.target.value)}
-                                className="pl-9 bg-slate-950/50 border-slate-700"
+                                className="w-full pl-8 h-8 bg-slate-950/50 border border-slate-700 rounded-md text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500/50 transition-all"
                             />
                         </div>
-                        <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-1 shrink-0">
+                    </div>
+                    
+                    <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-0.5 shrink-0">
                             <Button
                                 variant="ghost" size="sm"
                                 onClick={() => onViewModeChange('view')}
-                                className={cn("h-8 px-3 rounded-md transition-all text-xs font-medium", viewMode === 'view' ? "bg-sky-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
+                                className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium", viewMode === 'view' ? "bg-sky-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
                             >
-                                <Eye className="w-3.5 h-3.5 mr-1.5" /> View
+                                <Eye className="w-3.5 h-3.5 mr-1" /> View
                             </Button>
                             <Button
                                 variant="ghost" size="sm"
                                 onClick={() => onViewModeChange('edit')}
-                                className={cn("h-8 px-3 rounded-md transition-all text-xs font-medium", viewMode === 'edit' ? "bg-amber-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
+                                className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium", viewMode === 'edit' ? "bg-amber-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
                             >
-                                <PenLine className="w-3.5 h-3.5 mr-1.5" /> Edit
+                                <PenLine className="w-3.5 h-3.5 mr-1" /> Edit
                             </Button>
                         </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
-                        {top30Average > 0 && (
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner">
-                                <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
-                                <span className="text-amber-100 font-mono font-bold text-sm">{top30Average.toLocaleString('en-US')}</span>
-                            </div>
-                        )}
-                        <Button className="bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20" onClick={onAddClick}>
-                            <Plus className="w-4 h-4 mr-2" /> Add Champion
+
+                        <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
+                            <SelectTrigger className="h-8 w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
+                                <span className="text-slate-500 mr-1">Sort:</span>
+                                <SelectValue placeholder="Sort" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>
+                                <SelectItem value="NAME" className="text-xs">Name</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3" onClick={onAddClick}>
+                            <Plus className="w-3.5 h-3.5 mr-1" /> <span className="hidden sm:inline">Add</span>
                         </Button>
                     </div>
                 </div>
 
-                {/* Row 2: Standard Selection Filters */}
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-slate-800 pt-4">
+                {/* Row 2: Standard Selection Filters + Advanced Filters */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-800/50 pt-2.5">
                     <div className="flex items-center gap-2">
-                        <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Sort By</Label>
-                        <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
-                            <SelectTrigger className="h-8 w-[110px] bg-slate-950/50 border-slate-700 text-xs">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="PRESTIGE">Prestige</SelectItem>
-                                <SelectItem value="NAME">Name</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Stars</Label>
                         <MultiFilterGroup 
                             options={[
-                                { value: "7", label: "7 ★" },
-                                { value: "6", label: "6 ★" },
-                                { value: "5", label: "5 ★" },
+                                { value: "7", label: "7★" },
+                                { value: "6", label: "6★" },
+                                { value: "5", label: "5★" },
                             ]}
                             values={filterStars.map(String)}
                             onChange={(vals) => onFilterStarsChange(vals.map(Number))}
                         />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Rank</Label>
                         <MultiFilterGroup 
                             options={[1,2,3,4,5,6].map(r => ({ value: String(r), label: `R${r}` }))}
                             values={filterRanks.map(String)}
@@ -182,47 +169,31 @@ export function RosterFilters({
                         />
                     </div>
 
-                    <div className="h-6 w-px bg-slate-800 hidden sm:block mx-2" />
-
-                    <div className="flex items-center gap-2">
-                        <Label className="text-[10px] text-slate-500 uppercase font-bold tracking-tight mr-1">Class</Label>
-                        <div className="flex items-center gap-1 bg-slate-950/40 p-1 rounded-full border border-slate-800/50">
-                            <Button
-                                variant="ghost" size="icon"
-                                className={cn("h-7 w-7 rounded-full transition-all shrink-0", filterClasses.length === 0 ? "bg-slate-700 text-white shadow-inner" : "text-slate-500 hover:text-slate-300")}
-                                onClick={() => onFilterClassesChange([])}
-                                title="All Classes"
-                            >
-                                <CircleOff className="h-3.5 w-3.5" />
-                            </Button>
-                            <div className="h-3 w-px bg-slate-800 mx-0.5" />
-                            {CLASSES.map(c => {
-                                const colors = getChampionClassColors(c);
-                                const isSelected = filterClasses.includes(c);
-                                return (
-                                    <Button
-                                        key={c} variant="ghost" size="sm"
-                                        className={cn("h-7 w-7 p-1 rounded-full transition-all border shrink-0", isSelected ? cn(colors.bg, colors.border, "shadow-sm") : "bg-transparent border-transparent hover:bg-slate-800")}
-                                        onClick={() => {
-                                            if (isSelected) onFilterClassesChange(filterClasses.filter(x => x !== c));
-                                            else onFilterClassesChange([...filterClasses, c]);
-                                        }}
-                                        title={c}
-                                    >
-                                        <div className="relative w-4 h-4">
-                                            <Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="16px" className="object-contain" />
-                                        </div>
-                                    </Button>
-                                );
-                            })}
-                        </div>
+                    <div className="flex items-center gap-1 bg-slate-950/40 p-1 rounded-lg border border-slate-800/50">
+                        {CLASSES.map(c => {
+                            const colors = getChampionClassColors(c);
+                            const isSelected = filterClasses.includes(c);
+                            return (
+                                <Button
+                                    key={c} variant="ghost" size="icon"
+                                    className={cn("h-7 w-7 p-1 rounded-md transition-all border shrink-0", isSelected ? cn(colors.bg, colors.border, "shadow-sm") : "bg-transparent border-transparent hover:bg-slate-800")}
+                                    onClick={() => {
+                                        if (isSelected) onFilterClassesChange(filterClasses.filter(x => x !== c));
+                                        else onFilterClassesChange([...filterClasses, c]);
+                                    }}
+                                    title={c}
+                                >
+                                    <div className="relative w-3.5 h-3.5">
+                                        <Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="14px" className="object-contain" />
+                                    </div>
+                                </Button>
+                            );
+                        })}
                     </div>
-                </div>
 
-                {/* Row 3: Advanced Filters */}
-                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
-                    <div className="flex flex-wrap gap-2 items-center w-full">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Advanced:</span>
+                    <div className="h-6 w-px bg-slate-800 hidden sm:block mx-1" />
+
+                    <div className="flex flex-wrap gap-2 items-center">
                         <MultiSelectFilter title="Tags" icon={TagIcon} options={initialTags} selectedValues={tagFilter} onSelect={onTagFilterChange} logic={tagLogic} onLogicChange={onTagLogicChange} />
                         <MultiSelectFilter title="Categories" icon={BookOpen} options={initialAbilityCategories} selectedValues={abilityCategoryFilter} onSelect={onAbilityCategoryFilterChange} logic={abilityCategoryLogic} onLogicChange={onAbilityCategoryLogicChange} />
                         <MultiSelectFilter title="Abilities" icon={Zap} options={initialAbilities} selectedValues={abilityFilter} onSelect={onAbilityFilterChange} logic={abilityLogic} onLogicChange={onAbilityLogicChange} />
@@ -230,15 +201,15 @@ export function RosterFilters({
                     </div>
                 </div>
 
-                {/* Row 4: Active Filters Badges */}
+                {/* Row 3: Active Filters Badges */}
                 {activeFilters.length > 0 && (
-                    <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-4 items-center">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Active Filters:</span>
+                    <div className="flex flex-wrap gap-2 border-t border-slate-800/50 pt-3 items-center">
+                        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Active:</span>
                         {activeFilters.map((filter, index) => (
                             <Badge 
                                 key={`${filter.type}-${filter.label}-${index}`}
                                 variant="outline"
-                                className="bg-slate-950/50 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-7"
+                                className="bg-slate-950/50 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-7 text-[11px]"
                             >
                                 <span className="text-slate-500 font-normal mr-0.5">{filter.type}:</span>
                                 {filter.label}

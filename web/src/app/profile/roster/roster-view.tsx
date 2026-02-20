@@ -6,6 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
+import Link from "next/link";
+import { Upload, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
@@ -55,7 +59,7 @@ export function RosterView({
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
-  const [showInsights, setShowInsights] = useState(true);
+  const [showInsights, setShowInsights] = useState(false);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
   
@@ -306,6 +310,44 @@ export function RosterView({
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            My Roster
+          </h1>
+          <p className="text-slate-400 mt-1">
+            Manage your champions, update stats, and track your progress.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          {top30Average > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner h-10">
+                  <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
+                  <span className="text-amber-100 font-mono font-bold text-lg">{top30Average.toLocaleString('en-US')}</span>
+              </div>
+          )}
+          
+          <Button 
+              variant="outline" 
+              onClick={() => setShowInsights(!showInsights)}
+              className={cn(
+                  "h-10 px-4 gap-2 border-slate-700 transition-all",
+                  showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
+              )}
+          >
+              <TrendingUp className="w-4 h-4" />
+              <span>Prestige Insights</span>
+          </Button>
+
+          <Link href="/profile/update" className="flex-1 md:flex-none">
+            <Button className="w-full bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
+              <Upload className="w-4 h-4" />
+              Update Roster
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       <RosterInsights 
         showInsights={showInsights} onToggleInsights={() => setShowInsights(!showInsights)}
         recommendations={recommendations} sigRecommendations={sigRecommendations}
@@ -320,7 +362,7 @@ export function RosterView({
 
       <RosterFilters 
         search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
-        onAddClick={() => setIsAddingChampion(true)} top30Average={top30Average}
+        onAddClick={() => setIsAddingChampion(true)}
         sortBy={sortBy} onSortByChange={setSortBy} filterStars={filterStars} onFilterStarsChange={setFilterStars}
         filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
         tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
