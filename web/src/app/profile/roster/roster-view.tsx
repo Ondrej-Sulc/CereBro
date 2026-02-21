@@ -339,17 +339,17 @@ export function RosterView({
               <span>Prestige Insights</span>
           </Button>
 
-          <Link href="/profile/update" className="flex-1 md:flex-none">
-            <Button className="w-full bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
+          <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
+            <Link href="/profile/update">
               <Upload className="w-4 h-4" />
               Update Roster
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
 
       <RosterInsights 
-        showInsights={showInsights} onToggleInsights={() => setShowInsights(!showInsights)}
+        showInsights={showInsights}
         recommendations={recommendations} sigRecommendations={sigRecommendations}
         simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
         sigBudget={sigBudget} onSigBudgetChange={setSigBudget}

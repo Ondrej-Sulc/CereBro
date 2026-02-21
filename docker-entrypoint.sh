@@ -10,12 +10,14 @@ chown -R node:node /usr/src/app/web/node_modules
 echo "Permissions fixed."
 
 # Step down from root to the node user and execute the main container command (CMD)
-echo "Running database migrations..."
-gosu node npx prisma migrate deploy
+if [ "$RUN_MIGRATIONS_ONCE" = "true" ]; then
+  echo "Running database migrations..."
+  gosu node npx prisma migrate deploy
+fi
 
-if [ "$NODE_ENV" = "development" ]; then
-  echo "Detected Beta environment. Syncing curated game data from GCS..."
-  gosu node npm run db:sync
+if [ "$NODE_ENV" = "beta" ] && [ "$SKIP_DB_SYNC" != "true" ]; then
+  echo "Detected $NODE_ENV environment. Syncing curated game data from GCS..."
+  corepack enable && gosu node pnpm run db:sync || echo "Warning: db:sync failed, continuing startup..."
 fi
 
 exec gosu node "$@"

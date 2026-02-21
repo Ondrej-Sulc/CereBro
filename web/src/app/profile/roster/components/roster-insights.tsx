@@ -9,16 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getChampionClassColors } from "@/lib/championClassHelper";
+import { ClassFilterToggle } from "./class-filter-toggle";
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { Recommendation, SigRecommendation } from "../types";
 import { ChampionClass } from "@prisma/client";
-import { CLASSES, CLASS_ICONS } from "../constants";
+import { CLASSES } from "../constants";
 
 interface RosterInsightsProps {
     showInsights: boolean;
-    onToggleInsights: () => void;
     recommendations?: Recommendation[];
     sigRecommendations?: SigRecommendation[];
     simulationTargetRank: number;
@@ -39,11 +39,6 @@ interface RosterInsightsProps {
 }
 
 function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: ChampionClass[], onChange: (classes: ChampionClass[]) => void }) {
-    const toggleClass = (c: ChampionClass) => {
-        if (selectedClasses.includes(c)) onChange(selectedClasses.filter(cls => cls !== c));
-        else onChange([...selectedClasses, c]);
-    };
-
     return (
         <div className="flex items-center">
             <div className="lg:hidden">
@@ -54,29 +49,19 @@ function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: C
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-2 bg-slate-900 border-slate-800" align="end">
-                        <div className="flex gap-2">
-                            {CLASSES.map(c => (
-                                <Button key={c} variant="ghost" size="sm" className={cn("h-8 w-8 p-1.5 rounded-full transition-all border shrink-0", selectedClasses.includes(c) ? "bg-slate-800 border-slate-700" : "bg-transparent border-transparent")} onClick={() => toggleClass(c)}>
-                                    <div className="relative w-full h-full"><Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="24px" className="object-contain" /></div>
-                                </Button>
-                            ))}
-                        </div>
+                        <ClassFilterToggle selectedClasses={selectedClasses} onChange={onChange} size="sm" className="bg-transparent border-none p-0" />
                     </PopoverContent>
                 </Popover>
             </div>
-            <div className="hidden lg:flex items-center gap-1 bg-slate-900/50 p-1 rounded-full border border-slate-800">
-                {CLASSES.map(c => (
-                    <Button key={c} variant="ghost" size="sm" className={cn("h-6 w-6 p-1 rounded-full transition-all border shrink-0", selectedClasses.includes(c) ? "bg-slate-800 border-slate-700 shadow-sm" : "bg-transparent border-transparent")} onClick={() => toggleClass(c)}>
-                        <div className="relative w-full h-full"><Image src={CLASS_ICONS[c as Exclude<ChampionClass, 'SUPERIOR'>]} alt={c} fill sizes="24px" className="object-contain" /></div>
-                    </Button>
-                ))}
+            <div className="hidden lg:flex items-center">
+                <ClassFilterToggle selectedClasses={selectedClasses} onChange={onChange} className="bg-slate-900/50 p-1 rounded-full border border-slate-800" />
             </div>
         </div>
     );
 }
 
 export function RosterInsights({
-    showInsights, onToggleInsights, recommendations = [], sigRecommendations = [],
+    showInsights, recommendations = [], sigRecommendations = [],
     simulationTargetRank, onTargetRankChange, sigBudget, onSigBudgetChange,
     rankUpClassFilter, onRankUpClassFilterChange, sigClassFilter, onSigClassFilterChange,
     rankUpSagaFilter, onRankUpSagaFilterChange, sigSagaFilter, onSigSagaFilterChange,

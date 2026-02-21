@@ -7,8 +7,9 @@ import {
   Attachment,
   ContainerBuilder,
   TextDisplayBuilder,
+  Client,
 } from "discord.js";
-import { getPlayer, getActivePlayer } from "../../utils/playerHelper";
+import { getActivePlayer } from "../../utils/playerHelper";
 import { processBGViewScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
@@ -27,7 +28,7 @@ export async function handleScan(
   const userId = interaction.user.id;
 
   // 1. Defer immediately to prevent timeout (3s window)
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   if (activeScans.has(userId)) {
     await interaction.editReply({
@@ -51,8 +52,8 @@ export async function handleScan(
       return;
     }
 
-    // 3. Initial Reply via editReply
-    await interaction.editReply({
+    // 3. Initial Reply via followUp (public)
+    await interaction.followUp({
       content:
         `**Ready to scan!** 📸\n` +
         `Please upload your **BG View** (Battlegrounds) screenshots now.\n` +
@@ -61,9 +62,13 @@ export async function handleScan(
         `- Make sure you are in the "Battlegrounds" view (not "My Champions").`,
     });
 
+    // Delete the initial ephemeral reply to clean up
+    await interaction.deleteReply();
+
     const channel = interaction.channel as TextChannel;
     if (!channel) {
       activeScans.delete(userId);
+      await interaction.editReply({ content: "❌ Could not access this channel." });
       return;
     }
 
@@ -107,7 +112,7 @@ export async function handleScan(
   }
 }
 
-async function processMessage(message: Message, playerId: string, client: any) {
+async function processMessage(message: Message, playerId: string, client: Client) {
   // Acknowledge receipt
   const processingMsg = await message.reply("⏳ Processing images...");
   const resolveEmojis = createEmojiResolver(client);
@@ -121,7 +126,6 @@ async function processMessage(message: Message, playerId: string, client: any) {
     return;
   }
 
-  const results: { success: boolean; error?: string; count: number; added: RosterWithChampion[] }[] = [];
   const allAddedChampions: RosterWithChampion[] = [];
   const globalErrors: string[] = [];
 
@@ -141,8 +145,8 @@ async function processMessage(message: Message, playerId: string, client: any) {
       const updateResult = result as RosterUpdateResult;
       const added = updateResult.champions.flat();
       
-      if ((result as any).errors && Array.isArray((result as any).errors)) {
-          (result as any).errors.forEach((e: string) => globalErrors.push(`${image.name}: ${e}`));
+      if (updateResult.errors && Array.isArray(updateResult.errors)) {
+          updateResult.errors.forEach((e: string) => globalErrors.push(`${image.name}: ${e}`));
       }
 
       return { success: true, count: updateResult.count, added };

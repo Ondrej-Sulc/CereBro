@@ -36,6 +36,7 @@ interface RosterWithChampion {
     stars: number;
     rank: number;
     isAwakened: boolean;
+    sigLevel: number;
     powerRating?: number | null; // Add this line
     champion: ChampionData;
 }
@@ -93,8 +94,8 @@ const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion }) => {
           </div>
           <div className="flex justify-between text-[9px] text-slate-400 leading-tight">
               {item.powerRating && <span>{item.powerRating.toLocaleString()}</span>}
-              {(item.isAwakened && typeof (item as any).sigLevel === 'number') && (
-                  <span className="text-sky-300">S{(item as any).sigLevel}</span>
+              {(item.isAwakened && typeof item.sigLevel === 'number') && (
+                  <span className="text-sky-300">S{item.sigLevel}</span>
               )}
           </div>
       </div>
@@ -292,7 +293,7 @@ export function RosterUpdateForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
+            <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 bg-slate-950 p-1 border border-slate-800 rounded-lg h-auto">
                     <TabsTrigger 
                         value="stats-view"
