@@ -28,7 +28,7 @@ export async function handleScan(
   const userId = interaction.user.id;
 
   // 1. Defer immediately to prevent timeout (3s window)
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   if (activeScans.has(userId)) {
     await interaction.editReply({
@@ -52,8 +52,8 @@ export async function handleScan(
       return;
     }
 
-    // 3. Initial Reply via editReply
-    await interaction.editReply({
+    // 3. Initial Reply via followUp (public)
+    await interaction.followUp({
       content:
         `**Ready to scan!** 📸\n` +
         `Please upload your **BG View** (Battlegrounds) screenshots now.\n` +
@@ -61,6 +61,9 @@ export async function handleScan(
         `- I will listen in this channel for the next **5 minutes**.\n` +
         `- Make sure you are in the "Battlegrounds" view (not "My Champions").`,
     });
+
+    // Delete the initial ephemeral reply to clean up
+    await interaction.deleteReply();
 
     const channel = interaction.channel as TextChannel;
     if (!channel) {
