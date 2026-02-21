@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClassFilterToggle } from "./class-filter-toggle";
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { Recommendation, SigRecommendation } from "../types";
 import { ChampionClass } from "@prisma/client";
