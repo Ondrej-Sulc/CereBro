@@ -6,14 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode } from "../actions/alliance";
+import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings } from "../actions/alliance";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ColorPicker } from "@/components/alliance/ColorPicker";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,6 +61,7 @@ interface AllianceWithRequests {
     membershipRequests: MembershipRequest[];
     linkCode: string | null;
     linkCodeExpires: Date | null;
+    removeMissingMembers: boolean;
 }
 
 type PlayerWithRoster = Player & { roster: unknown[] };
@@ -83,6 +85,26 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         bg3: alliance.battlegroup3Color || "#3b82f6",
     });
     const [isSavingColors, setIsSavingColors] = useState(false);
+
+    // Alliance Settings
+    const [removeMissingMembers, setRemoveMissingMembers] = useState(alliance.removeMissingMembers);
+    const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+
+    const handleUpdateSettings = async (checked: boolean) => {
+        setRemoveMissingMembers(checked);
+        setIsUpdatingSettings(true);
+        try {
+            await updateAllianceSettings({ removeMissingMembers: checked });
+            toast({ title: "Settings Updated", description: "Alliance sync policy has been updated." });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to update settings";
+            toast({ title: "Error", description: message, variant: "destructive" });
+            // Revert state on error
+            setRemoveMissingMembers(!checked);
+        } finally {
+            setIsUpdatingSettings(false);
+        }
+    };
 
     // Discord Linking
     const [isGeneratingCode, setIsGeneratingCode] = useState(false);
@@ -432,17 +454,55 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                             </TabsContent>
 
                                             <TabsContent value="discord" className="space-y-6 py-4">
-                                                {alliance.guildId ? (
-                                                    <div className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-lg flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                                                            <Check className="w-6 h-6" />
+                                                {alliance.guildId && (
+                                                    <div className="space-y-4">
+                                                        <div className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-lg flex items-center gap-4">
+                                                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                                                <Check className="w-6 h-6" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-emerald-400">Discord Linked</p>
+                                                                <p className="text-xs text-slate-400">Your alliance is successfully integrated with Discord.</p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p className="font-bold text-emerald-400">Discord Linked</p>
-                                                            <p className="text-xs text-slate-400">Your alliance is successfully integrated with Discord.</p>
+
+                                                        <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 space-y-4">
+                                                            <div className="flex items-center gap-2 text-slate-400">
+                                                                <RotateCcw className="w-4 h-4" />
+                                                                <p className="text-[10px] uppercase font-bold tracking-wider">Sync Policy</p>
+                                                            </div>
+                                                            
+                                                            <div className="flex items-start gap-3">
+                                                                <Checkbox 
+                                                                    id="removeMissingMembers" 
+                                                                    checked={removeMissingMembers}
+                                                                    onCheckedChange={(checked) => handleUpdateSettings(checked === true)}
+                                                                    disabled={isUpdatingSettings}
+                                                                    className="mt-1"
+                                                                />
+                                                                <div className="grid gap-1.5 leading-none">
+                                                                    <label
+                                                                        htmlFor="removeMissingMembers"
+                                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                                    >
+                                                                        Strict Membership Sync
+                                                                    </label>
+                                                                    <p className="text-xs text-slate-500">
+                                                                        Automatically remove members from the roster if they lack Discord roles or leave the server.
+                                                                    </p>
+                                                                    {!removeMissingMembers && (
+                                                                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-amber-500 font-medium">
+                                                                            <AlertTriangle className="w-3 h-3" />
+                                                                            Recommended for hybrid alliances (Web + Discord).
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                ) : (
+                                                )}
+
+                                                {!alliance.guildId && (
                                                     <div className="space-y-4">
                                                         <div className="bg-sky-950/20 border border-sky-900/30 p-4 rounded-lg space-y-3">
                                                             <div className="flex items-center gap-3 text-sky-400">

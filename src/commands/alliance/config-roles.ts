@@ -8,6 +8,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
   const bg1Role = interaction.options.getRole('battlegroup1');
   const bg2Role = interaction.options.getRole('battlegroup2');
   const bg3Role = interaction.options.getRole('battlegroup3');
+  const removeMissingMembers = interaction.options.getBoolean('remove-missing-members');
 
   if (!interaction.guildId || !interaction.guild) {
     await interaction.editReply('This command can only be used in a server.');
@@ -20,12 +21,14 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
       battlegroup1Role?: string;
       battlegroup2Role?: string;
       battlegroup3Role?: string;
+      removeMissingMembers?: boolean;
     } = {};
 
     if (officerRole) updateData.officerRole = officerRole.id;
     if (bg1Role) updateData.battlegroup1Role = bg1Role.id;
     if (bg2Role) updateData.battlegroup2Role = bg2Role.id;
     if (bg3Role) updateData.battlegroup3Role = bg3Role.id;
+    if (removeMissingMembers !== null) updateData.removeMissingMembers = removeMissingMembers;
 
     if (Object.keys(updateData).length === 0) {
       // If no roles are provided, show the current configuration
@@ -43,6 +46,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
       replyMessage += `- Battlegroup 1 Role: ${alliance.battlegroup1Role ? `<@&${alliance.battlegroup1Role}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 2 Role: ${alliance.battlegroup2Role ? `<@&${alliance.battlegroup2Role}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 3 Role: ${alliance.battlegroup3Role ? `<@&${alliance.battlegroup3Role}>` : 'Not set'}\n`;
+      replyMessage += `- Remove Missing Members: ${alliance.removeMissingMembers ? '✅ Enabled' : '❌ Disabled'}\n`;
       
       await interaction.editReply(replyMessage);
       return;
@@ -58,12 +62,18 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
     if (alliance.battlegroup1Role) replyMessage += `- Battlegroup 1 Role: <@&${alliance.battlegroup1Role}>\n`;
     if (alliance.battlegroup2Role) replyMessage += `- Battlegroup 2 Role: <@&${alliance.battlegroup2Role}>\n`;
     if (alliance.battlegroup3Role) replyMessage += `- Battlegroup 3 Role: <@&${alliance.battlegroup3Role}>\n`;
+    replyMessage += `- Remove Missing Members: ${alliance.removeMissingMembers ? '✅ Enabled' : '❌ Disabled'}\n`;
 
     await interaction.editReply(replyMessage);
     loggerService.info(`Alliance roles configured for guild ${interaction.guildId} by ${interaction.user.tag}`);
 
-    const updatedCount = await syncRolesForGuild(interaction.guild);
-    await interaction.followUp(`Automatic sync complete. ${updatedCount} player(s) were updated.`);
+    const result = await syncRolesForGuild(interaction.guild);
+    await interaction.followUp(
+        `Automatic sync complete.\n` +
+        `✅ **${result.created}** new profiles created.\n` +
+        `🔄 **${result.updated}** existing profiles updated.\n` +
+        `❌ **${result.removed}** profiles removed.`
+      );
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

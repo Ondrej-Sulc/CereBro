@@ -21,6 +21,7 @@
 *   **Role Sync:**
     *   `/setup`: Interactive wizard for configuring roles.
     *   Background jobs sync Discord roles to the database hourly.
+    *   **Hybrid Support:** Optional `removeMissingMembers` flag (configurable via `/alliance config-roles`) allows hybrid alliances to keep members who are added via the web but don't have specific Discord roles.
     *   `/alliance manage`: Officer tools to remove/list members.
 
 ---
