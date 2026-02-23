@@ -485,15 +485,20 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                                         htmlFor="removeMissingMembers"
                                                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                                     >
-                                                                        Strict Membership Sync
+                                                                        Strict Discord Membership
                                                                     </label>
                                                                     <p className="text-xs text-slate-500">
-                                                                        Automatically remove members from the roster if they lack Discord roles or leave the server.
+                                                                        When enabled, Discord roles are the absolute source of truth for who is in the alliance.
                                                                     </p>
-                                                                    {!removeMissingMembers && (
+                                                                    {removeMissingMembers ? (
                                                                         <div className="flex items-center gap-1.5 mt-1 text-[10px] text-amber-500 font-medium">
                                                                             <AlertTriangle className="w-3 h-3" />
-                                                                            Recommended for hybrid alliances (Web + Discord).
+                                                                            Warning: Members added via web will be removed if they lack roles.
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-emerald-500 font-medium">
+                                                                            <Check className="w-3 h-3" />
+                                                                            Hybrid Mode: Recommended if you add members via the website.
                                                                         </div>
                                                                     )}
                                                                 </div>
