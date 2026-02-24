@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
 import { syncRolesForGuild } from './sync-roles';
@@ -68,12 +68,13 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
     loggerService.info(`Alliance roles configured for guild ${interaction.guildId} by ${interaction.user.tag}`);
 
     const result = await syncRolesForGuild(interaction.guild);
-    await interaction.followUp(
-        `Automatic sync complete.\n` +
+    await interaction.followUp({
+        content: `Automatic sync complete.\n` +
         `✅ **${result.created}** new profiles created.\n` +
         `🔄 **${result.updated}** existing profiles updated.\n` +
-        `❌ **${result.removed}** profiles removed.`
-      );
+        `❌ **${result.removed}** profiles removed.`,
+        flags: [MessageFlags.Ephemeral]
+      });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

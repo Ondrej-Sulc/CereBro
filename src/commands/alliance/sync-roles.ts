@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Guild } from 'discord.js';
+import { ChatInputCommandInteraction, Guild, MessageFlags } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
 
@@ -199,12 +199,13 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
   try {
     await interaction.editReply('Starting role synchronization... This may take a moment.');
     const result = await syncRolesForGuild(interaction.guild);
-    await interaction.followUp(
-      `Role synchronization complete.\n` +
+    await interaction.followUp({
+      content: `Role synchronization complete.\n` +
       `✅ **${result.created}** new profiles created.\n` +
       `🔄 **${result.updated}** existing profiles updated.\n` +
-      `❌ **${result.removed}** profiles removed (lost roles or left server).`
-    );
+      `❌ **${result.removed}** profiles removed (lost roles or left server).`,
+      flags: [MessageFlags.Ephemeral]
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     loggerService.error({ error: errorMessage }, 'Error syncing alliance roles');
