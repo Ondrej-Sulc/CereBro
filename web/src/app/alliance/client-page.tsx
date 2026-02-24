@@ -217,16 +217,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             toast({ title: "Colors Updated", description: "Alliance theme colors saved." });
         } catch (e: unknown) {
              const error = e as Error;
-             if (error.message?.includes("Failed to find Server Action")) {
-                 toast({ 
-                    title: "Update Required", 
-                    description: "Application updated. Reloading...", 
-                    variant: "destructive" 
-                 });
-                 setTimeout(() => window.location.reload(), 1500);
-                 return;
-            }
-            toast({ title: "Error", description: "Failed to save colors.", variant: "destructive" });
+             toast({ title: "Error", description: error.message || "Failed to save colors.", variant: "destructive" });
         } finally {
             setIsSavingColors(false);
         }
@@ -241,16 +232,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             toast({ title: "Updated", description: "Player battlegroup updated." });
         } catch (e: unknown) {
             const error = e as Error;
-            if (error.message?.includes("Failed to find Server Action")) {
-                 toast({ 
-                    title: "Update Required", 
-                    description: "Application updated. Reloading...", 
-                    variant: "destructive" 
-                 });
-                 setTimeout(() => window.location.reload(), 1500);
-                 return;
-            }
-            toast({ title: "Error", description: "Failed to update player.", variant: "destructive" });
+            toast({ title: "Error", description: error.message || "Failed to update player.", variant: "destructive" });
         } finally {
             setLoadingId(null);
         }
