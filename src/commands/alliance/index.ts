@@ -59,6 +59,7 @@ export const command: Command = {
         .addRoleOption(option => option.setName('battlegroup1').setDescription('The role for Battlegroup 1.'))
         .addRoleOption(option => option.setName('battlegroup2').setDescription('The role for Battlegroup 2.'))
         .addRoleOption(option => option.setName('battlegroup3').setDescription('The role for Battlegroup 3.'))
+        .addBooleanOption(option => option.setName('remove-missing-members').setDescription('Enable Strict Discord Membership (removes members without roles during sync).'))
     )
     .addSubcommand((subcommand) =>
       subcommand

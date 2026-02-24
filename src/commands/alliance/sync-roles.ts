@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Guild } from 'discord.js';
+import { ChatInputCommandInteraction, Guild, MessageFlags } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
 
@@ -127,6 +127,11 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
                 continue;
             }
 
+            // Skip removal if the alliance has disabled strict membership removal
+            if (!alliance.removeMissingMembers) {
+                continue;
+            }
+
             // They are in the DB as part of this alliance, but don't have relevant roles in Discord.
             // Since this alliance has roles configured, we treat Discord as the source of truth.
             await prisma.player.update({
@@ -154,28 +159,30 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
   // 3. Handle "Leavers"
   // Any players remaining in dbMembersMap were not found in the guild member list.
   // They have left the server, so we remove them from the alliance.
-  for (const [discordId, player] of dbMembersMap) {
-      try {
-          // Do not remove Bot Admins
-          if (player.botUser?.isBotAdmin) {
-              continue;
-          }
+  if (alliance.removeMissingMembers) {
+    for (const [discordId, player] of dbMembersMap) {
+        try {
+            // Do not remove Bot Admins
+            if (player.botUser?.isBotAdmin) {
+                continue;
+            }
 
-          await prisma.player.update({
-              where: { id: player.id },
-              data: {
-                  allianceId: null,
-                  battlegroup: null,
-                  isOfficer: false,
-              },
-          });
-          removedCount++;
-      } catch (error) {
-          loggerService.error(
-            { error, discordId },
-            'Failed to remove leaver from alliance'
-          );
-      }
+            await prisma.player.update({
+                where: { id: player.id },
+                data: {
+                    allianceId: null,
+                    battlegroup: null,
+                    isOfficer: false,
+                },
+            });
+            removedCount++;
+        } catch (error) {
+            loggerService.error(
+              { error, discordId },
+              'Failed to remove leaver from alliance'
+            );
+        }
+    }
   }
   
   loggerService.info(`Alliance roles synced for guild ${guild.id}. Updated: ${updatedCount}, Created: ${createdCount}, Removed: ${removedCount}.`);
@@ -192,12 +199,13 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
   try {
     await interaction.editReply('Starting role synchronization... This may take a moment.');
     const result = await syncRolesForGuild(interaction.guild);
-    await interaction.followUp(
-      `Role synchronization complete.\n` +
+    await interaction.followUp({
+      content: `Role synchronization complete.\n` +
       `✅ **${result.created}** new profiles created.\n` +
       `🔄 **${result.updated}** existing profiles updated.\n` +
-      `❌ **${result.removed}** profiles removed (lost roles or left server).`
-    );
+      `❌ **${result.removed}** profiles removed (lost roles or left server).`,
+      flags: [MessageFlags.Ephemeral]
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     loggerService.error({ error: errorMessage }, 'Error syncing alliance roles');
