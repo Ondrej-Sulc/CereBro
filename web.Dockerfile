@@ -71,4 +71,4 @@ RUN pnpm --filter web run build
 
 EXPOSE 3000
 WORKDIR /usr/src/app/web
-CMD ["/bin/sh", "-c", "npx prisma migrate deploy && pnpm start"]
+CMD ["pnpm", "start"]
