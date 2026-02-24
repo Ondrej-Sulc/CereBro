@@ -49,8 +49,11 @@ RUN cp -r ./dist ./deploy/dist && \
     cp ./src/package.json ./deploy/package.json && \
     cp -r ./assets ./deploy/assets && \
     cp -r ./node_modules ./deploy/node_modules && \
+    cp -r ./prisma ./deploy/prisma && \
     mkdir -p ./deploy/src/data && \
-    cp ./src/data/commands.json ./deploy/src/data/commands.json
+    cp ./src/data/commands.json ./deploy/src/data/commands.json && \
+    cp ./src/bot-entrypoint.sh ./deploy/bot-entrypoint.sh && \
+    chmod +x ./deploy/bot-entrypoint.sh
 
 # ---- Final Production Image ----
 FROM base AS production
@@ -58,8 +61,9 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-dejavu-core \
     fonts-noto-color-emoji \
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 USER node
 WORKDIR /usr/src/app
 COPY --chown=node:node --from=production-builder /usr/src/app/deploy .
-CMD ["node", "dist/index.js"]
+CMD ["./bot-entrypoint.sh"]
