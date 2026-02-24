@@ -143,6 +143,22 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  if (
+    typeof props.description === 'string' && 
+    (props.description.includes('Failed to find Server Action') || props.description.includes('older or newer deployment'))
+  ) {
+    console.warn("Detected Server Action mismatch from toast, reloading...");
+    props.title = "Update Required";
+    props.description = "Application updated. Reloading...";
+    props.variant = "destructive";
+    
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }, 1500);
+  }
+
   const id = genId()
 
   const update = (props: ToasterToast) =>
