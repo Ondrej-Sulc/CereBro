@@ -51,7 +51,9 @@ RUN cp -r ./dist ./deploy/dist && \
     cp -r ./node_modules ./deploy/node_modules && \
     cp -r ./prisma ./deploy/prisma && \
     mkdir -p ./deploy/src/data && \
-    cp ./src/data/commands.json ./deploy/src/data/commands.json
+    cp ./src/data/commands.json ./deploy/src/data/commands.json && \
+    cp ./src/bot-entrypoint.sh ./deploy/bot-entrypoint.sh && \
+    chmod +x ./deploy/bot-entrypoint.sh
 
 # ---- Final Production Image ----
 FROM base AS production
@@ -64,4 +66,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 USER node
 WORKDIR /usr/src/app
 COPY --chown=node:node --from=production-builder /usr/src/app/deploy .
-CMD ["/bin/sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["./bot-entrypoint.sh"]
