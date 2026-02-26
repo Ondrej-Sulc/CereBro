@@ -190,15 +190,19 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
       <PopoverContent
         sideOffset={4}
         className="w-[--radix-popover-trigger-width] p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="h-auto">
           <CommandInput
             placeholder="Search champion..."
             value={search}
             onValueChange={setSearch}
           />
 
-          <CommandList className="overflow-hidden">
+          <CommandList className="max-h-none overflow-visible">
             {activeChampionIds && activeChampionIds.size > 0 && (
               <div className="px-2 py-2 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
                 <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
@@ -220,7 +224,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
               <CommandEmpty>No champion found.</CommandEmpty>
             )}
 
-            <CommandGroup>
+            <CommandGroup className="overflow-visible">
               <div
                 style={{
                   height: Math.min(

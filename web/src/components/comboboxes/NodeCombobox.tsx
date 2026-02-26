@@ -65,8 +65,14 @@ export const NodeCombobox = React.memo(function NodeCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
+        <Command className="h-auto">
           <CommandInput
             placeholder="Search node..."
             value={search}

@@ -1,0 +1,29 @@
+name: Sync Main to Dev
+
+on:
+  push:
+    branches: [main]
+concurrency:
+  group: sync-main-to-dev
+  cancel-in-progress: true
+
+jobs:
+  sync-dev:
+    permissions:
+          contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Force Sync Dev to Main
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # We use force, because squash-merging makes histories diverge.
+          # This ensures 'dev' is a perfect mirror of 'main' for Railway Beta.
+          git push origin main:dev --force

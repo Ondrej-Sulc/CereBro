@@ -146,16 +146,19 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
         sideOffset={4} 
         className="w-[--radix-popover-trigger-width] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="h-auto">
           <CommandInput
             placeholder="Search player..."
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList className="overflow-hidden">
+          <CommandList className="max-h-none overflow-visible">
             {filteredPlayers.length === 0 && <CommandEmpty>No players found.</CommandEmpty>}
-            <CommandGroup>
+            <CommandGroup className="overflow-visible">
                 {(() => {
                   const listHeight = Math.min(filteredPlayers.length * 46, 300);
                   return (
