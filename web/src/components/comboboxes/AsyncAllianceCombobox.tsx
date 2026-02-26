@@ -129,9 +129,12 @@ export function AsyncAllianceCombobox({
         sideOffset={4} 
         className="w-[200px] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         align="start"
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="h-auto">
           <CommandInput
             placeholder="Search alliance..."
             value={search}

@@ -157,9 +157,12 @@ export function AsyncPlayerCombobox({
         sideOffset={4}
         className="w-[var(--radix-popover-trigger-width)] min-w-[200px] p-0"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
         align="start"
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="h-auto">
           <CommandInput
             placeholder="Search player..."
             value={search}
