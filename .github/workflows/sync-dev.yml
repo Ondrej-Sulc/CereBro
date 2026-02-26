@@ -1,0 +1,23 @@
+name: Sync Dev to Main
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Force Sync Dev to Main
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Force push 'main' content to 'dev' branch
+          git push origin main:dev --force
