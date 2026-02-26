@@ -6,6 +6,8 @@ on:
 
 jobs:
   sync-dev:
+    permissions:
+          contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,5 +21,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Force push 'main' content to 'dev' branch
+          # We use force, because squash-merging makes histories diverge.
+          # This ensures 'dev' is a perfect mirror of 'main' for Railway Beta.
           git push origin main:dev --force
