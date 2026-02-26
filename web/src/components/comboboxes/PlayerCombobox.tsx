@@ -153,9 +153,9 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
             value={search}
             onValueChange={setSearch}
           />
-          <CommandList className="overflow-hidden">
+          <CommandList className="max-h-none overflow-visible">
             {filteredPlayers.length === 0 && <CommandEmpty>No players found.</CommandEmpty>}
-            <CommandGroup>
+            <CommandGroup className="overflow-visible">
                 {(() => {
                   const listHeight = Math.min(filteredPlayers.length * 46, 300);
                   return (
