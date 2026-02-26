@@ -3,6 +3,9 @@ name: Sync Dev to Main
 on:
   push:
     branches: [main]
+concurrency:
+  group: sync-main-to-dev
+  cancel-in-progress: true
 
 jobs:
   sync-dev:
