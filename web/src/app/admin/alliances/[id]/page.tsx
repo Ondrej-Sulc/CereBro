@@ -160,8 +160,8 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
               <CardContent>
                   <div className="flex flex-wrap gap-2">
                       {alliance.enabledFeatureCommands.length > 0 ? 
-                        alliance.enabledFeatureCommands.map((feature, i) => (
-                          <Badge key={i} variant="secondary" className="px-2 py-1 text-xs">
+                        alliance.enabledFeatureCommands.map((feature) => (
+                          <Badge key={feature} variant="secondary" className="px-2 py-1 text-xs">
                               {feature}
                           </Badge>
                         )) : (

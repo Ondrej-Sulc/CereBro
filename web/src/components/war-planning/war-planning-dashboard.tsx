@@ -344,9 +344,14 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: Exte
   const dateString = useMemo(() => {
     if (!war.createdAt) return "";
     const date = new Date(war.createdAt);
-    return date.toLocaleDateString(undefined, { 
-       timeZone: userTimezone || undefined 
-    });
+    try {
+      return date.toLocaleDateString(undefined, { 
+         timeZone: userTimezone || undefined 
+      });
+    } catch (e) {
+      // Fallback to local timezone if userTimezone is invalid
+      return date.toLocaleDateString();
+    }
   }, [war.createdAt, userTimezone]);
 
   useEffect(() => {

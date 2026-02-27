@@ -41,9 +41,13 @@ export async function POST(req: NextRequest) {
         const results: { fileName: string; debug: string; success: boolean; error?: string }[] = [];
 
         for (const file of files) {
-            const buffer = Buffer.from(await file.arrayBuffer());
-            
             try {
+                if (!(file instanceof File) && typeof (file as any).arrayBuffer !== 'function') {
+                    throw new Error("Invalid file object provided");
+                }
+
+                const buffer = Buffer.from(await file.arrayBuffer());
+                
                 // We use processBGView directly to get the debug image
                 const { debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
                 
@@ -55,10 +59,10 @@ export async function POST(req: NextRequest) {
                 });
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : String(err);
-                logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName: file.name }, "Error processing debug roster image");
+                logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName: (file as any)?.name || 'unknown' }, "Error processing debug roster image");
                 
                 results.push({
-                    fileName: file.name,
+                    fileName: (file as any)?.name || 'unknown',
                     debug: "",
                     success: false,
                     error: message

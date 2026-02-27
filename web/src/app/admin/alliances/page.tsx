@@ -44,8 +44,11 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
   const page = Math.max(1, parseInt(params.page || "1", 10) || 1)
   const pageSize = Math.min(100, Math.max(1, parseInt(params.pageSize || "20", 10) || 20))
   const remindersFilter = params.reminders
-  const sortBy = params.sortBy || "name"
-  const order = params.order || "asc"
+  
+  // Whitelist sort fields and order
+  const allowedSortFields = ["name", "members", "createdAt"]
+  const sortBy = allowedSortFields.includes(params.sortBy || "") ? params.sortBy! : "name"
+  const order = params.order === "desc" ? "desc" : "asc"
 
   const where: Prisma.AllianceWhereInput = {
     AND: [

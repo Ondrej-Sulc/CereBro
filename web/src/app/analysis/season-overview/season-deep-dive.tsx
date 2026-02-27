@@ -31,32 +31,34 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
   const [prevExternalSelection, setPrevExternalSelection] = useState<DeepDiveSelection | null>(null);
 
   // Sync with external selection (Standard React 19 pattern with structural check)
-  const isSelectionChanged = externalSelection && (
-    !prevExternalSelection || 
-    externalSelection.id !== prevExternalSelection.id || 
-    externalSelection.tab !== prevExternalSelection.tab || 
-    externalSelection.subTab !== prevExternalSelection.subTab
-  );
+  if (!externalSelection && prevExternalSelection) {
+    setPrevExternalSelection(null);
+  } else if (externalSelection) {
+    const isSelectionChanged = !prevExternalSelection || 
+      externalSelection.id !== prevExternalSelection.id || 
+      externalSelection.tab !== prevExternalSelection.tab || 
+      externalSelection.subTab !== prevExternalSelection.subTab;
 
-  if (isSelectionChanged) {
-    setPrevExternalSelection(externalSelection);
-    
-    setActiveTab(externalSelection!.tab);
-    if (externalSelection!.tab === "defense") {
-      if (externalSelection!.subTab === "node") {
-        setActiveDefenseSubTab("node");
-        setSelectedNode(externalSelection!.id);
-      } else if (externalSelection!.subTab === "defender") {
-        setActiveDefenseSubTab("defender");
-        setSelectedDefenderId(externalSelection!.id);
-      }
-    } else {
-      if (externalSelection!.subTab === "attacker") {
-        setActiveMatchupSubTab("attacker");
-        setSelectedAttackerId(externalSelection!.id);
-      } else if (externalSelection!.subTab === "counter") {
-        setActiveMatchupSubTab("counter");
-        setSelectedCounterDefenderId(externalSelection!.id);
+    if (isSelectionChanged) {
+      setPrevExternalSelection(externalSelection);
+      
+      setActiveTab(externalSelection.tab);
+      if (externalSelection.tab === "defense") {
+        if (externalSelection.subTab === "node") {
+          setActiveDefenseSubTab("node");
+          setSelectedNode(externalSelection.id);
+        } else if (externalSelection.subTab === "defender") {
+          setActiveDefenseSubTab("defender");
+          setSelectedDefenderId(externalSelection.id);
+        }
+      } else {
+        if (externalSelection.subTab === "attacker") {
+          setActiveMatchupSubTab("attacker");
+          setSelectedAttackerId(externalSelection.id);
+        } else if (externalSelection.subTab === "counter") {
+          setActiveMatchupSubTab("counter");
+          setSelectedCounterDefenderId(externalSelection.id);
+        }
       }
     }
   }

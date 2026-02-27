@@ -4,7 +4,8 @@ import { RightPanelState } from "../hooks/use-war-planning";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
-import DefenseEditor, { WarNodeWithAllocations } from "../node-editor/defense-editor";
+import DefenseEditor from "../node-editor/defense-editor";
+import type { WarNodeWithAllocations } from "../node-editor/defense-editor";
 import PlanningToolsPanel from "../planning-tools-panel";
 import DefenseStatsPanel from "../defense-stats-panel";
 

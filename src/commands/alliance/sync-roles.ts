@@ -208,7 +208,7 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
       `✅ **${result.created}** new profiles created.\n` +
       `🔄 **${result.updated}** existing profiles updated.\n` +
       `❌ **${result.removed}** profiles removed (lost roles or left server).`,
-      flags: [MessageFlags.Ephemeral]
+      flags: MessageFlags.Ephemeral
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

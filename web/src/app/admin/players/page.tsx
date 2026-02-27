@@ -48,8 +48,11 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
   const roleFilter = params.role
   const statusFilter = params.status
   const allianceId = params.alliance
-  const sortBy = params.sortBy || "createdAt"
-  const order = params.order || "desc"
+
+  // Whitelist sort fields and order
+  const allowedSortFields = ["createdAt", "ingameName", "summonerPrestige", "roster"]
+  const sortBy = allowedSortFields.includes(params.sortBy || "") ? params.sortBy! : "createdAt"
+  const order = params.order === "asc" ? "asc" : "desc"
 
   const conditions: Prisma.PlayerWhereInput[] = []
 

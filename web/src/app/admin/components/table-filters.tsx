@@ -65,6 +65,7 @@ export function TableFilters({ placeholder = "Search...", filters = [] }: TableF
   }
 
   function clearFilters() {
+    debouncedPush.cancel()
     startTransition(() => {
       router.push(`${pathname}`)
     })
@@ -88,7 +89,7 @@ export function TableFilters({ placeholder = "Search...", filters = [] }: TableF
         {filters.map((filter) => (
           <Select
             key={filter.name}
-            defaultValue={searchParams.get(filter.name) || "all"}
+            value={searchParams.get(filter.name) || "all"}
             onValueChange={(value) => handleFilterChange(filter.name, value)}
           >
             <SelectTrigger className="w-[160px]">

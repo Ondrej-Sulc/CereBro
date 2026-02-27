@@ -55,7 +55,7 @@ export function CleanupAlliancesButton() {
             Delete Empty Alliances?
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently remove all alliance records that currently have **0 members**. 
+            This will permanently remove all alliance records that currently have <strong>0 members</strong>. 
             Associated data like war history for these abandoned records will also be deleted.
           </AlertDialogDescription>
         </AlertDialogHeader>
