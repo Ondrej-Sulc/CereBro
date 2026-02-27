@@ -43,10 +43,6 @@ export async function POST(req: NextRequest) {
 
         for (const file of files) {
             try {
-                if (!(file instanceof File)) {
-                    throw new Error("Invalid file object provided");
-                }
-
                 const buffer = Buffer.from(await file.arrayBuffer());
                 
                 // We use processBGView directly to get the debug image
