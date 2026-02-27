@@ -32,9 +32,10 @@ export async function POST(req: NextRequest) {
 
         // 2. Parse Files
         const formData = await req.formData();
-        const files = formData.getAll("images") as File[];
+        const rawFiles = formData.getAll("images");
+        const files = rawFiles.filter((f): f is File => f instanceof File);
 
-        if (!files || files.length === 0) {
+        if (files.length === 0) {
             return NextResponse.json({ error: "No images provided" }, { status: 400 });
         }
 
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
 
         for (const file of files) {
             try {
-                if (!(file instanceof File) && (!file || typeof (file as { arrayBuffer: unknown }).arrayBuffer !== 'function')) {
+                if (!(file instanceof File)) {
                     throw new Error("Invalid file object provided");
                 }
 

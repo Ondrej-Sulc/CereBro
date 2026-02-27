@@ -41,28 +41,19 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
     notFound()
   }
 
-  // Aggregate stats separately to avoid loading all member records
-  const [prestigeStats, rosterStats] = await Promise.all([
+  // Aggregate stats separately to avoid pulling full member objects
+  const [prestigeStats, players] = await Promise.all([
     prisma.player.aggregate({
       where: { allianceId: id },
       _avg: { summonerPrestige: true }
     }),
-    prisma.player.aggregate({
+    prisma.player.findMany({
       where: { allianceId: id },
-      _sum: { 
-        roster: {
-          _count: true 
-        }
-      } as any // Prisma aggregate doesn't easily support deep counts in _sum, we'll use a simpler approach if this fails
-    }).catch(async () => {
-        // Fallback: manually calculate total roster count if nested aggregate fails
-        const players = await prisma.player.findMany({
-            where: { allianceId: id },
-            select: { _count: { select: { roster: true } } }
-        });
-        return { _sum: { roster: players.reduce((acc, p) => acc + p._count.roster, 0) } };
+      select: { _count: { select: { roster: true } } }
     })
   ]);
+
+  const rosterStatsTotal = players.reduce((acc, p) => acc + p._count.roster, 0);
 
   return (
     <div className="space-y-6">
@@ -118,7 +109,7 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                    {((prestigeStats as any)._sum?.roster || 0).toLocaleString()}
+                    {rosterStatsTotal.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Total champions tracked</p>
               </CardContent>

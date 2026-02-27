@@ -12,10 +12,20 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (!(session.user as any).isAdmin && (session.user as any).role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { id } = await params;
     const searchParams = req.nextUrl.searchParams;
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.max(1, Math.min(100, parseInt(searchParams.get("limit") || "10")));
+    const rawPage = parseInt(searchParams.get("page") || "1", 10);
+    const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
+    
+    const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+    const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(100, rawLimit)) : 10;
+
+    const skip = Math.floor((page - 1) * limit);
+    const take = Math.floor(limit);
 
     const [members, totalCount] = await Promise.all([
       prisma.player.findMany({
@@ -26,8 +36,8 @@ export async function GET(
             select: { roster: true }
           }
         },
-        skip: (page - 1) * limit,
-        take: limit
+        skip,
+        take
       }),
       prisma.player.count({
         where: { allianceId: id }

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/pagination";
 import axios from "axios";
 import { computePaginationWindow } from "@/lib/pagination";
+import { useRef } from "react";
 
 interface Member {
   id: string;
@@ -47,21 +48,29 @@ export function MembersTable({ allianceId }: MembersTableProps) {
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const limit = 10;
+  const requestIdRef = useRef(0);
 
   const fetchMembers = useCallback(async (pageNum: number) => {
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     try {
       const { data } = await axios.get(`/api/admin/alliances/${allianceId}/members`, {
         params: { page: pageNum, limit }
       });
-      setMembers(data.members);
-      setTotalPages(data.totalPages);
-      setTotalCount(data.totalCount);
-      setPage(data.currentPage);
+      if (currentRequestId === requestIdRef.current) {
+        setMembers(data.members);
+        setTotalPages(data.totalPages);
+        setTotalCount(data.totalCount);
+        setPage(data.currentPage);
+      }
     } catch (error) {
-      console.error("Error fetching members:", error);
+      if (currentRequestId === requestIdRef.current) {
+        console.error("Error fetching members:", error);
+      }
     } finally {
-      setLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [allianceId]);
 

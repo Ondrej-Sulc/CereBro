@@ -6,7 +6,12 @@ export function LastUpdated({ createdAtIso }: { createdAtIso: string }) {
   const [timestamp, setTimestamp] = useState<string>("");
 
   useEffect(() => {
-    setTimestamp(new Date(createdAtIso).toLocaleTimeString());
+    const d = new Date(createdAtIso);
+    if (isNaN(d.getTime())) {
+      setTimestamp("…");
+    } else {
+      setTimestamp(d.toLocaleTimeString());
+    }
   }, [createdAtIso]);
 
   return (

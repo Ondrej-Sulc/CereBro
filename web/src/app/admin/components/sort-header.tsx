@@ -10,7 +10,7 @@ interface SortHeaderProps {
   className?: string
   sortBy: string
   order: "asc" | "desc"
-  params: Record<string, any>
+  params: Record<string, string | string[] | undefined>
 }
 
 export const SortHeader = ({ field, label, className, sortBy, order, params }: SortHeaderProps) => {
