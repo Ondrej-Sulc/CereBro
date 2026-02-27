@@ -12,7 +12,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import { LastUpdated } from "./last-updated"
+
 export default async function InsightsPage() {
+  const lastUpdated = new Date().toISOString()
   const [
     totalPlayers,
     totalAlliances,
@@ -60,9 +63,7 @@ export default async function InsightsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Database Insights</h1>
-        <div className="text-sm text-muted-foreground italic">
-           Last updated: {new Date().toLocaleTimeString()}
-        </div>
+        <LastUpdated createdAtIso={lastUpdated} />
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

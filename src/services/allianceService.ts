@@ -10,28 +10,33 @@ export async function checkAndCleanupAlliance(allianceId: string | null | undefi
   if (!allianceId || allianceId === "GLOBAL") return false;
 
   try {
-    const memberCount = await prisma.player.count({
-      where: { allianceId }
+    return await prisma.$transaction(async (tx) => {
+      const memberCount = await tx.player.count({
+        where: { allianceId }
+      });
+
+      if (memberCount === 0) {
+        const alliance = await tx.alliance.findUnique({
+          where: { id: allianceId },
+          select: { name: true, guildId: true }
+        });
+
+        if (!alliance) return false;
+
+        await tx.alliance.delete({
+          where: { id: allianceId }
+        });
+
+        loggerService.info({ 
+          allianceId, 
+          allianceName: alliance.name, 
+          guildId: alliance.guildId 
+        }, `Empty alliance record "${alliance.name}" deleted automatically.`);
+        
+        return true;
+      }
+      return false;
     });
-
-    if (memberCount === 0) {
-      const alliance = await prisma.alliance.findUnique({
-        where: { id: allianceId },
-        select: { name: true, guildId: true }
-      });
-
-      await prisma.alliance.delete({
-        where: { id: allianceId }
-      });
-
-      loggerService.info({ 
-        allianceId, 
-        allianceName: alliance?.name, 
-        guildId: alliance?.guildId 
-      }, `Empty alliance record "${alliance?.name}" deleted automatically.`);
-      
-      return true;
-    }
   } catch (error) {
     loggerService.error({ error, allianceId }, 'Error checking or cleaning up empty alliance');
   }

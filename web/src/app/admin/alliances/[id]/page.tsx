@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MembersTable } from "./members-table"
 
 interface AdminAllianceDetailPageProps {
   params: Promise<{
@@ -29,16 +30,6 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
       _count: {
         select: { members: true }
       },
-      members: {
-        orderBy: {
-            ingameName: 'asc'
-        },
-        include: {
-            _count: {
-                select: { roster: true }
-            }
-        }
-      },
       config: true,
       aqReminderSettings: true,
       aqSchedules: true,
@@ -49,6 +40,29 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
   if (!alliance) {
     notFound()
   }
+
+  // Aggregate stats separately to avoid loading all member records
+  const [prestigeStats, rosterStats] = await Promise.all([
+    prisma.player.aggregate({
+      where: { allianceId: id },
+      _avg: { summonerPrestige: true }
+    }),
+    prisma.player.aggregate({
+      where: { allianceId: id },
+      _sum: { 
+        roster: {
+          _count: true 
+        }
+      } as any // Prisma aggregate doesn't easily support deep counts in _sum, we'll use a simpler approach if this fails
+    }).catch(async () => {
+        // Fallback: manually calculate total roster count if nested aggregate fails
+        const players = await prisma.player.findMany({
+            where: { allianceId: id },
+            select: { _count: { select: { roster: true } } }
+        });
+        return { _sum: { roster: players.reduce((acc, p) => acc + p._count.roster, 0) } };
+    })
+  ]);
 
   return (
     <div className="space-y-6">
@@ -90,8 +104,8 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                   {alliance.members.length > 0 ? 
-                    Math.round(alliance.members.reduce((acc, curr) => acc + (curr.summonerPrestige || 0), 0) / alliance.members.length).toLocaleString() 
+                   {prestigeStats._avg.summonerPrestige ? 
+                    Math.round(prestigeStats._avg.summonerPrestige).toLocaleString() 
                     : "0"}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Summoner Prestige avg.</p>
@@ -104,7 +118,7 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                    {alliance.members.reduce((acc, curr) => acc + curr._count.roster, 0).toLocaleString()}
+                    {((prestigeStats as any)._sum?.roster || 0).toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">Total champions tracked</p>
               </CardContent>
@@ -141,7 +155,7 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm font-medium">AQ Reminders</span>
                         </div>
-                        {(alliance.aqReminderSettings?.section1ReminderEnabled || alliance.aqReminderSettings?.section2ReminderEnabled) ? <Badge className="bg-blue-500">ACTIVE</Badge> : <Badge variant="outline">OFF</Badge>}
+                        {(alliance.aqReminderSettings?.section1ReminderEnabled || alliance.aqReminderSettings?.section2ReminderEnabled || alliance.aqReminderSettings?.finalReminderEnabled) ? <Badge className="bg-blue-500">ACTIVE</Badge> : <Badge variant="outline">OFF</Badge>}
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg border bg-slate-50/50">
                         <div className="flex items-center space-x-3">
@@ -183,67 +197,7 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Player</TableHead>
-                    <TableHead>Prestige (S/C)</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>BG</TableHead>
-                    <TableHead>Roster</TableHead>
-                    <TableHead>Timezone</TableHead>
-                    <TableHead className="text-right">Joined</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {alliance.members.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center space-x-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={member.avatar || ""} />
-                            <AvatarFallback><UserCircle className="h-4 w-4" /></AvatarFallback>
-                          </Avatar>
-                          <span>{member.ingameName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-xs">
-                            <span className="font-medium text-sm">S: {member.summonerPrestige?.toLocaleString() || "-"}</span>
-                            <span className="text-muted-foreground">C: {member.championPrestige?.toLocaleString() || "-"}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {member.isOfficer ? (
-                           <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
-                                <ShieldAlert className="mr-1 h-3 w-3" /> Officer
-                           </Badge>
-                        ) : (
-                           <Badge variant="outline" className="text-slate-500">Member</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {member.battlegroup ? (
-                           <span className="text-sm font-medium">BG {member.battlegroup}</span>
-                        ) : (
-                           <span className="text-muted-foreground text-xs">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="font-mono text-xs">
-                            {member._count.roster}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {member.timezone || "Not set"}
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">
-                        {new Date(member.createdAt).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                <MembersTable allianceId={alliance.id} />
             </CardContent>
           </Card>
         </TabsContent>

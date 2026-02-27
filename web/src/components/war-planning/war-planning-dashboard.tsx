@@ -98,13 +98,11 @@ export default function WarPlanningDashboard({
   const [isOffSeason, setIsOffSeason] = useState(false);
 
   // Sync selectedMapType with props when wars change
-  const [prevWars, setPrevWars] = useState(wars);
-  if (wars !== prevWars) {
-    setPrevWars(wars);
+  useEffect(() => {
     if (wars.length > 0 && wars[0].mapType !== selectedMapType) {
       setSelectedMapType(wars[0].mapType);
     }
-  }
+  }, [wars]);
 
   const activeWars = wars.filter((w) => w.status === WarStatus.PLANNING);
   const archivedWars = wars.filter((w) => w.status === WarStatus.FINISHED);
@@ -217,7 +215,7 @@ export default function WarPlanningDashboard({
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="mapType">Map Type</Label>
-                      <Select name="mapType" defaultValue={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
+                      <Select name="mapType" value={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
                           <SelectTrigger className="bg-slate-900 border-slate-800">
                               <SelectValue placeholder="Select Map Type" />
                           </SelectTrigger>

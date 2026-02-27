@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, X, Bug } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
 export function DebugRosterForm() {
   const [loading, setLoading] = useState(false);
@@ -61,9 +61,8 @@ export function DebugRosterForm() {
         setPreviews([]);
     } catch (err: unknown) {
         console.error(err);
-        if (axios.isAxiosError(err)) {
-            const error = err as AxiosError<{ error: string }>;
-            setStatusMessage("Error: " + (error.response?.data?.error || error.message));
+        if (axios.isAxiosError<{ error: string }>(err)) {
+            setStatusMessage("Error: " + (err.response?.data?.error || err.message));
         } else {
             setStatusMessage("Error: " + (err instanceof Error ? err.message : String(err)));
         }

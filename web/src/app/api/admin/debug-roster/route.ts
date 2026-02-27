@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
         for (const file of files) {
             try {
-                if (!(file instanceof File) && typeof (file as any).arrayBuffer !== 'function') {
+                if (!(file instanceof File) && (!file || typeof (file as { arrayBuffer: unknown }).arrayBuffer !== 'function')) {
                     throw new Error("Invalid file object provided");
                 }
 
@@ -59,10 +59,11 @@ export async function POST(req: NextRequest) {
                 });
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : String(err);
-                logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName: (file as any)?.name || 'unknown' }, "Error processing debug roster image");
+                const fileName = file instanceof File ? file.name : "unknown";
+                logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName }, "Error processing debug roster image");
                 
                 results.push({
-                    fileName: (file as any)?.name || 'unknown',
+                    fileName,
                     debug: "",
                     success: false,
                     error: message

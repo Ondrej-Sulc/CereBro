@@ -26,6 +26,8 @@ import { Suspense } from "react"
 import { buildSearchParams, cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { SortHeader } from "../components/sort-header"
+import { computePaginationWindow } from "@/lib/pagination"
 
 interface AdminPlayersPageProps {
   searchParams: Promise<{
@@ -146,31 +148,6 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
     }
   ]
 
-  const SortHeader = ({ field, label, className }: { field: string, label: string, className?: string }) => {
-    const isActive = sortBy === field
-    const nextOrder = isActive && order === "asc" ? "desc" : "asc"
-    const Icon = !isActive ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown
-
-    return (
-      <TableHead className={cn("p-0", className)}>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          asChild 
-          className={cn(
-            "h-8 w-full justify-start font-bold hover:bg-transparent px-2",
-            isActive && "text-primary"
-          )}
-        >
-          <Link href={buildSearchParams(params, { sortBy: field, order: nextOrder, page: "1" })}>
-            {label}
-            <Icon className="ml-2 h-3 w-3" />
-          </Link>
-        </Button>
-      </TableHead>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
@@ -192,12 +169,12 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader field="ingameName" label="Player Profile" />
+                <SortHeader field="ingameName" label="Player Profile" sortBy={sortBy} order={order} params={params} />
                 <TableHead>Alliance</TableHead>
-                <SortHeader field="summonerPrestige" label="Prestige" />
+                <SortHeader field="summonerPrestige" label="Prestige" sortBy={sortBy} order={order} params={params} />
                 <TableHead>Status/Role</TableHead>
-                <SortHeader field="roster" label="Roster" />
-                <SortHeader field="createdAt" label="Joined" className="text-right" />
+                <SortHeader field="roster" label="Roster" sortBy={sortBy} order={order} params={params} />
+                <SortHeader field="createdAt" label="Joined" className="text-right" sortBy={sortBy} order={order} params={params} />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -289,10 +266,8 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
                   </PaginationItem>
                   
                   {(() => {
-                    const windowSize = Math.min(5, totalPages);
-                    const half = Math.floor(windowSize / 2);
-                    const windowStart = Math.max(1, Math.min(page - half, totalPages - windowSize + 1));
-                    return Array.from({ length: windowSize }, (_, i) => {
+                    const { windowStart, windowEnd } = computePaginationWindow(page, totalPages);
+                    return Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => {
                       const pageNum = windowStart + i;
                       return (
                         <PaginationItem key={pageNum}>

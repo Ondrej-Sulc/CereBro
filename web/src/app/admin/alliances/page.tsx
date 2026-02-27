@@ -26,6 +26,7 @@ import { Prisma } from "@prisma/client"
 import { Suspense } from "react"
 import { buildSearchParams, cn } from "@/lib/utils"
 import { CleanupAlliancesButton } from "./cleanup-button"
+import { computePaginationWindow } from "@/lib/pagination"
 
 interface AdminAlliancesPageProps {
   searchParams: Promise<{
@@ -239,8 +240,7 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
                   </PaginationItem>
                   
                   {(() => {
-                    const windowStart = Math.max(1, Math.min(page - 2, Math.max(1, totalPages - 4)));
-                    const windowEnd = Math.min(totalPages, windowStart + 4);
+                    const { windowStart, windowEnd } = computePaginationWindow(page, totalPages);
                     
                     return Array.from({ length: windowEnd - windowStart + 1 }, (_, i) => {
                       const pageNum = windowStart + i;
