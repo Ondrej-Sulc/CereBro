@@ -31,6 +31,9 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Parse Files
+        const MAX_FILES = 10;
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+        
         const formData = await req.formData();
         const rawFiles = formData.getAll("images");
         const files = rawFiles.filter((f): f is File => f instanceof File);
@@ -39,10 +42,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No images provided" }, { status: 400 });
         }
 
+        if (files.length > MAX_FILES) {
+            return NextResponse.json({ error: `Too many files. Maximum is ${MAX_FILES}.` }, { status: 400 });
+        }
+
         const results: { fileName: string; debug: string; success: boolean; error?: string }[] = [];
 
         for (const file of files) {
             try {
+                if (file.size > MAX_FILE_SIZE) {
+                    throw new Error(`File size exceeds limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+                }
+
                 const buffer = Buffer.from(await file.arrayBuffer());
                 
                 // We use processBGView directly to get the debug image
@@ -56,7 +67,7 @@ export async function POST(req: NextRequest) {
                 });
             } catch (err: unknown) {
                 const message = err instanceof Error ? err.message : String(err);
-                const fileName = file instanceof File ? file.name : "unknown";
+                const fileName = file.name;
                 logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName }, "Error processing debug roster image");
                 
                 results.push({
