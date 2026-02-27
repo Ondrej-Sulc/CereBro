@@ -514,17 +514,20 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
 }) {
     const [isEditing, setIsEditing] = useState(false)
     const [source, setSource] = useState(link.source || "")
+    const [prevSource, setPrevSource] = useState(link.source || "")
     const [synergyOpen, setSynergyOpen] = useState(false)
+
+    // Reset state if link source changes from outside (standard React pattern)
+    const normalizedSource = link.source || ""
+    if (normalizedSource !== prevSource) {
+        setSource(normalizedSource)
+        setPrevSource(normalizedSource)
+    }
 
     const availableChampions = useMemo(() => {
         const existingIds = new Set(link.synergyChampions.map(s => s.champion.id))
         return allChampions.filter(c => !existingIds.has(c.id))
     }, [allChampions, link.synergyChampions])
-
-    // Update local state if prop changes
-    useEffect(() => {
-        setSource(link.source || "")
-    }, [link.source])
 
     if (!isEditing) {
         return (

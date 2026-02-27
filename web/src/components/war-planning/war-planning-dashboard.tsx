@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { War, WarStatus, WarMapType } from "@prisma/client";
 import Link from "next/link";
 import { 
@@ -337,19 +337,22 @@ export default function WarPlanningDashboard({
 }
 
 function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: ExtendedWar; isActive?: boolean; userTimezone?: string | null; isOfficer?: boolean }) {
-  const [dateString, setDateString] = useState<string>("");
   const { toast } = useToast();
   const [isMounted, setIsMounted] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-     setIsMounted(true);
-     const date = new Date(war.createdAt);
-     const formatted = date.toLocaleDateString(undefined, { 
+  const dateString = useMemo(() => {
+    if (!war.createdAt) return "";
+    const date = new Date(war.createdAt);
+    return date.toLocaleDateString(undefined, { 
        timeZone: userTimezone || undefined 
-     });
-     setDateString(formatted);
+    });
   }, [war.createdAt, userTimezone]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const totalDeaths = war.fights?.reduce((sum, fight) => sum + fight.death, 0) || 0;
 
@@ -430,7 +433,7 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: Exte
           </div>
           <div className="flex items-center gap-1.5 text-xs text-slate-500 pl-1">
              <Calendar className="h-3 w-3" />
-             <span>{isMounted ? (dateString || "Loading...") : ""}</span>
+             <span>{isMounted ? dateString : ""}</span>
           </div>
         </div>
       </CardContent>

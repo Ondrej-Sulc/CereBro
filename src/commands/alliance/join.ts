@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction } from "discord.js";
 import { safeReply } from "../../utils/errorHandler";
 import { getPlayer } from "../../utils/playerHelper";
+import { checkAndCleanupAlliance } from "../../services/allianceService.js";
 
 export async function handleAllianceJoin(interaction: ChatInputCommandInteraction) {
   const { prisma } = await import("../../services/prismaService.js");
@@ -17,6 +18,8 @@ export async function handleAllianceJoin(interaction: ChatInputCommandInteractio
     return;
   }
 
+  const oldAllianceId = player.allianceId;
+
   const alliance = await prisma.alliance.upsert({
     where: { guildId: guild.id },
     update: { name: guild.name },
@@ -27,6 +30,11 @@ export async function handleAllianceJoin(interaction: ChatInputCommandInteractio
     where: { id: player.id },
     data: { allianceId: alliance.id },
   });
+
+  // Cleanup old alliance if empty
+  if (oldAllianceId && oldAllianceId !== alliance.id) {
+    await checkAndCleanupAlliance(oldAllianceId);
+  }
 
   await safeReply(interaction, `You have successfully joined the **${alliance.name}** alliance.`);
 }

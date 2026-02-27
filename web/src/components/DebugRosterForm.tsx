@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, X, Bug } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 export function DebugRosterForm() {
   const [loading, setLoading] = useState(false);
@@ -59,9 +59,14 @@ export function DebugRosterForm() {
         setResults(response.data.results);
         setFiles([]);
         setPreviews([]);
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error(err);
-        setStatusMessage("Error: " + (err.response?.data?.error || err.message));
+        if (axios.isAxiosError(err)) {
+            const error = err as AxiosError<{ error: string }>;
+            setStatusMessage("Error: " + (error.response?.data?.error || error.message));
+        } else {
+            setStatusMessage("Error: " + (err instanceof Error ? err.message : String(err)));
+        }
     } finally {
         setLoading(false);
     }

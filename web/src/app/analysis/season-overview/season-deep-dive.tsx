@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Shield, Swords } from "lucide-react";
 import { DeepDiveSidebar } from "./DeepDiveSidebar";
@@ -28,29 +28,38 @@ export function SeasonDeepDive({ placementStats, externalSelection }: SeasonDeep
   const [selectedAttackerId, setSelectedAttackerId] = useState<number | null>(null);
   const [selectedCounterDefenderId, setSelectedCounterDefenderId] = useState<number | null>(null);
 
-  // Sync with external selection
-  useEffect(() => {
-    if (!externalSelection) return;
+  const [prevExternalSelection, setPrevExternalSelection] = useState<DeepDiveSelection | null>(null);
 
-    setActiveTab(externalSelection.tab);
-    if (externalSelection.tab === "defense") {
-      if (externalSelection.subTab === "node") {
+  // Sync with external selection (Standard React 19 pattern with structural check)
+  const isSelectionChanged = externalSelection && (
+    !prevExternalSelection || 
+    externalSelection.id !== prevExternalSelection.id || 
+    externalSelection.tab !== prevExternalSelection.tab || 
+    externalSelection.subTab !== prevExternalSelection.subTab
+  );
+
+  if (isSelectionChanged) {
+    setPrevExternalSelection(externalSelection);
+    
+    setActiveTab(externalSelection!.tab);
+    if (externalSelection!.tab === "defense") {
+      if (externalSelection!.subTab === "node") {
         setActiveDefenseSubTab("node");
-        setSelectedNode(externalSelection.id);
-      } else if (externalSelection.subTab === "defender") {
+        setSelectedNode(externalSelection!.id);
+      } else if (externalSelection!.subTab === "defender") {
         setActiveDefenseSubTab("defender");
-        setSelectedDefenderId(externalSelection.id);
+        setSelectedDefenderId(externalSelection!.id);
       }
     } else {
-      if (externalSelection.subTab === "attacker") {
+      if (externalSelection!.subTab === "attacker") {
         setActiveMatchupSubTab("attacker");
-        setSelectedAttackerId(externalSelection.id);
-      } else if (externalSelection.subTab === "counter") {
+        setSelectedAttackerId(externalSelection!.id);
+      } else if (externalSelection!.subTab === "counter") {
         setActiveMatchupSubTab("counter");
-        setSelectedCounterDefenderId(externalSelection.id);
+        setSelectedCounterDefenderId(externalSelection!.id);
       }
     }
-  }, [externalSelection]);
+  }
 
   // Unique Entities for Sidebar
   const uniqueNodes = useMemo(() => {

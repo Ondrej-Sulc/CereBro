@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No images provided" }, { status: 400 });
         }
 
-        const results: { original: string; debug: string }[] = [];
+        const results: { fileName: string; debug: string; success: boolean; error?: string }[] = [];
 
         for (const file of files) {
             const buffer = Buffer.from(await file.arrayBuffer());
@@ -47,30 +47,30 @@ export async function POST(req: NextRequest) {
                 // We use processBGView directly to get the debug image
                 const { debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
                 
-                if (debugImage) {
-                    results.push({
-                        original: file.name,
-                        debug: debugImage.toString('base64')
-                    });
-                } else {
-                    // Fallback if no debug image returned (shouldn't happen with debugMode: true)
-                    results.push({
-                        original: file.name,
-                        debug: "" // Empty string or placeholder
-                    });
-                }
-            } catch (err: any) {
-                logger.error({ error: err, fileName: file.name }, "Error processing debug roster image");
-                // Return error image or message?
-                // For now, skip or push error
-                continue;
+                results.push({
+                    fileName: file.name,
+                    debug: debugImage ? debugImage.toString('base64') : "",
+                    success: !!debugImage,
+                    error: debugImage ? undefined : "No debug image generated"
+                });
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : String(err);
+                logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName: file.name }, "Error processing debug roster image");
+                
+                results.push({
+                    fileName: file.name,
+                    debug: "",
+                    success: false,
+                    error: message
+                });
             }
         }
 
         return NextResponse.json({ results });
 
-    } catch (error: any) {
-        logger.error({ error }, "Error in debug roster route");
-        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error({ error: err }, "Error in debug roster route");
+        return NextResponse.json({ error: err.message || "Internal Server Error" }, { status: 500 });
     }
 }
