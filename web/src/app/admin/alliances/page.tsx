@@ -39,6 +39,40 @@ interface AdminAlliancesPageProps {
   }>
 }
 
+interface SortHeaderProps {
+  field: string
+  label: string
+  sortBy: string
+  order: string
+  params: any
+  className?: string
+}
+
+const SortHeader = ({ field, label, sortBy, order, params, className }: SortHeaderProps) => {
+  const isActive = sortBy === field
+  const nextOrder = isActive && order === "asc" ? "desc" : "asc"
+  const Icon = !isActive ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown
+
+  return (
+    <TableHead className={cn("p-0", className)}>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        asChild 
+        className={cn(
+          "h-8 w-full justify-start font-bold hover:bg-transparent px-2",
+          isActive && "text-primary"
+        )}
+      >
+        <Link href={buildSearchParams(params, { sortBy: field, order: nextOrder, page: "1" })}>
+          {label}
+          <Icon className="ml-2 h-3 w-3" />
+        </Link>
+      </Button>
+    </TableHead>
+  )
+}
+
 export default async function AdminAlliancesPage({ searchParams }: AdminAlliancesPageProps) {
   const params = await searchParams
   const query = params.query || ""
@@ -117,31 +151,6 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
     }
   ]
 
-  const SortHeader = ({ field, label, className }: { field: string, label: string, className?: string }) => {
-    const isActive = sortBy === field
-    const nextOrder = isActive && order === "asc" ? "desc" : "asc"
-    const Icon = !isActive ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown
-
-    return (
-      <TableHead className={cn("p-0", className)}>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          asChild 
-          className={cn(
-            "h-8 w-full justify-start font-bold hover:bg-transparent px-2",
-            isActive && "text-primary"
-          )}
-        >
-          <Link href={buildSearchParams(params, { sortBy: field, order: nextOrder, page: "1" })}>
-            {label}
-            <Icon className="ml-2 h-3 w-3" />
-          </Link>
-        </Button>
-      </TableHead>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
@@ -166,11 +175,11 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader field="name" label="Name" />
-                <SortHeader field="members" label="Members" className="text-right" />
+                <SortHeader field="name" label="Name" sortBy={sortBy} order={order} params={params} />
+                <SortHeader field="members" label="Members" className="text-right" sortBy={sortBy} order={order} params={params} />
                 <TableHead>AQ Reminders</TableHead>
                 <TableHead>Features</TableHead>
-                <SortHeader field="createdAt" label="Created" />
+                <SortHeader field="createdAt" label="Created" sortBy={sortBy} order={order} params={params} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -278,4 +287,3 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
     </div>
   )
 }
-
