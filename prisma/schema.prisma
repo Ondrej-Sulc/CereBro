@@ -728,9 +728,9 @@ model WarNodeAllocation {
   nodeModifierId String
   nodeModifier   NodeModifier @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
 
-  minTier Int?
-  maxTier Int?
-  season  Int?
+  minTier Int        @default(0)
+  maxTier Int        @default(0)
+  season  Int        @default(0)
   mapType WarMapType @default(STANDARD)
 
   @@unique([warNodeId, nodeModifierId, minTier, maxTier, season, mapType])

@@ -23,7 +23,6 @@ import {
 import { updateWarDetails, updateWarStatus } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
 import { WarStatus } from "@prisma/client";
-import logger from "@/lib/logger";
 
 interface CloseWarDialogProps {
   war: War;
@@ -45,13 +44,15 @@ export function CloseWarDialog({
       enemyDeaths: war.enemyDeaths || 0
   });
 
-  // Re-sync data when war changes
+  // Re-sync data when war changes or dialog opens
   useEffect(() => {
-    setData({
-        result: war.result || WarResult.UNKNOWN,
-        enemyDeaths: war.enemyDeaths || 0
-    });
-  }, [war.id, war.result, war.enemyDeaths]);
+    if (open) {
+        setData({
+            result: war.result || WarResult.UNKNOWN,
+            enemyDeaths: war.enemyDeaths || 0
+        });
+    }
+  }, [war.id, war.result, war.enemyDeaths, open]);
 
   const handleCloseWar = async () => {
       setIsUpdating(true);
@@ -85,12 +86,12 @@ export function CloseWarDialog({
               try {
                   await updateWarDetails(war.id, priorDetails);
               } catch (rollbackError) {
-                  logger.error({ rollbackError, warId: war.id, priorDetails }, "Failed to rollback war details after status update failure");
+                  console.error("Failed to rollback war details after status update failure:", { rollbackError, warId: war.id, priorDetails });
               }
               throw statusError;
           }
       } catch (error) {
-          logger.error({ error }, "Failed to close war");
+          console.error("Failed to close war:", error);
           toast({ title: "Update Failed", description: "Could not close war. Please try again.", variant: "destructive" });
       } finally {
           setIsUpdating(false);

@@ -13,9 +13,17 @@ import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } 
 import { Badge } from "@/components/ui/badge";
 import { GridCell } from "@/services/roster/types";
 
+interface DebugRosterApiItem {
+  fileName: string;
+  debug: string;
+  success: boolean;
+  error?: string;
+  grid?: GridCell[];
+}
+
 export function DebugRosterForm() {
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<{ fileName: string; debug: string; grid: GridCell[]; success: boolean; error?: string }[]>([]);
+  const [results, setResults] = useState<DebugRosterApiItem[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
@@ -94,12 +102,12 @@ export function DebugRosterForm() {
     });
 
     try {
-        const response = await axios.post("/api/admin/debug-roster", formData);
+        const response = await axios.post<{ results: DebugRosterApiItem[] }>("/api/admin/debug-roster", formData);
         setResults(response.data.results);
         setFiles([]);
         setPreviews([]);
     } catch (err: unknown) {
-        logger.error({ err }, "Failed to process debug roster");
+        console.error("Failed to process debug roster:", err);
         if (axios.isAxiosError<{ error: string }>(err)) {
             setStatusMessage("Error: " + (err.response?.data?.error || err.message));
         } else {

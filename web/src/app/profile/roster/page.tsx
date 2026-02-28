@@ -74,15 +74,34 @@ export default async function RosterPage(props: {
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : 0; // 0 lets the client/api decide default
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
 
+  // Safely map and type-cast the roster entries to ensure JsonValue fields match our local interfaces
+  const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
+    ...entry,
+    champion: {
+      ...entry.champion,
+      images: entry.champion.images as unknown as ChampionImages,
+      abilities: entry.champion.abilities.map(link => ({
+        ...link,
+        synergyChampions: link.synergyChampions.map(synergy => ({
+          ...synergy,
+          champion: {
+            ...synergy.champion,
+            images: synergy.champion.images as unknown as ChampionImages
+          }
+        }))
+      }))
+    }
+  }));
+
   // Determine default target rank if not set
   let effectiveTargetRank = targetRank;
   if (effectiveTargetRank === 0) {
-      const highest7StarRank = rosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
+      const highest7StarRank = typedRosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
       effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
   }
 
   const { prestigeMap, recommendations, sigRecommendations, top30Average } = await calculateRosterRecommendations(
-    rosterEntries as ProfileRosterEntry[],
+    typedRosterEntries,
     {
       targetRank: effectiveTargetRank,
       sigBudget,
@@ -96,7 +115,7 @@ export default async function RosterPage(props: {
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView 
-        initialRoster={rosterEntries as ProfileRosterEntry[]} 
+        initialRoster={typedRosterEntries} 
         allChampions={allChampions}
         top30Average={top30Average || player.championPrestige || 0}
         prestigeMap={prestigeMap}

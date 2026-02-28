@@ -17,7 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useMemo } from "react";
-import logger from "@/lib/logger";
 
 const MCOC_TIER_PRESETS = [
     { name: "Elite (Tier 1)", min: 1, max: 1 },
@@ -77,7 +76,10 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
         selectedNode.allocations
             .filter(a => a.mapType === mapType)
             .forEach(alloc => {
-                const key = `${alloc.minTier ?? 'any'}-${alloc.maxTier ?? 'any'}-${alloc.season ?? 'any'}`;
+                const min = alloc.minTier === 0 ? 'any' : alloc.minTier;
+                const max = alloc.maxTier === 0 ? 'any' : alloc.maxTier;
+                const s = alloc.season === 0 ? 'any' : alloc.season;
+                const key = `${min}-${max}-${s}`;
                 if (!groups[key]) groups[key] = [];
                 groups[key].push(alloc);
             });
@@ -186,7 +188,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setModifierSearch("");
         } catch (error: unknown) {
             const err = error as Error;
-            logger.error({ err }, "Failed to add allocation");
+            console.error({ err }, "Failed to add allocation");
             toast({
                 title: "Failed to Add Modifier",
                 description: err.message || "Please check the console for details.",
@@ -221,7 +223,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setSelectedPreset("custom");
         } catch (error: unknown) {
             const err = error as Error;
-            logger.error({ err }, "Failed to update allocation");
+            console.error({ err }, "Failed to update allocation");
             toast({
                 title: "Failed to Update Modifier",
                 description: err.message || "Please check the console for details.",
@@ -251,7 +253,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setCopySource(null);
         } catch (error: unknown) {
             const err = error as Error;
-            logger.error({ err }, "Failed to copy allocations");
+            console.error({ err }, "Failed to copy allocations");
             toast({
                 title: "Failed to Copy Modifiers",
                 description: err.message || "Please check the console for details.",
@@ -278,7 +280,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setMassCopyDialogOpen(false);
         } catch (error: unknown) {
             const err = error as Error;
-            logger.error({ err }, "Failed to mass copy allocations");
+            console.error({ err }, "Failed to mass copy allocations");
             toast({
                 title: "Failed Mass Copy",
                 description: err.message || "Please check the console for details.",
@@ -300,7 +302,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             }
         } catch (error: unknown) {
             const err = error as Error;
-            logger.error({ err }, "Failed to remove allocation");
+            console.error({ err }, "Failed to remove allocation");
             toast({
                 title: "Failed to Remove Modifier",
                 description: err.message || "Please check the console for details.",
@@ -397,11 +399,11 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                                                     <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                                                         <div className="flex items-center gap-3">
                                                             <Badge variant="secondary" className="bg-sky-950 text-sky-400 border-sky-900">
-                                                                {group.minTier && group.maxTier 
+                                                                {group.minTier !== 0 && group.maxTier !== 0
                                                                     ? (group.minTier === group.maxTier ? `Tier ${group.minTier}` : `Tiers ${group.minTier}-${group.maxTier}`)
                                                                     : "All Tiers"}
                                                             </Badge>
-                                                            {group.season && (
+                                                            {group.season !== 0 && (
                                                                 <Badge variant="outline">Season {group.season}</Badge>
                                                             )}
                                                         </div>

@@ -156,8 +156,6 @@ export function RosterView({
       fetchData();
   }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, initialPrestigeMap]);
 
-
-
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);
       Object.entries(updates).forEach(([key, value]) => { if (value) params.set(key, value); else params.delete(key); });

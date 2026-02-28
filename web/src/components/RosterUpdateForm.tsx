@@ -25,7 +25,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VirtuosoGrid } from "react-virtuoso";
 import axios from "axios";
 import Link from "next/link";
-import logger from "@/lib/logger";
 
 // Define local types matching what the API returns
 interface ChampionData {
@@ -116,7 +115,7 @@ const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion }) => {
                   {item.champion.championClass}
               </span>
               <span className="text-[10px] font-mono font-medium text-slate-400">
-                  {item.powerRating ? item.powerRating.toLocaleString() : '---'}
+                  {item.powerRating !== null && item.powerRating !== undefined ? item.powerRating.toLocaleString() : '---'}
               </span>
           </div>
       </div>
@@ -298,7 +297,7 @@ export function RosterUpdateForm() {
         } else if (err instanceof Error) {
             errorMessage = err.message;
         }
-        logger.error({ err }, "Failed to update roster");
+        console.error("Failed to update roster:", err);
         setResult({
             success: 0,
             added: [],
