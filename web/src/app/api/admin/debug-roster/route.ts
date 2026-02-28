@@ -49,11 +49,17 @@ export async function POST(req: NextRequest) {
         const results: { fileName: string; debug: string; success: boolean; error?: string }[] = [];
 
         for (const file of files) {
-            try {
-                if (file.size > MAX_FILE_SIZE) {
-                    throw new Error(`File size exceeds limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
-                }
+            if (file.size > MAX_FILE_SIZE) {
+                results.push({
+                    fileName: file.name,
+                    debug: "",
+                    success: false,
+                    error: `File size exceeds limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+                });
+                continue;
+            }
 
+            try {
                 const buffer = Buffer.from(await file.arrayBuffer());
                 
                 // We use processBGView directly to get the debug image
@@ -84,6 +90,6 @@ export async function POST(req: NextRequest) {
     } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
         logger.error({ error: err }, "Error in debug roster route");
-        return NextResponse.json({ error: err.message || "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
