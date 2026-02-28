@@ -44,21 +44,46 @@ export function CloseWarDialog({
       enemyDeaths: war.enemyDeaths || 0
   });
 
+  // Re-sync data when war changes
+  useEffect(() => {
+    setData({
+        result: war.result || WarResult.UNKNOWN,
+        enemyDeaths: war.enemyDeaths || 0
+    });
+  }, [war.id, war.result, war.enemyDeaths]);
+
   const handleCloseWar = async () => {
       setIsUpdating(true);
+      
+      // Store prior details for potential rollback if atomic action is not available
+      const priorDetails = {
+          result: war.result || WarResult.UNKNOWN,
+          enemyDeaths: war.enemyDeaths || 0
+      };
+
       try {
           // 1. Update Details (Result & Deaths)
+          const enemyDeaths = typeof data.enemyDeaths === 'string' 
+              ? parseInt(data.enemyDeaths, 10) || 0 
+              : data.enemyDeaths;
+
           await updateWarDetails(war.id, {
               result: data.result,
-              enemyDeaths: typeof data.enemyDeaths === 'string' ? parseInt(data.enemyDeaths) || 0 : data.enemyDeaths
+              enemyDeaths
           });
 
-          // 2. Update Status to FINISHED
-          await updateWarStatus(war.id, WarStatus.FINISHED);
+          try {
+              // 2. Update Status to FINISHED
+              await updateWarStatus(war.id, WarStatus.FINISHED);
 
-          toast({ title: "War Finished", description: "War has been closed and results recorded." });
-          onOpenChange(false);
-          if (onSuccess) onSuccess();
+              toast({ title: "War Finished", description: "War has been closed and results recorded." });
+              onOpenChange(false);
+              if (onSuccess) onSuccess();
+          } catch (statusError) {
+              // Rollback details update if status update fails to avoid partial persistence
+              await updateWarDetails(war.id, priorDetails);
+              throw statusError;
+          }
       } catch (error) {
           console.error("Failed to close war:", error);
           toast({ title: "Update Failed", description: "Could not close war. Please try again.", variant: "destructive" });
@@ -97,7 +122,10 @@ export function CloseWarDialog({
                         id="close-enemyDeaths"
                         type="number"
                         value={data.enemyDeaths}
-                        onChange={(e) => setData({ ...data, enemyDeaths: e.target.value === "" ? 0 : parseInt(e.target.value) })}
+                        onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setData({ ...data, enemyDeaths: isNaN(val) ? 0 : val });
+                        }}
                         onFocus={(e) => e.target.select()}
                         className="bg-slate-900 border-slate-800 h-11 no-spin-buttons text-lg"
                         placeholder="0"

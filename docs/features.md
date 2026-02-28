@@ -130,12 +130,13 @@ A secure, web-based suite for managing core game data and system-wide alliance/p
 *   **Directory Management:**
     *   **Alliances:** Searchable, sortable, and paginated directory of all registered Discord servers.
     *   **Players:** Comprehensive directory of all MCOC profiles with granular status and role indicators (Admin, Officer, Trusted).
-- **Alliance Maintenance:**
+*   **Alliance Maintenance:**
     *   **Automated Cleanup:** Background service `checkAndCleanupAlliance` automatically prunes "orphan" alliances (0 members) to prevent database bloat.
     *   **Manual Pruning:** Admin-only "Cleanup Orphans" tool for bulk removal of abandoned registrations.
     *   **Infrastructure Protection:** The `GLOBAL` mercenary alliance is exempt from all cleanup routines to support solo uploads and guest player infrastructure.
-- **System Debugging:**
-    *   **Roster Debugger:** API-driven tool for troubleshooting OCR processing. Allows admins to upload screenshots and view the raw attribute extraction and debug images in real-time with strict resource limits (Max 10 files, 10MB per file).
+*   **System Debugging:**
+    *   **Roster Debugger:** API-driven tool for troubleshooting OCR processing.
+        Allows admins to upload screenshots and view the raw attribute extraction results and debug images in real-time with strict resource limits (max 10 files, 10 MB per file).
 
 *   **Champion Management:**
     *   **Visual Grid:** Compact, high-density grid view of all champions with Class Filters and real-time search.

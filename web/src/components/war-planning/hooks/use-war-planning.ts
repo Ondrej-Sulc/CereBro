@@ -282,10 +282,17 @@ export function useWarPlanning({
     }
   }, [status, warId, updateWarStatus, router, war.result, war.enemyDeaths]);
 
-  const handleCloseSuccess = useCallback(() => {
+  const handleCloseSuccess = useCallback(async () => {
+    try {
+      await updateWarStatus(warId, 'FINISHED');
       setStatus('FINISHED');
       router.refresh();
-  }, [router]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Failed to persist war status in handleCloseSuccess:", err);
+      setFightsError(message || "Failed to persist closed status. Please refresh.");
+    }
+  }, [warId, updateWarStatus, router]);
 
   const handleNodeClick = useCallback((nodeId: number) => {
     setSelectedNodeId(nodeId);

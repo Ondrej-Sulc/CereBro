@@ -48,7 +48,7 @@ We strictly adhere to React 19's asynchronous parameter and state management rul
 
 ## API Hardening & Resilience
 *   **Resource Limits:** File-based APIs (e.g., `/api/admin/debug-roster`) enforce strict upload bounds (MAX_FILES=10, MAX_FILE_SIZE=10MB) and per-file validation to ensure system availability.
-- **Concurrent Interaction:** Web filters use a mutable `pendingParamsRef` pattern to correctly merge rapid, concurrent search and filter updates into a single URL state push during the debounce window.
+*   **Concurrent Interaction:** Web filters use a mutable `pendingParamsRef` pattern to correctly merge rapid, concurrent search and filter updates into a single URL state push during the debounce window.
 
 ## Database Integrity & Maintenance
 *   **Cascading Deletes:** Alliances use `onDelete: Cascade` in Prisma for linked records (Wars, etc.) to support safe, automated cleanup of abandoned server registrations.

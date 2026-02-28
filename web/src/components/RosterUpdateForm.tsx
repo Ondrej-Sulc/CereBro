@@ -30,7 +30,7 @@ import Link from "next/link";
 interface ChampionData {
     id: number;
     name: string;
-    class: string;
+    championClass: string;
     images: ChampionImages;
 }
 
@@ -102,6 +102,9 @@ const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion }) => {
 
           {/* Line 3: Class & Rating */}
           <div className="flex items-center justify-between gap-1 mt-0.5">
+              <span className="text-[10px] font-semibold text-slate-500 uppercase">
+                  {item.champion.championClass}
+              </span>
               <span className="text-[10px] font-mono font-medium text-slate-400">
                   {item.powerRating ? item.powerRating.toLocaleString() : '---'}
               </span>
@@ -262,7 +265,13 @@ export function RosterUpdateForm() {
       
         setResult({
             success: data.count,
-            added: data.added || [],
+            added: (data.added || []).map((item: any) => ({
+                ...item,
+                champion: {
+                    ...item.champion,
+                    championClass: item.champion.class
+                }
+            })),
             errors: data.errors || [],
         });
       
@@ -521,11 +530,11 @@ export function RosterUpdateForm() {
                                 <Check className="w-5 h-5" />
                                 Updated {result.success} Champions
                             </CardTitle>
-                            <Link href="/profile/roster">
-                                <Button variant="outline" size="sm" className="bg-green-950/20 border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white transition-all">
+                            <Button asChild variant="outline" size="sm" className="bg-green-950/20 border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white transition-all">
+                                <Link href="/profile/roster">
                                     View Full Roster
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         </CardHeader>
                         <CardContent className="p-4">
                             <VirtuosoGrid 

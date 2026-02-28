@@ -235,10 +235,10 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
         try {
             await copyAllocations(
                 selectedNode.id,
-                copySource.min ?? 0, // 0 usually means null in terms of the function expecting numbers
-                copySource.max ?? 0,
-                copyTargetMin ? parseInt(copyTargetMin) : 0,
-                copyTargetMax ? parseInt(copyTargetMax) : 0,
+                copySource.min ?? null,
+                copySource.max ?? null,
+                copyTargetMin ? parseInt(copyTargetMin, 10) : null,
+                copyTargetMax ? parseInt(copyTargetMax, 10) : null,
                 mapType
             );
             
@@ -262,10 +262,10 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
     const handleMassCopyAllocations = async () => {
         try {
             await massCopyAllocations(
-                massCopySourceMin ? parseInt(massCopySourceMin) : 0,
-                massCopySourceMax ? parseInt(massCopySourceMax) : 0,
-                massCopyTargetMin ? parseInt(massCopyTargetMin) : 0,
-                massCopyTargetMax ? parseInt(massCopyTargetMax) : 0,
+                massCopySourceMin ? parseInt(massCopySourceMin, 10) : null,
+                massCopySourceMax ? parseInt(massCopySourceMax, 10) : null,
+                massCopyTargetMin ? parseInt(massCopyTargetMin, 10) : null,
+                massCopyTargetMax ? parseInt(massCopyTargetMax, 10) : null,
                 mapType
             );
             
