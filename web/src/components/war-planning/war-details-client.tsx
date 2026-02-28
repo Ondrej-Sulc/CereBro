@@ -11,6 +11,7 @@ import { WarTabs } from "./details/war-tabs";
 import { DesktopSidebar } from "./details/desktop-sidebar";
 import { PlayerListPanel } from "./details/player-list-panel";
 import { MobileSheet } from "./details/mobile-sheet";
+import { CloseWarDialog } from "./close-war-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { distributePlan } from "@/app/planning/actions";
 import { PlayerColorProvider } from "./player-color-context";
@@ -48,6 +49,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     extraChampions, 
     status,
     isUpdatingStatus,
+    isCloseDialogOpen,
+    setIsCloseDialogOpen,
     loadingFights,
     activeTactic,
     historyFilters,
@@ -60,6 +63,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
 
     // Handlers
     handleToggleStatus,
+    handleCloseSuccess,
     handleNodeClick,
     handleNavigateNode,
     handleEditorClose,
@@ -156,6 +160,14 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-65px)]",
           isDesktop ? "flex-row" : "flex-col"
       )}>
+        {/* Close War Dialog */}
+        <CloseWarDialog 
+          war={props.war}
+          open={isCloseDialogOpen}
+          onOpenChange={setIsCloseDialogOpen}
+          onSuccess={handleCloseSuccess}
+        />
+
         {/* Left Panel (Player Roster) - Desktop Only for now */}
         <PlayerListPanel 
           isOpen={isPlayerPanelOpen}

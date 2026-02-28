@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
+import { War, WarFight, WarStatus, WarResult, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, type ExtraChampion } from "@/app/planning/actions";
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
+
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
 export type { ExtraChampion };
@@ -82,6 +83,7 @@ export function useWarPlanning({
   const [warBans, setWarBans] = useState<WarBanWithChampion[]>(initialWarBans);
   const [status, setStatus] = useState<WarStatus>(war.status);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
@@ -118,7 +120,7 @@ export function useWarPlanning({
                 setNodesMap(map);
             }
         } catch (e) {
-            console.error("Failed to fetch node data", e);
+            console.error({ err: e }, "Failed to fetch node data");
         }
     }
     fetchNodes();
@@ -156,7 +158,7 @@ export function useWarPlanning({
         setExtraChampions(extrasData);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        console.error("Failed to fetch war data:", err);
+        console.error({ err }, "Failed to fetch war data");
         setFightsError(message || "Failed to load war data.");
       } finally {
         setLoadingFights(false);
@@ -219,7 +221,7 @@ export function useWarPlanning({
             });
 
         } catch (error) {
-            console.error("Polling failed", error);
+            console.error({ err: error }, "Polling failed in useWarPlanning");
         }
     }, 5000);
 
@@ -260,6 +262,12 @@ export function useWarPlanning({
 
   // Handlers
   const handleToggleStatus = useCallback(async () => {
+    // Check if moving to FINISHED and result is not set
+    if (status === 'PLANNING' && (war.result === 'UNKNOWN' || war.enemyDeaths === null)) {
+        setIsCloseDialogOpen(true);
+        return;
+    }
+
     try {
       setIsUpdatingStatus(true);
       const newStatus = status === 'PLANNING' ? 'FINISHED' : 'PLANNING';
@@ -273,7 +281,13 @@ export function useWarPlanning({
     } finally {
       setIsUpdatingStatus(false);
     }
-  }, [status, warId, updateWarStatus, router]);
+  }, [status, warId, updateWarStatus, router, war.result, war.enemyDeaths]);
+
+  const handleCloseSuccess = useCallback(() => {
+    // CloseWarDialog already updated the server state; synchronize locally
+    setStatus('FINISHED');
+    router.refresh();
+  }, [router]);
 
   const handleNodeClick = useCallback((nodeId: number) => {
     setSelectedNodeId(nodeId);
@@ -335,7 +349,7 @@ export function useWarPlanning({
       setExtraChampions((prev: ExtraChampion[]) => prev.map((x: ExtraChampion) => x.id === tempId ? { ...x, id: created.id } : x));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to add extra champion", err);
+      console.error({ err }, "Failed to add extra champion");
       setExtraChampions((prev: ExtraChampion[]) => prev.filter((x: ExtraChampion) => x.id !== tempId));
       setFightsError(message || "Failed to add extra champion.");
     }
@@ -351,7 +365,7 @@ export function useWarPlanning({
       await removeExtraChampion(extraId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to remove extra champion", err);
+      console.error({ err }, "Failed to remove extra champion");
       setExtraChampions((prev: ExtraChampion[]) => [...prev, toRemove]);
       setFightsError(message || "Failed to remove extra champion.");
     }
@@ -378,7 +392,7 @@ export function useWarPlanning({
       setWarBans((prev: WarBanWithChampion[]) => prev.map((x: WarBanWithChampion) => x.id === tempId ? { ...x, id: created.id } : x));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to add war ban", err);
+      console.error({ err }, "Failed to add war ban");
       setWarBans((prev: WarBanWithChampion[]) => prev.filter((x: WarBanWithChampion) => x.id !== tempId));
       setFightsError(message || "Failed to add war ban.");
     }
@@ -394,7 +408,7 @@ export function useWarPlanning({
       await removeWarBan(banId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to remove war ban", err);
+      console.error({ err }, "Failed to remove war ban");
       setWarBans((prev: WarBanWithChampion[]) => [...prev, toRemove]);
       setFightsError(message || "Failed to remove war ban.");
     }
@@ -510,7 +524,7 @@ export function useWarPlanning({
       await updateWarFight(updatedFight);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to save fight:", err);
+      console.error({ err }, "Failed to save fight");
       // Rollback
       setCurrentFights(previousFights);
       setFightsError(message || "Failed to save changes. Please try again.");
@@ -546,6 +560,8 @@ export function useWarPlanning({
     extraChampions,
     status,
     isUpdatingStatus,
+    isCloseDialogOpen,
+    setIsCloseDialogOpen,
     loadingFights,
     fightsError,
     activeTactic,
@@ -561,6 +577,7 @@ export function useWarPlanning({
 
     // Handlers
     handleToggleStatus,
+    handleCloseSuccess,
     handleNodeClick,
     handleNavigateNode,
     handleEditorClose,

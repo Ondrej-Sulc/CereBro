@@ -26,9 +26,9 @@ export async function searchModifiers(query: string) {
 export async function addAllocation(
     warNodeId: number, 
     nodeModifierId: string, 
-    minTier?: number, 
-    maxTier?: number, 
-    season?: number,
+    minTier: number = 0, 
+    maxTier: number = 0, 
+    season: number = 0,
     mapType: WarMapType = WarMapType.STANDARD
 ) {
     await requireBotAdmin();
@@ -45,6 +45,108 @@ export async function addAllocation(
     });
 
     revalidatePath("/admin/nodes");
+}
+
+export async function updateAllocation(
+    allocationId: string,
+    data: {
+        nodeModifierId?: string;
+        minTier?: number;
+        maxTier?: number;
+        season?: number;
+        mapType?: WarMapType;
+    }
+) {
+    await requireBotAdmin();
+
+    await prisma.warNodeAllocation.update({
+        where: { id: allocationId },
+        data
+    });
+
+    revalidatePath("/admin/nodes");
+}
+
+export async function copyAllocations(
+    warNodeId: number,
+    sourceMinTier: number | null,
+    sourceMaxTier: number | null,
+    targetMinTier: number | null,
+    targetMaxTier: number | null,
+    mapType: WarMapType
+) {
+    await requireBotAdmin();
+
+    const sourceAllocations = await prisma.warNodeAllocation.findMany({
+        where: {
+            warNodeId,
+            minTier: sourceMinTier ?? 0,
+            maxTier: sourceMaxTier ?? 0,
+            mapType
+        }
+    });
+
+    if (sourceAllocations.length === 0) {
+        return { count: 0, totalFound: 0 };
+    }
+
+    // Create new allocations for target tiers
+    const newAllocations = sourceAllocations.map(alloc => ({
+        warNodeId,
+        nodeModifierId: alloc.nodeModifierId,
+        minTier: targetMinTier ?? 0,
+        maxTier: targetMaxTier ?? 0,
+        season: alloc.season || 0,
+        mapType
+    }));
+
+    const result = await prisma.warNodeAllocation.createMany({
+        data: newAllocations,
+        skipDuplicates: true
+    });
+
+    revalidatePath("/admin/nodes");
+    return { count: result.count, totalFound: sourceAllocations.length };
+}
+
+export async function massCopyAllocations(
+    sourceMinTier: number | null,
+    sourceMaxTier: number | null,
+    targetMinTier: number | null,
+    targetMaxTier: number | null,
+    mapType: WarMapType
+) {
+    await requireBotAdmin();
+
+    const sourceAllocations = await prisma.warNodeAllocation.findMany({
+        where: {
+            minTier: sourceMinTier ?? 0,
+            maxTier: sourceMaxTier ?? 0,
+            mapType
+        }
+    });
+
+    if (sourceAllocations.length === 0) {
+        return { count: 0, totalFound: 0 };
+    }
+
+    // Create new allocations for target tiers for all nodes
+    const newAllocations = sourceAllocations.map(alloc => ({
+        warNodeId: alloc.warNodeId,
+        nodeModifierId: alloc.nodeModifierId,
+        minTier: targetMinTier ?? 0,
+        maxTier: targetMaxTier ?? 0,
+        season: alloc.season || 0,
+        mapType
+    }));
+
+    const result = await prisma.warNodeAllocation.createMany({
+        data: newAllocations,
+        skipDuplicates: true
+    });
+
+    revalidatePath("/admin/nodes");
+    return { count: result.count, totalFound: sourceAllocations.length };
 }
 
 export async function removeAllocation(allocationId: string) {

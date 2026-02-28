@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition } from "react";
+import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition, useRef } from "react";
 import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -68,7 +68,8 @@ export function RosterView({
   const [recommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
   const [sigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
   const [top30Average, setTop30Average] = useState(initialTop30Average);
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(true);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(Object.keys(initialPrestigeMap).length === 0);
+  const lastFetchedParams = useRef<string | null>(null);
 
   // Filter States
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
@@ -113,19 +114,28 @@ export function RosterView({
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
+      const params = new URLSearchParams();
+      if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
+      if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
+      if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
+      if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
+      if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
+      if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
+      
+      const currentParams = params.toString();
+      if (lastFetchedParams.current === currentParams) return;
+
+      // Skip initial fetch if we already have data from server
+      if (lastFetchedParams.current === null && Object.keys(initialPrestigeMap).length > 0) {
+          lastFetchedParams.current = currentParams;
+          return;
+      }
+
       const fetchData = async () => {
           setIsLoadingRecommendations(true);
           setPendingSection('all');
           try {
-              const params = new URLSearchParams();
-              if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
-              if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
-              if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
-              if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
-              if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
-              if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
-
-              const res = await fetch(`/api/profile/roster/recommendations?${params.toString()}`);
+              const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`);
               if (!res.ok) throw new Error("Failed to load recommendations");
               
               const data = await res.json();
@@ -133,6 +143,7 @@ export function RosterView({
               setRecommendations(data.recommendations);
               setSigRecommendations(data.sigRecommendations);
               setTop30Average(data.top30Average);
+              lastFetchedParams.current = currentParams;
           } catch (error) {
               console.error(error);
               toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
@@ -143,7 +154,7 @@ export function RosterView({
       };
       
       fetchData();
-  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast]);
+  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, initialPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);
