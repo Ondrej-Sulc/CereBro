@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useMemo } from "react";
+import logger from "@/lib/logger";
 
 const MCOC_TIER_PRESETS = [
     { name: "Elite (Tier 1)", min: 1, max: 1 },
@@ -185,7 +186,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setModifierSearch("");
         } catch (error: unknown) {
             const err = error as Error;
-            console.error("Failed to add allocation:", err);
+            logger.error({ err }, "Failed to add allocation");
             toast({
                 title: "Failed to Add Modifier",
                 description: err.message || "Please check the console for details.",
@@ -220,7 +221,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setSelectedPreset("custom");
         } catch (error: unknown) {
             const err = error as Error;
-            console.error("Failed to update allocation:", err);
+            logger.error({ err }, "Failed to update allocation");
             toast({
                 title: "Failed to Update Modifier",
                 description: err.message || "Please check the console for details.",
@@ -250,7 +251,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setCopySource(null);
         } catch (error: unknown) {
             const err = error as Error;
-            console.error("Failed to copy allocations:", err);
+            logger.error({ err }, "Failed to copy allocations");
             toast({
                 title: "Failed to Copy Modifiers",
                 description: err.message || "Please check the console for details.",
@@ -277,7 +278,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             setMassCopyDialogOpen(false);
         } catch (error: unknown) {
             const err = error as Error;
-            console.error("Failed to mass copy allocations:", err);
+            logger.error({ err }, "Failed to mass copy allocations");
             toast({
                 title: "Failed Mass Copy",
                 description: err.message || "Please check the console for details.",
@@ -299,7 +300,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
             }
         } catch (error: unknown) {
             const err = error as Error;
-            console.error("Failed to remove allocation:", err);
+            logger.error({ err }, "Failed to remove allocation");
             toast({
                 title: "Failed to Remove Modifier",
                 description: err.message || "Please check the console for details.",

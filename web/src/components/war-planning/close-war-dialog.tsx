@@ -23,6 +23,7 @@ import {
 import { updateWarDetails, updateWarStatus } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
 import { WarStatus } from "@prisma/client";
+import logger from "@/lib/logger";
 
 interface CloseWarDialogProps {
   war: War;
@@ -85,7 +86,7 @@ export function CloseWarDialog({
               throw statusError;
           }
       } catch (error) {
-          console.error("Failed to close war:", error);
+          logger.error({ error }, "Failed to close war");
           toast({ title: "Update Failed", description: "Could not close war. Please try again.", variant: "destructive" });
       } finally {
           setIsUpdating(false);

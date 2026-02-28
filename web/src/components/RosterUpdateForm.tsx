@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VirtuosoGrid } from "react-virtuoso";
 import axios from "axios";
 import Link from "next/link";
+import logger from "@/lib/logger";
 
 // Define local types matching what the API returns
 interface ChampionData {
@@ -288,6 +289,7 @@ export function RosterUpdateForm() {
         } else if (err instanceof Error) {
             errorMessage = err.message;
         }
+        logger.error({ err }, "Failed to update roster");
         setResult({
             success: 0,
             added: [],

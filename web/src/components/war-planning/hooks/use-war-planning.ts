@@ -5,6 +5,7 @@ import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, type ExtraChampion } from "@/app/planning/actions";
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
+import logger from "@/lib/logger";
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
 export type { ExtraChampion };
@@ -119,7 +120,7 @@ export function useWarPlanning({
                 setNodesMap(map);
             }
         } catch (e) {
-            console.error("Failed to fetch node data", e);
+            logger.error({ err: e }, "Failed to fetch node data");
         }
     }
     fetchNodes();
@@ -157,7 +158,7 @@ export function useWarPlanning({
         setExtraChampions(extrasData);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        console.error("Failed to fetch war data:", err);
+        logger.error({ err }, "Failed to fetch war data");
         setFightsError(message || "Failed to load war data.");
       } finally {
         setLoadingFights(false);
@@ -220,7 +221,7 @@ export function useWarPlanning({
             });
 
         } catch (error) {
-            console.error("Polling failed", error);
+            logger.error({ error }, "Polling failed in useWarPlanning");
         }
     }, 5000);
 
@@ -275,7 +276,7 @@ export function useWarPlanning({
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to update war status:", err);
+      logger.error({ err }, "Failed to update war status");
       setFightsError(message || "Failed to update war status.");
     } finally {
       setIsUpdatingStatus(false);
@@ -289,7 +290,7 @@ export function useWarPlanning({
       router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to persist war status in handleCloseSuccess:", err);
+      logger.error({ err }, "Failed to persist war status in handleCloseSuccess");
       setFightsError(message || "Failed to persist closed status. Please refresh.");
     }
   }, [warId, updateWarStatus, router]);
@@ -354,7 +355,7 @@ export function useWarPlanning({
       setExtraChampions((prev: ExtraChampion[]) => prev.map((x: ExtraChampion) => x.id === tempId ? { ...x, id: created.id } : x));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to add extra champion", err);
+      logger.error({ err }, "Failed to add extra champion");
       setExtraChampions((prev: ExtraChampion[]) => prev.filter((x: ExtraChampion) => x.id !== tempId));
       setFightsError(message || "Failed to add extra champion.");
     }
@@ -370,7 +371,7 @@ export function useWarPlanning({
       await removeExtraChampion(extraId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to remove extra champion", err);
+      logger.error({ err }, "Failed to remove extra champion");
       setExtraChampions((prev: ExtraChampion[]) => [...prev, toRemove]);
       setFightsError(message || "Failed to remove extra champion.");
     }
@@ -397,7 +398,7 @@ export function useWarPlanning({
       setWarBans((prev: WarBanWithChampion[]) => prev.map((x: WarBanWithChampion) => x.id === tempId ? { ...x, id: created.id } : x));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to add war ban", err);
+      logger.error({ err }, "Failed to add war ban");
       setWarBans((prev: WarBanWithChampion[]) => prev.filter((x: WarBanWithChampion) => x.id !== tempId));
       setFightsError(message || "Failed to add war ban.");
     }
@@ -413,7 +414,7 @@ export function useWarPlanning({
       await removeWarBan(banId);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to remove war ban", err);
+      logger.error({ err }, "Failed to remove war ban");
       setWarBans((prev: WarBanWithChampion[]) => [...prev, toRemove]);
       setFightsError(message || "Failed to remove war ban.");
     }
@@ -529,7 +530,7 @@ export function useWarPlanning({
       await updateWarFight(updatedFight);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error("Failed to save fight:", err);
+      logger.error({ err }, "Failed to save fight");
       // Rollback
       setCurrentFights(previousFights);
       setFightsError(message || "Failed to save changes. Please try again.");
