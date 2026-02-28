@@ -279,6 +279,9 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+      use-debounce:
+        specifier: ^10.1.0
+        version: 10.1.0(react@19.2.0)
       use-image:
         specifier: ^1.1.4
         version: 1.1.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -918,8 +921,8 @@ packages:
   '@maxim_mazurok/gapi.client.discovery-v1@0.4.20200806':
     resolution: {integrity: sha512-Jeo/KZqK39DI6ExXHcJ4lqnn1O/wEqboQ6eQ8WnNpu5eJ7wUnX/C5KazOgs1aRhnIB/dVzDe8wm62nmtkMIoaw==}
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.1.20260202':
-    resolution: {integrity: sha512-hKngg5Oam/MJV9xCX9Hll5ellF5wF9iLb/7fad5nsuvQ6blCU5VrG8zFACIpFLmtJHoDM7wFGw2Woui4W/1mHg==}
+  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260218':
+    resolution: {integrity: sha512-pMFqa3nZEzXPgvdU1rzB1BJRofOMLgvlOAGw7ykUZYYibkuQUvuE1UPPhv2FPOAEYsX679jwKDsQc6Bgt3wWgw==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -4682,6 +4685,12 @@ packages:
       '@types/react':
         optional: true
 
+  use-debounce@10.1.0:
+    resolution: {integrity: sha512-lu87Za35V3n/MyMoEpD5zJv0k7hCn0p+V/fK2kWD+3k2u3kOCwO593UArbczg1fhfs2rqPEnHpULJ3KmGdDzvg==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      react: '*'
+
   use-image@1.1.4:
     resolution: {integrity: sha512-P+swhszzHHgEb2X2yQ+vQNPCq/8Ks3hyfdXAVN133pvnvK7UK++bUaZUa5E+A3S02Mw8xOCBr9O6CLhk2fjrWA==}
     peerDependencies:
@@ -5483,7 +5492,7 @@ snapshots:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.1.20260202':
+  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260218':
     dependencies:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
@@ -6358,7 +6367,7 @@ snapshots:
 
   '@types/gapi.client.sheets-v4@0.0.4':
     dependencies:
-      '@maxim_mazurok/gapi.client.sheets-v4': 0.1.20260202
+      '@maxim_mazurok/gapi.client.sheets-v4': 0.2.20260218
 
   '@types/gapi.client@1.0.8': {}
 
@@ -9586,6 +9595,10 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.2
+
+  use-debounce@10.1.0(react@19.2.0):
+    dependencies:
+      react: 19.2.0
 
   use-image@1.1.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:

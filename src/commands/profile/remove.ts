@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import { safeReply } from '../../utils/errorHandler';
+import { checkAndCleanupAlliance } from '../../services/allianceService.js';
 
 export async function handleProfileRemove(interaction: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction, ingameNameArg?: string): Promise<void> {
   const discordId = interaction.user.id;
@@ -23,12 +24,16 @@ export async function handleProfileRemove(interaction: ChatInputCommandInteracti
   }
 
   const wasActive = profileToRemove.isActive;
+  const allianceId = profileToRemove.allianceId;
 
   await prisma.player.delete({
     where: {
       id: profileToRemove.id,
     },
   });
+
+  // Cleanup alliance if this profile was the last member
+  await checkAndCleanupAlliance(allianceId);
 
   let replyMessage = `✅ Successfully removed profile **${ingameName}**.`;
 

@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, Guild, MessageFlags } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
+import { checkAndCleanupAlliance } from '../../services/allianceService.js';
 
 /**
  * Synchronizes Discord roles for officers and battlegroups with the database for a specific guild.
@@ -184,6 +185,9 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
         }
     }
   }
+
+  // Cleanup empty alliance if everyone left or was removed
+  await checkAndCleanupAlliance(alliance.id);
   
   loggerService.info(`Alliance roles synced for guild ${guild.id}. Updated: ${updatedCount}, Created: ${createdCount}, Removed: ${removedCount}.`);
   return { updated: updatedCount, created: createdCount, removed: removedCount };
@@ -204,7 +208,7 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
       `✅ **${result.created}** new profiles created.\n` +
       `🔄 **${result.updated}** existing profiles updated.\n` +
       `❌ **${result.removed}** profiles removed (lost roles or left server).`,
-      flags: [MessageFlags.Ephemeral]
+      flags: MessageFlags.Ephemeral
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

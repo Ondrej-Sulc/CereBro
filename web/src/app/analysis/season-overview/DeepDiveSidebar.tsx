@@ -76,7 +76,7 @@ export function DeepDiveSidebar({
       <CardContent className="p-4 space-y-6">
         {activeTab === "defense" ? (
           <div className="space-y-4">
-            <Tabs value={activeDefenseSubTab} onValueChange={(v) => onDefenseSubTabChange(v as any)} className="w-full">
+            <Tabs value={activeDefenseSubTab} onValueChange={(v) => onDefenseSubTabChange(v as "node" | "defender")} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 mb-4 h-9">
                 <TabsTrigger value="node" className="text-xs">Node</TabsTrigger>
                 <TabsTrigger value="defender" className="text-xs">Defender</TabsTrigger>
@@ -147,7 +147,7 @@ export function DeepDiveSidebar({
           </div>
         ) : (
           <div className="space-y-4">
-            <Tabs value={activeMatchupSubTab} onValueChange={(v) => onMatchupSubTabChange(v as any)} className="w-full">
+            <Tabs value={activeMatchupSubTab} onValueChange={(v) => onMatchupSubTabChange(v as "attacker" | "counter")} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 mb-4 h-9">
                 <TabsTrigger value="attacker" className="text-xs">Attacker</TabsTrigger>
                 <TabsTrigger value="counter" className="text-xs">Defender</TabsTrigger>

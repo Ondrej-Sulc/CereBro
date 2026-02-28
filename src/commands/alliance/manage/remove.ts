@@ -1,5 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import loggerService from '../../../services/loggerService';
+import { checkAndCleanupAlliance } from '../../../services/allianceService.js';
 
 export async function handleAllianceManageRemove(interaction: ChatInputCommandInteraction) {
   const { prisma } = await import('../../../services/prismaService.js');
@@ -25,6 +26,8 @@ export async function handleAllianceManageRemove(interaction: ChatInputCommandIn
       return;
     }
 
+    const allianceId = player.allianceId;
+
     await prisma.player.update({
       where: { id: player.id },
       data: {
@@ -33,6 +36,9 @@ export async function handleAllianceManageRemove(interaction: ChatInputCommandIn
         battlegroup: null,
       },
     });
+
+    // Cleanup empty alliance
+    await checkAndCleanupAlliance(allianceId);
 
     const embed = new EmbedBuilder()
       .setColor(0x00FF00)

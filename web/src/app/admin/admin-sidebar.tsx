@@ -4,7 +4,18 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Sword } from "lucide-react"
+import { 
+  LayoutDashboard, 
+  Sword, 
+  LineChart, 
+  Shield, 
+  Users, 
+  Ban, 
+  Bug, 
+  Hash, 
+  Target, 
+  Youtube 
+} from "lucide-react"
 
 const items = [
   {
@@ -13,9 +24,49 @@ const items = [
     icon: LayoutDashboard,
   },
   {
+    title: "Insights",
+    href: "/admin/insights",
+    icon: LineChart,
+  },
+  {
+    title: "Alliances",
+    href: "/admin/alliances",
+    icon: Shield,
+  },
+  {
+    title: "Players",
+    href: "/admin/players",
+    icon: Users,
+  },
+  {
     title: "Champions",
     href: "/admin/champions",
     icon: Sword,
+  },
+  {
+    title: "Bans",
+    href: "/admin/bans",
+    icon: Ban,
+  },
+  {
+    title: "Nodes",
+    href: "/admin/nodes",
+    icon: Hash,
+  },
+  {
+    title: "Tactics",
+    href: "/admin/tactics",
+    icon: Target,
+  },
+  {
+    title: "YouTube",
+    href: "/admin/youtube",
+    icon: Youtube,
+  },
+  {
+    title: "Debug Roster",
+    href: "/admin/debug-roster",
+    icon: Bug,
   },
 ]
 

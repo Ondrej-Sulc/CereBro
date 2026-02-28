@@ -509,7 +509,7 @@ model War {
 
   // A war belongs to an alliance
   allianceId String
-  alliance   Alliance @relation(fields: [allianceId], references: [id])
+  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
 
   // A war is comprised of many fights
   fights         WarFight[]

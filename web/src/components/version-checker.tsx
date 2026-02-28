@@ -10,9 +10,10 @@ const AUTO_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 export function VersionChecker({ initialVersion }: { initialVersion: string }) {
   const { toast } = useToast();
   const [hasNotified, setHasNotified] = useState(false);
-  const lastVisibleTimeRef = useRef(Date.now());
+  const lastVisibleTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
+    lastVisibleTimeRef.current = Date.now();
     // 1. Listen for Server Action failures (common Next.js error message)
     const handleGlobalError = (event: ErrorEvent) => {
       const msg = event.message || "";
@@ -71,7 +72,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     // Check on focus
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        const inactiveTime = Date.now() - lastVisibleTimeRef.current;
+        const inactiveTime = lastVisibleTimeRef.current ? Date.now() - lastVisibleTimeRef.current : 0;
         // If they've been away for 5+ mins, just refresh if version changed
         checkVersion(inactiveTime > AUTO_REFRESH_THRESHOLD);
         lastVisibleTimeRef.current = Date.now();

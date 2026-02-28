@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,9 +59,13 @@ export function DebugRosterForm() {
         setResults(response.data.results);
         setFiles([]);
         setPreviews([]);
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error(err);
-        setStatusMessage("Error: " + (err.response?.data?.error || err.message));
+        if (axios.isAxiosError<{ error: string }>(err)) {
+            setStatusMessage("Error: " + (err.response?.data?.error || err.message));
+        } else {
+            setStatusMessage("Error: " + (err instanceof Error ? err.message : String(err)));
+        }
     } finally {
         setLoading(false);
     }
