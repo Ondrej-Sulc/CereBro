@@ -11,7 +11,7 @@ import Image from "next/image";
 import axios from "axios";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { GridCell } from "@cerebro/core/services/roster/types";
+import type { GridCell } from "@cerebro/core/services/roster/types";
 
 interface DebugRosterApiItem {
   fileName: string;
