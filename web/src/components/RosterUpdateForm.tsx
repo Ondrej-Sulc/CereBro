@@ -50,6 +50,15 @@ interface UpdateResult {
     errors: string[];
 }
 
+interface RosterApiItem extends Omit<RosterWithChampion, 'champion'> {
+    champion: {
+        id: number;
+        name: string;
+        class: string;
+        images: ChampionImages;
+    }
+}
+
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
   <div 
     ref={ref} 
@@ -266,7 +275,7 @@ export function RosterUpdateForm() {
       
         setResult({
             success: data.count,
-            added: (data.added || []).map((item: any) => ({
+            added: (data.added || []).map((item: RosterApiItem) => ({
                 ...item,
                 champion: {
                     ...item.champion,

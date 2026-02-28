@@ -11,15 +11,7 @@ import Image from "next/image";
 import axios from "axios";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-
-interface GridCell {
-  stars?: number;
-  rank?: number;
-  championName?: string;
-  powerRating?: number;
-  isAscended?: boolean;
-  class?: string;
-}
+import { GridCell } from "@/services/roster/types";
 
 export function DebugRosterForm() {
   const [loading, setLoading] = useState(false);
@@ -107,7 +99,7 @@ export function DebugRosterForm() {
         setFiles([]);
         setPreviews([]);
     } catch (err: unknown) {
-        console.error(err);
+        logger.error({ err }, "Failed to process debug roster");
         if (axios.isAxiosError<{ error: string }>(err)) {
             setStatusMessage("Error: " + (err.response?.data?.error || err.message));
         } else {

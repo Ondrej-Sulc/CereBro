@@ -82,7 +82,7 @@ export default async function RosterPage(props: {
   }
 
   const { prestigeMap, recommendations, sigRecommendations, top30Average } = await calculateRosterRecommendations(
-    rosterEntries as unknown as ProfileRosterEntry[],
+    rosterEntries as ProfileRosterEntry[],
     {
       targetRank: effectiveTargetRank,
       sigBudget,
@@ -96,7 +96,7 @@ export default async function RosterPage(props: {
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView 
-        initialRoster={rosterEntries as unknown as ProfileRosterEntry[]} 
+        initialRoster={rosterEntries as ProfileRosterEntry[]} 
         allChampions={allChampions}
         top30Average={top30Average || player.championPrestige || 0}
         prestigeMap={prestigeMap}

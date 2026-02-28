@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { War, WarResult } from "@prisma/client";
 import {
     Dialog,
@@ -82,7 +82,11 @@ export function CloseWarDialog({
               if (onSuccess) onSuccess();
           } catch (statusError) {
               // Rollback details update if status update fails to avoid partial persistence
-              await updateWarDetails(war.id, priorDetails);
+              try {
+                  await updateWarDetails(war.id, priorDetails);
+              } catch (rollbackError) {
+                  logger.error({ rollbackError, warId: war.id, priorDetails }, "Failed to rollback war details after status update failure");
+              }
               throw statusError;
           }
       } catch (error) {
@@ -122,10 +126,11 @@ export function CloseWarDialog({
                     <Input
                         id="close-enemyDeaths"
                         type="number"
+                        min="0"
                         value={data.enemyDeaths}
                         onChange={(e) => {
                             const val = parseInt(e.target.value, 10);
-                            setData({ ...data, enemyDeaths: isNaN(val) ? 0 : val });
+                            setData({ ...data, enemyDeaths: isNaN(val) ? 0 : Math.max(0, val) });
                         }}
                         onFocus={(e) => e.target.select()}
                         className="bg-slate-900 border-slate-800 h-11 no-spin-buttons text-lg"

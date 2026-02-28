@@ -221,7 +221,7 @@ export function useWarPlanning({
             });
 
         } catch (error) {
-            logger.error({ error }, "Polling failed in useWarPlanning");
+            logger.error({ err: error }, "Polling failed in useWarPlanning");
         }
     }, 5000);
 
@@ -263,7 +263,7 @@ export function useWarPlanning({
   // Handlers
   const handleToggleStatus = useCallback(async () => {
     // Check if moving to FINISHED and result is not set
-    if (status === 'PLANNING' && (war.result === 'UNKNOWN' || war.enemyDeaths === null || war.enemyDeaths === 0)) {
+    if (status === 'PLANNING' && (war.result === 'UNKNOWN' || war.enemyDeaths === null)) {
         setIsCloseDialogOpen(true);
         return;
     }

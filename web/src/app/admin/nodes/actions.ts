@@ -69,10 +69,10 @@ export async function updateAllocation(
 
 export async function copyAllocations(
     warNodeId: number,
-    sourceMinTier: number,
-    sourceMaxTier: number,
-    targetMinTier: number,
-    targetMaxTier: number,
+    sourceMinTier: number | null,
+    sourceMaxTier: number | null,
+    targetMinTier: number | null,
+    targetMaxTier: number | null,
     mapType: WarMapType
 ) {
     await requireBotAdmin();
@@ -99,17 +99,18 @@ export async function copyAllocations(
     }));
 
     await prisma.warNodeAllocation.createMany({
-        data: newAllocations
+        data: newAllocations,
+        skipDuplicates: true
     });
 
     revalidatePath("/admin/nodes");
 }
 
 export async function massCopyAllocations(
-    sourceMinTier: number,
-    sourceMaxTier: number,
-    targetMinTier: number,
-    targetMaxTier: number,
+    sourceMinTier: number | null,
+    sourceMaxTier: number | null,
+    targetMinTier: number | null,
+    targetMaxTier: number | null,
     mapType: WarMapType
 ) {
     await requireBotAdmin();
@@ -135,7 +136,8 @@ export async function massCopyAllocations(
     }));
 
     await prisma.warNodeAllocation.createMany({
-        data: newAllocations
+        data: newAllocations,
+        skipDuplicates: true
     });
 
     revalidatePath("/admin/nodes");

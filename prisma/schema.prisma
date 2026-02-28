@@ -733,6 +733,7 @@ model WarNodeAllocation {
   season  Int?
   mapType WarMapType @default(STANDARD)
 
+  @@unique([warNodeId, nodeModifierId, minTier, maxTier, season, mapType])
   @@index([warNodeId])
   @@index([nodeModifierId])
 }
