@@ -40,6 +40,20 @@ We use a server-side, in-memory caching mechanism to optimize performance:
 *   **`BotUser` (Global):** Represents the Discord user. Stores global permissions (`isBotAdmin`). Linked to NextAuth.
 *   **`Player` (Game Profile):** Represents an MCOC account. Linked to `BotUser`. Stores roster/prestige. Users can have multiple profiles.
 
+## React 19 Patterns
+We strictly adhere to React 19's asynchronous parameter and state management rules:
+*   **Async Params:** `params` and `searchParams` in Server Components MUST be awaited before property access.
+*   **Suspense:** Any component using `useSearchParams()` MUST be wrapped in a `<Suspense>` boundary to prevent build-time prerendering errors.
+*   **State Sync:** Use **render-time structural synchronization** (comparing props against a `prev` state ref) instead of `useEffect` for props-to-state updates to avoid infinite render loops and hydration mismatches.
+
+## API Hardening & Resilience
+*   **Resource Limits:** File-based APIs (e.g., `/api/admin/debug-roster`) enforce strict upload bounds (MAX_FILES=10, MAX_FILE_SIZE=10MB) and per-file validation to ensure system availability.
+- **Concurrent Interaction:** Web filters use a mutable `pendingParamsRef` pattern to correctly merge rapid, concurrent search and filter updates into a single URL state push during the debounce window.
+
+## Database Integrity & Maintenance
+*   **Cascading Deletes:** Alliances use `onDelete: Cascade` in Prisma for linked records (Wars, etc.) to support safe, automated cleanup of abandoned server registrations.
+*   **Atomic Cleanup:** The `checkAndCleanupAlliance` service uses `prisma.$transaction` to eliminate TOCTOU (Time-of-Check to Time-of-Use) race conditions during orphan pruning.
+
 ## Admin Portal Architecture
 The Admin Portal (`/admin`) is a secure, server-rendered section of the web app.
 *   **Security:** Uses a dedicated `ensureAdmin()` server action that verifies the session user's `isBotAdmin` status against the database before rendering any admin layouts or executing mutations.

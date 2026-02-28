@@ -47,6 +47,100 @@ export async function addAllocation(
     revalidatePath("/admin/nodes");
 }
 
+export async function updateAllocation(
+    allocationId: string,
+    data: {
+        nodeModifierId?: string;
+        minTier?: number;
+        maxTier?: number;
+        season?: number;
+        mapType?: WarMapType;
+    }
+) {
+    await requireBotAdmin();
+
+    await prisma.warNodeAllocation.update({
+        where: { id: allocationId },
+        data
+    });
+
+    revalidatePath("/admin/nodes");
+}
+
+export async function copyAllocations(
+    warNodeId: number,
+    sourceMinTier: number,
+    sourceMaxTier: number,
+    targetMinTier: number,
+    targetMaxTier: number,
+    mapType: WarMapType
+) {
+    await requireBotAdmin();
+
+    const sourceAllocations = await prisma.warNodeAllocation.findMany({
+        where: {
+            warNodeId,
+            minTier: sourceMinTier,
+            maxTier: sourceMaxTier,
+            mapType
+        }
+    });
+
+    if (sourceAllocations.length === 0) return;
+
+    // Create new allocations for target tiers
+    const newAllocations = sourceAllocations.map(alloc => ({
+        warNodeId,
+        nodeModifierId: alloc.nodeModifierId,
+        minTier: targetMinTier,
+        maxTier: targetMaxTier,
+        season: alloc.season,
+        mapType
+    }));
+
+    await prisma.warNodeAllocation.createMany({
+        data: newAllocations
+    });
+
+    revalidatePath("/admin/nodes");
+}
+
+export async function massCopyAllocations(
+    sourceMinTier: number,
+    sourceMaxTier: number,
+    targetMinTier: number,
+    targetMaxTier: number,
+    mapType: WarMapType
+) {
+    await requireBotAdmin();
+
+    const sourceAllocations = await prisma.warNodeAllocation.findMany({
+        where: {
+            minTier: sourceMinTier,
+            maxTier: sourceMaxTier,
+            mapType
+        }
+    });
+
+    if (sourceAllocations.length === 0) return;
+
+    // Create new allocations for target tiers for all nodes
+    const newAllocations = sourceAllocations.map(alloc => ({
+        warNodeId: alloc.warNodeId,
+        nodeModifierId: alloc.nodeModifierId,
+        minTier: targetMinTier,
+        maxTier: targetMaxTier,
+        season: alloc.season,
+        mapType
+    }));
+
+    await prisma.warNodeAllocation.createMany({
+        data: newAllocations
+    });
+
+    revalidatePath("/admin/nodes");
+}
+
 export async function removeAllocation(allocationId: string) {
     await requireBotAdmin();
 

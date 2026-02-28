@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { War, WarFight, WarStatus, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
+import { War, WarFight, WarStatus, WarResult, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
 import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, type ExtraChampion } from "@/app/planning/actions";
@@ -82,6 +82,7 @@ export function useWarPlanning({
   const [warBans, setWarBans] = useState<WarBanWithChampion[]>(initialWarBans);
   const [status, setStatus] = useState<WarStatus>(war.status);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
   const [loadingFights, setLoadingFights] = useState(false);
   const [fightsError, setFightsError] = useState<string | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
@@ -260,6 +261,12 @@ export function useWarPlanning({
 
   // Handlers
   const handleToggleStatus = useCallback(async () => {
+    // Check if moving to FINISHED and result is not set
+    if (status === 'PLANNING' && (war.result === 'UNKNOWN' || war.enemyDeaths === null || war.enemyDeaths === 0)) {
+        setIsCloseDialogOpen(true);
+        return;
+    }
+
     try {
       setIsUpdatingStatus(true);
       const newStatus = status === 'PLANNING' ? 'FINISHED' : 'PLANNING';
@@ -273,7 +280,12 @@ export function useWarPlanning({
     } finally {
       setIsUpdatingStatus(false);
     }
-  }, [status, warId, updateWarStatus, router]);
+  }, [status, warId, updateWarStatus, router, war.result, war.enemyDeaths]);
+
+  const handleCloseSuccess = useCallback(() => {
+      setStatus('FINISHED');
+      router.refresh();
+  }, [router]);
 
   const handleNodeClick = useCallback((nodeId: number) => {
     setSelectedNodeId(nodeId);
@@ -546,6 +558,8 @@ export function useWarPlanning({
     extraChampions,
     status,
     isUpdatingStatus,
+    isCloseDialogOpen,
+    setIsCloseDialogOpen,
     loadingFights,
     fightsError,
     activeTactic,
@@ -561,6 +575,7 @@ export function useWarPlanning({
 
     // Handlers
     handleToggleStatus,
+    handleCloseSuccess,
     handleNodeClick,
     handleNavigateNode,
     handleEditorClose,

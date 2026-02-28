@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { rosterImageService } from "@cerebro/core/services/rosterImageService";
+import { rosterImageService, GridCell } from "@cerebro/core/services/rosterImageService";
 import { processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process"; // Alternatively use this if easier, but direct service is better for debug
 import logger from "@cerebro/core/services/loggerService";
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Too many files. Maximum is ${MAX_FILES}.` }, { status: 400 });
         }
 
-        const results: { fileName: string; debug: string; success: boolean; error?: string }[] = [];
+        const results: { fileName: string; debug: string; grid?: GridCell[]; success: boolean; error?: string }[] = [];
 
         for (const file of files) {
             if (file.size > MAX_FILE_SIZE) {
@@ -62,12 +62,13 @@ export async function POST(req: NextRequest) {
             try {
                 const buffer = Buffer.from(await file.arrayBuffer());
                 
-                // We use processBGView directly to get the debug image
-                const { debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
+                // We use processBGView directly to get the debug image and the detected grid
+                const { grid, debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
                 
                 results.push({
                     fileName: file.name,
                     debug: debugImage ? debugImage.toString('base64') : "",
+                    grid,
                     success: !!debugImage,
                     error: debugImage ? undefined : "No debug image generated"
                 });

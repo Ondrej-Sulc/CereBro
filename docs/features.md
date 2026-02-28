@@ -124,8 +124,19 @@ A unified suite of tools for managing Alliance War.
     *   Redeem via `/alliance link` in Discord to bridge the two platforms.
 
 ### Admin Portal & Data Management
-A secure, web-based suite for managing core game data, replacing complex Discord commands.
-*   **Access Control:** Strictly protected via RBAC. Only users with the `BotUser.isBotAdmin` flag can access the portal or see the link in the user menu.
+A secure, web-based suite for managing core game data and system-wide alliance/player records.
+*   **Access Control:** Strictly protected via RBAC. Only users with the `BotUser.isBotAdmin` flag can access the portal.
+*   **Database Insights:** Real-time dashboard with key metrics (Total Players/Alliances, Affiliation rates) and high-performance visualizations of top-tier alliances and prestige leaders.
+*   **Directory Management:**
+    *   **Alliances:** Searchable, sortable, and paginated directory of all registered Discord servers.
+    *   **Players:** Comprehensive directory of all MCOC profiles with granular status and role indicators (Admin, Officer, Trusted).
+- **Alliance Maintenance:**
+    *   **Automated Cleanup:** Background service `checkAndCleanupAlliance` automatically prunes "orphan" alliances (0 members) to prevent database bloat.
+    *   **Manual Pruning:** Admin-only "Cleanup Orphans" tool for bulk removal of abandoned registrations.
+    *   **Infrastructure Protection:** The `GLOBAL` mercenary alliance is exempt from all cleanup routines to support solo uploads and guest player infrastructure.
+- **System Debugging:**
+    *   **Roster Debugger:** API-driven tool for troubleshooting OCR processing. Allows admins to upload screenshots and view the raw attribute extraction and debug images in real-time with strict resource limits (Max 10 files, 10MB per file).
+
 *   **Champion Management:**
     *   **Visual Grid:** Compact, high-density grid view of all champions with Class Filters and real-time search.
     *   **Unified Editor:** A powerful modal editor for managing all aspects of a champion:

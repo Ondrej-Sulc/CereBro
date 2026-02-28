@@ -7,38 +7,13 @@ import { prisma } from "@/lib/prisma";
 import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "./types";
+import { calculateRosterRecommendations } from "@/lib/roster-recommendation-service";
 import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
   title: "My Roster | CereBro",
   description: "Manage and view your MCOC champion roster.",
 };
-
-interface Recommendation {
-    championId: number;
-    championName: string;
-    championClass: ChampionClass;
-    championImage: ChampionImages;
-    stars: number;
-    fromRank: number;
-    toRank: number;
-    prestigeGain: number;
-    accountGain: number;
-}
-
-interface SigRecommendation {
-    championId: number;
-    championName: string;
-    championClass: ChampionClass;
-    championImage: ChampionImages;
-    stars: number;
-    rank: number;
-    fromSig: number;
-    toSig: number;
-    prestigeGain: number;
-    accountGain: number;
-    prestigePerSig: number;
-}
 
 export default async function RosterPage(props: {
   searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string }>;
@@ -86,9 +61,6 @@ export default async function RosterPage(props: {
   const abilities = await prisma.ability.findMany({ where: { id: { in: abilityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
   const immunities = await prisma.ability.findMany({ where: { id: { in: immunityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
 
-  // Use stored prestige as initial value
-  const top30Average = player.championPrestige || 0;
-  
   // Parse initial filters for Client Component
   const validClasses = Object.values(ChampionClass);
   const rankClassFilterRaw = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
@@ -102,16 +74,35 @@ export default async function RosterPage(props: {
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : 0; // 0 lets the client/api decide default
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
 
+  // Determine default target rank if not set
+  let effectiveTargetRank = targetRank;
+  if (effectiveTargetRank === 0) {
+      const highest7StarRank = rosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
+      effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
+  }
+
+  const { prestigeMap, recommendations, sigRecommendations, top30Average } = await calculateRosterRecommendations(
+    rosterEntries as unknown as ProfileRosterEntry[],
+    {
+      targetRank: effectiveTargetRank,
+      sigBudget,
+      rankClassFilter,
+      sigClassFilter,
+      rankSagaFilter,
+      sigSagaFilter
+    }
+  );
+
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView 
         initialRoster={rosterEntries as unknown as ProfileRosterEntry[]} 
         allChampions={allChampions}
-        top30Average={top30Average}
-        prestigeMap={{}} // Empty initially, fetched client-side
-        recommendations={[]} // Empty initially
-        sigRecommendations={[]} // Empty initially
-        simulationTargetRank={targetRank}
+        top30Average={top30Average || player.championPrestige || 0}
+        prestigeMap={prestigeMap}
+        recommendations={recommendations}
+        sigRecommendations={sigRecommendations}
+        simulationTargetRank={effectiveTargetRank}
         initialSigBudget={sigBudget}
         initialRankClassFilter={rankClassFilter}
         initialSigClassFilter={sigClassFilter}
