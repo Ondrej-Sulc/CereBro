@@ -1244,14 +1244,14 @@
     "properties": [],
     "mid": "",
     "locale": "",
-    "description": "31481",
+    "description": "231481",
     "score": 0,
     "confidence": 0,
     "topicality": 0,
     "boundingPoly": {
       "vertices": [
         {
-          "x": 1316,
+          "x": 1297,
           "y": 525
         },
         {
@@ -1263,7 +1263,7 @@
           "y": 547
         },
         {
-          "x": 1316,
+          "x": 1297,
           "y": 546
         }
       ],

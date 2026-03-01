@@ -65,12 +65,21 @@ export class RosterLayoutService {
     const sortedX = [...positions].sort((a, b) => a.x - b.x);
     const uniqueCols: number[] = [];
     if (sortedX.length > 0) {
-      uniqueCols.push(sortedX[0].x);
+      const cols: number[][] = [];
+      let currentCol = [sortedX[0].x];
       for (let i = 1; i < sortedX.length; i++) {
-        if (sortedX[i].x > uniqueCols[uniqueCols.length - 1] + 50) {
-          uniqueCols.push(sortedX[i].x);
+        if (sortedX[i].x - currentCol[currentCol.length - 1] < 50) {
+          currentCol.push(sortedX[i].x);
+        } else {
+          cols.push(currentCol);
+          currentCol = [sortedX[i].x];
         }
       }
+      cols.push(currentCol);
+
+      // The true X coordinate is the maximum (rightmost) X in the cluster 
+      // because class icons prepended by OCR shift the bounding box left
+      uniqueCols.push(...cols.map(c => Math.max(...c)));
     }
 
     let avgColDist = 0;
@@ -98,8 +107,25 @@ export class RosterLayoutService {
     const cellDims = { width: cellWidth, height: cellHeight };
 
     for (const pos of positions) {
-      const powerRating = parseInt(pos.pi.description?.replace(/[^\d]/g, '') || '0', 10);
-      const cellX = pos.x - (avgColDist * CONFIG.PI_OFFSET_X_RATIO);
+      let powerRating = parseInt(pos.pi.description?.replace(/[^\d]/g, '') || '0', 10);
+
+      const closestColX = uniqueCols.reduce((prev, curr) =>
+        Math.abs(curr - pos.x) < Math.abs(prev - pos.x) ? curr : prev
+      );
+
+      console.log(`[DEBUG] PI: ${powerRating}, pos.x: ${pos.x}, closestColX: ${closestColX}, diff: ${closestColX - pos.x}`);
+
+      // If the bounding box is shifted left by >10 pixels relative to the clean column X,
+      // it means OCR merged the class icon as a leading digit. Strip it.
+      if (closestColX - pos.x > 10) {
+        const prStr = powerRating.toString();
+        if (prStr.length >= 5) {
+          powerRating = parseInt(prStr.substring(1), 10);
+          console.log(`[DEBUG] Stripped PI to: ${powerRating}`);
+        }
+      }
+
+      const cellX = closestColX - (avgColDist * CONFIG.PI_OFFSET_X_RATIO);
       const cellY = pos.y - cellHeight + (cellHeight * CONFIG.PI_OFFSET_Y_RATIO);
 
       if (cellY < headerMinY) {
@@ -122,7 +148,7 @@ export class RosterLayoutService {
         const textCenterX = (v[0].x + v[2].x) / 2;
         const textBottomY = v[2].y;
 
-        const isAligned = Math.abs(textCenterX - pos.x) < (cellWidth * 0.6);
+        const isAligned = Math.abs(textCenterX - closestColX) < (cellWidth * 0.6);
         const isAbove = textBottomY < pos.y && textBottomY > (cellY + cellHeight * 0.2);
         return isAligned && isAbove;
       });

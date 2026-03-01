@@ -22,16 +22,29 @@ export interface RosterWithChampion {
 }
 
 export const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion }) => {
+    // Map star levels to specific border colors
+    const starBorderColors: Record<number, string> = {
+        7: "border-purple-500 hover:border-purple-400/80 shadow-purple-900/20",
+        6: "border-sky-400 hover:border-sky-300/80 shadow-sky-900/20",
+        5: "border-red-400 hover:border-red-300/80 shadow-red-900/20",
+        4: "border-yellow-500 hover:border-yellow-400/80 shadow-yellow-900/20",
+        3: "border-slate-300 hover:border-slate-200/80 shadow-slate-900/20",
+        2: "border-amber-700 hover:border-amber-600/80 shadow-amber-900/20", // Brown-ish
+        1: "border-slate-500 hover:border-slate-400/80 shadow-slate-900/20",
+    };
+
+    const borderClass = starBorderColors[item.stars] || "border-slate-800 hover:border-sky-500/50 shadow-black/20";
+
     return (
-        <div className="flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950/50 group hover:border-sky-500/50 transition-all duration-300 shadow-xl">
+        <div className={`flex flex-col rounded-lg overflow-hidden border-2 bg-slate-950/50 group transition-all duration-300 shadow-lg ${borderClass}`}>
             {/* Top Section: Smaller Portrait */}
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-900/50 border-b border-slate-800/50">
+            <div className="relative aspect-square w-full overflow-hidden bg-slate-900/50 border-b border-slate-800/50">
                 <Image
                     src={getChampionImageUrl(item.champion.images, '128')}
                     alt={item.champion.name}
                     width={128}
                     height={128}
-                    className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* Awakened Frame Glow */}
