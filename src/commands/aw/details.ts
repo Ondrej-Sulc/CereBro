@@ -221,15 +221,23 @@ export async function handleDetails(interaction: ChatInputCommandInteraction) {
     }
 
     // Filter and add modifiers
-    const activeAllocations = fight.node.allocations.filter((a) => {
-      // Check map type
+    // Season 0 is default, but current war season takes priority if it exists for the same modifier/map/tier
+    const candidates = fight.node.allocations.filter((a) => {
       if (a.mapType !== war.mapType) return false;
-      // Check season (if allocation has season, it must match)
-      if (a.season !== null && a.season !== war.season) return false;
-      // Check tier
-      if (a.minTier !== null && war.warTier < a.minTier) return false;
-      if (a.maxTier !== null && war.warTier > a.maxTier) return false;
-      return true;
+      if (war.warTier < a.minTier || (a.maxTier > 0 && war.warTier > a.maxTier)) return false;
+      return a.season === war.season || a.season === 0;
+    });
+
+    const activeAllocations = candidates.filter((a) => {
+      if (a.season === war.season) return true;
+      if (a.season === 0) {
+        // If there is ANY candidate for the same modifier with the current season, it takes priority
+        return !candidates.some(c => 
+          c.nodeModifierId === a.nodeModifierId && 
+          c.season === war.season
+        );
+      }
+      return false;
     });
 
     for (const alloc of activeAllocations) {

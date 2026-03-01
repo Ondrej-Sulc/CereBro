@@ -105,6 +105,9 @@ export function RosterView({
   const router = useRouter();
   const { toast } = useToast();
 
+  // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
+  const memoizedPrestigeMap = useMemo(() => initialPrestigeMap, [JSON.stringify(initialPrestigeMap)]);
+
   // Sync Props to State (Handle Navigation)
   useEffect(() => { setSigBudget(initialSigBudget); }, [initialSigBudget]);
   useEffect(() => { setRankUpClassFilter(initialRankClassFilter); }, [initialRankClassFilter]);
@@ -126,7 +129,7 @@ export function RosterView({
       if (lastFetchedParams.current === currentParams) return;
 
       // Skip initial fetch if we already have data from server
-      if (lastFetchedParams.current === null && Object.keys(initialPrestigeMap).length > 0) {
+      if (lastFetchedParams.current === null && Object.keys(memoizedPrestigeMap).length > 0) {
           lastFetchedParams.current = currentParams;
           return;
       }
@@ -154,7 +157,7 @@ export function RosterView({
       };
       
       fetchData();
-  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, initialPrestigeMap]);
+  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, memoizedPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);

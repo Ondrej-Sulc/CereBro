@@ -263,14 +263,14 @@ export function useWarPlanning({
   // Handlers
   const handleToggleStatus = useCallback(async () => {
     // Check if moving to FINISHED and result is not set
-    if (status === 'PLANNING' && (war.result === 'UNKNOWN' || war.enemyDeaths === null)) {
+    if (status === WarStatus.PLANNING && (war.result === WarResult.UNKNOWN || war.enemyDeaths === null)) {
         setIsCloseDialogOpen(true);
         return;
     }
 
     try {
       setIsUpdatingStatus(true);
-      const newStatus = status === 'PLANNING' ? 'FINISHED' : 'PLANNING';
+      const newStatus = status === WarStatus.PLANNING ? WarStatus.FINISHED : WarStatus.PLANNING;
       await updateWarStatus(warId, newStatus);
       setStatus(newStatus);
       router.refresh();
@@ -285,7 +285,7 @@ export function useWarPlanning({
 
   const handleCloseSuccess = useCallback(() => {
     // CloseWarDialog already updated the server state; synchronize locally
-    setStatus('FINISHED');
+    setStatus(WarStatus.FINISHED);
     router.refresh();
   }, [router]);
 

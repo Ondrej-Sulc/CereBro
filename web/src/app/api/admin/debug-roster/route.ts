@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Too many files. Maximum is ${MAX_FILES}.` }, { status: 400 });
         }
 
-        const results: { fileName: string; debug: string; grid?: any[]; success: boolean; error?: string }[] = [];
+        type LightweightGridCell = Pick<GridCell, 'championName'|'stars'|'rank'|'powerRating'|'isAscended'>;
+        const results: { fileName: string; debug: string; grid?: LightweightGridCell[]; success: boolean; error?: string }[] = [];
 
         for (const file of files) {
             if (file.size > MAX_FILE_SIZE) {
