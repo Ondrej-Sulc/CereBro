@@ -730,7 +730,7 @@ model WarNodeAllocation {
 
   minTier Int        @default(0)
   maxTier Int        @default(0)
-  season  Int        @default(0)
+  season  Int?        @default(0)
   mapType WarMapType @default(STANDARD)
 
   @@unique([warNodeId, nodeModifierId, minTier, maxTier, season, mapType])
