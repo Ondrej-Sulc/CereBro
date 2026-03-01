@@ -344,10 +344,17 @@ export async function updateWarStatus(warId: string, status: WarStatus) {
     throw new Error("You must be an Alliance Officer or Bot Admin to update war status.");
   }
 
-  if (!player.isBotAdmin) {
-      const war = await prisma.war.findUnique({ where: { id: warId } });
-      if (!war || war.allianceId !== player.allianceId) {
-          throw new Error("Unauthorized.");
+  const war = await prisma.war.findUnique({ where: { id: warId } });
+  if (!war) throw new Error("War not found.");
+
+  if (!player.isBotAdmin && war.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized.");
+  }
+
+  // Server-side validation for finishing a war
+  if (status === WarStatus.FINISHED) {
+      if (war.result === WarResult.UNKNOWN || war.enemyDeaths === null) {
+          throw new Error("A war result and enemy deaths must be set before finishing the war.");
       }
   }
 

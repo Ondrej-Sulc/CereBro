@@ -286,8 +286,9 @@ export function useWarPlanning({
   const handleCloseSuccess = useCallback(() => {
     // CloseWarDialog already updated the server state; synchronize locally
     setStatus(WarStatus.FINISHED);
+    setIsCloseDialogOpen(false);
     router.refresh();
-  }, [router]);
+  }, [router, setStatus, setIsCloseDialogOpen]);
 
   const handleNodeClick = useCallback((nodeId: number) => {
     setSelectedNodeId(nodeId);

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { rosterImageService, GridCell } from "@cerebro/core/services/rosterImageService";
+import { rosterImageService } from "@cerebro/core/services/rosterImageService";
+import type { GridCell } from "@cerebro/core/services/rosterImageService";
 import { processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process"; // Alternatively use this if easier, but direct service is better for debug
 import logger from "@cerebro/core/services/loggerService";
 

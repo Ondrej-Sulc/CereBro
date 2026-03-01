@@ -19,6 +19,7 @@ import { RosterInsights } from "./components/roster-insights";
 import { EditChampionModal } from "./components/modals/edit-champion-modal";
 import { AddChampionModal } from "./components/modals/add-champion-modal";
 import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
+import { useDeepMemo } from "@/hooks/use-deep-memo";
 
 interface RosterViewProps {
   initialRoster: ProfileRosterEntry[];
@@ -45,6 +46,13 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
     </div>
 ));
 GridList.displayName = "GridList";
+
+interface ApiRosterResponse {
+  prestigeMap: Record<string, number>;
+  recommendations: Recommendation[];
+  sigRecommendations: SigRecommendation[];
+  top30Average: number;
+}
 
 export function RosterView({
     initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
@@ -106,7 +114,7 @@ export function RosterView({
   const { toast } = useToast();
 
   // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
-  const memoizedPrestigeMap = useMemo(() => initialPrestigeMap, [JSON.stringify(initialPrestigeMap)]);
+  const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
 
   // Sync Props to State (Handle Navigation)
   useEffect(() => { setSigBudget(initialSigBudget); }, [initialSigBudget]);
@@ -134,29 +142,34 @@ export function RosterView({
           return;
       }
 
+      const controller = new AbortController();
       const fetchData = async () => {
           setIsLoadingRecommendations(true);
           setPendingSection('all');
           try {
-              const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`);
+              const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`, { signal: controller.signal });
               if (!res.ok) throw new Error("Failed to load recommendations");
               
-              const data = await res.json();
+              const data = await res.json() as ApiRosterResponse;
               setPrestigeMap(data.prestigeMap);
               setRecommendations(data.recommendations);
               setSigRecommendations(data.sigRecommendations);
               setTop30Average(data.top30Average);
               lastFetchedParams.current = currentParams;
           } catch (error) {
+              if (error instanceof Error && error.name === 'AbortError') return;
               console.error(error);
               toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
           } finally {
-              setIsLoadingRecommendations(false);
-              setPendingSection(null);
+              if (!controller.signal.aborted) {
+                  setIsLoadingRecommendations(false);
+                  setPendingSection(null);
+              }
           }
       };
       
       fetchData();
+      return () => controller.abort();
   }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, memoizedPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
