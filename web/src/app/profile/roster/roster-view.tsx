@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition } from "react";
+import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition, useRef } from "react";
 import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,25 @@ import { RosterInsights } from "./components/roster-insights";
 import { EditChampionModal } from "./components/modals/edit-champion-modal";
 import { AddChampionModal } from "./components/modals/add-champion-modal";
 import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
+import { useDeepMemo } from "@/hooks/use-deep-memo";
+
+function buildRosterQueryParams(params: {
+    simulationTargetRank: number;
+    initialSigBudget?: number;
+    initialRankClassFilter: ChampionClass[];
+    initialSigClassFilter: ChampionClass[];
+    initialRankSagaFilter: boolean;
+    initialSigSagaFilter: boolean;
+}) {
+    const searchParams = new URLSearchParams();
+    if (params.simulationTargetRank) searchParams.set("targetRank", params.simulationTargetRank.toString());
+    if (params.initialSigBudget) searchParams.set("sigBudget", params.initialSigBudget.toString());
+    if (params.initialRankClassFilter.length) searchParams.set("rankClassFilter", params.initialRankClassFilter.join(','));
+    if (params.initialSigClassFilter.length) searchParams.set("sigClassFilter", params.initialSigClassFilter.join(','));
+    if (params.initialRankSagaFilter) searchParams.set("rankSagaFilter", 'true');
+    if (params.initialSigSagaFilter) searchParams.set("sigSagaFilter", 'true');
+    return searchParams.toString();
+}
 
 interface RosterViewProps {
   initialRoster: ProfileRosterEntry[];
@@ -46,6 +65,13 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
 ));
 GridList.displayName = "GridList";
 
+interface ApiRosterResponse {
+  prestigeMap: Record<string, number>;
+  recommendations: Recommendation[];
+  sigRecommendations: SigRecommendation[];
+  top30Average: number;
+}
+
 export function RosterView({
     initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
     simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
@@ -68,7 +94,8 @@ export function RosterView({
   const [recommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
   const [sigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
   const [top30Average, setTop30Average] = useState(initialTop30Average);
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(true);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(Object.keys(initialPrestigeMap).length === 0);
+  const lastFetchedParams = useRef<string | null>(null);
 
   // Filter States
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
@@ -104,6 +131,9 @@ export function RosterView({
   const router = useRouter();
   const { toast } = useToast();
 
+  // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
+  const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
+
   // Sync Props to State (Handle Navigation)
   useEffect(() => { setSigBudget(initialSigBudget); }, [initialSigBudget]);
   useEffect(() => { setRankUpClassFilter(initialRankClassFilter); }, [initialRankClassFilter]);
@@ -111,39 +141,70 @@ export function RosterView({
   useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
   useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
 
+  // Sync Recommendations Data Props (e.g. after router.refresh)
+  useEffect(() => {
+    const currentParams = buildRosterQueryParams({
+        simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+    });
+    
+    // Only update if our last fetch was with these same parameters
+    if (lastFetchedParams.current === currentParams) {
+        setPrestigeMap(initialPrestigeMap);
+        setRecommendations(initialRecommendations || []);
+        setSigRecommendations(initialSigRecommendations || []);
+        setTop30Average(initialTop30Average);
+    }
+  }, [initialPrestigeMap, initialRecommendations, initialSigRecommendations, initialTop30Average, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter]);
+
   // Fetch Recommendations & Prestige
   useEffect(() => {
+      const currentParams = buildRosterQueryParams({
+          simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+      });
+
+      if (lastFetchedParams.current === currentParams) {
+          setIsLoadingRecommendations(false);
+          setPendingSection(null);
+          return;
+      }
+
+      // Skip initial fetch if we already have data from server
+      if (lastFetchedParams.current === null && Object.keys(memoizedPrestigeMap).length > 0) {
+          lastFetchedParams.current = currentParams;
+          setIsLoadingRecommendations(false);
+          setPendingSection(null);
+          return;
+      }
+
+      const controller = new AbortController();
       const fetchData = async () => {
           setIsLoadingRecommendations(true);
           setPendingSection('all');
           try {
-              const params = new URLSearchParams();
-              if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
-              if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
-              if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
-              if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
-              if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
-              if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
-
-              const res = await fetch(`/api/profile/roster/recommendations?${params.toString()}`);
+              const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`, { signal: controller.signal });
               if (!res.ok) throw new Error("Failed to load recommendations");
               
-              const data = await res.json();
+              const data = await res.json() as ApiRosterResponse;
               setPrestigeMap(data.prestigeMap);
               setRecommendations(data.recommendations);
               setSigRecommendations(data.sigRecommendations);
               setTop30Average(data.top30Average);
+              lastFetchedParams.current = currentParams;
           } catch (error) {
+              if (error instanceof Error && error.name === 'AbortError') return;
               console.error(error);
               toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
           } finally {
-              setIsLoadingRecommendations(false);
-              setPendingSection(null);
+              if (!controller.signal.aborted) {
+                  setIsLoadingRecommendations(false);
+                  setPendingSection(null);
+              }
           }
       };
       
       fetchData();
-  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast]);
+      return () => controller.abort();
+  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, memoizedPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
       const params = new URLSearchParams(window.location.search);

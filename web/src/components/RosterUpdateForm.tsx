@@ -24,11 +24,13 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VirtuosoGrid } from "react-virtuoso";
 import axios from "axios";
+import Link from "next/link";
 
 // Define local types matching what the API returns
 interface ChampionData {
     id: number;
     name: string;
+    championClass: string;
     images: ChampionImages;
 }
 
@@ -47,12 +49,21 @@ interface UpdateResult {
     errors: string[];
 }
 
+interface RosterApiItem extends Omit<RosterWithChampion, 'champion'> {
+    champion: {
+        id: number;
+        name: string;
+        class: string;
+        images: ChampionImages;
+    }
+}
+
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
   <div 
     ref={ref} 
     {...props} 
     style={style} 
-    className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3"
+    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4"
   >
     {children}
   </div>
@@ -61,42 +72,51 @@ GridList.displayName = "GridList";
 
 const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion }) => {
   return (
-    <div className="relative aspect-square rounded-md overflow-hidden border border-slate-700 bg-slate-900 group">
-      <Image 
-          src={getChampionImageUrl(item.champion.images, '128')}
-          alt={item.champion.name}
-          width={128}
-          height={128}
-          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-      />
-      
-      {/* Rank & Star Badge */}
-      <div className="absolute top-1 right-1 z-10 flex flex-col items-end gap-0.5">
-          <span className="text-[10px] font-bold text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">
-              {item.stars}★ R{item.rank}
-          </span>
+    <div className="flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950/50 group hover:border-sky-500/50 transition-all duration-300 shadow-xl">
+      {/* Top Section: Smaller Portrait */}
+      <div className="relative aspect-video w-full overflow-hidden bg-slate-900/50 border-b border-slate-800/50">
+        <Image 
+            src={getChampionImageUrl(item.champion.images, '128')}
+            alt={item.champion.name}
+            width={128}
+            height={128}
+            className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-500"
+        />
+        
+        {/* Awakened Frame Glow */}
+        {item.isAwakened && (
+            <div className="absolute inset-0 border border-sky-400/20 pointer-events-none group-hover:border-sky-400/40 transition-colors" />
+        )}
       </div>
 
-      <div className="absolute top-1 left-1 z-10">
-          {item.isAwakened ? (
-              <div className="bg-black/80 rounded p-0.5">
-                  <Sparkles className="w-3 h-3 text-slate-100 fill-slate-300 drop-shadow-md" />
-              </div>
-          ) : null}
-      </div>
-
-      {/* Stats Overlay */}
-      <div className="absolute bottom-0 inset-x-0 bg-black/90 p-1 border-t border-white/5">
-          <div className="flex justify-between items-end">
-              <span className="text-[10px] text-white font-medium truncate">
+      {/* Bottom Section: Info (3 Lines) */}
+      <div className="p-1 space-y-0 bg-slate-950">
+          {/* Line 1: Name */}
+          <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-white truncate uppercase tracking-tight">
                   {item.champion.name}
               </span>
           </div>
-          <div className="flex justify-between text-[9px] text-slate-400 leading-tight">
-              {item.powerRating && <span>{item.powerRating.toLocaleString()}</span>}
-              {(item.isAwakened && typeof item.sigLevel === 'number') && (
-                  <span className="text-sky-300">S{item.sigLevel}</span>
+          
+          {/* Line 2: Star, Rank, Sig */}
+          <div className="flex items-center gap-1 text-[10px]">
+              <span className={`font-black ${item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}`}>
+                  {item.stars}★
+              </span>
+              <span className="font-bold text-slate-300">R{item.rank}</span>
+              {item.isAwakened && typeof item.sigLevel === 'number' && (
+                  <span className="font-black text-sky-400">S{item.sigLevel}</span>
               )}
+          </div>
+
+          {/* Line 3: Class & Rating */}
+          <div className="flex items-center justify-between gap-1 mt-0.5">
+              <span className="text-[10px] font-semibold text-slate-500 uppercase">
+                  {item.champion.championClass}
+              </span>
+              <span className="text-[10px] font-mono font-medium text-slate-400">
+                  {item.powerRating !== null && item.powerRating !== undefined ? item.powerRating.toLocaleString() : '---'}
+              </span>
           </div>
       </div>
     </div>
@@ -254,7 +274,13 @@ export function RosterUpdateForm() {
       
         setResult({
             success: data.count,
-            added: data.added || [],
+            added: (data.added || []).map((item: RosterApiItem) => ({
+                ...item,
+                champion: {
+                    ...item.champion,
+                    championClass: item.champion.class
+                }
+            })),
             errors: data.errors || [],
         });
       
@@ -271,6 +297,7 @@ export function RosterUpdateForm() {
         } else if (err instanceof Error) {
             errorMessage = err.message;
         }
+        console.error("Failed to update roster:", err);
         setResult({
             success: 0,
             added: [],
@@ -323,8 +350,8 @@ export function RosterUpdateForm() {
                     <TabsContent value="grid-view" className="space-y-4 mt-0">
                         <div className="bg-slate-900/50 rounded-md p-3 mb-4">
                             <p className="text-sm text-slate-400">
-                                Use this for standard "My Champions" screen. Since you can only see champion names and rating in this view, 
-                                you must manually specify the Star Level and Rank for all champions in the screenshots and submit each rank separately. It will detect if champion is awakened, but you have to specify sig level manually if you want it to be added to the roster. This method is more time consuming, but can be used as a fallback if the Battlegrounds view doesn't work for some reason.
+                                Use this for standard &quot;My Champions&quot; screen. Since you can only see champion names and rating in this view, 
+                                you must manually specify the Star Level and Rank for all champions in the screenshots and submit each rank separately. It will detect if champion is awakened, but you have to specify sig level manually if you want it to be added to the roster. This method is more time consuming, but can be used as a fallback if the Battlegrounds view doesn&apos;t work for some reason.
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-4">
@@ -508,11 +535,16 @@ export function RosterUpdateForm() {
                 {/* Success Summary */}
                 {result.success > 0 && (
                      <Card className="border-green-900/50 bg-green-950/10 overflow-hidden">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-green-400 flex items-center gap-2">
+                        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-green-400 flex items-center gap-2 text-xl">
                                 <Check className="w-5 h-5" />
                                 Updated {result.success} Champions
                             </CardTitle>
+                            <Button asChild variant="outline" size="sm" className="bg-green-950/20 border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white transition-all">
+                                <Link href="/profile/roster">
+                                    View Full Roster
+                                </Link>
+                            </Button>
                         </CardHeader>
                         <CardContent className="p-4">
                             <VirtuosoGrid 

@@ -1,9 +1,9 @@
-import { Champion, ChampionClass } from "@prisma/client";
+import { Champion as PrismaChampion, ChampionClass } from "@prisma/client";
 import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionImages } from "@/types/champion";
 
 export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
-    champion: Champion & {
+    champion: Omit<PrismaChampion, 'images'> & {
         images: ChampionImages;
         tags: { id: string | number, name: string }[];
         abilities: {

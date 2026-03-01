@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, Check, X, Settings, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Shield, Check, X, Settings } from "lucide-react"
 import Link from "next/link"
 import {
   Table,
@@ -24,9 +24,10 @@ import {
 } from "@/components/ui/pagination"
 import { Prisma } from "@prisma/client"
 import { Suspense } from "react"
-import { buildSearchParams, cn } from "@/lib/utils"
+import { buildSearchParams } from "@/lib/utils"
 import { CleanupAlliancesButton } from "./cleanup-button"
 import { computePaginationWindow } from "@/lib/pagination"
+import { SortHeader } from "../components/sort-header"
 
 interface AdminAlliancesPageProps {
   searchParams: Promise<{
@@ -117,31 +118,6 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
     }
   ]
 
-  const SortHeader = ({ field, label, className }: { field: string, label: string, className?: string }) => {
-    const isActive = sortBy === field
-    const nextOrder = isActive && order === "asc" ? "desc" : "asc"
-    const Icon = !isActive ? ArrowUpDown : order === "asc" ? ArrowUp : ArrowDown
-
-    return (
-      <TableHead className={cn("p-0", className)}>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          asChild 
-          className={cn(
-            "h-8 w-full justify-start font-bold hover:bg-transparent px-2",
-            isActive && "text-primary"
-          )}
-        >
-          <Link href={buildSearchParams(params, { sortBy: field, order: nextOrder, page: "1" })}>
-            {label}
-            <Icon className="ml-2 h-3 w-3" />
-          </Link>
-        </Button>
-      </TableHead>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
@@ -166,11 +142,11 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader field="name" label="Name" />
-                <SortHeader field="members" label="Members" className="text-right" />
+                <SortHeader field="name" label="Name" sortBy={sortBy} order={order} params={params as Record<string, string | string[] | undefined>} />
+                <SortHeader field="members" label="Members" className="text-right" sortBy={sortBy} order={order} params={params as Record<string, string | string[] | undefined>} />
                 <TableHead>AQ Reminders</TableHead>
                 <TableHead>Features</TableHead>
-                <SortHeader field="createdAt" label="Created" />
+                <SortHeader field="createdAt" label="Created" sortBy={sortBy} order={order} params={params as Record<string, string | string[] | undefined>} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -278,4 +254,3 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
     </div>
   )
 }
-

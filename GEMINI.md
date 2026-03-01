@@ -26,7 +26,13 @@
 2.  **Ephemeral Messages:** Never use `ephemeral: true`. Always use `flags: MessageFlags.Ephemeral`.
 3.  **Type Safety:** No `any`. Always verify with `tsc`.
 4.  **Bot Admin:** Check `BotUser.isBotAdmin`, **not** `Player.isBotAdmin`.
-5.  **Caching:** Use `os.tmpdir()` for file-based caches to avoid permission issues in Docker.
-6.  **Assets:** Access shared resources via the top-level `assets/` directory.
-7.  **Server Actions:** **NEVER** re-export non-async functions or values from a `"use server"` file. Next.js strictly requires only async function exports for server actions.
-8.  **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
+5.  **React 19:**
+    *   **Async Params:** `params` and `searchParams` in Server Components MUST be awaited before property access.
+    *   **Suspense:** Components using `useSearchParams()` MUST be wrapped in `<Suspense>` boundaries.
+    *   **State Sync:** Use **render-time structural synchronization** instead of `useEffect` for props-to-state syncing to avoid infinite render loops.
+6.  **Caching:** Use `os.tmpdir()` for file-based caches to avoid permission issues in Docker.
+7.  **Assets:** Access shared resources via the top-level `assets/` directory.
+8.  **Server Actions:** **NEVER** re-export non-async functions or values from a `"use server"` file. Next.js strictly requires only async function exports for server actions.
+9.  **Multi-Profile Logic:** `BotUser` (Discord account) maps to multiple `Player` (In-game identity) profiles; Admin directories focus on `Player` profiles for granular roster/prestige tracking.
+10. **Data Protection:** The alliance with ID `GLOBAL` (Mercenaries) is critical for solo war uploads and guest players; it is exempt from all automated and manual cleanup routines.
+11. **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
