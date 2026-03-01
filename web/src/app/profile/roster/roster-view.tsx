@@ -21,6 +21,24 @@ import { AddChampionModal } from "./components/modals/add-champion-modal";
 import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 
+function buildRosterQueryParams(params: {
+    simulationTargetRank: number;
+    initialSigBudget?: number;
+    initialRankClassFilter: ChampionClass[];
+    initialSigClassFilter: ChampionClass[];
+    initialRankSagaFilter: boolean;
+    initialSigSagaFilter: boolean;
+}) {
+    const searchParams = new URLSearchParams();
+    if (params.simulationTargetRank) searchParams.set("targetRank", params.simulationTargetRank.toString());
+    if (params.initialSigBudget) searchParams.set("sigBudget", params.initialSigBudget.toString());
+    if (params.initialRankClassFilter.length) searchParams.set("rankClassFilter", params.initialRankClassFilter.join(','));
+    if (params.initialSigClassFilter.length) searchParams.set("sigClassFilter", params.initialSigClassFilter.join(','));
+    if (params.initialRankSagaFilter) searchParams.set("rankSagaFilter", 'true');
+    if (params.initialSigSagaFilter) searchParams.set("sigSagaFilter", 'true');
+    return searchParams.toString();
+}
+
 interface RosterViewProps {
   initialRoster: ProfileRosterEntry[];
   allChampions: Champion[];
@@ -125,16 +143,12 @@ export function RosterView({
 
   // Sync Recommendations Data Props (e.g. after router.refresh)
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
-    if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
-    if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
-    if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
-    if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
-    if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
+    const currentParams = buildRosterQueryParams({
+        simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+    });
     
     // Only update if our last fetch was with these same parameters
-    if (lastFetchedParams.current === params.toString()) {
+    if (lastFetchedParams.current === currentParams) {
         setPrestigeMap(initialPrestigeMap);
         setRecommendations(initialRecommendations || []);
         setSigRecommendations(initialSigRecommendations || []);
@@ -144,20 +158,21 @@ export function RosterView({
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
-      const params = new URLSearchParams();
-      if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
-      if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
-      if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
-      if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
-      if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
-      if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
-      
-      const currentParams = params.toString();
-      if (lastFetchedParams.current === currentParams) return;
+      const currentParams = buildRosterQueryParams({
+          simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+      });
+
+      if (lastFetchedParams.current === currentParams) {
+          setIsLoadingRecommendations(false);
+          setPendingSection(null);
+          return;
+      }
 
       // Skip initial fetch if we already have data from server
       if (lastFetchedParams.current === null && Object.keys(memoizedPrestigeMap).length > 0) {
           lastFetchedParams.current = currentParams;
+          setIsLoadingRecommendations(false);
+          setPendingSection(null);
           return;
       }
 

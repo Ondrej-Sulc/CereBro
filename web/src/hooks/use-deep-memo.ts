@@ -1,13 +1,22 @@
 import { useRef, useMemo } from 'react';
 
-let unserializableCounter = 0;
+const unserializableMap = new WeakMap<object, string>();
+let unserializableIdCounter = 0;
 
 export function useDeepMemo<T>(value: T): T {
   const stringify = (val: T) => {
     try {
       return JSON.stringify(val);
     } catch {
-      return `__UNSERIALIZABLE__${unserializableCounter++}`;
+      if (val !== null && typeof val === 'object') {
+        const existing = unserializableMap.get(val as object);
+        if (existing) return existing;
+        
+        const token = `__UNSERIALIZABLE__${unserializableIdCounter++}`;
+        unserializableMap.set(val as object, token);
+        return token;
+      }
+      return `__UNSERIALIZABLE__${unserializableIdCounter++}`;
     }
   };
 
