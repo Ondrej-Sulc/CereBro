@@ -123,6 +123,25 @@ export function RosterView({
   useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
   useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
 
+  // Sync Recommendations Data Props (e.g. after router.refresh)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (simulationTargetRank) params.set("targetRank", simulationTargetRank.toString());
+    if (initialSigBudget) params.set("sigBudget", initialSigBudget.toString());
+    if (initialRankClassFilter.length) params.set("rankClassFilter", initialRankClassFilter.join(','));
+    if (initialSigClassFilter.length) params.set("sigClassFilter", initialSigClassFilter.join(','));
+    if (initialRankSagaFilter) params.set("rankSagaFilter", 'true');
+    if (initialSigSagaFilter) params.set("sigSagaFilter", 'true');
+    
+    // Only update if our last fetch was with these same parameters
+    if (lastFetchedParams.current === params.toString()) {
+        setPrestigeMap(initialPrestigeMap);
+        setRecommendations(initialRecommendations || []);
+        setSigRecommendations(initialSigRecommendations || []);
+        setTop30Average(initialTop30Average);
+    }
+  }, [initialPrestigeMap, initialRecommendations, initialSigRecommendations, initialTop30Average, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter]);
+
   // Fetch Recommendations & Prestige
   useEffect(() => {
       const params = new URLSearchParams();

@@ -618,6 +618,17 @@ export async function updateWarDetails(warId: string, data: Partial<War>) {
       throw new Error("Unauthorized: Cannot update wars outside your alliance.");
   }
 
+  // State invariant validation: Finished wars must have a result and deaths
+  const effectiveStatus = war.status; // status isn't updatable via this action yet
+  const effectiveResult = data.result !== undefined ? data.result : war.result;
+  const effectiveDeaths = data.enemyDeaths !== undefined ? data.enemyDeaths : war.enemyDeaths;
+
+  if (effectiveStatus === WarStatus.FINISHED) {
+      if (effectiveResult === WarResult.UNKNOWN || effectiveDeaths === null) {
+          throw new Error("A finished war must have a valid result and enemy deaths.");
+      }
+  }
+
   await prisma.war.update({
     where: { id: warId },
     data: {
