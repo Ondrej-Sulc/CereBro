@@ -14,14 +14,20 @@ async function testProcessing() {
   console.log(`Processing ${imagePath}...`);
   try {
     const buffer = await fs.readFile(imagePath);
-    
-    // Optional: Log raw OCR descriptions for debugging
+
     const visionService = await getGoogleVisionService();
-    // const rawDetections = await visionService.detectText(buffer);
-    // console.log("Raw OCR Texts:", rawDetections.slice(0, 50).map((d: any) => d.description));
+    const rawDetections = await visionService.detectText(buffer);
+
+    const { createHash } = await import('crypto');
+    const hash = createHash('md5').update(buffer).digest('hex');
+    const ocrDir = path.dirname(imagePath);
+    const ocrPath = path.join(ocrDir, `${hash}.json`);
+
+    await fs.writeFile(ocrPath, JSON.stringify(rawDetections, null, 2));
+    console.log(`Saved raw OCR results to ${ocrPath}`);
 
     const result = await rosterImageService.processBGView(buffer, { debugMode: true });
-    
+
     if (result.debugImage) {
       const debugPath = path.join(path.dirname(imagePath), 'debug-' + path.basename(imagePath));
       await fs.writeFile(debugPath, result.debugImage);
@@ -29,15 +35,19 @@ async function testProcessing() {
       delete result.debugImage; // Don't log the buffer
     }
 
-    // Clean up buffers from logging to avoid massive output
-    result.grid.forEach(cell => {
-      if (cell.debugInfo?.bestMatchBuffer) {
-        delete cell.debugInfo.bestMatchBuffer;
-      }
-    });
+    const formattedExpectation = result.grid.map(cell => ({
+      class: cell.class,
+      name: cell.championName,
+      stars: cell.stars,
+      rank: cell.rank || 0,
+      sig: cell.sigLevel !== undefined ? cell.sigLevel : 0,
+      ascended: cell.isAscended || false,
+      pi: cell.powerRating || 0
+    }));
 
-    console.log("Result:", JSON.stringify(result, null, 2));
-    console.log("Success! Grid size:", result.grid.length);
+    console.log(`\n\n--- EXPECTATION FORMAT FOR ${path.basename(imagePath)} ---`);
+    console.log(`  "${path.basename(imagePath)}": ` + JSON.stringify(formattedExpectation, null, 2).replace(/\n/g, '\n  ') + ',');
+    console.log("---------------------------------------------------\n\n");
   } catch (error) {
     console.error("Error:", error);
   }

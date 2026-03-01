@@ -5,14 +5,14 @@ import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
 
 export class RosterLayoutService {
-  public async estimateGridFromBG(detections: any[], imageBuffer: Buffer): Promise<{ 
-    grid: GridCell[], 
-    avgColDist: number, 
-    cellDims: {width: number, height: number},
+  public async estimateGridFromBG(detections: any[], imageBuffer: Buffer): Promise<{
+    grid: GridCell[],
+    avgColDist: number,
+    cellDims: { width: number, height: number },
     headerMinY: number
   }> {
     const cells: GridCell[] = [];
-    
+
     const metadata = await sharp(imageBuffer).metadata();
     const imageWidth = metadata.width || 1000;
 
@@ -32,52 +32,65 @@ export class RosterLayoutService {
     let headerMinY = 0;
     const headerKeywords = ['MASTERIES', 'CRAFTING'];
     for (const text of detections.slice(1)) {
-        if (text.description && headerKeywords.some(kw => text.description.toUpperCase().includes(kw))) {
-            const v = text.boundingPoly.vertices;
-            const bottomY = Math.max(v[2].y, v[3].y);
-            if (bottomY > headerMinY) {
-                headerMinY = bottomY;
-            }
+      if (text.description && headerKeywords.some(kw => text.description.toUpperCase().includes(kw))) {
+        const v = text.boundingPoly.vertices;
+        const bottomY = Math.max(v[2].y, v[3].y);
+        if (bottomY > headerMinY) {
+          headerMinY = bottomY;
         }
+      }
     }
     if (headerMinY > 0) {
-        logger.info({ headerMinY }, "Detected Header Line, ignoring content above.");
+      logger.info({ headerMinY }, "Detected Header Line, ignoring content above.");
     }
 
     const positions = piCandidates.map((pi: any) => {
-        const vertices = pi.boundingPoly.vertices;
-        let x = vertices[0].x;
-        const text = pi.description || '';
-        const firstDigitIndex = text.search(/\d/);
-        const height = vertices[2].y - vertices[0].y;
+      const vertices = pi.boundingPoly.vertices;
+      let x = vertices[0].x;
+      const text = pi.description || '';
+      const firstDigitIndex = text.search(/\d/);
+      const height = vertices[2].y - vertices[0].y;
 
-        if (firstDigitIndex > 0 && text.length > 0) {
-             x += (height * 1.15); 
-        }
+      if (firstDigitIndex > 0 && text.length > 0) {
+        x += (height * 1.15);
+      }
 
-        return {
-            x: x, 
-            y: vertices[2].y, 
-            pi
-        };
-    });
+      return {
+        x: x,
+        y: vertices[2].y,
+        pi
+      };
+    }).filter(pos => pos.y > headerMinY);
 
     const sortedX = [...positions].sort((a, b) => a.x - b.x);
     const uniqueCols: number[] = [];
     if (sortedX.length > 0) {
-        uniqueCols.push(sortedX[0].x);
-        for (let i = 1; i < sortedX.length; i++) {
-            if (sortedX[i].x > uniqueCols[uniqueCols.length - 1] + 50) { 
-                uniqueCols.push(sortedX[i].x);
-            }
+      uniqueCols.push(sortedX[0].x);
+      for (let i = 1; i < sortedX.length; i++) {
+        if (sortedX[i].x > uniqueCols[uniqueCols.length - 1] + 50) {
+          uniqueCols.push(sortedX[i].x);
         }
+      }
     }
 
     let avgColDist = 0;
     if (uniqueCols.length > 1) {
-        avgColDist = (uniqueCols[uniqueCols.length - 1] - uniqueCols[0]) / (uniqueCols.length - 1);
+      const estColDist = imageWidth / 7;
+      const validDists: number[] = [];
+      for (let i = 1; i < uniqueCols.length; i++) {
+        const d = uniqueCols[i] - uniqueCols[i - 1];
+        const colsBetween = Math.round(d / estColDist);
+        if (colsBetween > 0) {
+          validDists.push(d / colsBetween);
+        }
+      }
+      if (validDists.length > 0) {
+        avgColDist = validDists.reduce((a, b) => a + b, 0) / validDists.length;
+      } else {
+        avgColDist = estColDist;
+      }
     } else {
-        avgColDist = imageWidth / 7; 
+      avgColDist = imageWidth / 7;
     }
 
     const cellWidth = avgColDist * CONFIG.CELL_WIDTH_RATIO;
@@ -90,40 +103,40 @@ export class RosterLayoutService {
       const cellY = pos.y - cellHeight + (cellHeight * CONFIG.PI_OFFSET_Y_RATIO);
 
       if (cellY < headerMinY) {
-          continue;
+        continue;
       }
 
       const cellBounds = {
-          x: cellX,
-          y: cellY,
-          width: cellWidth,
-          height: cellHeight
+        x: cellX,
+        y: cellY,
+        width: cellWidth,
+        height: cellHeight
       };
 
       let rank: number | undefined;
       let sigLevel: number | undefined;
 
       const candidateDetections = detections.filter(d => {
-          if (!d.description) return false;
-          const v = d.boundingPoly.vertices;
-          const textCenterX = (v[0].x + v[2].x) / 2;
-          const textBottomY = v[2].y;
-          
-          const isAligned = Math.abs(textCenterX - pos.x) < (cellWidth * 0.6);
-          const isAbove = textBottomY < pos.y && textBottomY > (cellY + cellHeight * 0.2);
-          return isAligned && isAbove;
+        if (!d.description) return false;
+        const v = d.boundingPoly.vertices;
+        const textCenterX = (v[0].x + v[2].x) / 2;
+        const textBottomY = v[2].y;
+
+        const isAligned = Math.abs(textCenterX - pos.x) < (cellWidth * 0.6);
+        const isAbove = textBottomY < pos.y && textBottomY > (cellY + cellHeight * 0.2);
+        return isAligned && isAbove;
       });
 
       const combinedText = candidateDetections.map(d => d.description).join(' ');
-      
+
       let rankMatch = combinedText.match(/Rank\s*(\d+)/i);
       if (!rankMatch) {
-          rankMatch = combinedText.match(/\bR(\d+)\b/i);
+        rankMatch = combinedText.match(/\bR(\d+)\b/i);
       }
-      
+
       let sigMatch = combinedText.match(/Sig[.\s]*(\d+)/i);
       if (!sigMatch) {
-          sigMatch = combinedText.match(/\bS(\d+)\b/i);
+        sigMatch = combinedText.match(/\bS(\d+)\b/i);
       }
 
       if (rankMatch) rank = parseInt(rankMatch[1], 10);
