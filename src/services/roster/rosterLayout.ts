@@ -4,8 +4,15 @@ import logger from '../loggerService.js';
 import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
 
+interface OCRDetection {
+  description?: string;
+  boundingPoly: {
+    vertices: { x?: number; y?: number }[];
+  };
+}
+
 export class RosterLayoutService {
-  public async estimateGridFromBG(detections: any[], imageBuffer: Buffer): Promise<{
+  public async estimateGridFromBG(detections: OCRDetection[], imageBuffer: Buffer): Promise<{
     grid: GridCell[],
     avgColDist: number,
     cellDims: { width: number, height: number },
@@ -32,9 +39,10 @@ export class RosterLayoutService {
     let headerMinY = 0;
     const headerKeywords = ['MASTERIES', 'CRAFTING'];
     for (const text of detections.slice(1)) {
-      if (text.description && headerKeywords.some(kw => text.description.toUpperCase().includes(kw))) {
+      const desc = text.description;
+      if (desc && headerKeywords.some(kw => desc.toUpperCase().includes(kw))) {
         const v = text.boundingPoly.vertices;
-        const bottomY = Math.max(v[2].y, v[3].y);
+        const bottomY = Math.max(v[2]?.y || 0, v[3]?.y || 0);
         if (bottomY > headerMinY) {
           headerMinY = bottomY;
         }
@@ -44,12 +52,12 @@ export class RosterLayoutService {
       logger.info({ headerMinY }, "Detected Header Line, ignoring content above.");
     }
 
-    const positions = piCandidates.map((pi: any) => {
+    const positions = piCandidates.map((pi: OCRDetection) => {
       const vertices = pi.boundingPoly.vertices;
-      let x = vertices[0].x;
+      let x = vertices[0].x || 0;
       const text = pi.description || '';
       const firstDigitIndex = text.search(/\d/);
-      const height = vertices[2].y - vertices[0].y;
+      const height = (vertices[2].y || 0) - (vertices[0].y || 0);
 
       if (firstDigitIndex > 0 && text.length > 0) {
         x += (height * 1.15);
@@ -57,7 +65,7 @@ export class RosterLayoutService {
 
       return {
         x: x,
-        y: vertices[2].y,
+        y: vertices[2].y || 0,
         pi
       };
     }).filter(pos => pos.y > headerMinY);
@@ -113,7 +121,12 @@ export class RosterLayoutService {
         Math.abs(curr - pos.x) < Math.abs(prev - pos.x) ? curr : prev
       );
 
-      console.log(`[DEBUG] PI: ${powerRating}, pos.x: ${pos.x}, closestColX: ${closestColX}, diff: ${closestColX - pos.x}`);
+      logger.debug({
+        powerRating,
+        posX: pos.x,
+        closestColX,
+        diff: closestColX - pos.x
+      }, "Cell PI debugging");
 
       // If the bounding box is shifted left by >10 pixels relative to the clean column X,
       // it means OCR merged the class icon as a leading digit. Strip it.
@@ -121,7 +134,7 @@ export class RosterLayoutService {
         const prStr = powerRating.toString();
         if (prStr.length >= 5) {
           powerRating = parseInt(prStr.substring(1), 10);
-          console.log(`[DEBUG] Stripped PI to: ${powerRating}`);
+          logger.debug({ powerRating }, "Stripped PI digit");
         }
       }
 
@@ -145,8 +158,8 @@ export class RosterLayoutService {
       const candidateDetections = detections.filter(d => {
         if (!d.description) return false;
         const v = d.boundingPoly.vertices;
-        const textCenterX = (v[0].x + v[2].x) / 2;
-        const textBottomY = v[2].y;
+        const textCenterX = ((v[0]?.x || 0) + (v[2]?.x || 0)) / 2;
+        const textBottomY = v[2]?.y || 0;
 
         const isAligned = Math.abs(textCenterX - closestColX) < (cellWidth * 0.6);
         const isAbove = textBottomY < pos.y && textBottomY > (cellY + cellHeight * 0.2);
@@ -169,12 +182,12 @@ export class RosterLayoutService {
       if (sigMatch) sigLevel = parseInt(sigMatch[1], 10);
 
       const v = pos.pi.boundingPoly.vertices;
-      const piW = v[2].x - v[0].x;
-      const piH = v[2].y - v[0].y;
+      const piW = (v[2]?.x || 0) - (v[0]?.x || 0);
+      const piH = (v[2]?.y || 0) - (v[0]?.y || 0);
 
       cells.push({
         bounds: cellBounds,
-        piBounds: { x: v[0].x, y: v[0].y, width: piW, height: piH },
+        piBounds: { x: v[0]?.x || 0, y: v[0]?.y || 0, width: piW, height: piH },
         powerRating: powerRating,
         rank,
         sigLevel

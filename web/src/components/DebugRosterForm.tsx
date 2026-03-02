@@ -24,6 +24,7 @@ const ZoomControls = () => {
         onClick={() => zoomOut()}
         className="p-1.5 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-colors"
         title="Zoom Out"
+        aria-label="Zoom Out"
       >
         <ZoomOut className="w-4 h-4" />
       </button>
@@ -32,6 +33,7 @@ const ZoomControls = () => {
         onClick={() => resetTransform()}
         className="p-1.5 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-colors"
         title="Reset Zoom"
+        aria-label="Reset Zoom"
       >
         <RotateCcw className="w-4 h-4" />
       </button>
@@ -40,6 +42,7 @@ const ZoomControls = () => {
         onClick={() => zoomIn()}
         className="p-1.5 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-colors"
         title="Zoom In"
+        aria-label="Zoom In"
       >
         <ZoomIn className="w-4 h-4" />
       </button>
@@ -73,8 +76,9 @@ export function DebugRosterForm() {
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
+    const urlsToCleanup = previews;
     return () => {
-      previews.forEach(url => URL.revokeObjectURL(url));
+      urlsToCleanup.forEach(url => URL.revokeObjectURL(url));
     };
   }, [previews]);
 
@@ -235,7 +239,7 @@ export function DebugRosterForm() {
             </div>
           </form>
 
-          {statusMessage && loading && (
+          {statusMessage && (
             <p className="text-center text-slate-400 mt-4">{statusMessage}</p>
           )}
         </CardContent>

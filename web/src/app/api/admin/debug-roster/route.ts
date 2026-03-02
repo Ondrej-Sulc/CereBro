@@ -47,10 +47,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Too many files. Maximum is ${MAX_FILES}.` }, { status: 400 });
         }
 
-        type LightweightGridCell = Pick<GridCell, 'championName' | 'stars' | 'rank' | 'powerRating' | 'isAscended' | 'sigLevel'> & { champion?: any };
+        interface LightweightChampion {
+            id: number;
+            name: string;
+            championClass: string;
+            images: Record<string, string>;
+        }
+
+        type LightweightGridCell = Pick<GridCell, 'championName' | 'stars' | 'rank' | 'powerRating' | 'isAscended' | 'sigLevel'> & { 
+            champion?: LightweightChampion 
+        };
         const results: { fileName: string; debug: string; grid?: LightweightGridCell[]; success: boolean; error?: string }[] = [];
 
         const allChampions = await prisma.champion.findMany();
+        const championMap = new Map(allChampions.map(c => [c.name, c]));
 
         for (const file of files) {
             if (file.size > MAX_FILE_SIZE) {
@@ -71,7 +81,7 @@ export async function POST(req: NextRequest) {
 
                 // Send only essential fields to the client to avoid sending heavy OCR-related debug data
                 const lightweightGrid = grid?.map(cell => {
-                    const champ = allChampions.find(c => c.name === cell.championName);
+                    const champ = cell.championName ? championMap.get(cell.championName) : undefined;
                     return {
                         championName: cell.championName,
                         stars: cell.stars,
@@ -83,7 +93,7 @@ export async function POST(req: NextRequest) {
                             id: champ.id,
                             name: champ.name,
                             championClass: champ.class,
-                            images: champ.images
+                            images: champ.images as Record<string, string>
                         } : undefined
                     };
                 });

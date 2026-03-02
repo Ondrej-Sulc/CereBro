@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
+import { ChampionClass } from "@prisma/client";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VirtuosoGrid } from "react-virtuoso";
@@ -185,6 +186,12 @@ export function RosterUpdateForm() {
         formData.append("rank", rank);
         formData.append("isAscended", String(isAscended));
 
+        interface RosterUpdateResponse {
+            count: number;
+            added?: RosterApiItem[];
+            errors?: string[];
+        }
+
         try {
             // Compress/Convert all images
             for (let i = 0; i < files.length; i++) {
@@ -195,7 +202,7 @@ export function RosterUpdateForm() {
 
             setStatusMessage("Uploading...");
 
-            const response = await axios.post("/api/profile/roster/update", formData, {
+            const response = await axios.post<RosterUpdateResponse>("/api/profile/roster/update", formData, {
                 onUploadProgress: (progressEvent) => {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
                     setUploadProgress(percentCompleted);
@@ -213,7 +220,7 @@ export function RosterUpdateForm() {
                     ...item,
                     champion: {
                         ...item.champion,
-                        championClass: item.champion.class
+                        championClass: item.champion.class as ChampionClass
                     }
                 })),
                 errors: data.errors || [],
@@ -255,7 +262,15 @@ export function RosterUpdateForm() {
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
 
-                        <Tabs value={mode} onValueChange={(v) => setMode(v as typeof mode)} className="w-full">
+                        <Tabs 
+                            value={mode} 
+                            onValueChange={(v) => {
+                                if (v === 'stats-view' || v === 'grid-view') {
+                                    setMode(v);
+                                }
+                            }} 
+                            className="w-full"
+                        >
                             <TabsList className="grid w-full grid-cols-2 bg-slate-950 p-1 border border-slate-800 rounded-lg h-auto">
                                 <TabsTrigger
                                     value="stats-view"

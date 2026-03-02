@@ -8,7 +8,7 @@ import { ChampionClass } from "@prisma/client";
 export interface ChampionData {
     id: number;
     name: string;
-    championClass: string;
+    championClass: ChampionClass;
     images: ChampionImages;
 }
 
@@ -75,20 +75,14 @@ export const UpdatedChampionItem = memo(({ item }: { item: RosterWithChampion })
 
                 {/* Line 3: Class & Rating */}
                 <div className="flex items-center justify-between gap-1 mt-0.5">
-                    {item.champion.championClass !== 'SUPERIOR' ? (
-                        <Image
-                            src={CLASS_ICONS[item.champion.championClass as keyof typeof CLASS_ICONS]}
-                            alt={item.champion.championClass}
-                            title={item.champion.championClass}
-                            width={12}
-                            height={12}
-                            className="opacity-80"
-                        />
-                    ) : (
-                        <span className="text-[10px] font-semibold text-slate-500 uppercase">
-                            {item.champion.championClass}
-                        </span>
-                    )}
+                    <Image
+                        src={CLASS_ICONS[item.champion.championClass]}
+                        alt={item.champion.championClass}
+                        title={item.champion.championClass}
+                        width={12}
+                        height={12}
+                        className="opacity-80"
+                    />
                     <span className="text-[10px] font-mono font-medium text-slate-400">
                         {item.powerRating !== null && item.powerRating !== undefined ? item.powerRating.toLocaleString() : '---'}
                     </span>

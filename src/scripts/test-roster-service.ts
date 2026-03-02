@@ -19,8 +19,10 @@ async function testProcessing() {
     const rawDetections = await visionService.detectText(buffer);
 
     const { createHash } = await import('crypto');
+    const os = await import('os');
     const hash = createHash('md5').update(buffer).digest('hex');
-    const ocrDir = path.dirname(imagePath);
+    const ocrDir = path.join(os.tmpdir(), 'cerebro-ocr');
+    await fs.mkdir(ocrDir, { recursive: true });
     const ocrPath = path.join(ocrDir, `${hash}.json`);
 
     await fs.writeFile(ocrPath, JSON.stringify(rawDetections, null, 2));
