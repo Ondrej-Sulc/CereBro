@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
             where: { id: session.user.id },
             include: { accounts: true }
         });
-        
+
         const discordId = user?.accounts.find(a => a.provider === 'discord')?.providerAccountId;
         if (!discordId) {
             return NextResponse.json({ error: "No Discord account linked" }, { status: 403 });
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         // 2. Parse Files
         const MAX_FILES = 10;
         const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-        
+
         const formData = await req.formData();
         const rawFiles = formData.getAll("images");
         const files = rawFiles.filter((f): f is File => f instanceof File);
@@ -47,8 +47,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: `Too many files. Maximum is ${MAX_FILES}.` }, { status: 400 });
         }
 
-        type LightweightGridCell = Pick<GridCell, 'championName'|'stars'|'rank'|'powerRating'|'isAscended'>;
+        interface LightweightChampion {
+            id: number;
+            name: string;
+            championClass: string;
+            images: Record<string, string>;
+        }
+
+        type LightweightGridCell = Pick<GridCell, 'championName' | 'stars' | 'rank' | 'powerRating' | 'isAscended' | 'sigLevel'> & { 
+            champion?: LightweightChampion 
+        };
         const results: { fileName: string; debug: string; grid?: LightweightGridCell[]; success: boolean; error?: string }[] = [];
+
+        const allChampions = await prisma.champion.findMany();
+        const championMap = new Map(allChampions.map(c => [c.name, c]));
 
         for (const file of files) {
             if (file.size > MAX_FILE_SIZE) {
@@ -63,18 +75,28 @@ export async function POST(req: NextRequest) {
 
             try {
                 const buffer = Buffer.from(await file.arrayBuffer());
-                
+
                 // We use processBGView directly to get the debug image and the detected grid
                 const { grid, debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
-                
+
                 // Send only essential fields to the client to avoid sending heavy OCR-related debug data
-                const lightweightGrid = grid?.map(cell => ({
-                    championName: cell.championName,
-                    stars: cell.stars,
-                    rank: cell.rank,
-                    powerRating: cell.powerRating,
-                    isAscended: cell.isAscended
-                }));
+                const lightweightGrid = grid?.map(cell => {
+                    const champ = cell.championName ? championMap.get(cell.championName) : undefined;
+                    return {
+                        championName: cell.championName,
+                        stars: cell.stars,
+                        rank: cell.rank,
+                        powerRating: cell.powerRating,
+                        isAscended: cell.isAscended,
+                        sigLevel: cell.sigLevel,
+                        champion: champ ? {
+                            id: champ.id,
+                            name: champ.name,
+                            championClass: champ.class,
+                            images: champ.images as Record<string, string>
+                        } : undefined
+                    };
+                });
 
                 results.push({
                     fileName: file.name,
@@ -87,7 +109,7 @@ export async function POST(req: NextRequest) {
                 const message = err instanceof Error ? err.message : String(err);
                 const fileName = file.name;
                 logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName }, "Error processing debug roster image");
-                
+
                 results.push({
                     fileName,
                     debug: "",

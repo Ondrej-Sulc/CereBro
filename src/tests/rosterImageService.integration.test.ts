@@ -28,7 +28,6 @@ vi.mock('../services/googleVisionService.js', () => {
 });
 
 // Define where the test images are located.
-// Ideally these should be in the repo, but for now we point to temp/testimages.
 // Adjust this path if you move the images.
 const TEST_IMAGES_DIR = path.join(process.cwd(), 'src', 'tests', 'fixtures', 'roster-images');
 
@@ -57,7 +56,7 @@ describe('RosterImageService Integration Tests', () => {
       }
 
       const filePath = path.join(TEST_IMAGES_DIR, filename);
-      
+
       // Check if individual file exists
       try {
         await fs.access(filePath);

@@ -24,24 +24,37 @@ interface ChampionCardProps {
 
 export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: ChampionCardProps) => {
     const classColors = getChampionClassColors(item.champion.class);
-    
+
+    // Map star levels to specific border colors
+    const starBorderColors: Record<number, string> = {
+        7: "border-purple-500 hover:border-purple-400/80 shadow-purple-900/40",
+        6: "border-sky-400 hover:border-sky-300/80 shadow-sky-900/40",
+        5: "border-red-400 hover:border-red-300/80 shadow-red-900/40",
+        4: "border-yellow-500 hover:border-yellow-400/80 shadow-yellow-900/40",
+        3: "border-slate-300 hover:border-slate-200/80 shadow-slate-900/40",
+        2: "border-amber-700 hover:border-amber-600/80 shadow-amber-900/40", // Brown-ish
+        1: "border-slate-500 hover:border-slate-400/80 shadow-slate-900/40",
+    };
+
+    const borderClass = starBorderColors[item.stars] || "border-slate-800 hover:border-slate-500 shadow-black/20";
+
     const cardContent = (
-        <div 
+        <div
             className={cn(
-                "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-colors cursor-pointer bg-slate-900",
+                "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-colors cursor-pointer bg-slate-900 shadow-lg",
                 classColors.bg,
-                "border-slate-800 hover:border-slate-500"
+                borderClass
             )}
             onClick={() => mode === 'edit' && onClick(item)}
         >
-            <Image 
-                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, 'full')} 
+            <Image
+                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, 'full')}
                 alt={item.champion.name}
                 fill
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 10vw"
                 className="object-cover transition-transform group-hover:scale-105 p-1"
             />
-            
+
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
             <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
@@ -61,13 +74,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                         <Trophy className="w-3 h-3 text-yellow-400" />
                     </div>
                 )}
-                
+
                 <div className="hidden sm:block">
                     <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm", classColors.text)}>
                         <div className="relative w-4 h-4">
-                            <Image 
-                                src={CLASS_ICONS[item.champion.class as Exclude<ChampionClass, 'SUPERIOR'>]} 
-                                alt={item.champion.class} 
+                            <Image
+                                src={CLASS_ICONS[item.champion.class] || "/icons/unknown.png"}
+                                alt={item.champion.class}
                                 fill
                                 sizes="16px"
                                 className="object-contain"
@@ -79,20 +92,20 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
 
             <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
                 {prestige && (
-                     <div className="hidden sm:flex justify-end mb-0.5">
+                    <div className="hidden sm:flex justify-end mb-0.5">
                         <span className="text-[9px] font-mono font-bold text-slate-300 bg-black/60 px-1 rounded border border-white/5">
                             {prestige.toLocaleString('en-US')}
                         </span>
-                     </div>
+                    </div>
                 )}
                 <p className="text-[10px] sm:text-xs font-bold text-white leading-tight truncate text-center sm:text-left drop-shadow-sm">{item.champion.name}</p>
             </div>
 
             {mode === 'edit' && (
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="bg-sky-600 p-2 rounded-full scale-75 group-hover:scale-100 transition-transform">
-                            <Edit2 className="w-4 h-4 text-white" />
-                        </div>
+                    <div className="bg-sky-600 p-2 rounded-full scale-75 group-hover:scale-100 transition-transform">
+                        <Edit2 className="w-4 h-4 text-white" />
+                    </div>
                 </div>
             )}
         </div>
@@ -107,8 +120,8 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                 <PopoverContent className="w-[280px] p-0 bg-slate-950 border-slate-800 shadow-xl z-50">
                     <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
-                            <Image 
-                                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
+                            <Image
+                                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64') || '/icons/unknown.png'}
                                 alt={item.champion.name}
                                 fill
                                 className="object-cover"
@@ -125,7 +138,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                 const isFilteringAbilities = filters.abilities.length > 0 || filters.immunities.length > 0 || filters.categories.length > 0;
                                 const isFilteringTags = filters.tags.length > 0;
                                 const isFiltering = isFilteringAbilities || isFilteringTags;
-                                
+
                                 if (!isFiltering) {
                                     return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion details.</div>;
                                 }
@@ -139,22 +152,24 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
 
                                 const abilities = relevantAbilities.filter(a => a.type === 'ABILITY');
                                 const immunities = relevantAbilities.filter(a => a.type === 'IMMUNITY');
-                                const tags = isFilteringTags 
-                                    ? (item.champion.tags || []).filter(t => filters.tags.includes(t.name)) 
+                                const tags = isFilteringTags
+                                    ? (item.champion.tags || []).filter(t => filters.tags.includes(t.name))
                                     : [];
 
                                 if (abilities.length === 0 && immunities.length === 0 && tags.length === 0) {
-                                     return <div className="text-xs text-slate-500 text-center italic">No matching details found.</div>;
+                                    return <div className="text-xs text-slate-500 text-center italic">No matching details found.</div>;
                                 }
-                                
+
                                 const groupItems = (items: typeof abilities) => {
                                     const grouped = items.reduce((acc, curr) => {
                                         const name = curr.ability.name;
                                         if (!acc[name]) {
-                                            acc[name] = { name, instances: [] as { 
-                                                source: string | null, 
-                                                synergyChampions: { name: string; images: ChampionImages }[] 
-                                            }[] };
+                                            acc[name] = {
+                                                name, instances: [] as {
+                                                    source: string | null,
+                                                    synergyChampions: { name: string; images: ChampionImages }[]
+                                                }[]
+                                            };
                                         }
                                         acc[name].instances.push({
                                             source: curr.source,
@@ -164,12 +179,12 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                             }))
                                         });
                                         return acc;
-                                    }, {} as Record<string, { 
-                                        name: string, 
-                                        instances: { 
-                                            source: string | null, 
-                                            synergyChampions: { name: string; images: ChampionImages }[] 
-                                        }[] 
+                                    }, {} as Record<string, {
+                                        name: string,
+                                        instances: {
+                                            source: string | null,
+                                            synergyChampions: { name: string; images: ChampionImages }[]
+                                        }[]
                                     }>);
                                     return Object.values(grouped);
                                 };
@@ -187,9 +202,9 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                 </div>
                                                 <div className="flex flex-wrap gap-1.5">
                                                     {displayImmunities.map((imm, i) => (
-                                                        <Badge 
-                                                            key={i} 
-                                                            variant="secondary" 
+                                                        <Badge
+                                                            key={i}
+                                                            variant="secondary"
                                                             className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[11px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                         >
                                                             <div className="flex items-start gap-1.5">
@@ -201,9 +216,9 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                                                 {inst.synergyChampions.length > 0 && (
                                                                                     <div className="flex -space-x-1.5">
                                                                                         {inst.synergyChampions.map((sc, scIdx) => (
-                                                                                                <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                                    <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
-                                                                                                </div>
+                                                                                            <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
+                                                                                                <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
+                                                                                            </div>
                                                                                         ))}
                                                                                     </div>
                                                                                 )}
@@ -227,9 +242,9 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                 </div>
                                                 <div className="flex flex-wrap gap-1.5">
                                                     {displayAbilities.map((ab, i) => (
-                                                        <Badge 
-                                                            key={i} 
-                                                            variant="secondary" 
+                                                        <Badge
+                                                            key={i}
+                                                            variant="secondary"
                                                             className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[11px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                         >
                                                             <div className="flex items-start gap-1.5">
@@ -241,9 +256,9 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                                                 {inst.synergyChampions.length > 0 && (
                                                                                     <div className="flex -space-x-1.5">
                                                                                         {inst.synergyChampions.map((sc, scIdx) => (
-                                                                                                <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                                    <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
-                                                                                                </div>
+                                                                                            <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
+                                                                                                <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
+                                                                                            </div>
                                                                                         ))}
                                                                                     </div>
                                                                                 )}
@@ -258,9 +273,9 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         {tags.length > 0 && (
-                                             <div className="space-y-1.5">
+                                            <div className="space-y-1.5">
                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
                                                     <TagIcon className="w-3.5 h-3.5" />
                                                     Matching Tags
