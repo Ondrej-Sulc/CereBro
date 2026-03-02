@@ -53,11 +53,14 @@ export class RosterLayoutService {
     }
 
     const positions = piCandidates.map((pi: OCRDetection) => {
-      const vertices = pi.boundingPoly.vertices;
-      let x = vertices[0].x || 0;
+      const vertices = pi.boundingPoly?.vertices || [];
+      const v0 = vertices[0] || { x: 0, y: 0 };
+      const v2 = vertices[2] || { x: 0, y: 0 };
+      
+      let x = v0.x || 0;
       const text = pi.description || '';
       const firstDigitIndex = text.search(/\d/);
-      const height = (vertices[2].y || 0) - (vertices[0].y || 0);
+      const height = (v2.y || 0) - (v0.y || 0);
 
       if (firstDigitIndex > 0 && text.length > 0) {
         x += (height * 1.15);
@@ -65,7 +68,7 @@ export class RosterLayoutService {
 
       return {
         x: x,
-        y: vertices[2].y || 0,
+        y: v2.y || 0,
         pi
       };
     }).filter(pos => pos.y > headerMinY);

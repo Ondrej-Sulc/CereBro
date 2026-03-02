@@ -13,6 +13,7 @@ export * from './roster/types.js';
 
 interface ProcessingOptions {
   debugMode?: boolean;
+  detections?: any[];
 }
 
 export class RosterImageService {
@@ -27,8 +28,11 @@ export class RosterImageService {
   ): Promise<{ grid: GridCell[]; debugImage?: Buffer }> {
     const t0 = performance.now();
 
-    const visionService = await getGoogleVisionService();
-    const detections = await visionService.detectText(imageBuffer);
+    let detections = options.detections;
+    if (!detections) {
+      const visionService = await getGoogleVisionService();
+      detections = await visionService.detectText(imageBuffer);
+    }
     
     const t1 = performance.now(); // OCR done
 

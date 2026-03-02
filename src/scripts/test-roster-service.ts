@@ -28,7 +28,7 @@ async function testProcessing() {
     await fs.writeFile(ocrPath, JSON.stringify(rawDetections, null, 2));
     console.log(`Saved raw OCR results to ${ocrPath}`);
 
-    const result = await rosterImageService.processBGView(buffer, { debugMode: true });
+    const result = await rosterImageService.processBGView(buffer, { debugMode: true, detections: rawDetections });
 
     if (result.debugImage) {
       const debugPath = path.join(path.dirname(imagePath), 'debug-' + path.basename(imagePath));

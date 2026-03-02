@@ -82,6 +82,12 @@ export function RosterUpdateForm() {
         };
     }, [previews]);
 
+    const addFiles = useCallback((newFiles: File[]) => {
+        setFiles(prev => [...prev, ...newFiles]);
+        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        setPreviews(prev => [...prev, ...newPreviews]);
+    }, []);
+
     const handlePaste = useCallback((e: ClipboardEvent) => {
         const items = e.clipboardData?.items;
         if (!items) return;
@@ -99,7 +105,7 @@ export function RosterUpdateForm() {
         if (newFiles.length > 0) {
             addFiles(newFiles);
         }
-    }, []);
+    }, [addFiles]);
 
     useEffect(() => {
         window.addEventListener("paste", handlePaste);
@@ -107,12 +113,6 @@ export function RosterUpdateForm() {
             window.removeEventListener("paste", handlePaste);
         };
     }, [handlePaste]);
-
-    const addFiles = (newFiles: File[]) => {
-        setFiles(prev => [...prev, ...newFiles]);
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-        setPreviews(prev => [...prev, ...newPreviews]);
-    };
 
     const removeFile = (index: number) => {
         setFiles(prev => prev.filter((_, i) => i !== index));
