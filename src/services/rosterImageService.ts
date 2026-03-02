@@ -11,9 +11,16 @@ import { performance } from 'perf_hooks';
 
 export * from './roster/types.js';
 
+interface Detection {
+  description?: string;
+  boundingPoly: {
+    vertices: { x?: number; y?: number }[];
+  };
+}
+
 interface ProcessingOptions {
   debugMode?: boolean;
-  detections?: any[];
+  detections?: Detection[];
 }
 
 export class RosterImageService {

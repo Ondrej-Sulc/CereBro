@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, forwardRef, HTMLAttributes, memo } from "react";
+import { useState, useEffect, useCallback, forwardRef, HTMLAttributes, memo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,17 +74,23 @@ export function RosterUpdateForm() {
 
     const [uploadProgress, setUploadProgress] = useState(0);
     const [statusMessage, setStatusMessage] = useState("");
+    const previewUrlsRef = useRef<string[]>([]);
 
-    // Cleanup object URLs to avoid memory leaks
+    // Cleanup object URLs on unmount to avoid memory leaks
     useEffect(() => {
+        const urls = previewUrlsRef.current;
         return () => {
-            previews.forEach(url => URL.revokeObjectURL(url));
+            urls.forEach(url => URL.revokeObjectURL(url));
         };
-    }, [previews]);
+    }, []);
 
     const addFiles = useCallback((newFiles: File[]) => {
         setFiles(prev => [...prev, ...newFiles]);
-        const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+        const newPreviews = newFiles.map(file => {
+            const url = URL.createObjectURL(file);
+            previewUrlsRef.current.push(url);
+            return url;
+        });
         setPreviews(prev => [...prev, ...newPreviews]);
     }, []);
 
