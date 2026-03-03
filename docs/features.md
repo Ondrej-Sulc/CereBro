@@ -99,6 +99,19 @@ A unified suite of tools for managing Alliance War.
     *   **Defense:** Analyze performance by Node (lethality) or Defender (placement history).
     *   **Matchups:** Analyze Attacker success rates and find "Best Counters".
 
+### Quest Planning & Roster Integration
+A dedicated system for planning fights across complex quests (e.g., Story content, Everest runs).
+*   **Data Model:** `QuestCategory` -> `QuestPlan` -> `QuestEncounter` -> `QuestEncounterNode`.
+*   **Admin Builder (`/admin/quests`):**
+    *   **Quest Creation:** Define paths, add sequence steps, and specify defenders via `ChampionCombobox`.
+    *   **Restrictions:** Configure quest-wide or encounter-specific restrictions like Min/Max Star levels, Class, and Tag requirements using interactive UI tools (`MultiTagCombobox`).
+    *   **Recommendations & Tips:** Provide Markdown-supported tips, recommend specific champions, and map active `NodeModifier`s to encounters.
+*   **Player Timeline (`/planning/quests/[id]`):**
+    *   **Interactive Path:** A visual, vertical timeline of the quest path summarizing required encounters.
+    *   **Roster Syncing:** Dynamically filters the player's CereBro roster against the quest/encounter restrictions to display only eligible champions.
+    *   **Counter Selection:** Players simply click a valid champion from their roster to assign them to an encounter, saving their plan dynamically across sessions via `PlayerQuestEncounter`.
+    *   **Highlights:** Automatically highlights champions matching the administrative "Recommended Tags" or "Recommended Champions" for quick, intelligent selection.
+
 ### Profile & Roster Manager
 *   **Profile:** Switch/create/delete multiple MCOC accounts per user.
 *   **Roster Grid:** High-performance virtualized list of champions.

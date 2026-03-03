@@ -4,17 +4,18 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { 
-  LayoutDashboard, 
-  Sword, 
-  LineChart, 
-  Shield, 
-  Users, 
-  Ban, 
-  Bug, 
-  Hash, 
-  Target, 
-  Youtube 
+import {
+  LayoutDashboard,
+  Sword,
+  LineChart,
+  Shield,
+  Users,
+  Ban,
+  Bug,
+  Hash,
+  Target,
+  Youtube,
+  Map
 } from "lucide-react"
 
 const items = [
@@ -67,6 +68,11 @@ const items = [
     title: "Debug Roster",
     href: "/admin/debug-roster",
     icon: Bug,
+  },
+  {
+    title: "Quests",
+    href: "/admin/quests",
+    icon: Map,
   },
 ]
 
