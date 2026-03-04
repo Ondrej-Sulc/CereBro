@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair } from "lucide-react";
 import { savePlayerQuestCounter } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -17,6 +17,7 @@ import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
 import { ChampionImages, Champion } from "@/types/champion";
 import { MultiSelectFilter } from "@/components/ui/filters";
+import { useToast } from "@/hooks/use-toast";
 
 import { getQuestPlanById } from "@/app/actions/quests";
 
@@ -45,9 +46,11 @@ interface Props {
 const CLASSES = Object.values(ChampionClass);
 
 export default function QuestTimelineClient({ quest, roster, savedEncounters, filterMetadata }: Props) {
+    const { toast } = useToast();
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
+    const [isTeamExpanded, setIsTeamExpanded] = useState(false);
 
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -132,6 +135,23 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
 
     const handleSelectCounter = async (encounterId: string, championId: number) => {
         const previousValue = selections[encounterId];
+        
+        // If selecting a NEW champion (not unselecting, and not already selected for this fight)
+        if (previousValue !== championId) {
+            // Check if this champion is already in the team for another fight
+            const isAlreadyInTeam = Object.values(selections).includes(championId);
+            
+            // If they aren't in the team, and adding them would exceed the limit, block it
+            if (!isAlreadyInTeam && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
+                toast({
+                    title: "Team Limit Reached",
+                    description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
+                    variant: "destructive"
+                });
+                return; // Stop here, do not select
+            }
+        }
+
         const newValue = previousValue === championId ? null : championId;
         setSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
@@ -140,6 +160,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
         } catch (error) {
             console.error("Failed to save counter selection", error);
             setSelections(prev => ({ ...prev, [encounterId]: previousValue }));
+            toast({ title: "Error", description: "Failed to save selection.", variant: "destructive" });
         }
     };
 
@@ -162,9 +183,13 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
             {quest.teamLimit !== null && quest.teamLimit > 0 && (
                 <div className="sticky top-[72px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0">
                     <Card className="bg-slate-950/95 border-sky-900/40 shadow-xl shadow-black/50 backdrop-blur-md">
-                        <CardHeader className="py-2.5 px-4 border-b border-slate-800/50 flex flex-row items-center justify-between">
+                        <CardHeader 
+                            className="py-2.5 px-4 border-b border-slate-800/50 flex flex-row items-center justify-between cursor-pointer hover:bg-slate-900/50 transition-colors"
+                            onClick={() => setIsTeamExpanded(!isTeamExpanded)}
+                        >
                             <CardTitle className="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
                                 Current Team Plan
+                                {isTeamExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
                             </CardTitle>
                             <Badge variant={selectedTeam.length > quest.teamLimit ? "destructive" : "secondary"} className={cn(
                                 "font-bold",
@@ -177,27 +202,61 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                             {selectedTeam.length === 0 ? (
                                 <p className="text-xs text-slate-500 italic text-center py-2">No champions selected. Pick counters below.</p>
                             ) : (
-                                <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                                    {selectedTeam.map(r => (
-                                        <div key={r.id} className="w-[85px] sm:w-[95px] shrink-0">
-                                            <UpdatedChampionItem
-                                                variant="tall"
-                                                item={{
-                                                    stars: r.stars,
-                                                    rank: r.rank,
-                                                    isAwakened: r.isAwakened,
-                                                    sigLevel: r.sigLevel,
-                                                    powerRating: r.powerRating,
-                                                    champion: {
-                                                        id: r.champion.id,
-                                                        name: r.champion.name,
-                                                        championClass: r.champion.class,
-                                                        images: r.champion.images
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    ))}
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                        {selectedTeam.map(r => {
+                                            // Find all encounters this champion is assigned to
+                                            const assignedEncounterIds = Object.entries(selections)
+                                                .filter(([_, champId]) => champId === r.championId)
+                                                .map(([encId]) => encId);
+                                            
+                                            const assignedEncounters = quest.encounters.filter(e => assignedEncounterIds.includes(e.id));
+
+                                            return (
+                                                <div key={r.id} className="w-[85px] sm:w-[95px] shrink-0 flex flex-col gap-2">
+                                                    <UpdatedChampionItem
+                                                        variant="tall"
+                                                        item={{
+                                                            stars: r.stars,
+                                                            rank: r.rank,
+                                                            isAwakened: r.isAwakened,
+                                                            sigLevel: r.sigLevel,
+                                                            powerRating: r.powerRating,
+                                                            champion: {
+                                                                id: r.champion.id,
+                                                                name: r.champion.name,
+                                                                championClass: r.champion.class,
+                                                                images: r.champion.images
+                                                            }
+                                                        }}
+                                                    />
+                                                    
+                                                    {isTeamExpanded && (
+                                                        <div className="bg-slate-900/50 rounded-md border border-slate-800 p-1.5 flex flex-col gap-1.5 animate-in slide-in-from-top-2">
+                                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                                                                <span>Fights ({assignedEncounters.length})</span>
+                                                                <Crosshair className="w-3 h-3" />
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {assignedEncounters.map(enc => (
+                                                                    <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-6 h-6 rounded border border-slate-700 overflow-hidden group/tgt cursor-help">
+                                                                        {enc.defender ? (
+                                                                            <Image src={getChampionImageUrl(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                                                                        ) : (
+                                                                            <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                                        )}
+                                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            <span className="text-[8px] font-black text-white">{enc.sequence}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                             {selectedTeam.length > quest.teamLimit && (
@@ -210,141 +269,194 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                 </div>
             )}
 
-            <div className="relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-slate-800 before:via-slate-800 before:to-transparent">
+            <div className="relative pl-6 md:pl-10 pb-8">
+                {/* Continuous Vertical Timeline Line */}
+                <div className="absolute top-8 bottom-12 left-6 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full">
+                    {/* Progress Fill (Optional later, currently static styling) */}
+                    <div className="w-full h-full bg-gradient-to-b from-slate-800 via-sky-900/20 to-slate-800 rounded-full" />
+                </div>
+
                 {quest.encounters.length === 0 ? (
                     <p className="text-center text-slate-400 italic mt-8">No encounters have been added to this quest yet.</p>
                 ) : (
-                    <div className="space-y-8">
-                        {quest.encounters.map((encounter: EncounterWithRelations) => {
+                    <div className="space-y-6">
+                        {/* Start Node */}
+                        <div className="relative flex items-center h-12 pl-8 md:pl-10 group">
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
+                                <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-slate-950 bg-slate-800 shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+                                    <div className="w-2 h-2 rounded-full bg-slate-500" />
+                                </div>
+                            </div>
+                            <div className="text-xs font-black uppercase tracking-widest text-slate-500">Quest Start</div>
+                        </div>
+
+                        {quest.encounters.map((encounter: EncounterWithRelations, index: number) => {
                             const isExpanded = expandedId === encounter.id;
                             const selectedChampId = selections[encounter.id];
                             const selectedRosterItem = selectedChampId ? roster.find(r => r.championId === selectedChampId) : null;
                             const hasSelection = !!selectedChampId;
                             const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : null;
+                            const isLast = index === quest.encounters.length - 1;
 
                             return (
-                                <div key={encounter.id} className="relative flex items-center group is-active">
-                                    {/* Timeline Dot (Sequence / Status) */}
-                                    <div className={cn(
-                                        "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 shadow shrink-0 absolute left-0 transform -translate-x-1/2 font-bold z-10 transition-colors",
-                                        hasSelection ? "bg-sky-600 border-sky-400 text-white" : "bg-slate-900 border-slate-700 text-slate-300"
-                                    )}>
-                                        {hasSelection ? <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" /> : encounter.sequence}
+                                <div key={encounter.id} className="relative flex items-stretch group is-active pl-8 md:pl-10">
+                                    {/* Timeline Node (Circle on the line) */}
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
+                                        <div className={cn(
+                                            "flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-[3px] shadow-lg font-black transition-all duration-300",
+                                            hasSelection 
+                                                ? "bg-sky-600 border-slate-950 text-white shadow-[0_0_15px_rgba(2,132,199,0.5)] scale-110" 
+                                                : isLast 
+                                                    ? "bg-red-950 border-red-800 text-red-500 scale-110 shadow-[0_0_15px_rgba(220,38,38,0.2)]" 
+                                                    : "bg-slate-900 border-slate-800 text-slate-400 group-hover:border-slate-600"
+                                        )}>
+                                            {hasSelection ? <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5" /> : (isLast ? <Crosshair className="h-4 w-4 md:h-5 md:w-5" /> : encounter.sequence)}
+                                        </div>
                                     </div>
+                                    
+                                    {/* Horizontal Connector Line (from circle to card) */}
+                                    <div className={cn(
+                                        "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-8 md:w-10 z-10 transition-colors duration-300",
+                                        hasSelection ? "bg-sky-500/50" : (isLast ? "bg-red-800/50" : "bg-slate-800 group-hover:bg-slate-700")
+                                    )} />
 
                                     {/* Card Content */}
                                     <Card
                                         className={cn(
-                                            "w-[calc(100%-3rem)] ml-12 md:ml-16 bg-slate-950/90 backdrop-blur-sm border transition-all cursor-pointer overflow-hidden",
-                                            hasSelection ? "border-sky-800 shadow-[0_0_15px_rgba(2,132,199,0.15)]" : "border-slate-800 hover:border-slate-700"
+                                            "flex-1 bg-slate-950/90 backdrop-blur-md border transition-all cursor-pointer overflow-hidden z-10 relative",
+                                            hasSelection ? "border-sky-800/80 shadow-[0_0_20px_rgba(2,132,199,0.15)]" : (isLast ? "border-red-900/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]" : "border-slate-800 hover:border-slate-700 hover:bg-slate-900/90"),
+                                            isExpanded && "ring-1 ring-slate-700 shadow-xl"
                                         )}
                                     >
                                         {/* Card Header (Always Visible) */}
                                         <div
-                                            className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+                                            className="relative p-0 flex flex-col md:flex-row items-stretch min-h-[100px]"
                                             onClick={() => toggleExpand(encounter.id)}
                                         >
-                                            <div className="flex items-center gap-4">
+                                            {/* Left Side: Defender (Red/Orange Theme) */}
+                                            <div className="relative flex-1 flex items-center p-4 md:p-5 gap-4 z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-red-950/20 before:to-transparent before:-z-10">
                                                 {/* Defender Avatar */}
-                                                <div className="relative shrink-0">
-                                                    <div className={`h-16 w-16 rounded-md bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
+                                                <div className="relative shrink-0 group-hover:scale-105 transition-transform duration-300">
+                                                    <div className={`h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
                                                         {encounter.defender ? (
                                                             <Image
                                                                 src={getChampionImageUrl(encounter.defender.images, "128")}
                                                                 alt={encounter.defender.name}
                                                                 fill
-                                                                sizes="64px"
+                                                                sizes="80px"
                                                                 className="object-cover"
                                                             />
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-slate-600">
-                                                                <ShieldAlert className="h-8 w-8" />
+                                                            <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-950">
+                                                                <ShieldAlert className="h-8 w-8 md:h-10 md:w-10 opacity-50" />
                                                             </div>
                                                         )}
+                                                        {/* Subtle inner gradient */}
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                                                     </div>
                                                     {encounter.defender && (
-                                                        <div className="absolute -bottom-2 -right-2 z-20 h-6 w-6 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-0.5 shadow-lg">
+                                                        <div className="absolute -bottom-2.5 -right-2.5 z-20 h-7 w-7 md:h-8 md:w-8 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-lg">
                                                             <Image
                                                                 src={`/icons/${encounter.defender.class.charAt(0).toUpperCase() + encounter.defender.class.slice(1).toLowerCase()}.png`}
                                                                 alt={encounter.defender.class}
-                                                                width={20}
-                                                                height={20}
-                                                                className="object-contain"
+                                                                fill
+                                                                className="object-contain p-1"
                                                             />
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                <div className="flex flex-col">
-                                                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Defender</div>
-                                                    <CardTitle className={`text-xl font-black ${colors ? colors.text : "text-slate-200"}`}>{encounter.defender?.name || "Unknown Defender"}</CardTitle>
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <div className="text-[10px] text-red-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center gap-1.5">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                                                        Target
+                                                    </div>
+                                                    <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
+                                                        {encounter.defender?.name || "Unknown Defender"}
+                                                    </CardTitle>
                                                     {/* Mini node preview */}
                                                     {encounter.nodes.length > 0 && !isExpanded && (
-                                                        <div className="flex gap-1 mt-1.5 flex-wrap">
-                                                            {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-900/80 border-slate-800 text-slate-400 font-normal">
+                                                        <div className="flex gap-1 mt-2 flex-wrap">
+                                                            {encounter.nodes.slice(0, 3).map((n: EncounterNodeWithRelations) => (
+                                                                <Badge key={n.id} variant="secondary" className="text-[9px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-400 font-medium">
                                                                     {n.nodeModifier.name}
                                                                 </Badge>
                                                             ))}
+                                                            {encounter.nodes.length > 3 && (
+                                                                <Badge variant="secondary" className="text-[9px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-500 font-medium">
+                                                                    +{encounter.nodes.length - 3}
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {/* VS Indicator (Hidden on mobile) */}
-                                            <div className="hidden lg:flex flex-1 items-center justify-center px-4">
-                                                <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent w-full relative">
-                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950 px-3 py-1 border border-slate-800 rounded-full shadow-xl">
-                                                        <span className="text-[10px] font-black text-slate-500 italic uppercase tracking-tighter">VS</span>
-                                                    </div>
+                                            {/* VS Centerpiece */}
+                                            <div className="hidden md:flex absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-24 items-center justify-center z-20 pointer-events-none">
+                                                <div className="relative flex items-center justify-center w-12 h-12">
+                                                    <svg width="100%" height="100%" viewBox="0 0 100 100" className="absolute inset-0 text-slate-800 fill-slate-950 drop-shadow-xl">
+                                                        <polygon points="50 0, 100 25, 100 75, 50 100, 0 75, 0 25" stroke="currentColor" strokeWidth="2" />
+                                                    </svg>
+                                                    <span className="relative z-10 text-sm font-black text-slate-500 italic uppercase tracking-tighter mix-blend-screen">VS</span>
+                                                    {/* Stylized slash */}
+                                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-slate-700/20 to-transparent opacity-50 transform rotate-12" />
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0">
-                                                {/* Selected Counter Preview */}
+                                            {/* Right Side: Selected Counter (Blue/Sky Theme) */}
+                                            <div className={cn(
+                                                "relative flex-1 flex items-center p-4 md:p-5 gap-4 border-t md:border-t-0 md:border-l border-slate-800/50 justify-between md:justify-end transition-colors z-10",
+                                                hasSelection ? "before:absolute before:inset-0 before:bg-gradient-to-l before:from-sky-950/20 before:to-transparent before:-z-10" : ""
+                                            )}>
                                                 {hasSelection && selectedRosterItem ? (
-                                                    <div className="flex items-center gap-4">
+                                                    <div className="flex items-center gap-4 w-full md:w-auto md:flex-row-reverse">
                                                         {(() => {
                                                             const champColors = getChampionClassColors(selectedRosterItem.champion.class as ChampionClass);
                                                             return (
                                                                 <>
-                                                                    <div className="hidden sm:flex flex-col items-end">
-                                                                        <div className={cn("text-xl font-black leading-tight text-right", champColors.text)}>
-                                                                            {selectedRosterItem.champion.name}
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                                                            <span className="text-[10px] font-black text-slate-300 bg-slate-800 px-1.5 py-0 rounded">
-                                                                                {selectedRosterItem.stars}★
-                                                                            </span>
-                                                                            <span className="text-[10px] font-black text-slate-300 bg-slate-800 px-1.5 py-0 rounded">
-                                                                                RANK {selectedRosterItem.rank}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="relative shrink-0">
+                                                                    <div className="relative shrink-0 group-hover:scale-105 transition-transform duration-300">
                                                                         <div className={cn(
-                                                                            "h-16 w-16 rounded-md bg-slate-900 border-2 overflow-hidden relative z-10",
+                                                                            "h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 shadow-[0_0_15px_rgba(2,132,199,0.3)]",
                                                                             getStarBorderClass(selectedRosterItem.stars)
                                                                         )}>
                                                                             <Image
                                                                                 src={getChampionImageUrl(selectedRosterItem.champion.images, "128")}
                                                                                 alt={selectedRosterItem.champion.name}
                                                                                 fill
-                                                                                sizes="64px"
+                                                                                sizes="80px"
                                                                                 className="object-cover"
                                                                             />
+                                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                                                                         </div>
 
-                                                                        {/* Class Icon Overlay */}
-                                                                        <div className="absolute -bottom-2 -left-2 z-20 h-6 w-6 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-0.5 shadow-lg">
+                                                                        <div className="absolute -bottom-2.5 -left-2.5 md:-left-auto md:-right-2.5 z-20 h-7 w-7 md:h-8 md:w-8 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-lg">
                                                                             <Image
                                                                                 src={`/icons/${selectedRosterItem.champion.class.charAt(0).toUpperCase() + selectedRosterItem.champion.class.slice(1).toLowerCase()}.png`}
                                                                                 alt={selectedRosterItem.champion.class}
-                                                                                width={20}
-                                                                                height={20}
-                                                                                className="object-contain"
+                                                                                fill
+                                                                                className="object-contain p-1"
                                                                             />
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <div className="flex flex-col flex-1 md:flex-initial md:items-end min-w-0 text-left md:text-right">
+                                                                        <div className="text-[10px] text-sky-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center md:flex-row-reverse gap-1.5">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)]" />
+                                                                            Counter
+                                                                        </div>
+                                                                        <div className={cn("text-lg md:text-2xl font-black leading-none truncate w-full", champColors.text)}>
+                                                                            {selectedRosterItem.champion.name}
+                                                                        </div>
+                                                                        <div className="flex items-center md:flex-row-reverse gap-1.5 mt-1.5">
+                                                                            <Badge variant="outline" className="text-[9px] font-black text-slate-300 bg-slate-900 border-slate-700 px-1.5 py-0 h-4">
+                                                                                {selectedRosterItem.stars}★ R{selectedRosterItem.rank}
+                                                                            </Badge>
+                                                                            {selectedRosterItem.isAwakened && (
+                                                                                <Badge variant="outline" className="text-[9px] font-black text-sky-400 bg-sky-950/50 border-sky-800 px-1.5 py-0 h-4">
+                                                                                    S{selectedRosterItem.sigLevel}
+                                                                                </Badge>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </>
@@ -352,9 +464,14 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                         })()}
                                                     </div>
                                                 ) : (
-                                                    <div className="text-xs font-bold uppercase tracking-widest text-slate-600 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800 border-dashed">No counter picked</div>
+                                                    <div className="flex-1 flex justify-center md:justify-end items-center">
+                                                        <div className="text-xs font-bold uppercase tracking-widest text-slate-500 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800 border-dashed group-hover:border-slate-600 transition-colors flex items-center gap-2">
+                                                            <Crosshair className="w-4 h-4" /> Pick Counter
+                                                        </div>
+                                                    </div>
                                                 )}
-                                                <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-slate-800 ml-2">                                                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                                <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-slate-800 ml-2 h-8 w-8 self-center md:self-auto">
+                                                    {isExpanded ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
                                                 </Button>
                                             </div>
                                         </div>

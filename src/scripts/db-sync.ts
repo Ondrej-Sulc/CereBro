@@ -36,6 +36,10 @@ async function exportToGCS() {
       data[table] = await prisma.champion.findMany({
         include: { tags: true }
       });
+    } else if (table === "ability") {
+      data[table] = await prisma.ability.findMany({
+        include: { categories: true }
+      });
     } else if (table === "tag") {
       // For tags, we don't need to export the champions they belong to
       // because we're handling the relation from the champion side.
@@ -163,9 +167,26 @@ export async function importFromGCS() {
               tags: tags ? { set: tags.map(t => ({ id: t.id })) } : undefined
             },
             create: {
-              id: record.id,
+              id: record.id as number,
               ...championPayload,
               tags: tags ? { connect: tags.map(t => ({ id: t.id })) } : undefined
+            }
+          });
+        } else if (table === "ability") {
+          const categories = record.categories as { id: number }[] | undefined;
+          const abilityPayload = { ...updatePayload } as any;
+          delete abilityPayload.categories;
+
+          await prisma.ability.upsert({
+            where: where as any,
+            update: {
+              ...abilityPayload,
+              categories: categories ? { set: categories.map(c => ({ id: c.id })) } : undefined
+            },
+            create: {
+              id: record.id as number,
+              ...abilityPayload,
+              categories: categories ? { connect: categories.map(c => ({ id: c.id })) } : undefined
             }
           });
         } else {

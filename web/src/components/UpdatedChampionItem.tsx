@@ -109,15 +109,17 @@ export const UpdatedChampionItem = memo(({
 
     return (
         <div className={cn(
-            "flex flex-col rounded-lg overflow-hidden border-2 group transition-all duration-300 shadow-lg relative",
-            classColors.bg,
-            borderClass,
+            "flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950 group transition-all duration-300 relative",
             isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
             isRecommended && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
             isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
         )}>
             {/* Top Section: Smaller Portrait */}
-            <div className="relative aspect-square w-full overflow-hidden bg-slate-900/50  border-b border-slate-800/50">
+            <div className={cn(
+                "relative aspect-square w-full overflow-hidden border-b-2",
+                classColors.bg,
+                isMissing ? "border-slate-800" : getStarBorderClass(item.stars)
+            )}>
                 <Image
                     src={getChampionImageUrl(item.champion.images, '128')}
                     alt={item.champion.name}
@@ -128,57 +130,43 @@ export const UpdatedChampionItem = memo(({
 
                 {/* Selection Checkmark */}
                 {isSelected && (
-                    <div className="absolute top-1.5 right-1.5 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <div className="absolute top-1 right-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </div>
                 )}
 
-                {/* Awakened Frame Glow */}
-                {item.isAwakened && !isMissing && (
-                    <div className="absolute inset-0 border border-sky-400/20 pointer-events-none group-hover:border-sky-400/40 transition-colors" />
-                )}
-            </div>
-
-            {/* Bottom Section: Info (3 Lines) */}
-            <div className="p-1 space-y-0 bg-slate-950">
-                {/* Line 1: Name */}
-                <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-white truncate uppercase tracking-tight">
-                        {item.champion.name}
-                    </span>
-                </div>
-
-                {/* Line 2: Star, Rank, Sig */}
-                <div className="flex items-center gap-1 text-[10px]">
-                    {!isMissing ? (
-                        <>
-                            <span className={`font-black ${item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}`}>
-                                {item.stars}★
-                            </span>
-                            <span className="font-bold text-slate-300">R{item.rank}</span>
-                            {item.isAwakened && typeof item.sigLevel === 'number' && (
-                                <span className="font-black text-sky-400">S{item.sigLevel}</span>
-                            )}
-                        </>
-                    ) : (
-                        <span className="font-bold text-slate-500">Not in roster</span>
-                    )}
-                </div>
-
-                {/* Line 3: Class & Rating */}
-                <div className="flex items-center justify-between gap-1 mt-0.5 h-[14px]">
+                {/* Class Icon Overlay */}
+                <div className="absolute bottom-1 right-1 z-20 h-5 w-5 bg-black/80 rounded-sm border border-white/10 flex items-center justify-center p-0.5 shadow-sm">
                     <Image
                         src={CLASS_ICONS[item.champion.championClass]}
                         alt={item.champion.championClass}
-                        title={item.champion.championClass}
-                        width={12}
-                        height={12}
-                        className="opacity-80"
+                        width={14}
+                        height={14}
+                        className="object-contain"
                     />
-                    {!isMissing && (
-                        <span className="text-[10px] font-mono font-medium text-slate-400">
-                            {item.powerRating !== null && item.powerRating !== undefined ? item.powerRating.toLocaleString() : '---'}
-                        </span>
+                </div>
+            </div>
+
+            {/* Bottom Section: Compact Info */}
+            <div className="p-1.5 space-y-0.5">
+                <div className="text-[10px] font-bold text-white truncate uppercase tracking-tight leading-tight">
+                    {item.champion.name}
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[9px] font-bold">
+                    {!isMissing ? (
+                        <>
+                            <span className={item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}>
+                                {item.stars}★ R{item.rank}
+                            </span>
+                            {item.isAwakened && typeof item.sigLevel === 'number' && (
+                                <span className="text-sky-400 bg-sky-950/50 px-1 rounded-sm border border-sky-800/50">
+                                    S{item.sigLevel}
+                                </span>
+                            )}
+                        </>
+                    ) : (
+                        <span className="text-slate-500">Not in roster</span>
                     )}
                 </div>
             </div>
