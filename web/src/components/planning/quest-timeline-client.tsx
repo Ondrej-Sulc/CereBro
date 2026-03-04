@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import { QuestPlan, QuestEncounter, Champion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass } from "@prisma/client";
+import { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,25 +15,16 @@ import { ChampionAvatar } from "@/components/champion-avatar";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
+import { ChampionImages, Champion } from "@/types/champion";
 
-type EncounterNodeWithRelations = QuestEncounterNode & { nodeModifier: NodeModifier };
+import { getQuestPlanById } from "@/app/actions/quests";
 
-type EncounterWithRelations = QuestEncounter & {
-    defender: Champion | null;
-    recommendedChampions: Champion[];
-    requiredTags: Tag[];
-    nodes: EncounterNodeWithRelations[];
-};
-
-type QuestWithRelations = QuestPlan & {
-    encounters: EncounterWithRelations[];
-    requiredTags?: Tag[];
-};
+type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
+type EncounterWithRelations = QuestWithRelations["encounters"][0];
+type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
 
 type RosterWithChampion = Roster & {
-    champion: Champion & {
-        tags: Tag[];
-    };
+    champion: Champion;
 };
 
 interface Props {
@@ -75,15 +66,15 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
     }, [roster, searchQuery, selectedClass]);
 
     const handleSelectCounter = async (encounterId: string, championId: number) => {
-        // Toggle off if already selected, otherwise select
-        const newValue = selections[encounterId] === championId ? null : championId;
+        const previousValue = selections[encounterId];
+        const newValue = previousValue === championId ? null : championId;
         setSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
-        // Save to DB
         try {
             await savePlayerQuestCounter(quest.id, encounterId, newValue);
         } catch (error) {
             console.error("Failed to save counter selection", error);
+            setSelections(prev => ({ ...prev, [encounterId]: previousValue }));
         }
     };
 
@@ -124,7 +115,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
                                 <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
                                     {selectedTeam.map(r => (
                                         <div key={r.id} className="w-[85px] sm:w-[95px] shrink-0">
-                                            <UpdatedChampionItem 
+                                            <UpdatedChampionItem
                                                 variant="tall"
                                                 item={{
                                                     stars: r.stars,
@@ -136,9 +127,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
                                                         id: r.champion.id,
                                                         name: r.champion.name,
                                                         championClass: r.champion.class,
-                                                        images: r.champion.images as any
+                                                        images: r.champion.images
                                                     }
-                                                }} 
+                                                }}
                                             />
                                         </div>
                                     ))}
@@ -159,368 +150,423 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
                     <p className="text-center text-slate-400 italic mt-8">No encounters have been added to this quest yet.</p>
                 ) : (
                     <div className="space-y-8">
-                    {quest.encounters.map((encounter: EncounterWithRelations) => {
-                        const isExpanded = expandedId === encounter.id;
-                        const selectedChampId = selections[encounter.id];
-                        const selectedRosterItem = selectedChampId ? roster.find(r => r.championId === selectedChampId) : null;
-                        const hasSelection = !!selectedChampId;
-                        const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as any) : null;
+                        {quest.encounters.map((encounter: EncounterWithRelations) => {
+                            const isExpanded = expandedId === encounter.id;
+                            const selectedChampId = selections[encounter.id];
+                            const selectedRosterItem = selectedChampId ? roster.find(r => r.championId === selectedChampId) : null;
+                            const hasSelection = !!selectedChampId;
+                            const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : null;
 
-                        return (
-                            <div key={encounter.id} className="relative flex items-center group is-active">
-                                {/* Timeline Dot (Sequence / Status) */}
-                                <div className={cn(
-                                    "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 shadow shrink-0 absolute left-0 transform -translate-x-1/2 font-bold z-10 transition-colors",
-                                    hasSelection ? "bg-sky-600 border-sky-400 text-white" : "bg-slate-900 border-slate-700 text-slate-300"
-                                )}>
-                                    {hasSelection ? <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" /> : encounter.sequence}
-                                </div>
+                            return (
+                                <div key={encounter.id} className="relative flex items-center group is-active">
+                                    {/* Timeline Dot (Sequence / Status) */}
+                                    <div className={cn(
+                                        "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 shadow shrink-0 absolute left-0 transform -translate-x-1/2 font-bold z-10 transition-colors",
+                                        hasSelection ? "bg-sky-600 border-sky-400 text-white" : "bg-slate-900 border-slate-700 text-slate-300"
+                                    )}>
+                                        {hasSelection ? <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6" /> : encounter.sequence}
+                                    </div>
 
-                                {/* Card Content */}
-                                <Card
-                                    className={cn(
-                                        "w-[calc(100%-3rem)] ml-12 md:ml-16 bg-slate-950/90 backdrop-blur-sm border transition-all cursor-pointer overflow-hidden",
-                                        hasSelection ? "border-sky-800 shadow-[0_0_15px_rgba(2,132,199,0.15)]" : "border-slate-800 hover:border-slate-700"
-                                    )}
-                                >
-                                    {/* Card Header (Always Visible) */}
-                                    <div
-                                        className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
-                                        onClick={() => toggleExpand(encounter.id)}
+                                    {/* Card Content */}
+                                    <Card
+                                        className={cn(
+                                            "w-[calc(100%-3rem)] ml-12 md:ml-16 bg-slate-950/90 backdrop-blur-sm border transition-all cursor-pointer overflow-hidden",
+                                            hasSelection ? "border-sky-800 shadow-[0_0_15px_rgba(2,132,199,0.15)]" : "border-slate-800 hover:border-slate-700"
+                                        )}
                                     >
-                                        <div className="flex items-center gap-4">
-                                            {/* Defender Avatar */}
-                                            <div className="relative shrink-0">
-                                                <div className={`h-16 w-16 rounded-md bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800"}`}>
-                                                    {encounter.defender ? (
-                                                        <Image
-                                                            src={getChampionImageUrl(encounter.defender.images as any, "128")}
-                                                            alt={encounter.defender.name}
-                                                            fill
-                                                            sizes="64px"
-                                                            className="object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-slate-600">
-                                                            <ShieldAlert className="h-8 w-8" />
+                                        {/* Card Header (Always Visible) */}
+                                        <div
+                                            className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between"
+                                            onClick={() => toggleExpand(encounter.id)}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                {/* Defender Avatar */}
+                                                <div className="relative shrink-0">
+                                                    <div className={`h-16 w-16 rounded-md bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
+                                                        {encounter.defender ? (
+                                                            <Image
+                                                                src={getChampionImageUrl(encounter.defender.images, "128")}
+                                                                alt={encounter.defender.name}
+                                                                fill
+                                                                sizes="64px"
+                                                                className="object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-slate-600">
+                                                                <ShieldAlert className="h-8 w-8" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {encounter.defender && (
+                                                        <div className="absolute -bottom-2 -right-2 z-20 h-6 w-6 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-0.5 shadow-lg">
+                                                            <Image
+                                                                src={`/icons/${encounter.defender.class.charAt(0).toUpperCase() + encounter.defender.class.slice(1).toLowerCase()}.png`}
+                                                                alt={encounter.defender.class}
+                                                                width={20}
+                                                                height={20}
+                                                                className="object-contain"
+                                                            />
                                                         </div>
                                                     )}
                                                 </div>
-                                                {encounter.defender && (
-                                                    <div className="absolute -bottom-2 -right-2 z-20 h-6 w-6 bg-slate-900 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-0.5">
-                                                        <Image
-                                                            src={`/icons/${encounter.defender.class.charAt(0).toUpperCase() + encounter.defender.class.slice(1).toLowerCase()}.png`}
-                                                            alt={encounter.defender.class}
-                                                            width={20}
-                                                            height={20}
-                                                            className="object-contain"
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
 
-                                            <div>
-                                                <CardTitle className={`text-xl ${colors ? colors.text : ""}`}>{encounter.defender?.name || "Unknown Defender"}</CardTitle>
-                                                {/* Mini node preview */}
-                                                {encounter.nodes.length > 0 && !isExpanded && (
-                                                    <div className="flex gap-1 mt-2 flex-wrap">
-                                                        {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                                            <Badge key={n.id} variant="secondary" className="text-xs py-0 h-5 bg-slate-900 border-slate-800 text-slate-400">
-                                                                {n.nodeModifier.name}
-                                                            </Badge>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0">
-                                            {/* Selected Counter Preview */}
-                                            {hasSelection && selectedRosterItem ? (
-                                                <div className="flex items-center gap-3 bg-sky-950/40 px-3 py-2 rounded-xl border border-sky-800 shadow-[0_0_10px_rgba(2,132,199,0.2)]">
-                                                    <ChampionAvatar 
-                                                        name={selectedRosterItem.champion.name}
-                                                        images={selectedRosterItem.champion.images as any}
-                                                        championClass={selectedRosterItem.champion.class}
-                                                        stars={selectedRosterItem.stars}
-                                                        rank={selectedRosterItem.rank}
-                                                        isAwakened={selectedRosterItem.isAwakened}
-                                                        sigLevel={selectedRosterItem.sigLevel || 0}
-                                                        size="sm"
-                                                        showStars
-                                                        showRank
-                                                    />
-                                                    <div className="hidden sm:flex flex-col">
-                                                        <div className="text-sm font-bold text-sky-100 leading-tight">{selectedRosterItem.champion.name}</div>
-                                                        <div className="text-[10px] text-sky-400 font-medium">Selected Counter</div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="text-sm font-medium text-slate-500 italic bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-800 border-dashed">No counter selected</div>
-                                            )}
-
-                                            <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-slate-800">
-                                                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Content */}
-                                    {isExpanded && (
-                                        <div className="border-t border-slate-800 bg-slate-900/20 p-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
-
-                                            {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
-                                                <div className="flex flex-col gap-2 mb-4 bg-red-950/10 p-4 rounded-lg border border-red-900/30">
-                                                    <div className="flex items-center gap-2 text-sm text-red-400 uppercase tracking-wide font-bold"><AlertCircle className="w-4 h-4" /> Quest & Encounter Restrictions Apply</div>
-                                                    <div className="flex flex-wrap gap-2 mt-1">
-                                                    {[
-                                                        quest.minStarLevel ? `Min ${quest.minStarLevel}★ (Quest)` : null,
-                                                        quest.maxStarLevel ? `Max ${quest.maxStarLevel}★ (Quest)` : null,
-                                                        quest.requiredClasses?.length ? `Class: ${quest.requiredClasses.join(', ')} (Quest)` : null,
-                                                        encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
-                                                        encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
-                                                        encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(', ')} (Encounter)` : null,
-                                                        quest.requiredTags?.length ? `Tag: Any from Quest Requirements` : null
-                                                    ].filter(Boolean).map((req, i) => (
-                                                        <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
-                                                    ))}
-                                                    </div>
-                                                </div>
-                                            ) : null}
-
-                                            {/* Nodes & Tips Grid */}
-                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                                {/* Nodes */}
-                                                {encounter.nodes.length > 0 && (
-                                                    <div className="space-y-3">
-                                                        <h4 className="text-sm font-semibold text-sky-400 uppercase tracking-wider">Node Buffs</h4>
-                                                        <div className="space-y-2">
+                                                <div className="flex flex-col">
+                                                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Defender</div>
+                                                    <CardTitle className={`text-xl font-black ${colors ? colors.text : "text-slate-200"}`}>{encounter.defender?.name || "Unknown Defender"}</CardTitle>
+                                                    {/* Mini node preview */}
+                                                    {encounter.nodes.length > 0 && !isExpanded && (
+                                                        <div className="flex gap-1 mt-1.5 flex-wrap">
                                                             {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                                                <div key={n.id} className="bg-slate-900/50 p-3 rounded-md border border-slate-800/80 group/node transition-colors hover:border-sky-800">
-                                                                    <div className="flex items-center gap-2 mb-1">
-                                                                        <Info className="w-4 h-4 text-sky-600 shrink-0" />
-                                                                        <span className="font-semibold text-slate-200">{n.nodeModifier.name}</span>
-                                                                    </div>
-                                                                    <span className="text-sm text-slate-400 leading-snug block pl-6">{n.nodeModifier.description}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Tips */}
-                                                {encounter.tips && (
-                                                    <div className="space-y-3">
-                                                        <h4 className="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Quick Tips</h4>
-                                                        <div className="bg-indigo-950/20 p-4 rounded-md border border-indigo-900/40 text-indigo-100 text-sm leading-relaxed">
-                                                            <SimpleMarkdown content={encounter.tips} />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Roster Selection */}
-                                            <div className="space-y-4 pt-4 border-t border-slate-800/50">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                    <h4 className="text-sm font-semibold text-amber-500 uppercase tracking-wider shrink-0">Select Your Counter</h4>
-
-                                                    <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
-                                                        <div className="relative flex-1">
-                                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                                                            <Input
-                                                                placeholder="Search champions..."
-                                                                className="pl-9 h-9 bg-slate-900/50 border-slate-800 text-sm"
-                                                                value={searchQuery}
-                                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                            />
-                                                            {searchQuery && (
-                                                                <button
-                                                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 hover:text-slate-300"
-                                                                    onClick={() => setSearchQuery("")}
-                                                                >
-                                                                    <X className="h-3 w-3" />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex gap-1 overflow-x-auto pb-1 custom-scrollbar">
-                                                            {CLASSES.map((cls) => (
-                                                                <button
-                                                                    key={cls}
-                                                                    onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
-                                                                    className={cn(
-                                                                        "p-1.5 rounded border transition-all shrink-0",
-                                                                        selectedClass === cls ? "bg-sky-600 border-sky-400 shadow-[0_0_8px_rgba(2,132,199,0.5)]" : "bg-slate-900 border-slate-800 hover:border-slate-600"
-                                                                    )}
-                                                                    title={cls}
-                                                                >
-                                                                    <div className="relative w-5 h-5">
-                                                                        <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
-                                                                    </div>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Recommendations hints */}
-                                                    {(encounter.recommendedTags.length > 0) && (
-                                                        <div className="flex gap-2">
-                                                            {encounter.recommendedTags.map((tag: string) => (
-                                                                <Badge key={tag} variant="outline" className="text-xs bg-amber-950/30 border-amber-800 text-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.15)] flex gap-1 items-center">
-                                                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400"></span> {tag}
+                                                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-900/80 border-slate-800 text-slate-400 font-normal">
+                                                                    {n.nodeModifier.name}
                                                                 </Badge>
                                                             ))}
                                                         </div>
                                                     )}
                                                 </div>
-
-                                                {/* Specific Recommended Champions Visual */}
-                                                {encounter.recommendedChampions.length > 0 && (
-                                                    <div className="flex flex-col sm:flex-row gap-4 sm:items-center text-sm py-2 px-1">
-                                                        <span className="text-slate-400 font-medium shrink-0">Recommended:</span>
-                                                        <div className="flex flex-wrap gap-3">
-                                                            {encounter.recommendedChampions.map((c: Champion) => {
-                                                                // Find highest version in roster that matches restrictions
-                                                                const userChamp = roster
-                                                                    .filter(r => r.championId === c.id)
-                                                                    .filter(r => {
-                                                                        if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                                                        if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-                                                                        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                                                        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-                                                                        return true;
-                                                                    })
-                                                                    .sort((a, b) => b.stars - a.stars || b.rank - a.rank)[0];
-
-                                                                const isSelected = selections[encounter.id] === userChamp?.championId;
-
-                                                                return (
-                                                                    <div
-                                                                        key={c.id}
-                                                                        onClick={() => userChamp && handleSelectCounter(encounter.id, userChamp.championId)}
-                                                                        title={userChamp ? `Click to select your ${userChamp.stars}★ R${userChamp.rank} ${c.name}` : `You don't have ${c.name} meeting requirements`}
-                                                                        className="w-[85px] sm:w-[95px] cursor-pointer"
-                                                                    >
-                                                                        <UpdatedChampionItem
-                                                                            item={userChamp ? {
-                                                                                stars: userChamp.stars,
-                                                                                rank: userChamp.rank,
-                                                                                isAwakened: userChamp.isAwakened,
-                                                                                sigLevel: userChamp.sigLevel,
-                                                                                powerRating: userChamp.powerRating,
-                                                                                champion: {
-                                                                                    id: c.id,
-                                                                                    name: c.shortName || c.name,
-                                                                                    championClass: c.class,
-                                                                                    images: c.images as any
-                                                                                }
-                                                                            } : {
-                                                                                stars: 0,
-                                                                                rank: 0,
-                                                                                champion: {
-                                                                                    id: c.id,
-                                                                                    name: c.shortName || c.name,
-                                                                                    championClass: c.class,
-                                                                                    images: c.images as any
-                                                                                }
-                                                                            }}
-                                                                            isSelected={isSelected}
-                                                                            isRecommended={!isSelected}
-                                                                            isMissing={!userChamp}
-                                                                        />
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {(() => {
-                                                    const encounterRoster = filteredGlobalRoster.filter(r => {
-                                                        // Quest-level restrictions
-                                                        if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                                        if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-                                                        if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-                                                        if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                                            const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags.some((ct: Tag) => ct.id === tag.id));
-                                                            if (!hasTag) return false;
-                                                        }
-
-                                                        // Encounter-level restrictions
-                                                        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                                        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-                                                        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-
-                                                        return true;
-                                                    }).sort((a, b) => {
-                                                        // Selected first
-                                                        if (selections[encounter.id] === a.championId) return -1;
-                                                        if (selections[encounter.id] === b.championId) return 1;
-                                                        return 0;
-                                                    });
-
-                                                    if (roster.length === 0) {
-                                                        return (
-                                                            <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl">
-                                                                <p className="text-slate-400 text-lg">Your roster is empty.</p>
-                                                                <p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p>
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    if (encounterRoster.length === 0) {
-                                                        return (
-                                                            <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
-                                                                <p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p>
-                                                            </div>
-                                                        )
-                                                    }
-
-                                                    return (
-                                                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
-                                                            {encounterRoster.slice(0, 100).map((r: RosterWithChampion) => {
-                                                                const isSelected = selections[encounter.id] === r.championId;
-                                                                const isRecommended = encounter.recommendedChampions.some((rc: Champion) => rc.id === r.championId);
-
-                                                                return (
-                                                                    <div
-                                                                        key={r.id}
-                                                                        onClick={() => handleSelectCounter(encounter.id, r.championId)}
-                                                                        title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
-                                                                        className="cursor-pointer"
-                                                                    >
-                                                                        <UpdatedChampionItem
-                                                                            item={{
-                                                                                stars: r.stars,
-                                                                                rank: r.rank,
-                                                                                isAwakened: r.isAwakened,
-                                                                                sigLevel: r.sigLevel,
-                                                                                powerRating: r.powerRating,
-                                                                                champion: {
-                                                                                    id: r.champion.id,
-                                                                                    name: r.champion.shortName || r.champion.name,
-                                                                                    championClass: r.champion.class,
-                                                                                    images: r.champion.images as any
-                                                                                }
-                                                                            }}
-                                                                            isSelected={isSelected}
-                                                                            isRecommended={isRecommended}
-                                                                        />
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    );
-                                                })()}
                                             </div>
 
+                                            {/* VS Indicator (Hidden on mobile) */}
+                                            <div className="hidden lg:flex flex-1 items-center justify-center px-4">
+                                                <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent w-full relative">
+                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-950 px-3 py-1 border border-slate-800 rounded-full shadow-xl">
+                                                        <span className="text-[10px] font-black text-slate-500 italic uppercase tracking-tighter">VS</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0">
+                                                {/* Selected Counter Preview */}
+                                                {hasSelection && selectedRosterItem ? (
+                                                    <div className="flex items-center gap-4">
+                                                        {(() => {
+                                                            const champColors = getChampionClassColors(selectedRosterItem.champion.class as ChampionClass);
+                                                            return (
+                                                                <>
+                                                                    <div className="hidden sm:flex flex-col items-end">
+                                                                        <div className={cn("text-xl font-black leading-tight text-right", champColors.text)}>
+                                                                            {selectedRosterItem.champion.name}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                                            <span className="text-[10px] font-black text-slate-300 bg-slate-800 px-1.5 py-0 rounded">
+                                                                                {selectedRosterItem.stars}★
+                                                                            </span>
+                                                                            <span className="text-[10px] font-black text-slate-300 bg-slate-800 px-1.5 py-0 rounded">
+                                                                                RANK {selectedRosterItem.rank}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="relative shrink-0">
+                                                                        <div className={cn(
+                                                                            "h-16 w-16 rounded-md bg-slate-900 border-2 overflow-hidden relative z-10",
+                                                                            getStarBorderClass(selectedRosterItem.stars)
+                                                                        )}>
+                                                                            <Image
+                                                                                src={getChampionImageUrl(selectedRosterItem.champion.images, "128")}
+                                                                                alt={selectedRosterItem.champion.name}
+                                                                                fill
+                                                                                sizes="64px"
+                                                                                className="object-cover"
+                                                                            />
+                                                                        </div>
+
+                                                                        {/* Class Icon Overlay */}
+                                                                        <div className="absolute -bottom-2 -left-2 z-20 h-6 w-6 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-0.5 shadow-lg">
+                                                                            <Image
+                                                                                src={`/icons/${selectedRosterItem.champion.class.charAt(0).toUpperCase() + selectedRosterItem.champion.class.slice(1).toLowerCase()}.png`}
+                                                                                alt={selectedRosterItem.champion.class}
+                                                                                width={20}
+                                                                                height={20}
+                                                                                className="object-contain"
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs font-bold uppercase tracking-widest text-slate-600 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800 border-dashed">No counter picked</div>
+                                                )}
+                                                <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-slate-800 ml-2">                                                {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                                </Button>
+                                            </div>
                                         </div>
-                                    )}
-                                </Card>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+
+                                        {/* Expanded Content */}
+                                        {isExpanded && (
+                                            <div className="border-t border-slate-800 bg-slate-900/20 p-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
+
+                                                {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
+                                                    <div className="flex flex-col gap-2 mb-4 bg-red-950/10 p-4 rounded-lg border border-red-900/30">
+                                                        <div className="flex items-center gap-2 text-sm text-red-400 uppercase tracking-wide font-bold"><AlertCircle className="w-4 h-4" /> Quest & Encounter Restrictions Apply</div>
+                                                        <div className="flex flex-wrap gap-2 mt-1">
+                                                            {[
+                                                                quest.minStarLevel ? `Min ${quest.minStarLevel}★ (Quest)` : null,
+                                                                quest.maxStarLevel ? `Max ${quest.maxStarLevel}★ (Quest)` : null,
+                                                                quest.requiredClasses?.length ? `Class: ${quest.requiredClasses.join(', ')} (Quest)` : null,
+                                                                encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
+                                                                encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
+                                                                encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(', ')} (Encounter)` : null,
+                                                                quest.requiredTags?.length ? `Tag: Any from Quest Requirements` : null
+                                                            ].filter(Boolean).map((req, i) => (
+                                                                <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : null}
+
+                                                {/* Nodes & Tips Grid */}
+                                                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pt-2">
+                                                    {/* Nodes */}
+                                                    <div className="xl:col-span-7 space-y-4">
+                                                        {encounter.nodes.length > 0 && (
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="h-6 w-1 bg-sky-500 rounded-full" />
+                                                                    <h4 className="text-xs font-bold text-sky-400 uppercase tracking-[0.2em]">Encounter Nodes</h4>
+                                                                </div>
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                    {encounter.nodes.map((n: EncounterNodeWithRelations) => (
+                                                                        <div key={n.id} className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 group/node transition-all hover:border-sky-800/50 hover:bg-slate-900/50">
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                <div className="p-1 rounded bg-sky-500/10 text-sky-500 shrink-0">
+                                                                                    <Info className="w-3.5 h-3.5" />
+                                                                                </div>
+                                                                                <span className="font-bold text-sm text-slate-100">{n.nodeModifier.name}</span>
+                                                                            </div>
+                                                                            <span className="text-xs text-slate-400 leading-normal block pl-8 pr-2">{n.nodeModifier.description}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Tips */}
+                                                        {encounter.tips && (
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="h-6 w-1 bg-indigo-500 rounded-full" />
+                                                                    <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-[0.2em]">Strategy & Tips</h4>
+                                                                </div>
+                                                                <div className="bg-indigo-950/20 p-5 rounded-xl border border-indigo-900/40 text-indigo-100 text-sm leading-relaxed shadow-inner">
+                                                                    <SimpleMarkdown content={encounter.tips} />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Suggested Counters Area */}
+                                                    <div className="xl:col-span-5 space-y-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
+                                                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
+                                                        </div>
+
+                                                        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 space-y-4">
+                                                            {/* Suggested Tags */}
+                                                            {encounter.recommendedTags.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {encounter.recommendedTags.map((tag: string) => (
+                                                                        <Badge key={tag} variant="outline" className="text-[10px] uppercase font-bold bg-amber-950/20 border-amber-800/50 text-amber-400 py-1 px-2.5 rounded-full flex gap-2 items-center tracking-wider shadow-sm">
+                                                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> {tag}
+                                                                        </Badge>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                                                                                    {/* Recommended Champions List */}
+                                                                                                                    {(encounter.recommendedChampions as unknown as Champion[]).length > 0 ? (
+                                                                                                                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                                                                                                            {(encounter.recommendedChampions as unknown as Champion[]).map((c: Champion) => {                                                                        // Find highest version in roster that matches restrictions
+                                                                        const userChamp = roster
+                                                                            .filter(r => r.championId === c.id)
+                                                                            .filter(r => {
+                                                                                if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
+                                                                                if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
+                                                                                if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
+                                                                                if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+                                                                                return true;
+                                                                            })
+                                                                            .sort((a, b) => b.stars - a.stars || b.rank - a.rank)[0];
+
+                                                                        const isSelected = selections[encounter.id] === userChamp?.championId;
+
+                                                                        return (
+                                                                            <div
+                                                                                key={c.id}
+                                                                                onClick={() => userChamp && handleSelectCounter(encounter.id, userChamp.championId)}
+                                                                                className="cursor-pointer group"
+                                                                            >
+                                                                                <UpdatedChampionItem
+                                                                                    item={userChamp ? {
+                                                                                        stars: userChamp.stars,
+                                                                                        rank: userChamp.rank,
+                                                                                        isAwakened: userChamp.isAwakened,
+                                                                                        sigLevel: userChamp.sigLevel,
+                                                                                        powerRating: userChamp.powerRating,
+                                                                                        champion: {
+                                                                                            id: c.id,
+                                                                                                                                                                                    name: c.shortName || c.name,
+                                                                                                                                                                                    championClass: c.class,
+                                                                                                                                                                                    images: c.images
+                                                                                                                                                                                }
+                                                                                                                                                                            } : {                                                                                        stars: 0,
+                                                                                        rank: 0,
+                                                                                                                                                                            champion: {
+                                                                                                                                                                                id: c.id,
+                                                                                                                                                                                name: c.shortName || c.name,
+                                                                                                                                                                                championClass: c.class,
+                                                                                                                                                                                images: c.images
+                                                                                                                                                                            }
+                                                                                                                                                                        }}                                                                                    isSelected={isSelected}
+                                                                                    isRecommended={!isSelected}
+                                                                                    isMissing={!userChamp}
+                                                                                />
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg">No specific champions recommended for this encounter.</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Roster Selection */}
+                                                <div className="space-y-4 pt-8 border-t border-slate-800/50">
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-6 w-1 bg-sky-600 rounded-full" />
+                                                            <h4 className="text-xs font-bold text-slate-100 uppercase tracking-[0.2em]">Select from Your Roster</h4>
+                                                        </div>
+
+                                                        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+                                                            <div className="relative flex-1">
+                                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                                                                <Input
+                                                                    placeholder="Search your roster..."
+                                                                    className="pl-9 h-10 bg-slate-900/50 border-slate-800 text-sm focus-visible:ring-sky-500"
+                                                                    value={searchQuery}
+                                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                                />
+                                                                {searchQuery && (
+                                                                    <button
+                                                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded"
+                                                                        onClick={() => setSearchQuery("")}
+                                                                    >
+                                                                        <X className="h-3 w-3 text-slate-500" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex gap-1.5 p-1 bg-slate-950/50 border border-slate-800 rounded-lg overflow-x-auto custom-scrollbar">
+                                                                {CLASSES.map((cls) => (
+                                                                    <button
+                                                                        key={cls}
+                                                                        onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
+                                                                        className={cn(
+                                                                            "p-1.5 rounded-md border transition-all shrink-0",
+                                                                            selectedClass === cls ? "bg-sky-600 border-sky-400 shadow-[0_0_10px_rgba(2,132,199,0.3)]" : "bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-700"
+                                                                        )}
+                                                                        title={cls}
+                                                                    >
+                                                                        <div className="relative w-5 h-5">
+                                                                            <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                                                        </div>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {(() => {
+                                                        const encounterRoster = filteredGlobalRoster.filter(r => {
+                                                            // Quest-level restrictions
+                                                            if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
+                                                            if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
+                                                            if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
+                                                                                                                    if (quest.requiredTags && quest.requiredTags.length > 0) {
+                                                                                                                        const hasTag = quest.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                                                                        if (!hasTag) return false;
+                                                                                                                    }
+                                                            // Encounter-level restrictions
+                                                            if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
+                                                            if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+                                                            if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
+
+                                                            return true;
+                                                        }).sort((a, b) => {
+                                                            // Selected first
+                                                            if (selections[encounter.id] === a.championId) return -1;
+                                                            if (selections[encounter.id] === b.championId) return 1;
+                                                            return 0;
+                                                        });
+
+                                                        if (roster.length === 0) {
+                                                            return (
+                                                                <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl">
+                                                                    <p className="text-slate-400 text-lg">Your roster is empty.</p>
+                                                                    <p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p>
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        if (encounterRoster.length === 0) {
+                                                            return (
+                                                                <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
+                                                                    <p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p>
+                                                                </div>
+                                                            )
+                                                        }
+
+                                                        return (
+                                                            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
+                                                                {encounterRoster.slice(0, 100).map((r: RosterWithChampion) => {
+                                                                    const isSelected = selections[encounter.id] === r.championId;
+                                                                    const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
+
+                                                                    return (
+                                                                        <div
+                                                                            key={r.id}
+                                                                            onClick={() => handleSelectCounter(encounter.id, r.championId)}
+                                                                            title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
+                                                                            className="cursor-pointer"
+                                                                        >
+                                                                            <UpdatedChampionItem
+                                                                                item={{
+                                                                                    stars: r.stars,
+                                                                                    rank: r.rank,
+                                                                                    isAwakened: r.isAwakened,
+                                                                                    sigLevel: r.sigLevel,
+                                                                                    powerRating: r.powerRating,
+                                                                                    champion: {
+                                                                                        id: r.champion.id,
+                                                                                        name: r.champion.shortName || r.champion.name,
+                                                                                        championClass: r.champion.class,
+                                                                                        images: r.champion.images
+                                                                                    }
+                                                                                }}
+                                                                                isSelected={isSelected}
+                                                                                isRecommended={isRecommended}
+                                                                            />
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+
+                                            </div>
+                                        )}
+                                    </Card>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );

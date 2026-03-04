@@ -19,7 +19,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Champion } from "@/types/champion"
+import { Champion, ChampionImages } from "@/types/champion"
 import { getChampionImageUrl } from "@/lib/championHelper";
 
 interface MultiChampionComboboxProps {
@@ -68,55 +68,59 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
     return fuse.search(search).map(result => result.item);
   }, [fuse, search, champions]);
 
-  const selectedChampions = React.useMemo(() => 
+  const selectedChampions = React.useMemo(() =>
     values.map(id => champions.find(c => c.id === id)).filter(Boolean) as Champion[],
-  [values, champions]);
+    [values, champions]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <div
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full h-auto min-h-[40px] justify-between pr-2 pl-2 rounded-md", className)}
+          tabIndex={0}
+          className={cn(
+            "flex h-auto min-h-[40px] w-full items-center justify-between rounded-md border border-slate-800 bg-transparent px-3 py-2 text-sm ring-offset-slate-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+            className
+          )}
         >
           <div className="flex flex-wrap items-center gap-1.5 py-1">
-             {selectedChampions.length > 0 ? (
-                selectedChampions.map(champion => (
-                    <Badge key={champion.id} variant="secondary" className="pl-1 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
-                         <div className="relative h-5 w-5 rounded-full overflow-hidden bg-slate-900 flex-shrink-0">
-                            <Image 
-                            src={getChampionImageUrl(champion.images, '64')}
-                            alt={champion.name}
-                            fill
-                            className="object-cover"
-                            />
-                        </div>
-                        <span className="text-xs font-bold max-w-[80px] truncate">{champion.name}</span>
-                        <div 
-                            role="button"
-                            onClick={(e) => handleRemove(e, champion.id)}
-                            className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer"
-                        >
-                            <X className="h-3 w-3" />
-                        </div>
-                    </Badge>
-                ))
-             ) : (
-                <span className="text-slate-500 pl-1">{placeholder}</span>
-             )}
+            {selectedChampions.length > 0 ? (
+              selectedChampions.map(champion => (
+                <Badge key={champion.id} variant="secondary" className="pl-1 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
+                  <div className="relative h-5 w-5 rounded-full overflow-hidden bg-slate-900 flex-shrink-0">
+                    <Image
+                      src={getChampionImageUrl(champion.images, '64')}
+                      alt={champion.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <span className="text-xs font-bold max-w-[80px] truncate">{champion.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${champion.name}`}
+                    onClick={(e) => handleRemove(e, champion.id)}
+                    className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))
+            ) : (
+              <span className="text-slate-500 pl-1">{placeholder}</span>
+            )}
           </div>
 
           <div className="flex items-center ml-2 shrink-0">
-             <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
           </div>
-        </Button>
+        </div>
       </PopoverTrigger>
-            <PopoverContent
-              sideOffset={4}
-              className="w-[--radix-popover-trigger-width] p-0"
-              onWheel={(e) => e.stopPropagation()}        onTouchStart={(e) => e.stopPropagation()}
+      <PopoverContent
+        sideOffset={4}
+        className="w-[--radix-popover-trigger-width] p-0"
+        onWheel={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
         <Command shouldFilter={false} className="h-auto">
@@ -128,27 +132,27 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
           <CommandList>
             <CommandEmpty>No champion found.</CommandEmpty>
             <CommandGroup>
-                {filteredChampions.slice(0, 100).map((champion) => {
-                    const isSelected = values.includes(champion.id);
-                    return (
-                    <CommandItem
-                        key={champion.id}
-                        value={champion.name}
-                        onSelect={() => handleSelect(champion.id)}
-                        className={cn("flex items-center gap-2 cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
-                    >
-                        <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
-                          <Image 
-                            src={getChampionImageUrl(champion.images, '64')}
-                            alt={champion.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <span className={cn(isSelected && "font-bold")}>{champion.name}</span>
-                        {isSelected && <span className="ml-auto text-xs text-sky-400 font-bold">✓</span>}
-                    </CommandItem>
-                )})}
+              {filteredChampions.slice(0, 100).map((champion) => {
+                const isSelected = values.includes(champion.id);
+                return (
+                  <CommandItem
+                    key={champion.id}
+                    value={champion.name}
+                    onSelect={() => handleSelect(champion.id)}
+                    className={cn("flex items-center gap-2 cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
+                  >
+                    <div className="relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
+                      <Image src={getChampionImageUrl(champion.images, '64')}
+                        alt={champion.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <span className={cn(isSelected && "font-bold")}>{champion.name}</span>
+                    {isSelected && <span className="ml-auto text-xs text-sky-400 font-bold">✓</span>}
+                  </CommandItem>
+                )
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

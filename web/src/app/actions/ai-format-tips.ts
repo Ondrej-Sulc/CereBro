@@ -36,15 +36,22 @@ ${rawTips}`
             max_tokens: 500,
         });
 
-        if (response.choices && response.choices.length > 0) {
+        if (
+            response.choices &&
+            Array.isArray(response.choices) &&
+            response.choices.length > 0 &&
+            response.choices[0].message &&
+            typeof response.choices[0].message.content === "string" &&
+            response.choices[0].message.content.trim().length > 0
+        ) {
             let result = response.choices[0].message.content.trim();
             return { success: true, formattedTips: result };
         } else {
             return { success: false, error: "No response from AI." };
         }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error auto-formatting tips:", error);
-        return { success: false, error: error.message || "Failed to contact AI service." };
+        return { success: false, error: error instanceof Error ? error.message : "Failed to contact AI service." };
     }
 }

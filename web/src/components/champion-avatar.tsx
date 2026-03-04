@@ -54,9 +54,9 @@ export const ChampionAvatar = memo(({
             "rounded-md overflow-hidden relative border shadow-sm shrink-0",
             bgClass,
             sizeClasses[size],
-            isSelected ? "border-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.6)]" : 
-            isRecommended ? "border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" : 
-            borderClass,
+            isSelected ? "border-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.6)]" :
+                isRecommended ? "border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" :
+                    borderClass,
             className
         )}>
             {/* Star Level Badge */}
@@ -84,7 +84,7 @@ export const ChampionAvatar = memo(({
                 src={getChampionImageUrl(images, "128")}
                 alt={name}
                 fill
-                sizes={size === 'xl' ? '80px' : size === 'lg' ? '64px' : '40px'}
+                sizes={{ sm: '32px', md: '40px', lg: '72px', xl: '80px' }[size]}
                 className="object-cover z-10"
             />
 

@@ -1,22 +1,24 @@
 import { ChampionImages } from '@/types/champion';
+import { Prisma } from '@prisma/client';
 
 export function getChampionImageUrl(
-  images: ChampionImages,
+  images: ChampionImages | Prisma.JsonValue | any,
   size: "32" | "64" | "128" | "full" = "full",
   type: "primary" | "secondary" | "hero" = "primary"
 ): string {
+  const imgs = images as ChampionImages;
   if (type === "hero") {
-    return images.hero;
+    return imgs.hero;
   }
 
   if (size === "full") {
     return type === "primary"
-      ? images.full_primary
-      : images.full_secondary;
+      ? imgs.full_primary
+      : imgs.full_secondary;
   }
 
   const key = `${type.charAt(0)}_${size}` as keyof ChampionImages;
-  return images[key];
+  return imgs[key];
 }
 
 export function getMaxRank(stars: number): number {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getQuestPlanById } from "@/app/actions/quests";
 import AdminQuestBuilderClient from "@/components/admin/quests/admin-quest-builder-client";
+import { Champion } from "@/types/champion";
 
 export default async function AdminQuestBuilderPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -44,10 +45,10 @@ export default async function AdminQuestBuilderPage({ params }: { params: Promis
     return (
         <div className="space-y-6">
             <AdminQuestBuilderClient
-                initialQuest={quest as any}
+                initialQuest={quest}
                 categories={categories}
                 tags={tags}
-                champions={champions as any}
+                champions={champions as unknown as Champion[]}
                 nodeModifiers={nodeModifiers}
             />
         </div>

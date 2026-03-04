@@ -17,8 +17,8 @@ export function SimpleMarkdown({ content, className }: { content: string, classN
         <div className={`space-y-1.5 ${className || ''}`}>
             {lines.map((line, lineIndex) => {
                 const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
-                const cleanLine = isBullet ? line.replace(/^[-*]\s+/, '') : line;
-                
+                const cleanLine = isBullet ? line.trimStart().replace(/^[-*]\s+/, '') : line;
+
                 // If it's empty, skip or render a spacer
                 if (!line.trim()) {
                     return <div key={`empty-${lineIndex}`} className="h-1" />;

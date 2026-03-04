@@ -535,6 +535,12 @@
             "description": "The role for Battlegroup 3.",
             "required": false,
             "type": 8
+          },
+          {
+            "name": "remove-missing-members",
+            "description": "Enable Strict Discord Membership (removes members without roles during sync).",
+            "required": false,
+            "type": 5
           }
         ]
       },
@@ -812,6 +818,21 @@
       },
       {
         "type": 1,
+        "name": "defense-plan",
+        "description": "Sends defense plan layout to battlegroup channels.",
+        "options": [
+          {
+            "max_value": 3,
+            "min_value": 1,
+            "type": 4,
+            "name": "battlegroup",
+            "description": "Optional: Specific battlegroup to send to.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
         "name": "details",
         "description": "Get detailed information about your AW assignments.",
         "options": [
@@ -927,6 +948,19 @@
             "name": "image5",
             "description": "Another screenshot.",
             "required": false,
+            "type": 11
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "roster-scan",
+        "description": "Debug BG View roster processing.",
+        "options": [
+          {
+            "name": "image",
+            "description": "Screenshot of Battlegrounds Deck View.",
+            "required": true,
             "type": 11
           }
         ]
@@ -1314,6 +1348,19 @@
     "group": "User Management",
     "color": "pink",
     "options": [
+      {
+        "type": 1,
+        "name": "scan",
+        "description": "Auto-scan Battlegrounds View screenshots (interactive mode).",
+        "options": [
+          {
+            "name": "player",
+            "description": "The player to update the roster for (defaults to you).",
+            "required": false,
+            "type": 6
+          }
+        ]
+      },
       {
         "type": 1,
         "name": "update",

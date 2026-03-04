@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import QuestListClient from "@/components/planning/quest-list-client";
+import { QuestPlanStatus } from "@prisma/client";
 
 export default async function QuestsPage() {
     const session = await auth();
@@ -9,8 +10,9 @@ export default async function QuestsPage() {
         redirect("/api/auth/discord-login?redirectTo=/planning/quests");
     }
 
-    // Fetch all quest plans
+    // Fetch quest plans - only show VISIBLE ones
     const quests = await prisma.questPlan.findMany({
+        where: { status: QuestPlanStatus.VISIBLE },
         orderBy: { createdAt: 'desc' },
         include: {
             category: true,

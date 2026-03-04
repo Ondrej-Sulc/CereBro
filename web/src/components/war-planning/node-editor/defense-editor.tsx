@@ -18,10 +18,6 @@ import { WarTacticWithTags } from "../hooks/use-war-planning";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
-interface ChampionWithTags extends Champion {
-  tags?: { name: string }[];
-}
-
 export interface WarNodeWithAllocations {
   allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
 }
@@ -91,7 +87,7 @@ export default function DefenseEditor({
   const defenderTacticMatch = useMemo(() => {
       const tactic = activeTactic;
       if (!defenderId || !tactic?.defenseTag?.name) return false;
-      const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
+      const def = champions.find(c => c.id === defenderId);
       return def?.tags?.some(t => t.name === tactic.defenseTag!.name) ?? false;
   }, [defenderId, activeTactic, champions]);
 

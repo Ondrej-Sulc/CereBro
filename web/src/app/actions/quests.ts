@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
 import logger from "@/lib/logger";
-import { ChampionClass } from "@prisma/client";
+import { ChampionClass, QuestPlanStatus } from "@prisma/client";
+import { uploadToGcs } from "@/lib/gcs";
 
 // --- Quest Categories ---
 
@@ -19,7 +20,9 @@ export async function getQuestCategories() {
 
 export async function createQuestCategory(name: string, order: number = 0, parentId?: string) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     await prisma.questCategory.create({
         data: {
@@ -77,6 +80,10 @@ export async function getQuestPlanById(id: string) {
 
 export type QuestPlanCreateInput = {
     title: string;
+    status?: QuestPlanStatus;
+    bannerUrl?: string | null;
+    bannerFit?: string | null;
+    bannerPosition?: string | null;
     categoryId?: string;
     minStarLevel?: number;
     maxStarLevel?: number;
@@ -87,11 +94,17 @@ export type QuestPlanCreateInput = {
 
 export async function createQuestPlan(data: QuestPlanCreateInput) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     const plan = await prisma.questPlan.create({
         data: {
             title: data.title,
+            status: data.status,
+            bannerUrl: data.bannerUrl,
+            bannerFit: data.bannerFit || "cover",
+            bannerPosition: data.bannerPosition || "center",
             categoryId: data.categoryId,
             creatorId: actingUser.id,
             minStarLevel: data.minStarLevel,
@@ -112,6 +125,10 @@ export async function createQuestPlan(data: QuestPlanCreateInput) {
 export type QuestPlanUpdateInput = {
     id: string;
     title?: string;
+    status?: QuestPlanStatus;
+    bannerUrl?: string | null;
+    bannerFit?: string | null;
+    bannerPosition?: string | null;
     categoryId?: string | null;
     minStarLevel?: number | null;
     maxStarLevel?: number | null;
@@ -122,12 +139,18 @@ export type QuestPlanUpdateInput = {
 
 export async function updateQuestPlan(data: QuestPlanUpdateInput) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     await prisma.questPlan.update({
         where: { id: data.id },
         data: {
             title: data.title,
+            status: data.status,
+            bannerUrl: data.bannerUrl,
+            bannerFit: data.bannerFit,
+            bannerPosition: data.bannerPosition,
             categoryId: data.categoryId,
             minStarLevel: data.minStarLevel,
             maxStarLevel: data.maxStarLevel,
@@ -148,7 +171,9 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
 
 export async function deleteQuestPlan(id: string) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     await prisma.questPlan.delete({
         where: { id }
@@ -156,6 +181,141 @@ export async function deleteQuestPlan(id: string) {
 
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
+    return { success: true };
+}
+
+export async function uploadQuestBanner(questPlanId: string, formData: FormData) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+
+    const file = formData.get('file');
+    if (!file || !(file instanceof File)) {
+        throw new Error("Invalid or missing file upload");
+    }
+
+    // Validate file type
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error("Invalid file type. Only PNG, JPEG, and WebP are allowed.");
+    }
+
+    // Validate file size (e.g., 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+        throw new Error("File is too large. Maximum size is 5MB.");
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const fileName = `quest-banners/${questPlanId}-${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const publicUrl = await uploadToGcs(buffer, fileName, file.type);
+
+    // Update the quest plan with the new banner URL
+    await prisma.questPlan.update({
+        where: { id: questPlanId },
+        data: { bannerUrl: publicUrl }
+    });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+
+    return { success: true, url: publicUrl };
+}
+
+export async function duplicateQuestPlan(id: string) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+
+    const sourcePlan = await prisma.questPlan.findUnique({
+        where: { id },
+        include: {
+            requiredTags: true,
+            encounters: {
+                include: {
+                    requiredTags: true,
+                    recommendedChampions: true,
+                    nodes: true
+                }
+            }
+        }
+    });
+
+    if (!sourcePlan) throw new Error("Source plan not found");
+
+    const newPlan = await prisma.questPlan.create({
+        data: {
+            title: `${sourcePlan.title} (Copy)`,
+            status: QuestPlanStatus.DRAFT,
+            bannerUrl: sourcePlan.bannerUrl,
+            bannerFit: sourcePlan.bannerFit,
+            bannerPosition: sourcePlan.bannerPosition,
+            categoryId: sourcePlan.categoryId,
+            creatorId: actingUser.id,
+            minStarLevel: sourcePlan.minStarLevel,
+            maxStarLevel: sourcePlan.maxStarLevel,
+            teamLimit: sourcePlan.teamLimit,
+            requiredClasses: sourcePlan.requiredClasses,
+            requiredTags: {
+                connect: sourcePlan.requiredTags.map(t => ({ id: t.id }))
+            },
+            encounters: {
+                create: sourcePlan.encounters.map(e => ({
+                    sequence: e.sequence,
+                    tips: e.tips,
+                    defenderId: e.defenderId,
+                    recommendedTags: e.recommendedTags,
+                    requiredClasses: e.requiredClasses,
+                    minStarLevel: e.minStarLevel,
+                    maxStarLevel: e.maxStarLevel,
+                    recommendedChampions: {
+                        connect: e.recommendedChampions.map(c => ({ id: c.id }))
+                    },
+                    requiredTags: {
+                        connect: e.requiredTags.map(t => ({ id: t.id }))
+                    },
+                    nodes: {
+                        create: e.nodes.map(n => ({
+                            nodeModifierId: n.nodeModifierId
+                        }))
+                    }
+                }))
+            }
+        }
+    });
+
+    revalidatePath('/admin/quests');
+    return { success: true, planId: newPlan.id };
+}
+
+export async function clearRecommendedChampionsInQuest(id: string) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+
+    const encounters = await prisma.questEncounter.findMany({
+        where: { questPlanId: id },
+        select: { id: true }
+    });
+
+    for (const encounter of encounters) {
+        await prisma.questEncounter.update({
+            where: { id: encounter.id },
+            data: {
+                recommendedChampions: {
+                    set: []
+                }
+            }
+        });
+    }
+
+    revalidatePath(`/admin/quests/${id}`);
+    revalidatePath(`/planning/quests/${id}`);
     return { success: true };
 }
 

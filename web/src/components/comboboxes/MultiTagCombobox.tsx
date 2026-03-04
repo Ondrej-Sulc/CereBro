@@ -49,7 +49,7 @@ export const MultiTagCombobox = React.memo(function MultiTagCombobox({
         setSearch("");
     }, [values, onSelect]);
 
-    const handleRemove = React.useCallback((e: React.MouseEvent, tagName: string) => {
+    const handleRemove = React.useCallback((e: React.MouseEvent | React.KeyboardEvent, tagName: string) => {
         e.stopPropagation();
         onSelect(values.filter((v) => v !== tagName));
     }, [values, onSelect]);
@@ -82,13 +82,21 @@ export const MultiTagCombobox = React.memo(function MultiTagCombobox({
                             values.map(tagName => (
                                 <Badge key={tagName} variant="secondary" className="pl-2 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
                                     <span className="text-xs font-bold truncate max-w-[120px]">{tagName}</span>
-                                    <div
+                                    <span
                                         role="button"
+                                        tabIndex={0}
+                                        aria-label={`Remove ${tagName}`}
                                         onClick={(e) => handleRemove(e, tagName)}
-                                        className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                handleRemove(e, tagName);
+                                            }
+                                        }}
+                                        className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500"
                                     >
                                         <X className="h-3 w-3" />
-                                    </div>
+                                    </span>
                                 </Badge>
                             ))
                         ) : (

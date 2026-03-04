@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { QuestPlan, QuestCategory, Player } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Map, ArrowRight } from "lucide-react";
+import { Map, ArrowRight, Image as ImageIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type QuestWithRelations = QuestPlan & {
     category: QuestCategory | null;
@@ -62,27 +64,49 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
                     {displayedQuests.map(quest => (
                         <Card
                             key={quest.id}
-                            className="bg-slate-950 border-slate-800 hover:border-sky-700 hover:shadow-[0_0_15px_rgba(2,132,199,0.15)] transition-all cursor-pointer group"
+                            className="bg-slate-950 border-slate-800 hover:border-sky-700 hover:shadow-[0_0_20px_rgba(2,132,199,0.1)] transition-all cursor-pointer group overflow-hidden flex flex-col"
                             onClick={() => router.push(`/planning/quests/${quest.id}`)}
                         >
-                            <CardHeader className="pb-3">
-                                <div className="flex justify-between items-start mb-2">
-                                    <Badge variant="secondary" className="bg-slate-900 border-slate-700 text-slate-300">
+                            <div className="relative aspect-[21/9] w-full overflow-hidden bg-slate-900 border-b border-slate-800">
+                                {quest.bannerUrl ? (
+                                    <Image 
+                                        src={quest.bannerUrl} 
+                                        alt={quest.title} 
+                                        fill 
+                                        sizes="(max-width: 768px) 100vw, 33vw"
+                                        className={cn(
+                                            "transition-transform duration-500 group-hover:scale-105",
+                                            quest.bannerFit === "contain" ? "object-contain" : "object-cover",
+                                            quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                                        )} 
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
+                                        <ImageIcon className="w-8 h-8 text-slate-800 opacity-50" />
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60" />
+                                <div className="absolute top-3 left-3 flex gap-2">
+                                    <Badge variant="secondary" className="bg-slate-950/80 backdrop-blur-md border-slate-700 text-[10px] uppercase tracking-wider font-bold">
                                         {quest.category ? quest.category.name : "Uncategorized"}
                                     </Badge>
-                                    <Badge variant="outline" className="text-sky-400 border-sky-900/50 bg-sky-950/30">
+                                </div>
+                                <div className="absolute top-3 right-3">
+                                    <Badge variant="outline" className="bg-sky-950/80 backdrop-blur-md text-sky-400 border-sky-800/50 text-[10px] font-bold">
                                         {quest.encounters.length} Fights
                                     </Badge>
                                 </div>
-                                <CardTitle className="text-xl group-hover:text-sky-400 transition-colors">{quest.title}</CardTitle>
-                                <CardDescription className="text-slate-500">
-                                    By {quest.creator?.ingameName || "Admin"}
+                            </div>
+                            <CardHeader className="pb-3 pt-4 flex-1">
+                                <CardTitle className="text-lg group-hover:text-sky-400 transition-colors line-clamp-1">{quest.title}</CardTitle>
+                                <CardDescription className="text-slate-500 text-xs mt-1">
+                                    Planned by {quest.creator?.ingameName || "Cerebro Admin"}
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                <div className="flex justify-end">
-                                    <span className="text-sm font-medium text-sky-500 flex items-center group-hover:translate-x-1 transition-transform">
-                                        Start Planning <ArrowRight className="ml-1 h-4 w-4" />
+                            <CardContent className="pb-4">
+                                <div className="flex justify-end pt-2 border-t border-slate-900/50">
+                                    <span className="text-xs font-bold uppercase tracking-widest text-sky-500 flex items-center group-hover:translate-x-1 transition-transform">
+                                        View Plan <ArrowRight className="ml-1.5 h-3 w-3" />
                                     </span>
                                 </div>
                             </CardContent>

@@ -91,12 +91,12 @@ export async function importFromGCS() {
             },
           };
         } else if (table === "championAbilitySynergy") {
-           where = {
-             championAbilityLinkId_championId: {
-                championAbilityLinkId: record.championAbilityLinkId,
-                championId: record.championId
-             }
-           }
+          where = {
+            championAbilityLinkId_championId: {
+              championAbilityLinkId: record.championAbilityLinkId,
+              championId: record.championId
+            }
+          }
         } else if (table === "tag") {
           where = {
             name_category: {
@@ -129,14 +129,14 @@ export async function importFromGCS() {
             },
           };
         } else if (table === "seasonBan") {
-           where = {
-             season_minTier_maxTier_championId: {
-               season: record.season,
-               minTier: record.minTier,
-               maxTier: record.maxTier,
-               championId: record.championId
-             }
-           }
+          where = {
+            season_minTier_maxTier_championId: {
+              season: record.season,
+              minTier: record.minTier,
+              maxTier: record.maxTier,
+              championId: record.championId
+            }
+          }
         } else if (table === "systemConfig") {
           where = { key: record.key };
         } else if (table === "duel") {
@@ -152,28 +152,29 @@ export async function importFromGCS() {
         const { id: _id, createdAt: _ca, updatedAt: _ua, ...updatePayload } = record;
 
         if (table === "champion") {
-            const tags = record.tags as { id: number }[] | undefined;
-            const championPayload = { ...updatePayload };
-            delete championPayload.tags; // Remove from base payload
-            
-            await prisma.champion.upsert({
-                where,
-                update: {
-                    ...championPayload,
-                    tags: tags ? { set: tags.map(t => ({ id: t.id })) } : undefined
-                },
-                create: {
-                    ...record,
-                    tags: tags ? { connect: tags.map(t => ({ id: t.id })) } : undefined
-                }
-            });
+          const tags = record.tags as { id: number }[] | undefined;
+          const championPayload = { ...updatePayload } as any;
+          delete championPayload.tags; // Remove from base payload
+
+          await prisma.champion.upsert({
+            where: where as any,
+            update: {
+              ...championPayload,
+              tags: tags ? { set: tags.map(t => ({ id: t.id })) } : undefined
+            },
+            create: {
+              id: record.id,
+              ...championPayload,
+              tags: tags ? { connect: tags.map(t => ({ id: t.id })) } : undefined
+            }
+          });
         } else {
-            // @ts-expect-error - Dynamically accessing prisma models
-            await prisma[table].upsert({
-              where,
-              update: updatePayload,
-              create: record,
-            });
+          // @ts-expect-error - Dynamically accessing prisma models
+          await prisma[table].upsert({
+            where,
+            update: updatePayload,
+            create: record,
+          });
         }
       } catch (e: unknown) {
         failureCount++;

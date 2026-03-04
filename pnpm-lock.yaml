@@ -132,6 +132,9 @@ importers:
       '@cerebro/core':
         specifier: workspace:*
         version: link:../src
+      '@google-cloud/storage':
+        specifier: ^7.17.3
+        version: 7.17.3
       '@google-cloud/vision':
         specifier: ^5.3.4
         version: 5.3.4
@@ -921,8 +924,8 @@ packages:
   '@maxim_mazurok/gapi.client.discovery-v1@0.4.20200806':
     resolution: {integrity: sha512-Jeo/KZqK39DI6ExXHcJ4lqnn1O/wEqboQ6eQ8WnNpu5eJ7wUnX/C5KazOgs1aRhnIB/dVzDe8wm62nmtkMIoaw==}
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260218':
-    resolution: {integrity: sha512-pMFqa3nZEzXPgvdU1rzB1BJRofOMLgvlOAGw7ykUZYYibkuQUvuE1UPPhv2FPOAEYsX679jwKDsQc6Bgt3wWgw==}
+  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260225':
+    resolution: {integrity: sha512-9uCa3AJNihDUnQy2o+9gLwpxxhzSA9VfJKvrZY4V7LjD2y1qt9D5p51npdu5xDfYSyDAz9RZ6ViCd4TH6sKklw==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -5492,7 +5495,7 @@ snapshots:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260218':
+  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260225':
     dependencies:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
@@ -6367,7 +6370,7 @@ snapshots:
 
   '@types/gapi.client.sheets-v4@0.0.4':
     dependencies:
-      '@maxim_mazurok/gapi.client.sheets-v4': 0.2.20260218
+      '@maxim_mazurok/gapi.client.sheets-v4': 0.2.20260225
 
   '@types/gapi.client@1.0.8': {}
 

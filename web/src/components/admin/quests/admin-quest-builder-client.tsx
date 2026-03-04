@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { QuestPlan, QuestEncounter, Champion, QuestCategory, Tag, ChampionClass } from "@prisma/client";
+import { useToast } from "@/hooks/use-toast";
+import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, ArrowLeft, Save, Edit3, XCircle, Wand2, Loader2, ExternalLink } from "lucide-react";
-import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter } from "@/app/actions/quests";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Trash2, Plus, ArrowLeft, Save, Edit3, XCircle, Wand2, Loader2, ExternalLink, ClipboardPaste, Eraser, Upload, Image as ImageIcon } from "lucide-react";
+import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner } from "@/app/actions/quests";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -23,23 +25,12 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
+import { getQuestPlanById } from "@/app/actions/quests";
+import { ChampionImages, Champion } from "@/types/champion";
 
-// We'll define a simpler type for now based on what we included in page.tsx
-type EncounterNodeWithRelations = QuestEncounterNode & {
-    nodeModifier: NodeModifier;
-};
-
-type EncounterWithRelations = QuestEncounter & {
-    defender: Champion | null;
-    recommendedChampions: Champion[];
-    nodes: EncounterNodeWithRelations[];
-};
-
-type QuestWithRelations = QuestPlan & {
-    category: QuestCategory | null;
-    encounters: EncounterWithRelations[];
-    requiredTags?: Tag[];
-};
+type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
+type EncounterWithRelations = QuestWithRelations["encounters"][0];
+type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
 
 interface Props {
     initialQuest: QuestWithRelations;
@@ -51,6 +42,7 @@ interface Props {
 
 export default function AdminQuestBuilderClient({ initialQuest, categories, tags, champions, nodeModifiers }: Props) {
     const router = useRouter();
+    const { toast } = useToast();
 
     const [editingEncounterId, setEditingEncounterId] = useState<string | null>(null);
 
@@ -66,6 +58,65 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [nodeModifierIds, setNodeModifierIds] = useState<string[]>([]);
     const [isFormattingTips, setIsFormattingTips] = useState(false);
 
+    // Bulk Paste states
+    const [bulkChampionText, setBulkChampionText] = useState("");
+    const [bulkNodeText, setBulkNodeText] = useState("");
+
+    const handleBulkChampionParse = () => {
+        const lines = bulkChampionText.split('\n').map(l => l.trim().toLowerCase()).filter(Boolean);
+        const newIds = new Set<number>(recommendedChampionIds);
+        let matchedCount = 0;
+
+        lines.forEach(line => {
+            const match = champions.find(c =>
+                c.name.toLowerCase() === line ||
+                (c.shortName && c.shortName.toLowerCase() === line)
+            );
+            if (match) {
+                newIds.add(match.id);
+                matchedCount++;
+            }
+        });
+
+        setRecommendedChampionIds(Array.from(newIds));
+        setBulkChampionText("");
+        toast({
+            title: "Bulk Parse Complete",
+            description: `Matched ${matchedCount} champions from ${lines.length} lines.`,
+            variant: matchedCount > 0 ? "default" : "destructive"
+        });
+    };
+
+    const handleBulkNodeParse = () => {
+        const lines = bulkNodeText.split('\n').map(l => l.trim().toLowerCase()).filter(Boolean);
+        const newIds = new Set<string>(nodeModifierIds);
+        let matchedCount = 0;
+
+        lines.forEach(line => {
+            const matches = nodeModifiers.filter(n => n.name.toLowerCase() === line || n.name.toLowerCase().startsWith(line) || n.name.toLowerCase().includes(line));
+            if (matches.length === 1) {
+                newIds.add(matches[0].id);
+                matchedCount++;
+            } else if (matches.length > 1) {
+                const exactMatch = matches.find(n => n.name.toLowerCase() === line);
+                if (exactMatch) {
+                    newIds.add(exactMatch.id);
+                    matchedCount++;
+                } else {
+                    toast({ title: "Ambiguous Match", description: `Multiple matches for '${line}'. Please select manually.`, variant: "destructive" });
+                }
+            }
+        });
+
+        setNodeModifierIds(Array.from(newIds));
+        setBulkNodeText("");
+        toast({
+            title: "Bulk Parse Complete",
+            description: `Matched ${matchedCount} nodes from ${lines.length} lines.`,
+            variant: matchedCount > 0 ? "default" : "destructive"
+        });
+    };
+
     // Auto-update sequence when encounters change (after refresh)
     useEffect(() => {
         if (!editingEncounterId) {
@@ -78,6 +129,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
     // Settings State
     const [title, setTitle] = useState(initialQuest.title);
+    const [status, setStatus] = useState<QuestPlanStatus>(initialQuest.status);
+    const [bannerUrl, setBannerUrl] = useState<string | null>(initialQuest.bannerUrl || null);
+    const [bannerFit, setBannerFit] = useState<string>(initialQuest.bannerFit || "cover");
+    const [bannerPosition, setBannerPosition] = useState<string>(initialQuest.bannerPosition || "center");
     const [categoryId, setCategoryId] = useState(initialQuest.categoryId || "none");
     const [minStars, setMinStars] = useState(initialQuest.minStarLevel ? String(initialQuest.minStarLevel) : "");
     const [maxStars, setMaxStars] = useState(initialQuest.maxStarLevel ? String(initialQuest.maxStarLevel) : "");
@@ -85,6 +140,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [requiredClasses, setRequiredClasses] = useState<ChampionClass[]>(initialQuest.requiredClasses || []);
     const [requiredTags, setRequiredTags] = useState<number[]>((initialQuest.requiredTags as Tag[])?.map(t => t.id) || []);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const AVAILABLE_CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "COSMIC", "TECH", "MYSTIC"];
 
@@ -94,6 +150,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             await updateQuestPlan({
                 id: initialQuest.id,
                 title,
+                status,
+                bannerUrl,
+                bannerFit,
+                bannerPosition,
                 categoryId: categoryId === "none" ? null : categoryId,
                 minStarLevel: minStars ? parseInt(minStars) : null,
                 maxStarLevel: maxStars ? parseInt(maxStars) : null,
@@ -101,12 +161,36 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 requiredClasses,
                 requiredTagIds: requiredTags
             });
-            alert("Settings saved successfully!");
-        } catch (error: any) {
+            toast({ title: "Success", description: "Settings saved successfully!" });
+        } catch (error: unknown) {
             console.error(error);
-            alert(error.message || "Failed to save settings");
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to save settings";
+            toast({ title: "Error", description: msg, variant: "destructive" });
         } finally {
             setIsSavingSettings(false);
+        }
+    };
+
+    const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const result = await uploadQuestBanner(initialQuest.id, formData);
+            if (result.success && result.url) {
+                setBannerUrl(result.url);
+                toast({ title: "Success", description: "Banner uploaded successfully!" });
+            }
+        } catch (error: unknown) {
+            console.error(error);
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to upload banner";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -139,9 +223,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
             cancelEditing();
             router.refresh();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            alert(error.message || `Failed to ${editingEncounterId ? 'update' : 'add'} encounter`);
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : `Failed to ${editingEncounterId ? 'update' : 'add'} encounter`;
+            toast({ title: "Error", description: msg, variant: "destructive" });
         }
     };
 
@@ -172,7 +257,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             router.refresh();
         } catch (error) {
             console.error(error);
-            alert("Failed to delete encounter");
+            toast({ title: "Error", description: "Failed to delete encounter", variant: "destructive" });
         }
     };
 
@@ -184,13 +269,28 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             if (result.success && result.formattedTips) {
                 setTips(result.formattedTips);
             } else {
-                alert(result.error || "Failed to format tips.");
+                toast({ title: "Error", description: result.error || "Failed to format tips.", variant: "destructive" });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            alert("An error occurred while formatting tips.");
+            toast({ title: "Error", description: "An error occurred while formatting tips.", variant: "destructive" });
         } finally {
             setIsFormattingTips(false);
+        }
+    };
+
+    const handleClearRecommended = async () => {
+        if (!confirm("Are you sure you want to clear ALL recommended champions from every encounter in this quest? This cannot be undone.")) return;
+        try {
+            const res = await clearRecommendedChampionsInQuest(initialQuest.id);
+            if (res.success) {
+                toast({ title: "Success", description: "All recommended champions cleared." });
+                router.refresh();
+            }
+        } catch (error: unknown) {
+            console.error(error);
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to clear recommendations";
+            toast({ title: "Error", description: msg, variant: "destructive" });
         }
     };
 
@@ -216,10 +316,22 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     <CardDescription>Restrictions set here apply to the entire quest path.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                        <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                        <div className="space-y-2 lg:col-span-2">
                             <Label>Quest Title</Label>
                             <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Status</Label>
+                            <select
+                                value={status}
+                                onChange={e => setStatus(e.target.value as QuestPlanStatus)}
+                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            >
+                                <option value="DRAFT">Draft (Hidden)</option>
+                                <option value="VISIBLE">Visible (All Players)</option>
+                                <option value="ARCHIVED">Archived</option>
+                            </select>
                         </div>
                         <div className="space-y-2">
                             <Label>Category</Label>
@@ -255,7 +367,94 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+                    <div className="mt-6 pt-6 border-t border-slate-800/50">
+                        <Label className="mb-3 block text-slate-400 uppercase tracking-widest text-[10px] font-bold">Quest Banner Asset</Label>
+                                                <div className="flex flex-col md:flex-row gap-6 items-start">
+                                                    <div className="relative group w-full md:w-80 aspect-[21/9] rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-900 shadow-inner flex items-center justify-center">
+                                                        {bannerUrl ? (
+                                                            <>
+                                                                <Image 
+                                                                    src={bannerUrl} 
+                                                                    alt="Quest Banner" 
+                                                                    fill 
+                                                                    className={cn(
+                                                                        bannerFit === "cover" ? "object-cover" : "object-contain",
+                                                                        bannerPosition === "top" ? "object-top" : bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                                                                    )} 
+                                                                />
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                                    <Button variant="secondary" size="sm" onClick={() => setBannerUrl(null)} className="bg-red-600 hover:bg-red-500 text-white border-none h-8">
+                                                                        <XCircle className="w-4 h-4 mr-2" /> Remove
+                                                                    </Button>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center gap-2 text-slate-600">
+                                                                <ImageIcon className="w-8 h-8 opacity-20" />
+                                                                <span className="text-xs font-medium">No banner assigned</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div className="flex-1 space-y-4">
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs text-slate-500 leading-relaxed max-w-md">
+                                                                Upload a banner for this quest plan. Recommended ratio: 21:9.
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-3 pt-1">
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] text-slate-500 uppercase">Image Fit</Label>
+                                                                    <select 
+                                                                        value={bannerFit} 
+                                                                        onChange={e => setBannerFit(e.target.value)}
+                                                                        className="block w-28 h-8 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-300 focus:ring-1 focus:ring-sky-500"
+                                                                    >
+                                                                        <option value="cover">Zoom (Cover)</option>
+                                                                        <option value="contain">Whole (Contain)</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <Label className="text-[10px] text-slate-500 uppercase">Position</Label>
+                                                                    <select 
+                                                                        value={bannerPosition} 
+                                                                        onChange={e => setBannerPosition(e.target.value)}
+                                                                        className="block w-28 h-8 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-300 focus:ring-1 focus:ring-sky-500"
+                                                                    >
+                                                                        <option value="top">Top</option>
+                                                                        <option value="center">Center</option>
+                                                                        <option value="bottom">Bottom</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                        
+                                                        <div className="flex gap-2 pt-1">
+                                                            <label className={cn(
+                                                                "cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-all shadow-sm",
+                                                                isUploading && "opacity-50 cursor-not-allowed"
+                                                            )}>
+                                                                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                                                {isUploading ? "Upload" : "Upload Image"}
+                                                                <input type="file" className="hidden" accept="image/*" onChange={handleBannerUpload} disabled={isUploading} />
+                                                            </label>
+                                                            
+                                                                                                <div className="relative flex-1 max-w-sm">
+                                                                                                    <Input 
+                                                                                                        placeholder="Or paste external URL..." 
+                                                                                                        value={bannerUrl || ""} 
+                                                                                                        onChange={(e) => setBannerUrl(e.target.value.trim() === "" ? null : e.target.value)}
+                                                                                                        className="h-10 bg-slate-950 border-slate-800 text-xs pr-10"
+                                                                                                    />
+                                                                                                    {bannerUrl && (
+                                                                                                        <button onClick={() => setBannerUrl(null)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                                                                                                            <XCircle className="w-3.5 h-3.5" />
+                                                                                                        </button>
+                                                                                                    )}
+                                                                                                </div>                                                        </div>
+                                                    </div>
+                                                </div>                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 mt-6 border-t border-slate-800/50">
                         <div className="space-y-3">
                             <Label>Required Classes (Any of the following)</Label>
                             <div className="flex flex-wrap gap-2">
@@ -292,14 +491,24 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             <MultiTagCombobox
                                 tags={tags}
                                 values={requiredTags.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
-                                onSelect={(names) => setRequiredTags(names.map(name => tags.find(t => t.name === name)!.id))}
+                                onSelect={(names) => setRequiredTags(names.map(name => {
+                                    const foundTag = tags.find(t => t.name === name);
+                                    return foundTag ? foundTag.id : undefined;
+                                }).filter((id): id is number => id !== undefined))}
                                 placeholder="Search tags..."
                             />
                             <p className="text-xs text-slate-500 mt-1">Select required tags for this quest path.</p>
                         </div>
                     </div>
 
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-between items-center pt-2">
+                        <Button
+                            variant="outline"
+                            onClick={handleClearRecommended}
+                            className="border-red-900/50 text-red-400 hover:bg-red-950/30 hover:text-red-300"
+                        >
+                            <Eraser className="mr-2 h-4 w-4" /> Clear All Recommendations
+                        </Button>
                         <Button onClick={handleSaveSettings} disabled={isSavingSettings} className="bg-sky-600 hover:bg-sky-500 text-white min-w-[150px] shadow-md shadow-sky-900/20 transition-all">
                             <Save className="mr-2 h-4 w-4" /> {isSavingSettings ? "Saving..." : "Save Settings"}
                         </Button>
@@ -338,7 +547,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 <div className="space-y-2">
                                     <Label>Defender</Label>
                                     <ChampionCombobox
-                                        champions={champions as any}
+                                        champions={champions}
                                         value={defenderId}
                                         onSelect={(id) => setDefenderId(id)}
                                         placeholder="Search..."
@@ -384,16 +593,60 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Recommended Champions</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label>Recommended Champions</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
+                                                    <ClipboardPaste className="w-3 h-3 mr-1" /> Bulk Paste
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-80 p-3 bg-slate-950 border-slate-800" align="end">
+                                                <div className="space-y-2">
+                                                    <h4 className="font-medium text-sm leading-none">Bulk Paste Champions</h4>
+                                                    <p className="text-xs text-slate-500">Paste a list of champion names, one per line.</p>
+                                                    <Textarea
+                                                        value={bulkChampionText}
+                                                        onChange={(e) => setBulkChampionText(e.target.value)}
+                                                        placeholder="e.g.&#10;Hercules&#10;Hulkling&#10;Kitty Pryde"
+                                                        className="h-32 text-xs bg-slate-900 border-slate-800"
+                                                    />
+                                                    <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white" onClick={handleBulkChampionParse}>Parse & Add</Button>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
                                     <MultiChampionCombobox
-                                        champions={champions as any}
+                                        champions={champions}
                                         values={recommendedChampionIds}
                                         onSelect={setRecommendedChampionIds}
                                         placeholder="Search champions..."
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Node Modifiers</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label>Node Modifiers</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
+                                                    <ClipboardPaste className="w-3 h-3 mr-1" /> Bulk Paste
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-80 p-3 bg-slate-950 border-slate-800" align="end">
+                                                <div className="space-y-2">
+                                                    <h4 className="font-medium text-sm leading-none">Bulk Paste Node Modifiers</h4>
+                                                    <p className="text-xs text-slate-500">Paste a list of node modifiers, one per line.</p>
+                                                    <Textarea
+                                                        value={bulkNodeText}
+                                                        onChange={(e) => setBulkNodeText(e.target.value)}
+                                                        placeholder="e.g.&#10;Stun Immunity&#10;Bleed Vulnerability"
+                                                        className="h-32 text-xs bg-slate-900 border-slate-800"
+                                                    />
+                                                    <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white" onClick={handleBulkNodeParse}>Parse & Add</Button>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
                                     <MultiNodeModifierCombobox
                                         modifiers={nodeModifiers}
                                         values={nodeModifierIds}
@@ -404,12 +657,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             </div>
 
                             <div className="flex gap-3 pt-4 border-t border-slate-800/50 mt-4">
-                                <Button 
-                                    onClick={handleAddOrUpdateEncounter} 
+                                <Button
+                                    onClick={handleAddOrUpdateEncounter}
                                     className={cn(
                                         "flex-1 text-white shadow-md transition-all",
                                         editingEncounterId ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20" : "bg-sky-600 hover:bg-sky-500 shadow-sky-900/20"
-                                    )} 
+                                    )}
                                     disabled={!sequence}
                                 >
                                     {editingEncounterId ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><Plus className="mr-2 h-4 w-4" /> Add Encounter</>}
@@ -453,7 +706,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                     {encounter.defender ? (
                                                         <div className={cn("relative h-12 w-12 rounded-lg overflow-hidden flex-shrink-0 border-2 shadow-sm", colors.border)}>
                                                             <Image
-                                                                src={getChampionImageUrl(encounter.defender.images as any, "128")}
+                                                                src={getChampionImageUrl(encounter.defender.images, "128")}
                                                                 alt={encounter.defender.name}
                                                                 fill
                                                                 className="object-cover"
@@ -490,14 +743,38 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </CardHeader>
-                                            {encounter.tips && (
-                                                <CardContent className="px-4 pb-4 pt-0">
-                                                    <div className="text-sm text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
-                                                        <SimpleMarkdown content={encounter.tips} />
-                                                    </div>
+
+                                            {(encounter.tips || (encounter.recommendedChampions && encounter.recommendedChampions.length > 0)) && (
+                                                <CardContent className="px-4 pb-4 pt-0 space-y-3">
+                                                    {encounter.recommendedChampions && encounter.recommendedChampions.length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 pb-1">
+                                                            {encounter.recommendedChampions.map((champ) => {
+                                                                const champColors = getChampionClassColors(champ.class as ChampionClass);
+                                                                return (
+                                                                    <div
+                                                                        key={champ.id}
+                                                                        className={cn("relative h-8 w-8 rounded-full overflow-hidden border-2 shadow-sm ring-1 ring-slate-950/50", champColors.border)}
+                                                                        title={champ.name}
+                                                                    >
+                                                                        <Image
+                                                                            src={getChampionImageUrl(champ.images, "64")}
+                                                                            alt={champ.name}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                        />
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+
+                                                    {encounter.tips && (
+                                                        <div className="text-sm text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
+                                                            <SimpleMarkdown content={encounter.tips} />
+                                                        </div>
+                                                    )}
                                                 </CardContent>
-                                            )}
-                                        </Card>
+                                            )}                                        </Card>
                                     </div>
                                 );
                             })}

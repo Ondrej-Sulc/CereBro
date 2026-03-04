@@ -92,6 +92,12 @@ enum BotJobType {
   UPDATE_MEMBER_ROLES
 }
 
+enum QuestPlanStatus {
+  DRAFT
+  VISIBLE
+  ARCHIVED
+}
+
 // --- Models ---
 
 // RENAMED from GlossaryCategory and re-linked
@@ -871,6 +877,10 @@ model QuestCategory {
 model QuestPlan {
   id              String          @id @default(cuid())
   title           String
+  status          QuestPlanStatus @default(DRAFT)
+  bannerUrl       String?
+  bannerFit       String?         @default("cover")
+  bannerPosition  String?         @default("center")
   creatorId       String?
   creator         Player?         @relation("QuestCreator", fields: [creatorId], references: [id])
   categoryId      String?
@@ -952,7 +962,7 @@ model PlayerQuestEncounter {
   questEncounter   QuestEncounter @relation(fields: [questEncounterId], references: [id], onDelete: Cascade)
 
   selectedChampionId Int?
-  selectedChampion   Champion? @relation("PlayerSelectedCounter", fields: [selectedChampionId], references: [id])
+  selectedChampion   Champion? @relation("PlayerSelectedCounter", fields: [selectedChampionId], references: [id], onDelete: SetNull)
 
   @@unique([playerQuestPlanId, questEncounterId])
   @@index([playerQuestPlanId])
