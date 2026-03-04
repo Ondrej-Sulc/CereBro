@@ -37,9 +37,9 @@ export const UpdatedChampionItem = memo(({
     variant?: "square" | "tall";
 }) => {
     const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
+    const classColors = getChampionClassColors(item.champion.championClass);
     
     if (variant === "tall") {
-        const classColors = getChampionClassColors(item.champion.championClass);
         return (
             <div
                 className={cn(
@@ -109,14 +109,15 @@ export const UpdatedChampionItem = memo(({
 
     return (
         <div className={cn(
-            "flex flex-col rounded-lg overflow-hidden border-2 bg-slate-950/50 group transition-all duration-300 shadow-lg relative",
+            "flex flex-col rounded-lg overflow-hidden border-2 group transition-all duration-300 shadow-lg relative",
+            classColors.bg,
             borderClass,
             isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
             isRecommended && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
             isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
         )}>
             {/* Top Section: Smaller Portrait */}
-            <div className="relative aspect-square w-full overflow-hidden bg-slate-900/50 border-b border-slate-800/50">
+            <div className="relative aspect-square w-full overflow-hidden bg-slate-900/50  border-b border-slate-800/50">
                 <Image
                     src={getChampionImageUrl(item.champion.images, '128')}
                     alt={item.champion.name}
