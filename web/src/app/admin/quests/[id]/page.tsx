@@ -42,7 +42,7 @@ export default async function AdminQuestBuilderPage({ params }: { params: Promis
     const nodeModifiers = await prisma.nodeModifier.findMany({ orderBy: { name: 'asc' } });
 
     return (
-        <div className="p-6">
+        <div className="space-y-6">
             <AdminQuestBuilderClient
                 initialQuest={quest as any}
                 categories={categories}

@@ -32,3 +32,20 @@ export function normalizeChampionName(name: string): string {
   if (!name) return "";
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
+
+/**
+ * Returns a Tailwind border + shadow class string for a given star level.
+ * Centralized here to avoid duplication across ChampionCard, UpdatedChampionItem, and the Quest Timeline.
+ */
+export function getStarBorderClass(stars: number): string {
+  const map: Record<number, string> = {
+    7: "border-purple-600 shadow-purple-900/10",
+    6: "border-sky-600 shadow-sky-900/10",
+    5: "border-red-600 shadow-red-900/10",
+    4: "border-yellow-600 shadow-yellow-900/10",
+    3: "border-slate-400 shadow-slate-900/10",
+    2: "border-amber-800 shadow-amber-900/10",
+    1: "border-slate-600 shadow-slate-900/10",
+  };
+  return map[stars] ?? "border-slate-800 shadow-black/10";
+}

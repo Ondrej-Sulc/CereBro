@@ -877,6 +877,7 @@ model QuestPlan {
   category        QuestCategory?  @relation(fields: [categoryId], references: [id])
   minStarLevel    Int?
   maxStarLevel    Int?
+  teamLimit       Int?            @default(5)
   requiredClasses ChampionClass[]
   requiredTags    Tag[]           @relation("QuestRequiredTags")
 

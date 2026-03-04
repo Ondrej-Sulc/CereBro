@@ -41,8 +41,14 @@ export default async function AdminQuestsPage() {
     });
 
     return (
-        <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Quest Planner Management</h1>
+        <div className="space-y-8">
+            <div className="flex flex-col gap-2">
+                <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">
+                    Quest Planner Management
+                </h1>
+                <p className="text-slate-400">Create and manage standardized quest counters and guides for the alliance.</p>
+            </div>
+            
             <AdminQuestManagerClient initialQuests={quests} categories={categories} />
         </div>
     );

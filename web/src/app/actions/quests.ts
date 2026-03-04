@@ -80,6 +80,7 @@ export type QuestPlanCreateInput = {
     categoryId?: string;
     minStarLevel?: number;
     maxStarLevel?: number;
+    teamLimit?: number | null;
     requiredClasses?: ChampionClass[];
     requiredTagIds?: number[]; // Note: Tag.id is actually Int in the schema
 };
@@ -95,6 +96,7 @@ export async function createQuestPlan(data: QuestPlanCreateInput) {
             creatorId: actingUser.id,
             minStarLevel: data.minStarLevel,
             maxStarLevel: data.maxStarLevel,
+            teamLimit: data.teamLimit,
             requiredClasses: data.requiredClasses || [],
             requiredTags: data.requiredTagIds ? {
                 connect: data.requiredTagIds.map(id => ({ id }))
@@ -113,6 +115,7 @@ export type QuestPlanUpdateInput = {
     categoryId?: string | null;
     minStarLevel?: number | null;
     maxStarLevel?: number | null;
+    teamLimit?: number | null;
     requiredClasses?: ChampionClass[];
     requiredTagIds?: number[];
 };
@@ -128,6 +131,7 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
             categoryId: data.categoryId,
             minStarLevel: data.minStarLevel,
             maxStarLevel: data.maxStarLevel,
+            teamLimit: data.teamLimit,
             requiredClasses: data.requiredClasses,
             requiredTags: data.requiredTagIds !== undefined ? {
                 set: data.requiredTagIds.map(id => ({ id }))

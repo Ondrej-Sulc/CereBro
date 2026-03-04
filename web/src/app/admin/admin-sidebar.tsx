@@ -45,22 +45,22 @@ const items = [
     icon: Sword,
   },
   {
-    title: "Bans",
+    title: "War Bans",
     href: "/admin/bans",
     icon: Ban,
   },
   {
-    title: "Nodes",
+    title: "War Nodes",
     href: "/admin/nodes",
     icon: Hash,
   },
   {
-    title: "Tactics",
+    title: "War Tactics",
     href: "/admin/tactics",
     icon: Target,
   },
   {
-    title: "YouTube",
+    title: "YouTube Token",
     href: "/admin/youtube",
     icon: Youtube,
   },

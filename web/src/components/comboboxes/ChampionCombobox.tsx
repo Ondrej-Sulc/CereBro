@@ -21,6 +21,7 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionClass } from "@prisma/client";
+import Fuse from "fuse.js";
 
 interface ChampionComboboxProps {
   champions: (Champion & { group?: string })[];
@@ -66,6 +67,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   const handleSelect = React.useCallback(
     (championId: string) => {
       onSelect(championId);
+      setSearch(""); // Clear search on select
       setOpen(false);
     },
     [onSelect, setOpen]
@@ -79,18 +81,29 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     [onSelect]
   );
 
-  const { flatItems, groupCounts, groupNames } = React.useMemo(() => {
-    const searchLower = search.toLowerCase();
+  const fuse = React.useMemo(() => {
+    return new Fuse(champions, {
+      keys: ["name"],
+      threshold: 0.3,
+      distance: 100,
+      ignoreLocation: true,
+    });
+  }, [champions]);
 
+  const { flatItems, groupCounts, groupNames } = React.useMemo(() => {
     let filtered = champions;
 
     if (showOnlyActive && activeChampionIds) {
       filtered = filtered.filter((c) => activeChampionIds.has(String(c.id)));
     }
 
-    filtered = filtered.filter((champion) =>
-      champion.name.toLowerCase().includes(searchLower)
-    );
+    if (search) {
+      filtered = fuse.search(search).map(result => result.item);
+      // Re-filter by active if needed after fuzzy search
+      if (showOnlyActive && activeChampionIds) {
+          filtered = filtered.filter((c) => activeChampionIds.has(String(c.id)));
+      }
+    }
 
     const groups: Record<string, typeof champions> = {};
 
@@ -115,7 +128,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     });
 
     return { flatItems: flat, groupCounts: counts, groupNames: groupOrder };
-  }, [champions, search, showOnlyActive, activeChampionIds]);
+  }, [champions, search, showOnlyActive, activeChampionIds, fuse]);
 
   const selectedChampion = React.useMemo(
     () => (value ? champions.find((c) => String(c.id) === value) : null),
@@ -190,7 +203,6 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
       <PopoverContent
         sideOffset={4}
         className="w-[--radix-popover-trigger-width] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
         onWheel={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}

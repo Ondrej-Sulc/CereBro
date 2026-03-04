@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronsUpDown, X } from "lucide-react"
-import { Virtuoso } from "react-virtuoso";
+import Fuse from "fuse.js"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import {
     CommandGroup,
     CommandInput,
     CommandItem,
+    CommandList,
 } from "@/components/ui/command"
 import {
     Popover,
@@ -45,6 +46,7 @@ export const MultiTagCombobox = React.memo(function MultiTagCombobox({
         } else {
             onSelect([...values, tagName]);
         }
+        setSearch("");
     }, [values, onSelect]);
 
     const handleRemove = React.useCallback((e: React.MouseEvent, tagName: string) => {
@@ -52,11 +54,19 @@ export const MultiTagCombobox = React.memo(function MultiTagCombobox({
         onSelect(values.filter((v) => v !== tagName));
     }, [values, onSelect]);
 
-    const filteredTags = React.useMemo(() =>
-        tags.filter(tag =>
-            tag.name.toLowerCase().includes(search.toLowerCase())
-        ), [tags, search]
-    );
+    const fuse = React.useMemo(() => {
+        return new Fuse(tags, {
+            keys: ["name"],
+            threshold: 0.3,
+            distance: 100,
+            ignoreLocation: true,
+        });
+    }, [tags]);
+
+    const filteredTags = React.useMemo(() => {
+        if (!search) return tags;
+        return fuse.search(search).map(result => result.item);
+    }, [fuse, search, tags]);
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -94,40 +104,35 @@ export const MultiTagCombobox = React.memo(function MultiTagCombobox({
             <PopoverContent
                 sideOffset={4}
                 className="w-[--radix-popover-trigger-width] p-0"
-                onOpenAutoFocus={(e) => e.preventDefault()}
                 onWheel={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
             >
-                <Command className="h-auto">
+                <Command shouldFilter={false} className="h-auto">
                     <CommandInput
                         placeholder="Search tags..."
                         value={search}
                         onValueChange={setSearch}
                     />
-                    <CommandEmpty>No tags found.</CommandEmpty>
-                    <CommandGroup>
-                        {open && (
-                            <Virtuoso
-                                style={{ height: "200px" }}
-                                data={filteredTags}
-                                itemContent={(index, tag) => {
-                                    const isSelected = values.includes(tag.name);
-                                    return (
-                                        <CommandItem
-                                            key={tag.id}
-                                            value={tag.name}
-                                            onSelect={() => handleSelect(tag.name)}
-                                            className={cn("flex items-center justify-between cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
-                                        >
-                                            <span className={cn("font-bold text-xs")}>{tag.name}</span>
-                                            {isSelected && <span className="text-xs text-sky-400 font-bold">✓</span>}
-                                        </CommandItem>
-                                    )
-                                }}
-                            />
-                        )}
-                    </CommandGroup>
+                    <CommandList>
+                        <CommandEmpty>No tags found.</CommandEmpty>
+                        <CommandGroup>
+                            {filteredTags.slice(0, 100).map((tag) => {
+                                const isSelected = values.includes(tag.name);
+                                return (
+                                    <CommandItem
+                                        key={tag.id}
+                                        value={tag.name}
+                                        onSelect={() => handleSelect(tag.name)}
+                                        className={cn("flex items-center justify-between cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
+                                    >
+                                        <span className={cn("font-bold text-xs")}>{tag.name}</span>
+                                        {isSelected && <span className="text-xs text-sky-400 font-bold">✓</span>}
+                                    </CommandItem>
+                                )
+                            })}
+                        </CommandGroup>
+                    </CommandList>
                 </Command>
             </PopoverContent>
         </Popover>

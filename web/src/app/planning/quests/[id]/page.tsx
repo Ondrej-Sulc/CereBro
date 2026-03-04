@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getQuestPlanById } from "@/app/actions/quests";
 import QuestTimelineClient from "@/components/planning/quest-timeline-client";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Edit3 } from "lucide-react";
 
 export default async function QuestTimelinePage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -70,10 +73,19 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     });
 
     return (
-        <div className="p-4 md:p-8 max-w-5xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">{quest.title}</h1>
-                {quest.category && <p className="text-slate-400 mt-2">{quest.category.name}</p>}
+        <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+            <div className="mb-8 flex items-start justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">{quest.title}</h1>
+                    {quest.category && <p className="text-slate-400 mt-2">{quest.category.name}</p>}
+                </div>
+                {botUser?.isBotAdmin && (
+                    <Link href={`/admin/quests/${quest.id}`}>
+                        <Button variant="outline" className="shrink-0 border-sky-800 text-sky-400 hover:bg-sky-950/50 hover:text-sky-300">
+                            <Edit3 className="w-4 h-4 mr-2" /> Edit Plan
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             {/* We cast here because Prisma's nested includes get complex, but we know the shape matches what the client needs */}

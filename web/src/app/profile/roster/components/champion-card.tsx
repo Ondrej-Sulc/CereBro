@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trophy, Edit2, Shield, Zap, Tag as TagIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionImages } from "@/types/champion";
 import { ChampionClass } from "@prisma/client";
@@ -25,18 +25,7 @@ interface ChampionCardProps {
 export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: ChampionCardProps) => {
     const classColors = getChampionClassColors(item.champion.class);
 
-    // Map star levels to specific border colors
-    const starBorderColors: Record<number, string> = {
-        7: "border-purple-500 hover:border-purple-400/80 shadow-purple-900/40",
-        6: "border-sky-400 hover:border-sky-300/80 shadow-sky-900/40",
-        5: "border-red-400 hover:border-red-300/80 shadow-red-900/40",
-        4: "border-yellow-500 hover:border-yellow-400/80 shadow-yellow-900/40",
-        3: "border-slate-300 hover:border-slate-200/80 shadow-slate-900/40",
-        2: "border-amber-700 hover:border-amber-600/80 shadow-amber-900/40", // Brown-ish
-        1: "border-slate-500 hover:border-slate-400/80 shadow-slate-900/40",
-    };
-
-    const borderClass = starBorderColors[item.stars] || "border-slate-800 hover:border-slate-500 shadow-black/20";
+    const borderClass = getStarBorderClass(item.stars);
 
     const cardContent = (
         <div

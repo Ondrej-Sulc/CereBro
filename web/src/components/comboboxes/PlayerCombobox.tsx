@@ -142,12 +142,10 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        sideOffset={4} 
-        className="w-[--radix-popover-trigger-width] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onWheel={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
+            <PopoverContent
+              sideOffset={4}
+              className="w-[--radix-popover-trigger-width] p-0"
+              onWheel={(e) => e.stopPropagation()}        onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
         <Command shouldFilter={false} className="h-auto">

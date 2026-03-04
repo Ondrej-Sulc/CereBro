@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronsUpDown, X } from "lucide-react"
-import { Virtuoso } from "react-virtuoso";
+import Fuse from "fuse.js"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import {
     CommandGroup,
     CommandInput,
     CommandItem,
+    CommandList,
 } from "@/components/ui/command"
 import {
     Popover,
@@ -45,6 +46,7 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
         } else {
             onSelect([...values, modifierId]);
         }
+        setSearch(""); // Clear search on select
     }, [values, onSelect]);
 
     const handleRemove = React.useCallback((e: React.MouseEvent, modifierId: string) => {
@@ -52,12 +54,20 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
         onSelect(values.filter((v) => v !== modifierId));
     }, [values, onSelect]);
 
-    const filteredModifiers = React.useMemo(() =>
-        modifiers.filter(modifier =>
-            modifier.name.toLowerCase().includes(search.toLowerCase()) ||
-            modifier.description.toLowerCase().includes(search.toLowerCase())
-        ), [modifiers, search]
-    );
+    // Initialize Fuse instance
+    const fuse = React.useMemo(() => {
+        return new Fuse(modifiers, {
+            keys: ["name", "description"],
+            threshold: 0.3,
+            distance: 100,
+            ignoreLocation: true,
+        });
+    }, [modifiers]);
+
+    const filteredModifiers = React.useMemo(() => {
+        if (!search) return modifiers;
+        return fuse.search(search).map(result => result.item);
+    }, [fuse, search, modifiers]);
 
     const selectedModifiers = React.useMemo(() =>
         values.map(id => modifiers.find(m => m.id === id)).filter(Boolean) as NodeModifier[],
@@ -99,43 +109,38 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
             <PopoverContent
                 sideOffset={4}
                 className="w-[--radix-popover-trigger-width] p-0"
-                onOpenAutoFocus={(e) => e.preventDefault()}
                 onWheel={(e) => e.stopPropagation()}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
             >
-                <Command className="h-auto">
+                <Command shouldFilter={false} className="h-auto">
                     <CommandInput
                         placeholder="Search modifiers..."
                         value={search}
                         onValueChange={setSearch}
                     />
-                    <CommandEmpty>No modifiers found.</CommandEmpty>
-                    <CommandGroup>
-                        {open && (
-                            <Virtuoso
-                                style={{ height: "288px" }}
-                                data={filteredModifiers}
-                                itemContent={(index, modifier) => {
-                                    const isSelected = values.includes(modifier.id);
-                                    return (
-                                        <CommandItem
-                                            key={modifier.id}
-                                            value={modifier.name + modifier.description}
-                                            onSelect={() => handleSelect(modifier.id)}
-                                            className={cn("flex flex-col items-start gap-1 cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
-                                        >
-                                            <div className="flex items-center w-full justify-between">
-                                                <span className={cn("font-bold", isSelected && "text-sky-400")}>{modifier.name}</span>
-                                                {isSelected && <span className="text-xs text-sky-400 font-bold">✓</span>}
-                                            </div>
-                                            <span className="text-xs text-slate-400 line-clamp-2">{modifier.description}</span>
-                                        </CommandItem>
-                                    )
-                                }}
-                            />
-                        )}
-                    </CommandGroup>
+                    <CommandList>
+                        <CommandEmpty>No modifiers found.</CommandEmpty>
+                        <CommandGroup>
+                            {filteredModifiers.slice(0, 100).map((modifier) => {
+                                const isSelected = values.includes(modifier.id);
+                                return (
+                                    <CommandItem
+                                        key={modifier.id}
+                                        value={modifier.name + modifier.description}
+                                        onSelect={() => handleSelect(modifier.id)}
+                                        className={cn("flex flex-col items-start gap-1 cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
+                                    >
+                                        <div className="flex items-center w-full justify-between">
+                                            <span className={cn("font-bold", isSelected && "text-sky-400")}>{modifier.name}</span>
+                                            {isSelected && <span className="text-xs text-sky-400 font-bold">✓</span>}
+                                        </div>
+                                        <span className="text-xs text-slate-400 line-clamp-2">{modifier.description}</span>
+                                    </CommandItem>
+                                )
+                            })}
+                        </CommandGroup>
+                    </CommandList>
                 </Command>
             </PopoverContent>
         </Popover>
