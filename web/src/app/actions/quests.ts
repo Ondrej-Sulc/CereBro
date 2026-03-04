@@ -371,12 +371,15 @@ export type QuestEncounterCreateInput = {
     defenderId?: number;
     recommendedTagNames?: string[];
     recommendedChampionIds?: number[];
+    requiredTagIds?: number[];
     nodeModifierIds?: string[];
 };
 
 export async function createQuestEncounter(data: QuestEncounterCreateInput) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     if (data.defenderId) {
         const champ = await prisma.champion.findUnique({ where: { id: data.defenderId } });
@@ -394,6 +397,9 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
             recommendedTags: data.recommendedTagNames || [],
             recommendedChampions: data.recommendedChampionIds ? {
                 connect: data.recommendedChampionIds.map(id => ({ id }))
+            } : undefined,
+            requiredTags: data.requiredTagIds ? {
+                connect: data.requiredTagIds.map(id => ({ id }))
             } : undefined,
             nodes: data.nodeModifierIds ? {
                 create: data.nodeModifierIds.map(nodeId => ({
@@ -416,12 +422,15 @@ export type QuestEncounterUpdateInput = {
     defenderId?: number | null;
     recommendedTagNames?: string[];
     recommendedChampionIds?: number[];
+    requiredTagIds?: number[];
     nodeModifierIds?: string[];
 };
 
 export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     if (data.defenderId) {
         const champ = await prisma.champion.findUnique({ where: { id: data.defenderId } });
@@ -440,6 +449,9 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
             recommendedChampions: data.recommendedChampionIds !== undefined ? {
                 set: data.recommendedChampionIds.map(id => ({ id }))
             } : undefined,
+            requiredTags: data.requiredTagIds !== undefined ? {
+                set: data.requiredTagIds.map(id => ({ id }))
+            } : undefined,
             nodes: data.nodeModifierIds !== undefined ? {
                 deleteMany: {},
                 create: data.nodeModifierIds.map(nodeId => ({
@@ -456,7 +468,9 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
 
 export async function deleteQuestEncounter(questPlanId: string, encounterId: string) {
     const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser || !actingUser.isBotAdmin) throw new Error("Unauthorized");
+    if (!actingUser) throw new Error("Unauthorized");
+    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
+    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
 
     await prisma.questEncounter.delete({
         where: { id: encounterId }

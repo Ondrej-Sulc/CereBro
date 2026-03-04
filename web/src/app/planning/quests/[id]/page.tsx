@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit3 } from "lucide-react";
 import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { Champion } from "@/types/champion";
+import { Champion, ChampionImages } from "@/types/champion";
 
 export default async function QuestTimelinePage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -67,60 +67,150 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         }
     });
 
-    // Fetch the user's roster to pass to the client for counter selection
-    const roster = await prisma.roster.findMany({
-        where: { playerId: activePlayer.id },
-        include: {
-            champion: {
-                include: { tags: true }
-            }
-        },
-        orderBy: [
-            { stars: 'desc' },
-            { rank: 'desc' },
-            { powerRating: 'desc' },
-            { champion: { name: 'asc' } }
-        ]
-    });
+    // Fetch the user's roster with tags and abilities
+    // Fetch filter metadata in parallel
+    const [rosterEntries, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
+        prisma.roster.findMany({
+            where: { playerId: activePlayer.id },
+            include: {
+                champion: {
+                    include: { 
+                        tags: true,
+                        abilities: {
+                            include: {
+                                ability: {
+                                    include: {
+                                        categories: { select: { name: true } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: [
+                { stars: 'desc' },
+                { rank: 'desc' },
+                { powerRating: 'desc' },
+                { champion: { name: 'asc' } }
+            ]
+        }),
+        prisma.tag.findMany({ orderBy: { name: 'asc' } }),
+        prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
+        prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
+        prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] })
+    ]);
+
+    const [abilities, immunities] = await Promise.all([
+        prisma.ability.findMany({ where: { id: { in: abilityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+        prisma.ability.findMany({ where: { id: { in: immunityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } })
+    ]);
+
+    // Map roster entries to typed objects, ensuring JsonValue fields are cast correctly
+    const roster = rosterEntries.map(entry => ({
+        ...entry,
+        champion: {
+            ...entry.champion,
+            images: entry.champion.images as unknown as ChampionImages,
+            tags: entry.champion.tags,
+            abilities: entry.champion.abilities.map(link => ({
+                ...link,
+                ability: {
+                    name: link.ability.name,
+                    categories: link.ability.categories
+                },
+                synergyChampions: [] // Placeholder as it's not needed for filtering here
+            }))
+        }
+    }));
 
     return (
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
-                        {quest.bannerUrl && (
-                            <div className="relative w-full aspect-[21/9] md:aspect-[25/7] mb-8 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
-                                <Image 
-                                    src={quest.bannerUrl} 
-                                    alt={quest.title} 
-                                    fill 
-                                    priority
-                                    className={cn(
-                                        quest.bannerFit === "contain" ? "object-contain" : "object-cover",
-                                        quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
-                                    )} 
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />                    <div className="absolute bottom-6 left-8 right-8">
-                        <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-2xl uppercase tracking-tight">{quest.title}</h1>
-                        {quest.category && (
-                            <Badge className="mt-2 bg-sky-600 text-white border-none text-xs font-bold uppercase tracking-widest px-3 py-1">
-                                {quest.category.name}
-                            </Badge>
-                        )}
+            {quest.bannerUrl && (
+                <div className="relative w-full aspect-[21/9] md:aspect-[25/7] mb-8 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
+                    <Image 
+                        src={quest.bannerUrl} 
+                        alt={quest.title} 
+                        fill 
+                        priority
+                        className={cn(
+                            quest.bannerFit === "contain" ? "object-contain" : "object-cover",
+                            quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                        )} 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                    <div className="absolute bottom-6 left-8 right-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-2xl uppercase tracking-tight">{quest.title}</h1>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {quest.category && (
+                                    <Badge className="bg-sky-600 text-white border-none text-xs font-bold uppercase tracking-widest px-3 py-1 shadow-lg">
+                                        {quest.category.name}
+                                    </Badge>
+                                )}
+                                {(quest.minStarLevel || quest.maxStarLevel) && (
+                                    <Badge className="bg-amber-600 text-white border-none text-xs font-bold uppercase tracking-widest px-3 py-1 shadow-lg">
+                                        {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                                    </Badge>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap md:justify-end gap-2">
+                            {quest.requiredClasses?.map((cls) => (
+                                <div key={cls} className="bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-2xl">
+                                    <div className="relative w-4 h-4">
+                                        <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                    </div>
+                                    <span className="text-[10px] font-black text-white uppercase tracking-tighter leading-none">{cls}</span>
+                                </div>
+                            ))}
+                            {quest.requiredTags?.map((tag) => (
+                                <Badge key={tag.id} variant="outline" className="bg-white/10 text-white border-white/20 text-[10px] uppercase font-black px-3 py-1 backdrop-blur-md shadow-2xl">
+                                    {tag.name}
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
 
             {!quest.bannerUrl && (
-                <div className="mb-8 flex items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">{quest.title}</h1>
-                        {quest.category && <p className="text-slate-400 mt-2">{quest.category.name}</p>}
+                <div className="mb-8 space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">{quest.title}</h1>
+                            {quest.category && <p className="text-slate-400 mt-2 font-medium">{quest.category.name}</p>}
+                        </div>
+                        {isAdmin && botUser?.isBotAdmin && (
+                            <Link href={`/admin/quests/${quest.id}`}>
+                                <Button variant="outline" className="shrink-0 border-sky-800 text-sky-400 hover:bg-sky-950/50 hover:text-sky-300">
+                                    <Edit3 className="w-4 h-4 mr-2" /> Edit Plan
+                                </Button>
+                            </Link>
+                        )}
                     </div>
-                    {isAdmin && botUser?.isBotAdmin && (
-                        <Link href={`/admin/quests/${quest.id}`}>
-                            <Button variant="outline" className="shrink-0 border-sky-800 text-sky-400 hover:bg-sky-950/50 hover:text-sky-300">
-                                <Edit3 className="w-4 h-4 mr-2" /> Edit Plan
-                            </Button>
-                        </Link>
-                    )}
+                    
+                    <div className="flex flex-wrap gap-3">
+                        {(quest.minStarLevel || quest.maxStarLevel) && (
+                            <Badge variant="outline" className="bg-amber-950/20 border-amber-800/50 text-amber-500 font-bold px-3 py-1">
+                                {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                            </Badge>
+                        )}
+                        {quest.requiredClasses?.map((cls) => (
+                            <div key={cls} className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 flex items-center gap-2 shadow-sm">
+                                <div className="relative w-4 h-4">
+                                    <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">{cls}</span>
+                            </div>
+                        ))}
+                        {quest.requiredTags?.map((tag) => (
+                            <Badge key={tag.id} variant="outline" className="bg-slate-900/50 text-slate-300 border-slate-800 text-[10px] uppercase font-bold px-3 py-1">
+                                {tag.name}
+                            </Badge>
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -139,6 +229,12 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 quest={quest as any}
                 roster={roster as unknown as any[]}
                 savedEncounters={playerPlan?.encounters || []}
+                filterMetadata={{
+                    tags,
+                    abilityCategories,
+                    abilities,
+                    immunities
+                }}
             />
         </div>
     );

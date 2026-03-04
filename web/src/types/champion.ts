@@ -14,6 +14,13 @@ export interface ChampionImages {
 
 export interface Champion extends Omit<PrismaChampion, 'images'> {
   images: ChampionImages;
-  abilities?: { ability: { name: string } }[];
+  abilities?: { 
+    type: 'ABILITY' | 'IMMUNITY';
+    ability: { 
+      id: number;
+      name: string;
+      categories: { name: string }[];
+    } 
+  }[];
   tags?: Tag[];
 }

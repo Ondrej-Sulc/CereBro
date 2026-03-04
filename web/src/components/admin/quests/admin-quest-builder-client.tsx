@@ -54,6 +54,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [defenderId, setDefenderId] = useState<string>("");
     const [tips, setTips] = useState<string>("");
     const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
+    const [encounterRequiredTagIds, setEncounterRequiredTagIds] = useState<number[]>([]);
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
     const [nodeModifierIds, setNodeModifierIds] = useState<string[]>([]);
     const [isFormattingTips, setIsFormattingTips] = useState(false);
@@ -207,6 +208,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     tips: tips || null,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
+                    requiredTagIds: encounterRequiredTagIds,
                     nodeModifierIds: nodeModifierIds
                 });
             } else {
@@ -217,6 +219,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     tips: tips || undefined,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
+                    requiredTagIds: encounterRequiredTagIds,
                     nodeModifierIds: nodeModifierIds
                 });
             }
@@ -236,6 +239,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setDefenderId(encounter.defenderId ? String(encounter.defenderId) : "");
         setTips(encounter.tips || "");
         setRecommendedTags(encounter.recommendedTags);
+        setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
         setNodeModifierIds(encounter.nodes?.map(n => n.nodeModifierId) || []);
     };
@@ -246,6 +250,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setDefenderId("");
         setTips("");
         setRecommendedTags([]);
+        setEncounterRequiredTagIds([]);
         setRecommendedChampionIds([]);
         setNodeModifierIds([]);
     };
@@ -316,54 +321,73 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     <CardDescription>Restrictions set here apply to the entire quest path.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-                        <div className="space-y-2 lg:col-span-2">
-                            <Label>Quest Title</Label>
-                            <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                        {/* General Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-4 w-1 bg-sky-500 rounded-full" />
+                                <h4 className="text-[10px] font-bold text-sky-500 uppercase tracking-widest">General Information</h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label>Quest Title</Label>
+                                    <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Status</Label>
+                                    <select
+                                        value={status}
+                                        onChange={e => setStatus(e.target.value as QuestPlanStatus)}
+                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                    >
+                                        <option value="DRAFT">Draft (Hidden)</option>
+                                        <option value="VISIBLE">Visible (All Players)</option>
+                                        <option value="ARCHIVED">Archived</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Category</Label>
+                                    <select
+                                        value={categoryId}
+                                        onChange={e => setCategoryId(e.target.value)}
+                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <option value="none">Uncategorized</option>
+                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Status</Label>
-                            <select
-                                value={status}
-                                onChange={e => setStatus(e.target.value as QuestPlanStatus)}
-                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
-                            >
-                                <option value="DRAFT">Draft (Hidden)</option>
-                                <option value="VISIBLE">Visible (All Players)</option>
-                                <option value="ARCHIVED">Archived</option>
-                            </select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Category</Label>
-                            <select
-                                value={categoryId}
-                                onChange={e => setCategoryId(e.target.value)}
-                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <option value="none">Uncategorized</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Team Limit</Label>
-                            <select
-                                value={teamLimit}
-                                onChange={e => setTeamLimit(e.target.value)}
-                                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
-                            >
-                                <option value="1">1 Champion</option>
-                                <option value="3">3 Champions</option>
-                                <option value="5">5 Champions</option>
-                                <option value="">Infinite (Swaps)</option>
-                            </select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Min Star Level</Label>
-                            <Input type="number" value={minStars} onChange={e => setMinStars(e.target.value)} placeholder="e.g. 5" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Max Star Level</Label>
-                            <Input type="number" value={maxStars} onChange={e => setMaxStars(e.target.value)} placeholder="e.g. 7" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+
+                        {/* Requirements Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-4 w-1 bg-amber-500 rounded-full" />
+                                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Requirements & Limits</h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Team Limit</Label>
+                                    <select
+                                        value={teamLimit}
+                                        onChange={e => setTeamLimit(e.target.value)}
+                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                    >
+                                        <option value="1">1 Champion</option>
+                                        <option value="3">3 Champions</option>
+                                        <option value="5">5 Champions</option>
+                                        <option value="">Infinite (Swaps)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Min Stars</Label>
+                                    <Input type="number" value={minStars} onChange={e => setMinStars(e.target.value)} placeholder="e.g. 5" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Max Stars</Label>
+                                    <Input type="number" value={maxStars} onChange={e => setMaxStars(e.target.value)} placeholder="e.g. 7" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -534,7 +558,16 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-sky-400 font-bold">Defender</Label>
+                                    <ChampionCombobox
+                                        champions={champions}
+                                        value={defenderId}
+                                        onSelect={(id) => setDefenderId(id)}
+                                        placeholder="Search champions..."
+                                    />
+                                </div>
                                 <div className="space-y-2">
                                     <Label>Sequence (Fight Number)</Label>
                                     <Input
@@ -544,17 +577,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Defender</Label>
-                                    <ChampionCombobox
-                                        champions={champions}
-                                        value={defenderId}
-                                        onSelect={(id) => setDefenderId(id)}
-                                        placeholder="Search..."
-                                    />
-                                </div>
                             </div>
-                            <p className="text-xs text-slate-500 -mt-2">Leave defender empty to use a generic/unknown node.</p>
 
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
@@ -583,14 +606,28 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     <Badge variant="secondary" className="bg-slate-800 text-slate-400">Optional</Badge>
                                     Encounter Specifics
                                 </h4>
-                                <div className="space-y-2">
-                                    <Label>Recommended Tags</Label>
-                                    <MultiTagCombobox
-                                        tags={tags}
-                                        values={recommendedTags}
-                                        onSelect={setRecommendedTags}
-                                        placeholder="Search tags..."
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Required Tags</Label>
+                                        <MultiTagCombobox
+                                            tags={tags}
+                                            values={encounterRequiredTagIds.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
+                                            onSelect={(names) => setEncounterRequiredTagIds(names.map(name => {
+                                                const foundTag = tags.find(t => t.name === name);
+                                                return foundTag ? foundTag.id : undefined;
+                                            }).filter((id): id is number => id !== undefined))}
+                                            placeholder="Required for this fight..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Recommended Tags</Label>
+                                        <MultiTagCombobox
+                                            tags={tags}
+                                            values={recommendedTags}
+                                            onSelect={setRecommendedTags}
+                                            placeholder="Recommended for this fight..."
+                                        />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
@@ -726,6 +763,20 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                 {encounter.nodes.map((n) => (
                                                                     <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-900 border-slate-800 text-slate-400 font-normal">
                                                                         {n.nodeModifier.name}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {(encounter.requiredTags?.length > 0 || encounter.recommendedTags?.length > 0) && (
+                                                            <div className="flex gap-1 mt-1.5 flex-wrap">
+                                                                {encounter.requiredTags?.map((t: Tag) => (
+                                                                    <Badge key={t.id} variant="outline" className="text-[9px] py-0 h-3.5 bg-red-950/20 border-red-900/30 text-red-400 font-bold uppercase tracking-tighter">
+                                                                        REQ: {t.name}
+                                                                    </Badge>
+                                                                ))}
+                                                                {encounter.recommendedTags?.map((tag: string) => (
+                                                                    <Badge key={tag} variant="outline" className="text-[9px] py-0 h-3.5 bg-amber-950/20 border-amber-800/30 text-amber-400 font-bold uppercase tracking-tighter">
+                                                                        REC: {tag}
                                                                     </Badge>
                                                                 ))}
                                                             </div>

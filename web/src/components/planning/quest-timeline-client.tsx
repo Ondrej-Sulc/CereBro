@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2 } from "lucide-react";
 import { savePlayerQuestCounter } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -16,6 +16,7 @@ import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
 import { ChampionImages, Champion } from "@/types/champion";
+import { MultiSelectFilter } from "@/components/ui/filters";
 
 import { getQuestPlanById } from "@/app/actions/quests";
 
@@ -27,18 +28,37 @@ type RosterWithChampion = Roster & {
     champion: Champion;
 };
 
+interface FilterMetadata {
+    tags: { id: string | number, name: string }[];
+    abilityCategories: { id: string | number, name: string }[];
+    abilities: { id: string | number, name: string }[];
+    immunities: { id: string | number, name: string }[];
+}
+
 interface Props {
     quest: QuestWithRelations;
     roster: RosterWithChampion[];
     savedEncounters: PlayerQuestEncounter[];
+    filterMetadata: FilterMetadata;
 }
 
 const CLASSES = Object.values(ChampionClass);
 
-export default function QuestTimelineClient({ quest, roster, savedEncounters }: Props) {
+export default function QuestTimelineClient({ quest, roster, savedEncounters, filterMetadata }: Props) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
+
+    // Advanced Filter States
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [tagFilter, setTagFilter] = useState<string[]>([]);
+    const [tagLogic, setTagLogic] = useState<'AND' | 'OR'>('AND');
+    const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
+    const [abilityCategoryLogic, setAbilityCategoryLogic] = useState<'AND' | 'OR'>('OR');
+    const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
+    const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
+    const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
+    const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
 
     // Track selections locally for immediate UI updates
     const [selections, setSelections] = useState<Record<string, number | null>>(() => {
@@ -61,9 +81,54 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
             // Class filter
             if (selectedClass && r.champion.class !== selectedClass) return false;
 
+            // Pre-compute sets for performance with existence checks
+            const champAbilities = r.champion.abilities || [];
+            const abilityEntries = champAbilities.filter(a => a.type === 'ABILITY');
+            const immunityEntries = champAbilities.filter(a => a.type === 'IMMUNITY');
+            const champTags = (r.champion.tags || []).map(t => t.name);
+
+            // Advanced filters
+            if (tagFilter.length > 0) {
+                if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }
+                else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
+            }
+
+            if (abilityCategoryFilter.length > 0) {
+                const championCategories = new Set(
+                    champAbilities.flatMap(a => a.ability?.categories?.map(c => c.name) || [])
+                );
+                if (abilityCategoryLogic === 'AND') { if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false; }
+                else { if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false; }
+            }
+
+            if (abilityFilter.length > 0) {
+                const champAbilityNames = new Set(abilityEntries.map(a => a.ability?.name).filter(Boolean));
+                if (abilityLogic === 'AND') { if (!abilityFilter.every(req => champAbilityNames.has(req))) return false; }
+                else { if (!abilityFilter.some(req => champAbilityNames.has(req))) return false; }
+            }
+
+            if (immunityFilter.length > 0) {
+                const champImmunityNames = new Set(immunityEntries.map(a => a.ability?.name).filter(Boolean));
+                if (immunityLogic === 'AND') { if (!immunityFilter.every(req => champImmunityNames.has(req))) return false; }
+                else { if (!immunityFilter.some(req => champImmunityNames.has(req))) return false; }
+            }
+
             return true;
         });
-    }, [roster, searchQuery, selectedClass]);
+    }, [roster, searchQuery, selectedClass, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic]);
+
+    const activeFiltersCount = useMemo(() => {
+        return tagFilter.length + abilityCategoryFilter.length + abilityFilter.length + immunityFilter.length;
+    }, [tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
+
+    const clearAllFilters = () => {
+        setSearchQuery("");
+        setSelectedClass(null);
+        setTagFilter([]);
+        setAbilityCategoryFilter([]);
+        setAbilityFilter([]);
+        setImmunityFilter([]);
+    };
 
     const handleSelectCounter = async (encounterId: string, championId: number) => {
         const previousValue = selections[encounterId];
@@ -309,7 +374,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
                                                                 encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
                                                                 encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
                                                                 encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(', ')} (Encounter)` : null,
-                                                                quest.requiredTags?.length ? `Tag: Any from Quest Requirements` : null
+                                                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map(t => t.name).join(', ')}` : null,
+                                                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map(t => (t as Tag).name).join(', ')}` : null
                                                             ].filter(Boolean).map((req, i) => (
                                                                 <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
                                                             ))}
@@ -387,6 +453,10 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
                                                                                 if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
                                                                                 if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
                                                                                 if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+                                                                                if (encounter.requiredTags && encounter.requiredTags.length > 0) {
+                                                                                    const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                                    if (!hasTag) return false;
+                                                                                }
                                                                                 return true;
                                                                             })
                                                                             .sort((a, b) => b.stars - a.stars || b.rank - a.rank)[0];
@@ -437,47 +507,126 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
 
                                                 {/* Roster Selection */}
                                                 <div className="space-y-4 pt-8 border-t border-slate-800/50">
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-6 w-1 bg-sky-600 rounded-full" />
-                                                            <h4 className="text-xs font-bold text-slate-100 uppercase tracking-[0.2em]">Select from Your Roster</h4>
+                                                    <div className="flex flex-col gap-4">
+                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-6 w-1 bg-sky-600 rounded-full" />
+                                                                <h4 className="text-xs font-bold text-slate-100 uppercase tracking-[0.2em]">Select from Your Roster</h4>
+                                                            </div>
+
+                                                            <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+                                                                <div className="relative flex-1">
+                                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+                                                                    <Input
+                                                                        placeholder="Search your roster..."
+                                                                        className="pl-9 h-10 bg-slate-900/50 border-slate-800 text-sm focus-visible:ring-sky-500"
+                                                                        value={searchQuery}
+                                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                                    />
+                                                                    {searchQuery && (
+                                                                        <button
+                                                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded"
+                                                                            onClick={() => setSearchQuery("")}
+                                                                        >
+                                                                            <X className="h-3 w-3 text-slate-500" />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                <div className="flex gap-2">
+                                                                    <div className="flex gap-1.5 p-1 bg-slate-950/50 border border-slate-800 rounded-lg overflow-x-auto custom-scrollbar">
+                                                                        {CLASSES.map((cls) => (
+                                                                            <button
+                                                                                key={cls}
+                                                                                onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
+                                                                                className={cn(
+                                                                                    "p-1.5 rounded-md border transition-all shrink-0",
+                                                                                    selectedClass === cls ? "bg-sky-600 border-sky-400 shadow-[0_0_10px_rgba(2,132,199,0.3)]" : "bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-700"
+                                                                                )}
+                                                                                title={cls}
+                                                                            >
+                                                                                <div className="relative w-5 h-5">
+                                                                                    <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                                                                </div>
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                    
+                                                                    <Button 
+                                                                        variant="outline" 
+                                                                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                                                                        className={cn(
+                                                                            "h-10 px-3 border-slate-800 gap-2 shrink-0",
+                                                                            showAdvancedFilters || activeFiltersCount > 0 ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900/50 text-slate-400"
+                                                                        )}
+                                                                    >
+                                                                        <Filter className="w-4 h-4" />
+                                                                        {activeFiltersCount > 0 && <span className="bg-white text-indigo-700 text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{activeFiltersCount}</span>}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
                                                         </div>
 
-                                                        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
-                                                            <div className="relative flex-1">
-                                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
-                                                                <Input
-                                                                    placeholder="Search your roster..."
-                                                                    className="pl-9 h-10 bg-slate-900/50 border-slate-800 text-sm focus-visible:ring-sky-500"
-                                                                    value={searchQuery}
-                                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                                />
-                                                                {searchQuery && (
-                                                                    <button
-                                                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded"
-                                                                        onClick={() => setSearchQuery("")}
-                                                                    >
-                                                                        <X className="h-3 w-3 text-slate-500" />
-                                                                    </button>
-                                                                )}
+                                                        {/* Advanced Filters Panel */}
+                                                        {showAdvancedFilters && (
+                                                            <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center animate-in slide-in-from-top-2 duration-200">
+                                                                <MultiSelectFilter title="Tags" icon={TagIcon} options={filterMetadata.tags} selectedValues={tagFilter} onSelect={setTagFilter} logic={tagLogic} onLogicChange={setTagLogic} />
+                                                                <MultiSelectFilter title="Categories" icon={BookOpen} options={filterMetadata.abilityCategories} selectedValues={abilityCategoryFilter} onSelect={setAbilityCategoryFilter} logic={abilityCategoryLogic} onLogicChange={setAbilityCategoryLogic} />
+                                                                <MultiSelectFilter title="Abilities" icon={Zap} options={filterMetadata.abilities} selectedValues={abilityFilter} onSelect={setAbilityFilter} logic={abilityLogic} onLogicChange={setAbilityLogic} />
+                                                                <MultiSelectFilter title="Immunities" icon={Shield} options={filterMetadata.immunities} selectedValues={immunityFilter} onSelect={setImmunityFilter} logic={immunityLogic} onLogicChange={setImmunityLogic} />
                                                             </div>
-                                                            <div className="flex gap-1.5 p-1 bg-slate-950/50 border border-slate-800 rounded-lg overflow-x-auto custom-scrollbar">
-                                                                {CLASSES.map((cls) => (
-                                                                    <button
-                                                                        key={cls}
-                                                                        onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
-                                                                        className={cn(
-                                                                            "p-1.5 rounded-md border transition-all shrink-0",
-                                                                            selectedClass === cls ? "bg-sky-600 border-sky-400 shadow-[0_0_10px_rgba(2,132,199,0.3)]" : "bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-700"
-                                                                        )}
-                                                                        title={cls}
-                                                                    >
-                                                                        <div className="relative w-5 h-5">
-                                                                            <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
-                                                                        </div>
-                                                                    </button>
-                                                                ))}
-                                                            </div>
+                                                        )}
+
+                                                        {/* Active Filter Badges */}
+                                                        <div className="flex flex-wrap gap-2 items-center">
+                                                            {/* Read-only requirements from Quest/Encounter */}
+                                                            {quest.requiredTags?.map(t => (
+                                                                <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
+                                                                    <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
+                                                                </Badge>
+                                                            ))}
+                                                            {encounter.requiredTags?.map((t: any) => (
+                                                                <Badge key={`req-e-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
+                                                                    <ShieldAlert className="w-3 h-3" /> Fight Req: {t.name}
+                                                                </Badge>
+                                                            ))}
+
+                                                            {/* User-selected removable filters */}
+                                                            {tagFilter.map(tag => (
+                                                                <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                    Tag: {tag}
+                                                                    <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                </Badge>
+                                                            ))}
+                                                            {abilityCategoryFilter.map(cat => (
+                                                                <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                    Cat: {cat}
+                                                                    <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                </Badge>
+                                                            ))}
+                                                            {abilityFilter.map(ab => (
+                                                                <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                    Ability: {ab}
+                                                                    <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                </Badge>
+                                                            ))}
+                                                            {immunityFilter.map(imm => (
+                                                                <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                    Immunity: {imm}
+                                                                    <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                </Badge>
+                                                            ))}
+
+                                                            {activeFiltersCount > 0 && (
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="sm" 
+                                                                    className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2"
+                                                                    onClick={clearAllFilters}
+                                                                >
+                                                                    <Trash2 className="w-3 h-3 mr-1" /> Clear All
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -495,6 +644,10 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters }: 
                                                             if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
                                                             if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
                                                             if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
+                                                            if (encounter.requiredTags && encounter.requiredTags.length > 0) {
+                                                                const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                if (!hasTag) return false;
+                                                            }
 
                                                             return true;
                                                         }).sort((a, b) => {
