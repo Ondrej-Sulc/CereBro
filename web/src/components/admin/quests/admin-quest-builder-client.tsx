@@ -18,6 +18,7 @@ import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
 import { MultiNodeModifierCombobox } from "@/components/comboboxes/MultiNodeModifierCombobox";
 import { MultiTagCombobox } from "@/components/comboboxes/MultiTagCombobox";
+import { AsyncBotUserCombobox } from "@/components/comboboxes/AsyncBotUserCombobox";
 import { NodeModifier, QuestEncounterNode } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,6 +32,7 @@ import { ChampionImages, Champion } from "@/types/champion";
 type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 type EncounterWithRelations = QuestWithRelations["encounters"][0];
 type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
+type CreatorRelation = QuestWithRelations["creators"][0];
 
 interface Props {
     initialQuest: QuestWithRelations;
@@ -140,6 +142,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [teamLimit, setTeamLimit] = useState(initialQuest.teamLimit !== null ? String(initialQuest.teamLimit) : "");
     const [requiredClasses, setRequiredClasses] = useState<ChampionClass[]>(initialQuest.requiredClasses || []);
     const [requiredTags, setRequiredTags] = useState<number[]>((initialQuest.requiredTags as Tag[])?.map(t => t.id) || []);
+    const [creatorIds, setCreatorIds] = useState<string[]>(initialQuest.creators?.map(c => c.id) || []);
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -160,7 +163,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 maxStarLevel: maxStars ? parseInt(maxStars) : null,
                 teamLimit: teamLimit ? parseInt(teamLimit) : null,
                 requiredClasses,
-                requiredTagIds: requiredTags
+                requiredTagIds: requiredTags,
+                creatorIds
             });
             toast({ title: "Success", description: "Settings saved successfully!" });
         } catch (error: unknown) {
@@ -355,6 +359,43 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         <option value="none">Uncategorized</option>
                                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
+                                </div>
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label>Creators</Label>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex flex-wrap gap-2">
+                                            {initialQuest.creators?.map(c => (
+                                                <Badge key={c.id} variant="secondary" className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 border-slate-800">
+                                                    {c.discordId && ( // Just an indicator, the image isn't readily available without joining User, we will use BotUser directly for simplicity in the planner display
+                                                        <div className="w-3 h-3 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                                                        </div>
+                                                    )}
+                                                    {/* In the admin builder, since we just have BotUser IDs, we rely on the parent component mapping or we show a generic tag.
+                                                        To keep it simple, we just show the Discord ID or a placeholder if we didn't fetch the names. */}
+                                                    <span>Creator {c.id.slice(-4)}</span>
+                                                    <button onClick={() => setCreatorIds(creatorIds.filter(id => id !== c.id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
+                                                </Badge>
+                                            ))}
+                                            {/* For new additions, they won't show the name immediately without a refetch, but that's standard for this pattern without a complex local map. */}
+                                            {creatorIds.filter(id => !initialQuest.creators?.find(c => c.id === id)).map(id => (
+                                                <Badge key={id} variant="outline" className="flex items-center gap-1.5 px-2 py-1 bg-slate-900/50 border-slate-700 border-dashed text-slate-400">
+                                                    <span>New Creator</span>
+                                                    <button onClick={() => setCreatorIds(creatorIds.filter(i => i !== id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                        <AsyncBotUserCombobox 
+                                            value=""
+                                            displayValue=""
+                                            onSelect={(id) => {
+                                                if (id && !creatorIds.includes(id)) {
+                                                    setCreatorIds([...creatorIds, id]);
+                                                }
+                                            }}
+                                            placeholder="Search to add creators..."
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

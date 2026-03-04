@@ -61,6 +61,7 @@ export async function getQuestPlanById(id: string) {
         include: {
             category: true,
             requiredTags: true,
+            creators: true,
             encounters: {
                 orderBy: { sequence: 'asc' },
                 include: {
@@ -90,6 +91,7 @@ export type QuestPlanCreateInput = {
     teamLimit?: number | null;
     requiredClasses?: ChampionClass[];
     requiredTagIds?: number[]; // Note: Tag.id is actually Int in the schema
+    creatorIds?: string[];
 };
 
 export async function createQuestPlan(data: QuestPlanCreateInput) {
@@ -113,6 +115,9 @@ export async function createQuestPlan(data: QuestPlanCreateInput) {
             requiredClasses: data.requiredClasses || [],
             requiredTags: data.requiredTagIds ? {
                 connect: data.requiredTagIds.map(id => ({ id }))
+            } : undefined,
+            creators: data.creatorIds ? {
+                connect: data.creatorIds.map(id => ({ id }))
             } : undefined
         }
     });
@@ -135,6 +140,7 @@ export type QuestPlanUpdateInput = {
     teamLimit?: number | null;
     requiredClasses?: ChampionClass[];
     requiredTagIds?: number[];
+    creatorIds?: string[];
 };
 
 export async function updateQuestPlan(data: QuestPlanUpdateInput) {
@@ -158,6 +164,9 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
             requiredClasses: data.requiredClasses,
             requiredTags: data.requiredTagIds !== undefined ? {
                 set: data.requiredTagIds.map(id => ({ id }))
+            } : undefined,
+            creators: data.creatorIds !== undefined ? {
+                set: data.creatorIds.map(id => ({ id }))
             } : undefined
         }
     });

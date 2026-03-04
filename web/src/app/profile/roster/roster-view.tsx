@@ -22,21 +22,21 @@ import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 
 function buildRosterQueryParams(params: {
-    simulationTargetRank: number;
-    initialSigBudget?: number;
-    initialRankClassFilter: ChampionClass[];
-    initialSigClassFilter: ChampionClass[];
-    initialRankSagaFilter: boolean;
-    initialSigSagaFilter: boolean;
+  simulationTargetRank: number;
+  initialSigBudget?: number;
+  initialRankClassFilter: ChampionClass[];
+  initialSigClassFilter: ChampionClass[];
+  initialRankSagaFilter: boolean;
+  initialSigSagaFilter: boolean;
 }) {
-    const searchParams = new URLSearchParams();
-    if (params.simulationTargetRank) searchParams.set("targetRank", params.simulationTargetRank.toString());
-    if (params.initialSigBudget) searchParams.set("sigBudget", params.initialSigBudget.toString());
-    if (params.initialRankClassFilter.length) searchParams.set("rankClassFilter", params.initialRankClassFilter.join(','));
-    if (params.initialSigClassFilter.length) searchParams.set("sigClassFilter", params.initialSigClassFilter.join(','));
-    if (params.initialRankSagaFilter) searchParams.set("rankSagaFilter", 'true');
-    if (params.initialSigSagaFilter) searchParams.set("sigSagaFilter", 'true');
-    return searchParams.toString();
+  const searchParams = new URLSearchParams();
+  if (params.simulationTargetRank) searchParams.set("targetRank", params.simulationTargetRank.toString());
+  if (params.initialSigBudget) searchParams.set("sigBudget", params.initialSigBudget.toString());
+  if (params.initialRankClassFilter.length) searchParams.set("rankClassFilter", params.initialRankClassFilter.join(','));
+  if (params.initialSigClassFilter.length) searchParams.set("sigClassFilter", params.initialSigClassFilter.join(','));
+  if (params.initialRankSagaFilter) searchParams.set("rankSagaFilter", 'true');
+  if (params.initialSigSagaFilter) searchParams.set("sigSagaFilter", 'true');
+  return searchParams.toString();
 }
 
 interface RosterViewProps {
@@ -59,9 +59,9 @@ interface RosterViewProps {
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
-    <div ref={ref} {...props} style={style} className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2">
-        {children}
-    </div>
+  <div ref={ref} {...props} style={style} className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2">
+    {children}
+  </div>
 ));
 GridList.displayName = "GridList";
 
@@ -73,10 +73,10 @@ interface ApiRosterResponse {
 }
 
 export function RosterView({
-    initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
-    simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
-    initialRankSagaFilter, initialSigSagaFilter,
-    initialTags, initialAbilityCategories, initialAbilities, initialImmunities
+  initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
+  simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
+  initialRankSagaFilter, initialSigSagaFilter,
+  initialTags, initialAbilityCategories, initialAbilities, initialImmunities
 }: RosterViewProps) {
   const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
   const [search, setSearch] = useState("");
@@ -84,11 +84,12 @@ export function RosterView({
   const [filterStars, setFilterStars] = useState<number[]>([]);
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
+  const [showUnowned, setShowUnowned] = useState(false);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(false);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
-  
+
   // Data State (Client-Side Fetching)
   const [prestigeMap, setPrestigeMap] = useState<Record<string, number>>(initialPrestigeMap);
   const [recommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
@@ -112,20 +113,20 @@ export function RosterView({
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
   const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
-  
+
   const [isPending, startTransition] = useTransition();
-  const [chartData, setChartData] = useState<{data: PrestigePoint[], rec: SigRecommendation} | null>(null);
+  const [chartData, setChartData] = useState<{ data: PrestigePoint[], rec: SigRecommendation } | null>(null);
   const [loadingChart, setLoadingChart] = useState(false);
   const [isAddingChampion, setIsAddingChampion] = useState(false);
   const [newChampion, setNewChampion] = useState<{
-      championId: number | null;
-      stars: number;
-      rank: number;
-      sigLevel: number;
-      isAwakened: boolean;
-      isAscended: boolean;
+    championId: number | null;
+    stars: number;
+    rank: number;
+    sigLevel: number;
+    isAwakened: boolean;
+    isAscended: boolean;
   }>({
-      championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
+    championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
   });
 
   const router = useRouter();
@@ -144,229 +145,254 @@ export function RosterView({
   // Sync Recommendations Data Props (e.g. after router.refresh)
   useEffect(() => {
     const currentParams = buildRosterQueryParams({
-        simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
     });
-    
+
     // Only update if our last fetch was with these same parameters
     if (lastFetchedParams.current === currentParams) {
-        setPrestigeMap(initialPrestigeMap);
-        setRecommendations(initialRecommendations || []);
-        setSigRecommendations(initialSigRecommendations || []);
-        setTop30Average(initialTop30Average);
+      setPrestigeMap(initialPrestigeMap);
+      setRecommendations(initialRecommendations || []);
+      setSigRecommendations(initialSigRecommendations || []);
+      setTop30Average(initialTop30Average);
     }
   }, [initialPrestigeMap, initialRecommendations, initialSigRecommendations, initialTop30Average, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter]);
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
-      const currentParams = buildRosterQueryParams({
-          simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
-      });
+    const currentParams = buildRosterQueryParams({
+      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+    });
 
-      if (lastFetchedParams.current === currentParams) {
+    if (lastFetchedParams.current === currentParams) {
+      setIsLoadingRecommendations(false);
+      setPendingSection(null);
+      return;
+    }
+
+    // Skip initial fetch if we already have data from server
+    if (lastFetchedParams.current === null && Object.keys(memoizedPrestigeMap).length > 0) {
+      lastFetchedParams.current = currentParams;
+      setIsLoadingRecommendations(false);
+      setPendingSection(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    const fetchData = async () => {
+      setIsLoadingRecommendations(true);
+      setPendingSection('all');
+      try {
+        const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`, { signal: controller.signal });
+        if (!res.ok) throw new Error("Failed to load recommendations");
+
+        const data = await res.json() as ApiRosterResponse;
+        setPrestigeMap(data.prestigeMap);
+        setRecommendations(data.recommendations);
+        setSigRecommendations(data.sigRecommendations);
+        setTop30Average(data.top30Average);
+        lastFetchedParams.current = currentParams;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return;
+        console.error(error);
+        toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
+      } finally {
+        if (!controller.signal.aborted) {
           setIsLoadingRecommendations(false);
           setPendingSection(null);
-          return;
+        }
       }
+    };
 
-      // Skip initial fetch if we already have data from server
-      if (lastFetchedParams.current === null && Object.keys(memoizedPrestigeMap).length > 0) {
-          lastFetchedParams.current = currentParams;
-          setIsLoadingRecommendations(false);
-          setPendingSection(null);
-          return;
-      }
-
-      const controller = new AbortController();
-      const fetchData = async () => {
-          setIsLoadingRecommendations(true);
-          setPendingSection('all');
-          try {
-              const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`, { signal: controller.signal });
-              if (!res.ok) throw new Error("Failed to load recommendations");
-              
-              const data = await res.json() as ApiRosterResponse;
-              setPrestigeMap(data.prestigeMap);
-              setRecommendations(data.recommendations);
-              setSigRecommendations(data.sigRecommendations);
-              setTop30Average(data.top30Average);
-              lastFetchedParams.current = currentParams;
-          } catch (error) {
-              if (error instanceof Error && error.name === 'AbortError') return;
-              console.error(error);
-              toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
-          } finally {
-              if (!controller.signal.aborted) {
-                  setIsLoadingRecommendations(false);
-                  setPendingSection(null);
-              }
-          }
-      };
-      
-      fetchData();
-      return () => controller.abort();
+    fetchData();
+    return () => controller.abort();
   }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, memoizedPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(window.location.search);
-      Object.entries(updates).forEach(([key, value]) => { if (value) params.set(key, value); else params.delete(key); });
-      startTransition(() => { router.push(`?${params.toString()}`); });
+    const params = new URLSearchParams(window.location.search);
+    Object.entries(updates).forEach(([key, value]) => { if (value) params.set(key, value); else params.delete(key); });
+    startTransition(() => { router.push(`?${params.toString()}`); });
   }, [router]);
 
   const handleRankClassFilterChange = (classes: ChampionClass[]) => {
-      setRankUpClassFilter(classes); setPendingSection('rank');
-      updateUrlParams({ rankClassFilter: classes.length > 0 ? classes.join(',') : null });
+    setRankUpClassFilter(classes); setPendingSection('rank');
+    updateUrlParams({ rankClassFilter: classes.length > 0 ? classes.join(',') : null });
   };
 
   const handleSigClassFilterChange = (classes: ChampionClass[]) => {
-      setSigClassFilter(classes); setPendingSection('sig');
-      updateUrlParams({ sigClassFilter: classes.length > 0 ? classes.join(',') : null });
+    setSigClassFilter(classes); setPendingSection('sig');
+    updateUrlParams({ sigClassFilter: classes.length > 0 ? classes.join(',') : null });
   };
 
   const handleRankSagaFilterChange = (val: boolean) => {
-      setRankUpSagaFilter(val); setPendingSection('rank');
-      updateUrlParams({ rankSagaFilter: val ? 'true' : null });
+    setRankUpSagaFilter(val); setPendingSection('rank');
+    updateUrlParams({ rankSagaFilter: val ? 'true' : null });
   };
 
   const handleSigSagaFilterChange = (val: boolean) => {
-      setSigSagaFilter(val); setPendingSection('sig');
-      updateUrlParams({ sigSagaFilter: val ? 'true' : null });
+    setSigSagaFilter(val); setPendingSection('sig');
+    updateUrlParams({ sigSagaFilter: val ? 'true' : null });
   };
 
   const handleAddChampion = async () => {
-      if (newChampion.championId === null) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
-      try {
-        const response = await fetch("/api/profile/roster/add", {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
-        });
-        if (!response.ok) throw new Error("Failed to add champion");
-        toast({ title: "Success", description: "Champion added to roster" });
-        setIsAddingChampion(false);
-        setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
-        setPendingSection('all');
-        startTransition(() => { router.refresh(); });
-      } catch {
-          toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
-      }
+    if (newChampion.championId === null) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
+    try {
+      const response = await fetch("/api/profile/roster/add", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
+      });
+      if (!response.ok) throw new Error("Failed to add champion");
+      toast({ title: "Success", description: "Champion added to roster" });
+      setIsAddingChampion(false);
+      setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
+      setPendingSection('all');
+      startTransition(() => { router.refresh(); });
+    } catch {
+      toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
+    }
   };
 
   const handleRecommendationClick = async (rec: SigRecommendation) => {
-      setLoadingChart(true);
-      try {
-        const res = await fetch(`/api/profile/champion-prestige?championId=${rec.championId}&rarity=${rec.stars}&rank=${rec.rank}`);
-        if (!res.ok) throw new Error("Failed to fetch prestige data");
-        const data = await res.json();
-        setChartData({ data, rec });
-      } catch {
-        toast({ title: "Error", description: "Could not load prestige curve", variant: "destructive" });
-      } finally {
-        setLoadingChart(false);
-      }
+    setLoadingChart(true);
+    try {
+      const res = await fetch(`/api/profile/champion-prestige?championId=${rec.championId}&rarity=${rec.stars}&rank=${rec.rank}`);
+      if (!res.ok) throw new Error("Failed to fetch prestige data");
+      const data = await res.json();
+      setChartData({ data, rec });
+    } catch {
+      toast({ title: "Error", description: "Could not load prestige curve", variant: "destructive" });
+    } finally {
+      setLoadingChart(false);
+    }
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-        if (sigBudget !== initialSigBudget) {
-            setPendingSection('sig');
-            updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
-        }
+      if (sigBudget !== initialSigBudget) {
+        setPendingSection('sig');
+        updateUrlParams({ sigBudget: sigBudget > 0 ? sigBudget.toString() : null });
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [sigBudget, updateUrlParams, initialSigBudget]);
 
   const filteredRoster = useMemo(() => {
-    const filtered = roster.filter((item) => {
+    let baseRoster = [...roster];
+
+    if (showUnowned) {
+      const ownedChampionIds = new Set(roster.map(r => r.championId));
+      const unownedChampions = allChampions.filter(c => !ownedChampionIds.has(c.id));
+
+      const unownedEntries: ProfileRosterEntry[] = unownedChampions.map(c => ({
+        id: `unowned-${c.id}`,
+        playerId: roster[0]?.playerId || '',
+        championId: c.id,
+        stars: 0,
+        rank: 0,
+        sigLevel: 0,
+        isAwakened: false,
+        isAscended: false,
+        powerRating: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        champion: c as unknown as ProfileRosterEntry['champion'],
+        isUnowned: true
+      }));
+
+      baseRoster = [...baseRoster, ...unownedEntries];
+    }
+
+    const filtered = baseRoster.filter((item) => {
       const matchesSearch = item.champion.name.toLowerCase().includes(search.toLowerCase());
       const matchesClass = filterClasses.length === 0 || filterClasses.includes(item.champion.class);
-      const matchesStars = filterStars.length === 0 || filterStars.includes(item.stars);
-      const matchesRank = filterRanks.length === 0 || filterRanks.includes(item.rank);
-      
+      const matchesStars = filterStars.length === 0 || item.isUnowned || filterStars.includes(item.stars);
+      const matchesRank = filterRanks.length === 0 || item.isUnowned || filterRanks.includes(item.rank);
+
       if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank) return false;
 
       // Pre-compute sets once per item for performance
       const abilityEntries = (item.champion.abilities || []).filter(a => a.type === 'ABILITY');
       const immunityEntries = (item.champion.abilities || []).filter(a => a.type === 'IMMUNITY');
       const champTags = (item.champion.tags || []).map(t => t.name);
-      
+
       if (tagFilter.length > 0) {
-          if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }
-          else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
+        if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }
+        else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
       }
 
       if (abilityCategoryFilter.length > 0) {
-          const championCategories = new Set(abilityEntries.flatMap(a => a.ability.categories.map(c => c.name)));
-          if (abilityCategoryLogic === 'AND') { if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false; }
-          else { if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false; }
+        const championCategories = new Set(abilityEntries.flatMap(a => a.ability.categories.map(c => c.name)));
+        if (abilityCategoryLogic === 'AND') { if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false; }
+        else { if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false; }
       }
 
       if (abilityFilter.length > 0) {
-          const champAbilities = new Set(abilityEntries.map(a => a.ability.name));
-          if (abilityLogic === 'AND') { if (!abilityFilter.every(req => champAbilities.has(req))) return false; }
-          else { if (!abilityFilter.some(req => champAbilities.has(req))) return false; }
+        const champAbilities = new Set(abilityEntries.map(a => a.ability.name));
+        if (abilityLogic === 'AND') { if (!abilityFilter.every(req => champAbilities.has(req))) return false; }
+        else { if (!abilityFilter.some(req => champAbilities.has(req))) return false; }
       }
 
       if (immunityFilter.length > 0) {
-          const champImmunities = new Set(immunityEntries.map(a => a.ability.name));
-          if (immunityLogic === 'AND') { if (!immunityFilter.every(req => champImmunities.has(req))) return false; }
-          else { if (!immunityFilter.some(req => champImmunities.has(req))) return false; }
+        const champImmunities = new Set(immunityEntries.map(a => a.ability.name));
+        if (immunityLogic === 'AND') { if (!immunityFilter.every(req => champImmunities.has(req))) return false; }
+        else { if (!immunityFilter.some(req => champImmunities.has(req))) return false; }
       }
 
       return true;
     });
 
     return filtered.sort((a, b) => {
-        if (sortBy === "NAME") return a.champion.name.localeCompare(b.champion.name);
-        const prestigeA = prestigeMap[a.id] || 0;
-        const prestigeB = prestigeMap[b.id] || 0;
-        if (prestigeA !== prestigeB) return prestigeB - prestigeA;
-        return a.champion.name.localeCompare(b.champion.name);
+      if (sortBy === "NAME") return a.champion.name.localeCompare(b.champion.name);
+      const prestigeA = prestigeMap[a.id] || 0;
+      const prestigeB = prestigeMap[b.id] || 0;
+      if (prestigeA !== prestigeB) return prestigeB - prestigeA;
+      return a.champion.name.localeCompare(b.champion.name);
     });
-  }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, prestigeMap, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic]);
+  }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, prestigeMap, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
 
   const handleUpdate = async (updatedData: Partial<ProfileRosterEntry> & { id: string }) => {
     try {
-        const response = await fetch("/api/profile/roster/manage", {
-            method: "PUT", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedData),
-        });
-        if (!response.ok) throw new Error("Failed to update");
-        const updatedItem = await response.json();
-        setRoster(prev => prev.map(item => item.id === updatedData.id ? { ...item, ...updatedItem } : item));
-        toast({ title: "Success", description: "Champion updated" });
-        setEditingItem(null);
-        setPendingSection('all');
-        startTransition(() => { router.refresh(); });
+      const response = await fetch("/api/profile/roster/manage", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+      if (!response.ok) throw new Error("Failed to update");
+      const updatedItem = await response.json();
+      setRoster(prev => prev.map(item => item.id === updatedData.id ? { ...item, ...updatedItem } : item));
+      toast({ title: "Success", description: "Champion updated" });
+      setEditingItem(null);
+      setPendingSection('all');
+      startTransition(() => { router.refresh(); });
     } catch {
-        toast({ title: "Error", description: "Failed to update champion", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to update champion", variant: "destructive" });
     }
   };
 
   const handleDelete = async (id: string) => {
-      if (!confirm("Are you sure you want to remove this champion from your roster?")) return;
-      try {
-        const response = await fetch("/api/profile/roster/manage", {
-            method: "DELETE", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id }),
-        });
-        if (!response.ok) throw new Error("Failed to delete");
-        setRoster(prev => prev.filter(item => item.id !== id));
-        toast({ title: "Success", description: "Champion removed" });
-        setEditingItem(null);
-        setPendingSection('all');
-        startTransition(() => { router.refresh(); });
-      } catch {
-          toast({ title: "Error", description: "Failed to remove champion", variant: "destructive" });
-      }
+    if (!confirm("Are you sure you want to remove this champion from your roster?")) return;
+    try {
+      const response = await fetch("/api/profile/roster/manage", {
+        method: "DELETE", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) throw new Error("Failed to delete");
+      setRoster(prev => prev.filter(item => item.id !== id));
+      toast({ title: "Success", description: "Champion removed" });
+      setEditingItem(null);
+      setPendingSection('all');
+      startTransition(() => { router.refresh(); });
+    } catch {
+      toast({ title: "Error", description: "Failed to remove champion", variant: "destructive" });
+    }
   };
 
   const itemContent = useCallback((index: number) => {
-      const item = filteredRoster[index];
-      return (
-        <ChampionCard 
-            item={item} prestige={prestigeMap[item.id]} onClick={setEditingItem} mode={viewMode}
-            filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
-        />
-      );
+    const item = filteredRoster[index];
+    return (
+      <ChampionCard
+        item={item} prestige={prestigeMap[item.id]} onClick={setEditingItem} mode={viewMode}
+        filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
+      />
+    );
   }, [filteredRoster, prestigeMap, viewMode, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
 
   return (
@@ -382,22 +408,22 @@ export function RosterView({
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           {top30Average > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner h-10">
-                  <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
-                  <span className="text-amber-100 font-mono font-bold text-lg">{top30Average.toLocaleString('en-US')}</span>
-              </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner h-10">
+              <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
+              <span className="text-amber-100 font-mono font-bold text-lg">{top30Average.toLocaleString('en-US')}</span>
+            </div>
           )}
-          
-          <Button 
-              variant="outline" 
-              onClick={() => setShowInsights(!showInsights)}
-              className={cn(
-                  "h-10 px-4 gap-2 border-slate-700 transition-all",
-                  showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
-              )}
+
+          <Button
+            variant="outline"
+            onClick={() => setShowInsights(!showInsights)}
+            className={cn(
+              "h-10 px-4 gap-2 border-slate-700 transition-all",
+              showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
+            )}
           >
-              <TrendingUp className="w-4 h-4" />
-              <span>Prestige Insights</span>
+            <TrendingUp className="w-4 h-4" />
+            <span>Prestige Insights</span>
           </Button>
 
           <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
@@ -409,7 +435,7 @@ export function RosterView({
         </div>
       </div>
 
-      <RosterInsights 
+      <RosterInsights
         showInsights={showInsights}
         recommendations={recommendations} sigRecommendations={sigRecommendations}
         simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
@@ -421,8 +447,9 @@ export function RosterView({
         isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 
-      <RosterFilters 
+      <RosterFilters
         search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
+        showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
         onAddClick={() => setIsAddingChampion(true)}
         sortBy={sortBy} onSortByChange={setSortBy} filterStars={filterStars} onFilterStarsChange={setFilterStars}
         filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
@@ -434,12 +461,12 @@ export function RosterView({
       />
 
       {filteredRoster.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 bg-slate-900/20 rounded-lg border border-slate-800 border-dashed">
-              <p>No champions found matching your criteria.</p>
-          </div>
-        ) : (
-            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
-        )}
+        <div className="text-center py-12 text-slate-500 bg-slate-900/20 rounded-lg border border-slate-800 border-dashed">
+          <p>No champions found matching your criteria.</p>
+        </div>
+      ) : (
+        <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
+      )}
 
       <EditChampionModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />
       <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />

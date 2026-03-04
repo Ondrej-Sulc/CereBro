@@ -25,16 +25,20 @@ interface ChampionCardProps {
 export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: ChampionCardProps) => {
     const classColors = getChampionClassColors(item.champion.class);
 
-    const borderClass = getStarBorderClass(item.stars);
+    const borderClass = item.isUnowned ? 'border-slate-700 border-dashed' : getStarBorderClass(item.stars);
 
     const cardContent = (
         <div
             className={cn(
                 "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-colors cursor-pointer bg-slate-900 shadow-lg",
                 classColors.bg,
-                borderClass
+                borderClass,
+                item.isUnowned && "grayscale opacity-60 hover:grayscale-[0.3] hover:opacity-100 transition-all duration-300"
             )}
-            onClick={() => mode === 'edit' && onClick(item)}
+            onClick={() => {
+                if (item.isUnowned) return;
+                mode === 'edit' && onClick(item);
+            }}
         >
             <Image
                 src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, 'full')}
@@ -47,18 +51,26 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
             <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
-                <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none">
-                    {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
-                </Badge>
-                {item.isAwakened && (
-                    <Badge variant="outline" className="bg-sky-950/80 border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none">
-                        S{item.sigLevel}
+                {item.isUnowned ? (
+                    <Badge variant="outline" className="bg-slate-900/80 border-slate-500/50 text-slate-300 text-[9px] px-1 py-0 h-4 font-bold leading-none tracking-wide">
+                        UNOWNED
                     </Badge>
+                ) : (
+                    <>
+                        <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none">
+                            {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
+                        </Badge>
+                        {item.isAwakened && (
+                            <Badge variant="outline" className="bg-sky-950/80 border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none">
+                                S{item.sigLevel}
+                            </Badge>
+                        )}
+                    </>
                 )}
             </div>
 
             <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
-                {item.isAscended && (
+                {!item.isUnowned && item.isAscended && (
                     <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
                         <Trophy className="w-3 h-3 text-yellow-400" />
                     </div>
@@ -80,7 +92,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
-                {prestige && (
+                {!item.isUnowned && prestige && (
                     <div className="hidden sm:flex justify-end mb-0.5">
                         <span className="text-[9px] font-mono font-bold text-slate-300 bg-black/60 px-1 rounded border border-white/5">
                             {prestige.toLocaleString('en-US')}
@@ -90,7 +102,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                 <p className="text-[10px] sm:text-xs font-bold text-white leading-tight truncate text-center sm:text-left drop-shadow-sm">{item.champion.name}</p>
             </div>
 
-            {mode === 'edit' && (
+            {mode === 'edit' && !item.isUnowned && (
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="bg-sky-600 p-2 rounded-full scale-75 group-hover:scale-100 transition-transform">
                         <Edit2 className="w-4 h-4 text-white" />
@@ -162,7 +174,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                         }
                                         acc[name].instances.push({
                                             source: curr.source,
-                                            synergyChampions: curr.synergyChampions.map(s => ({
+                                            synergyChampions: (curr.synergyChampions || []).map(s => ({
                                                 name: s.champion.name,
                                                 images: s.champion.images as unknown as ChampionImages
                                             }))

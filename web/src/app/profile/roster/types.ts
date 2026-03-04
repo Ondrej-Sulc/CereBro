@@ -3,6 +3,7 @@ import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionImages } from "@/types/champion";
 
 export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
+    isUnowned?: boolean;
     champion: Omit<PrismaChampion, 'images'> & {
         images: ChampionImages;
         tags: { id: string | number, name: string }[];

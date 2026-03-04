@@ -124,6 +124,25 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         }
     }));
 
+    // Map creators to User data to get their names and images
+    const creatorsWithUsers = await Promise.all((quest.creators || []).map(async (creator) => {
+        const user = await prisma.user.findFirst({
+            where: {
+                accounts: {
+                    some: {
+                        provider: "discord",
+                        providerAccountId: creator.discordId
+                    }
+                }
+            }
+        });
+        return {
+            ...creator,
+            name: user?.name || "Unknown Creator",
+            image: user?.image || null
+        };
+    }));
+
     return (
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
             {quest.bannerUrl && (
@@ -138,9 +157,31 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                             quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
                         )} 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
+                    
                     <div className="absolute bottom-6 left-8 right-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
+                        <div className="relative z-10">
+                            {creatorsWithUsers.length > 0 && (
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="flex -space-x-2">
+                                        {creatorsWithUsers.map(c => (
+                                            <div key={c.id} className="relative w-6 h-6 rounded-full border border-slate-950 overflow-hidden shadow-sm">
+                                                {c.image ? (
+                                                    <Image src={c.image} alt={c.name} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-slate-800 flex items-center justify-center text-[8px] font-bold text-white">
+                                                        {c.name.charAt(0)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-300 drop-shadow-md">
+                                        By {creatorsWithUsers.map(c => c.name).join(", ")}
+                                    </span>
+                                </div>
+                            )}
                             <h1 className="text-3xl md:text-5xl font-black text-white drop-shadow-2xl uppercase tracking-tight">{quest.title}</h1>
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {quest.category && (
