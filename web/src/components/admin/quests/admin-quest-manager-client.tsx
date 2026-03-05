@@ -11,13 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image as ImageIcon } from "lucide-react";
+import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning } from "lucide-react";
 import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan } from "@/app/actions/quests";
 import { cn } from "@/lib/utils";
 
 type QuestWithRelations = QuestPlan & {
     category: QuestCategory | null;
     creator: Player | null;
+    creators: { id: string; name: string; image: string | null }[];
+    encounters: { id: string }[];
 };
 
 interface Props {
@@ -270,6 +272,58 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                                         <CardTitle className="text-lg leading-tight group-hover:text-sky-400 transition-colors line-clamp-2">
                                                             {quest.title}
                                                         </CardTitle>
+                                                        
+                                                        <div className="flex flex-col gap-2 mt-3 text-xs text-slate-400">
+                                                            {/* Encounters & Team */}
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex items-center gap-1.5" title="Total Encounters">
+                                                                    <Swords className="w-3.5 h-3.5 text-red-400" />
+                                                                    <span className="font-medium text-slate-300">{quest.encounters?.length || 0}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5" title="Team Limit">
+                                                                    <Users className="w-3.5 h-3.5 text-indigo-400" />
+                                                                    <span className="font-medium text-slate-300">{quest.teamLimit || "∞"}</span>
+                                                                </div>
+                                                                {(quest.minStarLevel || quest.maxStarLevel) && (
+                                                                    <div className="flex items-center gap-1.5" title="Star Requirement">
+                                                                        <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                                                                        <span className="font-medium text-amber-500">
+                                                                            {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {/* Creators */}
+                                                            {quest.creators && quest.creators.length > 0 && (
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className="flex -space-x-1.5">
+                                                                        {quest.creators.slice(0, 3).map(c => (
+                                                                            <div key={c.id} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden bg-slate-800" title={c.name}>
+                                                                                {c.image ? (
+                                                                                    <Image src={c.image} alt={c.name} fill className="object-cover" />
+                                                                                ) : (
+                                                                                    <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-white uppercase">
+                                                                                        {c.name.charAt(0)}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    {quest.creators.length > 3 && (
+                                                                        <span className="text-[10px] text-slate-500">+{quest.creators.length - 3}</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {/* Empty State Warning */}
+                                                            {quest.encounters?.length === 0 && (
+                                                                <div className="flex items-center gap-1.5 text-amber-500/80 mt-1">
+                                                                    <FileWarning className="w-3.5 h-3.5" />
+                                                                    <span className="text-[10px] font-semibold uppercase tracking-wider">Empty Plan</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </CardHeader>
                                                     <CardFooter className="pt-0 flex gap-2 border-t border-slate-800/50 mt-4 px-6 py-4 bg-slate-900/20">
                                                         <Button 

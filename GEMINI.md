@@ -35,4 +35,5 @@
 8.  **Server Actions:** **NEVER** re-export non-async functions or values from a `"use server"` file. Next.js strictly requires only async function exports for server actions.
 9.  **Multi-Profile Logic:** `BotUser` (Discord account) maps to multiple `Player` (In-game identity) profiles; Admin directories focus on `Player` profiles for granular roster/prestige tracking.
 10. **Data Protection:** The alliance with ID `GLOBAL` (Mercenaries) is critical for solo war uploads and guest players; it is exempt from all automated and manual cleanup routines.
-11. **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.
+11. **Asset Management:** `bannerUrl` must use `null` as the canonical empty value; validate uploads for size (<= 5MB) and specific MIME types (PNG, JPEG, WebP). Ensure text overlays on banners use dark gradients for readability.
+12. **Documentation:** Always keep this context file (`GEMINI.md`) and the `docs/` folder updated with new features, architectural changes, or important learnings.

@@ -104,11 +104,17 @@ A dedicated system for planning fights across complex quests (e.g., Story conten
 *   **Data Model:** `QuestCategory` -> `QuestPlan` -> `QuestEncounter` -> `QuestEncounterNode`.
 *   **Admin Builder (`/admin/quests`):**
     *   **Quest Creation:** Define paths, add sequence steps, and specify defenders via `ChampionCombobox`.
+    *   **Visibility System:** Supports `DRAFT` (hidden), `VISIBLE` (alliance-wide), and `ARCHIVED` states.
+    *   **Creator Attribution:** Support for multiple creators per quest, displaying real Discord names and avatars via `AsyncBotUserCombobox`.
+    *   **Cinematic Banners:** Support for GCS-backed banner assets with Fit/Position controls and automated dark text overlays.
     *   **Restrictions:** Configure quest-wide or encounter-specific restrictions like Min/Max Star levels, Class, and Tag requirements using interactive UI tools (`MultiTagCombobox`).
     *   **Recommendations & Tips:** Provide Markdown-supported tips, recommend specific champions, and map active `NodeModifier`s to encounters.
+    *   **At-a-Glance Metrics:** Admin dashboard overhauls showing encounter counts, team limits, and star requirements per plan.
 *   **Player Timeline (`/planning/quests/[id]`):**
-    *   **Interactive Path:** A visual, vertical timeline of the quest path summarizing required encounters.
-    *   **Roster Syncing:** Dynamically filters the player's CereBro roster against the quest/encounter restrictions to display only eligible champions.
+    *   **Tactical Path:** A high-end vertical timeline with cinematic "VS" indicators, thematic color-coding (Defender Red vs. Counter Sky), and dedicated "Quest Start" and "Boss" nodes.
+    *   **Advanced Roster Filtering:** Integrated Ability, Category, and Immunity filters within the timeline selection grid to find perfect counters.
+    *   **Requirement Transparency:** Explicitly displays Quest and Fight requirements as read-only badges in the filter list.
+    *   **Team Limit Enforcement:** Automatic enforcement of quest-specific team limits with real-time feedback and an expandable "Current Team Plan" overview showing assigned defenders.
     *   **Counter Selection:** Players simply click a valid champion from their roster to assign them to an encounter, saving their plan dynamically across sessions via `PlayerQuestEncounter`.
     *   **Highlights:** Automatically highlights champions matching the administrative "Recommended Tags" or "Recommended Champions" for quick, intelligent selection.
 
