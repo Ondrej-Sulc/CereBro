@@ -122,6 +122,9 @@ CREATE INDEX "QuestEncounter_defenderId_idx" ON "QuestEncounter"("defenderId");
 CREATE UNIQUE INDEX "QuestEncounter_questPlanId_sequence_key" ON "QuestEncounter"("questPlanId", "sequence");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "QuestEncounter_id_questPlanId_key" ON "QuestEncounter"("id", "questPlanId");
+
+-- CreateIndex
 CREATE INDEX "QuestEncounterNode_questEncounterId_idx" ON "QuestEncounterNode"("questEncounterId");
 
 -- CreateIndex
@@ -138,6 +141,9 @@ CREATE INDEX "PlayerQuestPlan_questPlanId_idx" ON "PlayerQuestPlan"("questPlanId
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PlayerQuestPlan_playerId_questPlanId_key" ON "PlayerQuestPlan"("playerId", "questPlanId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PlayerQuestPlan_id_questPlanId_key" ON "PlayerQuestPlan"("id", "questPlanId");
 
 -- CreateIndex
 CREATE INDEX "PlayerQuestEncounter_playerQuestPlanId_idx" ON "PlayerQuestEncounter"("playerQuestPlanId");
