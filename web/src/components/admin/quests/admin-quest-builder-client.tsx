@@ -29,8 +29,11 @@ import { cn } from "@/lib/utils";
 import { getQuestPlanById } from "@/app/actions/quests";
 import { ChampionImages, Champion } from "@/types/champion";
 
-type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
-type EncounterWithRelations = QuestWithRelations["encounters"][0];
+type BaseQuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
+type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
+    creators: (BaseQuestWithRelations["creators"][0] & { name?: string })[];
+};
+type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
 type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
 type CreatorRelation = QuestWithRelations["creators"][0];
 
@@ -373,7 +376,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                     )}
                                                     {/* In the admin builder, since we just have BotUser IDs, we rely on the parent component mapping or we show a generic tag.
                                                         To keep it simple, we just show the Discord ID or a placeholder if we didn't fetch the names. */}
-                                                    <span>Creator {c.id.slice(-4)}</span>
+                                                    <span>{c.name ? c.name : `Creator ${c.id.slice(-4)}`}</span>
                                                     <button onClick={() => setCreatorIds(creatorIds.filter(id => id !== c.id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
                                                 </Badge>
                                             ))}

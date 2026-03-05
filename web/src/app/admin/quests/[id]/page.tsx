@@ -37,6 +37,29 @@ export default async function AdminQuestBuilderPage({ params }: { params: Promis
         return <p>Quest Plan not found.</p>;
     }
 
+    // Map creators to User data to get their names
+    const creatorsWithUsers = await Promise.all((quest.creators || []).map(async (creator) => {
+        const user = await prisma.user.findFirst({
+            where: {
+                accounts: {
+                    some: {
+                        provider: "discord",
+                        providerAccountId: creator.discordId
+                    }
+                }
+            }
+        });
+        return {
+            ...creator,
+            name: user?.name || "Unknown Creator"
+        };
+    }));
+
+    const enrichedQuest = {
+        ...quest,
+        creators: creatorsWithUsers
+    };
+
     const categories = await prisma.questCategory.findMany({ orderBy: { order: 'asc' } });
     const tags = await prisma.tag.findMany({ orderBy: { name: 'asc' } });
     const champions = await prisma.champion.findMany({ orderBy: { name: 'asc' } });
@@ -45,7 +68,7 @@ export default async function AdminQuestBuilderPage({ params }: { params: Promis
     return (
         <div className="space-y-6">
             <AdminQuestBuilderClient
-                initialQuest={quest}
+                initialQuest={enrichedQuest as any}
                 categories={categories}
                 tags={tags}
                 champions={champions as unknown as Champion[]}
