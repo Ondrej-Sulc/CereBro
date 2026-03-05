@@ -391,6 +391,7 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
         create: {
             playerQuestPlanId: playerPlan.id,
             questEncounterId: questEncounterId,
+            questPlanId: questPlanId,
             selectedChampionId: selectedChampionId
         },
         update: {

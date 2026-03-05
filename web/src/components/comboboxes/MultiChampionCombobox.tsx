@@ -106,10 +106,16 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
     return fuse.search(search).map(result => result.item);
   }, [fuse, search, champions]);
 
+  const championMap = React.useMemo(() => {
+    const map = new Map<number, Champion>();
+    champions.forEach(c => map.set(c.id, c));
+    return map;
+  }, [champions]);
+
   const selectedChampions = React.useMemo(() => {
     const isChampion = (v: unknown): v is Champion => v !== undefined && v !== null;
-    return values.map(id => champions.find(c => c.id === id)).filter(isChampion);
-  }, [values, champions]);
+    return values.map(id => championMap.get(id)).filter(isChampion);
+  }, [values, championMap]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

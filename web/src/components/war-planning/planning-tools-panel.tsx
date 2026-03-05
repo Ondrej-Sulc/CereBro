@@ -117,6 +117,8 @@ export default function PlanningToolsPanel({
   useEffect(() => {
     if (initialPlayerId) {
       fetchRosterForPlayer(initialPlayerId);
+    } else {
+      setRosterResults([]);
     }
   }, [initialPlayerId, fetchRosterForPlayer]);
 

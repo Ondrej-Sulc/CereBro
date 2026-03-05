@@ -108,7 +108,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
 
             if (!globalPlayer) {
               const profileCount = await prisma.player.count({ where: { discordId: member.id } });
-              if (profileCount > 0) {
+              if (profileCount > 1) {
                 throw new Error('Multiple profiles exist. Please set an active profile to sync roles.');
               }
             }
@@ -159,6 +159,10 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
 
           // They are in the DB as part of this alliance, but don't have relevant roles in Discord.
           // Since this alliance has roles configured, we treat Discord as the source of truth.
+          // Protection for GLOBAL alliance
+          if (alliance.id === 'GLOBAL') {
+            continue;
+          }
           await prisma.player.update({
             where: { id: existingAllianceMember.id },
             data: {
@@ -189,6 +193,11 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
       try {
         // Do not remove Bot Admins
         if (player.botUser?.isBotAdmin) {
+          continue;
+        }
+
+        // Protection for GLOBAL alliance
+        if (alliance.id === 'GLOBAL') {
           continue;
         }
 

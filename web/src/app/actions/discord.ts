@@ -23,17 +23,33 @@ export interface DiscordGuild {
     }[];
 }
 
-async function fetchWithRetry(url: string, options: RequestInit, retries = 2): Promise<Response> {
-    const response = await fetch(url, options);
+async function fetchWithRetry(url: string, options: RequestInit, retries = 2, timeout = 10000): Promise<Response> {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
 
-    if (response.status === 429 && retries > 0) {
-        const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
-        console.warn(`Discord Rate Limit (429) hit for ${url}. Retrying in ${retryAfter}ms...`);
-        await new Promise(resolve => setTimeout(resolve, retryAfter));
-        return fetchWithRetry(url, options, retries - 1);
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: options.signal ? (options.signal as any).any([controller.signal]) : controller.signal
+        });
+
+        if (response.status === 429 && retries > 0) {
+            const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
+            console.warn(`Discord Rate Limit (429) hit for ${url}. Retrying in ${retryAfter}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryAfter));
+            return fetchWithRetry(url, options, retries - 1, timeout);
+        }
+
+        return response;
+    } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError' && retries > 0) {
+            console.warn(`Fetch timeout for ${url}. Retrying...`);
+            return fetchWithRetry(url, options, retries - 1, timeout);
+        }
+        throw error;
+    } finally {
+        clearTimeout(id);
     }
-
-    return response;
 }
 
 /**
@@ -113,7 +129,7 @@ export async function getDiscordGuilds() {
 
                     if (detailRes.ok) {
                         const data = await detailRes.json();
-                        if (typeof data.approximate_member_count !== 'undefined') {
+                        if (typeof data.approximate_member_count === 'number' && Number.isFinite(data.approximate_member_count)) {
                             memberCount = data.approximate_member_count;
                         }
                         features = data.features || features;
@@ -146,7 +162,7 @@ export async function getDiscordGuilds() {
     });
 }
 
-export async function leaveDiscordGuild(guildId: string) {
+export async function leaveDiscordGuild(guildId: string, skipRevalidate = false) {
     await requireBotAdmin();
 
     // Protection for GLOBAL alliance
@@ -167,7 +183,9 @@ export async function leaveDiscordGuild(guildId: string) {
         }
     });
 
-    revalidatePath('/admin/discord');
+    if (!skipRevalidate) {
+        revalidatePath('/admin/discord');
+    }
     return { success: true };
 }
 
@@ -178,12 +196,13 @@ export async function cleanupSmallGuilds() {
     let count = 0;
     for (const guild of smallGuilds) {
         try {
-            await leaveDiscordGuild(guild.id);
+            await leaveDiscordGuild(guild.id, true);
             count++;
         } catch (e) {
             console.error(`Failed to queue leave for ${guild.id}`, e);
         }
     }
 
+    revalidatePath('/admin/discord');
     return { success: true, count };
 }

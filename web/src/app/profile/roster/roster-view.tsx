@@ -125,8 +125,10 @@ export function RosterView({
   const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
   const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
 
+  const [limit, setLimit] = useState<number>(initialLimit || 5);
+
   const currentParams = buildRosterQueryParams({
-    simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: initialLimit
+    simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: limit
   });
 
   const usePropsData = lastFetchedParams.current === currentParams || lastFetchedParams.current === null;
@@ -436,7 +438,7 @@ export function RosterView({
         sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
         rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
         sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
-        limit={limit} onLimitChange={(val) => { setLimit(val); updateUrlParams({ limit: val.toString() }); }}
+        limit={limit} onLimitChange={(val) => { setLimit(val); updateUrlParams({ limit: val !== 5 ? val.toString() : null }); }}
         isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 

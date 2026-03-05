@@ -124,24 +124,41 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         }
     }));
 
-    // Map creators to User data to get their names and images
-    const creatorsWithUsers = await Promise.all((quest.creators || []).map(async (creator) => {
-        const user = await prisma.user.findFirst({
+    // Map creators to User data to get their names and images (Batched)
+    const creatorDiscordIds = (quest.creators || []).map(c => c.discordId).filter((id): id is string => !!id);
+
+    // Build map for users found via providerAccountId
+    const userLookup = new Map<string, { name: string | null; image: string | null }>();
+
+    if (creatorDiscordIds.length > 0) {
+        const users = await prisma.user.findMany({
             where: {
                 accounts: {
                     some: {
                         provider: "discord",
-                        providerAccountId: creator.discordId
+                        providerAccountId: { in: creatorDiscordIds }
                     }
                 }
+            },
+            include: { accounts: true }
+        });
+
+        users.forEach(u => {
+            const acc = u.accounts.find(a => a.provider === "discord");
+            if (acc) {
+                userLookup.set(acc.providerAccountId, { name: u.name, image: u.image });
             }
         });
+    }
+
+    const creatorsWithUsers = (quest.creators || []).map(creator => {
+        const userData = creator.discordId ? userLookup.get(creator.discordId) : null;
         return {
             ...creator,
-            name: user?.name || "Unknown Creator",
-            image: user?.image || null
+            name: userData?.name || "Unknown Creator",
+            image: userData?.image || null
         };
-    }));
+    });
 
     const bannerUrl = quest.bannerUrl ? quest.bannerUrl.replace(/#/g, '%23') : null;
 

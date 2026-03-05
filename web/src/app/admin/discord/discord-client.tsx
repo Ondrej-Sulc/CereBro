@@ -45,7 +45,7 @@ export function LeaveButton({ guildId, guildName }: { guildId: string, guildName
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" disabled={loading} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Button variant="ghost" size="icon" disabled={loading} className="text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Leave server">
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                 </Button>
             </AlertDialogTrigger>

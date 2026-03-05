@@ -51,11 +51,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
     const [editingEncounterId, setEditingEncounterId] = useState<string | null>(null);
 
-    const [sequence, setSequence] = useState<string>(
-        String((initialQuest.encounters.length > 0
-            ? Math.max(...initialQuest.encounters.map(e => e.sequence))
-            : 0) + 1)
-    );
+    const [sequence, setSequence] = useState<string>("");
     const [defenderId, setDefenderId] = useState<string>("");
     const [tips, setTips] = useState<string>("");
     const [videoUrl, setVideoUrl] = useState<string>("");
@@ -100,18 +96,51 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         let matchedCount = 0;
 
         lines.forEach(line => {
-            const matches = nodeModifiers.filter(n => n.name.toLowerCase() === line || n.name.toLowerCase().startsWith(line) || n.name.toLowerCase().includes(line));
-            if (matches.length === 1) {
+            const lowerLine = line.toLowerCase();
+            const matches = nodeModifiers.filter(n => {
+                const name = n.name.toLowerCase();
+                // Exact
+                if (name === lowerLine) return true;
+                // Prefix
+                if (name.startsWith(lowerLine)) return true;
+                // Word boundary substring
+                const wordRegex = new RegExp(`\\b${lowerLine}\\b`, 'i');
+                if (wordRegex.test(name)) return true;
+                // Regular substring fallback
+                return name.includes(lowerLine);
+            });
+
+            if (matches.length === 0) return;
+
+            // Prefer order: Exact > Prefix > Word Match > Substring
+            const exactMatch = matches.find(n => n.name.toLowerCase() === lowerLine);
+            if (exactMatch) {
+                newIds.add(exactMatch.id);
+                matchedCount++;
+                return;
+            }
+
+            const prefixMatches = matches.filter(n => n.name.toLowerCase().startsWith(lowerLine));
+            if (prefixMatches.length === 1) {
+                newIds.add(prefixMatches[0].id);
+                matchedCount++;
+                return;
+            }
+
+            // Word Boundary
+            const wordMatches = matches.filter(n => new RegExp(`\\b${lowerLine}\\b`, 'i').test(n.name));
+            if (wordMatches.length === 1) {
+                newIds.add(wordMatches[0].id);
+                matchedCount++;
+                return;
+            }
+
+            // If we have multiple substring matches or prefix matches, it's ambiguous
+            if (matches.length > 1) {
+                toast({ title: "Ambiguous Match", description: `Multiple matches for '${line}'. Please select manually.`, variant: "destructive" });
+            } else if (matches.length === 1) {
                 newIds.add(matches[0].id);
                 matchedCount++;
-            } else if (matches.length > 1) {
-                const exactMatch = matches.find(n => n.name.toLowerCase() === line);
-                if (exactMatch) {
-                    newIds.add(exactMatch.id);
-                    matchedCount++;
-                } else {
-                    toast({ title: "Ambiguous Match", description: `Multiple matches for '${line}'. Please select manually.`, variant: "destructive" });
-                }
             }
         });
 
@@ -124,15 +153,11 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         });
     };
 
-    // Auto-update sequence when encounters change (after refresh)
-    useEffect(() => {
-        if (!editingEncounterId) {
-            const nextSeq = (initialQuest.encounters.length > 0
-                ? Math.max(...initialQuest.encounters.map(e => e.sequence))
-                : 0) + 1;
-            setSequence(String(nextSeq));
-        }
-    }, [initialQuest.encounters, editingEncounterId]);
+    const defaultSequence = String((initialQuest.encounters.length > 0
+        ? Math.max(...initialQuest.encounters.map(e => e.sequence))
+        : 0) + 1);
+
+    const effectiveSequence = editingEncounterId ? sequence : defaultSequence;
 
     // Settings State
     const [title, setTitle] = useState(initialQuest.title);
@@ -206,14 +231,14 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     };
 
     const handleAddOrUpdateEncounter = async () => {
-        if (!sequence) return;
+        if (!effectiveSequence) return;
 
         try {
             if (editingEncounterId) {
                 await updateQuestEncounter({
                     id: editingEncounterId,
                     questPlanId: initialQuest.id,
-                    sequence: parseInt(sequence),
+                    sequence: parseInt(effectiveSequence),
                     defenderId: defenderId ? parseInt(defenderId) : null,
                     videoUrl: videoUrl || null,
                     tips: tips || null,
@@ -225,7 +250,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             } else {
                 await createQuestEncounter({
                     questPlanId: initialQuest.id,
-                    sequence: parseInt(sequence),
+                    sequence: parseInt(effectiveSequence),
                     defenderId: defenderId ? parseInt(defenderId) : undefined,
                     videoUrl: videoUrl || undefined,
                     tips: tips || undefined,
@@ -625,7 +650,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     <Label>Sequence (Fight Number)</Label>
                                     <Input
                                         type="number"
-                                        value={sequence}
+                                        value={effectiveSequence}
                                         onChange={e => setSequence(e.target.value)}
                                         className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
                                     />
@@ -762,7 +787,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         "flex-1 text-white shadow-md transition-all",
                                         editingEncounterId ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20" : "bg-sky-600 hover:bg-sky-500 shadow-sky-900/20"
                                     )}
-                                    disabled={!sequence}
+                                    disabled={!effectiveSequence}
                                 >
                                     {editingEncounterId ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><Plus className="mr-2 h-4 w-4" /> Add Encounter</>}
                                 </Button>
