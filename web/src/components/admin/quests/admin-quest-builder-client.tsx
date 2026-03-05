@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, Prisma } from "@prisma/client";
@@ -51,7 +51,18 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
     const [editingEncounterId, setEditingEncounterId] = useState<string | null>(null);
 
-    const [sequence, setSequence] = useState<string>("");
+    const defaultSequence = String((initialQuest.encounters.length > 0
+        ? Math.max(...initialQuest.encounters.map(e => e.sequence))
+        : 0) + 1);
+
+    const [sequence, setSequence] = useState<string>(defaultSequence);
+
+    useEffect(() => {
+        if (!editingEncounterId) {
+            setSequence(defaultSequence);
+        }
+    }, [editingEncounterId, defaultSequence]);
+
     const [defenderId, setDefenderId] = useState<string>("");
     const [tips, setTips] = useState<string>("");
     const [videoUrl, setVideoUrl] = useState<string>("");
@@ -153,11 +164,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         });
     };
 
-    const defaultSequence = String((initialQuest.encounters.length > 0
-        ? Math.max(...initialQuest.encounters.map(e => e.sequence))
-        : 0) + 1);
-
-    const effectiveSequence = editingEncounterId ? sequence : defaultSequence;
+    const effectiveSequence = sequence;
 
     // Settings State
     const [title, setTitle] = useState(initialQuest.title);
@@ -207,7 +214,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         }
     };
 
-    const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBannerUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -284,6 +291,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
     const cancelEditing = () => {
         setEditingEncounterId(null);
+        setSequence(defaultSequence);
         setDefenderId("");
         setTips("");
         setVideoUrl("");

@@ -54,9 +54,6 @@ export async function getUserPlayerWithAlliance() {
       ...player,
       isBotAdmin: botUser.isBotAdmin
     };
-  } else if (player) {
-    // Fallback if no BotUser exists yet (should be covered by migration)
-    return player;
   }
 
   return null;

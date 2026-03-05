@@ -31,7 +31,7 @@ export async function getActivePlayer(discordId: string): Promise<Player | null>
     };
   }
 
-  return player;
+  return null;
 }
 
 export async function getPlayer(

@@ -108,7 +108,11 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
 
             if (!globalPlayer) {
               const profileCount = await prisma.player.count({ where: { discordId: member.id } });
-              if (profileCount > 1) {
+              if (profileCount === 1) {
+                globalPlayer = await prisma.player.findFirst({
+                  where: { discordId: member.id },
+                });
+              } else if (profileCount > 1) {
                 throw new Error('Multiple profiles exist. Please set an active profile to sync roles.');
               }
             }

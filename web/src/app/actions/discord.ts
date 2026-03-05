@@ -25,13 +25,19 @@ export interface DiscordGuild {
 
 async function fetchWithRetry(url: string, options: RequestInit, retries = 2, timeout = 10000): Promise<Response> {
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
+    const timerId = setTimeout(() => controller.abort(), timeout);
 
     try {
+        const signal = options.signal 
+            ? AbortSignal.any([options.signal, controller.signal]) 
+            : controller.signal;
+
         const response = await fetch(url, {
             ...options,
-            signal: options.signal ? (options.signal as any).any([controller.signal]) : controller.signal
+            signal
         });
+
+        clearTimeout(timerId);
 
         if (response.status === 429 && retries > 0) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
@@ -48,7 +54,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 2, ti
         }
         throw error;
     } finally {
-        clearTimeout(id);
+        clearTimeout(timerId);
     }
 }
 
