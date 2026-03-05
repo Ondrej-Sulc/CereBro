@@ -15,6 +15,11 @@ export interface DiscordGuild {
     features: string[];
     approximate_member_count?: number;
     approximate_presence_count?: number;
+    alliances?: {
+        id: string;
+        name: string;
+        playerCount: number;
+    }[];
 }
 
 export async function getDiscordGuilds() {
@@ -40,12 +45,37 @@ export async function getDiscordGuilds() {
 
     const guilds = await response.json() as DiscordGuild[];
 
+    // Fetch all alliances with their member counts from DB
+    const dbAlliances = await prisma.alliance.findMany({
+        where: { guildId: { in: guilds.map(g => g.id) } },
+        select: {
+            id: true,
+            name: true,
+            guildId: true,
+            _count: {
+                select: { members: true }
+            }
+        }
+    });
+
+    // Group alliances by guildId
+    const allianceGroupByGuild = dbAlliances.reduce((acc, alliance) => {
+        if (!alliance.guildId) return acc;
+        if (!acc[alliance.guildId]) acc[alliance.guildId] = [];
+        acc[alliance.guildId].push({
+            id: alliance.id,
+            name: alliance.name,
+            playerCount: alliance._count.members
+        });
+        return acc;
+    }, {} as Record<string, { id: string, name: string, playerCount: number }[]>);
+
     // Fetch full details for each guild to get member counts
-    // Note: This might be slow if there are many guilds. 
-    // We could do it in chunks or on demand.
-    // For 100 guilds, it's 100 requests. Let's try to fetch them in parallel.
-    
     const detailedGuilds = await Promise.all(guilds.map(async (guild) => {
+        let memberCount = 0;
+        let features = guild.features;
+        let icon = guild.icon;
+
         try {
             const detailRes = await fetch(`https://discord.com/api/v10/guilds/${guild.id}?with_counts=true`, {
                 headers: {
@@ -53,12 +83,22 @@ export async function getDiscordGuilds() {
                 }
             });
             if (detailRes.ok) {
-                return await detailRes.json() as DiscordGuild;
+                const data = await detailRes.json();
+                memberCount = data.approximate_member_count || 0;
+                features = data.features || features;
+                icon = data.icon || icon;
             }
         } catch (e) {
             console.error(`Failed to fetch details for guild ${guild.id}`, e);
         }
-        return guild;
+
+        return {
+            ...guild,
+            icon,
+            features,
+            approximate_member_count: memberCount,
+            alliances: allianceGroupByGuild[guild.id] || []
+        };
     }));
 
     return detailedGuilds.sort((a, b) => (a.approximate_member_count || 0) - (b.approximate_member_count || 0));

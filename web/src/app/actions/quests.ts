@@ -82,6 +82,7 @@ export async function getQuestPlanById(id: string) {
 export type QuestPlanCreateInput = {
     title: string;
     status?: QuestPlanStatus;
+    videoUrl?: string | null;
     bannerUrl?: string | null;
     bannerFit?: string | null;
     bannerPosition?: string | null;
@@ -104,6 +105,7 @@ export async function createQuestPlan(data: QuestPlanCreateInput) {
         data: {
             title: data.title,
             status: data.status,
+            videoUrl: data.videoUrl,
             bannerUrl: data.bannerUrl,
             bannerFit: data.bannerFit || "cover",
             bannerPosition: data.bannerPosition || "center",
@@ -131,6 +133,7 @@ export type QuestPlanUpdateInput = {
     id: string;
     title?: string;
     status?: QuestPlanStatus;
+    videoUrl?: string | null;
     bannerUrl?: string | null;
     bannerFit?: string | null;
     bannerPosition?: string | null;
@@ -154,6 +157,7 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
         data: {
             title: data.title,
             status: data.status,
+            videoUrl: data.videoUrl,
             bannerUrl: data.bannerUrl,
             bannerFit: data.bannerFit,
             bannerPosition: data.bannerPosition,
@@ -260,6 +264,7 @@ export async function duplicateQuestPlan(id: string) {
         data: {
             title: `${sourcePlan.title} (Copy)`,
             status: QuestPlanStatus.DRAFT,
+            videoUrl: sourcePlan.videoUrl,
             bannerUrl: sourcePlan.bannerUrl,
             bannerFit: sourcePlan.bannerFit,
             bannerPosition: sourcePlan.bannerPosition,
@@ -275,6 +280,7 @@ export async function duplicateQuestPlan(id: string) {
             encounters: {
                 create: sourcePlan.encounters.map(e => ({
                     sequence: e.sequence,
+                    videoUrl: e.videoUrl,
                     tips: e.tips,
                     defenderId: e.defenderId,
                     recommendedTags: e.recommendedTags,
@@ -376,6 +382,7 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
 export type QuestEncounterCreateInput = {
     questPlanId: string;
     sequence: number;
+    videoUrl?: string | null;
     tips?: string;
     defenderId?: number;
     recommendedTagNames?: string[];
@@ -400,6 +407,7 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
     const encounter = await prisma.questEncounter.create({
         data: {
             sequence: data.sequence,
+            videoUrl: data.videoUrl,
             tips: data.tips,
             questPlanId: data.questPlanId,
             defenderId: data.defenderId,
@@ -427,6 +435,7 @@ export type QuestEncounterUpdateInput = {
     id: string;
     questPlanId: string;
     sequence?: number;
+    videoUrl?: string | null;
     tips?: string | null;
     defenderId?: number | null;
     recommendedTagNames?: string[];
@@ -452,6 +461,7 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
         where: { id: data.id },
         data: {
             sequence: data.sequence,
+            videoUrl: data.videoUrl,
             tips: data.tips,
             defenderId: data.defenderId,
             recommendedTags: data.recommendedTagNames !== undefined ? data.recommendedTagNames : undefined,

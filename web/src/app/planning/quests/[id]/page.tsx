@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit3 } from "lucide-react";
+import { Edit3, Youtube } from "lucide-react";
 import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { Champion, ChampionImages } from "@/types/champion";
@@ -198,6 +198,13 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                         </div>
 
                         <div className="flex flex-wrap md:justify-end gap-2">
+                            {quest.videoUrl && (
+                                <a href={quest.videoUrl} target="_blank" rel="noopener noreferrer">
+                                    <Button className="bg-red-600 hover:bg-red-500 text-white border-none text-[10px] font-black uppercase tracking-widest px-4 py-1.5 h-auto shadow-xl shadow-red-900/40 transition-all active:scale-95">
+                                        <Youtube className="w-4 h-4 mr-2" /> Watch Guide
+                                    </Button>
+                                </a>
+                            )}
                             {quest.requiredClasses?.map((cls) => (
                                 <div key={cls} className="bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-2xl">
                                     <div className="relative w-4 h-4">
@@ -219,9 +226,16 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             {!quest.bannerUrl && (
                 <div className="mb-8 space-y-4">
                     <div className="flex items-start justify-between gap-4">
-                        <div>
+                        <div className="flex-1">
                             <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">{quest.title}</h1>
-                            {quest.category && <p className="text-slate-400 mt-2 font-medium">{quest.category.name}</p>}
+                            <div className="flex items-center gap-3 mt-2">
+                                {quest.category && <p className="text-slate-400 font-medium">{quest.category.name}</p>}
+                                {quest.videoUrl && (
+                                    <a href={quest.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-red-400 hover:text-red-300 transition-colors text-sm font-bold uppercase tracking-wider">
+                                        <Youtube className="w-4 h-4" /> Watch Guide
+                                    </a>
+                                )}
+                            </div>
                         </div>
                         {isAdmin && botUser?.isBotAdmin && (
                             <Link href={`/admin/quests/${quest.id}`}>

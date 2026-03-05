@@ -10,22 +10,13 @@ import {
 } from "@/components/ui/table";
 import { getDiscordGuilds } from "@/app/actions/discord";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Shield, Users, Server } from "lucide-react";
+import { Users, Server, Shield } from "lucide-react";
 import { CleanupButton, LeaveButton } from "./discord-client";
-import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminDiscordPage() {
     const guilds = await getDiscordGuilds();
     const smallGuildsCount = guilds.filter(g => (g.approximate_member_count || 0) <= 1).length;
-
-    // Fetch alliance names from DB to match with guilds
-    const alliances = await prisma.alliance.findMany({
-        where: { guildId: { in: guilds.map(g => g.id) } },
-        select: { guildId: true, id: true, name: true }
-    });
-
-    const allianceMap = new Map(alliances.map(a => [a.guildId, a]));
 
     return (
         <div className="space-y-6">
@@ -51,16 +42,16 @@ export default async function AdminDiscordPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Server</TableHead>
-                                <TableHead>Alliance ID</TableHead>
-                                <TableHead>Members</TableHead>
+                                <TableHead>Alliance / Players</TableHead>
+                                <TableHead>Discord Members</TableHead>
                                 <TableHead>Features</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {guilds.map((guild) => {
-                                const alliance = guild.id ? allianceMap.get(guild.id) : null;
-                                const isGlobal = alliance?.id === 'GLOBAL';
+                                const guildAlliances = guild.alliances || [];
+                                const isGlobal = guildAlliances.some(a => a.id === 'GLOBAL');
 
                                 return (
                                     <TableRow key={guild.id} className={isGlobal ? "bg-primary/5" : ""}>
@@ -77,14 +68,24 @@ export default async function AdminDiscordPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {alliance ? (
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm">{alliance.name}</span>
-                                                    <code className="text-[10px] text-muted-foreground">{alliance.id}</code>
-                                                </div>
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground italic">No Alliance record</span>
-                                            )}
+                                            <div className="flex flex-col gap-2">
+                                                {guildAlliances.length > 0 ? (
+                                                    guildAlliances.map(alliance => (
+                                                        <div key={alliance.id} className="flex flex-col bg-muted/30 p-1.5 rounded border border-border/50">
+                                                            <div className="flex items-center justify-between gap-4">
+                                                                <span className="text-sm font-semibold truncate max-w-[150px]">{alliance.name}</span>
+                                                                <div className="flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">
+                                                                    <Shield className="h-2.5 w-2.5" />
+                                                                    {alliance.playerCount}
+                                                                </div>
+                                                            </div>
+                                                            <code className="text-[10px] text-muted-foreground truncate">{alliance.id}</code>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground italic">No Alliance records</span>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center gap-1.5">
@@ -98,12 +99,12 @@ export default async function AdminDiscordPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="flex flex-wrap gap-1 max-w-[200px]">
                                                 {isGlobal && (
                                                     <Badge className="bg-amber-500 hover:bg-amber-600 text-[10px] h-4 px-1">GLOBAL</Badge>
                                                 )}
                                                 {guild.features.slice(0, 3).map(f => (
-                                                    <Badge key={f} variant="outline" className="text-[9px] h-4 px-1">{f.toLowerCase().replace(/_/g, ' ')}</Badge>
+                                                    <Badge key={f} variant="outline" className="text-[9px] h-4 px-1 whitespace-nowrap">{f.toLowerCase().replace(/_/g, ' ')}</Badge>
                                                 ))}
                                                 {guild.features.length > 3 && (
                                                     <span className="text-[10px] text-muted-foreground">+{guild.features.length - 3}</span>

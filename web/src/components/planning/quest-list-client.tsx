@@ -7,7 +7,7 @@ import { QuestPlan, QuestCategory, Player } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Map, ArrowRight, Image as ImageIcon } from "lucide-react";
+import { Map, ArrowRight, Image as ImageIcon, Youtube } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type QuestWithRelations = QuestPlan & {
@@ -91,7 +91,12 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
                                         {quest.category ? quest.category.name : "Uncategorized"}
                                     </Badge>
                                 </div>
-                                <div className="absolute top-3 right-3">
+                                <div className="absolute top-3 right-3 flex gap-2">
+                                    {quest.videoUrl && (
+                                        <div className="bg-red-950/80 backdrop-blur-md border border-red-800/50 p-1 rounded-md shadow-lg" title="Video Guide Available">
+                                            <Youtube className="w-3.5 h-3.5 text-red-500" />
+                                        </div>
+                                    )}
                                     <Badge variant="outline" className="bg-sky-950/80 backdrop-blur-md text-sky-400 border-sky-800/50 text-[10px] font-bold">
                                         {quest.encounters.length} Fights
                                     </Badge>

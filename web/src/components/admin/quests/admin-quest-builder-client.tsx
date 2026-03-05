@@ -58,6 +58,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     );
     const [defenderId, setDefenderId] = useState<string>("");
     const [tips, setTips] = useState<string>("");
+    const [videoUrl, setVideoUrl] = useState<string>("");
     const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
     const [encounterRequiredTagIds, setEncounterRequiredTagIds] = useState<number[]>([]);
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
@@ -136,6 +137,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     // Settings State
     const [title, setTitle] = useState(initialQuest.title);
     const [status, setStatus] = useState<QuestPlanStatus>(initialQuest.status);
+    const [planVideoUrl, setPlanVideoUrl] = useState<string>(initialQuest.videoUrl || "");
     const [bannerUrl, setBannerUrl] = useState<string | null>(initialQuest.bannerUrl || null);
     const [bannerFit, setBannerFit] = useState<string>(initialQuest.bannerFit || "cover");
     const [bannerPosition, setBannerPosition] = useState<string>(initialQuest.bannerPosition || "center");
@@ -158,6 +160,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 id: initialQuest.id,
                 title,
                 status,
+                videoUrl: planVideoUrl || null,
                 bannerUrl,
                 bannerFit,
                 bannerPosition,
@@ -212,6 +215,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     questPlanId: initialQuest.id,
                     sequence: parseInt(sequence),
                     defenderId: defenderId ? parseInt(defenderId) : null,
+                    videoUrl: videoUrl || null,
                     tips: tips || null,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
@@ -223,6 +227,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     questPlanId: initialQuest.id,
                     sequence: parseInt(sequence),
                     defenderId: defenderId ? parseInt(defenderId) : undefined,
+                    videoUrl: videoUrl || undefined,
                     tips: tips || undefined,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
@@ -245,6 +250,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setSequence(String(encounter.sequence));
         setDefenderId(encounter.defenderId ? String(encounter.defenderId) : "");
         setTips(encounter.tips || "");
+        setVideoUrl(encounter.videoUrl || "");
         setRecommendedTags(encounter.recommendedTags);
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
@@ -256,6 +262,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setSequence(String((initialQuest.encounters.length > 0 ? Math.max(...initialQuest.encounters.map(e => e.sequence)) : 0) + 1));
         setDefenderId("");
         setTips("");
+        setVideoUrl("");
         setRecommendedTags([]);
         setEncounterRequiredTagIds([]);
         setRecommendedChampionIds([]);
@@ -339,6 +346,15 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 <div className="space-y-2 sm:col-span-2">
                                     <Label>Quest Title</Label>
                                     <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                </div>
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label>YouTube Video URL (Main Guide)</Label>
+                                    <Input 
+                                        value={planVideoUrl} 
+                                        onChange={e => setPlanVideoUrl(e.target.value)} 
+                                        placeholder="https://www.youtube.com/watch?v=..." 
+                                        className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" 
+                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Status</Label>
@@ -621,6 +637,15 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
                                     />
                                 </div>
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label>YouTube Video URL (Fight Specific)</Label>
+                                    <Input 
+                                        value={videoUrl} 
+                                        onChange={e => setVideoUrl(e.target.value)} 
+                                        placeholder="https://www.youtube.com/watch?v=..." 
+                                        className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" 
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
@@ -823,6 +848,14 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                         REC: {tag}
                                                                     </Badge>
                                                                 ))}
+                                                            </div>
+                                                        )}
+                                                        {encounter.videoUrl && (
+                                                            <div className="flex items-center gap-1.5 mt-2">
+                                                                <div className="h-4 w-4 rounded-full bg-red-600/20 flex items-center justify-center">
+                                                                    <div className="h-2 w-2 bg-red-600 rounded-full" />
+                                                                </div>
+                                                                <span className="text-[10px] text-slate-500 font-medium italic">Video guide linked</span>
                                                             </div>
                                                         )}
                                                     </div>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube } from "lucide-react";
 import { savePlayerQuestCounter } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { ChampionImages, Champion } from "@/types/champion";
 import { MultiSelectFilter } from "@/components/ui/filters";
 import { useToast } from "@/hooks/use-toast";
-
 import { getQuestPlanById } from "@/app/actions/quests";
 
 type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
@@ -210,7 +209,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                 .filter(([_, champId]) => champId === r.championId)
                                                 .map(([encId]) => encId);
                                             
-                                            const assignedEncounters = quest.encounters.filter(e => assignedEncounterIds.includes(e.id));
+                                            const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
 
                                             return (
                                                 <div key={r.id} className="w-[85px] sm:w-[95px] shrink-0 flex flex-col gap-2">
@@ -238,7 +237,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                 <Crosshair className="w-3 h-3" />
                                                             </div>
                                                             <div className="flex flex-wrap gap-1">
-                                                                {assignedEncounters.map(enc => (
+                                                                {assignedEncounters.map((enc: EncounterWithRelations) => (
                                                                     <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-6 h-6 rounded border border-slate-700 overflow-hidden group/tgt cursor-help">
                                                                         {enc.defender ? (
                                                                             <Image src={getChampionImageUrl(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
@@ -367,9 +366,23 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                 </div>
 
                                                 <div className="flex flex-col flex-1 min-w-0">
-                                                    <div className="text-[10px] text-red-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center gap-1.5">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                                                        Target
+                                                    <div className="text-[10px] text-red-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center justify-between">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                                                            Target
+                                                        </div>
+                                                        {encounter.videoUrl && (
+                                                            <a 
+                                                                href={encounter.videoUrl} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
+                                                            >
+                                                                <Youtube className="w-3.5 h-3.5" />
+                                                                <span className="text-[9px]">Guide</span>
+                                                            </a>
+                                                        )}
                                                     </div>
                                                     <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
                                                         {encounter.defender?.name || "Unknown Defender"}
@@ -491,8 +504,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                 encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
                                                                 encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
                                                                 encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(', ')} (Encounter)` : null,
-                                                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map(t => t.name).join(', ')}` : null,
-                                                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map(t => (t as Tag).name).join(', ')}` : null
+                                                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t: Tag) => t.name).join(', ')}` : null,
+                                                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t: any) => (t as Tag).name).join(', ')}` : null
                                                             ].filter(Boolean).map((req, i) => (
                                                                 <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
                                                             ))}
@@ -559,10 +572,11 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                 </div>
                                                             )}
 
-                                                                                                                    {/* Recommended Champions List */}
-                                                                                                                    {(encounter.recommendedChampions as unknown as Champion[]).length > 0 ? (
-                                                                                                                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                                                                                                            {(encounter.recommendedChampions as unknown as Champion[]).map((c: Champion) => {                                                                        // Find highest version in roster that matches restrictions
+                                                            {/* Recommended Champions List */}
+                                                            {(encounter.recommendedChampions as unknown as Champion[]).length > 0 ? (
+                                                                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                                                    {(encounter.recommendedChampions as unknown as Champion[]).map((c: Champion) => {
+                                                                        // Find highest version in roster that matches restrictions
                                                                         const userChamp = roster
                                                                             .filter(r => r.championId === c.id)
                                                                             .filter(r => {
@@ -595,19 +609,21 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                         powerRating: userChamp.powerRating,
                                                                                         champion: {
                                                                                             id: c.id,
-                                                                                                                                                                                    name: c.shortName || c.name,
-                                                                                                                                                                                    championClass: c.class,
-                                                                                                                                                                                    images: c.images
-                                                                                                                                                                                }
-                                                                                                                                                                            } : {                                                                                        stars: 0,
+                                                                                            name: c.shortName || c.name,
+                                                                                            championClass: c.class,
+                                                                                            images: c.images
+                                                                                        }
+                                                                                    } : {
+                                                                                        stars: 0,
                                                                                         rank: 0,
-                                                                                                                                                                            champion: {
-                                                                                                                                                                                id: c.id,
-                                                                                                                                                                                name: c.shortName || c.name,
-                                                                                                                                                                                championClass: c.class,
-                                                                                                                                                                                images: c.images
-                                                                                                                                                                            }
-                                                                                                                                                                        }}                                                                                    isSelected={isSelected}
+                                                                                        champion: {
+                                                                                            id: c.id,
+                                                                                            name: c.shortName || c.name,
+                                                                                            championClass: c.class,
+                                                                                            images: c.images
+                                                                                        }
+                                                                                    }}
+                                                                                    isSelected={isSelected}
                                                                                     isRecommended={!isSelected}
                                                                                     isMissing={!userChamp}
                                                                                 />
@@ -697,7 +713,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                         {/* Active Filter Badges */}
                                                         <div className="flex flex-wrap gap-2 items-center">
                                                             {/* Read-only requirements from Quest/Encounter */}
-                                                            {quest.requiredTags?.map(t => (
+                                                            {quest.requiredTags?.map((t: Tag) => (
                                                                 <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
                                                                     <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
                                                                 </Badge>
@@ -753,10 +769,10 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                             if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
                                                             if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
                                                             if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-                                                                                                                    if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                                                                                                        const hasTag = quest.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                                                                                                        if (!hasTag) return false;
-                                                                                                                    }
+                                                            if (quest.requiredTags && quest.requiredTags.length > 0) {
+                                                                const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                if (!hasTag) return false;
+                                                            }
                                                             // Encounter-level restrictions
                                                             if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
                                                             if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
