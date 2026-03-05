@@ -1,11 +1,11 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
-import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { getUserPlayerWithAlliance, requireBotAdmin } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
 import logger from "@/lib/logger";
 import { ChampionClass, QuestPlanStatus } from "@prisma/client";
-import { uploadToGcs } from "@/lib/gcs";
+import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
 
 // --- Quest Categories ---
 
@@ -19,10 +19,7 @@ export async function getQuestCategories() {
 }
 
 export async function createQuestCategory(name: string, order: number = 0, parentId?: string) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     await prisma.questCategory.create({
         data: {
@@ -96,10 +93,7 @@ export type QuestPlanCreateInput = {
 };
 
 export async function createQuestPlan(data: QuestPlanCreateInput) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    const actingUser = await requireBotAdmin();
 
     const plan = await prisma.questPlan.create({
         data: {
@@ -147,10 +141,7 @@ export type QuestPlanUpdateInput = {
 };
 
 export async function updateQuestPlan(data: QuestPlanUpdateInput) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     await prisma.questPlan.update({
         where: { id: data.id },
@@ -183,10 +174,7 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
 }
 
 export async function deleteQuestPlan(id: string) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     await prisma.questPlan.delete({
         where: { id }
@@ -198,10 +186,7 @@ export async function deleteQuestPlan(id: string) {
 }
 
 export async function uploadQuestBanner(questPlanId: string, formData: FormData) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     const file = formData.get('file');
     if (!file || !(file instanceof File)) {
@@ -227,10 +212,17 @@ export async function uploadQuestBanner(questPlanId: string, formData: FormData)
     const publicUrl = await uploadToGcs(buffer, fileName, file.type);
 
     // Update the quest plan with the new banner URL
-    await prisma.questPlan.update({
-        where: { id: questPlanId },
-        data: { bannerUrl: publicUrl }
-    });
+    try {
+        await prisma.questPlan.update({
+            where: { id: questPlanId },
+            data: { bannerUrl: publicUrl }
+        });
+    } catch (error) {
+        // If the DB update fails, the uploaded GCS object should not be orphaned
+        await deleteFromGcs(fileName);
+        console.error("Failed to update quest plan with banner URL, deleted GCS object.", error);
+        throw error;
+    }
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
@@ -239,10 +231,7 @@ export async function uploadQuestBanner(questPlanId: string, formData: FormData)
 }
 
 export async function duplicateQuestPlan(id: string) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    const actingUser = await requireBotAdmin();
 
     const sourcePlan = await prisma.questPlan.findUnique({
         where: { id },
@@ -308,10 +297,7 @@ export async function duplicateQuestPlan(id: string) {
 }
 
 export async function clearRecommendedChampionsInQuest(id: string) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     const encounters = await prisma.questEncounter.findMany({
         where: { questPlanId: id },
@@ -418,10 +404,7 @@ export type QuestEncounterCreateInput = {
 };
 
 export async function createQuestEncounter(data: QuestEncounterCreateInput) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     if (data.defenderId) {
         const champ = await prisma.champion.findUnique({ where: { id: data.defenderId } });
@@ -471,10 +454,7 @@ export type QuestEncounterUpdateInput = {
 };
 
 export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     if (data.defenderId) {
         const champ = await prisma.champion.findUnique({ where: { id: data.defenderId } });
@@ -517,10 +497,7 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
 }
 
 export async function deleteQuestEncounter(questPlanId: string, encounterId: string) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser) throw new Error("Unauthorized");
-    const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
-    if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+    await requireBotAdmin();
 
     const existingEncounter = await prisma.questEncounter.findUnique({ where: { id: encounterId } });
     if (!existingEncounter || existingEncounter.questPlanId !== questPlanId) {
