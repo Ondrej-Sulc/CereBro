@@ -30,7 +30,7 @@ import { getQuestPlanById } from "@/app/actions/quests";
 import { ChampionImages, Champion } from "@/types/champion";
 
 type BaseQuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
-type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
+export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
     creators: (BaseQuestWithRelations["creators"][0] & { name?: string })[];
 };
 type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
@@ -259,7 +259,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
     const cancelEditing = () => {
         setEditingEncounterId(null);
-        setSequence(String((initialQuest.encounters.length > 0 ? Math.max(...initialQuest.encounters.map(e => e.sequence)) : 0) + 1));
         setDefenderId("");
         setTips("");
         setVideoUrl("");

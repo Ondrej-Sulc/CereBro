@@ -318,15 +318,19 @@ export async function clearRecommendedChampionsInQuest(id: string) {
         select: { id: true }
     });
 
-    for (const encounter of encounters) {
-        await prisma.questEncounter.update({
-            where: { id: encounter.id },
-            data: {
-                recommendedChampions: {
-                    set: []
-                }
-            }
-        });
+    if (encounters.length > 0) {
+        await prisma.$transaction(
+            encounters.map(encounter =>
+                prisma.questEncounter.update({
+                    where: { id: encounter.id },
+                    data: {
+                        recommendedChampions: {
+                            set: []
+                        }
+                    }
+                })
+            )
+        );
     }
 
     revalidatePath(`/admin/quests/${id}`);

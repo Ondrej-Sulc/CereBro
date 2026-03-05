@@ -81,6 +81,9 @@ export function RosterView({
   initialRankSagaFilter, initialSigSagaFilter,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit
 }: RosterViewProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+
   const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
@@ -95,10 +98,10 @@ export function RosterView({
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
 
   // Data State (Client-Side Fetching)
-  const [prestigeMap, setPrestigeMap] = useState<Record<string, number>>(initialPrestigeMap);
-  const [recommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
-  const [sigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
-  const [top30Average, setTop30Average] = useState(initialTop30Average);
+  const [clientPrestigeMap, setPrestigeMap] = useState<Record<string, number>>(initialPrestigeMap);
+  const [clientRecommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
+  const [clientSigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
+  const [clientTop30Average, setTop30Average] = useState(initialTop30Average);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(Object.keys(initialPrestigeMap).length === 0);
   const lastFetchedParams = useRef<string | null>(null);
 
@@ -116,41 +119,24 @@ export function RosterView({
   // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
 
-  // Sync state correctly structure-wise by making props the initial state directly
-  // NextJS handles preserving state across un-related Server Component updates,
-  // but if the URL params themselves were modified externally (like via direct navigation),
-  // we would want to derive state. However, the requirement is to specifically remove
-  // the useEffect-based set* state sync in favor of initialization directly. Since we 
-  // already initialize via useState(initialProp), changing the key on the wrapper (in the layout/page)
-  // is the preferred React 19 pattern to reset state, avoiding infinite loops.
 
-  const [sigBudget, setSigBudget] = useState(initialSigBudget);
-  const [limit, setLimit] = useState(initialLimit);
   const [rankUpClassFilter, setRankUpClassFilter] = useState<ChampionClass[]>(initialRankClassFilter);
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
   const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
 
-  // Sync Recommendations Data Props (e.g. after router.refresh)
-  useEffect(() => {
-    const currentParams = buildRosterQueryParams({
-      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: initialLimit
-    });
+  const currentParams = buildRosterQueryParams({
+    simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: initialLimit
+  });
 
-    // Only update if our last fetch was with these same parameters
-    if (lastFetchedParams.current === currentParams) {
-      setPrestigeMap(initialPrestigeMap);
-      setRecommendations(initialRecommendations || []);
-      setSigRecommendations(initialSigRecommendations || []);
-      setTop30Average(initialTop30Average);
-    }
-  }, [initialPrestigeMap, initialRecommendations, initialSigRecommendations, initialTop30Average, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit]);
+  const usePropsData = lastFetchedParams.current === currentParams || lastFetchedParams.current === null;
+  const prestigeMap = usePropsData ? initialPrestigeMap : clientPrestigeMap;
+  const recommendations = usePropsData ? (initialRecommendations || []) : clientRecommendations;
+  const sigRecommendations = usePropsData ? (initialSigRecommendations || []) : clientSigRecommendations;
+  const top30Average = usePropsData ? initialTop30Average : clientTop30Average;
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
-    const currentParams = buildRosterQueryParams({
-      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: initialLimit
-    });
 
     if (lastFetchedParams.current === currentParams) {
       setIsLoadingRecommendations(false);
@@ -194,7 +180,7 @@ export function RosterView({
 
     fetchData();
     return () => controller.abort();
-  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit, toast, memoizedPrestigeMap]);
+  }, [currentParams, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit, toast, memoizedPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -269,8 +255,7 @@ export function RosterView({
     championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
   });
 
-  const router = useRouter();
-  const { toast } = useToast();
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -451,7 +436,7 @@ export function RosterView({
         sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
         rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
         sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
-        limit={limit} onLimitChange={(val) => updateUrlParams({ limit: val.toString() })}
+        limit={limit} onLimitChange={(val) => { setLimit(val); updateUrlParams({ limit: val.toString() }); }}
         isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 

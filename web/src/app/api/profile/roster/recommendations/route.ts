@@ -56,10 +56,6 @@ export async function GET(req: NextRequest) {
   // Determine default target rank if not set
   let effectiveTargetRank = targetRank;
   if (effectiveTargetRank === 0) {
-    let maxRosterRank = 1;
-    roster.forEach(r => {
-      if (r.stars === 7 && r.rank > maxRosterRank) maxRosterRank = r.rank;
-    });
     const highest7StarRank = roster.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
     effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
   }

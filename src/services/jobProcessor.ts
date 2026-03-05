@@ -39,16 +39,16 @@ export function startJobProcessor(client: Client) {
 
       try {
         switch (job.type) {
-          case "NOTIFY_WAR_VIDEO":
+          case BotJobType.NOTIFY_WAR_VIDEO:
             await handleWarVideoNotification(client, job.payload);
             break;
-          case "NOTIFY_DEATH_VIDEO":
+          case BotJobType.NOTIFY_DEATH_VIDEO:
             await handleDeathVideoNotification(client, job.payload);
             break;
-          case "DISTRIBUTE_WAR_PLAN":
+          case BotJobType.DISTRIBUTE_WAR_PLAN:
             await handleDistributeWarPlan(client, job.payload);
             break;
-          case "DISTRIBUTE_DEFENSE_PLAN":
+          case BotJobType.DISTRIBUTE_DEFENSE_PLAN:
             await handleDistributeDefensePlan(client, job.payload);
             break;
           case BotJobType.UPDATE_MEMBER_ROLES:
@@ -66,12 +66,13 @@ export function startJobProcessor(client: Client) {
           data: { status: 'COMPLETED' }
         });
       } catch (error: unknown) {
-        logger.error({ error: String(error), jobId: job.id }, 'Job processing failed');
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error({ error: errorMessage, jobId: job.id }, 'Job processing failed');
         await prisma.botJob.update({
           where: { id: job.id },
           data: {
             status: 'FAILED',
-            error: (error as any).message || String(error)
+            error: errorMessage
           }
         });
       }

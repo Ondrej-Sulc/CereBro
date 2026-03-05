@@ -46,7 +46,7 @@ export async function uploadToGcs(
 ): Promise<string> {
     const s = getStorage();
     const file = s.bucket(bucketName).file(destinationPath);
-    
+
     await file.save(buffer, {
         contentType,
         metadata: {
@@ -54,16 +54,13 @@ export async function uploadToGcs(
         }
     });
 
-    return `https://storage.googleapis.com/${bucketName}/${destinationPath}`;
+    return `https://storage.googleapis.com/${encodeURIComponent(bucketName)}/${destinationPath.split('/').map(encodeURIComponent).join('/')}`;
 }
 
 function isNotFoundError(err: unknown): boolean {
-    return (
-        typeof err === 'object' &&
-        err !== null &&
-        'code' in err &&
-        ((err as any).code === 404 || (err as any).code === '404')
-    );
+    if (typeof err !== 'object' || err === null) return false;
+    const code = (err as Record<string, unknown>).code;
+    return code === 404 || code === '404';
 }
 
 /**

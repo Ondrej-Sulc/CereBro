@@ -25,14 +25,14 @@ export interface DiscordGuild {
 
 async function fetchWithRetry(url: string, options: RequestInit, retries = 2): Promise<Response> {
     const response = await fetch(url, options);
-    
+
     if (response.status === 429 && retries > 0) {
         const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
         console.warn(`Discord Rate Limit (429) hit for ${url}. Retrying in ${retryAfter}ms...`);
         await new Promise(resolve => setTimeout(resolve, retryAfter));
         return fetchWithRetry(url, options, retries - 1);
     }
-    
+
     return response;
 }
 
@@ -100,7 +100,7 @@ export async function getDiscordGuilds() {
 
         for (const chunk of guildChunks) {
             const chunkResults = await Promise.all(chunk.map(async (guild) => {
-                let memberCount = 0;
+                let memberCount: number | undefined = undefined;
                 let features = guild.features;
                 let icon = guild.icon;
 
@@ -110,10 +110,12 @@ export async function getDiscordGuilds() {
                             Authorization: `Bot ${config.BOT_TOKEN}`
                         }
                     });
-                    
+
                     if (detailRes.ok) {
                         const data = await detailRes.json();
-                        memberCount = data.approximate_member_count || 0;
+                        if (typeof data.approximate_member_count !== 'undefined') {
+                            memberCount = data.approximate_member_count;
+                        }
                         features = data.features || features;
                         icon = data.icon || icon;
                     } else if (detailRes.status === 429) {
@@ -131,9 +133,9 @@ export async function getDiscordGuilds() {
                     alliances: allianceGroupByGuild[guild.id] || []
                 };
             }));
-            
+
             detailedGuilds.push(...chunkResults);
-            
+
             // Small delay between chunks if we have more than one
             if (guildChunks.length > 1) {
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -152,7 +154,7 @@ export async function leaveDiscordGuild(guildId: string) {
         where: { guildId, id: 'GLOBAL' },
         select: { id: true }
     });
-    
+
     if (globalAlliance) {
         throw new Error("Cannot leave the GLOBAL alliance server.");
     }
@@ -171,8 +173,8 @@ export async function leaveDiscordGuild(guildId: string) {
 
 export async function cleanupSmallGuilds() {
     const guilds = await getDiscordGuilds();
-    const smallGuilds = guilds.filter(g => (g.approximate_member_count || 0) <= 1);
-    
+    const smallGuilds = guilds.filter(g => g.approximate_member_count !== undefined && g.approximate_member_count <= 1);
+
     let count = 0;
     for (const guild of smallGuilds) {
         try {

@@ -6,15 +6,15 @@ import { leaveDiscordGuild, cleanupSmallGuilds } from "@/app/actions/discord";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, LogOut, Trash2 } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 export function LeaveButton({ guildId, guildName }: { guildId: string, guildName: string }) {
@@ -29,12 +29,6 @@ export function LeaveButton({ guildId, guildName }: { guildId: string, guildName
                 toast({
                     title: "Success",
                     description: `Queued leave for ${guildName}`,
-                });
-            } else {
-                toast({
-                    title: "Error",
-                    description: (result as any)?.error || "Failed to leave server.",
-                    variant: "destructive",
                 });
             }
         } catch (e: unknown) {
@@ -59,7 +53,7 @@ export function LeaveButton({ guildId, guildName }: { guildId: string, guildName
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will make the bot leave **{guildName}**. 
+                        This will make the bot leave <strong>{guildName}</strong>.
                         This action cannot be undone unless the bot is re-invited.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -87,12 +81,6 @@ export function CleanupButton({ smallGuildCount }: { smallGuildCount: number }) 
                     title: "Success",
                     description: `Queued leave for ${result.count} small servers.`,
                 });
-            } else {
-                toast({
-                    title: "Error",
-                    description: (result as any)?.error || "Failed to cleanup servers.",
-                    variant: "destructive",
-                });
             }
         } catch (e: unknown) {
             toast({
@@ -117,7 +105,7 @@ export function CleanupButton({ smallGuildCount }: { smallGuildCount: number }) 
                 <AlertDialogHeader>
                     <AlertDialogTitle>Cleanup Small Servers</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will make the bot leave **{smallGuildCount}** servers that have 1 or fewer members.
+                        This will make the bot leave <strong>{smallGuildCount}</strong> servers that have 1 or fewer members.
                         This is useful for clearing out test servers and reclaiming capacity.
                     </AlertDialogDescription>
                 </AlertDialogHeader>

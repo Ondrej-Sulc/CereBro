@@ -31,17 +31,16 @@ interface MultiChampionComboboxProps {
 }
 
 const ComboboxTrigger = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { open: boolean; selectedChampions: Champion[]; placeholder: string }
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { open: boolean; selectedChampions: Champion[]; placeholder: string }
 >(({ open, selectedChampions, placeholder, className, ...props }, ref) => {
   return (
-    <div
+    <button
+      type="button"
       ref={ref}
-      role="combobox"
       aria-expanded={open}
-      tabIndex={0}
       className={cn(
-        "flex h-auto min-h-[40px] w-full items-center justify-between rounded-md border border-slate-800 bg-transparent px-3 py-2 text-sm ring-offset-slate-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+        "flex h-auto min-h-[40px] w-full items-center justify-between rounded-md border border-slate-800 bg-transparent px-3 py-2 text-sm text-left ring-offset-slate-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
         className
       )}
       {...props}
@@ -59,7 +58,6 @@ const ComboboxTrigger = React.forwardRef<
                 />
               </div>
               <span className="text-xs font-bold max-w-[80px] truncate">{champion.name}</span>
-              {/* Note: The close button remains, but it should probably have stopPropagation to avoid opening the popover */}
             </Badge>
           ))
         ) : (
@@ -70,7 +68,7 @@ const ComboboxTrigger = React.forwardRef<
       <div className="flex items-center ml-2 shrink-0">
         <ChevronsUpDown className="h-4 w-4 opacity-50" />
       </div>
-    </div>
+    </button>
   );
 });
 ComboboxTrigger.displayName = "ComboboxTrigger";
@@ -108,9 +106,10 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
     return fuse.search(search).map(result => result.item);
   }, [fuse, search, champions]);
 
-  const selectedChampions = React.useMemo(() =>
-    values.map(id => champions.find(c => c.id === id)).filter(Boolean) as Champion[],
-    [values, champions]);
+  const selectedChampions = React.useMemo(() => {
+    const isChampion = (v: unknown): v is Champion => v !== undefined && v !== null;
+    return values.map(id => champions.find(c => c.id === id)).filter(isChampion);
+  }, [values, champions]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -137,7 +136,7 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
           <CommandList>
             <CommandEmpty>No champion found.</CommandEmpty>
             <CommandGroup>
-              {filteredChampions.slice(0, 100).map((champion) => {
+              {(search ? filteredChampions.slice(0, 100) : filteredChampions).map((champion) => {
                 const isSelected = values.includes(champion.id);
                 return (
                   <CommandItem

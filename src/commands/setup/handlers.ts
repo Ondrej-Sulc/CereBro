@@ -27,6 +27,15 @@ const COLORS = {
   SUCCESS: 0x10b981, // Emerald 500
 } as const;
 
+function extractAndValidateAllianceId(customId: string): string | null {
+  if (!customId) return null;
+  const parts = customId.split(":");
+  if (parts.length < 3) return null;
+  const allianceId = parts[2];
+  if (!allianceId || !/^[a-zA-Z0-9_\-]+$/.test(allianceId)) return null;
+  return allianceId;
+}
+
 type AllianceRoleField = 'officerRole' | 'battlegroup1Role' | 'battlegroup2Role' | 'battlegroup3Role';
 
 /**
@@ -38,8 +47,17 @@ export function registerSetupHandlers() {
     if (!interaction.isStringSelectMenu()) return;
     const allianceId = interaction.values[0];
 
-    const alliance = await prisma.alliance.findUnique({
-      where: { id: allianceId }
+    if (!allianceId || !/^[a-zA-Z0-9_\-]+$/.test(allianceId)) {
+      await interaction.reply({ content: "Invalid alliance ID.", flags: MessageFlags.Ephemeral });
+      return;
+    }
+    if (!interaction.guildId) {
+      await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    const alliance = await prisma.alliance.findFirst({
+      where: { id: allianceId, guildId: interaction.guildId }
     });
 
     if (!alliance) {
@@ -75,8 +93,11 @@ export function registerSetupHandlers() {
 
   // --- Step 1: Officer Role Selection ---
   registerButtonHandler("setup:step1_intro", async (interaction) => {
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     if (!interaction.guildId || !interaction.guild) {
       await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
@@ -110,8 +131,11 @@ export function registerSetupHandlers() {
 
   registerSelectMenuHandler("setup:select_officer_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     if (!interaction.guildId || !interaction.guild) {
       await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
@@ -122,15 +146,11 @@ export function registerSetupHandlers() {
 
     try {
       // Save to DB
-      const existing = await prisma.alliance.findFirst({
-        where: { id: allianceId, guildId: interaction.guildId }
-      });
-      if (!existing) throw new Error("Alliance not found or does not belong to this server.");
-
-      await prisma.alliance.update({
-        where: { id: allianceId },
+      const result = await prisma.alliance.updateMany({
+        where: { id: allianceId, guildId: interaction.guildId },
         data: { officerRole: roleId },
       });
+      if (result.count === 0) throw new Error("Alliance not found or does not belong to this server.");
 
       // Move to next step
       const embed = new EmbedBuilder()
@@ -168,8 +188,11 @@ export function registerSetupHandlers() {
   // --- Step 2: BG1 Role ---
   registerSelectMenuHandler("setup:select_bg1_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     try {
       const roleId = interaction.values[0];
@@ -182,8 +205,11 @@ export function registerSetupHandlers() {
   });
 
   registerButtonHandler("setup:skip_bg1", async (interaction) => {
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     try {
       await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup1Role", null);
@@ -219,8 +245,11 @@ export function registerSetupHandlers() {
 
   registerSelectMenuHandler("setup:select_bg2_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     try {
       await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup2Role", interaction.values[0]);
@@ -232,8 +261,11 @@ export function registerSetupHandlers() {
   });
 
   registerButtonHandler("setup:skip_bg2", async (interaction) => {
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     try {
       await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup2Role", null);
@@ -269,8 +301,11 @@ export function registerSetupHandlers() {
 
   registerSelectMenuHandler("setup:select_bg3_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     try {
       await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup3Role", interaction.values[0]);
@@ -282,8 +317,11 @@ export function registerSetupHandlers() {
   });
 
   registerButtonHandler("setup:skip_bg3", async (interaction) => {
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     try {
       await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup3Role", null);
@@ -323,8 +361,11 @@ export function registerSetupHandlers() {
       await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
       return;
     }
-    const customIdParts = interaction.customId.split(":");
-    const allianceId = customIdParts[2];
+    const allianceId = extractAndValidateAllianceId(interaction.customId);
+    if (!allianceId) {
+      await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     await interaction.deferUpdate();
     try {
@@ -357,15 +398,11 @@ export function registerSetupHandlers() {
 
 async function updateAllianceRole(allianceId: string, guildId: string, field: AllianceRoleField, roleId: string | null) {
   try {
-    const existing = await prisma.alliance.findFirst({
-      where: { id: allianceId, guildId }
-    });
-    if (!existing) throw new Error("Alliance not found or does not belong to this server.");
-
-    await prisma.alliance.update({
-      where: { id: allianceId },
+    const result = await prisma.alliance.updateMany({
+      where: { id: allianceId, guildId },
       data: { [field]: roleId }
     });
+    if (result.count === 0) throw new Error("Alliance not found or does not belong to this server.");
   } catch (error) {
     logger.error({ error, allianceId, guildId, field }, "Failed to update alliance role");
     throw new Error("Failed to update alliance configuration. Please try /setup again.");

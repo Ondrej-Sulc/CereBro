@@ -40,7 +40,7 @@ const CLASS_ICONS: Record<ChampionClass, string> = {
   COSMIC: "/assets/icons/Cosmic.png",
   TECH: "/assets/icons/Tech.png",
   MUTANT: "/assets/icons/Mutant.png",
-  SUPERIOR: "/assets/icons/Superior.png" // Fallback if needed, though likely not in filter list
+  SUPERIOR: "/assets/icons/superior.png" // Fallback if needed, though likely not in filter list
 };
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
@@ -84,10 +84,9 @@ export default function PlanningToolsPanel({
     !selectedClass || item.champion.class === selectedClass
   );
 
-  const handlePlayerSelect = useCallback(async (playerId: string) => {
-    setSelectedPlayerId(playerId);
+  const fetchRosterForPlayer = useCallback(async (playerId: string) => {
     setIsLoading(true);
-    setSelectedClass(null); // Reset filter on player change
+    setSelectedClass(null); // Reset filter on member change
     const reqId = ++rosterReqSeq.current;
 
     try {
@@ -100,14 +99,26 @@ export default function PlanningToolsPanel({
     } finally {
       if (reqId === rosterReqSeq.current) setIsLoading(false);
     }
-  }, []); // Dependencies removed
+  }, []);
 
-  // Effect to update when prop changes
+  const handlePlayerSelect = useCallback(async (playerId: string) => {
+    setSelectedPlayerId(playerId);
+    await fetchRosterForPlayer(playerId);
+  }, [fetchRosterForPlayer]);
+
+  // Render-time state synchronization for prop updates
+  const [prevInitialId, setPrevInitialId] = useState(initialPlayerId);
+  if (initialPlayerId !== prevInitialId) {
+    setPrevInitialId(initialPlayerId);
+    setSelectedPlayerId(initialPlayerId || "");
+  }
+
+  // Effect to perform data fetch when initialPlayerId prop changes
   useEffect(() => {
     if (initialPlayerId) {
-      handlePlayerSelect(initialPlayerId);
+      fetchRosterForPlayer(initialPlayerId);
     }
-  }, [initialPlayerId, handlePlayerSelect]);
+  }, [initialPlayerId, fetchRosterForPlayer]);
 
   const handleChampionSelect = async (championId: string) => {
     setSelectedChampionId(championId);

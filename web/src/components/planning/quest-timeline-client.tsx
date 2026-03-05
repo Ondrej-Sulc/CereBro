@@ -654,8 +654,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                 encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
                                                                 encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
                                                                 encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(', ')} (Encounter)` : null,
-                                                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t: Tag) => t.name).join(', ')}` : null,
-                                                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t: any) => (t as Tag).name).join(', ')}` : null
+                                                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t) => t.name).join(', ')}` : null,
+                                                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t) => t.name).join(', ')}` : null
                                                             ].filter(Boolean).map((req, i) => (
                                                                 <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
                                                             ))}
@@ -723,9 +723,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                             )}
 
                                                             {/* Recommended Champions List */}
-                                                            {(encounter.recommendedChampions as unknown as Champion[]).length > 0 ? (
+                                                            {encounter.recommendedChampions.length > 0 ? (
                                                                 <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                                                                    {(encounter.recommendedChampions as unknown as Champion[]).map((c: Champion) => {
+                                                                    {encounter.recommendedChampions.map((c) => {
                                                                         // Find highest version in roster that matches restrictions
                                                                         const userChamp = roster
                                                                             .filter(r => r.championId === c.id)
@@ -735,7 +735,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                 if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
                                                                                 if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
                                                                                 if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                                                                    const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                                    const hasTag = encounter.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
                                                                                     if (!hasTag) return false;
                                                                                 }
                                                                                 return true;

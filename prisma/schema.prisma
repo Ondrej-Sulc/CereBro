@@ -660,7 +660,7 @@ model QuestPlan {
   requiredClasses ChampionClass[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  teamLimit       Int?              @default(5)
+  teamLimit       Int               @default(5)
   status          QuestPlanStatus   @default(DRAFT)
   bannerUrl       String?
   bannerFit       String?           @default("cover")
@@ -692,6 +692,7 @@ model QuestEncounter {
   requiredTags         Tag[]                  @relation("EncounterRequiredTags")
 
   @@unique([questPlanId, sequence])
+  @@unique([id, questPlanId])
   @@index([questPlanId])
   @@index([defenderId])
 }
@@ -719,6 +720,7 @@ model PlayerQuestPlan {
   questPlan   QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, questPlanId])
+  @@unique([id, questPlanId])
   @@index([playerId])
   @@index([questPlanId])
 }
@@ -727,9 +729,10 @@ model PlayerQuestEncounter {
   id                 String          @id @default(cuid())
   playerQuestPlanId  String
   questEncounterId   String
+  questPlanId        String
   selectedChampionId Int?
-  playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId], references: [id], onDelete: Cascade)
-  questEncounter     QuestEncounter  @relation(fields: [questEncounterId], references: [id], onDelete: Cascade)
+  playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
+  questEncounter     QuestEncounter  @relation(fields: [questEncounterId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
   selectedChampion   Champion?       @relation("PlayerSelectedCounter", fields: [selectedChampionId], references: [id])
 
   @@unique([playerQuestPlanId, questEncounterId])

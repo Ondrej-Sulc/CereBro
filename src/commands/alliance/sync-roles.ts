@@ -9,11 +9,21 @@ import { checkAndCleanupAlliance } from '../../services/allianceService.js';
  * @returns An object containing the count of updated, created, and removed players.
  */
 export async function syncRolesForGuild(guild: Guild, allianceId?: string): Promise<{ updated: number; created: number; removed: number }> {
-  const alliance = await prisma.alliance.findFirst({
+  const alliances = await prisma.alliance.findMany({
     where: allianceId ? { id: allianceId, guildId: guild.id } : { guildId: guild.id },
   });
 
-  if (!alliance || (!alliance.officerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role)) {
+  if (alliances.length === 0) {
+    return { updated: 0, created: 0, removed: 0 };
+  }
+
+  if (alliances.length > 1) {
+    throw new Error('Multiple alliances found for this server. Please specify an alliance ID.');
+  }
+
+  const alliance = alliances[0];
+
+  if (!alliance.officerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role) {
     loggerService.warn({ guildId: guild.id }, 'Attempted to sync roles for an alliance with no roles configured.');
     return { updated: 0, created: 0, removed: 0 };
   }
@@ -78,17 +88,31 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
           dbMembersMap.delete(member.id);
         } else {
           // Member has roles but is NOT in the alliance in DB yet.
-          // Check if they exist globally (e.g. from another alliance or profile)
-          const globalPlayer = await prisma.player.findFirst({
-            where: { discordId: member.id },
-          });
-
-          // Ensure BotUser exists
+          // Ensure BotUser exists early
           const botUser = await prisma.botUser.upsert({
             where: { discordId: member.id },
             update: {},
             create: { discordId: member.id }
           });
+
+          let globalPlayer = null;
+
+          if (botUser.activeProfileId) {
+            globalPlayer = await prisma.player.findUnique({
+              where: { id: botUser.activeProfileId },
+            });
+          } else {
+            globalPlayer = await prisma.player.findFirst({
+              where: { discordId: member.id, allianceId: alliance.id },
+            });
+
+            if (!globalPlayer) {
+              const profileCount = await prisma.player.count({ where: { discordId: member.id } });
+              if (profileCount > 0) {
+                throw new Error('Multiple profiles exist. Please set an active profile to sync roles.');
+              }
+            }
+          }
 
           if (globalPlayer) {
             // Player exists, link them to this alliance and ensure botUserId

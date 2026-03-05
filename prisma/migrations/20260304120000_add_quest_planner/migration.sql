@@ -22,7 +22,7 @@ CREATE TABLE "QuestPlan" (
     "categoryId" TEXT,
     "minStarLevel" INTEGER CHECK("minStarLevel" > 0),
     "maxStarLevel" INTEGER CHECK("maxStarLevel" > 0),
-    "teamLimit" INTEGER DEFAULT 5 CHECK("teamLimit" > 0),
+    "teamLimit" INTEGER NOT NULL DEFAULT 5 CHECK("teamLimit" > 0),
     "requiredClasses" "ChampionClass"[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -70,6 +70,7 @@ CREATE TABLE "PlayerQuestEncounter" (
     "id" TEXT NOT NULL,
     "playerQuestPlanId" TEXT NOT NULL,
     "questEncounterId" TEXT NOT NULL,
+    "questPlanId" TEXT NOT NULL,
     "selectedChampionId" INTEGER,
 
     CONSTRAINT "PlayerQuestEncounter_pkey" PRIMARY KEY ("id")
@@ -101,6 +102,9 @@ CREATE TABLE "_EncounterRequiredTags" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "QuestCategory_name_key" ON "QuestCategory"("name");
+
+-- CreateIndex
+CREATE INDEX "QuestCategory_parentId_idx" ON "QuestCategory"("parentId");
 
 -- CreateIndex
 CREATE INDEX "QuestPlan_status_idx" ON "QuestPlan"("status");
@@ -190,10 +194,10 @@ ALTER TABLE "PlayerQuestPlan" ADD CONSTRAINT "PlayerQuestPlan_playerId_fkey" FOR
 ALTER TABLE "PlayerQuestPlan" ADD CONSTRAINT "PlayerQuestPlan_questPlanId_fkey" FOREIGN KEY ("questPlanId") REFERENCES "QuestPlan"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerQuestEncounter" ADD CONSTRAINT "PlayerQuestEncounter_playerQuestPlanId_fkey" FOREIGN KEY ("playerQuestPlanId") REFERENCES "PlayerQuestPlan"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerQuestEncounter" ADD CONSTRAINT "PlayerQuestEncounter_playerQuestPlanId_questPlanId_fkey" FOREIGN KEY ("playerQuestPlanId", "questPlanId") REFERENCES "PlayerQuestPlan"("id", "questPlanId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PlayerQuestEncounter" ADD CONSTRAINT "PlayerQuestEncounter_questEncounterId_fkey" FOREIGN KEY ("questEncounterId") REFERENCES "QuestEncounter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerQuestEncounter" ADD CONSTRAINT "PlayerQuestEncounter_questEncounterId_questPlanId_fkey" FOREIGN KEY ("questEncounterId", "questPlanId") REFERENCES "QuestEncounter"("id", "questPlanId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PlayerQuestEncounter" ADD CONSTRAINT "PlayerQuestEncounter_selectedChampionId_fkey" FOREIGN KEY ("selectedChampionId") REFERENCES "Champion"("id") ON DELETE SET NULL ON UPDATE CASCADE;
