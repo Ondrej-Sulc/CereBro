@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
   // Parse filters and options
   const targetRank = parseInt(searchParams.get("targetRank") || "0");
   const sigBudget = parseInt(searchParams.get("sigBudget") || "0");
-  
+  const limit = parseInt(searchParams.get("limit") || "5");
+
   const validClasses = Object.values(ChampionClass);
   const rankClassFilterRaw = searchParams.get("rankClassFilter") ? searchParams.get("rankClassFilter")!.split(',') : [];
   const sigClassFilterRaw = searchParams.get("sigClassFilter") ? searchParams.get("sigClassFilter")!.split(',') : [];
@@ -32,20 +33,20 @@ export async function GET(req: NextRequest) {
     include: {
       champion: {
         include: {
-           tags: { select: { id: true, name: true } },
-           abilities: {
-             include: {
-               ability: {
-                 select: {
-                    name: true,
-                    categories: { select: { name: true } }
-                 }
-               },
-               synergyChampions: {
-                 include: { champion: { select: { name: true, images: true } } }
-               }
-             }
-           }
+          tags: { select: { id: true, name: true } },
+          abilities: {
+            include: {
+              ability: {
+                select: {
+                  name: true,
+                  categories: { select: { name: true } }
+                }
+              },
+              synergyChampions: {
+                include: { champion: { select: { name: true, images: true } } }
+              }
+            }
+          }
         }
       }
     },
@@ -55,21 +56,22 @@ export async function GET(req: NextRequest) {
   // Determine default target rank if not set
   let effectiveTargetRank = targetRank;
   if (effectiveTargetRank === 0) {
-      let maxRosterRank = 1;
-      roster.forEach(r => {
-          if (r.stars === 7 && r.rank > maxRosterRank) maxRosterRank = r.rank;
-      });
-      const highest7StarRank = roster.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
-      effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
+    let maxRosterRank = 1;
+    roster.forEach(r => {
+      if (r.stars === 7 && r.rank > maxRosterRank) maxRosterRank = r.rank;
+    });
+    const highest7StarRank = roster.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
+    effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
   }
 
   const result = await calculateRosterRecommendations(roster as unknown as ProfileRosterEntry[], {
-      targetRank: effectiveTargetRank,
-      sigBudget,
-      rankClassFilter,
-      sigClassFilter,
-      rankSagaFilter,
-      sigSagaFilter
+    targetRank: effectiveTargetRank,
+    sigBudget,
+    rankClassFilter,
+    sigClassFilter,
+    rankSagaFilter,
+    sigSagaFilter,
+    limit
   });
 
   return NextResponse.json(result);

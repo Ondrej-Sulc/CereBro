@@ -6,7 +6,7 @@ import { Champion } from "@/types/champion";
 const CACHE_TTL = 3600;
 
 export async function getCachedChampions(): Promise<Champion[]> {
-  return await getFromCache("all-champions-full", CACHE_TTL, async () => {
+  return await getFromCache("all-champions-full-v2", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       orderBy: { name: 'asc' },
       select: {
@@ -23,13 +23,17 @@ export async function getCachedChampions(): Promise<Champion[]> {
         updatedAt: true,
         abilities: {
           select: {
+            type: true,
             ability: {
-              select: { name: true }
+              select: {
+                name: true,
+                categories: { select: { name: true } }
+              }
             }
           }
         },
         tags: {
-          select: { name: true }
+          select: { id: true, name: true }
         }
       }
     });

@@ -16,46 +16,46 @@ export const metadata: Metadata = {
 };
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string }>;
+  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string; limit?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
-  
+
   if (!player) {
     redirect("/api/auth/discord-login?redirectTo=/profile/roster");
   }
 
   // Parallel fetch for data
   const [rosterEntries, allChampions, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
-      prisma.roster.findMany({
-        where: { playerId: player.id },
-        include: {
-          champion: {
-            include: {
-               tags: { select: { id: true, name: true } },
-               abilities: {
-                 include: {
-                   ability: {
-                     select: {
-                        name: true,
-                        categories: { select: { name: true } }
-                     }
-                   },
-                   synergyChampions: {
-                     include: { champion: { select: { name: true, images: true } } }
-                   }
-                 }
-               }
+    prisma.roster.findMany({
+      where: { playerId: player.id },
+      include: {
+        champion: {
+          include: {
+            tags: { select: { id: true, name: true } },
+            abilities: {
+              include: {
+                ability: {
+                  select: {
+                    name: true,
+                    categories: { select: { name: true } }
+                  }
+                },
+                synergyChampions: {
+                  include: { champion: { select: { name: true, images: true } } }
+                }
+              }
             }
           }
-        },
-        orderBy: [{ stars: "desc" }, { rank: "desc" }],
-      }),
-      getCachedChampions(),
-      prisma.tag.findMany({ orderBy: { name: 'asc' } }),
-      prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
-      prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
-      prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] })
+        }
+      },
+      orderBy: [{ stars: "desc" }, { rank: "desc" }],
+    }),
+    getCachedChampions(),
+    prisma.tag.findMany({ orderBy: { name: 'asc' } }),
+    prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
+    prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
+    prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] })
   ]);
 
   const abilities = await prisma.ability.findMany({ where: { id: { in: abilityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
@@ -70,9 +70,10 @@ export default async function RosterPage(props: {
   const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
   const rankSagaFilter = searchParams.rankSagaFilter === 'true';
   const sigSagaFilter = searchParams.sigSagaFilter === 'true';
-  
+
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : 0; // 0 lets the client/api decide default
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
+  const limit = searchParams.limit ? parseInt(searchParams.limit) : 5;
 
   // Safely map and type-cast the roster entries to ensure JsonValue fields match our local interfaces
   const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
@@ -96,8 +97,8 @@ export default async function RosterPage(props: {
   // Determine default target rank if not set
   let effectiveTargetRank = targetRank;
   if (effectiveTargetRank === 0) {
-      const highest7StarRank = typedRosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
-      effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
+    const highest7StarRank = typedRosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
+    effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
   }
 
   const { prestigeMap, recommendations, sigRecommendations, top30Average } = await calculateRosterRecommendations(
@@ -108,14 +109,15 @@ export default async function RosterPage(props: {
       rankClassFilter,
       sigClassFilter,
       rankSagaFilter,
-      sigSagaFilter
+      sigSagaFilter,
+      limit
     }
   );
 
   return (
     <div className="container mx-auto p-4 sm:p-8">
-      <RosterView 
-        initialRoster={typedRosterEntries} 
+      <RosterView
+        initialRoster={typedRosterEntries}
         allChampions={allChampions}
         top30Average={top30Average || player.championPrestige || 0}
         prestigeMap={prestigeMap}
@@ -131,6 +133,7 @@ export default async function RosterPage(props: {
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}
         initialImmunities={immunities}
+        initialLimit={limit}
       />
     </div>
   );

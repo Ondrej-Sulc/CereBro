@@ -28,6 +28,7 @@ function buildRosterQueryParams(params: {
   initialSigClassFilter: ChampionClass[];
   initialRankSagaFilter: boolean;
   initialSigSagaFilter: boolean;
+  limit?: number;
 }) {
   const searchParams = new URLSearchParams();
   if (params.simulationTargetRank) searchParams.set("targetRank", params.simulationTargetRank.toString());
@@ -36,6 +37,7 @@ function buildRosterQueryParams(params: {
   if (params.initialSigClassFilter.length) searchParams.set("sigClassFilter", params.initialSigClassFilter.join(','));
   if (params.initialRankSagaFilter) searchParams.set("rankSagaFilter", 'true');
   if (params.initialSigSagaFilter) searchParams.set("sigSagaFilter", 'true');
+  if (params.limit && params.limit !== 5) searchParams.set("limit", params.limit.toString());
   return searchParams.toString();
 }
 
@@ -56,6 +58,7 @@ interface RosterViewProps {
   initialAbilityCategories: { id: string | number, name: string }[];
   initialAbilities: { id: string | number, name: string }[];
   initialImmunities: { id: string | number, name: string }[];
+  initialLimit: number;
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
@@ -76,7 +79,7 @@ export function RosterView({
   initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter,
-  initialTags, initialAbilityCategories, initialAbilities, initialImmunities
+  initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit
 }: RosterViewProps) {
   const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
   const [search, setSearch] = useState("");
@@ -88,6 +91,7 @@ export function RosterView({
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(false);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
+  const [limit, setLimit] = useState(initialLimit);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
 
   // Data State (Client-Side Fetching)
@@ -141,11 +145,12 @@ export function RosterView({
   useEffect(() => { setSigClassFilter(initialSigClassFilter); }, [initialSigClassFilter]);
   useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
   useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
+  useEffect(() => { setLimit(initialLimit); }, [initialLimit]);
 
   // Sync Recommendations Data Props (e.g. after router.refresh)
   useEffect(() => {
     const currentParams = buildRosterQueryParams({
-      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: initialLimit
     });
 
     // Only update if our last fetch was with these same parameters
@@ -155,12 +160,12 @@ export function RosterView({
       setSigRecommendations(initialSigRecommendations || []);
       setTop30Average(initialTop30Average);
     }
-  }, [initialPrestigeMap, initialRecommendations, initialSigRecommendations, initialTop30Average, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter]);
+  }, [initialPrestigeMap, initialRecommendations, initialSigRecommendations, initialTop30Average, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit]);
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
     const currentParams = buildRosterQueryParams({
-      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter
+      simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: initialLimit
     });
 
     if (lastFetchedParams.current === currentParams) {
@@ -205,7 +210,7 @@ export function RosterView({
 
     fetchData();
     return () => controller.abort();
-  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, toast, memoizedPrestigeMap]);
+  }, [simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit, toast, memoizedPrestigeMap]);
 
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
@@ -444,6 +449,7 @@ export function RosterView({
         sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
         rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
         sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
+        limit={limit} onLimitChange={(val) => updateUrlParams({ limit: val.toString() })}
         isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 
