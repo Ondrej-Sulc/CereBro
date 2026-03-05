@@ -287,8 +287,8 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             )}
 
             <QuestTimelineClient
-                quest={quest}
-                roster={roster}
+                quest={quest as QuestWithRelations}
+                roster={roster as RosterWithChampion[]}
                 savedEncounters={playerPlan?.encounters || []}
                 filterMetadata={{
                     tags,

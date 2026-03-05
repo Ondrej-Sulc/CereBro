@@ -113,31 +113,23 @@ export function RosterView({
   const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
   const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
 
+  // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
+  const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
+
+  // Sync state correctly structure-wise by making props the initial state directly
+  // NextJS handles preserving state across un-related Server Component updates,
+  // but if the URL params themselves were modified externally (like via direct navigation),
+  // we would want to derive state. However, the requirement is to specifically remove
+  // the useEffect-based set* state sync in favor of initialization directly. Since we 
+  // already initialize via useState(initialProp), changing the key on the wrapper (in the layout/page)
+  // is the preferred React 19 pattern to reset state, avoiding infinite loops.
+
+  const [sigBudget, setSigBudget] = useState(initialSigBudget);
+  const [limit, setLimit] = useState(initialLimit);
   const [rankUpClassFilter, setRankUpClassFilter] = useState<ChampionClass[]>(initialRankClassFilter);
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
   const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
-
-  const [isPending, startTransition] = useTransition();
-  const [chartData, setChartData] = useState<{ data: PrestigePoint[], rec: SigRecommendation } | null>(null);
-  const [loadingChart, setLoadingChart] = useState(false);
-  const [isAddingChampion, setIsAddingChampion] = useState(false);
-  const [newChampion, setNewChampion] = useState<{
-    championId: number | null;
-    stars: number;
-    rank: number;
-    sigLevel: number;
-    isAwakened: boolean;
-    isAscended: boolean;
-  }>({
-    championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
-  });
-
-  const router = useRouter();
-  const { toast } = useToast();
-
-  // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
-  const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
 
   // Sync Recommendations Data Props (e.g. after router.refresh)
   useEffect(() => {
@@ -261,6 +253,24 @@ export function RosterView({
       setLoadingChart(false);
     }
   };
+
+  const [isPending, startTransition] = useTransition();
+  const [chartData, setChartData] = useState<{ data: PrestigePoint[], rec: SigRecommendation } | null>(null);
+  const [loadingChart, setLoadingChart] = useState(false);
+  const [isAddingChampion, setIsAddingChampion] = useState(false);
+  const [newChampion, setNewChampion] = useState<{
+    championId: number | null;
+    stars: number;
+    rank: number;
+    sigLevel: number;
+    isAwakened: boolean;
+    isAscended: boolean;
+  }>({
+    championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
+  });
+
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const timer = setTimeout(() => {
