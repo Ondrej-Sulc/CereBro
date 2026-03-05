@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getQuestPlanById } from "@/app/actions/quests";
-import QuestTimelineClient from "@/components/planning/quest-timeline-client";
+import QuestTimelineClient, { QuestWithRelations, RosterWithChampion } from "@/components/planning/quest-timeline-client";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             where: { playerId: activePlayer.id },
             include: {
                 champion: {
-                    include: { 
+                    include: {
                         tags: true,
                         abilities: {
                             include: {
@@ -107,7 +107,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     ]);
 
     // Map roster entries to typed objects, ensuring JsonValue fields are cast correctly
-    const roster = rosterEntries.map(entry => ({
+    const roster: RosterWithChampion[] = rosterEntries.map(entry => ({
         ...entry,
         champion: {
             ...entry.champion,
@@ -116,10 +116,10 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             abilities: entry.champion.abilities.map(link => ({
                 ...link,
                 ability: {
+                    id: link.ability.id,
                     name: link.ability.name,
                     categories: link.ability.categories
-                },
-                synergyChampions: [] // Placeholder as it's not needed for filtering here
+                }
             }))
         }
     }));
@@ -154,19 +154,19 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
 
             {bannerUrl && (
                 <div className="relative w-full aspect-[21/9] md:aspect-[25/7] mb-8 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
-                    <Image 
-                        src={bannerUrl} 
-                        alt={quest.title} 
-                        fill 
+                    <Image
+                        src={bannerUrl}
+                        alt={quest.title}
+                        fill
                         priority
                         className={cn(
                             quest.bannerFit === "contain" ? "object-contain" : "object-cover",
                             quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
-                        )} 
+                        )}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none" />
-                    
+
                     <div className="absolute bottom-6 left-8 right-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div className="relative z-10">
                             {creatorsWithUsers.length > 0 && (
@@ -215,7 +215,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                             {quest.requiredClasses?.map((cls) => (
                                 <div key={cls} className="bg-black/60 backdrop-blur-md border border-white/20 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-2xl">
                                     <div className="relative w-4 h-4">
-                                        <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                        <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
                                     </div>
                                     <span className="text-[10px] font-black text-white uppercase tracking-tighter leading-none">{cls}</span>
                                 </div>
@@ -252,7 +252,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                             </Link>
                         )}
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-3">
                         {(quest.minStarLevel || quest.maxStarLevel) && (
                             <Badge variant="outline" className="bg-amber-950/20 border-amber-800/50 text-amber-500 font-bold px-3 py-1">
@@ -262,7 +262,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                         {quest.requiredClasses?.map((cls) => (
                             <div key={cls} className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 flex items-center gap-2 shadow-sm">
                                 <div className="relative w-4 h-4">
-                                    <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                    <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
                                 </div>
                                 <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">{cls}</span>
                             </div>
@@ -286,10 +286,9 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 </div>
             )}
 
-            {/* We cast here because Prisma's nested includes get complex, but we know the shape matches what the client needs */}
             <QuestTimelineClient
-                quest={quest as any}
-                roster={roster as unknown as any[]}
+                quest={quest}
+                roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
                 filterMetadata={{
                     tags,

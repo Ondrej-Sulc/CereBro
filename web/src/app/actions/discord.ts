@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from "@/lib/prisma";
-import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { requireBotAdmin } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
 import { BotJobType } from "@prisma/client";
 import { config } from "@cerebro/core/config";
@@ -48,10 +48,7 @@ function chunkArray<T>(array: T[], size: number): T[][] {
 }
 
 export async function getDiscordGuilds() {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser?.isBotAdmin) {
-        throw new Error("Unauthorized");
-    }
+    await requireBotAdmin();
 
     if (!config.BOT_TOKEN) {
         throw new Error("BOT_TOKEN not configured");
@@ -148,18 +145,15 @@ export async function getDiscordGuilds() {
 }
 
 export async function leaveDiscordGuild(guildId: string) {
-    const actingUser = await getUserPlayerWithAlliance();
-    if (!actingUser?.isBotAdmin) {
-        throw new Error("Unauthorized");
-    }
+    await requireBotAdmin();
 
     // Protection for GLOBAL alliance
-    const alliance = await prisma.alliance.findFirst({
-        where: { guildId },
+    const globalAlliance = await prisma.alliance.findFirst({
+        where: { guildId, id: 'GLOBAL' },
         select: { id: true }
     });
     
-    if (alliance?.id === 'GLOBAL') {
+    if (globalAlliance) {
         throw new Error("Cannot leave the GLOBAL alliance server.");
     }
 

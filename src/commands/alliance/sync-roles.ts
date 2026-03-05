@@ -8,9 +8,9 @@ import { checkAndCleanupAlliance } from '../../services/allianceService.js';
  * @param guild The guild to sync roles for.
  * @returns An object containing the count of updated, created, and removed players.
  */
-export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number; created: number; removed: number }> {
-  const alliance = await prisma.alliance.findUnique({
-    where: { guildId: guild.id },
+export async function syncRolesForGuild(guild: Guild, allianceId?: string): Promise<{ updated: number; created: number; removed: number }> {
+  const alliance = await prisma.alliance.findFirst({
+    where: allianceId ? { id: allianceId, guildId: guild.id } : { guildId: guild.id },
   });
 
   if (!alliance || (!alliance.officerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role)) {
@@ -28,7 +28,7 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
     where: { allianceId: alliance.id },
     include: { botUser: true }
   });
-  
+
   // Create a map for quick lookup and tracking processed members
   // Key: Discord ID, Value: Player record
   const dbMembersMap = new Map(dbAllianceMembers.map(p => [p.discordId, p]));
@@ -60,90 +60,90 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
 
       if (hasRelevantRole) {
         if (existingAllianceMember) {
-            // UPDATE existing alliance member
-            if (
-                existingAllianceMember.battlegroup !== battlegroup ||
-                existingAllianceMember.isOfficer !== isOfficer
-            ) {
-                await prisma.player.update({
-                    where: { id: existingAllianceMember.id },
-                    data: {
-                        battlegroup,
-                        isOfficer,
-                    },
-                });
-                updatedCount++;
-            }
-            // Mark as processed
-            dbMembersMap.delete(member.id);
+          // UPDATE existing alliance member
+          if (
+            existingAllianceMember.battlegroup !== battlegroup ||
+            existingAllianceMember.isOfficer !== isOfficer
+          ) {
+            await prisma.player.update({
+              where: { id: existingAllianceMember.id },
+              data: {
+                battlegroup,
+                isOfficer,
+              },
+            });
+            updatedCount++;
+          }
+          // Mark as processed
+          dbMembersMap.delete(member.id);
         } else {
-            // Member has roles but is NOT in the alliance in DB yet.
-            // Check if they exist globally (e.g. from another alliance or profile)
-            const globalPlayer = await prisma.player.findFirst({
-                where: { discordId: member.id },
-            });
+          // Member has roles but is NOT in the alliance in DB yet.
+          // Check if they exist globally (e.g. from another alliance or profile)
+          const globalPlayer = await prisma.player.findFirst({
+            where: { discordId: member.id },
+          });
 
-            // Ensure BotUser exists
-            const botUser = await prisma.botUser.upsert({
-                where: { discordId: member.id },
-                update: {},
-                create: { discordId: member.id }
-            });
+          // Ensure BotUser exists
+          const botUser = await prisma.botUser.upsert({
+            where: { discordId: member.id },
+            update: {},
+            create: { discordId: member.id }
+          });
 
-            if (globalPlayer) {
-                // Player exists, link them to this alliance and ensure botUserId
-                await prisma.player.update({
-                    where: { id: globalPlayer.id },
-                    data: {
-                        allianceId: alliance.id,
-                        battlegroup,
-                        isOfficer,
-                        botUserId: botUser.id
-                    },
-                });
-                updatedCount++;
-            } else {
-                // New player entirely
-                await prisma.player.create({
-                    data: {
-                        ingameName: member.displayName,
-                        discordId: member.id,
-                        allianceId: alliance.id,
-                        battlegroup,
-                        isOfficer,
-                        botUserId: botUser.id
-                    },
-                });
-                createdCount++;
-            }
+          if (globalPlayer) {
+            // Player exists, link them to this alliance and ensure botUserId
+            await prisma.player.update({
+              where: { id: globalPlayer.id },
+              data: {
+                allianceId: alliance.id,
+                battlegroup,
+                isOfficer,
+                botUserId: botUser.id
+              },
+            });
+            updatedCount++;
+          } else {
+            // New player entirely
+            await prisma.player.create({
+              data: {
+                ingameName: member.displayName,
+                discordId: member.id,
+                allianceId: alliance.id,
+                battlegroup,
+                isOfficer,
+                botUserId: botUser.id
+              },
+            });
+            createdCount++;
+          }
         }
       } else {
         // No relevant roles
         if (existingAllianceMember) {
-            // Mark as processed
-            dbMembersMap.delete(member.id);
+          // Mark as processed
+          dbMembersMap.delete(member.id);
 
-            // Do not remove Bot Admins from the alliance even if they don't have roles
-            if (existingAllianceMember.botUser?.isBotAdmin) {
-                continue;
-            }
+          // Do not remove Bot Admins from the alliance even if they don't have roles
+          if (existingAllianceMember.botUser?.isBotAdmin) {
+            continue;
+          }
 
-            // Skip removal if the alliance has disabled strict membership removal
-            if (!alliance.removeMissingMembers) {
-                continue;
-            }
+          // Skip removal if the alliance has disabled strict membership removal
+          if (!alliance.removeMissingMembers) {
+            continue;
+          }
 
-            // They are in the DB as part of this alliance, but don't have relevant roles in Discord.
-            // Since this alliance has roles configured, we treat Discord as the source of truth.
-            await prisma.player.update({
-                where: { id: existingAllianceMember.id },
-                data: {
-                    allianceId: null,
-                    battlegroup: null,
-                    isOfficer: false,
-                },
-            });
-            removedCount++;
+          // They are in the DB as part of this alliance, but don't have relevant roles in Discord.
+          // Since this alliance has roles configured, we treat Discord as the source of truth.
+          await prisma.player.update({
+            where: { id: existingAllianceMember.id },
+            data: {
+              allianceId: null,
+              battlegroup: null,
+              isOfficer: false,
+            },
+          });
+          removedCount++;
         }
         // If they don't have roles and aren't in the DB for this alliance, we do nothing.
       }
@@ -162,33 +162,33 @@ export async function syncRolesForGuild(guild: Guild): Promise<{ updated: number
   // They have left the server, so we remove them from the alliance.
   if (alliance.removeMissingMembers) {
     for (const [discordId, player] of dbMembersMap) {
-        try {
-            // Do not remove Bot Admins
-            if (player.botUser?.isBotAdmin) {
-                continue;
-            }
-
-            await prisma.player.update({
-                where: { id: player.id },
-                data: {
-                    allianceId: null,
-                    battlegroup: null,
-                    isOfficer: false,
-                },
-            });
-            removedCount++;
-        } catch (error) {
-            loggerService.error(
-              { error, discordId },
-              'Failed to remove leaver from alliance'
-            );
+      try {
+        // Do not remove Bot Admins
+        if (player.botUser?.isBotAdmin) {
+          continue;
         }
+
+        await prisma.player.update({
+          where: { id: player.id },
+          data: {
+            allianceId: null,
+            battlegroup: null,
+            isOfficer: false,
+          },
+        });
+        removedCount++;
+      } catch (error) {
+        loggerService.error(
+          { error, discordId },
+          'Failed to remove leaver from alliance'
+        );
+      }
     }
   }
 
   // Cleanup empty alliance if everyone left or was removed
   await checkAndCleanupAlliance(alliance.id);
-  
+
   loggerService.info(`Alliance roles synced for guild ${guild.id}. Updated: ${updatedCount}, Created: ${createdCount}, Removed: ${removedCount}.`);
   return { updated: updatedCount, created: createdCount, removed: removedCount };
 }
@@ -205,9 +205,9 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
     const result = await syncRolesForGuild(interaction.guild);
     await interaction.followUp({
       content: `Role synchronization complete.\n` +
-      `✅ **${result.created}** new profiles created.\n` +
-      `🔄 **${result.updated}** existing profiles updated.\n` +
-      `❌ **${result.removed}** profiles removed (lost roles or left server).`,
+        `✅ **${result.created}** new profiles created.\n` +
+        `🔄 **${result.updated}** existing profiles updated.\n` +
+        `❌ **${result.removed}** profiles removed (lost roles or left server).`,
       flags: MessageFlags.Ephemeral
     });
   } catch (error) {

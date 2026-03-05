@@ -49,8 +49,7 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
         setSearch(""); // Clear search on select
     }, [values, onSelect]);
 
-    const handleRemove = React.useCallback((e: React.MouseEvent | React.KeyboardEvent, modifierId: string) => {
-        e.stopPropagation();
+    const handleRemove = React.useCallback((modifierId: string) => {
         onSelect(values.filter((v) => v !== modifierId));
     }, [values, onSelect]);
 
@@ -87,21 +86,18 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
                             selectedModifiers.map(modifier => (
                                 <Badge key={modifier.id} variant="secondary" className="pl-2 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
                                     <span className="text-xs font-bold max-w-[120px] truncate">{modifier.name}</span>
-                                    <span
-                                        role="button"
-                                        tabIndex={0}
+                                    <button
+                                        type="button"
                                         aria-label={`Remove ${modifier.name}`}
-                                        onClick={(e) => handleRemove(e, modifier.id)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter" || e.key === " ") {
-                                                e.preventDefault();
-                                                handleRemove(e, modifier.id);
-                                            }
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            handleRemove(modifier.id);
                                         }}
                                         className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500"
                                     >
                                         <X className="h-3 w-3" />
-                                    </span>
+                                    </button>
                                 </Badge>
                             ))
                         ) : (

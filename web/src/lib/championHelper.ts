@@ -1,11 +1,30 @@
 import { ChampionImages } from '@/types/champion';
 import { Prisma } from '@prisma/client';
 
+export function isChampionImages(obj: any): obj is ChampionImages {
+  if (!obj || typeof obj !== 'object') return false;
+  return (
+    'hero' in obj &&
+    'full_primary' in obj &&
+    'full_secondary' in obj &&
+    'p_32' in obj &&
+    's_32' in obj &&
+    'p_64' in obj &&
+    's_64' in obj &&
+    'p_128' in obj &&
+    's_128' in obj
+  );
+}
+
 export function getChampionImageUrl(
-  images: ChampionImages | Prisma.JsonValue | any,
+  images: ChampionImages | Prisma.JsonValue,
   size: "32" | "64" | "128" | "full" = "full",
   type: "primary" | "secondary" | "hero" = "primary"
 ): string {
+  if (!isChampionImages(images)) {
+    return "";
+  }
+
   const imgs = images as ChampionImages;
   if (type === "hero") {
     return imgs.hero;

@@ -25,13 +25,14 @@ import {
   Map,
   Server,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LucideIcon
 } from "lucide-react"
 
 interface SidebarItem {
   title: string
   href: string
-  icon: any
+  icon: LucideIcon
 }
 
 interface SidebarGroup {

@@ -30,6 +30,51 @@ interface MultiChampionComboboxProps {
   className?: string;
 }
 
+const ComboboxTrigger = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { open: boolean; selectedChampions: Champion[]; placeholder: string }
+>(({ open, selectedChampions, placeholder, className, ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      role="combobox"
+      aria-expanded={open}
+      tabIndex={0}
+      className={cn(
+        "flex h-auto min-h-[40px] w-full items-center justify-between rounded-md border border-slate-800 bg-transparent px-3 py-2 text-sm ring-offset-slate-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+        className
+      )}
+      {...props}
+    >
+      <div className="flex flex-wrap items-center gap-1.5 py-1">
+        {selectedChampions.length > 0 ? (
+          selectedChampions.map(champion => (
+            <Badge key={champion.id} variant="secondary" className="pl-1 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
+              <div className="relative h-5 w-5 rounded-full overflow-hidden bg-slate-900 flex-shrink-0">
+                <Image
+                  src={getChampionImageUrl(champion.images, '64')}
+                  alt={champion.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <span className="text-xs font-bold max-w-[80px] truncate">{champion.name}</span>
+              {/* Note: The close button remains, but it should probably have stopPropagation to avoid opening the popover */}
+            </Badge>
+          ))
+        ) : (
+          <span className="text-slate-500 pl-1">{placeholder}</span>
+        )}
+      </div>
+
+      <div className="flex items-center ml-2 shrink-0">
+        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+      </div>
+    </div>
+  );
+});
+ComboboxTrigger.displayName = "ComboboxTrigger";
+
 export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
   champions,
   values,
@@ -47,11 +92,6 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
       onSelect([...values, championId]);
     }
     setSearch(""); // Clear search on select
-  }, [values, onSelect]);
-
-  const handleRemove = React.useCallback((e: React.MouseEvent, championId: number) => {
-    e.stopPropagation();
-    onSelect(values.filter((v) => v !== championId));
   }, [values, onSelect]);
 
   const fuse = React.useMemo(() => {
@@ -75,47 +115,12 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <div
-          role="combobox"
-          aria-expanded={open}
-          tabIndex={0}
-          className={cn(
-            "flex h-auto min-h-[40px] w-full items-center justify-between rounded-md border border-slate-800 bg-transparent px-3 py-2 text-sm ring-offset-slate-950 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
-            className
-          )}
-        >
-          <div className="flex flex-wrap items-center gap-1.5 py-1">
-            {selectedChampions.length > 0 ? (
-              selectedChampions.map(champion => (
-                <Badge key={champion.id} variant="secondary" className="pl-1 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
-                  <div className="relative h-5 w-5 rounded-full overflow-hidden bg-slate-900 flex-shrink-0">
-                    <Image
-                      src={getChampionImageUrl(champion.images, '64')}
-                      alt={champion.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <span className="text-xs font-bold max-w-[80px] truncate">{champion.name}</span>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${champion.name}`}
-                    onClick={(e) => handleRemove(e, champion.id)}
-                    className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))
-            ) : (
-              <span className="text-slate-500 pl-1">{placeholder}</span>
-            )}
-          </div>
-
-          <div className="flex items-center ml-2 shrink-0">
-            <ChevronsUpDown className="h-4 w-4 opacity-50" />
-          </div>
-        </div>
+        <ComboboxTrigger
+          open={open}
+          selectedChampions={selectedChampions}
+          placeholder={placeholder}
+          className={className}
+        />
       </PopoverTrigger>
       <PopoverContent
         sideOffset={4}

@@ -12,7 +12,7 @@ import { BotJobType, BotJobStatus } from '@prisma/client';
 
 export function startJobProcessor(client: Client) {
   logger.info('⚙️ Job Processor started.');
-  
+
   setInterval(async () => {
     try {
       if (!prisma.botJob) {
@@ -51,12 +51,11 @@ export function startJobProcessor(client: Client) {
           case "DISTRIBUTE_DEFENSE_PLAN":
             await handleDistributeDefensePlan(client, job.payload);
             break;
-          case "UPDATE_MEMBER_ROLES":
+          case BotJobType.UPDATE_MEMBER_ROLES:
             await handleUpdateMemberRoles(client, job.payload);
             break;
-          // @ts-ignore - Stale types
-          case "LEAVE_GUILD":
-            await handleLeaveGuild(client, job.payload);
+          case BotJobType.LEAVE_GUILD:
+            await handleLeaveGuild(client, job.payload as import('./jobHandlers/leaveGuild').LeaveGuildPayload);
             break;
           default:
             logger.warn(`Unknown job type: ${job.type}`);
@@ -66,13 +65,13 @@ export function startJobProcessor(client: Client) {
           where: { id: job.id },
           data: { status: 'COMPLETED' }
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error({ error: String(error), jobId: job.id }, 'Job processing failed');
         await prisma.botJob.update({
           where: { id: job.id },
-          data: { 
+          data: {
             status: 'FAILED',
-            error: error.message || String(error)
+            error: (error as any).message || String(error)
           }
         });
       }

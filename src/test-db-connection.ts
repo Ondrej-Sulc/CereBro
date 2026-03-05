@@ -15,6 +15,7 @@ async function main() {
     }
   } catch (error) {
     console.error('Error fetching quests:', error);
+    process.exit(1);
   } finally {
     await prisma.$disconnect();
   }

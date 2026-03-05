@@ -73,7 +73,7 @@ export default async function RosterPage(props: {
 
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : 0; // 0 lets the client/api decide default
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
-  const limit = searchParams.limit ? parseInt(searchParams.limit) : 5;
+  const limit = searchParams.limit ? Math.min(Math.max(parseInt(searchParams.limit, 10) || 5, 1), 100) : 5;
 
   // Safely map and type-cast the roster entries to ensure JsonValue fields match our local interfaces
   const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
@@ -117,6 +117,7 @@ export default async function RosterPage(props: {
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView
+        key={`${sigBudget}-${rankClassFilter.join(',')}-${sigClassFilter.join(',')}-${rankSagaFilter}-${sigSagaFilter}-${limit}-${effectiveTargetRank}`}
         initialRoster={typedRosterEntries}
         allChampions={allChampions}
         top30Average={top30Average || player.championPrestige || 0}

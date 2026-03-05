@@ -20,11 +20,11 @@ import { MultiSelectFilter } from "@/components/ui/filters";
 import { useToast } from "@/hooks/use-toast";
 import { getQuestPlanById } from "@/app/actions/quests";
 
-type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
-type EncounterWithRelations = QuestWithRelations["encounters"][0];
-type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
+export type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
+export type EncounterWithRelations = QuestWithRelations["encounters"][0];
+export type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
 
-type RosterWithChampion = Roster & {
+export type RosterWithChampion = Roster & {
     champion: Champion;
 };
 
@@ -158,12 +158,12 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
 
     const handleSelectCounter = async (encounterId: string, championId: number) => {
         const previousValue = selections[encounterId];
-        
+
         // If selecting a NEW champion (not unselecting, and not already selected for this fight)
         if (previousValue !== championId) {
             // Check if this champion is already in the team for another fight
             const isAlreadyInTeam = Object.values(selections).includes(championId);
-            
+
             // If they aren't in the team, and adding them would exceed the limit, block it
             if (!isAlreadyInTeam && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
                 toast({
@@ -207,7 +207,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                 <>
                     {/* Invisible marker for scroll detection */}
                     <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
-                    
+
                     <div className="sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
                         <div className={cn(
                             "transition-all duration-500 ease-in-out pointer-events-auto",
@@ -218,133 +218,133 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                 isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
                                 isTeamExpanded ? "w-[95vw] sm:w-[90vw] md:max-w-5xl" : "w-fit min-w-[200px]"
                             )}>
-                            <div 
-                                className={cn(
-                                    "py-2 px-4 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all group/team-header",
-                                    isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
-                                )}
-                                onClick={() => setIsTeamExpanded(!isTeamExpanded)}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                        "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-header:bg-sky-500/20 transition-colors",
-                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                    )}>
-                                        <Users className="w-3.5 h-3.5" />
-                                    </div>
-                                    <span className={cn(
-                                        "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-header:text-sky-400 transition-colors",
-                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                    )}>
-                                        Your Team
-                                    </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
-                                        <span className={cn(
-                                            "text-[10px] font-black",
-                                            selectedTeam.length > quest.teamLimit ? "text-red-400" : "text-sky-400"
-                                        )}>
-                                            {selectedTeam.length}
-                                        </span>
-                                        <span className="text-[10px] text-slate-600 font-bold">/</span>
-                                        <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
-                                    </div>
-                                    <div className={cn(
-                                        "transition-transform duration-300",
-                                        isTeamExpanded ? "rotate-180" : ""
-                                    )}>
-                                        <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={cn(
-                                "transition-all duration-500 ease-in-out overflow-hidden px-4 pb-4",
-                                isTeamExpanded ? "max-h-[800px] opacity-100" : "max-h-[140px] opacity-90"
-                            )}>
-                                {selectedTeam.length === 0 ? (
-                                    <div className="py-4 flex flex-col items-center justify-center gap-1">
-                                        <p className="text-[10px] text-slate-500 italic font-medium">No champions selected.</p>
-                                        {!isTeamExpanded && <p className="text-[8px] text-slate-600 uppercase tracking-tighter">Click to expand</p>}
-                                    </div>
-                                ) : (
-                                    <div className={cn(
-                                        "flex items-end transition-all duration-500",
-                                        isTeamExpanded ? "flex-col gap-4" : "flex-row gap-3 justify-center"
-                                    )}>
+                                <div
+                                    className={cn(
+                                        "py-2 px-4 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all group/team-header",
+                                        isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
+                                    )}
+                                    onClick={() => setIsTeamExpanded(!isTeamExpanded)}
+                                >
+                                    <div className="flex items-center gap-3">
                                         <div className={cn(
-                                            "flex gap-3 pb-1 overflow-x-auto custom-scrollbar scroll-smooth",
-                                            isTeamExpanded ? "w-full justify-start" : "w-fit max-w-full"
+                                            "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-header:bg-sky-500/20 transition-colors",
+                                            isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
                                         )}>
-                                            {selectedTeam.map(r => {
-                                                const assignedEncounterIds = Object.entries(selections)
-                                                    .filter(([_, champId]) => champId === r.championId)
-                                                    .map(([encId]) => encId);
-                                                
-                                                const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
-
-                                                // Dynamic sizes based on expansion AND scroll state
-                                                const avatarSize = isTeamExpanded 
-                                                    ? (isScrolled ? "lg" : "xl") 
-                                                    : (isScrolled ? "md" : "lg");
-                                                
-                                                const containerWidth = isTeamExpanded
-                                                    ? (isScrolled ? "w-[75px] sm:w-[85px]" : "w-[85px] sm:w-[95px]")
-                                                    : (isScrolled ? "w-[50px] sm:w-[60px]" : "w-[75px] sm:w-[85px]");
-
-                                                return (
-                                                    <div key={r.id} className={cn(
-                                                        "shrink-0 flex flex-col gap-2 transition-all duration-300",
-                                                        containerWidth
-                                                    )}>
-                                                        <ChampionAvatar
-                                                            images={r.champion.images}
-                                                            name={r.champion.name}
-                                                            stars={r.stars}
-                                                            rank={r.rank}
-                                                            isAwakened={r.isAwakened}
-                                                            sigLevel={r.sigLevel}
-                                                            championClass={r.champion.class}
-                                                            size={avatarSize}
-                                                            showRank={isTeamExpanded}
-                                                            showStars={isTeamExpanded}
-                                                        />
-                                                        
-                                                        {isTeamExpanded && assignedEncounters.length > 0 && (
-                                                            <div className="bg-slate-900/60 rounded-lg border border-slate-800 p-1.5 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                                <div className="flex flex-wrap gap-1 justify-center">
-                                                                    {assignedEncounters.map((enc: EncounterWithRelations) => (
-                                                                        <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-help shadow-sm">
-                                                                            {enc.defender ? (
-                                                                                <Image src={getChampionImageUrl(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
-                                                                            ) : (
-                                                                                <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
-                                                                            )}
-                                                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                <span className="text-[9px] font-black text-white">{enc.sequence}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
+                                            <Users className="w-3.5 h-3.5" />
                                         </div>
-                                        
-                                        {isTeamExpanded && selectedTeam.length > quest.teamLimit && (
-                                            <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 animate-in slide-in-from-bottom-2">
-                                                <AlertCircle className="w-4 h-4 shrink-0" />
-                                                <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
-                                            </div>
-                                        )}
+                                        <span className={cn(
+                                            "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-header:text-sky-400 transition-colors",
+                                            isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
+                                        )}>
+                                            Your Team
+                                        </span>
                                     </div>
-                                )}
-                            </div>
-                        </Card>
+
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
+                                            <span className={cn(
+                                                "text-[10px] font-black",
+                                                selectedTeam.length > quest.teamLimit ? "text-red-400" : "text-sky-400"
+                                            )}>
+                                                {selectedTeam.length}
+                                            </span>
+                                            <span className="text-[10px] text-slate-600 font-bold">/</span>
+                                            <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
+                                        </div>
+                                        <div className={cn(
+                                            "transition-transform duration-300",
+                                            isTeamExpanded ? "rotate-180" : ""
+                                        )}>
+                                            <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={cn(
+                                    "transition-all duration-500 ease-in-out overflow-hidden px-4 pb-4",
+                                    isTeamExpanded ? "max-h-[800px] opacity-100" : "max-h-[140px] opacity-90"
+                                )}>
+                                    {selectedTeam.length === 0 ? (
+                                        <div className="py-4 flex flex-col items-center justify-center gap-1">
+                                            <p className="text-[10px] text-slate-500 italic font-medium">No champions selected.</p>
+                                            {!isTeamExpanded && <p className="text-[8px] text-slate-600 uppercase tracking-tighter">Click to expand</p>}
+                                        </div>
+                                    ) : (
+                                        <div className={cn(
+                                            "flex items-end transition-all duration-500",
+                                            isTeamExpanded ? "flex-col gap-4" : "flex-row gap-3 justify-center"
+                                        )}>
+                                            <div className={cn(
+                                                "flex gap-3 pb-1 overflow-x-auto custom-scrollbar scroll-smooth",
+                                                isTeamExpanded ? "w-full justify-start" : "w-fit max-w-full"
+                                            )}>
+                                                {selectedTeam.map(r => {
+                                                    const assignedEncounterIds = Object.entries(selections)
+                                                        .filter(([_, champId]) => champId === r.championId)
+                                                        .map(([encId]) => encId);
+
+                                                    const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
+
+                                                    // Dynamic sizes based on expansion AND scroll state
+                                                    const avatarSize = isTeamExpanded
+                                                        ? (isScrolled ? "lg" : "xl")
+                                                        : (isScrolled ? "md" : "lg");
+
+                                                    const containerWidth = isTeamExpanded
+                                                        ? (isScrolled ? "w-[75px] sm:w-[85px]" : "w-[85px] sm:w-[95px]")
+                                                        : (isScrolled ? "w-[50px] sm:w-[60px]" : "w-[75px] sm:w-[85px]");
+
+                                                    return (
+                                                        <div key={r.id} className={cn(
+                                                            "shrink-0 flex flex-col gap-2 transition-all duration-300",
+                                                            containerWidth
+                                                        )}>
+                                                            <ChampionAvatar
+                                                                images={r.champion.images}
+                                                                name={r.champion.name}
+                                                                stars={r.stars}
+                                                                rank={r.rank}
+                                                                isAwakened={r.isAwakened}
+                                                                sigLevel={r.sigLevel}
+                                                                championClass={r.champion.class}
+                                                                size={avatarSize}
+                                                                showRank={isTeamExpanded}
+                                                                showStars={isTeamExpanded}
+                                                            />
+
+                                                            {isTeamExpanded && assignedEncounters.length > 0 && (
+                                                                <div className="bg-slate-900/60 rounded-lg border border-slate-800 p-1.5 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                                    <div className="flex flex-wrap gap-1 justify-center">
+                                                                        {assignedEncounters.map((enc: EncounterWithRelations) => (
+                                                                            <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-help shadow-sm">
+                                                                                {enc.defender ? (
+                                                                                    <Image src={getChampionImageUrl(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                                                                                ) : (
+                                                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                                                )}
+                                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                    <span className="text-[9px] font-black text-white">{enc.sequence}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {isTeamExpanded && selectedTeam.length > quest.teamLimit && (
+                                                <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 animate-in slide-in-from-bottom-2">
+                                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                                    <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </Card>
                         </div>
                     </div>
                 </>
@@ -385,16 +385,16 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                                         <div className={cn(
                                             "flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-[3px] shadow-lg font-black transition-all duration-300",
-                                            hasSelection 
-                                                ? "bg-sky-600 border-slate-950 text-white shadow-[0_0_15px_rgba(2,132,199,0.5)] scale-110" 
-                                                : isLast 
-                                                    ? "bg-red-950 border-red-800 text-red-500 scale-110 shadow-[0_0_15px_rgba(220,38,38,0.2)]" 
+                                            hasSelection
+                                                ? "bg-sky-600 border-slate-950 text-white shadow-[0_0_15px_rgba(2,132,199,0.5)] scale-110"
+                                                : isLast
+                                                    ? "bg-red-950 border-red-800 text-red-500 scale-110 shadow-[0_0_15px_rgba(220,38,38,0.2)]"
                                                     : "bg-slate-900 border-slate-800 text-slate-400 group-hover:border-slate-600"
                                         )}>
                                             {hasSelection ? <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5" /> : (isLast ? <Crosshair className="h-4 w-4 md:h-5 md:w-5" /> : encounter.sequence)}
                                         </div>
                                     </div>
-                                    
+
                                     {/* Horizontal Connector Line (from circle to card) */}
                                     <div className={cn(
                                         "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-8 md:w-10 z-10 transition-colors duration-300",
@@ -438,7 +438,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                     {encounter.defender && (
                                                         <div className="absolute -bottom-2.5 -right-2.5 z-20 h-7 w-7 md:h-8 md:w-8 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-lg">
                                                             <Image
-                                                                src={`/icons/${encounter.defender.class.charAt(0).toUpperCase() + encounter.defender.class.slice(1).toLowerCase()}.png`}
+                                                                src={`/assets/icons/${encounter.defender.class.charAt(0).toUpperCase() + encounter.defender.class.slice(1).toLowerCase()}.png`}
                                                                 alt={encounter.defender.class}
                                                                 fill
                                                                 className="object-contain p-1"
@@ -520,14 +520,14 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
 
                                                                         <div className="absolute -bottom-2.5 -left-2.5 md:-left-auto md:-right-2.5 z-20 h-7 w-7 md:h-8 md:w-8 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-lg">
                                                                             <Image
-                                                                                src={`/icons/${selectedRosterItem.champion.class.charAt(0).toUpperCase() + selectedRosterItem.champion.class.slice(1).toLowerCase()}.png`}
+                                                                                src={`/assets/icons/${selectedRosterItem.champion.class.charAt(0).toUpperCase() + selectedRosterItem.champion.class.slice(1).toLowerCase()}.png`}
                                                                                 alt={selectedRosterItem.champion.class}
                                                                                 fill
                                                                                 className="object-contain p-1"
                                                                             />
                                                                         </div>
                                                                     </div>
-                                                                    
+
                                                                     <div className="flex flex-col flex-1 min-w-0 text-left md:text-right">
                                                                         <div className="text-[10px] text-sky-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center md:flex-row-reverse gap-1.5">
                                                                             <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)] shrink-0" />
@@ -560,9 +560,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                 )}
                                                 <div className="flex items-center flex-col md:flex-row gap-1 md:gap-2 ml-2 self-center md:self-auto">
                                                     {hasSelection && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon" 
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
                                                             className="shrink-0 rounded-full hover:bg-red-950/80 hover:text-red-400 text-slate-500 h-8 w-8 transition-colors"
                                                             title="Remove selected counter"
                                                             onClick={(e) => {
@@ -605,9 +605,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                     }
                                                                     return <div className="p-8 text-center text-slate-500">Invalid video URL</div>;
                                                                 })()}
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="icon" 
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
                                                                     className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full h-8 w-8 z-50"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
@@ -618,7 +618,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                 </Button>
                                                             </div>
                                                         ) : (
-                                                            <div 
+                                                            <div
                                                                 className="group/video relative overflow-hidden rounded-xl border border-red-900/30 bg-gradient-to-r from-red-950/20 to-slate-900/40 p-4 cursor-pointer hover:border-red-600/50 transition-all active:scale-[0.99]"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
@@ -815,8 +815,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                         </button>
                                                                     )}
                                                                 </div>
-                                                                
-                                                                    <div className="flex gap-2">
+
+                                                                <div className="flex gap-2">
                                                                     <div className="flex gap-1.5 p-1 bg-slate-950/50 border border-slate-800 rounded-lg overflow-x-auto custom-scrollbar">
                                                                         {CLASSES.filter(cls => cls !== 'SUPERIOR').map((cls) => (
                                                                             <button
@@ -829,14 +829,14 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                 title={cls}
                                                                             >
                                                                                 <div className="relative w-5 h-5">
-                                                                                    <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                                                                    <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
                                                                                 </div>
                                                                             </button>
                                                                         ))}
                                                                     </div>
-                                                                    
-                                                                    <Button 
-                                                                        variant="outline" 
+
+                                                                    <Button
+                                                                        variant="outline"
                                                                         onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                                                                         className={cn(
                                                                             "h-10 px-3 border-slate-800 gap-2 shrink-0",
@@ -901,9 +901,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                             ))}
 
                                                             {activeFiltersCount > 0 && (
-                                                                <Button 
-                                                                    variant="ghost" 
-                                                                    size="sm" 
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
                                                                     className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2"
                                                                     onClick={clearAllFilters}
                                                                 >

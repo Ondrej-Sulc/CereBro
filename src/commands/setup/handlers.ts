@@ -39,12 +39,12 @@ export function registerSetupHandlers() {
     const allianceId = interaction.values[0];
 
     const alliance = await prisma.alliance.findUnique({
-        where: { id: allianceId }
+      where: { id: allianceId }
     });
 
     if (!alliance) {
-        await interaction.reply({ content: "Alliance not found.", flags: MessageFlags.Ephemeral });
-        return;
+      await interaction.reply({ content: "Alliance not found.", flags: MessageFlags.Ephemeral });
+      return;
     }
 
     const embed = new EmbedBuilder()
@@ -112,16 +112,21 @@ export function registerSetupHandlers() {
     if (!interaction.isRoleSelectMenu()) return;
     const customIdParts = interaction.customId.split(":");
     const allianceId = customIdParts[2];
-    
+
     if (!interaction.guildId || !interaction.guild) {
-        await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
-        return;
+      await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+      return;
     }
 
     const roleId = interaction.values[0];
 
     try {
       // Save to DB
+      const existing = await prisma.alliance.findFirst({
+        where: { id: allianceId, guildId: interaction.guildId }
+      });
+      if (!existing) throw new Error("Alliance not found or does not belong to this server.");
+
       await prisma.alliance.update({
         where: { id: allianceId },
         data: { officerRole: roleId },
@@ -129,34 +134,34 @@ export function registerSetupHandlers() {
 
       // Move to next step
       const embed = new EmbedBuilder()
-          .setTitle("Step 2: Battlegroup 1 Role")
-          .setDescription(
-              "Now, select the role for **Battlegroup 1**.\n" +
-              "If you don't use battlegroup roles, you can skip this step."
-          )
-          .setColor(COLORS.INFO);
+        .setTitle("Step 2: Battlegroup 1 Role")
+        .setDescription(
+          "Now, select the role for **Battlegroup 1**.\n" +
+          "If you don't use battlegroup roles, you can skip this step."
+        )
+        .setColor(COLORS.INFO);
 
       const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
-          new RoleSelectMenuBuilder()
-              .setCustomId(`setup:select_bg1_role:${allianceId}`)
-              .setPlaceholder("Select BG1 Role (Optional)")
-              .setMaxValues(1)
+        new RoleSelectMenuBuilder()
+          .setCustomId(`setup:select_bg1_role:${allianceId}`)
+          .setPlaceholder("Select BG1 Role (Optional)")
+          .setMaxValues(1)
       );
-      
+
       const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-              .setCustomId(`setup:skip_bg1:${allianceId}`)
-              .setLabel("Skip BG1")
-              .setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder()
+          .setCustomId(`setup:skip_bg1:${allianceId}`)
+          .setLabel("Skip BG1")
+          .setStyle(ButtonStyle.Secondary)
       );
 
       await interaction.update({
-          embeds: [embed],
-          components: [row1, row2],
+        embeds: [embed],
+        components: [row1, row2],
       });
     } catch (error) {
-        logger.error({ error, allianceId }, "Failed to process officer role selection");
-        await interaction.reply({ content: "Failed to save configuration. Please try /setup again.", flags: MessageFlags.Ephemeral });
+      logger.error({ error, allianceId }, "Failed to process officer role selection");
+      await interaction.reply({ content: "Failed to save configuration. Please try /setup again.", flags: MessageFlags.Ephemeral });
     }
   });
 
@@ -168,7 +173,7 @@ export function registerSetupHandlers() {
 
     try {
       const roleId = interaction.values[0];
-      await updateAllianceRole(allianceId, "battlegroup1Role", roleId);
+      await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup1Role", roleId);
       await promptBG2(interaction, allianceId);
     } catch (error) {
       logger.error({ error, allianceId }, "Failed to process BG1 selection");
@@ -181,7 +186,7 @@ export function registerSetupHandlers() {
     const allianceId = customIdParts[2];
 
     try {
-      await updateAllianceRole(allianceId, "battlegroup1Role", null);
+      await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup1Role", null);
       await promptBG2(interaction, allianceId);
     } catch (error) {
       logger.error({ error, allianceId }, "Failed to skip BG1");
@@ -192,21 +197,21 @@ export function registerSetupHandlers() {
   // --- Step 3: BG2 Role ---
   async function promptBG2(interaction: MessageComponentInteraction, allianceId: string) {
     const embed = new EmbedBuilder()
-        .setTitle("Step 3: Battlegroup 2 Role")
-        .setDescription("Select the role for **Battlegroup 2**.")
-        .setColor(COLORS.INFO);
-    
+      .setTitle("Step 3: Battlegroup 2 Role")
+      .setDescription("Select the role for **Battlegroup 2**.")
+      .setColor(COLORS.INFO);
+
     const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
-        new RoleSelectMenuBuilder()
-            .setCustomId(`setup:select_bg2_role:${allianceId}`)
-            .setPlaceholder("Select BG2 Role (Optional)")
-            .setMaxValues(1)
+      new RoleSelectMenuBuilder()
+        .setCustomId(`setup:select_bg2_role:${allianceId}`)
+        .setPlaceholder("Select BG2 Role (Optional)")
+        .setMaxValues(1)
     );
     const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId(`setup:skip_bg2:${allianceId}`)
-            .setLabel("Skip BG2")
-            .setStyle(ButtonStyle.Secondary)
+      new ButtonBuilder()
+        .setCustomId(`setup:skip_bg2:${allianceId}`)
+        .setLabel("Skip BG2")
+        .setStyle(ButtonStyle.Secondary)
     );
 
     await interaction.update({ embeds: [embed], components: [row1, row2] });
@@ -218,7 +223,7 @@ export function registerSetupHandlers() {
     const allianceId = customIdParts[2];
 
     try {
-      await updateAllianceRole(allianceId, "battlegroup2Role", interaction.values[0]);
+      await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup2Role", interaction.values[0]);
       await promptBG3(interaction, allianceId);
     } catch (error) {
       logger.error({ error, allianceId }, "Failed to process BG2 selection");
@@ -231,7 +236,7 @@ export function registerSetupHandlers() {
     const allianceId = customIdParts[2];
 
     try {
-      await updateAllianceRole(allianceId, "battlegroup2Role", null);
+      await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup2Role", null);
       await promptBG3(interaction, allianceId);
     } catch (error) {
       logger.error({ error, allianceId }, "Failed to skip BG2");
@@ -239,24 +244,24 @@ export function registerSetupHandlers() {
     }
   });
 
-   // --- Step 4: BG3 Role ---
-   async function promptBG3(interaction: MessageComponentInteraction, allianceId: string) {
+  // --- Step 4: BG3 Role ---
+  async function promptBG3(interaction: MessageComponentInteraction, allianceId: string) {
     const embed = new EmbedBuilder()
-        .setTitle("Step 4: Battlegroup 3 Role")
-        .setDescription("Select the role for **Battlegroup 3**.")
-        .setColor(COLORS.INFO);
-    
+      .setTitle("Step 4: Battlegroup 3 Role")
+      .setDescription("Select the role for **Battlegroup 3**.")
+      .setColor(COLORS.INFO);
+
     const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
-        new RoleSelectMenuBuilder()
-            .setCustomId(`setup:select_bg3_role:${allianceId}`)
-            .setPlaceholder("Select BG3 Role (Optional)")
-            .setMaxValues(1)
+      new RoleSelectMenuBuilder()
+        .setCustomId(`setup:select_bg3_role:${allianceId}`)
+        .setPlaceholder("Select BG3 Role (Optional)")
+        .setMaxValues(1)
     );
     const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-            .setCustomId(`setup:skip_bg3:${allianceId}`)
-            .setLabel("Skip BG3")
-            .setStyle(ButtonStyle.Secondary)
+      new ButtonBuilder()
+        .setCustomId(`setup:skip_bg3:${allianceId}`)
+        .setLabel("Skip BG3")
+        .setStyle(ButtonStyle.Secondary)
     );
 
     await interaction.update({ embeds: [embed], components: [row1, row2] });
@@ -268,7 +273,7 @@ export function registerSetupHandlers() {
     const allianceId = customIdParts[2];
 
     try {
-      await updateAllianceRole(allianceId, "battlegroup3Role", interaction.values[0]);
+      await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup3Role", interaction.values[0]);
       await promptSync(interaction, allianceId);
     } catch (error) {
       logger.error({ error, allianceId }, "Failed to process BG3 selection");
@@ -281,7 +286,7 @@ export function registerSetupHandlers() {
     const allianceId = customIdParts[2];
 
     try {
-      await updateAllianceRole(allianceId, "battlegroup3Role", null);
+      await updateAllianceRole(allianceId, interaction.guildId!, "battlegroup3Role", null);
       await promptSync(interaction, allianceId);
     } catch (error) {
       logger.error({ error, allianceId }, "Failed to skip BG3");
@@ -292,73 +297,77 @@ export function registerSetupHandlers() {
 
   // --- Step 5: Sync Confirmation ---
   async function promptSync(interaction: MessageComponentInteraction, allianceId: string) {
-      const embed = new EmbedBuilder()
-          .setTitle("✅ Configuration Complete")
-          .setDescription(
-              "All roles have been configured!\n\n" +
-              "**Final Step:** We need to sync these settings with your current member list. " +
-              "This will update the internal permissions for all users who have already registered.\n\n" +
-              "Click **Sync Roles** to finish."
-          )
-          .setColor(COLORS.SUCCESS);
+    const embed = new EmbedBuilder()
+      .setTitle("✅ Configuration Complete")
+      .setDescription(
+        "All roles have been configured!\n\n" +
+        "**Final Step:** We need to sync these settings with your current member list. " +
+        "This will update the internal permissions for all users who have already registered.\n\n" +
+        "Click **Sync Roles** to finish."
+      )
+      .setColor(COLORS.SUCCESS);
 
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-              .setCustomId(`setup:trigger_sync:${allianceId}`)
-              .setLabel("Sync Roles & Finish")
-              .setStyle(ButtonStyle.Success)
-              .setEmoji("🔄")
-      );
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`setup:trigger_sync:${allianceId}`)
+        .setLabel("Sync Roles & Finish")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji("🔄")
+    );
 
-      await interaction.update({ embeds: [embed], components: [row] });
+    await interaction.update({ embeds: [embed], components: [row] });
   }
 
   registerButtonHandler("setup:trigger_sync", async (interaction) => {
-      if (!interaction.guild) {
-          await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
-          return;
-      }
-      const customIdParts = interaction.customId.split(":");
-      const allianceId = customIdParts[2];
+    if (!interaction.guild) {
+      await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
+      return;
+    }
+    const customIdParts = interaction.customId.split(":");
+    const allianceId = customIdParts[2];
 
-      await interaction.deferUpdate();
-      try {
-          // Note: syncRolesForGuild might need update to handle multiple alliances, 
-          // but for now it syncs all alliances in the guild by their roles.
-          const result = await syncRolesForGuild(interaction.guild);
-          
-          const embed = new EmbedBuilder()
-            .setTitle("🎉 Setup Complete!")
-            .setDescription(
-                `Successfully synced roles for your alliance!\n\n` +
-                `✅ **${result.created}** new profiles created.\n` +
-                `🔄 **${result.updated}** existing profiles updated.\n\n` +
-                "**What's Next?**\n" +
-                "• All members with roles have been auto-registered.\n" +
-                "• Use `/alliance view` to see your roster overview.\n" +
-                "• Explore commands with `/help`."
-            )
-            .setColor(COLORS.SUCCESS)
-            .setThumbnail("https://cerebro-bot.com/CereBro_logo_512.png");
-            
-          await interaction.editReply({ embeds: [embed], components: [] });
+    await interaction.deferUpdate();
+    try {
+      // We now pass the specific allianceId to the sync-roles logic
+      const result = await syncRolesForGuild(interaction.guild, allianceId);
 
-      } catch (error) {
-          logger.error({ error }, "Error during setup sync");
-          await interaction.followUp({ content: "An error occurred during sync. Please try `/alliance sync-roles` manually.", flags: MessageFlags.Ephemeral });
-      }
+      const embed = new EmbedBuilder()
+        .setTitle("🎉 Setup Complete!")
+        .setDescription(
+          `Successfully synced roles for your alliance!\n\n` +
+          `✅ **${result.created}** new profiles created.\n` +
+          `🔄 **${result.updated}** existing profiles updated.\n\n` +
+          "**What's Next?**\n" +
+          "• All members with roles have been auto-registered.\n" +
+          "• Use `/alliance view` to see your roster overview.\n" +
+          "• Explore commands with `/help`."
+        )
+        .setColor(COLORS.SUCCESS)
+        .setThumbnail("https://cerebro-bot.com/CereBro_logo_512.png");
+
+      await interaction.editReply({ embeds: [embed], components: [] });
+
+    } catch (error) {
+      logger.error({ error }, "Error during setup sync");
+      await interaction.followUp({ content: "An error occurred during sync. Please try `/alliance sync-roles` manually.", flags: MessageFlags.Ephemeral });
+    }
   });
 
 }
 
-async function updateAllianceRole(allianceId: string, field: AllianceRoleField, roleId: string | null) {
-    try {
-        await prisma.alliance.update({
-            where: { id: allianceId },
-            data: { [field]: roleId }
-        });
-    } catch (error) {
-        logger.error({ error, allianceId, field }, "Failed to update alliance role");
-        throw new Error("Failed to update alliance configuration. Please try /setup again.");
-    }
+async function updateAllianceRole(allianceId: string, guildId: string, field: AllianceRoleField, roleId: string | null) {
+  try {
+    const existing = await prisma.alliance.findFirst({
+      where: { id: allianceId, guildId }
+    });
+    if (!existing) throw new Error("Alliance not found or does not belong to this server.");
+
+    await prisma.alliance.update({
+      where: { id: allianceId },
+      data: { [field]: roleId }
+    });
+  } catch (error) {
+    logger.error({ error, allianceId, guildId, field }, "Failed to update alliance role");
+    throw new Error("Failed to update alliance configuration. Please try /setup again.");
+  }
 }

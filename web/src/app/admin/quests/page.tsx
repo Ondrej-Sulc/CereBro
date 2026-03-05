@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import AdminQuestManagerClient from "@/components/admin/quests/admin-quest-manager-client";
+import AdminQuestManagerClient, { QuestWithRelations } from "@/components/admin/quests/admin-quest-manager-client";
 
 export default async function AdminQuestsPage() {
     const session = await auth();
@@ -79,6 +79,6 @@ export default async function AdminQuestsPage() {
                     <p className="text-slate-400">Create and manage standardized quest counters and guides for the alliance.</p>
                 </div>
     
-                <AdminQuestManagerClient initialQuests={enrichedQuests as any} categories={categories} />
+                <AdminQuestManagerClient initialQuests={enrichedQuests as QuestWithRelations[]} categories={categories} />
             </div>
         );}

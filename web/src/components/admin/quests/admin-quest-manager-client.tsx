@@ -11,17 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning, Tag as TagIcon, Trophy, Youtube } from "lucide-react";
+import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning, Tag as TagIcon, Trophy, Youtube, Loader2 } from "lucide-react";
 import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan } from "@/app/actions/quests";
 import { cn } from "@/lib/utils";
 
-type CreatorInfo = {
+export type CreatorInfo = {
     id: string;
     name: string;
     image: string | null;
 };
 
-type QuestWithRelations = QuestPlan & {
+export type QuestWithRelations = QuestPlan & {
     category: QuestCategory | null;
     creator: Player | null;
     creators: CreatorInfo[];
@@ -48,8 +48,11 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
     // Search state
     const [searchQuery, setSearchQuery] = useState("");
 
+    const [isCreating, setIsCreating] = useState(false);
+
     const handleAdd = async () => {
-        if (!title) return;
+        if (!title || isCreating) return;
+        setIsCreating(true);
         try {
             const res = await createQuestPlan({
                 title,
@@ -62,6 +65,8 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
             console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to create quest";
             toast({ title: "Error", description: msg, variant: "destructive" });
+        } finally {
+            setIsCreating(false);
         }
     };
 
@@ -171,9 +176,9 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                         <Button
                             onClick={handleAdd}
                             className="w-full bg-sky-600 hover:bg-sky-500 text-white mt-2 transition-all shadow-md shadow-sky-900/20"
-                            disabled={!title}
+                            disabled={!title || isCreating}
                         >
-                            <Plus className="mr-2 h-4 w-4" /> Create & Build
+                            {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} {isCreating ? "Creating..." : "Create & Build"}
                         </Button>
                     </CardContent>
                 </Card>
@@ -251,16 +256,16 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                             <Card key={quest.id} className="bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all flex flex-col group overflow-hidden relative">
                                 <div className="relative aspect-[21/9] w-full overflow-hidden bg-slate-900 border-b border-slate-800">
                                     {quest.bannerUrl ? (
-                                        <Image 
-                                            src={quest.bannerUrl.replace(/#/g, '%23')} 
-                                            alt={quest.title} 
-                                            fill 
+                                        <Image
+                                            src={quest.bannerUrl.replace(/#/g, '%23')}
+                                            alt={quest.title}
+                                            fill
                                             sizes="(max-width: 768px) 100vw, 25vw"
                                             className={cn(
                                                 "transition-transform duration-500 group-hover:scale-105 opacity-60 group-hover:opacity-100",
                                                 quest.bannerFit === "contain" ? "object-contain" : "object-cover",
                                                 quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
-                                            )} 
+                                            )}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950 opacity-40">
@@ -270,7 +275,7 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                     <div className="absolute top-3 right-3 flex gap-2">
                                         {getStatusBadge(quest.status)}
                                     </div>
-                                    
+
                                     <div className="absolute bottom-2.5 right-4 flex gap-3 z-10">
                                         <div className="flex items-center gap-1.5 text-white drop-shadow-lg">
                                             <Swords className="w-3.5 h-3.5 text-red-500" />
@@ -282,7 +287,7 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <CardContent className="p-5 flex flex-col flex-1 gap-4">
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between gap-2">
@@ -296,7 +301,7 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                         <CardTitle className="text-lg font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-none">
                                             {quest.title}
                                         </CardTitle>
-                                        
+
                                         {/* Creators Bar */}
                                         {quest.creators && quest.creators.length > 0 ? (
                                             <div className="flex items-center gap-2 mt-2.5">
@@ -343,7 +348,7 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                                 <div className="flex gap-0.5">
                                                     {quest.requiredClasses.slice(0, 3).map(cls => (
                                                         <div key={cls} className="relative w-2.5 h-2.5">
-                                                            <Image src={`/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                                            <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
                                                         </div>
                                                     ))}
                                                 </div>
@@ -370,28 +375,28 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                         </div>
                                     )}
                                 </CardContent>
-                                
+
                                 <CardFooter className="p-4 bg-slate-900/40 border-t border-slate-800/50 flex gap-2">
-                                    <Button 
-                                        variant="secondary" 
-                                        className="flex-1 bg-slate-800 hover:bg-slate-700 h-9 font-bold text-xs uppercase tracking-widest" 
+                                    <Button
+                                        variant="secondary"
+                                        className="flex-1 bg-slate-800 hover:bg-slate-700 h-9 font-bold text-xs uppercase tracking-widest"
                                         onClick={() => router.push(`/admin/quests/${quest.id}`)}
                                     >
                                         <Edit className="h-4 w-4 mr-2 text-sky-400" /> Edit
                                     </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        onClick={() => handleDuplicate(quest.id)} 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDuplicate(quest.id)}
                                         className="text-slate-400 hover:text-indigo-400 hover:bg-indigo-950/30 shrink-0 h-9 w-9"
                                         title="Duplicate Quest"
                                     >
                                         <Copy className="h-4 w-4" />
                                     </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        onClick={() => handleDelete(quest.id)} 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDelete(quest.id)}
                                         className="text-slate-400 hover:text-red-400 hover:bg-red-950/30 shrink-0 h-9 w-9"
                                         title="Delete Quest"
                                     >

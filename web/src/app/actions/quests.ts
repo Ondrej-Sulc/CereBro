@@ -340,6 +340,27 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
+    // Validate that the encounter belongs to the plan
+    const encounter = await prisma.questEncounter.findUnique({
+        where: { id: questEncounterId },
+        select: { questPlanId: true }
+    });
+
+    if (!encounter || encounter.questPlanId !== questPlanId) {
+        throw new Error("Invalid quest encounter or plan mismatch.");
+    }
+
+    // Validate champion ownership if provided
+    if (selectedChampionId !== null) {
+        const hasChampion = await prisma.roster.findFirst({
+            where: {
+                playerId: actingUser.id,
+                championId: selectedChampionId
+            }
+        });
+        if (!hasChampion) throw new Error("Champion not found in your roster.");
+    }
+
     // Ensure the PlayerQuestPlan exists first
     const playerPlan = await prisma.playerQuestPlan.upsert({
         where: {
@@ -457,6 +478,11 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
         }
     }
 
+    const existingEncounter = await prisma.questEncounter.findUnique({ where: { id: data.id } });
+    if (!existingEncounter || existingEncounter.questPlanId !== data.questPlanId) {
+        throw new Error("Encounter not found or does not belong to this quest plan.");
+    }
+
     const encounter = await prisma.questEncounter.update({
         where: { id: data.id },
         data: {
@@ -490,6 +516,11 @@ export async function deleteQuestEncounter(questPlanId: string, encounterId: str
     if (!actingUser) throw new Error("Unauthorized");
     const botUser = actingUser.botUserId ? await prisma.botUser.findUnique({ where: { id: actingUser.botUserId } }) : null;
     if (!botUser || !botUser.isBotAdmin) throw new Error("Unauthorized");
+
+    const existingEncounter = await prisma.questEncounter.findUnique({ where: { id: encounterId } });
+    if (!existingEncounter || existingEncounter.questPlanId !== questPlanId) {
+        throw new Error("Encounter not found or does not belong to this quest plan.");
+    }
 
     await prisma.questEncounter.delete({
         where: { id: encounterId }

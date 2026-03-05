@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   // Parse filters and options
   const targetRank = parseInt(searchParams.get("targetRank") || "0");
   const sigBudget = parseInt(searchParams.get("sigBudget") || "0");
-  const limit = parseInt(searchParams.get("limit") || "5");
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "5", 10) || 5, 1), 100);
 
   const validClasses = Object.values(ChampionClass);
   const rankClassFilterRaw = searchParams.get("rankClassFilter") ? searchParams.get("rankClassFilter")!.split(',') : [];

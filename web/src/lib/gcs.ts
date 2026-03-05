@@ -57,6 +57,15 @@ export async function uploadToGcs(
     return `https://storage.googleapis.com/${bucketName}/${destinationPath}`;
 }
 
+function isNotFoundError(err: unknown): boolean {
+    return (
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        ((err as any).code === 404 || (err as any).code === '404')
+    );
+}
+
 /**
  * Deletes a file from GCS.
  */
@@ -65,9 +74,9 @@ export async function deleteFromGcs(path: string): Promise<void> {
     const file = s.bucket(bucketName).file(path);
     try {
         await file.delete();
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Ignore if file doesn't exist (404)
-        if (error.code === 404 || error.code === '404') {
+        if (isNotFoundError(error)) {
             return;
         }
         console.error(`Failed to delete ${path} from GCS`, error);

@@ -139,14 +139,6 @@ export function RosterView({
   // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
 
-  // Sync Props to State (Handle Navigation)
-  useEffect(() => { setSigBudget(initialSigBudget); }, [initialSigBudget]);
-  useEffect(() => { setRankUpClassFilter(initialRankClassFilter); }, [initialRankClassFilter]);
-  useEffect(() => { setSigClassFilter(initialSigClassFilter); }, [initialSigClassFilter]);
-  useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
-  useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
-  useEffect(() => { setLimit(initialLimit); }, [initialLimit]);
-
   // Sync Recommendations Data Props (e.g. after router.refresh)
   useEffect(() => {
     const currentParams = buildRosterQueryParams({

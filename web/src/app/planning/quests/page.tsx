@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import QuestListClient from "@/components/planning/quest-list-client";
+import { QuestWithRelations } from "@/components/planning/quest-list-client";
 import { QuestPlanStatus } from "@prisma/client";
 
 export default async function QuestsPage() {
@@ -66,7 +67,7 @@ export default async function QuestsPage() {
                 <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">Quest Planner</h1>
                 <p className="text-lg text-slate-400 mt-2">Plan your path, pick your counters, and conquer content.</p>
             </div>
-            <QuestListClient initialQuests={quests as any} categories={categories} />
+            <QuestListClient initialQuests={quests as QuestWithRelations[]} categories={categories} />
         </div>
     );
 }

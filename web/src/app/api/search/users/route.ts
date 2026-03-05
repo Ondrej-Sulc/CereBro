@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import logger from "@cerebro/core/services/loggerService";
+import { auth } from "@/auth";
 
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const searchParams = req.nextUrl.searchParams;
   const q = searchParams.get("q");
 
@@ -37,21 +43,28 @@ export async function GET(req: NextRequest) {
     });
 
     // Map to BotUser structure (we need the BotUser ID or Discord ID)
-    const botUsers = [];
-    for (const u of users) {
-        if (u.accounts.length > 0 && u.name) {
-            const botUser = await prisma.botUser.findUnique({
-                where: { discordId: u.accounts[0].providerAccountId }
-            });
-            if (botUser) {
-                botUsers.push({
-                    id: botUser.id,
-                    name: u.name,
-                    image: u.image
-                });
-            }
-        }
-    }
+    const discordIds = users
+        .map(u => u.accounts[0]?.providerAccountId)
+        .filter((id): id is string => !!id);
+
+    const botUsersFromDb = await prisma.botUser.findMany({
+        where: { discordId: { in: discordIds } }
+    });
+
+    const botUserMap = new Map(botUsersFromDb.map(bu => [bu.discordId, bu]));
+
+    const botUsers = users
+        .map(u => {
+            const discordId = u.accounts[0]?.providerAccountId;
+            const botUser = discordId ? botUserMap.get(discordId) : null;
+            if (!botUser || !u.name) return null;
+            return {
+                id: botUser.id,
+                name: u.name,
+                image: u.image
+            };
+        })
+        .filter((bu): bu is { id: string, name: string, image: string | null } => !!bu);
 
     return NextResponse.json({ users: botUsers });
   } catch (error) {

@@ -21,19 +21,26 @@ export function LeaveButton({ guildId, guildName }: { guildId: string, guildName
     const [loading, setLoading] = useState(false);
 
     async function handleLeave() {
+        if (loading) return;
         setLoading(true);
         try {
             const result = await leaveDiscordGuild(guildId);
-            if (result.success) {
+            if (result && result.success) {
                 toast({
                     title: "Success",
                     description: `Queued leave for ${guildName}`,
                 });
+            } else {
+                toast({
+                    title: "Error",
+                    description: (result as any)?.error || "Failed to leave server.",
+                    variant: "destructive",
+                });
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             toast({
                 title: "Error",
-                description: e.message,
+                description: e instanceof Error ? e.message : String(e),
                 variant: "destructive",
             });
         } finally {
@@ -44,7 +51,7 @@ export function LeaveButton({ guildId, guildName }: { guildId: string, guildName
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                <Button variant="ghost" size="icon" disabled={loading} className="text-destructive hover:text-destructive hover:bg-destructive/10">
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                 </Button>
             </AlertDialogTrigger>
@@ -58,7 +65,7 @@ export function LeaveButton({ guildId, guildName }: { guildId: string, guildName
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleLeave} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <AlertDialogAction onClick={handleLeave} disabled={loading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                         Leave Server
                     </AlertDialogAction>
                 </AlertDialogFooter>
@@ -71,20 +78,26 @@ export function CleanupButton({ smallGuildCount }: { smallGuildCount: number }) 
     const [loading, setLoading] = useState(false);
 
     async function handleCleanup() {
-        if (smallGuildCount === 0) return;
+        if (smallGuildCount === 0 || loading) return;
         setLoading(true);
         try {
             const result = await cleanupSmallGuilds();
-            if (result.success) {
+            if (result && result.success) {
                 toast({
                     title: "Success",
                     description: `Queued leave for ${result.count} small servers.`,
                 });
+            } else {
+                toast({
+                    title: "Error",
+                    description: (result as any)?.error || "Failed to cleanup servers.",
+                    variant: "destructive",
+                });
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             toast({
                 title: "Error",
-                description: e.message,
+                description: e instanceof Error ? e.message : String(e),
                 variant: "destructive",
             });
         } finally {
@@ -110,7 +123,7 @@ export function CleanupButton({ smallGuildCount }: { smallGuildCount: number }) 
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleCleanup} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <AlertDialogAction onClick={handleCleanup} disabled={loading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                         Confirm Cleanup
                     </AlertDialogAction>
                 </AlertDialogFooter>

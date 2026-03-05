@@ -50,7 +50,7 @@ export const command: Command = {
         .setCustomId("setup:select_alliance")
         .setPlaceholder("Choose an alliance...")
         .addOptions(
-          alliances.map((a) =>
+          alliances.slice(0, 25).map((a) =>
             new StringSelectMenuOptionBuilder()
               .setLabel(a.name)
               .setValue(a.id)

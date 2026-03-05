@@ -12,8 +12,8 @@ import { getChampionImageUrl } from "@/lib/championHelper";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { usePlayerColor } from "./player-color-context"; 
-import { getChampionClassColors } from "@/lib/championClassHelper"; 
+import { usePlayerColor } from "./player-color-context";
+import { getChampionClassColors } from "@/lib/championClassHelper";
 import { Champion, ChampionImages } from "@/types/champion";
 
 interface PlanningToolsPanelProps {
@@ -34,24 +34,24 @@ type RosterWithChampion = Roster & { champion: ChampionWithTags };
 type RosterWithPlayer = Roster & { player: Player };
 
 const CLASS_ICONS: Record<ChampionClass, string> = {
-    SCIENCE: "/icons/Science.png",
-    SKILL: "/icons/Skill.png",
-    MYSTIC: "/icons/Mystic.png",
-    COSMIC: "/icons/Cosmic.png",
-    TECH: "/icons/Tech.png",
-    MUTANT: "/icons/Mutant.png",
-    SUPERIOR: "/icons/Superior.png" // Fallback if needed, though likely not in filter list
+  SCIENCE: "/assets/icons/Science.png",
+  SKILL: "/assets/icons/Skill.png",
+  MYSTIC: "/assets/icons/Mystic.png",
+  COSMIC: "/assets/icons/Cosmic.png",
+  TECH: "/assets/icons/Tech.png",
+  MUTANT: "/assets/icons/Mutant.png",
+  SUPERIOR: "/assets/icons/Superior.png" // Fallback if needed, though likely not in filter list
 };
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
 export default function PlanningToolsPanel({
-  players, 
-  champions, 
-  allianceId, 
-  onClose, 
-  currentBattlegroup, 
-  onAddExtra, 
+  players,
+  champions,
+  allianceId,
+  onClose,
+  currentBattlegroup,
+  onAddExtra,
   initialPlayerId,
   assignedChampions,
   activeTag,
@@ -76,11 +76,11 @@ export default function PlanningToolsPanel({
 
   const selectedPlayer = players.find(p => p.id === selectedPlayerId);
 
-  const filteredPlayers = currentBattlegroup 
+  const filteredPlayers = currentBattlegroup
     ? players.filter(p => p.battlegroup === currentBattlegroup)
     : players;
 
-  const filteredRoster = rosterResults.filter(item => 
+  const filteredRoster = rosterResults.filter(item =>
     !selectedClass || item.champion.class === selectedClass
   );
 
@@ -104,9 +104,9 @@ export default function PlanningToolsPanel({
 
   // Effect to update when prop changes
   useEffect(() => {
-      if (initialPlayerId) {
-          handlePlayerSelect(initialPlayerId);
-      }
+    if (initialPlayerId) {
+      handlePlayerSelect(initialPlayerId);
+    }
   }, [initialPlayerId, handlePlayerSelect]);
 
   const handleChampionSelect = async (championId: string) => {
@@ -115,11 +115,11 @@ export default function PlanningToolsPanel({
       setOwnerResults([]);
       return;
     }
-    
+
     const parsedChampionId = Number.parseInt(championId, 10);
     if (!Number.isFinite(parsedChampionId)) {
-        setOwnerResults([]);
-        return;
+      setOwnerResults([]);
+      return;
     }
 
     setIsLoading(true);
@@ -134,9 +134,9 @@ export default function PlanningToolsPanel({
   };
 
   const handleAddChampion = (item: RosterWithChampion) => {
-      if (onAddExtra && selectedPlayerId) {
-          onAddExtra(selectedPlayerId, item.champion.id, item.stars);
-      }
+    if (onAddExtra && selectedPlayerId) {
+      onAddExtra(selectedPlayerId, item.champion.id, item.stars);
+    }
   };
 
   const handleAddOwner = (item: RosterWithPlayer) => {
@@ -144,9 +144,9 @@ export default function PlanningToolsPanel({
     if (!Number.isFinite(parsedId)) return;
 
     const champion = champions.find(c => c.id === parsedId);
-    
+
     if (onAddExtra && champion) {
-        onAddExtra(item.player.id, champion.id, item.stars);
+      onAddExtra(item.player.id, champion.id, item.stars);
     }
   };
 
@@ -171,7 +171,7 @@ export default function PlanningToolsPanel({
             <TabsTrigger value="roster">Player Roster</TabsTrigger>
             <TabsTrigger value="owners">Find Champion</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="roster" className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Player</label>
@@ -179,28 +179,28 @@ export default function PlanningToolsPanel({
                 <SelectTrigger className="rounded-full">
                   {selectedPlayer ? (
                     <div className="flex items-center gap-2">
-                        {selectedPlayer.avatar ? (
-                          <div 
-                            className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-800 border ml-[-10px]"
-                            style={{ borderColor: getPlayerColor(selectedPlayer.id) }}
-                          >
-                            <Image 
-                              src={selectedPlayer.avatar} 
-                              alt={selectedPlayer.ingameName} 
-                              fill 
-                              sizes="32px"
-                              className="object-cover" 
-                            />
-                          </div>
-                        ) : (
-                           <div 
-                             className="relative w-8 h-8 rounded-full flex items-center justify-center border"
-                             style={{ borderColor: getPlayerColor(selectedPlayer.id) }}
-                           >
-                             <Users className="w-5 h-5 text-slate-400" />
-                           </div>
-                        )}
-                        <span className="truncate font-bold">{selectedPlayer.ingameName}</span>
+                      {selectedPlayer.avatar ? (
+                        <div
+                          className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-800 border ml-[-10px]"
+                          style={{ borderColor: getPlayerColor(selectedPlayer.id) }}
+                        >
+                          <Image
+                            src={selectedPlayer.avatar}
+                            alt={selectedPlayer.ingameName}
+                            fill
+                            sizes="32px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="relative w-8 h-8 rounded-full flex items-center justify-center border"
+                          style={{ borderColor: getPlayerColor(selectedPlayer.id) }}
+                        >
+                          <Users className="w-5 h-5 text-slate-400" />
+                        </div>
+                      )}
+                      <span className="truncate font-bold">{selectedPlayer.ingameName}</span>
                     </div>
                   ) : (
                     <SelectValue placeholder="Choose a player..." />
@@ -211,25 +211,25 @@ export default function PlanningToolsPanel({
                     <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center gap-2">
                         {p.avatar ? (
-                          <div 
+                          <div
                             className="relative w-6 h-6 rounded-full overflow-hidden bg-slate-800 border"
                             style={{ borderColor: getPlayerColor(p.id) }}
                           >
-                            <Image 
-                              src={p.avatar} 
-                              alt={p.ingameName} 
-                              fill 
+                            <Image
+                              src={p.avatar}
+                              alt={p.ingameName}
+                              fill
                               sizes="32px"
-                              className="object-cover" 
+                              className="object-cover"
                             />
                           </div>
                         ) : (
-                           <div 
-                             className="relative w-6 h-6 rounded-full flex items-center justify-center border"
-                             style={{ borderColor: getPlayerColor(p.id) }}
-                           >
-                             <Users className="w-4 h-4 text-slate-400" />
-                           </div>
+                          <div
+                            className="relative w-6 h-6 rounded-full flex items-center justify-center border"
+                            style={{ borderColor: getPlayerColor(p.id) }}
+                          >
+                            <Users className="w-4 h-4 text-slate-400" />
+                          </div>
                         )}
                         <span className="truncate">{p.ingameName}</span>
                       </div>
@@ -241,51 +241,51 @@ export default function PlanningToolsPanel({
 
             {/* Class Filter Bar */}
             {rosterResults.length > 0 && (
-                <div className="flex items-center gap-1.5 justify-between bg-slate-900/50 p-1.5 rounded-lg border border-slate-800">
+              <div className="flex items-center gap-1.5 justify-between bg-slate-900/50 p-1.5 rounded-lg border border-slate-800">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-7 w-7 rounded-full transition-all",
+                    !selectedClass ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
+                  )}
+                  onClick={() => setSelectedClass(null)}
+                  title="All Classes"
+                >
+                  <CircleOff className="h-4 w-4" />
+                </Button>
+                <div className="h-4 w-px bg-slate-800" />
+                {CLASSES.map(c => {
+                  const colors = getChampionClassColors(c);
+                  const isSelected = selectedClass === c;
+
+                  return (
                     <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                            "h-7 w-7 rounded-full transition-all",
-                            !selectedClass ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
-                        )}
-                        onClick={() => setSelectedClass(null)}
-                        title="All Classes"
+                      key={c}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "h-7 w-7 p-1 rounded-full transition-all border",
+                        isSelected
+                          ? cn(colors.bg, colors.border)
+                          : "bg-transparent border-transparent hover:bg-slate-800"
+                      )}
+                      onClick={() => setSelectedClass(isSelected ? null : c)}
+                      title={c}
                     >
-                        <CircleOff className="h-4 w-4" />
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={CLASS_ICONS[c]}
+                          alt={c}
+                          fill
+                          sizes="20px"
+                          className="object-contain"
+                        />
+                      </div>
                     </Button>
-                    <div className="h-4 w-px bg-slate-800" />
-                    {CLASSES.map(c => {
-                        const colors = getChampionClassColors(c);
-                        const isSelected = selectedClass === c;
-                        
-                        return (
-                            <Button
-                                key={c}
-                                variant="ghost"
-                                size="sm"
-                                className={cn(
-                                    "h-7 w-7 p-1 rounded-full transition-all border",
-                                    isSelected 
-                                        ? cn(colors.bg, colors.border) 
-                                        : "bg-transparent border-transparent hover:bg-slate-800"
-                                )}
-                                onClick={() => setSelectedClass(isSelected ? null : c)}
-                                title={c}
-                            >
-                                <div className="relative w-full h-full">
-                                    <Image 
-                                        src={CLASS_ICONS[c]} 
-                                        alt={c} 
-                                        fill 
-                                        sizes="20px"
-                                        className="object-contain"
-                                    />
-                                </div>
-                            </Button>
-                        );
-                    })}
-                </div>
+                  );
+                })}
+              </div>
             )}
 
             <div className="space-y-2 mt-2">
@@ -296,50 +296,50 @@ export default function PlanningToolsPanel({
                   {filteredRoster.map((item) => {
                     const classColors = getChampionClassColors(item.champion.class);
                     const isAssigned = assignedSet.has(`${selectedPlayerId}:${item.champion.id}`);
-                    const isTacticChampion = 
-                      activeTag && 
+                    const isTacticChampion =
+                      activeTag &&
                       item.champion.tags?.some(t => t.name === activeTag.name);
                     return (
-                    <div 
-                        key={item.id} 
+                      <div
+                        key={item.id}
                         className={cn(
-                            "flex items-center gap-3 p-2 rounded-md border bg-slate-900/50 transition-colors",
-                            (onAddExtra && !isReadOnly) && "cursor-pointer hover:bg-slate-800 hover:border-slate-700",
-                            isAssigned && "border-transparent", // Border is handled by gradient now
-                            isTacticChampion && "border-teal-500"
+                          "flex items-center gap-3 p-2 rounded-md border bg-slate-900/50 transition-colors",
+                          (onAddExtra && !isReadOnly) && "cursor-pointer hover:bg-slate-800 hover:border-slate-700",
+                          isAssigned && "border-transparent", // Border is handled by gradient now
+                          isTacticChampion && "border-teal-500"
                         )}
                         style={{
                           backgroundImage: isAssigned ? `linear-gradient(to right, ${classColors.color}20, transparent)` : undefined,
                           borderWidth: isTacticChampion ? '1px' : undefined, // Explicit 1px border for tactic champion
                         }}
                         onClick={(onAddExtra && !isReadOnly) ? () => handleAddChampion(item) : undefined}
-                    >
-                      <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
-                        <Image
-                          src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64')}
-                          alt={item.champion.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1.5">
+                      >
+                        <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
+                          <Image
+                            src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64')}
+                            alt={item.champion.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5">
                             <p className={cn("font-bold text-sm", classColors.text)}>{item.champion.name}</p>
                             {isTacticChampion && <Shield className="h-3 w-3 text-teal-400 flex-shrink-0" />}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className={cn("flex items-center font-bold", item.isAwakened ? "text-slate-300" : "text-yellow-500")}>
+                              {item.stars}<Star className="h-3 w-3 fill-current ml-0.5" />
+                            </span>
+                            <span>R{item.rank}</span>
+                            {item.isAscended && <span className="text-pink-400 font-bold">Ascended</span>}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className={cn("flex items-center font-bold", item.isAwakened ? "text-slate-300" : "text-yellow-500")}>
-                            {item.stars}<Star className="h-3 w-3 fill-current ml-0.5" />
-                          </span>
-                          <span>R{item.rank}</span>
-                          {item.isAscended && <span className="text-pink-400 font-bold">Ascended</span>}
-                        </div>
+                        {isAssigned && (
+                          <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        )}
                       </div>
-                      {isAssigned && (
-                        <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      )}
-                    </div>
-                  );
+                    );
                   })}
                 </div>
               ) : (
@@ -349,7 +349,7 @@ export default function PlanningToolsPanel({
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="owners" className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Select Champion</label>
@@ -367,14 +367,14 @@ export default function PlanningToolsPanel({
               ) : ownerResults.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
                   {ownerResults.map((item) => (
-                    <div 
-                        key={item.id} 
-                        className={cn(
-                          "flex items-center justify-between p-2 rounded-md border border-slate-800/50 bg-slate-900/50 border-l-[2px] transition-colors",
-                          (onAddExtra && !isReadOnly) && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
-                        )}
-                        style={{ borderLeftColor: getPlayerColor(item.player.id) }}
-                        onClick={(onAddExtra && !isReadOnly) ? () => handleAddOwner(item) : undefined}
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "flex items-center justify-between p-2 rounded-md border border-slate-800/50 bg-slate-900/50 border-l-[2px] transition-colors",
+                        (onAddExtra && !isReadOnly) && "cursor-pointer hover:bg-slate-800 hover:border-slate-700"
+                      )}
+                      style={{ borderLeftColor: getPlayerColor(item.player.id) }}
+                      onClick={(onAddExtra && !isReadOnly) ? () => handleAddOwner(item) : undefined}
                     >
                       <div className="flex items-center gap-3">
                         {item.player.avatar ? (
@@ -387,10 +387,10 @@ export default function PlanningToolsPanel({
                             style={{ borderColor: getPlayerColor(item.player.id) }}
                           />
                         ) : (
-                          <div 
-                             className="relative h-6 w-6 rounded-full flex items-center justify-center border"
-                             style={{ borderColor: getPlayerColor(item.player.id) }}
-                           >
+                          <div
+                            className="relative h-6 w-6 rounded-full flex items-center justify-center border"
+                            style={{ borderColor: getPlayerColor(item.player.id) }}
+                          >
                             <Users className="h-5 w-5 text-slate-400" />
                           </div>
                         )}

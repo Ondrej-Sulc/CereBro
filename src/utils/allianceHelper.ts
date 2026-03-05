@@ -40,9 +40,6 @@ export async function getAlliance(
   }
 
   // 3. Multi-alliance server and user not linked to any of them
-  // For now, we return the first one but in the future we should probably prompt
-  // or return null and let the command handle the selection.
-  // Actually, for most "USER" commands, returning the first one is risky.
-  // But for "ALLIANCE_ADMIN" commands, the admin might need to specify.
-  return alliances[0];
+  // Return null so the caller can handle prompting for selection.
+  return null;
 }

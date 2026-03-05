@@ -1,4 +1,4 @@
-import { Champion as PrismaChampion, Tag } from '@prisma/client';
+import type { Champion as PrismaChampion, Tag } from '@prisma/client';
 
 export interface ChampionImages {
   hero: string;
