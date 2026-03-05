@@ -13,7 +13,7 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
   const guildId = interaction.guildId;
   if (!guildId) return;
 
-  const alliance = await prisma.alliance.findUnique({
+  const alliance = await prisma.alliance.findFirst({
     where: { guildId },
     select: { id: true },
   });

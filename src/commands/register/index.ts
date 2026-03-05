@@ -46,7 +46,7 @@ export const command: Command = {
     let allianceId: string | null = null;
 
     if (guild) {
-      const alliance = await prisma.alliance.findUnique({
+      const alliance = await prisma.alliance.findFirst({
           where: { guildId: guild.id },
       });
       if(alliance) {

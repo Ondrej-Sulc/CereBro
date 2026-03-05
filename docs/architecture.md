@@ -23,6 +23,7 @@ Complex web pages (like Roster) follow a modular architecture:
 To decouple the Web App and Discord Bot, we use a database-backed `BotJob` queue.
 *   **Producer (Web):** Creates `BotJob` records (e.g., `NOTIFY_WAR_VIDEO`).
 *   **Consumer (Bot):** `JobProcessor` service polls for `PENDING` jobs and executes Discord API calls.
+*   **Guild Multi-Tenancy:** A single Discord Guild can host multiple Alliance records. This is supported via the `Alliance.guildId` index (non-unique).
 *   **Job Types:** `NOTIFY_WAR_VIDEO`, `DISTRIBUTE_WAR_PLAN`, `UPDATE_MEMBER_ROLES`, `LEAVE_GUILD`.
 
 ## Direct Discord API Access (Web)

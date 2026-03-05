@@ -371,7 +371,7 @@ model PrestigeLog {
 
 model Alliance {
   id                     String   @id @default(cuid())
-  guildId                String?  @unique
+  guildId                String?  
   name                   String
   enabledFeatureCommands String[] @default([])
   createAqThread         Boolean  @default(false)
@@ -409,6 +409,8 @@ model Alliance {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([guildId])
 }
 
 enum MembershipRequestStatus {

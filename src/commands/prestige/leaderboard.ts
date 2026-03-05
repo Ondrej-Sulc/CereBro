@@ -96,7 +96,7 @@ export async function handleLeaderboard(
     return;
   }
 
-  const alliance = await prisma.alliance.findUnique({
+  const alliance = await prisma.alliance.findFirst({
     where: { guildId },
     select: { id: true },
   });
@@ -133,7 +133,7 @@ async function handleLeaderboardButton(interaction: ButtonInteraction) {
   const customIdParts = interaction.customId.split(":");
   const prestigeType = customIdParts[2] as PrestigeType;
 
-  const alliance = await prisma.alliance.findUnique({
+  const alliance = await prisma.alliance.findFirst({
     where: { guildId },
     select: { id: true },
   });

@@ -8,6 +8,7 @@ import { handleAllianceConfigChannels } from './config-channels';
 import { handleAllianceSyncRoles } from './sync-roles';
 import { handleAllianceLink } from './link';
 import { handleAllianceView } from './view';
+import { handleAllianceCreate } from './create';
 import { handleAllianceManageRemove } from './manage/remove';
 import { handleAllianceManageList } from './manage/list';
 import { handleAllianceFindChampion } from './find-champion';
@@ -117,6 +118,17 @@ export const command: Command = {
         .setName('view')
         .setDescription('Display an overview of the alliance.')
     )
+    .addSubcommand((subcommand) =>
+        subcommand
+          .setName('create')
+          .setDescription('Create an additional alliance for this server (Bot Admin only).')
+          .addStringOption((option) =>
+            option
+              .setName('name')
+              .setDescription('The name of the new alliance.')
+              .setRequired(true)
+          )
+      )
     .addSubcommand((subcommand) =>
       subcommand
         .setName('find-champion')
@@ -234,6 +246,9 @@ export const command: Command = {
           break;
         case 'view':
           await handleAllianceView(interaction);
+          break;
+        case 'create':
+          await handleAllianceCreate(interaction);
           break;
         case 'find-champion':
           await handleAllianceFindChampion(interaction);

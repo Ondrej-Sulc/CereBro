@@ -71,7 +71,7 @@ export async function leaveDiscordGuild(guildId: string) {
     }
 
     // Protection for GLOBAL alliance
-    const alliance = await prisma.alliance.findUnique({
+    const alliance = await prisma.alliance.findFirst({
         where: { guildId },
         select: { id: true }
     });
