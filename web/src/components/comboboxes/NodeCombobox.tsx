@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { ChevronsUpDown } from "lucide-react"
-import { Virtuoso } from "react-virtuoso";
+import Fuse from "fuse.js"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -40,15 +41,23 @@ export const NodeCombobox = React.memo(function NodeCombobox({
 
   const handleSelect = React.useCallback((nodeId: string) => {
     onSelect(nodeId);
+    setSearch("");
     setOpen(false);
   }, [onSelect]);
 
-  const filteredNodes = React.useMemo(() =>
-    nodes.filter(node =>
-      String(node.nodeNumber).includes(search) ||
-      node.description?.toLowerCase().includes(search.toLowerCase())
-    ), [nodes, search]
-  );
+  const fuse = React.useMemo(() => {
+    return new Fuse(nodes, {
+      keys: ["nodeNumber", "description"],
+      threshold: 0.3,
+      distance: 100,
+      ignoreLocation: true,
+    });
+  }, [nodes]);
+
+  const filteredNodes = React.useMemo(() => {
+    if (!search) return nodes;
+    return fuse.search(search).map(result => result.item);
+  }, [fuse, search, nodes]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -67,35 +76,30 @@ export const NodeCombobox = React.memo(function NodeCombobox({
       </PopoverTrigger>
       <PopoverContent 
         className="w-[--radix-popover-trigger-width] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
         onWheel={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
-        <Command className="h-auto">
+        <Command shouldFilter={false} className="h-auto">
           <CommandInput
             placeholder="Search node..."
             value={search}
             onValueChange={setSearch}
           />
-          <CommandEmpty>No node found.</CommandEmpty>
-          <CommandGroup>
-            {open && (
-                <Virtuoso
-                    style={{ height: "288px" }}
-                    data={filteredNodes}
-                    itemContent={(index, node) => (
-                        <CommandItem
-                            key={node.id}
-                            value={String(node.nodeNumber)}
-                            onSelect={() => handleSelect(String(node.id))}
-                        >
-                            {node.nodeNumber}
-                        </CommandItem>
-                    )}
-                />
-            )}
-          </CommandGroup>
+          <CommandList>
+            <CommandEmpty>No node found.</CommandEmpty>
+            <CommandGroup>
+                {filteredNodes.slice(0, 100).map((node) => (
+                    <CommandItem
+                        key={node.id}
+                        value={String(node.nodeNumber)}
+                        onSelect={() => handleSelect(String(node.id))}
+                    >
+                        {node.nodeNumber}
+                    </CommandItem>
+                ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

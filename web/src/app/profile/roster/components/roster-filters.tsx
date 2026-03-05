@@ -20,6 +20,8 @@ interface RosterFiltersProps {
     onSearchChange: (val: string) => void;
     viewMode: 'view' | 'edit';
     onViewModeChange: (mode: 'view' | 'edit') => void;
+    showUnowned: boolean;
+    onShowUnownedChange: (val: boolean) => void;
     onAddClick: () => void;
     sortBy: "PRESTIGE" | "NAME";
     onSortByChange: (val: "PRESTIGE" | "NAME") => void;
@@ -53,6 +55,7 @@ interface RosterFiltersProps {
 
 export function RosterFilters({
     search, onSearchChange, viewMode, onViewModeChange, onAddClick,
+    showUnowned, onShowUnownedChange,
     sortBy, onSortByChange, filterStars, onFilterStarsChange, filterRanks, onFilterRanksChange,
     filterClasses, onFilterClassesChange, tagFilter, onTagFilterChange, tagLogic, onTagLogicChange,
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
@@ -95,8 +98,12 @@ export function RosterFilters({
             filters.push({ label: imm, type: 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
         });
 
+        if (showUnowned) {
+            filters.push({ label: 'Yes', type: 'Unowned', onRemove: () => onShowUnownedChange(false) });
+        }
+
         return filters;
-    }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange]);
+    }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, showUnowned, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onShowUnownedChange]);
 
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
@@ -106,15 +113,15 @@ export function RosterFilters({
                     <div className="flex gap-2 flex-1 min-w-[200px] max-w-md">
                         <div className="relative flex-1">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 z-10" />
-                            <Input 
-                                placeholder="Search..." 
-                                value={search} 
+                            <Input
+                                placeholder="Search..."
+                                value={search}
                                 onChange={(e) => onSearchChange(e.target.value)}
                                 className="w-full pl-8 h-8 bg-slate-950/50 border border-slate-700 rounded-md text-xs text-slate-200 placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-sky-500/50 transition-all border-none"
                             />
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 shrink-0">
                         <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-0.5 shrink-0">
                             <Button
@@ -132,6 +139,14 @@ export function RosterFilters({
                                 <PenLine className="w-3.5 h-3.5 mr-1" /> Edit
                             </Button>
                         </div>
+
+                        <Button
+                            variant="ghost" size="sm"
+                            onClick={() => onShowUnownedChange(!showUnowned)}
+                            className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium border border-slate-700 bg-slate-950/50", showUnowned ? "text-sky-400 border-sky-500/50 bg-sky-950/30" : "text-slate-400 hover:text-slate-200")}
+                        >
+                            <CircleOff className="w-3.5 h-3.5 mr-1" /> Unowned
+                        </Button>
 
                         <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
                             <SelectTrigger className="h-8 w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
@@ -153,7 +168,7 @@ export function RosterFilters({
                 {/* Row 2: Standard Selection Filters + Advanced Filters */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-800/50 pt-2.5">
                     <div className="flex items-center gap-2">
-                        <MultiFilterGroup 
+                        <MultiFilterGroup
                             options={[
                                 { value: "7", label: "7★" },
                                 { value: "6", label: "6★" },
@@ -162,8 +177,8 @@ export function RosterFilters({
                             values={filterStars.map(String)}
                             onChange={(vals) => onFilterStarsChange(vals.map(Number))}
                         />
-                        <MultiFilterGroup 
-                            options={[1,2,3,4,5,6].map(r => ({ value: String(r), label: `R${r}` }))}
+                        <MultiFilterGroup
+                            options={[1, 2, 3, 4, 5, 6].map(r => ({ value: String(r), label: `R${r}` }))}
                             values={filterRanks.map(String)}
                             onChange={(vals) => onFilterRanksChange(vals.map(Number))}
                         />
@@ -186,7 +201,7 @@ export function RosterFilters({
                     <div className="flex flex-wrap gap-2 border-t border-slate-800/50 pt-3 items-center">
                         <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mr-2">Active:</span>
                         {activeFilters.map((filter, index) => (
-                            <Badge 
+                            <Badge
                                 key={`${filter.type}-${filter.label}-${index}`}
                                 variant="outline"
                                 className="bg-slate-950/50 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-7 text-[11px]"
@@ -203,12 +218,13 @@ export function RosterFilters({
                                 </Button>
                             </Badge>
                         ))}
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+                        <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-7 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 ml-auto"
                             onClick={() => {
                                 onSearchChange("");
+                                onShowUnownedChange(false);
                                 onFilterStarsChange([]);
                                 onFilterRanksChange([]);
                                 onFilterClassesChange([]);

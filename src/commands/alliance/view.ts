@@ -21,7 +21,7 @@ export async function handleAllianceView(interaction: ChatInputCommandInteractio
   }
 
   try {
-    const alliance = await prisma.alliance.findUnique({
+    const alliance = await prisma.alliance.findFirst({
       where: { guildId: interaction.guildId },
       include: {
         members: {

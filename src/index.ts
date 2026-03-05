@@ -121,15 +121,21 @@ client.on(Events.GuildCreate, async (guild) => {
 
   try {
     // 1. Create/Update Alliance Record
-    await prisma.alliance.upsert({
+    const existing = await prisma.alliance.findFirst({
       where: { guildId: guild.id },
-      update: {},
-      create: {
-        guildId: guild.id,
-        name: guild.name,
-      },
     });
-    logger.info(`✅ Initialized alliance record for ${guild.name}`);
+
+    if (!existing) {
+      await prisma.alliance.create({
+        data: {
+          guildId: guild.id,
+          name: guild.name,
+        },
+      });
+      logger.info(`✅ Initialized new alliance record for ${guild.name}`);
+    } else {
+      logger.info(`✅ Alliance record already exists for ${guild.name}`);
+    }
 
     // 2. Find a suitable channel for the welcome message
     // Try system channel first, then first viewable text channel
@@ -423,7 +429,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
         return;
       }
-      const alliance = await prisma.alliance.findUnique({
+      const alliance = await prisma.alliance.findFirst({
         where: { guildId: interaction.guildId },
         select: { enabledFeatureCommands: true },
       });

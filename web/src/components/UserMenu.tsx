@@ -43,7 +43,7 @@ export function UserMenu({ user }: UserMenuProps) {
         {user.isBotAdmin && (
             <>
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/champions" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
+                  <Link href="/admin" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
                     <LayoutDashboard className="w-4 h-4 text-amber-500" />
                     <span>Admin Portal</span>
                   </Link>

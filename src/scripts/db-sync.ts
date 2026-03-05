@@ -32,8 +32,22 @@ async function exportToGCS() {
 
   for (const table of STATIC_TABLES) {
     logger.info(`📦 Fetching ${table}...`);
-    // @ts-expect-error - Dynamically accessing prisma models
-    data[table] = await prisma[table].findMany();
+    if (table === "champion") {
+      data[table] = await prisma.champion.findMany({
+        include: { tags: true }
+      });
+    } else if (table === "ability") {
+      data[table] = await prisma.ability.findMany({
+        include: { categories: true }
+      });
+    } else if (table === "tag") {
+      // For tags, we don't need to export the champions they belong to
+      // because we're handling the relation from the champion side.
+      data[table] = await prisma.tag.findMany();
+    } else {
+      // @ts-expect-error - Dynamically accessing prisma models
+      data[table] = await prisma[table].findMany();
+    }
     logger.info(`✅ Fetched ${data[table].length} records from ${table}`);
   }
 
@@ -81,12 +95,12 @@ export async function importFromGCS() {
             },
           };
         } else if (table === "championAbilitySynergy") {
-           where = {
-             championAbilityLinkId_championId: {
-                championAbilityLinkId: record.championAbilityLinkId,
-                championId: record.championId
-             }
-           }
+          where = {
+            championAbilityLinkId_championId: {
+              championAbilityLinkId: record.championAbilityLinkId,
+              championId: record.championId
+            }
+          }
         } else if (table === "tag") {
           where = {
             name_category: {
@@ -119,14 +133,14 @@ export async function importFromGCS() {
             },
           };
         } else if (table === "seasonBan") {
-           where = {
-             season_minTier_maxTier_championId: {
-               season: record.season,
-               minTier: record.minTier,
-               maxTier: record.maxTier,
-               championId: record.championId
-             }
-           }
+          where = {
+            season_minTier_maxTier_championId: {
+              season: record.season,
+              minTier: record.minTier,
+              maxTier: record.maxTier,
+              championId: record.championId
+            }
+          }
         } else if (table === "systemConfig") {
           where = { key: record.key };
         } else if (table === "duel") {
@@ -141,12 +155,48 @@ export async function importFromGCS() {
         // Create a separate object for updates, stripping read-only fields
         const { id: _id, createdAt: _ca, updatedAt: _ua, ...updatePayload } = record;
 
-        // @ts-expect-error - Dynamically accessing prisma models
-        await prisma[table].upsert({
-          where,
-          update: updatePayload,
-          create: record,
-        });
+        if (table === "champion") {
+          const tags = record.tags as { id: number }[] | undefined;
+          const championPayload = { ...updatePayload } as any;
+          delete championPayload.tags; // Remove from base payload
+
+          await prisma.champion.upsert({
+            where: where as any,
+            update: {
+              ...championPayload,
+              tags: tags ? { set: tags.map(t => ({ id: t.id })) } : undefined
+            },
+            create: {
+              id: record.id as number,
+              ...championPayload,
+              tags: tags ? { connect: tags.map(t => ({ id: t.id })) } : undefined
+            }
+          });
+        } else if (table === "ability") {
+          const categories = record.categories as { id: number }[] | undefined;
+          const abilityPayload = { ...updatePayload } as any;
+          delete abilityPayload.categories;
+
+          await prisma.ability.upsert({
+            where: where as any,
+            update: {
+              ...abilityPayload,
+              categories: categories ? { set: categories.map(c => ({ id: c.id })) } : undefined
+            },
+            create: {
+              id: record.id as number,
+              ...abilityPayload,
+              categories: categories ? { connect: categories.map(c => ({ id: c.id })) } : undefined
+            }
+          });
+        } else {
+          // @ts-expect-error - Dynamically accessing prisma models
+          await prisma[table].upsert({
+            where,
+            update: updatePayload,
+            create: record,
+          });
+        }
       } catch (e: unknown) {
         failureCount++;
         totalFailureCount++;

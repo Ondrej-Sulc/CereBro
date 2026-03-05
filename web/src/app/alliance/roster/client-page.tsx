@@ -28,13 +28,13 @@ interface ClientPageProps {
     bgColors: Record<number, string>;
 }
 
-export function AllianceRosterMatrix({ 
-    data, 
-    initialTags, 
+export function AllianceRosterMatrix({
+    data,
+    initialTags,
     initialAbilityCategories,
     initialAbilities,
     initialImmunities,
-    bgColors 
+    bgColors
 }: ClientPageProps) {
     // Filters
     const [bgFilter, setBgFilter] = useState<string>("ALL");
@@ -86,16 +86,16 @@ export function AllianceRosterMatrix({
     const getFilteredChampionsForPlayer = (playerId: string) => {
         const filtered = data.filter(entry => {
             if (entry.playerId !== playerId) return false;
-            
+
             // Class
             if (classFilter.length > 0 && !classFilter.includes(entry.championClass)) return false;
-            
+
             // Stars
             if (starFilter !== "ALL" && entry.stars !== parseInt(starFilter)) return false;
-            
+
             // Min Rank
             if (parseInt(minRankFilter) > 0 && entry.rank < parseInt(minRankFilter)) return false;
-            
+
             // Tag Logic
             if (tagFilter.length > 0) {
                 if (tagLogic === 'AND') {
@@ -109,7 +109,7 @@ export function AllianceRosterMatrix({
             if (abilityCategoryFilter.length > 0) {
                 // Get all category names present on this champion
                 const championCategories = new Set(entry.abilities.filter(a => a.type === 'ABILITY').flatMap(a => a.categories));
-                
+
                 if (abilityCategoryLogic === 'AND') {
                     // Must have ALL selected categories (across its abilities)
                     if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false;
@@ -158,12 +158,12 @@ export function AllianceRosterMatrix({
             "3": [],
             "unassigned": []
         };
-        
+
         filteredPlayers.forEach(p => {
             const key = p.bg?.toString() || "unassigned";
             if (groups[key]) groups[key].push(p);
         });
-        
+
         return groups;
     }, [filteredPlayers]);
 
@@ -223,11 +223,11 @@ export function AllianceRosterMatrix({
                 <div className="flex-1 p-1.5 flex flex-wrap gap-1 items-start content-start">
                     {champions.map((champ, idx) => {
                         const classColors = getChampionClassColors(champ.championClass);
-                        
+
                         return (
                             <Popover key={`${champ.championId}-${idx}`}>
                                 <PopoverTrigger asChild>
-                                    <div 
+                                    <div
                                         className="flex flex-col items-center gap-0.5 shrink-0 group transition-transform hover:scale-110 hover:z-10 cursor-pointer"
                                     >
                                         <div className={cn(
@@ -236,15 +236,15 @@ export function AllianceRosterMatrix({
                                         )}>
                                             {/* Portrait */}
                                             {champ.championImages && (
-                                                <Image 
-                                                    src={getChampionImageUrl(champ.championImages, '64') || '/icons/unknown.png'} 
+                                                <Image
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/assets/icons/glossary.svg'}
                                                     alt={champ.championName}
                                                     fill
                                                     sizes="48px"
                                                     className="object-cover"
                                                 />
                                             )}
-                                            
+
                                             {/* Tactic Indicators */}
                                             <div className="absolute top-0 left-0 p-0.5 flex flex-col gap-0.5">
                                                 {champ.tactics.attack && <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm ring-1 ring-black/50" title="Attack Tactic" />}
@@ -266,8 +266,8 @@ export function AllianceRosterMatrix({
                                     <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
                                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                                             {champ.championImages && (
-                                                <Image 
-                                                    src={getChampionImageUrl(champ.championImages, '64') || '/icons/unknown.png'} 
+                                                <Image
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/assets/icons/glossary.svg'}
                                                     alt={champ.championName}
                                                     fill
                                                     className="object-cover"
@@ -285,7 +285,7 @@ export function AllianceRosterMatrix({
                                                 const isFilteringAbilities = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0;
                                                 const isFilteringTags = tagFilter.length > 0;
                                                 const isFiltering = isFilteringAbilities || isFilteringTags;
-                                                
+
                                                 if (!isFiltering) {
                                                     return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion details.</div>;
                                                 }
@@ -294,9 +294,9 @@ export function AllianceRosterMatrix({
                                                     // Strict Type Checking for Filters
                                                     if (abilityFilter.length > 0 && a.type === 'ABILITY' && abilityFilter.includes(a.name)) return true;
                                                     if (immunityFilter.length > 0 && a.type === 'IMMUNITY' && immunityFilter.includes(a.name)) return true;
-                                                    
+
                                                     if (abilityCategoryFilter.length > 0 && a.type === 'ABILITY' && a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
-                                                    
+
                                                     return false;
                                                 }) : [];
 
@@ -304,13 +304,13 @@ export function AllianceRosterMatrix({
                                                 const groupedItems = relevantItems.reduce((acc, curr) => {
                                                     const key = `${curr.type}-${curr.name}`;
                                                     if (!acc[key]) {
-                                                        acc[key] = { 
+                                                        acc[key] = {
                                                             name: curr.name,
                                                             type: curr.type,
-                                                            instances: [] as { 
-                                                                source: string | null, 
-                                                                synergyChampions: { name: string; images: ChampionImages }[] 
-                                                            }[] 
+                                                            instances: [] as {
+                                                                source: string | null,
+                                                                synergyChampions: { name: string; images: ChampionImages }[]
+                                                            }[]
                                                         };
                                                     }
                                                     acc[key].instances.push({
@@ -321,13 +321,13 @@ export function AllianceRosterMatrix({
                                                         }))
                                                     });
                                                     return acc;
-                                                }, {} as Record<string, { 
-                                                    name: string, 
-                                                    type: string, 
-                                                    instances: { 
-                                                        source: string | null, 
-                                                        synergyChampions: { name: string; images: ChampionImages }[] 
-                                                    }[] 
+                                                }, {} as Record<string, {
+                                                    name: string,
+                                                    type: string,
+                                                    instances: {
+                                                        source: string | null,
+                                                        synergyChampions: { name: string; images: ChampionImages }[]
+                                                    }[]
                                                 }>);
 
                                                 const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
@@ -338,16 +338,16 @@ export function AllianceRosterMatrix({
                                                     return <div className="text-xs text-slate-500 text-center italic">No matching details found.</div>;
                                                 }
 
-                                                const renderBadgeContent = (item: { 
-                                                    name: string, 
-                                                    type: string, 
-                                                    instances: { 
-                                                        source: string | null, 
-                                                        synergyChampions: { name: string; images: ChampionImages }[] 
-                                                    }[] 
+                                                const renderBadgeContent = (item: {
+                                                    name: string,
+                                                    type: string,
+                                                    instances: {
+                                                        source: string | null,
+                                                        synergyChampions: { name: string; images: ChampionImages }[]
+                                                    }[]
                                                 }) => {
                                                     const validInstances = item.instances.filter(inst => inst.source || inst.synergyChampions.length > 0);
-                                                    
+
                                                     return (
                                                         <div className="flex items-start gap-1.5">
                                                             <span className="font-semibold whitespace-nowrap mt-1">{item.name}</span>
@@ -361,14 +361,14 @@ export function AllianceRosterMatrix({
                                                                             {instance.synergyChampions.length > 0 && (
                                                                                 <div className="flex -space-x-1.5">
                                                                                     {instance.synergyChampions.map((sc, scIdx) => (
-                                                                                         <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                             <Image 
-                                                                                                 src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/icons/unknown.png'} 
-                                                                                                 alt={sc.name}
-                                                                                                 fill
-                                                                                                 className="object-cover"
-                                                                                             />
-                                                                                         </div>
+                                                                                        <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
+                                                                                            <Image
+                                                                                                src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/assets/icons/glossary.svg'}
+                                                                                                alt={sc.name}
+                                                                                                fill
+                                                                                                className="object-cover"
+                                                                                            />
+                                                                                        </div>
                                                                                     ))}
                                                                                 </div>
                                                                             )}
@@ -395,9 +395,9 @@ export function AllianceRosterMatrix({
                                                                 </div>
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {displayImmunities.map((imm, i) => (
-                                                                        <Badge 
-                                                                            key={i} 
-                                                                            variant="secondary" 
+                                                                        <Badge
+                                                                            key={i}
+                                                                            variant="secondary"
                                                                             className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                                         >
                                                                             {renderBadgeContent(imm)}
@@ -415,12 +415,12 @@ export function AllianceRosterMatrix({
                                                                 </div>
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {displayAbilities.map((ab, i) => (
-                                                                        <Badge 
-                                                                            key={i} 
-                                                                            variant="secondary" 
+                                                                        <Badge
+                                                                            key={i}
+                                                                            variant="secondary"
                                                                             className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
                                                                         >
-                                                                           {renderBadgeContent(ab)}
+                                                                            {renderBadgeContent(ab)}
                                                                         </Badge>
                                                                     ))}
                                                                 </div>
@@ -468,10 +468,10 @@ export function AllianceRosterMatrix({
                 <div className="flex flex-col gap-4">
                     {/* Top Row: Primary Filters */}
                     <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-                         <div className="flex flex-col w-full gap-4">
+                        <div className="flex flex-col w-full gap-4">
                             <div className="flex items-center justify-between w-full">
                                 {/* Battlegroup - Always Visible */}
-                                <FilterGroup 
+                                <FilterGroup
                                     options={[
                                         { value: "ALL", label: "All BGs" },
                                         { value: "1", label: "BG 1" },
@@ -482,11 +482,11 @@ export function AllianceRosterMatrix({
                                     onChange={setBgFilter}
                                     className="flex-1 max-w-[300px]"
                                 />
-                                
+
                                 {/* Mobile Toggle */}
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     className="xl:hidden ml-2"
                                     onClick={() => setShowFilters(!showFilters)}
                                 >
@@ -500,9 +500,9 @@ export function AllianceRosterMatrix({
                                 !showFilters && "hidden xl:flex",
                                 showFilters && "flex"
                             )}>
-                                 <div className="flex flex-wrap gap-2 items-center">
-                                     {/* Stars */}
-                                     <FilterGroup 
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    {/* Stars */}
+                                    <FilterGroup
                                         options={[
                                             { value: "ALL", label: "All Stars" },
                                             { value: "7", label: "7 ★" },
@@ -512,8 +512,8 @@ export function AllianceRosterMatrix({
                                         onChange={setStarFilter}
                                     />
 
-                                     {/* Min Rank */}
-                                     <FilterGroup 
+                                    {/* Min Rank */}
+                                    <FilterGroup
                                         options={[
                                             { value: "0", label: "Any Rank" },
                                             { value: "3", label: "R3+" },
@@ -524,8 +524,8 @@ export function AllianceRosterMatrix({
                                         onChange={setMinRankFilter}
                                     />
 
-                                     {/* Limit */}
-                                     <FilterGroup 
+                                    {/* Limit */}
+                                    <FilterGroup
                                         options={[
                                             { value: "5", label: "Top 5" },
                                             { value: "10", label: "Top 10" },
@@ -540,8 +540,8 @@ export function AllianceRosterMatrix({
                                 {/* Bottom Row: Tag, Abilities, Categories */}
                                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
                                     <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
-                                         {/* Tags */}
-                                         <MultiSelectFilter 
+                                        {/* Tags */}
+                                        <MultiSelectFilter
                                             title="Tags"
                                             icon={TagIcon}
                                             options={initialTags}
@@ -550,10 +550,10 @@ export function AllianceRosterMatrix({
                                             placeholder="Search tags..."
                                             logic={tagLogic}
                                             onLogicChange={setTagLogic}
-                                         />
+                                        />
 
-                                         {/* Ability Categories */}
-                                         <MultiSelectFilter 
+                                        {/* Ability Categories */}
+                                        <MultiSelectFilter
                                             title="Categories"
                                             icon={BookOpen}
                                             options={initialAbilityCategories}
@@ -562,10 +562,10 @@ export function AllianceRosterMatrix({
                                             placeholder="Search categories..."
                                             logic={abilityCategoryLogic}
                                             onLogicChange={setAbilityCategoryLogic}
-                                         />
+                                        />
 
-                                         {/* Abilities */}
-                                         <MultiSelectFilter 
+                                        {/* Abilities */}
+                                        <MultiSelectFilter
                                             title="Abilities"
                                             icon={Zap}
                                             options={initialAbilities}
@@ -574,10 +574,10 @@ export function AllianceRosterMatrix({
                                             placeholder="Search abilities..."
                                             logic={abilityLogic}
                                             onLogicChange={setAbilityLogic}
-                                         />
+                                        />
 
-                                         {/* Immunities */}
-                                         <MultiSelectFilter 
+                                        {/* Immunities */}
+                                        <MultiSelectFilter
                                             title="Immunities"
                                             icon={Shield}
                                             options={initialImmunities}
@@ -586,15 +586,15 @@ export function AllianceRosterMatrix({
                                             placeholder="Search immunities..."
                                             logic={immunityLogic}
                                             onLogicChange={setImmunityLogic}
-                                         />
+                                        />
                                     </div>
 
-                                     {/* Class Filter */}
-                                     <div className="flex gap-1 overflow-x-auto pb-1 lg:pb-0 w-full sm:w-auto">
-                                         <Button
+                                    {/* Class Filter */}
+                                    <div className="flex gap-1 overflow-x-auto pb-1 lg:pb-0 w-full sm:w-auto">
+                                        <Button
                                             variant="ghost" size="icon"
                                             className={cn(
-                                                "h-8 w-8 rounded-full shrink-0", 
+                                                "h-8 w-8 rounded-full shrink-0",
                                                 classFilter.length === 0 ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
                                             )}
                                             onClick={() => setClassFilter([])}
@@ -621,9 +621,9 @@ export function AllianceRosterMatrix({
                                                         }
                                                     }}
                                                 >
-                                                   <div className="relative w-5 h-5">
-                                                        <Image src={`/icons/${c.charAt(0) + c.slice(1).toLowerCase()}.png`} alt={c} fill className="object-contain" />
-                                                   </div>
+                                                    <div className="relative w-5 h-5">
+                                                        <Image src={`/assets/icons/${c.charAt(0) + c.slice(1).toLowerCase()}.png`} alt={c} fill className="object-contain" />
+                                                    </div>
                                                 </Button>
                                             );
                                         })}
@@ -635,16 +635,16 @@ export function AllianceRosterMatrix({
                                     <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-3">
                                         <span className="text-xs text-slate-500 py-0.5">Active Filters:</span>
                                         {activeFilters.map((f, idx) => (
-                                            <Badge 
+                                            <Badge
                                                 key={`${f.type}-${f.label}-${idx}`}
                                                 variant="outline"
                                                 className="bg-slate-900 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-6"
                                             >
                                                 <span className="text-slate-500 font-normal mr-1">{f.type}:</span>
                                                 {f.label}
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     className="h-4 w-4 ml-1 hover:bg-slate-800 hover:text-red-400 rounded-full"
                                                     onClick={f.onRemove}
                                                 >
@@ -652,9 +652,9 @@ export function AllianceRosterMatrix({
                                                 </Button>
                                             </Badge>
                                         ))}
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
                                             className="h-6 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
                                             onClick={() => {
                                                 setBgFilter("ALL");
@@ -683,14 +683,14 @@ export function AllianceRosterMatrix({
                     if (players.length === 0) return null;
                     const bgId = bg === "unassigned" ? null : parseInt(bg);
                     const accentColor = bgId ? bgColors[bgId] : null;
-                    
+
                     return (
                         <div key={bg} className="flex flex-col">
-                            <div 
+                            <div
                                 className="bg-slate-900/80 px-4 py-1.5 border-y border-slate-800 flex items-center justify-between"
                                 style={accentColor ? { borderLeft: `3px solid ${accentColor}` } : {}}
                             >
-                                <span 
+                                <span
                                     className="text-[11px] font-black uppercase tracking-widest text-slate-400"
                                     style={accentColor ? { color: accentColor } : {}}
                                 >

@@ -1,17 +1,746 @@
-// prisma/schema.prisma
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider      = "prisma-client-js"
   output        = "../node_modules/.prisma/client"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
-// --- Enums for type safety and consistency ---
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AbilityCategory {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String
+  abilities   Ability[] @relation("AbilityToAbilityCategory")
+}
+
+model Ability {
+  id          Int                   @id @default(autoincrement())
+  name        String                @unique
+  description String?
+  emoji       String?
+  champions   ChampionAbilityLink[]
+  categories  AbilityCategory[]     @relation("AbilityToAbilityCategory")
+}
+
+model Champion {
+  id                           Int                      @id @default(autoincrement())
+  name                         String                   @unique
+  shortName                    String
+  class                        ChampionClass
+  releaseDate                  DateTime
+  obtainable                   String[]
+  images                       Json
+  discordEmoji                 String?
+  fullAbilities                Json
+  createdAt                    DateTime                 @default(now())
+  updatedAt                    DateTime                 @updatedAt
+  attacks                      Attack[]
+  abilities                    ChampionAbilityLink[]
+  synergyProviderFor           ChampionAbilitySynergy[]
+  prestigeData                 ChampionPrestige[]
+  duels                        Duel[]
+  placedPrefights              FightPrefight[]
+  questSelectedAsCounter       PlayerQuestEncounter[]   @relation("PlayerSelectedCounter")
+  questDefenderEncounters      QuestEncounter[]
+  roster                       Roster[]
+  seasonBans                   SeasonBan[]
+  warBans                      WarBan[]
+  defensePlacements            WarDefensePlacement[]
+  extraAssignments             WarExtraChampion[]
+  asAttacker                   WarFight[]               @relation("AttackerRelation")
+  asDefender                   WarFight[]               @relation("DefenderRelation")
+  tags                         Tag[]                    @relation("ChampionToTag")
+  questRecommendedInEncounters QuestEncounter[]         @relation("EncounterRecommendedChampions")
+}
+
+model ChampionPrestige {
+  id         Int      @id @default(autoincrement())
+  championId Int
+  rarity     Int
+  rank       Int
+  sig        Int
+  prestige   Int
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([championId, rarity, rank, sig])
+  @@index([championId])
+}
+
+model Duel {
+  id                   Int        @id @default(autoincrement())
+  playerName           String
+  rank                 String?
+  championId           Int
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  status               DuelStatus @default(ACTIVE)
+  submittedByDiscordId String?
+  source               DuelSource @default(GUIA_MTC)
+  champion             Champion   @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([championId, playerName])
+  @@index([championId])
+}
+
+model Tag {
+  id                        Int              @id @default(autoincrement())
+  name                      String
+  category                  String
+  highlightedInPlans        WarDefensePlan[]
+  attackTactics             WarTactic[]      @relation("AttackTactic")
+  defenseTactics            WarTactic[]      @relation("DefenseTactic")
+  champions                 Champion[]       @relation("ChampionToTag")
+  questRequiredInEncounters QuestEncounter[] @relation("EncounterRequiredTags")
+  questRequiredInPlans      QuestPlan[]      @relation("QuestRequiredTags")
+
+  @@unique([name, category])
+}
+
+model ChampionAbilityLink {
+  id               Int                      @id @default(autoincrement())
+  type             AbilityLinkType
+  source           String?
+  championId       Int
+  abilityId        Int
+  ability          Ability                  @relation(fields: [abilityId], references: [id], onDelete: Cascade)
+  champion         Champion                 @relation(fields: [championId], references: [id], onDelete: Cascade)
+  synergyChampions ChampionAbilitySynergy[]
+
+  @@unique([championId, abilityId, type, source])
+  @@index([championId])
+  @@index([abilityId])
+}
+
+model ChampionAbilitySynergy {
+  id                    Int                 @id @default(autoincrement())
+  championAbilityLinkId Int
+  championId            Int
+  championAbilityLink   ChampionAbilityLink @relation(fields: [championAbilityLinkId], references: [id], onDelete: Cascade)
+  champion              Champion            @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([championAbilityLinkId, championId])
+  @@index([championAbilityLinkId])
+  @@index([championId])
+}
+
+model Attack {
+  id         Int        @id @default(autoincrement())
+  type       AttackType
+  championId Int
+  champion   Champion   @relation(fields: [championId], references: [id], onDelete: Cascade)
+  hits       Hit[]
+
+  @@unique([championId, type])
+  @@index([championId])
+}
+
+model Hit {
+  id         Int      @id @default(autoincrement())
+  properties String[]
+  attackId   Int
+  attack     Attack   @relation(fields: [attackId], references: [id], onDelete: Cascade)
+
+  @@index([attackId])
+}
+
+model Schedule {
+  id                String            @id @default(cuid())
+  name              String
+  frequency         ScheduleFrequency
+  time              String
+  command           String?
+  message           String?
+  target_channel_id String?
+  target_user_id    String?
+  is_active         Boolean           @default(true)
+  day               String?
+  interval          String?
+  unit              String?
+  last_run          DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model AQState {
+  channelId String   @id
+  state     Json
+  updatedAt DateTime @updatedAt
+}
+
+model BotUser {
+  id                String      @id @default(cuid())
+  discordId         String      @unique
+  isBotAdmin        Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  activeProfileId   String?
+  profiles          Player[]
+  createdQuestPlans QuestPlan[] @relation("QuestPlanCreators")
+}
+
+model Player {
+  id                 String                      @id @default(cuid())
+  discordId          String
+  ingameName         String
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+  championPrestige   Int?
+  relicPrestige      Int?
+  summonerPrestige   Int?
+  allianceId         String?
+  isBotAdmin         Boolean                     @default(false)
+  timezone           String?
+  isActive           Boolean                     @default(false)
+  isTrustedUploader  Boolean                     @default(false)
+  battlegroup        Int?
+  isOfficer          Boolean                     @default(false)
+  avatar             String?
+  botUserId          String?
+  sentInvitations    AllianceMembershipRequest[] @relation("OfficerInvites")
+  membershipRequests AllianceMembershipRequest[] @relation("PlayerRequests")
+  placedPrefights    FightPrefight[]
+  alliance           Alliance?                   @relation(fields: [allianceId], references: [id])
+  botUser            BotUser?                    @relation(fields: [botUserId], references: [id], onDelete: Cascade)
+  playerQuestPlans   PlayerQuestPlan[]
+  prestigeHistory    PrestigeLog[]
+  createdQuestPlans  QuestPlan[]                 @relation("QuestCreator")
+  roster             Roster[]
+  uploadTokens       UploadToken[]
+  defensePlacements  WarDefensePlacement[]
+  extraChampions     WarExtraChampion[]
+  playedInFights     WarFight[]                  @relation("PlayerInFight")
+  submittedVideos    WarVideo[]                  @relation("SubmittedBy")
+
+  @@unique([discordId, ingameName])
+  @@index([discordId])
+  @@index([allianceId])
+}
+
+model PrestigeLog {
+  id               Int      @id @default(autoincrement())
+  summonerPrestige Int
+  championPrestige Int
+  relicPrestige    Int
+  createdAt        DateTime @default(now())
+  playerId         String
+  player           Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+}
+
+model Alliance {
+  id                     String                      @id @default(cuid())
+  guildId                String?                     @unique
+  name                   String
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  enabledFeatureCommands String[]                    @default([])
+  createAqThread         Boolean                     @default(false)
+  battlegroup1Role       String?
+  battlegroup2Role       String?
+  battlegroup3Role       String?
+  officerRole            String?
+  canUploadFiles         Boolean                     @default(false)
+  warVideosChannelId     String?
+  battlegroup1ChannelId  String?
+  battlegroup2ChannelId  String?
+  battlegroup3ChannelId  String?
+  battlegroup1Color      String                      @default("#ef4444")
+  battlegroup2Color      String                      @default("#22c55e")
+  battlegroup3Color      String                      @default("#3b82f6")
+  linkCode               String?                     @unique
+  linkCodeExpires        DateTime?
+  deathChannelId         String?
+  activeDefensePlanId    String?                     @unique
+  removeMissingMembers   Boolean                     @default(true)
+  aqReminderSettings     AQReminderSettings?
+  aqSchedules            AQSchedule[]
+  aqSkip                 AQSkip?
+  activeDefensePlan      WarDefensePlan?             @relation("ActiveDefensePlan", fields: [activeDefensePlanId], references: [id])
+  config                 AllianceConfig?
+  membershipRequests     AllianceMembershipRequest[]
+  members                Player[]
+  wars                   War[]
+  defensePlans           WarDefensePlan[]
+}
+
+model AllianceMembershipRequest {
+  id         String                  @id @default(cuid())
+  status     MembershipRequestStatus @default(PENDING)
+  type       MembershipRequestType
+  allianceId String
+  playerId   String
+  inviterId  String?
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+  alliance   Alliance                @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  inviter    Player?                 @relation("OfficerInvites", fields: [inviterId], references: [id])
+  player     Player                  @relation("PlayerRequests", fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([allianceId])
+  @@index([playerId])
+}
+
+model AQReminderSettings {
+  id                      String   @id @default(cuid())
+  allianceId              String   @unique
+  finalReminderEnabled    Boolean  @default(true)
+  section1ReminderEnabled Boolean  @default(true)
+  section2ReminderEnabled Boolean  @default(true)
+  finalPingTime           String   @default("11:00")
+  section1PingTime        String   @default("11:00")
+  section2PingTime        String   @default("18:00")
+  alliance                Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+}
+
+model AllianceConfig {
+  id         String   @id @default(cuid())
+  sheetId    String?
+  allianceId String   @unique
+  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+}
+
+model AQSchedule {
+  id          String   @id @default(cuid())
+  allianceId  String
+  battlegroup Int
+  dayOfWeek   Int
+  time        String
+  aqDay       Int
+  channelId   String
+  roleId      String
+  alliance    Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+
+  @@unique([allianceId, battlegroup, aqDay])
+}
+
+model AQSkip {
+  id         String   @id @default(cuid())
+  allianceId String   @unique
+  skipUntil  DateTime
+  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+}
+
+model Roster {
+  id          String   @id @default(cuid())
+  stars       Int
+  rank        Int
+  isAwakened  Boolean
+  powerRating Int?
+  playerId    String
+  championId  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isAscended  Boolean  @default(false)
+  sigLevel    Int      @default(0)
+  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, championId, stars])
+  @@index([playerId])
+  @@index([championId])
+}
+
+model War {
+  id             String             @id @default(cuid())
+  season         Int
+  warNumber      Int?
+  warTier        Int
+  enemyAlliance  String?
+  createdAt      DateTime           @default(now())
+  allianceId     String
+  status         WarStatus          @default(PLANNING)
+  mapType        WarMapType         @default(STANDARD)
+  name           String?
+  result         WarResult          @default(UNKNOWN)
+  enemyDeaths    Int?
+  alliance       Alliance           @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  bans           WarBan[]
+  extraChampions WarExtraChampion[]
+  fights         WarFight[]
+
+  @@unique([allianceId, season, warNumber])
+  @@index([allianceId])
+}
+
+model WarDefensePlan {
+  id                String                @id @default(cuid())
+  name              String
+  mapType           WarMapType            @default(STANDARD)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  allianceId        String
+  tacticId          String?
+  highlightTagId    Int?
+  tier              Int?
+  activeForAlliance Alliance?             @relation("ActiveDefensePlan")
+  placements        WarDefensePlacement[]
+  alliance          Alliance              @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  highlightTag      Tag?                  @relation(fields: [highlightTagId], references: [id])
+  tactic            WarTactic?            @relation(fields: [tacticId], references: [id])
+
+  @@index([allianceId])
+}
+
+model WarDefensePlacement {
+  id          String         @id @default(cuid())
+  nodeId      Int
+  defenderId  Int?
+  playerId    String?
+  planId      String
+  battlegroup Int            @default(1)
+  starLevel   Int?
+  defender    Champion?      @relation(fields: [defenderId], references: [id])
+  node        WarNode        @relation(fields: [nodeId], references: [id])
+  plan        WarDefensePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  player      Player?        @relation(fields: [playerId], references: [id])
+
+  @@unique([planId, battlegroup, nodeId])
+  @@index([planId])
+  @@index([playerId])
+  @@index([defenderId])
+  @@index([nodeId])
+}
+
+model SeasonBan {
+  id         String   @id @default(cuid())
+  season     Int
+  minTier    Int?
+  maxTier    Int?
+  championId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([season, minTier, maxTier, championId])
+}
+
+model WarBan {
+  id         String   @id @default(cuid())
+  warId      String
+  championId Int
+  createdAt  DateTime @default(now())
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  war        War      @relation(fields: [warId], references: [id], onDelete: Cascade)
+
+  @@index([warId])
+  @@index([championId])
+}
+
+model WarFight {
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now())
+  attackerId        Int?
+  defenderId        Int?
+  nodeId            Int
+  playerId          String?
+  warId             String
+  videoId           String?
+  battlegroup       Int
+  death             Int             @default(0)
+  notes             String?
+  prefightChampions FightPrefight[]
+  attacker          Champion?       @relation("AttackerRelation", fields: [attackerId], references: [id])
+  defender          Champion?       @relation("DefenderRelation", fields: [defenderId], references: [id])
+  node              WarNode         @relation(fields: [nodeId], references: [id])
+  player            Player?         @relation("PlayerInFight", fields: [playerId], references: [id])
+  video             WarVideo?       @relation(fields: [videoId], references: [id])
+  war               War             @relation(fields: [warId], references: [id], onDelete: Cascade)
+
+  @@index([attackerId])
+  @@index([defenderId])
+  @@index([nodeId])
+  @@index([playerId])
+  @@index([warId])
+  @@index([videoId])
+}
+
+model FightPrefight {
+  id         String   @id @default(cuid())
+  warFightId String
+  championId Int
+  playerId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  player     Player?  @relation(fields: [playerId], references: [id])
+  warFight   WarFight @relation(fields: [warFightId], references: [id], onDelete: Cascade)
+
+  @@unique([warFightId, championId])
+  @@index([warFightId])
+  @@index([championId])
+  @@index([playerId])
+}
+
+model WarExtraChampion {
+  id          String   @id @default(cuid())
+  warId       String
+  playerId    String
+  championId  Int
+  battlegroup Int
+  createdAt   DateTime @default(now())
+  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  war         War      @relation(fields: [warId], references: [id], onDelete: Cascade)
+
+  @@index([warId])
+  @@index([playerId])
+}
+
+model WarVideo {
+  id            String         @id @default(cuid())
+  visibility    String         @default("public")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  submittedById String
+  status        WarVideoStatus @default(PLANNING)
+  description   String?
+  gcsUrl        String?        @unique
+  url           String?        @unique
+  fights        WarFight[]
+  submittedBy   Player         @relation("SubmittedBy", fields: [submittedById], references: [id])
+
+  @@index([submittedById])
+}
+
+model WarNode {
+  id          Int                   @id @default(autoincrement())
+  nodeNumber  Int                   @unique
+  description String?
+  placements  WarDefensePlacement[]
+  fights      WarFight[]
+  allocations WarNodeAllocation[]
+}
+
+model NodeModifier {
+  id                  String               @id @default(cuid())
+  name                String
+  description         String
+  questEncounterNodes QuestEncounterNode[]
+  allocations         WarNodeAllocation[]
+
+  @@unique([name, description])
+}
+
+model WarNodeAllocation {
+  id             String       @id @default(cuid())
+  warNodeId      Int
+  nodeModifierId String
+  minTier        Int          @default(0)
+  maxTier        Int          @default(0)
+  season         Int          @default(0)
+  mapType        WarMapType   @default(STANDARD)
+  nodeModifier   NodeModifier @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
+  warNode        WarNode      @relation(fields: [warNodeId], references: [id], onDelete: Cascade)
+
+  @@unique([warNodeId, nodeModifierId, minTier, maxTier, season, mapType])
+  @@index([warNodeId])
+  @@index([nodeModifierId])
+}
+
+model WarTactic {
+  id           String           @id @default(cuid())
+  season       Int
+  minTier      Int?
+  maxTier      Int?
+  name         String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  attackTagId  Int?
+  defenseTagId Int?
+  defensePlans WarDefensePlan[]
+  attackTag    Tag?             @relation("AttackTactic", fields: [attackTagId], references: [id])
+  defenseTag   Tag?             @relation("DefenseTactic", fields: [defenseTagId], references: [id])
+
+  @@unique([season, minTier, maxTier])
+}
+
+model UploadSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  fightIds  String[]
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model UploadToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  playerId  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model BotJob {
+  id        String       @id @default(cuid())
+  type      BotJobType
+  status    BotJobStatus @default(PENDING)
+  payload   Json
+  error     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model QuestCategory {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  order     Int             @default(0)
+  parentId  String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  parent    QuestCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  QuestCategory[] @relation("CategoryHierarchy")
+  quests    QuestPlan[]
+}
+
+model QuestPlan {
+  id              String            @id @default(cuid())
+  title           String
+  videoUrl        String?
+  creatorId       String?
+  categoryId      String?
+  minStarLevel    Int?
+  maxStarLevel    Int?
+  requiredClasses ChampionClass[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  teamLimit       Int               @default(5)
+  status          QuestPlanStatus   @default(DRAFT)
+  bannerUrl       String?
+  bannerFit       String?           @default("cover")
+  bannerPosition  String?           @default("center")
+  playerPlans     PlayerQuestPlan[]
+  encounters      QuestEncounter[]
+  category        QuestCategory?    @relation(fields: [categoryId], references: [id])
+  creator         Player?           @relation("QuestCreator", fields: [creatorId], references: [id])
+  creators        BotUser[]         @relation("QuestPlanCreators")
+  requiredTags    Tag[]             @relation("QuestRequiredTags")
+}
+
+model QuestEncounter {
+  id                   String                 @id @default(cuid())
+  sequence             Int
+  videoUrl             String?
+  tips                 String?
+  minStarLevel         Int?
+  maxStarLevel         Int?
+  requiredClasses      ChampionClass[]
+  questPlanId          String
+  defenderId           Int?
+  recommendedTags      String[]
+  playerEncounters     PlayerQuestEncounter[]
+  defender             Champion?              @relation(fields: [defenderId], references: [id])
+  questPlan            QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  nodes                QuestEncounterNode[]
+  recommendedChampions Champion[]             @relation("EncounterRecommendedChampions")
+  requiredTags         Tag[]                  @relation("EncounterRequiredTags")
+
+  @@unique([questPlanId, sequence])
+  @@unique([id, questPlanId])
+  @@index([questPlanId])
+  @@index([defenderId])
+}
+
+model QuestEncounterNode {
+  id               String         @id @default(cuid())
+  questEncounterId String
+  nodeModifierId   String
+  nodeModifier     NodeModifier   @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
+  questEncounter   QuestEncounter @relation(fields: [questEncounterId], references: [id], onDelete: Cascade)
+
+  @@unique([questEncounterId, nodeModifierId])
+  @@index([questEncounterId])
+  @@index([nodeModifierId])
+}
+
+model PlayerQuestPlan {
+  id          String                 @id @default(cuid())
+  playerId    String
+  questPlanId String
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  encounters  PlayerQuestEncounter[]
+  player      Player                 @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  questPlan   QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, questPlanId])
+  @@unique([id, questPlanId])
+  @@index([playerId])
+  @@index([questPlanId])
+}
+
+model PlayerQuestEncounter {
+  id                 String          @id @default(cuid())
+  playerQuestPlanId  String
+  questEncounterId   String
+  questPlanId        String
+  selectedChampionId Int?
+  playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
+  questEncounter     QuestEncounter  @relation(fields: [questEncounterId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
+  selectedChampion   Champion?       @relation("PlayerSelectedCounter", fields: [selectedChampionId], references: [id])
+
+  @@unique([playerQuestPlanId, questEncounterId])
+  @@index([playerQuestPlanId])
+  @@index([questEncounterId])
+  @@index([selectedChampionId])
+}
+
 enum ChampionClass {
   SCIENCE
   SKILL
@@ -27,7 +756,6 @@ enum AbilityLinkType {
   IMMUNITY
 }
 
-// NEW: Enum for the different attack types.
 enum AttackType {
   L1
   L2
@@ -86,167 +814,17 @@ enum BotJobStatus {
 
 enum BotJobType {
   NOTIFY_WAR_VIDEO
-  NOTIFY_DEATH_VIDEO
   DISTRIBUTE_WAR_PLAN
-  DISTRIBUTE_DEFENSE_PLAN
   UPDATE_MEMBER_ROLES
+  NOTIFY_DEATH_VIDEO
+  DISTRIBUTE_DEFENSE_PLAN
+  LEAVE_GUILD
 }
 
-// --- Models ---
-
-// RENAMED from GlossaryCategory and re-linked
-model AbilityCategory {
-  id          Int    @id @default(autoincrement())
-  name        String @unique
-  description String
-
-  abilities Ability[]
-}
-
-model Ability {
-  id          Int     @id @default(autoincrement())
-  name        String  @unique
-  description String?
-  emoji       String?
-
-  categories AbilityCategory[]
-  champions  ChampionAbilityLink[]
-}
-
-model Champion {
-  id            Int           @id @default(autoincrement())
-  name          String        @unique
-  shortName     String
-  class         ChampionClass
-  releaseDate   DateTime
-  obtainable    String[]
-  images        Json
-  discordEmoji  String?
-  fullAbilities Json
-
-  // --- Relations ---
-  tags               Tag[]
-  abilities          ChampionAbilityLink[]
-  attacks            Attack[]
-  prestigeData       ChampionPrestige[]
-  roster             Roster[]
-  synergyProviderFor ChampionAbilitySynergy[]
-  duels              Duel[]
-  asAttacker         WarFight[]               @relation("AttackerRelation")
-  asDefender         WarFight[]               @relation("DefenderRelation")
-  defensePlacements  WarDefensePlacement[]
-  placedPrefights    FightPrefight[]
-  extraAssignments   WarExtraChampion[]
-  seasonBans         SeasonBan[]
-  warBans            WarBan[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ChampionPrestige {
-  id          Int      @id @default(autoincrement())
-  championId  Int
-  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-  rarity      Int
-  rank        Int
-  sig         Int
-  prestige    Int
-
-  @@unique([championId, rarity, rank, sig])
-  @@index([championId])
-}
-
-model Duel {
-  id                   Int        @id @default(autoincrement())
-  playerName           String
-  rank                 String?
-  source               DuelSource @default(GUIA_MTC)
-  status               DuelStatus @default(ACTIVE) // Tracks the state of the duel target
-  // To track who submitted the suggestion/report
-  submittedByDiscordId String?
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Prevent duplicate suggestions for the same champion and player
-  @@unique([championId, playerName])
-  @@index([championId])
-}
-
-model Tag {
-  id       Int    @id @default(autoincrement())
-  name     String
-  category String
-
-  champions Champion[]
-
-  attackTactics  WarTactic[] @relation("AttackTactic")
-  defenseTactics WarTactic[] @relation("DefenseTactic")
-
-  highlightedInPlans WarDefensePlan[]
-
-  @@unique([name, category])
-}
-
-model ChampionAbilityLink {
-  id     Int             @id @default(autoincrement())
-  type   AbilityLinkType
-  source String?
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  abilityId Int
-  ability   Ability @relation(fields: [abilityId], references: [id], onDelete: Cascade)
-
-  synergyChampions ChampionAbilitySynergy[]
-
-  @@unique([championId, abilityId, type, source])
-  @@index([championId])
-  @@index([abilityId])
-}
-
-model ChampionAbilitySynergy {
-  id                    Int                 @id @default(autoincrement())
-  championAbilityLinkId Int
-  championAbilityLink   ChampionAbilityLink @relation(fields: [championAbilityLinkId], references: [id], onDelete: Cascade)
-  championId            Int
-  champion              Champion            @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  @@unique([championAbilityLinkId, championId])
-  @@index([championAbilityLinkId])
-  @@index([championId])
-}
-
-// --- New Models for Normalized Attacks ---
-
-// Represents a specific attack for a champion (e.g., Abomination's SP2)
-model Attack {
-  id   Int        @id @default(autoincrement())
-  type AttackType // e.g., S1, M2, etc.
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  hits Hit[] // An attack is composed of one or more hits
-
-  @@unique([championId, type]) // Each champion can only have one S1, one M1, etc.
-  @@index([championId])
-}
-
-// Represents a single hit within an attack.
-model Hit {
-  id         Int      @id @default(autoincrement())
-  properties String[] // e.g., ["Contact", "Physical"]
-
-  attackId Int
-  attack   Attack @relation(fields: [attackId], references: [id], onDelete: Cascade)
-
-  @@index([attackId])
+enum QuestPlanStatus {
+  DRAFT
+  VISIBLE
+  ARCHIVED
 }
 
 enum ScheduleFrequency {
@@ -254,142 +832,6 @@ enum ScheduleFrequency {
   weekly
   monthly
   every
-}
-
-model Schedule {
-  id                String            @id @default(cuid())
-  name              String
-  frequency         ScheduleFrequency
-  time              String
-  command           String?
-  message           String?
-  target_channel_id String?
-  target_user_id    String?
-  is_active         Boolean           @default(true)
-  day               String?
-  interval          String?
-  unit              String?
-  last_run          DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model AQState {
-  channelId String   @id
-  state     Json
-  updatedAt DateTime @updatedAt
-}
-
-// --- Player and Prestige Logging ---
-
-model BotUser {
-  id              String   @id @default(cuid())
-  discordId       String   @unique
-  isBotAdmin      Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  profiles        Player[]
-  activeProfileId String?
-}
-
-model Player {
-  id                String  @id @default(cuid())
-  discordId         String
-  ingameName        String
-  avatar            String?
-  isActive          Boolean @default(false)
-  timezone          String?
-  isTrustedUploader Boolean @default(false)
-
-  summonerPrestige Int?
-  championPrestige Int?
-  relicPrestige    Int?
-  isBotAdmin       Boolean @default(false) // Deprecated: Use BotUser.isBotAdmin
-  isOfficer        Boolean @default(false)
-  battlegroup      Int?
-
-  botUserId String?
-  botUser   BotUser? @relation(fields: [botUserId], references: [id], onDelete: Cascade)
-
-  roster          Roster[]
-  prestigeHistory PrestigeLog[]
-  uploadTokens    UploadToken[]
-
-  alliance   Alliance? @relation(fields: [allianceId], references: [id], onDelete: SetNull)
-  allianceId String?
-
-  membershipRequests AllianceMembershipRequest[] @relation("PlayerRequests")
-  sentInvitations    AllianceMembershipRequest[] @relation("OfficerInvites")
-
-  playedInFights  WarFight[]         @relation("PlayerInFight")
-  defensePlacements WarDefensePlacement[]
-  submittedVideos WarVideo[]         @relation("SubmittedBy")
-  placedPrefights FightPrefight[]
-  extraChampions  WarExtraChampion[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([discordId, ingameName])
-  @@index([discordId])
-  @@index([allianceId])
-}
-
-model PrestigeLog {
-  id               Int      @id @default(autoincrement())
-  summonerPrestige Int
-  championPrestige Int
-  relicPrestige    Int
-  createdAt        DateTime @default(now())
-
-  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId String
-
-  @@index([playerId])
-}
-
-model Alliance {
-  id                     String   @id @default(cuid())
-  guildId                String?  @unique
-  name                   String
-  enabledFeatureCommands String[] @default([])
-  createAqThread         Boolean  @default(false)
-  canUploadFiles         Boolean  @default(false)
-  officerRole            String?
-  battlegroup1Role       String?
-  battlegroup2Role       String?
-  battlegroup3Role       String?
-  warVideosChannelId     String?
-  deathChannelId         String?
-  battlegroup1ChannelId  String?
-  battlegroup2ChannelId  String?
-  battlegroup3ChannelId  String?
-
-  battlegroup1Color      String   @default("#ef4444") // Red
-  battlegroup2Color      String   @default("#22c55e") // Green
-  battlegroup3Color      String   @default("#3b82f6") // Blue
-
-  removeMissingMembers   Boolean  @default(true)
-
-  linkCode               String?  @unique
-  linkCodeExpires        DateTime?
-
-  members            Player[]
-  config             AllianceConfig?
-  aqSchedules        AQSchedule[]
-  aqSkip             AQSkip?
-  aqReminderSettings AQReminderSettings?
-  wars               War[]
-  defensePlans       WarDefensePlan[]
-  activeDefensePlanId String? @unique
-  activeDefensePlan   WarDefensePlan? @relation("ActiveDefensePlan", fields: [activeDefensePlanId], references: [id], onDelete: SetNull)
-
-  membershipRequests AllianceMembershipRequest[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 enum MembershipRequestStatus {
@@ -400,444 +842,6 @@ enum MembershipRequestStatus {
 }
 
 enum MembershipRequestType {
-  INVITE // Officer invites player
-  REQUEST // Player requests to join
-}
-
-model AllianceMembershipRequest {
-  id         String                  @id @default(cuid())
-  status     MembershipRequestStatus @default(PENDING)
-  type       MembershipRequestType
-  
-  allianceId String
-  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-
-  playerId   String
-  player     Player   @relation("PlayerRequests", fields: [playerId], references: [id], onDelete: Cascade)
-
-  // Who sent the invite (if type is INVITE)
-  inviterId  String?
-  inviter    Player?  @relation("OfficerInvites", fields: [inviterId], references: [id], onDelete: SetNull)
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([allianceId])
-  @@index([playerId])
-}
-
-model AQReminderSettings {
-  id         String   @id @default(cuid())
-  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-  allianceId String   @unique
-
-  section1ReminderEnabled Boolean @default(true)
-  section1PingTime        String  @default("11:00")
-
-  section2ReminderEnabled Boolean @default(true)
-  section2PingTime        String  @default("18:00")
-
-  finalReminderEnabled Boolean @default(true)
-  finalPingTime        String  @default("11:00")
-}
-
-model AllianceConfig {
-  id      String  @id @default(cuid())
-  sheetId String?
-
-  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-  allianceId String   @unique
-}
-
-model AQSchedule {
-  id          String   @id @default(cuid())
-  alliance    Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-  allianceId  String
-  battlegroup Int
-  dayOfWeek   Int // 0 = Sunday, 6 = Saturday
-  time        String // "HH:mm"
-  aqDay       Int
-  channelId   String
-  roleId      String
-
-  @@unique([allianceId, battlegroup, aqDay])
-}
-
-model AQSkip {
-  id         String   @id @default(cuid())
-  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-  allianceId String   @unique
-  skipUntil  DateTime
-}
-
-model Roster {
-  id          String  @id @default(cuid())
-  stars       Int
-  rank        Int
-  isAwakened  Boolean
-  isAscended  Boolean @default(false)
-  powerRating Int?
-  sigLevel    Int     @default(0)
-
-  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId   String
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-  championId Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([playerId, championId, stars])
-  @@index([playerId])
-  @@index([championId])
-}
-
-// --- War Video Models ---
-
-model War {
-  id            String    @id @default(cuid())
-  name          String?
-  season        Int
-  warNumber     Int?
-  warTier       Int
-  enemyAlliance String?
-  status        WarStatus @default(PLANNING)
-  result        WarResult @default(UNKNOWN)
-  enemyDeaths   Int?
-  mapType       WarMapType @default(STANDARD)
-  createdAt     DateTime  @default(now())
-
-  // A war belongs to an alliance
-  allianceId String
-  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-
-  // A war is comprised of many fights
-  fights         WarFight[]
-  extraChampions WarExtraChampion[]
-  bans           WarBan[]
-
-  @@unique([allianceId, season, warNumber])
-  @@index([allianceId])
-}
-
-model WarDefensePlan {
-  id          String     @id @default(cuid())
-  name        String
-  mapType     WarMapType @default(STANDARD)
-  tier        Int?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  allianceId  String
-  alliance    Alliance   @relation(fields: [allianceId], references: [id], onDelete: Cascade)
-
-  placements  WarDefensePlacement[]
-  
-  // Optional: Link to a specific tactic for visualization
-  tacticId    String?
-  tactic      WarTactic? @relation(fields: [tacticId], references: [id])
-
-  highlightTagId Int?
-  highlightTag   Tag? @relation(fields: [highlightTagId], references: [id])
-
-  activeForAlliance Alliance? @relation("ActiveDefensePlan")
-
-  @@index([allianceId])
-}
-
-model WarDefensePlacement {
-  id          String   @id @default(cuid())
-  
-  nodeId      Int
-  node        WarNode  @relation(fields: [nodeId], references: [id])
-
-  defenderId  Int?
-  defender    Champion? @relation(fields: [defenderId], references: [id])
-
-  playerId    String?
-  player      Player?   @relation(fields: [playerId], references: [id])
-
-  planId      String
-  plan        WarDefensePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
-
-  battlegroup Int @default(1)
-  starLevel   Int? // New: Star level of the champion placed
-
-  @@unique([planId, battlegroup, nodeId])
-  @@index([planId])
-  @@index([playerId])
-  @@index([defenderId])
-  @@index([nodeId])
-}
-
-model SeasonBan {
-  id      String @id @default(cuid())
-  season  Int
-  minTier Int?
-  maxTier Int?
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([season, minTier, maxTier, championId])
-}
-
-model WarBan {
-  id String @id @default(cuid())
-
-  warId String
-  war   War    @relation(fields: [warId], references: [id], onDelete: Cascade)
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([warId])
-  @@index([championId])
-}
-
-model WarFight {
-  id          String   @id @default(cuid())
-  death       Int      @default(0)
-  battlegroup Int
-  createdAt   DateTime @default(now())
-
-  // --- Core Fight Details ---
-  attackerId Int?
-  attacker   Champion? @relation("AttackerRelation", fields: [attackerId], references: [id])
-  defenderId Int?
-  defender   Champion? @relation("DefenderRelation", fields: [defenderId], references: [id])
-  nodeId     Int
-  node       WarNode   @relation(fields: [nodeId], references: [id])
-
-  prefightChampions FightPrefight[]
-
-  // --- Contextual Links ---
-  // The player who performed the fight
-  playerId String?
-  player   Player? @relation("PlayerInFight", fields: [playerId], references: [id])
-
-  // The war this fight belongs to
-  warId String
-  war   War    @relation(fields: [warId], references: [id], onDelete: Cascade)
-
-  // Optional notes for the fight
-  notes String?
-
-  // The video this fight appears in (optional, can be null)
-  videoId String?
-  video   WarVideo? @relation(fields: [videoId], references: [id], onDelete: SetNull)
-
-  @@index([attackerId])
-  @@index([defenderId])
-  @@index([nodeId])
-  @@index([playerId])
-  @@index([warId])
-  @@index([videoId])
-}
-
-model FightPrefight {
-  id String @id @default(cuid())
-
-  warFightId String
-  warFight   WarFight @relation(fields: [warFightId], references: [id], onDelete: Cascade)
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  playerId String?
-  player   Player? @relation(fields: [playerId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([warFightId, championId])
-  @@index([warFightId])
-  @@index([championId])
-  @@index([playerId])
-}
-
-model WarExtraChampion {
-  id String @id @default(cuid())
-
-  warId String
-  war   War    @relation(fields: [warId], references: [id], onDelete: Cascade)
-
-  playerId String
-  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
-
-  championId Int
-  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-
-  battlegroup Int
-
-  createdAt DateTime @default(now())
-
-  @@index([warId])
-  @@index([playerId])
-}
-
-model WarVideo {
-  id          String         @id @default(cuid())
-  gcsUrl      String?        @unique
-  url         String?        @unique
-  description String?
-  visibility  String         @default("public")
-  status      WarVideoStatus @default(PLANNING)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  // A video can contain one or more fights
-  fights WarFight[]
-
-  // The player who submitted the video
-  submittedById String
-  submittedBy   Player @relation("SubmittedBy", fields: [submittedById], references: [id])
-
-  @@index([submittedById])
-}
-
-model WarNode {
-  id          Int                 @id @default(autoincrement())
-  nodeNumber  Int                 @unique
-  description String?
-  fights      WarFight[]
-  allocations WarNodeAllocation[]
-  placements  WarDefensePlacement[]
-}
-
-model NodeModifier {
-  id          String @id @default(cuid())
-  name        String
-  description String
-
-  allocations WarNodeAllocation[]
-
-  @@unique([name, description])
-}
-
-model WarNodeAllocation {
-  id        String  @id @default(cuid())
-  warNodeId Int
-  warNode   WarNode @relation(fields: [warNodeId], references: [id], onDelete: Cascade)
-
-  nodeModifierId String
-  nodeModifier   NodeModifier @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
-
-  minTier Int        @default(0)
-  maxTier Int        @default(0)
-  season  Int        @default(0)
-  mapType WarMapType @default(STANDARD)
-
-  @@unique([warNodeId, nodeModifierId, minTier, maxTier, season, mapType])
-  @@index([warNodeId])
-  @@index([nodeModifierId])
-}
-
-model WarTactic {
-  id      String @id @default(cuid())
-  season  Int
-  minTier Int?
-  maxTier Int?
-
-  attackTagId Int?
-  attackTag   Tag? @relation("AttackTactic", fields: [attackTagId], references: [id])
-
-  defenseTagId Int?
-  defenseTag   Tag? @relation("DefenseTactic", fields: [defenseTagId], references: [id])
-
-  name String?
-
-  defensePlans WarDefensePlan[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([season, minTier, maxTier])
-}
-
-model UploadSession {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  fightIds  String[]
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-model UploadToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  playerId  String
-  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([playerId])
-}
-
-// --- NextAuth Models ---
-
-model SystemConfig {
-  key       String   @id
-  value     String
-  updatedAt DateTime @updatedAt
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model BotJob {
-  id        String       @id @default(cuid())
-  type      BotJobType
-  status    BotJobStatus @default(PENDING)
-  payload   Json
-  error     String?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  INVITE
+  REQUEST
 }

@@ -23,7 +23,8 @@ Complex web pages (like Roster) follow a modular architecture:
 To decouple the Web App and Discord Bot, we use a database-backed `BotJob` queue.
 *   **Producer (Web):** Creates `BotJob` records (e.g., `NOTIFY_WAR_VIDEO`).
 *   **Consumer (Bot):** `JobProcessor` service polls for `PENDING` jobs and executes Discord API calls.
-*   **Job Types:** `NOTIFY_WAR_VIDEO`, `DISTRIBUTE_WAR_PLAN`, `UPDATE_MEMBER_ROLES`.
+*   **Guild Multi-Tenancy:** A single Discord Guild can host multiple Alliance records. This is supported via the `Alliance.guildId` index (non-unique).
+*   **Job Types:** `NOTIFY_WAR_VIDEO`, `DISTRIBUTE_WAR_PLAN`, `UPDATE_MEMBER_ROLES`, `LEAVE_GUILD`.
 
 ## Direct Discord API Access (Web)
 While most Discord actions are handled via the `BotJob` queue, the Web App can directly query the Discord API for read-only operations (e.g., fetching guild channels).
@@ -54,8 +55,15 @@ We strictly adhere to React 19's asynchronous parameter and state management rul
 *   **Cascading Deletes:** Alliances use `onDelete: Cascade` in Prisma for linked records (Wars, etc.) to support safe, automated cleanup of abandoned server registrations.
 *   **Atomic Cleanup:** The `checkAndCleanupAlliance` service uses `prisma.$transaction` to eliminate TOCTOU (Time-of-Check to Time-of-Use) race conditions during orphan pruning.
 
+## Asset Management & Google Cloud Storage
+We use Google Cloud Storage (GCS) for hosting user-uploaded assets like quest banners.
+*   **Infrastructure:** The `@google-cloud/storage` library is used within a strictly typed singleton wrapper (`web/src/lib/gcs.ts`) to manage connections.
+*   **Resilience:** Deletion logic (`deleteFromGcs`) is hardened to ignore 404 errors, preventing system crashes when trying to remove already-missing assets.
+*   **Performance:** Metadata is set to `public, max-age=31536000` on upload to ensure aggressive edge caching via the GCS CDN.
+
 ## Admin Portal Architecture
 The Admin Portal (`/admin`) is a secure, server-rendered section of the web app.
 *   **Security:** Uses a dedicated `ensureAdmin()` server action that verifies the session user's `isBotAdmin` status against the database before rendering any admin layouts or executing mutations.
 *   **Data Mutation:** Relies heavily on **Server Actions** for CRUD operations (e.g., `updateChampionDetails`, `saveChampionAttacks`), ensuring direct and type-safe database interaction without API routes.
+*   **Hydration Pattern:** For complex relations (like Quest Creators), Server Components hydrate raw database records by joining with Discord `User` tables before passing the "enriched" data to client components. This ensures actual names and avatars are displayed instead of raw IDs.
 *   **State Management:** Uses optimistic updates and `revalidatePath` to ensure the UI remains snappy and consistent after edits.

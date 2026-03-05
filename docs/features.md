@@ -99,6 +99,25 @@ A unified suite of tools for managing Alliance War.
     *   **Defense:** Analyze performance by Node (lethality) or Defender (placement history).
     *   **Matchups:** Analyze Attacker success rates and find "Best Counters".
 
+### Quest Planning & Roster Integration
+A dedicated system for planning fights across complex quests (e.g., Story content, Everest runs).
+*   **Data Model:** `QuestCategory` -> `QuestPlan` -> `QuestEncounter` -> `QuestEncounterNode`.
+*   **Admin Builder (`/admin/quests`):**
+    *   **Quest Creation:** Define paths, add sequence steps, and specify defenders via `ChampionCombobox`.
+    *   **Visibility System:** Supports `DRAFT` (hidden), `VISIBLE` (alliance-wide), and `ARCHIVED` states.
+    *   **Creator Attribution:** Support for multiple creators per quest, displaying real Discord names and avatars via `AsyncBotUserCombobox`.
+    *   **Cinematic Banners:** Support for GCS-backed banner assets with Fit/Position controls and automated dark text overlays.
+    *   **Restrictions:** Configure quest-wide or encounter-specific restrictions like Min/Max Star levels, Class, and Tag requirements using interactive UI tools (`MultiTagCombobox`).
+    *   **Recommendations & Tips:** Provide Markdown-supported tips, recommend specific champions, and map active `NodeModifier`s to encounters.
+    *   **At-a-Glance Metrics:** Admin dashboard overhauls showing encounter counts, team limits, and star requirements per plan.
+*   **Player Timeline (`/planning/quests/[id]`):**
+    *   **Tactical Path:** A high-end vertical timeline with cinematic "VS" indicators, thematic color-coding (Defender Red vs. Counter Sky), and dedicated "Quest Start" and "Boss" nodes.
+    *   **Advanced Roster Filtering:** Integrated Ability, Category, and Immunity filters within the timeline selection grid to find perfect counters.
+    *   **Requirement Transparency:** Explicitly displays Quest and Fight requirements as read-only badges in the filter list.
+    *   **Team Limit Enforcement:** Automatic enforcement of quest-specific team limits with real-time feedback and an expandable "Current Team Plan" overview showing assigned defenders.
+    *   **Counter Selection:** Players simply click a valid champion from their roster to assign them to an encounter, saving their plan dynamically across sessions via `PlayerQuestEncounter`.
+    *   **Highlights:** Automatically highlights champions matching the administrative "Recommended Tags" or "Recommended Champions" for quick, intelligent selection.
+
 ### Profile & Roster Manager
 *   **Profile:** Switch/create/delete multiple MCOC accounts per user.
 *   **Roster Grid:** High-performance virtualized list of champions.
@@ -129,7 +148,15 @@ A secure, web-based suite for managing core game data and system-wide alliance/p
 *   **Database Insights:** Real-time dashboard with key metrics (Total Players/Alliances, Affiliation rates) and high-performance visualizations of top-tier alliances and prestige leaders.
 *   **Directory Management:**
     *   **Alliances:** Searchable, sortable, and paginated directory of all registered Discord servers.
+    *   **Discord Servers:** Real-time monitoring of all servers the bot is connected to. Features include:
+        *   **Member Tracking:** Displays approximate member counts to identify small/test servers.
+        *   **Manual Leave:** Admins can trigger the bot to leave specific servers via the `LEAVE_GUILD` job queue.
+        *   **Batch Cleanup:** One-click tool to leave all servers with 1 or fewer members, helping stay under the 100-server cap.
     *   **Players:** Comprehensive directory of all MCOC profiles with granular status and role indicators (Admin, Officer, Trusted).
+*   **Enhanced Navigation:**
+    *   **Collapsible Sidebar:** Admin sidebar can be collapsed to an icon-only view to maximize workspace area.
+    *   **Logical Grouping:** Navigation items are organized into categories: Overview, Community, Game Data, War Config, and System.
+    *   **Persistent State:** Sidebar state (collapsed/expanded) is persisted across sessions via `localStorage`.
 *   **Alliance Maintenance:**
     *   **Automated Cleanup:** Background service `checkAndCleanupAlliance` automatically prunes "orphan" alliances (0 members) to prevent database bloat.
     *   **Manual Pruning:** Admin-only "Cleanup Orphans" tool for bulk removal of abandoned registrations.

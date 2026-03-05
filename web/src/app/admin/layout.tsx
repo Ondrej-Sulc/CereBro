@@ -9,10 +9,9 @@ export default async function AdminLayout({
   await ensureAdmin()
 
   return (
-    <div className="container mx-auto py-6 flex flex-col md:flex-row gap-6">
-      <aside className="w-full md:w-64 flex-shrink-0">
+    <div className="w-full max-w-[1600px] mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">
+      <aside className="w-full md:w-auto flex-shrink-0">
         <div className="sticky top-20">
-            <h2 className="text-xl font-bold mb-4 px-4">Admin Portal</h2>
             <AdminSidebar />
         </div>
       </aside>

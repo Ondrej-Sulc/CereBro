@@ -10,6 +10,7 @@ interface RecommendationOptions {
     sigClassFilter: ChampionClass[];
     rankSagaFilter: boolean;
     sigSagaFilter: boolean;
+    limit?: number;
 }
 
 export async function calculateRosterRecommendations(
@@ -137,7 +138,7 @@ export async function calculateRosterRecommendations(
 
     const recommendations = allRecommendations
         .sort((a, b) => b.accountGain - a.accountGain)
-        .slice(0, 5);
+        .slice(0, options.limit || 5);
 
     // --- Signature Stone Simulation ---
     const sigCandidates = roster.filter(r => {
@@ -260,8 +261,8 @@ export async function calculateRosterRecommendations(
                 prestigePerSig: parseFloat(efficiency.toFixed(2))
             };
         }).filter((r): r is NonNullable<typeof r> => r !== null && r.accountGain > 0)
-        .sort((a, b) => b.accountGain - a.accountGain)
-        .slice(0, 5);
+            .sort((a, b) => b.accountGain - a.accountGain)
+            .slice(0, options.limit || 5);
     }
 
     return {

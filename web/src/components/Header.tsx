@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -56,18 +56,22 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link href="/profile/roster" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-              <LayoutGrid className="w-4 h-4" />
-              My Roster
-            </Link>
-            
-            <Link href="/war-videos" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-              <Book className="w-4 h-4" />
-              War Archive
-            </Link>
-
+                    {/* Desktop Navigation */}
+                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+                      <Link href="/profile/roster" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                        <LayoutGrid className="w-4 h-4" />
+                        My Roster
+                      </Link>
+          
+                      <Link href="/planning/quests" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                        <Map className="w-4 h-4" />
+                        Quest Planner
+                      </Link>
+          
+                      <Link href="/war-videos" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                        <Book className="w-4 h-4" />
+                        War Archive
+                      </Link>
             {isInAlliance ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -152,22 +156,28 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                   </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-4">
-                    <Link 
-                        href="/profile/roster" 
-                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                    >
-                      <LayoutGrid className="w-5 h-5" />
-                      My Roster
-                    </Link>
-                    <Link 
-                        href="/war-videos" 
-                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                    >
-                      <Book className="w-5 h-5" />
-                      War Archive
-                    </Link>
-
+                                    <div className="flex flex-col gap-4">
+                                      <Link
+                                          href="/profile/roster"
+                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                                      >
+                                        <LayoutGrid className="w-5 h-5" />
+                                        My Roster
+                                      </Link>
+                                      <Link
+                                          href="/planning/quests"
+                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                                      >
+                                        <Map className="w-5 h-5" />
+                                        Quest Planner
+                                      </Link>
+                                      <Link
+                                          href="/war-videos"
+                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                                      >
+                                        <Book className="w-5 h-5" />
+                                        War Archive
+                                      </Link>
                     <Link 
                         href="/about" 
                         className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"

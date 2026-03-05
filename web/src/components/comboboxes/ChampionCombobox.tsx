@@ -16,11 +16,12 @@ import {
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+import { ChampionClass } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { getChampionClassColors } from "@/lib/championClassHelper";
-import { ChampionClass } from "@prisma/client";
+import Fuse from "fuse.js";
 
 interface ChampionComboboxProps {
   champions: (Champion & { group?: string })[];
@@ -66,6 +67,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   const handleSelect = React.useCallback(
     (championId: string) => {
       onSelect(championId);
+      setSearch(""); // Clear search on select
       setOpen(false);
     },
     [onSelect, setOpen]
@@ -79,18 +81,29 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     [onSelect]
   );
 
-  const { flatItems, groupCounts, groupNames } = React.useMemo(() => {
-    const searchLower = search.toLowerCase();
+  const fuse = React.useMemo(() => {
+    return new Fuse(champions, {
+      keys: ["name"],
+      threshold: 0.3,
+      distance: 100,
+      ignoreLocation: true,
+    });
+  }, [champions]);
 
+  const { flatItems, groupCounts, groupNames } = React.useMemo(() => {
     let filtered = champions;
 
     if (showOnlyActive && activeChampionIds) {
       filtered = filtered.filter((c) => activeChampionIds.has(String(c.id)));
     }
 
-    filtered = filtered.filter((champion) =>
-      champion.name.toLowerCase().includes(searchLower)
-    );
+    if (search) {
+      filtered = fuse.search(search).map(result => result.item);
+      // Re-filter by active if needed after fuzzy search
+      if (showOnlyActive && activeChampionIds) {
+        filtered = filtered.filter((c) => activeChampionIds.has(String(c.id)));
+      }
+    }
 
     const groups: Record<string, typeof champions> = {};
 
@@ -115,7 +128,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     });
 
     return { flatItems: flat, groupCounts: counts, groupNames: groupOrder };
-  }, [champions, search, showOnlyActive, activeChampionIds]);
+  }, [champions, search, showOnlyActive, activeChampionIds, fuse]);
 
   const selectedChampion = React.useMemo(
     () => (value ? champions.find((c) => String(c.id) === value) : null),
@@ -146,7 +159,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                 >
                   <Image
                     src={getChampionImageUrl(
-                      selectedChampion.images as unknown as ChampionImages,
+                      selectedChampion.images,
                       "128"
                     )}
                     alt={selectedChampion.name}
@@ -190,7 +203,6 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
       <PopoverContent
         sideOffset={4}
         className="w-[--radix-popover-trigger-width] p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
         onWheel={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
@@ -236,59 +248,59 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                 {!mounted ? (
                   <div className="p-4 text-center text-xs text-muted-foreground">Loading...</div>
                 ) : (
-                <GroupedVirtuoso
-                  style={{
-                    height: Math.min(
-                      flatItems.length * 52 + groupNames.length * 28,
-                      300
-                    ),
-                  }}
-                  groupCounts={groupCounts}
-                  groupContent={(index) => (
-                    <div className="bg-slate-950/95 backdrop-blur text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1.5 border-b border-slate-800 sticky top-0 z-10">
-                      {groupNames[index]}
-                    </div>
-                  )}
-                  itemContent={(index) => {
-                    const item = flatItems[index];
+                  <GroupedVirtuoso
+                    style={{
+                      height: Math.min(
+                        flatItems.length * 52 + groupNames.length * 28,
+                        300
+                      ),
+                    }}
+                    groupCounts={groupCounts}
+                    groupContent={(index: number) => (
+                      <div className="bg-slate-950/95 backdrop-blur text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1.5 border-b border-slate-800 sticky top-0 z-10">
+                        {groupNames[index]}
+                      </div>
+                    )}
+                    itemContent={(index: number) => {
+                      const item = flatItems[index];
 
-                    const colors = getChampionClassColors(
-                      item.class as ChampionClass
-                    );
+                      const colors = getChampionClassColors(
+                        item.class as ChampionClass
+                      );
 
-                    return (
-                      <CommandItem
-                        key={item.id}
-                        value={item.name}
-                        onSelect={() => handleSelect(String(item.id))}
-                        className="flex items-center gap-2 cursor-pointer h-auto py-2"
-                      >
-                        <div
-                          className={cn(
-                            "relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2",
-                            colors.border
-                          )}
+                      return (
+                        <CommandItem
+                          key={item.id}
+                          value={item.name}
+                          onSelect={() => handleSelect(String(item.id))}
+                          className="flex items-center gap-2 cursor-pointer h-auto py-2"
                         >
-                          <Image
-                            src={getChampionImageUrl(item.images as unknown as ChampionImages, "64")}
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
+                          <div
+                            className={cn(
+                              "relative h-8 w-8 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border-2",
+                              colors.border
+                            )}
+                          >
+                            <Image
+                              src={getChampionImageUrl(item.images, "64")}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
 
-                        <span
-                          className={cn(
-                            "font-medium text-sm leading-tight whitespace-normal",
-                            colors.text
-                          )}
-                        >
-                          {item.name}
-                        </span>
-                      </CommandItem>
-                    );
-                  }}
-                />
+                          <span
+                            className={cn(
+                              "font-medium text-sm leading-tight whitespace-normal",
+                              colors.text
+                            )}
+                          >
+                            {item.name}
+                          </span>
+                        </CommandItem>
+                      );
+                    }}
+                  />
                 )}
               </div>
             </CommandGroup>

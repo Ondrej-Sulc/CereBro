@@ -1,4 +1,4 @@
-import { Champion as PrismaChampion } from '@prisma/client';
+import type { Champion as PrismaChampion, Tag } from '@prisma/client';
 
 export interface ChampionImages {
   hero: string;
@@ -14,6 +14,13 @@ export interface ChampionImages {
 
 export interface Champion extends Omit<PrismaChampion, 'images'> {
   images: ChampionImages;
-  abilities?: { ability: { name: string } }[];
-  tags?: { name: string }[];
+  abilities?: { 
+    type: 'ABILITY' | 'IMMUNITY';
+    ability: { 
+      id: number;
+      name: string;
+      categories: { name: string }[];
+    } 
+  }[];
+  tags?: Tag[];
 }

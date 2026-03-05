@@ -18,10 +18,6 @@ import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
 import { ExtraChampion, WarTacticWithTags } from "../hooks/use-war-planning";
 
-interface ChampionWithTags extends Champion {
-  tags?: { name: string }[];
-}
-
 interface NodeEditorProps {
   onClose: () => void;
   warId: string;
@@ -101,13 +97,13 @@ export default function NodeEditor({
   // Check for tactic matches
   const defenderTacticMatch = useMemo(() => {
       if (!defenderId || !activeTactic?.defenseTag?.name) return false;
-      const def = champions.find(c => c.id === defenderId) as ChampionWithTags | undefined;
+      const def = champions.find(c => c.id === defenderId);
       return def?.tags?.some(t => t.name === activeTactic.defenseTag!.name) ?? false;
   }, [defenderId, activeTactic, champions]);
 
   const attackerTacticMatch = useMemo(() => {
       if (!attackerId || !activeTactic?.attackTag?.name) return false;
-      const atk = champions.find(c => c.id === attackerId) as ChampionWithTags | undefined;
+      const atk = champions.find(c => c.id === attackerId);
       return atk?.tags?.some(t => t.name === activeTactic.attackTag!.name) ?? false;
   }, [attackerId, activeTactic, champions]);
 

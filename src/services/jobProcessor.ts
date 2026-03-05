@@ -6,12 +6,13 @@ import { handleDeathVideoNotification } from './jobHandlers/deathVideoNotificati
 import { handleDistributeWarPlan } from './jobHandlers/distributeWarPlan';
 import { handleDistributeDefensePlan } from './jobHandlers/distributeDefensePlan';
 import { handleUpdateMemberRoles } from './jobHandlers/updateMemberRoles';
+import { handleLeaveGuild, LeaveGuildPayload } from './jobHandlers/leaveGuild';
 // @ts-ignore - Types might be stale until regen
 import { BotJobType, BotJobStatus } from '@prisma/client';
 
 export function startJobProcessor(client: Client) {
   logger.info('⚙️ Job Processor started.');
-  
+
   setInterval(async () => {
     try {
       if (!prisma.botJob) {
@@ -38,19 +39,23 @@ export function startJobProcessor(client: Client) {
 
       try {
         switch (job.type) {
-          case 'NOTIFY_WAR_VIDEO':
+          case BotJobType.NOTIFY_WAR_VIDEO:
             await handleWarVideoNotification(client, job.payload);
             break;
-          case 'NOTIFY_DEATH_VIDEO':
+          case BotJobType.NOTIFY_DEATH_VIDEO:
             await handleDeathVideoNotification(client, job.payload);
             break;
-                          case 'DISTRIBUTE_WAR_PLAN':
-                              await handleDistributeWarPlan(client, job.payload);
-                              break;
-                          case 'DISTRIBUTE_DEFENSE_PLAN':
-                              await handleDistributeDefensePlan(client, job.payload);
-                              break;
-                          case 'UPDATE_MEMBER_ROLES':            await handleUpdateMemberRoles(client, job.payload);
+          case BotJobType.DISTRIBUTE_WAR_PLAN:
+            await handleDistributeWarPlan(client, job.payload);
+            break;
+          case BotJobType.DISTRIBUTE_DEFENSE_PLAN:
+            await handleDistributeDefensePlan(client, job.payload);
+            break;
+          case BotJobType.UPDATE_MEMBER_ROLES:
+            await handleUpdateMemberRoles(client, job.payload);
+            break;
+          case BotJobType.LEAVE_GUILD:
+            await handleLeaveGuild(client, job.payload as LeaveGuildPayload);
             break;
           default:
             logger.warn(`Unknown job type: ${job.type}`);
@@ -60,13 +65,14 @@ export function startJobProcessor(client: Client) {
           where: { id: job.id },
           data: { status: 'COMPLETED' }
         });
-      } catch (error: any) {
-        logger.error({ error: String(error), jobId: job.id }, 'Job processing failed');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error({ error: errorMessage, jobId: job.id }, 'Job processing failed');
         await prisma.botJob.update({
           where: { id: job.id },
-          data: { 
+          data: {
             status: 'FAILED',
-            error: error.message || String(error)
+            error: errorMessage
           }
         });
       }

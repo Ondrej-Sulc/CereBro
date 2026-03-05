@@ -51,31 +51,23 @@ export async function getUserPlayerWithAlliance() {
   if (player && botUser) {
     // Override the local isBotAdmin with the global BotUser permission
     return {
-        ...player,
-        isBotAdmin: botUser.isBotAdmin
+      ...player,
+      isBotAdmin: botUser.isBotAdmin
     };
-  } else if (player) {
-      // Fallback if no BotUser exists yet (should be covered by migration)
-      return player;
   }
 
   return null;
 }
 
 export async function requireBotAdmin() {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
+  const actingUser = await getUserPlayerWithAlliance();
+  if (!actingUser) throw new Error("Unauthorized");
 
-    const account = await prisma.account.findFirst({
-        where: { userId: session.user.id, provider: "discord" },
-    });
-    if (!account?.providerAccountId) throw new Error("No discord account linked");
-    
-    const botUser = await prisma.botUser.findUnique({
-        where: { discordId: account.providerAccountId }
-    });
+  // getUserPlayerWithAlliance already populated isBotAdmin from BotUser table.
+  // If it's missing or false, we look up again just to be sure we have latest.
+  if (!actingUser.isBotAdmin) {
+    throw new Error("Unauthorized");
+  }
 
-    if (!botUser?.isBotAdmin) throw new Error("Must be bot admin");
-
-    return { session, account, botUser };
+  return actingUser;
 }
