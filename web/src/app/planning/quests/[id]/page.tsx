@@ -143,12 +143,14 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         };
     }));
 
+    const bannerUrl = quest.bannerUrl ? quest.bannerUrl.replace(/#/g, '%23') : null;
+
     return (
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
-            {quest.bannerUrl && (
+            {bannerUrl && (
                 <div className="relative w-full aspect-[21/9] md:aspect-[25/7] mb-8 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
                     <Image 
-                        src={quest.bannerUrl} 
+                        src={bannerUrl} 
                         alt={quest.title} 
                         fill 
                         priority

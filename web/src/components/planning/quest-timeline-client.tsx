@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle } from "lucide-react";
 import { savePlayerQuestCounter } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -44,12 +44,28 @@ interface Props {
 
 const CLASSES = Object.values(ChampionClass);
 
+function getYoutubeId(url: string) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
 export default function QuestTimelineClient({ quest, roster, savedEncounters, filterMetadata }: Props) {
     const { toast } = useToast();
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
     const [isTeamExpanded, setIsTeamExpanded] = useState(false);
+    const [showVideoId, setShowVideoId] = useState<string | null>(null);
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 100);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -73,6 +89,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
 
     const toggleExpand = (id: string) => {
         setExpandedId(prev => prev === id ? null : id);
+        // Reset video state when switching/closing
+        if (expandedId !== id) setShowVideoId(null);
     };
 
     const filteredGlobalRoster = useMemo(() => {
@@ -180,29 +198,43 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
     return (
         <div className="relative pt-4 pb-20">
             {quest.teamLimit !== null && quest.teamLimit > 0 && (
-                <div className="sticky top-[72px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0">
-                    <Card className="bg-slate-950/95 border-sky-900/40 shadow-xl shadow-black/50 backdrop-blur-md">
+                <div className={cn(
+                    "sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 transition-all duration-300",
+                    isScrolled ? "scale-[0.98] md:scale-100 opacity-95 hover:opacity-100" : ""
+                )}>
+                    <Card className={cn(
+                        "bg-slate-950/95 border-sky-900/40 shadow-xl shadow-black/50 backdrop-blur-md transition-all duration-300",
+                        isScrolled ? "border-sky-800/60 ring-1 ring-sky-500/20" : ""
+                    )}>
                         <CardHeader 
-                            className="py-2.5 px-4 border-b border-slate-800/50 flex flex-row items-center justify-between cursor-pointer hover:bg-slate-900/50 transition-colors"
+                            className={cn(
+                                "py-1.5 px-3 border-b border-slate-800/50 flex flex-row items-center justify-between cursor-pointer hover:bg-slate-900/50 transition-all",
+                                isScrolled ? "py-1" : "py-2"
+                            )}
                             onClick={() => setIsTeamExpanded(!isTeamExpanded)}
                         >
-                            <CardTitle className="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
-                                Current Team Plan
-                                {isTeamExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                            <CardTitle className="text-[11px] font-black uppercase tracking-widest text-sky-400 flex items-center gap-2">
+                                Team Plan
+                                {isTeamExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
                             </CardTitle>
-                            <Badge variant={selectedTeam.length > quest.teamLimit ? "destructive" : "secondary"} className={cn(
-                                "font-bold",
-                                selectedTeam.length > quest.teamLimit ? "bg-red-600 text-white shadow-[0_0_10px_rgba(220,38,38,0.5)]" : "bg-sky-950 text-sky-400 border border-sky-800"
-                            )}>
-                                {selectedTeam.length} / {quest.teamLimit}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                <Badge variant={selectedTeam.length > quest.teamLimit ? "destructive" : "secondary"} className={cn(
+                                    "font-black text-[10px] h-5 px-2",
+                                    selectedTeam.length > quest.teamLimit ? "bg-red-600 text-white" : "bg-sky-950 text-sky-400 border border-sky-800"
+                                )}>
+                                    {selectedTeam.length} / {quest.teamLimit}
+                                </Badge>
+                            </div>
                         </CardHeader>
-                        <CardContent className="p-3">
+                        <CardContent className={cn(
+                            "p-2 transition-all overflow-hidden",
+                            isScrolled && !isTeamExpanded ? "max-h-[82px]" : "max-h-[500px]"
+                        )}>
                             {selectedTeam.length === 0 ? (
-                                <p className="text-xs text-slate-500 italic text-center py-2">No champions selected. Pick counters below.</p>
+                                <p className="text-[10px] text-slate-500 italic text-center py-1">No champions selected.</p>
                             ) : (
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar scroll-smooth">
                                         {selectedTeam.map(r => {
                                             // Find all encounters this champion is assigned to
                                             const assignedEncounterIds = Object.entries(selections)
@@ -212,9 +244,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                             const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
 
                                             return (
-                                                <div key={r.id} className="w-[85px] sm:w-[95px] shrink-0 flex flex-col gap-2">
+                                                <div key={r.id} className="w-[65px] sm:w-[75px] shrink-0 flex flex-col gap-1.5">
                                                     <UpdatedChampionItem
-                                                        variant="tall"
+                                                        variant="square"
                                                         item={{
                                                             stars: r.stars,
                                                             rank: r.rank,
@@ -231,21 +263,17 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                     />
                                                     
                                                     {isTeamExpanded && (
-                                                        <div className="bg-slate-900/50 rounded-md border border-slate-800 p-1.5 flex flex-col gap-1.5 animate-in slide-in-from-top-2">
-                                                            <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                                                                <span>Fights ({assignedEncounters.length})</span>
-                                                                <Crosshair className="w-3 h-3" />
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-1">
+                                                        <div className="bg-slate-900/50 rounded-md border border-slate-800 p-1 flex flex-col gap-1 animate-in slide-in-from-top-1 duration-200">
+                                                            <div className="flex flex-wrap gap-0.5">
                                                                 {assignedEncounters.map((enc: EncounterWithRelations) => (
-                                                                    <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-6 h-6 rounded border border-slate-700 overflow-hidden group/tgt cursor-help">
+                                                                    <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-5 h-5 rounded border border-slate-700 overflow-hidden group/tgt cursor-help">
                                                                         {enc.defender ? (
                                                                             <Image src={getChampionImageUrl(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
                                                                         ) : (
-                                                                            <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                                            <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-2.5 h-2.5 text-slate-500" /></div>
                                                                         )}
                                                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                            <span className="text-[8px] font-black text-white">{enc.sequence}</span>
+                                                                            <span className="text-[7px] font-black text-white">{enc.sequence}</span>
                                                                         </div>
                                                                     </div>
                                                                 ))}
@@ -256,11 +284,6 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                             );
                                         })}
                                     </div>
-                                </div>
-                            )}
-                            {selectedTeam.length > quest.teamLimit && (
-                                <div className="mt-2 text-xs text-red-300 bg-red-950/40 px-3 py-1.5 rounded-md border border-red-900/50 flex items-center gap-2 font-medium">
-                                    <AlertCircle className="w-3.5 h-3.5 shrink-0" /> Over team limit
                                 </div>
                             )}
                         </CardContent>
@@ -371,32 +394,25 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                             <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
                                                             Target
                                                         </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
+                                                            {encounter.defender?.name || "Unknown Defender"}
+                                                        </CardTitle>
                                                         {encounter.videoUrl && (
-                                                            <a 
-                                                                href={encounter.videoUrl} 
-                                                                target="_blank" 
-                                                                rel="noopener noreferrer"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
-                                                            >
-                                                                <Youtube className="w-3.5 h-3.5" />
-                                                                <span className="text-[9px]">Guide</span>
-                                                            </a>
+                                                            <Youtube className="w-5 h-5 text-red-600 shrink-0" />
                                                         )}
                                                     </div>
-                                                    <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
-                                                        {encounter.defender?.name || "Unknown Defender"}
-                                                    </CardTitle>
                                                     {/* Mini node preview */}
                                                     {encounter.nodes.length > 0 && !isExpanded && (
                                                         <div className="flex gap-1 mt-2 flex-wrap">
                                                             {encounter.nodes.slice(0, 3).map((n: EncounterNodeWithRelations) => (
-                                                                <Badge key={n.id} variant="secondary" className="text-[9px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-400 font-medium">
+                                                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-400 font-medium">
                                                                     {n.nodeModifier.name}
                                                                 </Badge>
                                                             ))}
                                                             {encounter.nodes.length > 3 && (
-                                                                <Badge variant="secondary" className="text-[9px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-500 font-medium">
+                                                                <Badge variant="secondary" className="text-[10px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-500 font-medium">
                                                                     +{encounter.nodes.length - 3}
                                                                 </Badge>
                                                             )}
@@ -461,7 +477,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                         <div className={cn("text-lg md:text-2xl font-black leading-none truncate w-full", champColors.text)}>
                                                                             {selectedRosterItem.champion.name}
                                                                         </div>
-                                                                        <div className="flex items-center md:flex-row-reverse gap-1.5 mt-1.5">
+                                                                        <div className="flex items-center md:justify-end gap-1.5 mt-1.5">
                                                                             <Badge variant="outline" className="text-[9px] font-black text-slate-300 bg-slate-900 border-slate-700 px-1.5 py-0 h-4">
                                                                                 {selectedRosterItem.stars}★ R{selectedRosterItem.rank}
                                                                             </Badge>
@@ -492,6 +508,65 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                         {/* Expanded Content */}
                                         {isExpanded && (
                                             <div className="border-t border-slate-800 bg-slate-900/20 p-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
+
+                                                {/* Video Guide Section */}
+                                                {encounter.videoUrl && (
+                                                    <div className="mb-4">
+                                                        {showVideoId === encounter.id ? (
+                                                            <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
+                                                                {(() => {
+                                                                    const videoId = getYoutubeId(encounter.videoUrl);
+                                                                    if (videoId) {
+                                                                        return (
+                                                                            <iframe
+                                                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                                                                                title="YouTube video player"
+                                                                                frameBorder="0"
+                                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                                                allowFullScreen
+                                                                                className="absolute inset-0 w-full h-full"
+                                                                            ></iframe>
+                                                                        );
+                                                                    }
+                                                                    return <div className="p-8 text-center text-slate-500">Invalid video URL</div>;
+                                                                })()}
+                                                                <Button 
+                                                                    variant="ghost" 
+                                                                    size="icon" 
+                                                                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full h-8 w-8 z-50"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setShowVideoId(null);
+                                                                    }}
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <div 
+                                                                className="group/video relative overflow-hidden rounded-xl border border-red-900/30 bg-gradient-to-r from-red-950/20 to-slate-900/40 p-4 cursor-pointer hover:border-red-600/50 transition-all active:scale-[0.99]"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setShowVideoId(encounter.id);
+                                                                }}
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="relative h-12 w-20 rounded bg-slate-950 flex items-center justify-center border border-slate-800 overflow-hidden shrink-0">
+                                                                        <Youtube className="w-6 h-6 text-red-600 group-hover/video:scale-110 transition-transform" />
+                                                                        <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover/video:opacity-100 transition-opacity" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="text-sm font-bold text-slate-200">Video Guide Available</h4>
+                                                                        <p className="text-xs text-slate-500">Click to watch the strategy for this encounter</p>
+                                                                    </div>
+                                                                    <div className="ml-auto">
+                                                                        <PlayCircle className="w-8 h-8 text-red-600/40 group-hover/video:text-red-600 transition-colors" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
 
                                                 {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
                                                     <div className="flex flex-col gap-2 mb-4 bg-red-950/10 p-4 rounded-lg border border-red-900/30">
@@ -608,10 +683,10 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                         sigLevel: userChamp.sigLevel,
                                                                                         powerRating: userChamp.powerRating,
                                                                                         champion: {
-                                                                                            id: c.id,
-                                                                                            name: c.shortName || c.name,
-                                                                                            championClass: c.class,
-                                                                                            images: c.images
+                                                                                            id: userChamp.champion.id,
+                                                                                            name: userChamp.champion.shortName || userChamp.champion.name,
+                                                                                            championClass: userChamp.champion.class,
+                                                                                            images: userChamp.champion.images
                                                                                         }
                                                                                     } : {
                                                                                         stars: 0,
@@ -666,9 +741,9 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                     )}
                                                                 </div>
                                                                 
-                                                                <div className="flex gap-2">
+                                                                    <div className="flex gap-2">
                                                                     <div className="flex gap-1.5 p-1 bg-slate-950/50 border border-slate-800 rounded-lg overflow-x-auto custom-scrollbar">
-                                                                        {CLASSES.map((cls) => (
+                                                                        {CLASSES.filter(cls => cls !== 'SUPERIOR').map((cls) => (
                                                                             <button
                                                                                 key={cls}
                                                                                 onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
@@ -808,38 +883,47 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                         }
 
                                                         return (
-                                                            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
-                                                                {encounterRoster.slice(0, 100).map((r: RosterWithChampion) => {
-                                                                    const isSelected = selections[encounter.id] === r.championId;
-                                                                    const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
+                                                            <div className="space-y-4">
+                                                                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
+                                                                    {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
+                                                                        const isSelected = selections[encounter.id] === r.championId;
+                                                                        const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
 
-                                                                    return (
-                                                                        <div
-                                                                            key={r.id}
-                                                                            onClick={() => handleSelectCounter(encounter.id, r.championId)}
-                                                                            title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
-                                                                            className="cursor-pointer"
-                                                                        >
-                                                                            <UpdatedChampionItem
-                                                                                item={{
-                                                                                    stars: r.stars,
-                                                                                    rank: r.rank,
-                                                                                    isAwakened: r.isAwakened,
-                                                                                    sigLevel: r.sigLevel,
-                                                                                    powerRating: r.powerRating,
-                                                                                    champion: {
-                                                                                        id: r.champion.id,
-                                                                                        name: r.champion.shortName || r.champion.name,
-                                                                                        championClass: r.champion.class,
-                                                                                        images: r.champion.images
-                                                                                    }
-                                                                                }}
-                                                                                isSelected={isSelected}
-                                                                                isRecommended={isRecommended}
-                                                                            />
-                                                                        </div>
-                                                                    );
-                                                                })}
+                                                                        return (
+                                                                            <div
+                                                                                key={r.id}
+                                                                                onClick={() => handleSelectCounter(encounter.id, r.championId)}
+                                                                                title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
+                                                                                className="cursor-pointer"
+                                                                            >
+                                                                                <UpdatedChampionItem
+                                                                                    item={{
+                                                                                        stars: r.stars,
+                                                                                        rank: r.rank,
+                                                                                        isAwakened: r.isAwakened,
+                                                                                        sigLevel: r.sigLevel,
+                                                                                        powerRating: r.powerRating,
+                                                                                        champion: {
+                                                                                            id: r.champion.id,
+                                                                                            name: r.champion.shortName || r.champion.name,
+                                                                                            championClass: r.champion.class,
+                                                                                            images: r.champion.images
+                                                                                        }
+                                                                                    }}
+                                                                                    isSelected={isSelected}
+                                                                                    isRecommended={isRecommended}
+                                                                                />
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                {encounterRoster.length > 30 && (
+                                                                    <div className="text-center p-3 bg-slate-900/30 border border-slate-800 border-dashed rounded-lg">
+                                                                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                                                                            Showing first 30 of {encounterRoster.length} matches. Use search or filters to narrow down.
+                                                                        </p>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         );
                                                     })()}

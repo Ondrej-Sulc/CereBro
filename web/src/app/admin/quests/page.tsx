@@ -34,6 +34,7 @@ export default async function AdminQuestsPage() {
                 category: true,
                 creator: true,
                 creators: true,
+                requiredTags: true,
                 encounters: {
                     select: { id: true }
                 }

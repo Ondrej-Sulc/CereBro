@@ -11,17 +11,50 @@ export default async function QuestsPage() {
     }
 
     // Fetch quest plans - only show VISIBLE ones
-    const quests = await prisma.questPlan.findMany({
+    const rawQuests = await prisma.questPlan.findMany({
         where: { status: QuestPlanStatus.VISIBLE },
         orderBy: { createdAt: 'desc' },
         include: {
             category: true,
             creator: true,
+            creators: {
+                include: {
+                    profiles: { where: { isActive: true } }
+                }
+            },
+            requiredTags: true,
             encounters: {
                 select: { id: true } // Just need count for summary
             }
         }
     });
+
+    // Map creators to User data to get their names and images
+    const quests = await Promise.all(rawQuests.map(async (quest) => {
+        const creatorsWithUsers = await Promise.all((quest.creators || []).map(async (creator) => {
+            const user = await prisma.user.findFirst({
+                where: {
+                    accounts: {
+                        some: {
+                            provider: "discord",
+                            providerAccountId: creator.discordId
+                        }
+                    }
+                }
+            });
+            return {
+                id: creator.id,
+                discordId: creator.discordId,
+                name: user?.name || creator.profiles[0]?.ingameName || "Unknown",
+                image: user?.image || null
+            };
+        }));
+
+        return {
+            ...quest,
+            creators: creatorsWithUsers
+        };
+    }));
 
     const categories = await prisma.questCategory.findMany({
         orderBy: { order: 'asc' }
@@ -33,7 +66,7 @@ export default async function QuestsPage() {
                 <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">Quest Planner</h1>
                 <p className="text-lg text-slate-400 mt-2">Plan your path, pick your counters, and conquer content.</p>
             </div>
-            <QuestListClient initialQuests={quests} categories={categories} />
+            <QuestListClient initialQuests={quests as any} categories={categories} />
         </div>
     );
 }

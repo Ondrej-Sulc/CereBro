@@ -458,7 +458,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                         {bannerUrl ? (
                                                             <>
                                                                 <Image 
-                                                                    src={bannerUrl} 
+                                                                    src={bannerUrl.replace(/#/g, '%23')} 
                                                                     alt="Quest Banner" 
                                                                     fill 
                                                                     className={cn(
