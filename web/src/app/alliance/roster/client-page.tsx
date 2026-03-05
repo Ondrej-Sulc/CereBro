@@ -237,7 +237,7 @@ export function AllianceRosterMatrix({
                                             {/* Portrait */}
                                             {champ.championImages && (
                                                 <Image
-                                                    src={getChampionImageUrl(champ.championImages, '64') || '/assets/icons/unknown.png'}
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/assets/icons/glossary.svg'}
                                                     alt={champ.championName}
                                                     fill
                                                     sizes="48px"
@@ -267,7 +267,7 @@ export function AllianceRosterMatrix({
                                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                                             {champ.championImages && (
                                                 <Image
-                                                    src={getChampionImageUrl(champ.championImages, '64') || '/assets/icons/unknown.png'}
+                                                    src={getChampionImageUrl(champ.championImages, '64') || '/assets/icons/glossary.svg'}
                                                     alt={champ.championName}
                                                     fill
                                                     className="object-cover"
@@ -363,7 +363,7 @@ export function AllianceRosterMatrix({
                                                                                     {instance.synergyChampions.map((sc, scIdx) => (
                                                                                         <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
                                                                                             <Image
-                                                                                                src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/assets/icons/unknown.png'}
+                                                                                                src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/assets/icons/glossary.svg'}
                                                                                                 alt={sc.name}
                                                                                                 fill
                                                                                                 className="object-cover"

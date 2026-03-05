@@ -80,7 +80,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                     <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm", classColors.text)}>
                         <div className="relative w-4 h-4">
                             <Image
-                                src={CLASS_ICONS[item.champion.class] || "/assets/icons/unknown.png"}
+                                src={CLASS_ICONS[item.champion.class] || "/assets/icons/glossary.svg"}
                                 alt={item.champion.class}
                                 fill
                                 sizes="16px"
@@ -122,7 +122,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                     <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                             <Image
-                                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64') || '/assets/icons/unknown.png'}
+                                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64') || '/assets/icons/glossary.svg'}
                                 alt={item.champion.name}
                                 fill
                                 className="object-cover"
