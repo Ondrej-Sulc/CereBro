@@ -761,7 +761,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                             id: userChamp.champion.id,
                                                                                             name: userChamp.champion.shortName || userChamp.champion.name,
                                                                                             championClass: userChamp.champion.class,
-                                                                                            images: userChamp.champion.images
+                                                                                            images: userChamp.champion.images as unknown as ChampionImages
                                                                                         }
                                                                                     } : {
                                                                                         stars: 0,
@@ -770,7 +770,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                             id: c.id,
                                                                                             name: c.shortName || c.name,
                                                                                             championClass: c.class,
-                                                                                            images: c.images
+                                                                                            images: c.images as unknown as ChampionImages
                                                                                         }
                                                                                     }}
                                                                                     isSelected={isSelected}

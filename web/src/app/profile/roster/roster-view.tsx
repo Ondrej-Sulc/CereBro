@@ -94,7 +94,7 @@ export function RosterView({
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(false);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
-  const [limit, setLimit] = useState(initialLimit);
+  const [limit, setLimit] = useState<number>(initialLimit || 5);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
 
   // Data State (Client-Side Fetching)
@@ -124,8 +124,6 @@ export function RosterView({
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
   const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
-
-  const [limit, setLimit] = useState<number>(initialLimit || 5);
 
   const currentParams = buildRosterQueryParams({
     simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: limit

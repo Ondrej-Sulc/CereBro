@@ -17,7 +17,7 @@ type CreatorInfo = {
     image: string | null;
 };
 
-type QuestWithRelations = QuestPlan & {
+export type QuestWithRelations = QuestPlan & {
     category: QuestCategory | null;
     creator: Player | null;
     creators: CreatorInfo[];
