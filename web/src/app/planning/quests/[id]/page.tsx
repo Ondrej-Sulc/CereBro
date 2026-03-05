@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit3, Youtube } from "lucide-react";
+import { Edit3, Youtube, ArrowLeft } from "lucide-react";
 import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { Champion, ChampionImages } from "@/types/champion";
@@ -147,6 +147,11 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
 
     return (
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+            <Link href="/planning/quests" className="inline-flex items-center gap-2 text-slate-400 hover:text-sky-400 mb-6 transition-colors group">
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                <span className="text-xs font-black uppercase tracking-[0.2em]">Back to Quest Plans</span>
+            </Link>
+
             {bannerUrl && (
                 <div className="relative w-full aspect-[21/9] md:aspect-[25/7] mb-8 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
                     <Image 

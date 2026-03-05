@@ -165,7 +165,7 @@ export async function leaveDiscordGuild(guildId: string) {
 
     await prisma.botJob.create({
         data: {
-            type: BotJobType.LEAVE_GUILD,
+            type: 'LEAVE_GUILD' as BotJobType,
             payload: { guildId },
             status: 'PENDING'
         }

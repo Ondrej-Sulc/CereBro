@@ -54,6 +54,7 @@ export function startJobProcessor(client: Client) {
           case "UPDATE_MEMBER_ROLES":
             await handleUpdateMemberRoles(client, job.payload);
             break;
+          // @ts-ignore - Stale types
           case "LEAVE_GUILD":
             await handleLeaveGuild(client, job.payload);
             break;
