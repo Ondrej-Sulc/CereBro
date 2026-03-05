@@ -6,6 +6,7 @@ import { handleDeathVideoNotification } from './jobHandlers/deathVideoNotificati
 import { handleDistributeWarPlan } from './jobHandlers/distributeWarPlan';
 import { handleDistributeDefensePlan } from './jobHandlers/distributeDefensePlan';
 import { handleUpdateMemberRoles } from './jobHandlers/updateMemberRoles';
+import { handleLeaveGuild } from './jobHandlers/leaveGuild';
 // @ts-ignore - Types might be stale until regen
 import { BotJobType, BotJobStatus } from '@prisma/client';
 
@@ -38,19 +39,23 @@ export function startJobProcessor(client: Client) {
 
       try {
         switch (job.type) {
-          case 'NOTIFY_WAR_VIDEO':
+          case "NOTIFY_WAR_VIDEO":
             await handleWarVideoNotification(client, job.payload);
             break;
-          case 'NOTIFY_DEATH_VIDEO':
+          case "NOTIFY_DEATH_VIDEO":
             await handleDeathVideoNotification(client, job.payload);
             break;
-                          case 'DISTRIBUTE_WAR_PLAN':
-                              await handleDistributeWarPlan(client, job.payload);
-                              break;
-                          case 'DISTRIBUTE_DEFENSE_PLAN':
-                              await handleDistributeDefensePlan(client, job.payload);
-                              break;
-                          case 'UPDATE_MEMBER_ROLES':            await handleUpdateMemberRoles(client, job.payload);
+          case "DISTRIBUTE_WAR_PLAN":
+            await handleDistributeWarPlan(client, job.payload);
+            break;
+          case "DISTRIBUTE_DEFENSE_PLAN":
+            await handleDistributeDefensePlan(client, job.payload);
+            break;
+          case "UPDATE_MEMBER_ROLES":
+            await handleUpdateMemberRoles(client, job.payload);
+            break;
+          case "LEAVE_GUILD":
+            await handleLeaveGuild(client, job.payload);
             break;
           default:
             logger.warn(`Unknown job type: ${job.type}`);

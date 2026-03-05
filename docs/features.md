@@ -148,7 +148,15 @@ A secure, web-based suite for managing core game data and system-wide alliance/p
 *   **Database Insights:** Real-time dashboard with key metrics (Total Players/Alliances, Affiliation rates) and high-performance visualizations of top-tier alliances and prestige leaders.
 *   **Directory Management:**
     *   **Alliances:** Searchable, sortable, and paginated directory of all registered Discord servers.
+    *   **Discord Servers:** Real-time monitoring of all servers the bot is connected to. Features include:
+        *   **Member Tracking:** Displays approximate member counts to identify small/test servers.
+        *   **Manual Leave:** Admins can trigger the bot to leave specific servers via the `LEAVE_GUILD` job queue.
+        *   **Batch Cleanup:** One-click tool to leave all servers with 1 or fewer members, helping stay under the 100-server cap.
     *   **Players:** Comprehensive directory of all MCOC profiles with granular status and role indicators (Admin, Officer, Trusted).
+*   **Enhanced Navigation:**
+    *   **Collapsible Sidebar:** Admin sidebar can be collapsed to an icon-only view to maximize workspace area.
+    *   **Logical Grouping:** Navigation items are organized into categories: Overview, Community, Game Data, War Config, and System.
+    *   **Persistent State:** Sidebar state (collapsed/expanded) is persisted across sessions via `localStorage`.
 *   **Alliance Maintenance:**
     *   **Automated Cleanup:** Background service `checkAndCleanupAlliance` automatically prunes "orphan" alliances (0 members) to prevent database bloat.
     *   **Manual Pruning:** Admin-only "Cleanup Orphans" tool for bulk removal of abandoned registrations.

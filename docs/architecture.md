@@ -23,7 +23,7 @@ Complex web pages (like Roster) follow a modular architecture:
 To decouple the Web App and Discord Bot, we use a database-backed `BotJob` queue.
 *   **Producer (Web):** Creates `BotJob` records (e.g., `NOTIFY_WAR_VIDEO`).
 *   **Consumer (Bot):** `JobProcessor` service polls for `PENDING` jobs and executes Discord API calls.
-*   **Job Types:** `NOTIFY_WAR_VIDEO`, `DISTRIBUTE_WAR_PLAN`, `UPDATE_MEMBER_ROLES`.
+*   **Job Types:** `NOTIFY_WAR_VIDEO`, `DISTRIBUTE_WAR_PLAN`, `UPDATE_MEMBER_ROLES`, `LEAVE_GUILD`.
 
 ## Direct Discord API Access (Web)
 While most Discord actions are handled via the `BotJob` queue, the Web App can directly query the Discord API for read-only operations (e.g., fetching guild channels).
