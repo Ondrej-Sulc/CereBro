@@ -51,7 +51,7 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
         ref={ref}
         {...props}
         style={style}
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4"
+        className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 sm:gap-4"
     >
         {children}
     </div>
@@ -268,13 +268,13 @@ export function RosterUpdateForm() {
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
 
-                        <Tabs 
-                            value={mode} 
+                        <Tabs
+                            value={mode}
                             onValueChange={(v) => {
                                 if (v === 'stats-view' || v === 'grid-view') {
                                     setMode(v);
                                 }
-                            }} 
+                            }}
                             className="w-full"
                         >
                             <TabsList className="grid w-full grid-cols-2 bg-slate-950 p-1 border border-slate-800 rounded-lg h-auto">

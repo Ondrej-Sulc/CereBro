@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Trophy } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
 import { ChampionImages } from "@/types/champion";
@@ -19,17 +20,18 @@ export interface RosterWithChampion {
     rank: number;
     isAwakened?: boolean;
     sigLevel?: number;
+    isAscended?: boolean;
     powerRating?: number | null;
     champion: ChampionData;
 }
 
-export const UpdatedChampionItem = memo(({ 
+export const UpdatedChampionItem = memo(({
     item,
     isSelected,
     isRecommended,
     isMissing,
     variant = "square"
-}: { 
+}: {
     item: RosterWithChampion;
     isSelected?: boolean;
     isRecommended?: boolean;
@@ -38,7 +40,7 @@ export const UpdatedChampionItem = memo(({
 }) => {
     const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
     const classColors = getChampionClassColors(item.champion.championClass);
-    
+
     if (variant === "tall") {
         return (
             <div
@@ -81,6 +83,11 @@ export const UpdatedChampionItem = memo(({
                 </div>
 
                 <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
+                    {item.isAscended && (
+                        <div className="bg-yellow-900/80 p-0.5 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
+                            <Trophy className="w-2.5 h-2.5 text-yellow-400 fill-yellow-500" />
+                        </div>
+                    )}
                     <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm", classColors.text)}>
                         <div className="relative w-3.5 h-3.5">
                             <Image
@@ -145,10 +152,17 @@ export const UpdatedChampionItem = memo(({
                         className="object-contain"
                     />
                 </div>
+
+                {/* Ascension Overlay */}
+                {item.isAscended && (
+                    <div className="absolute top-1 right-1 z-20 h-5 w-5 bg-yellow-950/80 rounded-sm border border-yellow-500/30 flex items-center justify-center p-0.5 shadow-sm">
+                        <Trophy className="w-3 h-3 text-yellow-400 fill-yellow-500" />
+                    </div>
+                )}
             </div>
 
             {/* Bottom Section: Compact Info */}
-            <div className="p-1.5 space-y-0.5">
+            <div className="p-1 space-y-0.5">
                 <div className="text-[10px] font-bold text-white truncate uppercase tracking-tight leading-tight">
                     {item.champion.name}
                 </div>
