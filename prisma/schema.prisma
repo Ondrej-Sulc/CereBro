@@ -652,7 +652,6 @@ model QuestCategory {
 model QuestPlan {
   id              String            @id @default(cuid())
   title           String
-  videoUrl        String?
   creatorId       String?
   categoryId      String?
   minStarLevel    Int?
@@ -660,11 +659,12 @@ model QuestPlan {
   requiredClasses ChampionClass[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
-  teamLimit       Int               @default(5)
+  teamLimit       Int?              @default(5)
   status          QuestPlanStatus   @default(DRAFT)
   bannerUrl       String?
   bannerFit       String?           @default("cover")
   bannerPosition  String?           @default("center")
+  videoUrl        String?
   playerPlans     PlayerQuestPlan[]
   encounters      QuestEncounter[]
   category        QuestCategory?    @relation(fields: [categoryId], references: [id])
@@ -676,7 +676,6 @@ model QuestPlan {
 model QuestEncounter {
   id                   String                 @id @default(cuid())
   sequence             Int
-  videoUrl             String?
   tips                 String?
   minStarLevel         Int?
   maxStarLevel         Int?
@@ -684,6 +683,7 @@ model QuestEncounter {
   questPlanId          String
   defenderId           Int?
   recommendedTags      String[]
+  videoUrl             String?
   playerEncounters     PlayerQuestEncounter[]
   defender             Champion?              @relation(fields: [defenderId], references: [id])
   questPlan            QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
@@ -729,8 +729,8 @@ model PlayerQuestEncounter {
   id                 String          @id @default(cuid())
   playerQuestPlanId  String
   questEncounterId   String
-  questPlanId        String
   selectedChampionId Int?
+  questPlanId        String
   playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
   questEncounter     QuestEncounter  @relation(fields: [questEncounterId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
   selectedChampion   Champion?       @relation("PlayerSelectedCounter", fields: [selectedChampionId], references: [id])

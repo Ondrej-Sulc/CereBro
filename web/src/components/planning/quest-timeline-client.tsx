@@ -762,7 +762,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                             name: userChamp.champion.shortName || userChamp.champion.name,
                                                                                             championClass: userChamp.champion.class,
                                                                                             images: userChamp.champion.images as unknown as ChampionImages
-                                                                                        }
+                                                                                        },
+                                                                                        isAscended: userChamp.isAscended
                                                                                     } : {
                                                                                         stars: 0,
                                                                                         rank: 0,
@@ -983,7 +984,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                             name: r.champion.shortName || r.champion.name,
                                                                                             championClass: r.champion.class,
                                                                                             images: r.champion.images
-                                                                                        }
+                                                                                        },
+                                                                                        isAscended: r.isAscended
                                                                                     }}
                                                                                     isSelected={isSelected}
                                                                                     isRecommended={isRecommended}
