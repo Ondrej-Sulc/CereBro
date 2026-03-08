@@ -341,7 +341,7 @@ export default function DefenseEditor({
                                         entry.isAwakened ? "text-slate-300" : "text-yellow-500"
                                     )} />
                                     <span className="text-slate-300 font-normal ml-1">R{entry.rank}</span>
-                                    {entry.isAwakened && typeof entry.sigLevel === 'number' && (
+                                    {entry.isAwakened && entry.sigLevel > 0 && (
                                         <span className="text-sky-400 ml-1">S{entry.sigLevel}</span>
                                     )}
                                  </div>

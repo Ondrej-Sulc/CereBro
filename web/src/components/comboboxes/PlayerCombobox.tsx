@@ -168,9 +168,15 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                                const p = filteredPlayers[index];
                                let rosterInfo = "";
                                if (attackerId != null) { // Changed to nullish check
-                                   const r = p.roster.find((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
-                                   if (r) {
-                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}${r.isAwakened ? ` S${r.sigLevel}` : ''})`;
+                                   const matchingEntries = p.roster.filter((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
+                                   if (matchingEntries.length > 0) {
+                                       const r = matchingEntries.sort((a, b) => {
+                                           if (a.stars !== b.stars) return b.stars - a.stars;
+                                           if (a.rank !== b.rank) return b.rank - a.rank;
+                                           if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
+                                           return b.sigLevel - a.sigLevel;
+                                       })[0];
+                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}${r.isAwakened && r.sigLevel > 0 ? ` S${r.sigLevel}` : ''})`;
                                    }
                                }
 

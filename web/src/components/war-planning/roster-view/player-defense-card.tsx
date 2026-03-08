@@ -281,7 +281,7 @@ export const PlayerDefenseCard = ({
                                         {rosterEntry && (
                                             <div className="flex items-center gap-1.5">
                                                 <span className="font-mono text-slate-400">R{rosterEntry.rank}</span>
-                                                {rosterEntry.isAwakened && typeof rosterEntry.sigLevel === 'number' && (
+                                                {rosterEntry.isAwakened && rosterEntry.sigLevel > 0 && (
                                                     <span className="text-sky-400 font-bold text-[9px]">S{rosterEntry.sigLevel}</span>
                                                 )}
                                                 {rosterEntry.isAscended && <span className="text-pink-400 font-bold text-[9px]">ASC</span>}
