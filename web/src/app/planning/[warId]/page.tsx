@@ -88,6 +88,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
             rank: true,
             isAscended: true,
             isAwakened: true,
+            sigLevel: true,
           }
         }
       }

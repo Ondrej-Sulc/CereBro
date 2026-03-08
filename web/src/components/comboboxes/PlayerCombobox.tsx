@@ -170,7 +170,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                                if (attackerId != null) { // Changed to nullish check
                                    const r = p.roster.find((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
                                    if (r) {
-                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})`;
+                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}${r.isAwakened ? ` S${r.sigLevel}` : ''})`;
                                    }
                                }
 

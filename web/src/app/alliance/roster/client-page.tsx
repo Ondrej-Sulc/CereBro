@@ -258,7 +258,7 @@ export function AllianceRosterMatrix({
                                             )}
                                         </div>
                                         <span className="text-[8px] font-bold text-slate-300 leading-none whitespace-nowrap">
-                                            <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank}
+                                            <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank} {champ.isAwakened ? `S${champ.sigLevel}` : ''}
                                         </span>
                                     </div>
                                 </PopoverTrigger>

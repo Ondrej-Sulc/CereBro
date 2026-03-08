@@ -63,9 +63,9 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
             rank: true,
             isAscended: true,
             isAwakened: true,
+            sigLevel: true,
           }
-        }
-      }
+        }      }
     });
   });
 

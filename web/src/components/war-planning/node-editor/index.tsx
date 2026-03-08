@@ -287,7 +287,7 @@ export default function NodeEditor({
 
     allowedChampions.forEach(c => {
         const r = rosterMap.get(c.id);
-        const rankStr = r ? `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})` : "";
+        const rankStr = r ? `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}${r.isAwakened ? ` S${r.sigLevel}` : ''})` : "";
         const displayName = `${c.name} ${rankStr}`.trim();
         
         const item = { ...c, name: displayName, originalName: c.name, rankData: r };

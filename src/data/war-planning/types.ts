@@ -8,6 +8,7 @@ export type PlayerWithRoster = Player & {
     rank: number;
     isAscended: boolean;
     isAwakened: boolean;
+    sigLevel: number;
   }[];
 };
 
