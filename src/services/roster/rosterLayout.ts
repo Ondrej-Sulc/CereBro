@@ -95,7 +95,20 @@ export class RosterLayoutService {
 
     let avgColDist = 0;
     if (uniqueCols.length > 1) {
-      const estColDist = imageWidth / 7;
+      let estColDist = imageWidth / 7;
+      
+      const rawDists: number[] = [];
+      for (let i = 1; i < uniqueCols.length; i++) {
+        rawDists.push(uniqueCols[i] - uniqueCols[i - 1]);
+      }
+      rawDists.sort((a, b) => a - b);
+      const minValidDist = imageWidth * 0.03; // ~3% minimum column width
+      const validEstDists = rawDists.filter(d => d > minValidDist);
+      if (validEstDists.length > 0) {
+        // Use a lower quartile to handle gaps while avoiding noise
+        estColDist = validEstDists[Math.floor(validEstDists.length / 4)];
+      }
+
       const validDists: number[] = [];
       for (let i = 1; i < uniqueCols.length; i++) {
         const d = uniqueCols[i] - uniqueCols[i - 1];
