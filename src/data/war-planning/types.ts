@@ -3,6 +3,7 @@ import { ChampionImages } from "../../utils/championHelper";
 
 export type PlayerWithRoster = Player & {
   roster: {
+    id: string;
     championId: number;
     stars: number;
     rank: number;
