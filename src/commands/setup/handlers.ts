@@ -79,7 +79,7 @@ export function registerSetupHandlers() {
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`setup:step1_intro:${allianceId}`)
+        .setCustomId(`setup:action:step1_intro:${allianceId}`)
         .setLabel("Start Setup")
         .setStyle(ButtonStyle.Primary)
         .setEmoji("🚀")
@@ -92,7 +92,7 @@ export function registerSetupHandlers() {
   });
 
   // --- Step 1: Officer Role Selection ---
-  registerButtonHandler("setup:step1_intro", async (interaction) => {
+  registerButtonHandler("setup:action:step1_intro", async (interaction) => {
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
       await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
@@ -113,7 +113,7 @@ export function registerSetupHandlers() {
 
     const row = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
       new RoleSelectMenuBuilder()
-        .setCustomId(`setup:select_officer_role:${allianceId}`)
+        .setCustomId(`setup:action:select_officer_role:${allianceId}`)
         .setPlaceholder("Select Officer Role")
         .setMaxValues(1)
     );
@@ -129,7 +129,7 @@ export function registerSetupHandlers() {
     }
   });
 
-  registerSelectMenuHandler("setup:select_officer_role", async (interaction) => {
+  registerSelectMenuHandler("setup:action:select_officer_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
@@ -163,14 +163,14 @@ export function registerSetupHandlers() {
 
       const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
         new RoleSelectMenuBuilder()
-          .setCustomId(`setup:select_bg1_role:${allianceId}`)
+          .setCustomId(`setup:action:select_bg1_role:${allianceId}`)
           .setPlaceholder("Select BG1 Role (Optional)")
           .setMaxValues(1)
       );
 
       const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId(`setup:skip_bg1:${allianceId}`)
+          .setCustomId(`setup:action:skip_bg1:${allianceId}`)
           .setLabel("Skip BG1")
           .setStyle(ButtonStyle.Secondary)
       );
@@ -186,7 +186,7 @@ export function registerSetupHandlers() {
   });
 
   // --- Step 2: BG1 Role ---
-  registerSelectMenuHandler("setup:select_bg1_role", async (interaction) => {
+  registerSelectMenuHandler("setup:action:select_bg1_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
@@ -204,7 +204,7 @@ export function registerSetupHandlers() {
     }
   });
 
-  registerButtonHandler("setup:skip_bg1", async (interaction) => {
+  registerButtonHandler("setup:action:skip_bg1", async (interaction) => {
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
       await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
@@ -229,13 +229,13 @@ export function registerSetupHandlers() {
 
     const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
       new RoleSelectMenuBuilder()
-        .setCustomId(`setup:select_bg2_role:${allianceId}`)
+        .setCustomId(`setup:action:select_bg2_role:${allianceId}`)
         .setPlaceholder("Select BG2 Role (Optional)")
         .setMaxValues(1)
     );
     const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`setup:skip_bg2:${allianceId}`)
+        .setCustomId(`setup:action:skip_bg2:${allianceId}`)
         .setLabel("Skip BG2")
         .setStyle(ButtonStyle.Secondary)
     );
@@ -243,7 +243,7 @@ export function registerSetupHandlers() {
     await interaction.update({ embeds: [embed], components: [row1, row2] });
   }
 
-  registerSelectMenuHandler("setup:select_bg2_role", async (interaction) => {
+  registerSelectMenuHandler("setup:action:select_bg2_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
@@ -260,7 +260,7 @@ export function registerSetupHandlers() {
     }
   });
 
-  registerButtonHandler("setup:skip_bg2", async (interaction) => {
+  registerButtonHandler("setup:action:skip_bg2", async (interaction) => {
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
       await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
@@ -285,13 +285,13 @@ export function registerSetupHandlers() {
 
     const row1 = new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
       new RoleSelectMenuBuilder()
-        .setCustomId(`setup:select_bg3_role:${allianceId}`)
+        .setCustomId(`setup:action:select_bg3_role:${allianceId}`)
         .setPlaceholder("Select BG3 Role (Optional)")
         .setMaxValues(1)
     );
     const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`setup:skip_bg3:${allianceId}`)
+        .setCustomId(`setup:action:skip_bg3:${allianceId}`)
         .setLabel("Skip BG3")
         .setStyle(ButtonStyle.Secondary)
     );
@@ -299,7 +299,7 @@ export function registerSetupHandlers() {
     await interaction.update({ embeds: [embed], components: [row1, row2] });
   }
 
-  registerSelectMenuHandler("setup:select_bg3_role", async (interaction) => {
+  registerSelectMenuHandler("setup:action:select_bg3_role", async (interaction) => {
     if (!interaction.isRoleSelectMenu()) return;
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
@@ -316,7 +316,7 @@ export function registerSetupHandlers() {
     }
   });
 
-  registerButtonHandler("setup:skip_bg3", async (interaction) => {
+  registerButtonHandler("setup:action:skip_bg3", async (interaction) => {
     const allianceId = extractAndValidateAllianceId(interaction.customId);
     if (!allianceId) {
       await interaction.reply({ content: "Invalid alliance setup context.", flags: MessageFlags.Ephemeral });
@@ -347,7 +347,7 @@ export function registerSetupHandlers() {
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`setup:trigger_sync:${allianceId}`)
+        .setCustomId(`setup:action:trigger_sync:${allianceId}`)
         .setLabel("Sync Roles & Finish")
         .setStyle(ButtonStyle.Success)
         .setEmoji("🔄")
@@ -356,7 +356,7 @@ export function registerSetupHandlers() {
     await interaction.update({ embeds: [embed], components: [row] });
   }
 
-  registerButtonHandler("setup:trigger_sync", async (interaction) => {
+  registerButtonHandler("setup:action:trigger_sync", async (interaction) => {
     if (!interaction.guild) {
       await interaction.reply({ content: "This command can only be used in a server.", flags: MessageFlags.Ephemeral });
       return;

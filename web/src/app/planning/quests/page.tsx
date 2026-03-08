@@ -20,7 +20,7 @@ export default async function QuestsPage() {
             creator: true,
             creators: {
                 include: {
-                    profiles: { where: { isActive: true } }
+                    profiles: true
                 }
             },
             requiredTags: true,
@@ -43,10 +43,16 @@ export default async function QuestsPage() {
                     }
                 }
             });
+
+            // Find best name: User name -> Active profile -> First profile -> "Unknown"
+            const profileName = creator.profiles.find(p => p.isActive)?.ingameName || 
+                              creator.profiles.find(p => p.id === creator.activeProfileId)?.ingameName ||
+                              creator.profiles[0]?.ingameName;
+
             return {
                 id: creator.id,
                 discordId: creator.discordId,
-                name: user?.name || creator.profiles[0]?.ingameName || "Unknown",
+                name: user?.name || profileName || "Unknown",
                 image: user?.image || null
             };
         }));

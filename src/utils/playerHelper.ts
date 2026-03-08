@@ -3,32 +3,47 @@ import { Player } from "@prisma/client";
 import { safeReply } from "./errorHandler";
 import { prisma } from "../services/prismaService.js";
 
-export async function getActivePlayer(discordId: string): Promise<Player | null> {
+import { Prisma } from "@prisma/client";
+
+export type ActivePlayerWithAlliance = Prisma.PlayerGetPayload<{
+  include: { alliance: true }
+}> & { isBotAdmin: boolean };
+
+export async function getActivePlayer(discordId: string): Promise<ActivePlayerWithAlliance | null> {
   // 1. Fetch the BotUser for global permissions
   const botUser = await prisma.botUser.findUnique({
     where: { discordId }
   });
 
   // 2. Fetch the Profile
+  // Try isActive: true first
   let player = await prisma.player.findFirst({
     where: { 
       discordId,
       isActive: true,
     },
-  });
+    include: { alliance: true }
+  }) as ActivePlayerWithAlliance | null;
 
+  // Fallback 1: Use activeProfileId if set
+  if (!player && botUser?.activeProfileId) {
+    player = await prisma.player.findUnique({
+        where: { id: botUser.activeProfileId },
+        include: { alliance: true }
+    }) as ActivePlayerWithAlliance | null;
+  }
+
+  // Fallback 2: If no active player, return the first one found for this user
   if (!player) {
-    // If no active player, return the first one found
     player = await prisma.player.findFirst({
       where: { discordId },
-    });
+      include: { alliance: true }
+    }) as ActivePlayerWithAlliance | null;
   }
 
   if (player && botUser) {
-    return {
-        ...player,
-        isBotAdmin: botUser.isBotAdmin
-    };
+    player.isBotAdmin = botUser.isBotAdmin;
+    return player;
   }
 
   return null;
@@ -36,7 +51,7 @@ export async function getActivePlayer(discordId: string): Promise<Player | null>
 
 export async function getPlayer(
   interaction: ChatInputCommandInteraction | ButtonInteraction
-): Promise<Player | null> {
+): Promise<ActivePlayerWithAlliance | null> {
   let targetUser: User;
   if (interaction.isChatInputCommand()) {
     const playerOption = interaction.options.get("player");

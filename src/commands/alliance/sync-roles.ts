@@ -126,22 +126,42 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
                 allianceId: alliance.id,
                 battlegroup,
                 isOfficer,
-                botUserId: botUser.id
+                botUserId: botUser.id,
+                isActive: true // Ensure they are active if they are the primary player
               },
             });
+            
+            // Ensure activeProfileId is set if not already
+            if (!botUser.activeProfileId) {
+                await prisma.botUser.update({
+                  where: { id: botUser.id },
+                  data: { activeProfileId: globalPlayer.id }
+                });
+            }
+            
             updatedCount++;
           } else {
             // New player entirely
-            await prisma.player.create({
+            const newPlayer = await prisma.player.create({
               data: {
                 ingameName: member.displayName,
                 discordId: member.id,
                 allianceId: alliance.id,
                 battlegroup,
                 isOfficer,
-                botUserId: botUser.id
+                botUserId: botUser.id,
+                isActive: true // New profile is active by default
               },
             });
+
+            // Ensure activeProfileId is set
+            if (!botUser.activeProfileId) {
+                await prisma.botUser.update({
+                  where: { id: botUser.id },
+                  data: { activeProfileId: newPlayer.id }
+                });
+            }
+            
             createdCount++;
           }
         }

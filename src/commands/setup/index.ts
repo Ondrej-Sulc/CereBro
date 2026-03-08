@@ -84,7 +84,7 @@ export const command: Command = {
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`setup:step1_intro:${alliance.id}`)
+        .setCustomId(`setup:action:step1_intro:${alliance.id}`)
         .setLabel("Start Setup")
         .setStyle(ButtonStyle.Primary)
         .setEmoji("🚀")

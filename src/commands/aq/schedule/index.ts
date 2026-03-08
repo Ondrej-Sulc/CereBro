@@ -15,6 +15,8 @@ import { buildEditBgContainer } from "./edit";
 import { buildReminderSettingsContainer } from "./reminder-settings";
 import logger from "../../../services/loggerService";
 
+import { getActivePlayer } from "../../../utils/playerHelper";
+
 export async function handleAqSchedule(
   interaction: ChatInputCommandInteraction
 ) {
@@ -64,9 +66,7 @@ export async function handleAqSchedule(
           where: { guildId: interaction.guildId! },
           include: { aqReminderSettings: true, aqSchedules: true },
         });
-        const player = await prisma.player.findFirst({
-          where: { discordId: i.user.id, isActive: true },
-        });
+        const player = await getActivePlayer(i.user.id);
         const timezone = player?.timezone || "UTC";
         const startTime = allianceData?.aqSchedules[0]?.time || "20:00";
 
@@ -95,9 +95,7 @@ export async function handleAqSchedule(
           const toggleTo = customIdParts[4] === "enable";
           reminderSettingsState[`${reminderKey}ReminderEnabled`] = toggleTo;
 
-          const player = await prisma.player.findFirst({
-            where: { discordId: i.user.id, isActive: true },
-          });
+          const player = await getActivePlayer(i.user.id);
           const timezone = player?.timezone || "UTC";
 
           const container = buildReminderSettingsContainer(
@@ -109,9 +107,7 @@ export async function handleAqSchedule(
         } else if (reminderAction === "select") {
           const setting = customIdParts[3];
           const value = i.values[0];
-          const player = await prisma.player.findFirst({
-            where: { discordId: i.user.id, isActive: true },
-          });
+          const player = await getActivePlayer(i.user.id);
           const timezone = player?.timezone || "UTC";
           const utcTime = convertUserToUtcTime(value, timezone);
 
@@ -259,9 +255,7 @@ export async function handleAqSchedule(
         await i.editReply({ components: [editContainer] });
       } else if (i.isButton()) {
         if (action === "edit-time") {
-          const player = await prisma.player.findFirst({
-            where: { discordId: i.user.id, isActive: true },
-          });
+          const player = await getActivePlayer(i.user.id);
           const timezone = player?.timezone || "UTC";
 
           const modal = new ModalBuilder()

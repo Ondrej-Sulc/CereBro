@@ -33,13 +33,16 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     const botUser = await prisma.botUser.findUnique({
         where: { discordId: account.providerAccountId },
         include: {
-            profiles: {
-                where: { isActive: true }
-            }
+            profiles: true
         }
     });
 
-    const activePlayer = botUser?.profiles[0];
+    // Try to find by isActive flag, fallback to activeProfileId, fallback to first profile
+    const activePlayer = 
+        botUser?.profiles.find(p => p.isActive) || 
+        botUser?.profiles.find(p => p.id === botUser.activeProfileId) || 
+        botUser?.profiles[0];
+
     if (!activePlayer) {
         return <p>Please create a player profile first.</p>;
     }

@@ -12,6 +12,7 @@ import {
 import { prisma } from "../../../services/prismaService";
 import { DAY_OPTIONS } from "./utils";
 import { convertUtcToUserTime } from "../../../utils/time";
+import { getActivePlayer } from "../../../utils/playerHelper";
 
 export async function buildOverviewContainer(
   interaction: ChatInputCommandInteraction | any
@@ -28,12 +29,7 @@ export async function buildOverviewContainer(
         aqReminderSettings: true,
       },
     }),
-    prisma.player.findFirst({
-      where: {
-        discordId: user.id,
-        isActive: true,
-      },
-    }),
+    getActivePlayer(user.id),
   ]);
 
   if (!alliance) {
