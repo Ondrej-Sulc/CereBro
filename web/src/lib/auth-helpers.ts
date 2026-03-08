@@ -34,12 +34,21 @@ export async function getUserPlayerWithAlliance() {
   });
 
   // 2. Fetch the Player (Profile)
+  // First try to find one marked as isActive: true
   let player = await prisma.player.findFirst({
     where: { discordId: account.providerAccountId, isActive: true },
     include: { alliance: true },
   });
 
-  // Fallback: If no active profile found, try to find the most recently updated one
+  // Fallback 1: Use the BotUser's activeProfileId if set
+  if (!player && botUser?.activeProfileId) {
+    player = await prisma.player.findUnique({
+      where: { id: botUser.activeProfileId },
+      include: { alliance: true },
+    });
+  }
+
+  // Fallback 2: If still no profile found, try to find the most recently updated one for this Discord ID
   if (!player) {
     player = await prisma.player.findFirst({
       where: { discordId: account.providerAccountId },

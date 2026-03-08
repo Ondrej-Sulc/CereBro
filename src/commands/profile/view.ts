@@ -80,17 +80,11 @@ function buildRosterSummary(
     });
 }
 
+import { getActivePlayer } from "../../utils/playerHelper";
+
 async function renderProfile(interaction: ChatInputCommandInteraction, statusMessage?: string) {
   const [activeProfile, allProfiles] = await Promise.all([
-    prisma.player.findFirst({
-      where: {
-        discordId: interaction.user.id,
-        isActive: true,
-      },
-      include: {
-        alliance: true,
-      },
-    }),
+    getActivePlayer(interaction.user.id),
     prisma.player.findMany({
       where: { discordId: interaction.user.id },
     }),

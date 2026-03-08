@@ -78,7 +78,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               logger.info({ discordId, playerId: existingPlayer.id }, "Linking existing player to BotUser");
               await prisma.player.update({
                   where: { id: existingPlayer.id },
-                  data: { botUserId: botUser.id }
+                  data: { 
+                      botUserId: botUser.id,
+                      isActive: true // Ensure legacy flag is set
+                  }
               });
               
               if (!botUser.activeProfileId) {
