@@ -258,11 +258,13 @@ export default function NodeEditor({
         if (!existing) {
             rosterMap.set(r.championId, r);
         } else {
-             // Priority: Stars > Rank > Ascended
+             // Priority: Stars > Rank > Ascended > Awakened > SigLevel
             const isBetter = 
                 (r.stars > existing.stars) ||
                 (r.stars === existing.stars && r.rank > existing.rank) ||
-                (r.stars === existing.stars && r.rank === existing.rank && r.isAscended && !existing.isAscended);
+                (r.stars === existing.stars && r.rank === existing.rank && r.isAscended && !existing.isAscended) ||
+                (r.stars === existing.stars && r.rank === existing.rank && r.isAscended === existing.isAscended && r.isAwakened && !existing.isAwakened) ||
+                (r.stars === existing.stars && r.rank === existing.rank && r.isAscended === existing.isAscended && r.isAwakened === existing.isAwakened && r.sigLevel > existing.sigLevel);
             
             if (isBetter) {
                 rosterMap.set(r.championId, r);
@@ -287,7 +289,7 @@ export default function NodeEditor({
 
     allowedChampions.forEach(c => {
         const r = rosterMap.get(c.id);
-        const rankStr = r ? `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''})` : "";
+        const rankStr = r ? `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}${r.isAwakened && r.sigLevel > 0 ? ` S${r.sigLevel}` : ''})` : "";
         const displayName = `${c.name} ${rankStr}`.trim();
         
         const item = { ...c, name: displayName, originalName: c.name, rankData: r };

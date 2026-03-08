@@ -240,6 +240,9 @@ export const DefensePlayerListPanel = ({
                                                                 {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
                                                             </span>
                                                             <span className="font-mono">R{roster.rank}</span>
+                                                            {roster.isAwakened && roster.sigLevel > 0 && (
+                                                                <span className="text-sky-400 font-bold">S{roster.sigLevel}</span>
+                                                            )}
                                                             {roster.isAscended && <span className="text-pink-400 font-bold">ASC</span>}
                                                         </div>
                                                     )}

@@ -281,13 +281,14 @@ export const PlayerListContent = ({
                                       <div className="space-y-1">
                                           <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assignments</div>
                                           {assignedChampions.map(champ => {
-                                              // Find the BEST roster entry (highest stars > rank > ascended)
+                                              // Find the BEST roster entry (highest stars > rank > ascended > sigLevel)
                                               const roster = player.roster
                                                   .filter(r => r.championId === champ.id)
                                                   .sort((a, b) => {
                                                       if (a.stars !== b.stars) return b.stars - a.stars;
                                                       if (a.rank !== b.rank) return b.rank - a.rank;
-                                                      return (a.isAscended === b.isAscended) ? 0 : (a.isAscended ? -1 : 1);
+                                                      if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
+                                                      return b.sigLevel - a.sigLevel;
                                                   })[0];
 
                                               const classColors = getChampionClassColors(champ.class);
@@ -308,6 +309,9 @@ export const PlayerListContent = ({
                                                                       {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
                                                                   </span>
                                                                   <span className="font-mono">R{roster.rank}</span>
+                                                                  {roster.isAwakened && roster.sigLevel > 0 && (
+                                                                      <span className="text-sky-400 font-bold">S{roster.sigLevel}</span>
+                                                                  )}
                                                                   {roster.isAscended && <span className="text-pink-400 font-bold">ASC</span>}
                                                               </div>
                                                           )}
@@ -330,13 +334,14 @@ export const PlayerListContent = ({
                                       {/* List of extras with remove button */}
                                       <div className="space-y-1">
                                           {playerExtras.map(ex => {
-                                              // Find the BEST roster entry (highest stars > rank > ascended)
+                                              // Find the BEST roster entry (highest stars > rank > ascended > sigLevel)
                                               const roster = player.roster
                                                   .filter(r => r.championId === ex.championId)
                                                   .sort((a, b) => {
                                                       if (a.stars !== b.stars) return b.stars - a.stars;
                                                       if (a.rank !== b.rank) return b.rank - a.rank;
-                                                      return (a.isAscended === b.isAscended) ? 0 : (a.isAscended ? -1 : 1);
+                                                      if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
+                                                      return b.sigLevel - a.sigLevel;
                                                   })[0];
 
                                               const fullChamp = champions.find(c => c.id === ex.championId); // Look up full champion to get class
@@ -359,6 +364,9 @@ export const PlayerListContent = ({
                                                                       {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
                                                                   </span>
                                                                   <span className="font-mono">R{roster.rank}</span>
+                                                                  {roster.isAwakened && roster.sigLevel > 0 && (
+                                                                      <span className="text-sky-400 font-bold">S{roster.sigLevel}</span>
+                                                                  )}
                                                               </div>
                                                           )}
                                                       </div>

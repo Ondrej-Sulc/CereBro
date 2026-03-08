@@ -301,6 +301,8 @@ export async function getPlayerRoster(playerId: string) {
       { stars: 'desc' },
       { rank: 'desc' },
       { isAscended: 'desc' },
+      { isAwakened: 'desc' },
+      { sigLevel: 'desc' },
       { champion: { name: 'asc' } }
     ]
   });
@@ -328,6 +330,8 @@ export async function getOwnersOfChampion(championId: number, allianceId: string
       { stars: 'desc' },
       { rank: 'desc' },
       { isAscended: 'desc' },
+      { isAwakened: 'desc' },
+      { sigLevel: 'desc' },
       { player: { ingameName: 'asc' } }
     ]
   });

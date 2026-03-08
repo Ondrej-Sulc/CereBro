@@ -345,6 +345,9 @@ export default function PlanningToolsPanel({
                               {item.stars}<Star className="h-3 w-3 fill-current ml-0.5" />
                             </span>
                             <span>R{item.rank}</span>
+                            {item.isAwakened && item.sigLevel > 0 && (
+                                <span className="text-sky-400 font-bold">S{item.sigLevel}</span>
+                            )}
                             {item.isAscended && <span className="text-pink-400 font-bold">Ascended</span>}
                           </div>
                         </div>
@@ -414,6 +417,9 @@ export default function PlanningToolsPanel({
                           {item.stars}<Star className="h-3 w-3 fill-current ml-0.5" />
                         </span>
                         <span className="font-mono bg-slate-800 px-1.5 py-0.5 rounded">R{item.rank}</span>
+                        {item.isAwakened && item.sigLevel > 0 && (
+                            <span className="text-sky-400 font-bold">S{item.sigLevel}</span>
+                        )}
                         {item.isAscended && <span className="text-pink-400 font-bold" title="Ascended">ASC</span>}
                       </div>
                     </div>

@@ -61,7 +61,17 @@ export default function DefenseEditor({
 }: DefenseEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentPlacement?.defenderId || undefined);
   const [playerId, setPlayerId] = useState<string | undefined>(currentPlacement?.playerId || undefined);
-  const [starLevel, setStarLevel] = useState<number | undefined>(currentPlacement?.starLevel || undefined);
+  
+  // Use a unique roster identifier (rosterId or composite) to distinguish copies
+  const [rosterId, setRosterId] = useState<string | undefined>(() => {
+      if (!currentPlacement?.starLevel || !currentPlacement?.playerId || !currentPlacement?.defenderId) return undefined;
+      const player = players.find(p => p.id === currentPlacement.playerId);
+      // Best guess for initial roster entry match if we only have starLevel from DB
+      return player?.roster.find(r => 
+          r.championId === currentPlacement.defenderId && 
+          r.stars === currentPlacement.starLevel
+      )?.id;
+  });
   
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
 
@@ -122,8 +132,15 @@ export default function DefenseEditor({
     const newPlayerId = currentPlacement?.playerId || undefined;
     if (newPlayerId !== playerId) setPlayerId(newPlayerId);
 
-    const newStarLevel = currentPlacement?.starLevel || undefined;
-    if (newStarLevel !== starLevel) setStarLevel(newStarLevel);
+    const newRosterId = (() => {
+        if (!currentPlacement?.starLevel || !currentPlacement?.playerId || !currentPlacement?.defenderId) return undefined;
+        const player = players.find(p => p.id === currentPlacement.playerId);
+        return player?.roster.find(r => 
+            r.championId === currentPlacement.defenderId && 
+            r.stars === currentPlacement.starLevel
+        )?.id;
+    })();
+    if (newRosterId !== rosterId) setRosterId(newRosterId);
     
     if (currentPlacement && !currentPlacement.defenderId) {
         setIsDefenderOpen(true);
@@ -198,40 +215,71 @@ export default function DefenseEditor({
     const val = idStr ? parseInt(idStr) : undefined;
     setDefenderId(val);
     
-    // Auto-detect star level from player roster if possible
-    let newStarLevel = starLevel;
+    // Auto-detect roster entry from player roster if possible
+    let newStarLevel = undefined;
     if (val && playerId) {
         const player = players.find(p => p.id === playerId);
-        const rosterEntry = player?.roster.find(r => r.championId === val);
+        const rosterEntry = player?.roster
+            .filter(r => r.championId === val)
+            .sort((a, b) => {
+                if (a.stars !== b.stars) return b.stars - a.stars;
+                if (a.rank !== b.rank) return b.rank - a.rank;
+                return b.sigLevel - a.sigLevel;
+            })[0];
+            
         if (rosterEntry) {
             newStarLevel = rosterEntry.stars;
-            setStarLevel(newStarLevel);
+            setRosterId(rosterEntry.id);
+        } else {
+            setRosterId(undefined);
         }
+    } else {
+        setRosterId(undefined);
     }
 
     triggerSave({ defenderId: val === undefined ? null : val, starLevel: newStarLevel ?? null });
-  }, [triggerSave, playerId, players, starLevel]);
+  }, [triggerSave, playerId, players]);
 
   const handlePlayerChange = useCallback((val: string | undefined) => {
     setPlayerId(val);
 
-    // Auto-detect star level if defender is already selected
-    let newStarLevel = starLevel;
+    // Auto-detect roster entry if defender is already selected
+    let newStarLevel = undefined;
     if (val && defenderId) {
         const player = players.find(p => p.id === val);
-        const rosterEntry = player?.roster.find(r => r.championId === defenderId);
+        const rosterEntry = player?.roster
+            .filter(r => r.championId === defenderId)
+            .sort((a, b) => {
+                if (a.stars !== b.stars) return b.stars - a.stars;
+                if (a.rank !== b.rank) return b.rank - a.rank;
+                return b.sigLevel - a.sigLevel;
+            })[0];
+            
         if (rosterEntry) {
              newStarLevel = rosterEntry.stars;
-             setStarLevel(newStarLevel);
+             setRosterId(rosterEntry.id);
+        } else {
+            setRosterId(undefined);
         }
+    } else {
+        setRosterId(undefined);
     }
 
     triggerSave({ playerId: val === undefined ? null : val, starLevel: newStarLevel ?? null });
-  }, [triggerSave, defenderId, players, starLevel]);
+  }, [triggerSave, defenderId, players]);
 
-  const handleStarLevelChange = useCallback((val: string) => {
+  const handleRosterChange = useCallback((id: string) => {
+      const player = players.find(p => p.id === playerId);
+      const entry = player?.roster.find(r => r.id === id);
+      if (entry) {
+          setRosterId(id);
+          triggerSave({ starLevel: entry.stars });
+      }
+  }, [triggerSave, players, playerId]);
+
+  const handleManualStarLevelChange = useCallback((val: string) => {
       const num = parseInt(val);
-      setStarLevel(num);
+      setRosterId(undefined);
       triggerSave({ starLevel: num });
   }, [triggerSave]);
 
@@ -240,7 +288,11 @@ export default function DefenseEditor({
   const rosterEntries = useMemo(() => {
       if (!playerId || !defenderId) return [];
       const player = players.find(p => p.id === playerId);
-      return player?.roster.filter(r => r.championId === defenderId).sort((a, b) => b.stars - a.stars) || [];
+      return player?.roster.filter(r => r.championId === defenderId).sort((a, b) => {
+          if (a.stars !== b.stars) return b.stars - a.stars;
+          if (a.rank !== b.rank) return b.rank - a.rank;
+          return b.sigLevel - a.sigLevel;
+      }) || [];
   }, [playerId, defenderId, players]);
 
   if (nodeId === null) return null;
@@ -324,13 +376,13 @@ export default function DefenseEditor({
                      <div className="flex flex-wrap gap-2">
                          {rosterEntries.map(entry => (
                              <Button
-                                key={entry.stars}
-                                variant={starLevel === entry.stars ? "default" : "outline"}
+                                key={entry.id}
+                                variant={rosterId === entry.id ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => !isReadOnly && handleStarLevelChange(String(entry.stars))}
+                                onClick={() => !isReadOnly && handleRosterChange(entry.id)}
                                 className={cn(
                                     "h-auto py-2 px-3 flex flex-col items-start gap-0.5",
-                                    starLevel === entry.stars ? "border-indigo-500 bg-indigo-500/20 text-white hover:bg-indigo-500/30" : "bg-slate-900 border-slate-700",
+                                    rosterId === entry.id ? "border-indigo-500 bg-indigo-500/20 text-white hover:bg-indigo-500/30" : "bg-slate-900 border-slate-700",
                                     isReadOnly && "cursor-default opacity-80"
                                 )}
                                 disabled={isReadOnly}
@@ -341,6 +393,9 @@ export default function DefenseEditor({
                                         entry.isAwakened ? "text-slate-300" : "text-yellow-500"
                                     )} />
                                     <span className="text-slate-300 font-normal ml-1">R{entry.rank}</span>
+                                    {entry.isAwakened && entry.sigLevel > 0 && (
+                                        <span className="text-sky-400 ml-1">S{entry.sigLevel}</span>
+                                    )}
                                  </div>
                                  {(entry.isAscended || entry.isAwakened) && (
                                     <div className="flex gap-1 text-[10px] text-slate-400">
@@ -356,8 +411,8 @@ export default function DefenseEditor({
                  {/* Manual Fallback */}
                  {rosterEntries.length === 0 && (
                      <Select 
-                        value={starLevel ? String(starLevel) : undefined} 
-                        onValueChange={handleStarLevelChange} 
+                        value={currentPlacement?.starLevel ? String(currentPlacement.starLevel) : undefined} 
+                        onValueChange={handleManualStarLevelChange} 
                         disabled={isReadOnly || !isReady || !defenderId}
                      >
                         <SelectTrigger className="w-full h-8 text-xs bg-slate-900 border-slate-800">

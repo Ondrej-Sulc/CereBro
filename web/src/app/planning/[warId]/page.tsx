@@ -83,11 +83,13 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       include: {
         roster: {
           select: {
+            id: true,
             championId: true,
             stars: true,
             rank: true,
             isAscended: true,
             isAwakened: true,
+            sigLevel: true,
           }
         }
       }
