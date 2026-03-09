@@ -121,12 +121,12 @@ client.on(Events.GuildCreate, async (guild) => {
 
   try {
     // 1. Create/Update Alliance Record
-    const existing = await prisma.alliance.findFirst({
+    let existing = await prisma.alliance.findFirst({
       where: { guildId: guild.id },
     });
 
     if (!existing) {
-      await prisma.alliance.create({
+      existing = await prisma.alliance.create({
         data: {
           guildId: guild.id,
           name: guild.name,
@@ -181,7 +181,7 @@ client.on(Events.GuildCreate, async (guild) => {
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId("setup:step1_intro")
+          .setCustomId(`setup:action:step1_intro:${existing.id}`)
           .setLabel("Start Setup")
           .setStyle(ButtonStyle.Primary)
           .setEmoji("🚀")

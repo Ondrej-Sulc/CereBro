@@ -21,7 +21,7 @@ export async function buildOverviewContainer(
   const container = new ContainerBuilder();
 
   const [alliance, player] = await Promise.all([
-    prisma.alliance.findUnique({
+    prisma.alliance.findFirst({
       where: { guildId },
       include: {
         aqSchedules: true,

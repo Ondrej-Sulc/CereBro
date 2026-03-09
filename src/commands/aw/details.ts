@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 import { capitalize, getEmoji } from "./utils";
 import { prisma } from "../../services/prismaService";
+import { getAlliance } from "../../utils/allianceHelper";
 
 export async function handleDetails(interaction: ChatInputCommandInteraction) {
   const { config } = await import("../../config.js");
@@ -17,9 +18,7 @@ export async function handleDetails(interaction: ChatInputCommandInteraction) {
   }
 
   // 1. Fetch Alliance and determine Battlegroup from Channel
-  const alliance = await prisma.alliance.findUnique({
-    where: { guildId: interaction.guild.id },
-  });
+  const alliance = await getAlliance(interaction);
 
   if (!alliance) {
     await interaction.editReply("This server is not registered as an alliance.");

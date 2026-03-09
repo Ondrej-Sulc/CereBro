@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import { safeReply } from '../../utils/errorHandler';
+import { getAlliance } from '../../utils/allianceHelper';
 
 export async function handleProfileAdd(interaction: ChatInputCommandInteraction): Promise<void> {
   const ingameName = interaction.options.getString('name', true);
@@ -33,9 +34,7 @@ export async function handleProfileAdd(interaction: ChatInputCommandInteraction)
   let allianceId: string | null = null;
 
   if (guild) {
-    const alliance = await prisma.alliance.findUnique({
-        where: { guildId: guild.id },
-    });
+    const alliance = await getAlliance(interaction);
     if(alliance) {
         allianceId = alliance.id;
     }

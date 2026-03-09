@@ -1,9 +1,16 @@
 import { ChatInputCommandInteraction, ChannelType } from 'discord.js';
 import { prisma } from '../../services/prismaService';
+import { getAlliance } from '../../utils/allianceHelper';
 
 export async function handleAllianceConfigChannels(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) {
     await interaction.editReply('This command can only be used in a server.');
+    return;
+  }
+
+  const alliance = await getAlliance(interaction);
+  if (!alliance) {
+    await interaction.editReply('Could not determine your alliance.');
     return;
   }
 
@@ -43,7 +50,7 @@ export async function handleAllianceConfigChannels(interaction: ChatInputCommand
   }
 
   await prisma.alliance.update({
-    where: { guildId: interaction.guildId },
+    where: { id: alliance.id },
     data,
   });
 

@@ -3,6 +3,7 @@ import { prisma } from "../../services/prismaService";
 import { distributeWarPlan } from "../../services/distribution/warPlanDistributor";
 import { capitalize } from "./utils";
 import { getActivePlayer } from "../../utils/playerHelper";
+import { getAlliance } from "../../utils/allianceHelper";
 
 export async function handlePlan(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -12,9 +13,7 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const alliance = await prisma.alliance.findUnique({
-    where: { guildId: interaction.guild.id },
-  });
+  const alliance = await getAlliance(interaction);
 
   if (!alliance) {
     await interaction.editReply("No alliance configured for this server.");

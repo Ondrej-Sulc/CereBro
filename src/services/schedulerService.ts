@@ -53,7 +53,7 @@ async function syncAllAllianceRoles(client: Client) {
         }
       }
 
-      await syncRolesForGuild(guild);
+      await syncRolesForGuild(guild, alliance.id);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       loggerService.error({ error: errorMessage, allianceId: alliance.id, guildId: alliance.guildId }, `Error syncing roles for alliance ${alliance.name}`);

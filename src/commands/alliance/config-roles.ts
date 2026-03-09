@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
 import { syncRolesForGuild } from './sync-roles';
+import { getAlliance } from '../../utils/allianceHelper';
 
 export async function handleAllianceConfigRoles(interaction: ChatInputCommandInteraction) {
   const officerRole = interaction.options.getRole('officer');
@@ -12,6 +13,12 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
 
   if (!interaction.guildId || !interaction.guild) {
     await interaction.editReply('This command can only be used in a server.');
+    return;
+  }
+
+  const allianceData = await getAlliance(interaction);
+  if (!allianceData) {
+    await interaction.editReply('Could not determine your alliance.');
     return;
   }
 
@@ -33,7 +40,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
     if (Object.keys(updateData).length === 0) {
       // If no roles are provided, show the current configuration
       const alliance = await prisma.alliance.findUnique({
-        where: { guildId: interaction.guildId },
+        where: { id: allianceData.id },
       });
 
       if (!alliance) {
@@ -53,7 +60,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
     }
 
     const alliance = await prisma.alliance.update({
-      where: { guildId: interaction.guildId },
+      where: { id: allianceData.id },
       data: updateData,
     });
 
