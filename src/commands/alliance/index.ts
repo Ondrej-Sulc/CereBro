@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionsBitField, MessageFlags, AutocompleteInteraction, ChannelType } from 'discord.js';
 import { Command, CommandAccess } from '../../types/command';
 import { handleAllianceToggleFeature } from './toggle-feature';
-import { handleAllianceJoin } from './join';
 import { handleAllianceName } from './name';
 import { handleAllianceConfigRoles } from './config-roles';
 import { handleAllianceConfigChannels } from './config-channels';
@@ -35,11 +34,6 @@ export const command: Command = {
             .setDescription('Whether the feature should be enabled or disabled.')
             .setRequired(true)
         )
-    )
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName('join')
-        .setDescription('Join the alliance associated with this server.')
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -226,9 +220,6 @@ export const command: Command = {
       switch (subcommand) {
         case 'toggle-feature':
           await handleAllianceToggleFeature(interaction);
-          break;
-        case 'join':
-          await handleAllianceJoin(interaction);
           break;
         case 'link':
           await handleAllianceLink(interaction);
