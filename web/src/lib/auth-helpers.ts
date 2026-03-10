@@ -78,11 +78,17 @@ export async function getUserProfiles() {
 
   if (!account?.providerAccountId) return [];
 
-  return await prisma.player.findMany({
+  const botUser = await prisma.botUser.findUnique({
     where: { discordId: account.providerAccountId },
-    include: { alliance: true },
-    orderBy: { updatedAt: 'desc' },
+    include: {
+      profiles: {
+        include: { alliance: true },
+        orderBy: { ingameName: 'asc' }
+      }
+    }
   });
+
+  return botUser?.profiles || [];
 }
 
 export async function requireBotAdmin() {
