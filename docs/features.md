@@ -14,6 +14,7 @@
 *   **Output:** Rich embeds with original/translated text, deep links, and user attribution.
 
 ### Alliance & Roster Management
+*   **Multi-Alliance Support:** Multiple `Alliance` records can be hosted within a single Discord server. Users can choose which alliance to join or configure via interactive UI menus.
 *   **Prestige Tracking:** Users can update/view prestige; system supports hypothetical simulations.
 *   **AQ Management:** Tools for managing Alliance Quest assignments and schedules.
 *   **Scheduling:** General purpose reminders and event scheduling.
