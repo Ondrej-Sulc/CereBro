@@ -31,7 +31,7 @@ function extractAndValidateAllianceId(customId: string): string | null {
   if (!customId) return null;
   const parts = customId.split(":");
   if (parts.length < 3) return null;
-  const allianceId = parts[2];
+  const allianceId = parts[parts.length - 1];
   if (!allianceId || !/^[a-zA-Z0-9_\-]+$/.test(allianceId)) return null;
   return allianceId;
 }

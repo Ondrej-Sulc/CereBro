@@ -62,7 +62,7 @@ export async function handleAqSchedule(
       }
 
       if (action === "edit-reminders") {
-        const allianceData = await prisma.alliance.findUnique({
+        const allianceData = await prisma.alliance.findFirst({
           where: { guildId: interaction.guildId! },
           include: { aqReminderSettings: true, aqSchedules: true },
         });
@@ -126,7 +126,7 @@ export async function handleAqSchedule(
           );
           await i.editReply({ components: [container] });
         } else if (reminderAction === "save") {
-          const allianceToSave = await prisma.alliance.findUnique({
+          const allianceToSave = await prisma.alliance.findFirst({
             where: { guildId: interaction.guildId! },
           });
           if (!allianceToSave) return;
@@ -155,7 +155,7 @@ export async function handleAqSchedule(
         }
       } else if (action === "edit-bg") {
         const bg = parseInt(customIdParts[3], 10);
-        const allianceData = await prisma.alliance.findUnique({
+        const allianceData = await prisma.alliance.findFirst({
           where: { guildId: interaction.guildId! },
           include: { aqSchedules: { where: { battlegroup: bg } } },
         });
@@ -176,7 +176,7 @@ export async function handleAqSchedule(
       } else if (action === "back") {
         await showOverview(i);
       } else if (action === "toggle-thread") {
-        const allianceToUpdate = await prisma.alliance.findUnique({
+        const allianceToUpdate = await prisma.alliance.findFirst({
           where: { guildId: interaction.guildId! },
         });
         if (allianceToUpdate) {
@@ -188,7 +188,7 @@ export async function handleAqSchedule(
         await showOverview(i);
       } else if (action === "save") {
         const bg = parseInt(customIdParts[3], 10);
-        const allianceToSave = await prisma.alliance.findUnique({
+        const allianceToSave = await prisma.alliance.findFirst({
           where: { guildId: interaction.guildId! },
         });
         if (!allianceToSave) return;
@@ -278,7 +278,7 @@ export async function handleAqSchedule(
               await submitted.deferUpdate();
               const timeInput = submitted.fields.getTextInputValue("time");
               const time = convertUserToUtcTime(timeInput, timezone);
-              const allianceForTime = await prisma.alliance.findUnique({
+              const allianceForTime = await prisma.alliance.findFirst({
                 where: { guildId: i.guildId! },
               });
               if (allianceForTime) {
@@ -322,7 +322,7 @@ export async function handleAqSchedule(
                 return;
               }
               const skipUntil = new Date(Date.now() + durationMs);
-              const allianceForSkip = await prisma.alliance.findUnique({
+              const allianceForSkip = await prisma.alliance.findFirst({
                 where: { guildId: interaction.guildId! },
               });
               if (allianceForSkip) {

@@ -1,6 +1,7 @@
 
 import { ChatInputCommandInteraction, PermissionsBitField } from 'discord.js';
 import { safeReply } from '../../utils/errorHandler';
+import { getAlliance } from '../../utils/allianceHelper';
 
 export async function handleAllianceToggleFeature(
   interaction: ChatInputCommandInteraction
@@ -19,12 +20,10 @@ export async function handleAllianceToggleFeature(
   const featureName = interaction.options.getString('feature', true);
   const enabled = interaction.options.getBoolean('enabled', true);
 
-  const alliance = await prisma.alliance.findUnique({
-    where: { guildId: interaction.guild.id },
-  });
+  const alliance = await getAlliance(interaction);
 
   if (!alliance) {
-    await safeReply(interaction, "This alliance is not registered. Please register your profile first.");
+    await safeReply(interaction, "Could not determine your alliance.");
     return;
   }
 

@@ -7,7 +7,7 @@ export async function handleAllianceCreate(interaction: ChatInputCommandInteract
   const guildId = interaction.guildId;
 
   if (!guildId) {
-    await interaction.reply({ content: 'This command can only be used in a server.', flags: MessageFlags.Ephemeral });
+    await interaction.editReply({ content: 'This command can only be used in a server.' });
     return;
   }
 
@@ -26,11 +26,11 @@ export async function handleAllianceCreate(interaction: ChatInputCommandInteract
       .setColor(0x10b981) // Emerald 500
       .setFooter({ text: 'Use /setup to configure this alliance.' });
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     logger.info({ guildId, allianceId: alliance.id, allianceName: name }, `New alliance "${name}" created via /alliance create`);
 
   } catch (error) {
     logger.error({ error: String(error), guildId }, 'Error creating additional alliance');
-    await interaction.reply({ content: 'An error occurred while creating the alliance.', flags: MessageFlags.Ephemeral });
+    await interaction.editReply({ content: 'An error occurred while creating the alliance.' });
   }
 }

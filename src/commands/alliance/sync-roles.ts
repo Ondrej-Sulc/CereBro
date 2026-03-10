@@ -257,11 +257,19 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
     return;
   }
 
+  const { getAlliance } = await import('../../utils/allianceHelper.js');
+  const alliance = await getAlliance(interaction);
+
+  if (!alliance) {
+      await interaction.editReply('Could not determine your alliance. Please join an alliance first.');
+      return;
+  }
+
   try {
     await interaction.editReply('Starting role synchronization... This may take a moment.');
-    const result = await syncRolesForGuild(interaction.guild);
+    const result = await syncRolesForGuild(interaction.guild, alliance.id);
     await interaction.followUp({
-      content: `Role synchronization complete.\n` +
+      content: `Role synchronization complete for **${alliance.name}**.\n` +
         `✅ **${result.created}** new profiles created.\n` +
         `🔄 **${result.updated}** existing profiles updated.\n` +
         `❌ **${result.removed}** profiles removed (lost roles or left server).`,
@@ -270,6 +278,6 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     loggerService.error({ error: errorMessage }, 'Error syncing alliance roles');
-    await interaction.editReply('An error occurred while syncing alliance roles.');
+    await interaction.editReply(errorMessage || 'An error occurred while syncing alliance roles.');
   }
 }

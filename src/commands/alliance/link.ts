@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
 import { syncRolesForGuild } from './sync-roles';
+import { getAlliance } from '../../utils/allianceHelper';
 
 export async function handleAllianceLink(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId || !interaction.guild) {
@@ -27,59 +28,30 @@ export async function handleAllianceLink(interaction: ChatInputCommandInteractio
       return;
     }
 
-    // 2. Check if this server already has an alliance record
-    const existingServerAlliance = await prisma.alliance.findUnique({
-      where: { guildId: interaction.guildId },
+    // Check if there are empty auto-created alliances in this server that we should clean up
+    const emptyAlliances = await prisma.alliance.findMany({
+      where: { guildId: interaction.guildId }
     });
-
-    if (existingServerAlliance && existingServerAlliance.id !== targetAlliance.id) {
-      // MERGE LOGIC:
-      // If the existing server alliance has no members other than auto-created ones, 
-      // or if it was just auto-created by the bot joining, we can "swap" the guildId.
-      
-      const memberCount = await prisma.player.count({
-          where: { allianceId: existingServerAlliance.id }
-      });
-
-      // If it's a "fresh" server alliance (less than 2 members), we merge.
-      // Otherwise, we ask for manual cleanup to prevent data loss.
-      if (memberCount > 1) {
-          await interaction.editReply('❌ This server is already linked to another alliance with active members. Please contact support if you need to merge alliances.');
-          return;
+    
+    for (const empty of emptyAlliances) {
+      const memberCount = await prisma.player.count({ where: { allianceId: empty.id } });
+      if (memberCount === 0) {
+         await prisma.alliance.delete({ where: { id: empty.id } });
       }
-
-      // Safe to "delete" the old server record and move guildId to the new one
-      await prisma.$transaction([
-          prisma.alliance.update({
-              where: { id: existingServerAlliance.id },
-              data: { guildId: null } // Free up the guildId
-          }),
-          prisma.alliance.delete({
-              where: { id: existingServerAlliance.id }
-          }),
-          prisma.alliance.update({
-              where: { id: targetAlliance.id },
-              data: { 
-                  guildId: interaction.guildId,
-                  linkCode: null,
-                  linkCodeExpires: null
-              }
-          })
-      ]);
-    } else {
-        // Direct link
-        await prisma.alliance.update({
-            where: { id: targetAlliance.id },
-            data: { 
-                guildId: interaction.guildId,
-                linkCode: null,
-                linkCodeExpires: null
-            }
-        });
     }
 
+    // Direct link to this server
+    await prisma.alliance.update({
+        where: { id: targetAlliance.id },
+        data: { 
+            guildId: interaction.guildId,
+            linkCode: null,
+            linkCodeExpires: null
+        }
+    });
+
     // 3. Perform initial role sync
-    await syncRolesForGuild(interaction.guild);
+    await syncRolesForGuild(interaction.guild, targetAlliance.id);
 
     const embed = new EmbedBuilder()
       .setColor(0x00FF00)
