@@ -121,7 +121,7 @@ export const command: Command = {
     .addSubcommand((subcommand) =>
         subcommand
           .setName('create')
-          .setDescription('Create an additional alliance for this server (Bot Admin only).')
+          .setDescription('Create an additional alliance for this server (Server Admin only).')
           .addStringOption((option) =>
             option
               .setName('name')
@@ -178,10 +178,11 @@ export const command: Command = {
     const subcommand = interaction.options.getSubcommand(true);
     const subcommandGroup = interaction.options.getSubcommandGroup();
 
-    if (subcommand === 'join') {
-        const player = await getActivePlayer(interaction.user.id);
-        if (!player || !player.isBotAdmin) {
-            await interaction.reply({ content: 'This command is restricted to Bot Administrators.', flags: [MessageFlags.Ephemeral] });
+    if (subcommand === 'create') {
+        const member = interaction.member;
+        const isAdmin = member && typeof member.permissions !== 'string' && member.permissions.has(PermissionsBitField.Flags.Administrator);
+        if (!isAdmin) {
+            await interaction.reply({ content: 'This command is restricted to Server Administrators.', flags: [MessageFlags.Ephemeral] });
             return;
         }
     }
