@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { clearCache } from "@/lib/cache";
 import { BotJobType } from "@prisma/client";
 import logger from "@/lib/logger";
 
@@ -47,7 +48,9 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
         }
     });
 
+    clearCache(`alliance-members-${actingUser.allianceId}`);
     revalidatePath('/alliance');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 
@@ -137,8 +140,10 @@ export async function leaveAlliance() {
         }
     });
 
+    clearCache(`alliance-members-${actingUser.allianceId}`);
     revalidatePath('/');
     revalidatePath('/alliance');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 
@@ -159,7 +164,9 @@ export async function removeMember(playerId: string) {
         }
     });
 
+    clearCache(`alliance-members-${actingUser.allianceId}`);
     revalidatePath('/alliance');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 
@@ -284,6 +291,8 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
             },
             data: { status: 'CANCELLED' }
         });
+
+        clearCache(`alliance-members-${request.allianceId}`);
     }
 
     await prisma.allianceMembershipRequest.update({
@@ -293,6 +302,7 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
 
     revalidatePath('/alliance');
     revalidatePath('/');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 

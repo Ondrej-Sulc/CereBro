@@ -172,6 +172,6 @@ export async function switchProfile(profileId: string) {
     data: { isActive: true }
   });
 
-  revalidatePath("/profile");
+  revalidatePath("/profile", "layout");
   return { success: true };
 }

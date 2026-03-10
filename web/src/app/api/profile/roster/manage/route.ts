@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@cerebro/core/services/loggerService";
+import { clearCache } from "@/lib/cache";
 
 const updateSchema = z.object({
   id: z.string(),
@@ -68,6 +70,8 @@ export async function PUT(req: Request) {
       },
     });
 
+    revalidatePath("/profile/roster");
+    if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
     return NextResponse.json(updatedRoster);
   } catch (error) {
     logger.error({ error }, "Error updating roster");
@@ -104,6 +108,8 @@ export async function DELETE(req: Request) {
       where: { id },
     });
 
+    revalidatePath("/profile/roster");
+    if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error({ error }, "Error deleting roster");

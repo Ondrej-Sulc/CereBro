@@ -68,6 +68,23 @@ export async function getUserPlayerWithAlliance() {
   return null;
 }
 
+export async function getUserProfiles() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+
+  if (!account?.providerAccountId) return [];
+
+  return await prisma.player.findMany({
+    where: { discordId: account.providerAccountId },
+    include: { alliance: true },
+    orderBy: { updatedAt: 'desc' },
+  });
+}
+
 export async function requireBotAdmin() {
   const actingUser = await getUserPlayerWithAlliance();
   if (!actingUser) throw new Error("Unauthorized");

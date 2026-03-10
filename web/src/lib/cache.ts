@@ -38,3 +38,20 @@ export async function getFromCache<T>(
 
   return data;
 }
+
+/**
+ * Clears a specific cache entry by exact key or by prefix.
+ * @param keyOrPrefix The exact key or prefix to clear.
+ * @param isPrefix If true, clears all keys starting with the given string.
+ */
+export function clearCache(keyOrPrefix: string, isPrefix: boolean = false) {
+  if (!isPrefix) {
+    cache.delete(keyOrPrefix);
+  } else {
+    for (const key of cache.keys()) {
+      if (key.startsWith(keyOrPrefix)) {
+        cache.delete(key);
+      }
+    }
+  }
+}

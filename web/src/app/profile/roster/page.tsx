@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCachedChampions } from "@/lib/data/champions";
-import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { getUserPlayerWithAlliance, getUserProfiles } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +20,7 @@ export default async function RosterPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
+  const profiles = await getUserProfiles();
 
   if (!player) {
     redirect("/api/auth/discord-login?redirectTo=/profile/roster");
@@ -117,9 +118,11 @@ export default async function RosterPage(props: {
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView
-        key={`${sigBudget}-${rankClassFilter.join(',')}-${sigClassFilter.join(',')}-${rankSagaFilter}-${sigSagaFilter}-${limit}-${effectiveTargetRank}`}
+        key={`${player.id}-${sigBudget}-${rankClassFilter.join(',')}-${sigClassFilter.join(',')}-${rankSagaFilter}-${sigSagaFilter}-${limit}-${effectiveTargetRank}`}
         initialRoster={typedRosterEntries}
         allChampions={allChampions}
+        player={player}
+        profiles={profiles}
         top30Average={top30Average || player.championPrestige || 0}
         prestigeMap={prestigeMap}
         recommendations={recommendations}

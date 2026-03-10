@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
 import Link from "next/link";
-import { Upload, TrendingUp } from "lucide-react";
+import { Upload, TrendingUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Player, Alliance } from "@prisma/client";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
@@ -20,6 +22,7 @@ import { EditChampionModal } from "./components/modals/edit-champion-modal";
 import { AddChampionModal } from "./components/modals/add-champion-modal";
 import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
+import { switchProfile } from "../actions";
 
 function buildRosterQueryParams(params: {
   simulationTargetRank: number;
@@ -44,6 +47,8 @@ function buildRosterQueryParams(params: {
 interface RosterViewProps {
   initialRoster: ProfileRosterEntry[];
   allChampions: Champion[];
+  player: Player & { alliance: Alliance | null };
+  profiles: (Player & { alliance: Alliance | null })[];
   top30Average: number;
   prestigeMap: Record<string, number>;
   recommendations?: Recommendation[];
@@ -76,7 +81,7 @@ interface ApiRosterResponse {
 }
 
 export function RosterView({
-  initialRoster, allChampions, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
+  initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit
@@ -182,6 +187,17 @@ export function RosterView({
     return () => controller.abort();
   }, [currentParams, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit, toast, memoizedPrestigeMap]);
 
+  const handleProfileSwitch = async (playerId: string) => {
+    try {
+      const response = await switchProfile(playerId);
+      if (response.error) throw new Error(response.error);
+      toast({ title: "Success", description: "Profile switched successfully" });
+      startTransition(() => { router.refresh(); });
+    } catch {
+      toast({ title: "Error", description: "Failed to switch profile", variant: "destructive" });
+    }
+  };
+
   const updateUrlParams = useCallback((updates: Record<string, string | null>) => {
     const params = new URLSearchParams(window.location.search);
     Object.entries(updates).forEach(([key, value]) => { if (value) params.set(key, value); else params.delete(key); });
@@ -216,6 +232,11 @@ export function RosterView({
         body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
       });
       if (!response.ok) throw new Error("Failed to add champion");
+      const addedItem = await response.json();
+      setRoster(prev => {
+        const filtered = prev.filter(p => !(p.championId === addedItem.championId && p.stars === addedItem.stars));
+        return [...filtered, addedItem];
+      });
       toast({ title: "Success", description: "Champion added to roster" });
       setIsAddingChampion(false);
       setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
@@ -391,9 +412,39 @@ export function RosterView({
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            My Roster
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-white tracking-tight">
+              {player.ingameName}'s Roster
+            </h1>
+            {profiles.length > 1 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1 bg-slate-900 border-slate-700">
+                    Switch Profile
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-slate-900 border-slate-800 text-slate-200">
+                  {profiles.map((p) => (
+                    <DropdownMenuItem
+                      key={p.id}
+                      onClick={() => handleProfileSwitch(p.id)}
+                      className={cn("cursor-pointer focus:bg-slate-800", p.id === player.id && "bg-slate-800/50")}
+                    >
+                      <div className="flex flex-col">
+                        <span className={cn("font-medium", p.id === player.id ? "text-white" : "text-slate-300")}>
+                          {p.ingameName}
+                        </span>
+                        {p.alliance && (
+                          <span className="text-xs text-slate-500">[{p.alliance.name}]</span>
+                        )}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
           <p className="text-slate-400 mt-1">
             Manage your champions, update stats, and track your progress.
           </p>
