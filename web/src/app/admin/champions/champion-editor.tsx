@@ -515,55 +515,90 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                     </TabsContent>
 
                     <TabsContent value="descriptions" className="mt-0 data-[state=active]:flex flex-col flex-1 p-6 h-full min-h-0">
-                        <ScrollArea className="flex-1 pr-4 -mr-4">
-                            <div className="space-y-8 pb-20 pr-4">
-                                {(() => {
-                                    const fa = champion.fullAbilities as any;
-                                    if (!fa || (!fa.signature && (!fa.abilities_breakdown || fa.abilities_breakdown.length === 0))) {
-                                        return <div className="text-center text-muted-foreground py-10">No full abilities descriptions available.</div>;
-                                    }
-
-                                    return (
-                                        <>
-                                            {fa.signature && (
-                                                <section>
-                                                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2">Signature Ability</h3>
-                                                    <div className="p-4 border rounded-lg bg-card/50">
-                                                        <h4 className="font-bold text-lg mb-2 text-amber-400">{fa.signature.name}</h4>
-                                                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                                                            {fa.signature.description}
-                                                        </p>
-                                                    </div>
-                                                </section>
-                                            )}
-
-                                            {fa.abilities_breakdown && fa.abilities_breakdown.length > 0 && (
-                                                <section>
-                                                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2 mt-6">Abilities Breakdown</h3>
-                                                    <div className="space-y-4">
-                                                        {fa.abilities_breakdown.map((ability: any, idx: number) => (
-                                                            <div key={idx} className="p-4 border rounded-lg bg-card/50">
-                                                                <div className="flex items-baseline gap-2 mb-2">
-                                                                    <h4 className="font-bold text-lg text-slate-200">{ability.title}</h4>
-                                                                    {ability.type && (
-                                                                        <span className="text-xs font-mono text-muted-foreground tracking-tight uppercase px-1.5 py-0.5 rounded bg-muted/50 border border-muted">
-                                                                            {ability.type}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                                                                    {ability.description}
-                                                                </p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </section>
-                                            )}
-                                        </>
-                                    );
-                                })()}
+                        {isEditingJson ? (
+                            <div className="flex flex-col h-full space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-primary">Edit fullAbilities JSON</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="ghost" size="sm" onClick={() => {
+                                            setIsEditingJson(false);
+                                            setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}");
+                                            setJsonError(null);
+                                        }}>
+                                            Cancel
+                                        </Button>
+                                        <Button size="sm" onClick={handleSaveJson} disabled={isSubmitting}>
+                                            <Save className="w-4 h-4 mr-2" /> Save JSON
+                                        </Button>
+                                    </div>
+                                </div>
+                                {jsonError && <p className="text-destructive text-sm font-mono">{jsonError}</p>}
+                                <Textarea 
+                                    className={cn(
+                                        "flex-1 font-mono text-sm resize-none bg-slate-950/80 border-slate-800 focus-visible:ring-primary h-full min-h-[300px]",
+                                        jsonError && "border-destructive focus-visible:ring-destructive"
+                                    )} 
+                                    value={fullAbilitiesJson} 
+                                    onChange={e => setFullAbilitiesJson(e.target.value)} 
+                                    spellCheck={false}
+                                />
                             </div>
-                        </ScrollArea>
+                        ) : (
+                            <ScrollArea className="flex-1 pr-4 -mr-4 relative group">
+                                <div className="absolute top-0 right-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity mt-2 mr-2">
+                                    <Button variant="outline" size="sm" onClick={() => setIsEditingJson(true)} className="bg-background/80 backdrop-blur-sm shadow-sm border-primary/20 hover:border-primary">
+                                        <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit JSON
+                                    </Button>
+                                </div>
+                                <div className="space-y-8 pb-20 pr-4">
+                                    {(() => {
+                                        const fa = champion.fullAbilities as any;
+                                        if (!fa || (!fa.signature && (!fa.abilities_breakdown || fa.abilities_breakdown.length === 0))) {
+                                            return <div className="text-center text-muted-foreground py-10">No full abilities descriptions available.</div>;
+                                        }
+
+                                        return (
+                                            <>
+                                                {fa.signature && (
+                                                    <section>
+                                                        <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2">Signature Ability</h3>
+                                                        <div className="p-4 border rounded-lg bg-card/50">
+                                                            <h4 className="font-bold text-lg mb-2 text-amber-400">{fa.signature.name}</h4>
+                                                            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                                {fa.signature.description}
+                                                            </p>
+                                                        </div>
+                                                    </section>
+                                                )}
+
+                                                {fa.abilities_breakdown && fa.abilities_breakdown.length > 0 && (
+                                                    <section>
+                                                        <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2 mt-6">Abilities Breakdown</h3>
+                                                        <div className="space-y-4">
+                                                            {fa.abilities_breakdown.map((ability: any, idx: number) => (
+                                                                <div key={idx} className="p-4 border rounded-lg bg-card/50">
+                                                                    <div className="flex items-baseline gap-2 mb-2">
+                                                                        <h4 className="font-bold text-lg text-slate-200">{ability.title}</h4>
+                                                                        {ability.type && (
+                                                                            <span className="text-xs font-mono text-muted-foreground tracking-tight uppercase px-1.5 py-0.5 rounded bg-muted/50 border border-muted">
+                                                                                {ability.type}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                                        {ability.description}
+                                                                    </p>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </section>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </ScrollArea>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="attacks" className="mt-0 data-[state=active]:flex-1 p-6 h-full min-h-0">
