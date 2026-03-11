@@ -36,3 +36,55 @@ export async function deleteAbilityCategory(id: number) {
     })
     revalidatePath("/admin/abilities")
 }
+
+export async function getAbilities() {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+    return await prisma.ability.findMany({
+        orderBy: { name: 'asc' },
+        include: {
+            categories: {
+                select: { id: true, name: true }
+            },
+            _count: { select: { champions: true } }
+        }
+    })
+}
+
+export async function createAbility(name: string, description: string | null, emoji: string | null, categoryIds: number[]) {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+    await prisma.ability.create({
+        data: {
+            name,
+            description,
+            emoji,
+            categories: {
+                connect: categoryIds.map(id => ({ id }))
+            }
+        }
+    })
+    revalidatePath("/admin/abilities")
+}
+
+export async function updateAbility(id: number, name: string, description: string | null, emoji: string | null, categoryIds: number[]) {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+    await prisma.ability.update({
+        where: { id },
+        data: {
+            name,
+            description,
+            emoji,
+            categories: {
+                set: categoryIds.map(categoryId => ({ id: categoryId }))
+            }
+        }
+    })
+    revalidatePath("/admin/abilities")
+}
+
+export async function deleteAbility(id: number) {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+    await prisma.ability.delete({
+        where: { id }
+    })
+    revalidatePath("/admin/abilities")
+}
