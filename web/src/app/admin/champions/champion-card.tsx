@@ -9,6 +9,8 @@ import { getChampionClassColors } from "@/lib/championClassHelper"
 import { Badge } from "@/components/ui/badge"
 import { Zap, Shield } from "lucide-react"
 
+import { Prisma } from "@prisma/client"
+
 export type AdminChampionData = {
     id: number
     name: string
@@ -17,6 +19,7 @@ export type AdminChampionData = {
     images: ChampionImages
     releaseDate: Date
     obtainable: string[]
+    fullAbilities: Prisma.JsonValue
     _count: { abilities: number }
     attacks: (Attack & { hits: Hit[] })[]
     abilities: (ChampionAbilityLink & { 

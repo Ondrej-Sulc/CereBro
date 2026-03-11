@@ -506,23 +506,52 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
                     <TabsContent value="descriptions" className="mt-0 data-[state=active]:flex flex-col flex-1 p-6 h-full min-h-0">
                         <ScrollArea className="flex-1 pr-4 -mr-4">
-                            <div className="space-y-6 pb-20 pr-4">
-                                {champion.abilities.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {Array.from(new Map(champion.abilities.map(l => [l.abilityId, l.ability])).values())
-                                            .sort((a, b) => a.name.localeCompare(b.name))
-                                            .map(ability => (
-                                            <div key={ability.id} className="p-4 border rounded-lg bg-card">
-                                                <h4 className="font-bold text-lg mb-2">{ability.name}</h4>
-                                                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                                                    {ability.description || "No description available."}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center text-muted-foreground py-10">No abilities available.</div>
-                                )}
+                            <div className="space-y-8 pb-20 pr-4">
+                                {(() => {
+                                    const fa = champion.fullAbilities as any;
+                                    if (!fa || (!fa.signature && (!fa.abilities_breakdown || fa.abilities_breakdown.length === 0))) {
+                                        return <div className="text-center text-muted-foreground py-10">No full abilities descriptions available.</div>;
+                                    }
+
+                                    return (
+                                        <>
+                                            {fa.signature && (
+                                                <section>
+                                                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2">Signature Ability</h3>
+                                                    <div className="p-4 border rounded-lg bg-card/50">
+                                                        <h4 className="font-bold text-lg mb-2 text-amber-400">{fa.signature.name}</h4>
+                                                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                            {fa.signature.description}
+                                                        </p>
+                                                    </div>
+                                                </section>
+                                            )}
+
+                                            {fa.abilities_breakdown && fa.abilities_breakdown.length > 0 && (
+                                                <section>
+                                                    <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2 mt-6">Abilities Breakdown</h3>
+                                                    <div className="space-y-4">
+                                                        {fa.abilities_breakdown.map((ability: any, idx: number) => (
+                                                            <div key={idx} className="p-4 border rounded-lg bg-card/50">
+                                                                <div className="flex items-baseline gap-2 mb-2">
+                                                                    <h4 className="font-bold text-lg text-slate-200">{ability.title}</h4>
+                                                                    {ability.type && (
+                                                                        <span className="text-xs font-mono text-muted-foreground tracking-tight uppercase px-1.5 py-0.5 rounded bg-muted/50 border border-muted">
+                                                                            {ability.type}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                                    {ability.description}
+                                                                </p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </section>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </ScrollArea>
                     </TabsContent>

@@ -19,6 +19,7 @@ export async function getChampions(): Promise<AdminChampionData[]> {
       images: true,
       releaseDate: true,
       obtainable: true,
+      fullAbilities: true,
       attacks: {
         include: {
             hits: true
