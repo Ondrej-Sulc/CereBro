@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { updateBotUserPermissions } from "../actions"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +32,13 @@ export function EditPermissionsDialog({ botUserId, initialPermissions, userName,
   const [isPending, setIsPending] = useState(false)
   const { toast } = useToast()
 
+  useEffect(() => {
+    if (open) {
+      setPermissions(initialPermissions);
+      setIsBotAdmin(initialIsBotAdmin);
+    }
+  }, [open, initialPermissions, initialIsBotAdmin]);
+
   const handleToggle = (permId: string, checked: boolean) => {
     if (checked) {
       setPermissions([...permissions, permId])
@@ -42,13 +49,18 @@ export function EditPermissionsDialog({ botUserId, initialPermissions, userName,
 
   const handleSave = async () => {
     setIsPending(true)
-    const result = await updateBotUserPermissions(botUserId, { permissions, isBotAdmin })
-    setIsPending(false)
-    if (result.success) {
-      toast({ title: "Permissions updated successfully" })
-      setOpen(false)
-    } else {
-      toast({ title: "Error", description: result.error, variant: "destructive" })
+    try {
+      const result = await updateBotUserPermissions(botUserId, { permissions, isBotAdmin })
+      if (result.success) {
+        toast({ title: "Permissions updated successfully" })
+        setOpen(false)
+      } else {
+        toast({ title: "Error", description: result.error, variant: "destructive" })
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: error?.message || "An unexpected error occurred", variant: "destructive" })
+    } finally {
+      setIsPending(false)
     }
   }
 

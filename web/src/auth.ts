@@ -45,11 +45,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
 
           // 2. Check if user has any Player profiles
-          const existingPlayer = await prisma.player.findFirst({
+          const existingPlayers = await prisma.player.findMany({
             where: { discordId }
           });
 
-          if (!existingPlayer) {
+          if (existingPlayers.length === 0) {
             // Create a default profile if they don't have one
             const discordProfile = profile as { global_name?: string; name?: string };
             const ingameName = discordProfile.global_name || discordProfile.name || user.name || "New Player";
@@ -73,23 +73,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 data: { activeProfileId: newPlayer.id }
               });
             }
-          } else if (!existingPlayer.botUserId) {
-              // Link existing player to botUser if it wasn't linked (e.g. legacy data)
-              logger.info({ discordId, playerId: existingPlayer.id }, "Linking existing player to BotUser");
-              await prisma.player.update({
-                  where: { id: existingPlayer.id },
-                  data: { 
-                      botUserId: botUser.id,
-                      isActive: true // Ensure legacy flag is set
-                  }
-              });
-              
-              if (!botUser.activeProfileId) {
-                  await prisma.botUser.update({
-                    where: { id: botUser.id },
-                    data: { activeProfileId: existingPlayer.id }
+          } else {
+              const unlinkedPlayers = existingPlayers.filter(p => !p.botUserId);
+              if (unlinkedPlayers.length > 0) {
+                  // Link existing players to botUser if they weren't linked (e.g. legacy data)
+                  logger.info({ discordId, count: unlinkedPlayers.length }, "Linking existing players to BotUser");
+                  await prisma.player.updateMany({
+                      where: { id: { in: unlinkedPlayers.map(p => p.id) } },
+                      data: { botUserId: botUser.id }
                   });
-                }
+                  
+                  if (!botUser.activeProfileId) {
+                      const activeLegacy = unlinkedPlayers.find(p => p.isActive) || unlinkedPlayers[0];
+                      await prisma.botUser.update({
+                        where: { id: botUser.id },
+                        data: { activeProfileId: activeLegacy.id }
+                      });
+                  }
+              }
           }
         }
         return true;
@@ -104,36 +105,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           session.user.permissions = [];
           
           try {
-            // Cache the session extension data for 5 minutes to reduce DB load
-            const extension = await getFromCache(
-                `session_ext_${user.id}`,
-                300,
+            // Cache the account discord id to avoid repeated account lookups
+            const discordId = await getFromCache(
+                `user_discord_id_${user.id}`,
+                3600, // Cache for 1 hour
                 async () => {
-                const account = await prisma.account.findFirst({
-                    where: { userId: user.id, provider: 'discord' },
-                    select: { providerAccountId: true }
-                });
-        
-                if (!account?.providerAccountId) return null;
-        
+                    const account = await prisma.account.findFirst({
+                        where: { userId: user.id, provider: 'discord' },
+                        select: { providerAccountId: true }
+                    });
+                    return account?.providerAccountId || null;
+                }
+            );
+    
+            if (discordId) {
+                session.user.discordId = discordId;
+                
+                // Fetch permissions fresh so changes reflect immediately
                 const botUser = await prisma.botUser.findUnique({
-                    where: { discordId: account.providerAccountId },
+                    where: { discordId },
                     select: { isBotAdmin: true, permissions: true }
                 });
-        
-                return {
-                    discordId: account.providerAccountId,
-                    isBotAdmin: botUser?.isBotAdmin || false,
-                    permissions: botUser?.permissions || []
-                };
-                },
-                (data) => data !== null
-            );
-        
-            if (extension) {
-                session.user.discordId = extension.discordId;
-                session.user.isBotAdmin = extension.isBotAdmin;
-                session.user.permissions = extension.permissions || [];
+
+                if (botUser) {
+                    session.user.isBotAdmin = botUser.isBotAdmin;
+                    session.user.permissions = botUser.permissions || [];
+                }
             }
           } catch (error) {
               logger.error({ error, userId: user.id }, "Error in session callback");

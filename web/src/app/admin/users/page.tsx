@@ -47,7 +47,7 @@ interface AdminUsersPageProps {
 
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
   const user = await ensureAdmin("MANAGE_USERS")
-  const isGlobalAdmin = user.isBotAdmin === true;
+  const isGlobalAdmin = user.isBotAdmin === true || (user.permissions && user.permissions.includes("MANAGE_USERS"));
 
   const params = await searchParams
   const query = params.query || ""

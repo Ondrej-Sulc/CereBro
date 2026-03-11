@@ -143,5 +143,9 @@ export async function requireBotAdmin(requiredPermission?: Permission) {
     return actingUser;
   }
 
+  if (!requiredPermission && actingUser.permissions && actingUser.permissions.length > 0) {
+    return actingUser;
+  }
+
   throw new Error("Unauthorized");
 }
