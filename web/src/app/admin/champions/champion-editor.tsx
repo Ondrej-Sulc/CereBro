@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { ChampionAbilityLink, AbilityLinkType, Ability, AttackType } from "@prisma/client"
-import { updateChampionAbility, removeChampionAbility, updateChampionDetails, addSynergy, removeSynergy, saveChampionAttacks } from "./actions"
+import { updateChampionAbility, removeChampionAbility, updateChampionDetails, addSynergy, removeSynergy, saveChampionAttacks, updateChampionFullAbilities } from "./actions"
 import { AdminChampionData } from "./champion-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,

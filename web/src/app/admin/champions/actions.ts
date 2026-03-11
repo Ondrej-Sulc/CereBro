@@ -103,6 +103,16 @@ export async function updateChampionDetails(
     revalidatePath('/admin/champions')
 }
 
+export async function updateChampionFullAbilities(id: number, fullAbilities: any) {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+
+    await prisma.champion.update({
+        where: { id },
+        data: { fullAbilities }
+    })
+    revalidatePath('/admin/champions')
+}
+
 export async function updateChampionAbility(
     linkId: number | undefined, 
     championId: number, 
