@@ -67,7 +67,7 @@ const COMMON_HIT_PROPERTIES = ["Contact", "Physical", "Energy", "Projectile"]
 
 export function ChampionEditor({ champion, allChampions, allAbilities, open, onOpenChange }: ChampionEditorProps) {
   const { toast } = useToast()
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState("info")
 
   // Form States
   const [name, setName] = useState("")
@@ -76,6 +76,11 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined)
   const [obtainable, setObtainable] = useState<string>("") // comma separated for now
   
+  // JSON Editor State
+  const [fullAbilitiesJson, setFullAbilitiesJson] = useState("")
+  const [isEditingJson, setIsEditingJson] = useState(false)
+  const [jsonError, setJsonError] = useState<string | null>(null)
+
   // Ability States
   const [newAbilityId, setNewAbilityId] = useState<number | null>(null)
   const [newType, setNewType] = useState<AbilityLinkType>("ABILITY")
@@ -96,11 +101,15 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
         setObtainable(champion.obtainable.join(", "))
 
         // Reset Editor State
-        setActiveTab("overview")
+        setActiveTab("info")
         setNewAbilityId(null)
         setNewType("ABILITY")
         setAbilityComboboxOpen(false)
         setIsAddingInstance(false)
+        
+        setIsEditingJson(false)
+        setJsonError(null)
+        setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
     }
   }, [champion])
 
