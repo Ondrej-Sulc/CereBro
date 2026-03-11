@@ -1,32 +1,9 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import AdminNodeManagerClient from "@/components/admin/admin-node-manager-client";
+import { ensureAdmin } from "../actions";
 
 export default async function AdminNodeManagerPage() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/api/auth/discord-login?redirectTo=/admin/nodes");
-  }
-
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: session.user.id,
-      provider: "discord",
-    },
-  });
-
-  if (!account?.providerAccountId) {
-    return <p>Error: No linked Discord account found.</p>;
-  }
-
-  const botUser = await prisma.botUser.findUnique({
-    where: { discordId: account.providerAccountId },
-  });
-
-  if (!botUser?.isBotAdmin) {
-    return <p>You must be a Bot Admin to access this page.</p>;
-  }
+  await ensureAdmin("MANAGE_WAR_CONFIG");
 
   const warNodes = await prisma.warNode.findMany({
     orderBy: { nodeNumber: 'asc' },

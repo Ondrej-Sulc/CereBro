@@ -13,8 +13,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users, Server, Shield } from "lucide-react";
 import { CleanupButton, LeaveButton } from "./discord-client";
 import { cn } from "@/lib/utils";
+import { ensureAdmin } from "../actions";
 
 export default async function AdminDiscordPage() {
+    await ensureAdmin("MANAGE_SYSTEM");
     const guilds = await getDiscordGuilds();
     const smallGuildsCount = guilds.filter(g => (g.approximate_member_count || 0) <= 1).length;
 

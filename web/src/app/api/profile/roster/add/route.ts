@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@cerebro/core/services/loggerService";
+import { clearCache } from "@/lib/cache";
 import { Prisma } from "@prisma/client";
 
 const addSchema = z.object({
@@ -84,6 +86,8 @@ export async function POST(req: Request) {
         }
     }
 
+    revalidatePath("/profile/roster");
+    if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
     return NextResponse.json(newRoster);
   } catch (error) {
     logger.error({ error }, "Error adding champion");

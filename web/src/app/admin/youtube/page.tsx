@@ -1,27 +1,17 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { isUserBotAdmin } from "@/lib/auth-helpers";
+import { ensureAdmin } from "../actions";
 
 export default async function YouTubeAdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const session = await auth();
-  if (!session?.user) redirect("/");
-
-  // Check Admin Status using helper to support multi-account
-  const isAdmin = await isUserBotAdmin();
-  
-  if (!isAdmin) {
-     return <div className="p-8 text-center text-red-500">Access Denied</div>;
-  }
+  await ensureAdmin("MANAGE_SYSTEM");
 
   const currentToken = await prisma.systemConfig.findUnique({
       where: { key: 'YOUTUBE_REFRESH_TOKEN' }

@@ -1,5 +1,13 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { Player, Alliance } from "@prisma/client";
+import { Permission } from "./permissions";
+
+export type UserPlayerWithAlliance = Player & {
+  alliance: Alliance | null;
+  isBotAdmin: boolean;
+  permissions: string[];
+};
 
 export async function isUserBotAdmin(): Promise<boolean> {
   const session = await auth();
@@ -18,7 +26,7 @@ export async function isUserBotAdmin(): Promise<boolean> {
   return !!botUser?.isBotAdmin;
 }
 
-export async function getUserPlayerWithAlliance() {
+export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAlliance | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
 
@@ -43,7 +51,10 @@ export async function getUserPlayerWithAlliance() {
   // Fallback 1: Use the BotUser's activeProfileId if set
   if (!player && botUser?.activeProfileId) {
     player = await prisma.player.findUnique({
-      where: { id: botUser.activeProfileId },
+      where: { 
+          id: botUser.activeProfileId,
+          discordId: account.providerAccountId 
+      },
       include: { alliance: true },
     });
   }
@@ -61,22 +72,83 @@ export async function getUserPlayerWithAlliance() {
     // Override the local isBotAdmin with the global BotUser permission
     return {
       ...player,
-      isBotAdmin: botUser.isBotAdmin
+      isBotAdmin: botUser.isBotAdmin,
+      permissions: botUser.permissions || []
     };
   }
 
   return null;
 }
 
-export async function requireBotAdmin() {
+export async function getUserProfiles() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const account = await prisma.account.findFirst({
+    where: { userId: session.user.id, provider: "discord" },
+  });
+
+  if (!account?.providerAccountId) return [];
+
+  const botUser = await prisma.botUser.findUnique({
+    where: { discordId: account.providerAccountId },
+    include: {
+      profiles: {
+        include: { alliance: true },
+        orderBy: { ingameName: 'asc' }
+      }
+    }
+  });
+
+  let profiles = botUser?.profiles || [];
+
+  // Resolution logic to find the active profile if it's not in the botUser's linked profiles
+  let activeProfile = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId, isActive: true },
+    include: { alliance: true },
+  });
+
+  if (!activeProfile && botUser?.activeProfileId) {
+    activeProfile = await prisma.player.findUnique({
+      where: { id: botUser.activeProfileId },
+      include: { alliance: true },
+    });
+  }
+
+  if (!activeProfile) {
+    activeProfile = await prisma.player.findFirst({
+      where: { discordId: account.providerAccountId },
+      orderBy: { updatedAt: 'desc' },
+      include: { alliance: true },
+    });
+  }
+
+  if (activeProfile) {
+    const isAlreadyIncluded = profiles.some(p => p.id === activeProfile?.id);
+    if (!isAlreadyIncluded) {
+        profiles = [...profiles, activeProfile];
+    }
+  }
+
+  return profiles;
+}
+
+export async function requireBotAdmin(requiredPermission?: Permission) {
   const actingUser = await getUserPlayerWithAlliance();
   if (!actingUser) throw new Error("Unauthorized");
 
   // getUserPlayerWithAlliance already populated isBotAdmin from BotUser table.
-  // If it's missing or false, we look up again just to be sure we have latest.
-  if (!actingUser.isBotAdmin) {
-    throw new Error("Unauthorized");
+  if (actingUser.isBotAdmin) {
+    return actingUser;
   }
 
-  return actingUser;
+  if (requiredPermission && actingUser.permissions?.includes(requiredPermission)) {
+    return actingUser;
+  }
+
+  if (!requiredPermission && actingUser.permissions && actingUser.permissions.length > 0) {
+    return actingUser;
+  }
+
+  throw new Error("Unauthorized");
 }

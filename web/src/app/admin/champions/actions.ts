@@ -9,7 +9,7 @@ import { AdminChampionData } from "./champion-card"
 import { ChampionImages } from "@/types/champion"
 
 export async function getChampions(): Promise<AdminChampionData[]> {
-  await ensureAdmin()
+  await ensureAdmin("MANAGE_CHAMPIONS")
   const champions = await prisma.champion.findMany({
     select: {
       id: true,
@@ -66,7 +66,7 @@ export async function getChampions(): Promise<AdminChampionData[]> {
 }
 
 export async function getAbilities() {
-  await ensureAdmin()
+  await ensureAdmin("MANAGE_CHAMPIONS")
   return await prisma.ability.findMany({
     orderBy: { name: 'asc' }
   })
@@ -82,7 +82,7 @@ export async function updateChampionDetails(
         obtainable: string[]
     }
 ) {
-    await ensureAdmin()
+    await ensureAdmin("MANAGE_CHAMPIONS")
 
     if (!Object.values(ChampionClass).includes(data.class as ChampionClass)) {
         throw new Error(`Invalid champion class: ${data.class}`)
@@ -109,7 +109,7 @@ export async function updateChampionAbility(
     type: AbilityLinkType, 
     source?: string
 ) {
-    await ensureAdmin()
+    await ensureAdmin("MANAGE_CHAMPIONS")
     if (linkId !== undefined) {
         await prisma.championAbilityLink.update({
             where: { id: linkId },
@@ -132,7 +132,7 @@ export async function updateChampionAbility(
 }
 
 export async function removeChampionAbility(linkId: number) {
-    await ensureAdmin()
+    await ensureAdmin("MANAGE_CHAMPIONS")
     await prisma.championAbilityLink.delete({
         where: { id: linkId }
     })
@@ -140,7 +140,7 @@ export async function removeChampionAbility(linkId: number) {
 }
 
 export async function addSynergy(linkId: number, championId: number) {
-    await ensureAdmin()
+    await ensureAdmin("MANAGE_CHAMPIONS")
     await prisma.championAbilitySynergy.create({
         data: {
             championAbilityLinkId: linkId,
@@ -151,7 +151,7 @@ export async function addSynergy(linkId: number, championId: number) {
 }
 
 export async function removeSynergy(linkId: number, championId: number) {
-    await ensureAdmin()
+    await ensureAdmin("MANAGE_CHAMPIONS")
     await prisma.championAbilitySynergy.deleteMany({
         where: {
             championAbilityLinkId: linkId,
@@ -166,7 +166,7 @@ export async function saveChampionAttacks(
     attackType: AttackType, 
     hits: { properties: string[] }[]
 ) {
-    await ensureAdmin()
+    await ensureAdmin("MANAGE_CHAMPIONS")
 
     // Input Validation Limits
     const MAX_HITS = 100;

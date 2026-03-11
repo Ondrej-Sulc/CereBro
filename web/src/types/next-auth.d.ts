@@ -10,6 +10,8 @@ declare module "next-auth" {
       discordId?: string
       /** Whether the user is a Bot Admin. */
       isBotAdmin: boolean
+      /** Granular permissions array */
+      permissions: string[]
     } & DefaultSession["user"]
   }
 }

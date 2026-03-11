@@ -19,7 +19,7 @@ export async function getQuestCategories() {
 }
 
 export async function createQuestCategory(name: string, order: number = 0, parentId?: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     await prisma.questCategory.create({
         data: {
@@ -93,7 +93,7 @@ export type QuestPlanCreateInput = {
 };
 
 export async function createQuestPlan(data: QuestPlanCreateInput) {
-    const actingUser = await requireBotAdmin();
+    const actingUser = await requireBotAdmin("MANAGE_QUESTS");
 
     const plan = await prisma.questPlan.create({
         data: {
@@ -141,7 +141,7 @@ export type QuestPlanUpdateInput = {
 };
 
 export async function updateQuestPlan(data: QuestPlanUpdateInput) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     await prisma.questPlan.update({
         where: { id: data.id },
@@ -174,7 +174,7 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
 }
 
 export async function deleteQuestPlan(id: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     await prisma.questPlan.delete({
         where: { id }
@@ -186,7 +186,7 @@ export async function deleteQuestPlan(id: string) {
 }
 
 export async function uploadQuestBanner(questPlanId: string, formData: FormData) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     const file = formData.get('file');
     if (!file || !(file instanceof File)) {
@@ -231,7 +231,7 @@ export async function uploadQuestBanner(questPlanId: string, formData: FormData)
 }
 
 export async function duplicateQuestPlan(id: string) {
-    const actingUser = await requireBotAdmin();
+    const actingUser = await requireBotAdmin("MANAGE_QUESTS");
 
     const sourcePlan = await prisma.questPlan.findUnique({
         where: { id },
@@ -297,7 +297,7 @@ export async function duplicateQuestPlan(id: string) {
 }
 
 export async function clearRecommendedChampionsInQuest(id: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     const encounters = await prisma.questEncounter.findMany({
         where: { questPlanId: id },
@@ -404,7 +404,7 @@ export type QuestEncounterCreateInput = {
 };
 
 export async function createQuestEncounter(data: QuestEncounterCreateInput) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     if (data.defenderId) {
         const champ = await prisma.champion.findUnique({ where: { id: data.defenderId } });
@@ -454,7 +454,7 @@ export type QuestEncounterUpdateInput = {
 };
 
 export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     if (data.defenderId) {
         const champ = await prisma.champion.findUnique({ where: { id: data.defenderId } });
@@ -497,7 +497,7 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
 }
 
 export async function deleteQuestEncounter(questPlanId: string, encounterId: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_QUESTS");
 
     const existingEncounter = await prisma.questEncounter.findUnique({ where: { id: encounterId } });
     if (!existingEncounter || existingEncounter.questPlanId !== questPlanId) {

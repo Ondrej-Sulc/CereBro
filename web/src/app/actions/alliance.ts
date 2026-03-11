@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { revalidatePath } from "next/cache";
+import { clearCache } from "@/lib/cache";
 import { BotJobType } from "@prisma/client";
 import logger from "@/lib/logger";
 
@@ -17,7 +18,11 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
         where: { id: targetPlayerId }
     });
 
-    if (!targetPlayer || targetPlayer.allianceId !== actingUser.allianceId) {
+    if (!targetPlayer) {
+        throw new Error("Target player not found");
+    }
+
+    if (targetPlayer.allianceId !== actingUser.allianceId) {
         // Allow Bot Admins to edit anyone? For now, stick to alliance scope.
         if (!actingUser.isBotAdmin) {
             throw new Error("Target player not in your alliance");
@@ -47,7 +52,9 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
         }
     });
 
+    clearCache(`alliance-members-${targetPlayer.allianceId}`);
     revalidatePath('/alliance');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 
@@ -137,8 +144,10 @@ export async function leaveAlliance() {
         }
     });
 
+    clearCache(`alliance-members-${actingUser.allianceId}`);
     revalidatePath('/');
     revalidatePath('/alliance');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 
@@ -159,7 +168,9 @@ export async function removeMember(playerId: string) {
         }
     });
 
+    clearCache(`alliance-members-${actingUser.allianceId}`);
     revalidatePath('/alliance');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 
@@ -268,31 +279,57 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
     }
 
     logger.info({ userId: actingUser.id, requestId, status, type: request.type }, "Responding to membership request");
+    
     if (status === 'ACCEPTED') {
-        // Add player to alliance
-        await prisma.player.update({
-            where: { id: request.playerId },
-            data: { allianceId: request.allianceId }
+        const claimSuccess = await prisma.$transaction(async (tx) => {
+            const updateCount = await tx.player.updateMany({
+                where: { id: request.playerId, allianceId: null },
+                data: { allianceId: request.allianceId }
+            });
+
+            if (updateCount.count === 1) {
+                // Claim succeeded
+                await tx.allianceMembershipRequest.update({
+                    where: { id: requestId },
+                    data: { status: 'ACCEPTED' }
+                });
+
+                // Cancel other pending requests for this player
+                await tx.allianceMembershipRequest.updateMany({
+                    where: { 
+                        playerId: request.playerId,
+                        status: 'PENDING',
+                        id: { not: requestId }
+                    },
+                    data: { status: 'CANCELLED' }
+                });
+                return true;
+            } else {
+                // Player is already in an alliance, cannot accept
+                await tx.allianceMembershipRequest.update({
+                    where: { id: requestId },
+                    data: { status: 'CANCELLED' }
+                });
+                return false;
+            }
         });
 
-        // Cancel other pending requests for this player
-        await prisma.allianceMembershipRequest.updateMany({
-            where: { 
-                playerId: request.playerId,
-                status: 'PENDING',
-                id: { not: requestId }
-            },
-            data: { status: 'CANCELLED' }
+        if (claimSuccess) {
+            clearCache(`alliance-members-${request.allianceId}`);
+        } else {
+            logger.warn({ userId: actingUser.id, requestId, playerId: request.playerId }, "Attempted to accept request for player already in an alliance. Request cancelled.");
+            return { error: "Player is already in an alliance" };
+        }
+    } else {
+        await prisma.allianceMembershipRequest.update({
+            where: { id: requestId },
+            data: { status }
         });
     }
 
-    await prisma.allianceMembershipRequest.update({
-        where: { id: requestId },
-        data: { status }
-    });
-
     revalidatePath('/alliance');
     revalidatePath('/');
+    revalidatePath('/planning', 'layout');
     return { success: true };
 }
 

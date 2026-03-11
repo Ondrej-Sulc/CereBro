@@ -157,21 +157,23 @@ export async function switchProfile(profileId: string) {
   }
 
   logger.info({ userId: user.id, profileId, profileName: profile.ingameName }, "Switching profile");
-  await prisma.botUser.update({
-    where: { id: user.id },
-    data: { activeProfileId: profileId }
-  });
+  
+  await prisma.$transaction([
+    prisma.botUser.update({
+      where: { id: user.id },
+      data: { activeProfileId: profileId }
+    }),
+    // Update legacy isActive flags for backward compatibility
+    prisma.player.updateMany({
+      where: { botUserId: user.id },
+      data: { isActive: false }
+    }),
+    prisma.player.update({
+      where: { id: profileId },
+      data: { isActive: true }
+    })
+  ]);
 
-  // Update legacy isActive flags for backward compatibility
-  await prisma.player.updateMany({
-    where: { botUserId: user.id },
-    data: { isActive: false }
-  });
-  await prisma.player.update({
-    where: { id: profileId },
-    data: { isActive: true }
-  });
-
-  revalidatePath("/profile");
+  revalidatePath("/profile", "layout");
   return { success: true };
 }
