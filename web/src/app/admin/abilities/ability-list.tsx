@@ -21,7 +21,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Edit2, Trash2, Plus, Check } from "lucide-react"
+import { Edit2, Trash2, Plus, Check, Search, Sparkles } from "lucide-react"
 import { createAbility, updateAbility, deleteAbility } from "./actions"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
@@ -39,6 +39,28 @@ type Ability = {
 type Category = {
     id: number;
     name: string;
+}
+
+function DiscordEmoji({ emoji, className }: { emoji: string | null, className?: string }) {
+    if (!emoji) return null;
+    
+    const match = emoji.match(/<(a?):([a-zA-Z0-9_]+):(\d+)>/);
+    if (match) {
+        const isAnimated = match[1] === 'a';
+        const name = match[2];
+        const id = match[3];
+        const ext = isAnimated ? 'gif' : 'png';
+        return (
+            <img 
+                src={`https://cdn.discordapp.com/emojis/${id}.${ext}`} 
+                alt={name} 
+                title={`:${name}:`}
+                className={cn("w-6 h-6 inline-block object-contain", className)}
+            />
+        );
+    }
+    // Fallback to text if it's not a standard discord emoji (e.g. unicode)
+    return <span className={cn("text-lg inline-block text-center", className)}>{emoji}</span>;
 }
 
 export function AbilityList({ initialAbilities, allCategories }: { initialAbilities: Ability[], allCategories: Category[] }) {
@@ -113,37 +135,46 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center gap-4">
-                <Input 
-                    placeholder="Search abilities..." 
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="max-w-sm"
-                />
+                <div className="relative max-w-sm w-full">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                        placeholder="Search abilities..." 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="pl-9 bg-card"
+                    />
+                </div>
                 <Button onClick={() => handleOpenDialog()}>
                     <Plus className="w-4 h-4 mr-2" /> Add Ability
                 </Button>
             </div>
 
-            <div className="border rounded-md">
+            <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/50">
                         <TableRow>
-                            <TableHead>Ability</TableHead>
+                            <TableHead className="w-[300px]">Ability</TableHead>
                             <TableHead>Categories</TableHead>
-                            <TableHead>Linked Champions</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[150px] text-center">Linked Champions</TableHead>
+                            <TableHead className="w-[100px] text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredAbilities.map((ability) => (
-                            <TableRow key={ability.id}>
+                            <TableRow key={ability.id} className="group">
                                 <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        {ability.emoji && <span className="text-lg">{ability.emoji}</span>}
-                                        <div>
-                                            <div className="font-medium">{ability.name}</div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-md bg-muted/50 border flex items-center justify-center shrink-0 shadow-inner">
+                                            {ability.emoji ? (
+                                                <DiscordEmoji emoji={ability.emoji} />
+                                            ) : (
+                                                <Sparkles className="w-4 h-4 text-muted-foreground/30" />
+                                            )}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="font-medium truncate">{ability.name}</div>
                                             {ability.description && (
-                                                <div className="text-xs text-muted-foreground truncate max-w-[300px]" title={ability.description}>
+                                                <div className="text-xs text-muted-foreground truncate max-w-[200px] xl:max-w-[300px]" title={ability.description}>
                                                     {ability.description}
                                                 </div>
                                             )}
@@ -154,22 +185,26 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                                     <div className="flex flex-wrap gap-1">
                                         {ability.categories.length > 0 ? (
                                             ability.categories.map(c => (
-                                                <Badge key={c.id} variant="secondary" className="text-xs font-normal">
+                                                <Badge key={c.id} variant="secondary" className="text-[10px] font-medium bg-background border-muted-foreground/20 hover:bg-muted">
                                                     {c.name}
                                                 </Badge>
                                             ))
                                         ) : (
-                                            <span className="text-xs text-muted-foreground italic">Uncategorized</span>
+                                            <span className="text-xs text-muted-foreground/50 italic">Uncategorized</span>
                                         )}
                                     </div>
                                 </TableCell>
-                                <TableCell>{ability._count.champions}</TableCell>
+                                <TableCell className="text-center">
+                                    <span className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                                        {ability._count.champions}
+                                    </span>
+                                </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(ability)}>
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(ability)}>
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(ability.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(ability.id)}>
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
                                     </div>
@@ -178,8 +213,11 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                         ))}
                         {filteredAbilities.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                                    No abilities found.
+                                <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center gap-2">
+                                        <Sparkles className="w-8 h-8 opacity-20" />
+                                        <p>No abilities found.</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
@@ -199,25 +237,33 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                                 <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Bleed" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Emoji (Optional)</Label>
-                                <Input value={emoji} onChange={e => setEmoji(e.target.value)} placeholder="e.g. 🩸" />
+                                <div className="flex items-center justify-between">
+                                    <Label>Discord Emoji</Label>
+                                    {emoji && (
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            Preview: <DiscordEmoji emoji={emoji} className="w-4 h-4" />
+                                        </div>
+                                    )}
+                                </div>
+                                <Input value={emoji} onChange={e => setEmoji(e.target.value)} placeholder="e.g. <:bleed:123456789>" className="font-mono text-sm" />
+                                <p className="text-[10px] text-muted-foreground">Format: <code>&lt;:name:id&gt;</code> or <code>&lt;a:name:id&gt;</code></p>
                             </div>
                             <div className="space-y-2">
                                 <Label>Description (Optional)</Label>
                                 <Textarea 
                                     value={description} 
                                     onChange={e => setDescription(e.target.value)} 
-                                    placeholder="Optional description..."
-                                    className="h-32"
+                                    placeholder="Brief description of how the ability works..."
+                                    className="h-24 resize-none"
                                 />
                             </div>
                         </div>
                         
                         <div className="space-y-2 flex flex-col h-[350px]">
                             <Label>Categories</Label>
-                            <div className="border rounded-md flex-1 overflow-hidden flex flex-col">
-                                <div className="bg-muted px-3 py-2 text-xs font-medium text-muted-foreground border-b">
-                                    Select categories
+                            <div className="border rounded-xl flex-1 overflow-hidden flex flex-col shadow-sm bg-muted/20">
+                                <div className="bg-muted/50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b">
+                                    Select Mappings
                                 </div>
                                 <ScrollArea className="flex-1 p-2">
                                     <div className="space-y-1">
@@ -229,13 +275,17 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                                                     type="button"
                                                     onClick={() => toggleCategory(category.id)}
                                                     className={cn(
-                                                        "flex items-center w-full px-2 py-1.5 text-sm rounded-sm transition-colors",
-                                                        isSelected ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                                                        "flex items-center w-full px-2 py-2 text-sm rounded-md transition-all border border-transparent",
+                                                        isSelected 
+                                                            ? "bg-primary/10 text-primary font-medium border-primary/20 shadow-sm" 
+                                                            : "hover:bg-muted/80 text-muted-foreground hover:text-foreground"
                                                     )}
                                                 >
                                                     <div className={cn(
-                                                        "mr-2 h-4 w-4 rounded-sm border flex items-center justify-center shrink-0",
-                                                        isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/30"
+                                                        "mr-3 h-4 w-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors",
+                                                        isSelected 
+                                                            ? "border-primary bg-primary text-primary-foreground" 
+                                                            : "border-muted-foreground/30 bg-background"
                                                     )}>
                                                         {isSelected && <Check className="h-3 w-3" />}
                                                     </div>
@@ -243,6 +293,11 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                                                 </button>
                                             )
                                         })}
+                                        {allCategories.length === 0 && (
+                                            <div className="text-center py-8 text-xs text-muted-foreground italic">
+                                                No categories created yet.
+                                            </div>
+                                        )}
                                     </div>
                                 </ScrollArea>
                             </div>
@@ -250,7 +305,7 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>Save</Button>
+                        <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>Save Ability</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

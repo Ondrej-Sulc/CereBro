@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Edit2, Trash2, Plus } from "lucide-react"
+import { Edit2, Trash2, Plus, LayoutGrid } from "lucide-react"
 import { createAbilityCategory, updateAbilityCategory, deleteAbilityCategory } from "./actions"
 import { useToast } from "@/hooks/use-toast"
 
@@ -87,34 +87,46 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center gap-4">
+                <div className="text-sm text-muted-foreground">
+                    Organize abilities into logical groupings for easier management.
+                </div>
                 <Button onClick={() => handleOpenDialog()}>
                     <Plus className="w-4 h-4 mr-2" /> Add Category
                 </Button>
             </div>
 
-            <div className="border rounded-md">
+            <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-muted/50">
                         <TableRow>
-                            <TableHead>Name</TableHead>
+                            <TableHead className="w-[300px]">Name</TableHead>
                             <TableHead>Description</TableHead>
-                            <TableHead>Linked Abilities</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="w-[150px] text-center">Linked Abilities</TableHead>
+                            <TableHead className="w-[100px] text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {categories.map((category) => (
-                            <TableRow key={category.id}>
-                                <TableCell className="font-medium">{category.name}</TableCell>
-                                <TableCell className="text-muted-foreground">{category.description}</TableCell>
-                                <TableCell>{category._count.abilities}</TableCell>
+                            <TableRow key={category.id} className="group">
+                                <TableCell className="font-medium">
+                                    <div className="flex items-center gap-2">
+                                        <LayoutGrid className="w-4 h-4 text-muted-foreground/50" />
+                                        {category.name}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground text-sm">{category.description || <span className="italic opacity-50">No description</span>}</TableCell>
+                                <TableCell className="text-center">
+                                    <span className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                                        {category._count.abilities}
+                                    </span>
+                                </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(category)}>
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(category)}>
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(category.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(category.id)}>
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
                                     </div>
@@ -123,8 +135,11 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                         ))}
                         {categories.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                                    No categories found.
+                                <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center gap-2">
+                                        <LayoutGrid className="w-8 h-8 opacity-20" />
+                                        <p>No categories found.</p>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         )}
@@ -144,12 +159,12 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                         </div>
                         <div className="space-y-2">
                             <Label>Description</Label>
-                            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description..." />
+                            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description..." className="resize-none h-24" />
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>Save</Button>
+                        <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>Save Category</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
