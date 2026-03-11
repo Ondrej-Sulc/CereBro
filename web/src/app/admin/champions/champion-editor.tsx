@@ -105,20 +105,26 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
   // Group abilities and sort alphabetically
   const groupedAbilities = useMemo(() => {
-      if (!champion) return []
+      if (!champion) return { abilities: [], immunities: [] }
       
-      const groups: Record<string, typeof champion.abilities> = {}
+      const abilities: Record<string, typeof champion.abilities> = {}
+      const immunities: Record<string, typeof champion.abilities> = {}
       
       champion.abilities.forEach(link => {
-          // Use name as key to group Ability and Immunity together
           const key = link.ability.name
-          if (!groups[key]) {
-              groups[key] = []
+          if (link.type === "ABILITY") {
+              if (!abilities[key]) abilities[key] = []
+              abilities[key].push(link)
+          } else if (link.type === "IMMUNITY") {
+              if (!immunities[key]) immunities[key] = []
+              immunities[key].push(link)
           }
-          groups[key].push(link)
       })
       
-      return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))
+      return {
+          abilities: Object.entries(abilities).sort((a, b) => a[0].localeCompare(b[0])),
+          immunities: Object.entries(immunities).sort((a, b) => a[0].localeCompare(b[0]))
+      }
   }, [champion])
 
   if (!champion) return null
@@ -238,6 +244,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                     <TabsList className="bg-transparent h-12 w-full justify-start gap-6 p-0">
                         <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Details</TabsTrigger>
                         <TabsTrigger value="abilities" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Abilities & Immunities</TabsTrigger>
+                        <TabsTrigger value="descriptions" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Descriptions</TabsTrigger>
                         <TabsTrigger value="attacks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Attacks</TabsTrigger>
                     </TabsList>
                 </div>
@@ -331,12 +338,12 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="abilities" className="mt-0 data-[state=active]:flex-1 p-6 flex-col h-full min-h-0">
+                    <TabsContent value="abilities" className="mt-0 data-[state=active]:flex flex-col flex-1 p-6 h-full min-h-0">
                         {/* Add New Ability Bar */}
                         <div className="p-4 border rounded-lg bg-background/50 space-y-4 shrink-0 shadow-sm mb-6">
                             <div className="flex items-end gap-3">
                                 <div className="flex-1 space-y-2">
-                                    <Label>Add New Ability/Immunity Group</Label>
+                                    <Label>Add New Ability/Immunity</Label>
                                     <div className="flex gap-2">
                                         <Popover open={abilityComboboxOpen} onOpenChange={setAbilityComboboxOpen}>
                                             <PopoverTrigger asChild>
@@ -403,62 +410,119 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         {/* Grouped Abilities List */}
                         <ScrollArea className="flex-1 pr-4 -mr-4">
                             <div className="space-y-6 pb-20 pr-4">
-                                {groupedAbilities.map(([title, links]) => {
-                                    const hasImmunity = links.some(l => l.type === "IMMUNITY")
-                                    const hasAbility = links.some(l => l.type === "ABILITY")
-                                    const firstLink = links[0]
-                                    
-                                    return (
-                                        <div key={title} className="border rounded-lg bg-card overflow-hidden">
-                                            <div className={cn(
-                                                "px-4 py-2 border-b flex items-center gap-3",
-                                                hasImmunity && !hasAbility ? "bg-sky-500/10 border-sky-500/20" : 
-                                                !hasImmunity && hasAbility ? "bg-amber-500/10 border-amber-500/20" :
-                                                "bg-muted/50 border-muted"
-                                            )}>
-                                                <span className={cn(
-                                                    "w-2 h-2 rounded-full",
-                                                    hasImmunity && !hasAbility ? "bg-sky-500" : 
-                                                    !hasImmunity && hasAbility ? "bg-amber-500" :
-                                                    "bg-slate-400"
-                                                )} />
-                                                <h4 className={cn(
-                                                    "font-bold text-sm uppercase tracking-wide",
-                                                    hasImmunity && !hasAbility ? "text-sky-500" : 
-                                                    !hasImmunity && hasAbility ? "text-amber-500" :
-                                                    "text-slate-200"
-                                                )}>
-                                                    {title}
-                                                </h4>
-                                                <div className="ml-auto">
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="sm" 
-                                                        className="h-6 text-xs"
-                                                        onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
-                                                        disabled={isAddingInstance}
-                                                    >
-                                                        <Plus className="w-3 h-3 mr-1" /> Add Instance
-                                                    </Button>
-                                                </div>
-                                            </div>
+                                {groupedAbilities.abilities.length > 0 && (
+                                    <div className="space-y-3">
+                                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">Abilities</h3>
+                                        {groupedAbilities.abilities.map(([title, links]) => {
+                                            const firstLink = links[0]
+                                            return (
+                                                <div key={`ability-${title}`} className="border rounded-lg bg-card overflow-hidden">
+                                                    <div className="px-4 py-2 border-b flex items-center gap-3 bg-amber-500/10 border-amber-500/20">
+                                                        <span className="w-2 h-2 rounded-full bg-amber-500" />
+                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-amber-500">
+                                                            {title}
+                                                        </h4>
+                                                        <div className="ml-auto">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm" 
+                                                                className="h-6 text-xs"
+                                                                onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
+                                                                disabled={isAddingInstance}
+                                                            >
+                                                                <Plus className="w-3 h-3 mr-1" /> Add Instance
+                                                            </Button>
+                                                        </div>
+                                                    </div>
 
-                                            <div className="divide-y divide-border/50">
-                                                {links.map((link) => (
-                                                    <AbilityLinkRow 
-                                                        key={link.id} 
-                                                        link={link} 
-                                                        allChampions={allChampions}
-                                                        onUpdateSource={(source) => handleUpdateSource(link.id, source, link.type)}
-                                                        onAddSynergy={(champId) => handleAddSynergy(link.id, champId)}
-                                                        onRemoveSynergy={(champId) => handleRemoveSynergy(link.id, champId)}
-                                                        onDelete={() => handleRemoveLink(link.id)}
-                                                    />
-                                                ))}
+                                                    <div className="divide-y divide-border/50">
+                                                        {links.map((link) => (
+                                                            <AbilityLinkRow 
+                                                                key={link.id} 
+                                                                link={link} 
+                                                                allChampions={allChampions}
+                                                                onUpdateSource={(source) => handleUpdateSource(link.id, source, link.type)}
+                                                                onAddSynergy={(champId) => handleAddSynergy(link.id, champId)}
+                                                                onRemoveSynergy={(champId) => handleRemoveSynergy(link.id, champId)}
+                                                                onDelete={() => handleRemoveLink(link.id)}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+
+                                {groupedAbilities.immunities.length > 0 && (
+                                    <div className="space-y-3 mt-6">
+                                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">Immunities</h3>
+                                        {groupedAbilities.immunities.map(([title, links]) => {
+                                            const firstLink = links[0]
+                                            return (
+                                                <div key={`immunity-${title}`} className="border rounded-lg bg-card overflow-hidden">
+                                                    <div className="px-4 py-2 border-b flex items-center gap-3 bg-sky-500/10 border-sky-500/20">
+                                                        <span className="w-2 h-2 rounded-full bg-sky-500" />
+                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-sky-500">
+                                                            {title}
+                                                        </h4>
+                                                        <div className="ml-auto">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="sm" 
+                                                                className="h-6 text-xs"
+                                                                onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
+                                                                disabled={isAddingInstance}
+                                                            >
+                                                                <Plus className="w-3 h-3 mr-1" /> Add Instance
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="divide-y divide-border/50">
+                                                        {links.map((link) => (
+                                                            <AbilityLinkRow 
+                                                                key={link.id} 
+                                                                link={link} 
+                                                                allChampions={allChampions}
+                                                                onUpdateSource={(source) => handleUpdateSource(link.id, source, link.type)}
+                                                                onAddSynergy={(champId) => handleAddSynergy(link.id, champId)}
+                                                                onRemoveSynergy={(champId) => handleRemoveSynergy(link.id, champId)}
+                                                                onDelete={() => handleRemoveLink(link.id)}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                                {groupedAbilities.abilities.length === 0 && groupedAbilities.immunities.length === 0 && (
+                                    <div className="text-center text-muted-foreground py-10">No abilities or immunities assigned.</div>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="descriptions" className="mt-0 data-[state=active]:flex flex-col flex-1 p-6 h-full min-h-0">
+                        <ScrollArea className="flex-1 pr-4 -mr-4">
+                            <div className="space-y-6 pb-20 pr-4">
+                                {champion.abilities.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {Array.from(new Map(champion.abilities.map(l => [l.abilityId, l.ability])).values())
+                                            .sort((a, b) => a.name.localeCompare(b.name))
+                                            .map(ability => (
+                                            <div key={ability.id} className="p-4 border rounded-lg bg-card">
+                                                <h4 className="font-bold text-lg mb-2">{ability.name}</h4>
+                                                <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                    {ability.description || "No description available."}
+                                                </p>
                                             </div>
-                                        </div>
-                                    )
-                                })}
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-muted-foreground py-10">No abilities available.</div>
+                                )}
                             </div>
                         </ScrollArea>
                     </TabsContent>

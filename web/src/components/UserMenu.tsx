@@ -18,10 +18,13 @@ interface UserMenuProps {
     name?: string | null
     image?: string | null
     isBotAdmin?: boolean
+    permissions?: string[]
   }
 }
 
 export function UserMenu({ user }: UserMenuProps) {
+  const hasAdminAccess = user.isBotAdmin || (user.permissions && user.permissions.length > 0)
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
@@ -40,7 +43,7 @@ export function UserMenu({ user }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-800" />
         
-        {user.isBotAdmin && (
+        {hasAdminAccess && (
             <>
                 <DropdownMenuItem asChild>
                   <Link href="/admin" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
