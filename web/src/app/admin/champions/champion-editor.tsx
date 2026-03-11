@@ -252,15 +252,15 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
                 <div className="px-6 border-b shrink-0">
                     <TabsList className="bg-transparent h-12 w-full justify-start gap-6 p-0">
-                        <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Details</TabsTrigger>
+                        <TabsTrigger value="info" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Info</TabsTrigger>
+                        <TabsTrigger value="descriptions" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Description</TabsTrigger>
                         <TabsTrigger value="abilities" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Abilities & Immunities</TabsTrigger>
-                        <TabsTrigger value="descriptions" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Descriptions</TabsTrigger>
                         <TabsTrigger value="attacks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Attacks</TabsTrigger>
                     </TabsList>
                 </div>
 
                 <div className="flex-1 bg-slate-950/50 min-h-0 flex flex-col">
-                    <TabsContent value="overview" className="mt-0 data-[state=active]:flex-1 overflow-y-auto p-6 space-y-6">
+                    <TabsContent value="info" className="mt-0 data-[state=active]:flex-1 overflow-y-auto p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div className="space-y-2">
