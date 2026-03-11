@@ -162,6 +162,22 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     }
   }
 
+  const handleSaveJson = async () => {
+    try {
+      setJsonError(null)
+      const parsedJson = JSON.parse(fullAbilitiesJson)
+      setIsSubmitting(true)
+      await updateChampionFullAbilities(champion.id, parsedJson)
+      toast({ title: "Descriptions JSON updated" })
+      setIsEditingJson(false)
+    } catch (error: any) {
+      setJsonError(error.message || "Invalid JSON")
+      toast({ title: "Invalid JSON format", variant: "destructive" })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleAddAbilityLink = async () => {
     if (!newAbilityId) return
 
