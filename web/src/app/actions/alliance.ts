@@ -280,14 +280,24 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
 
     logger.info({ userId: actingUser.id, requestId, status, type: request.type }, "Responding to membership request");
     if (status === 'ACCEPTED') {
-        if (request.player.allianceId && request.player.allianceId !== request.allianceId) {
-            // Player is already in another alliance, cannot accept.
-            await prisma.allianceMembershipRequest.update({
-                where: { id: requestId },
-                data: { status: 'CANCELLED' }
-            });
-            logger.warn({ userId: actingUser.id, requestId, playerId: request.playerId }, "Attempted to accept request for player already in another alliance. Request cancelled.");
-            return { error: "Player is already in an alliance" };
+        if (request.player.allianceId) {
+            if (request.player.allianceId === request.allianceId) {
+                // Player is already in this alliance
+                await prisma.allianceMembershipRequest.update({
+                    where: { id: requestId },
+                    data: { status: 'CANCELLED' }
+                });
+                logger.warn({ userId: actingUser.id, requestId, playerId: request.playerId }, "Attempted to accept request for player already in the alliance. Request cancelled.");
+                return { error: "Player is already in the alliance" };
+            } else {
+                // Player is already in another alliance, cannot accept.
+                await prisma.allianceMembershipRequest.update({
+                    where: { id: requestId },
+                    data: { status: 'CANCELLED' }
+                });
+                logger.warn({ userId: actingUser.id, requestId, playerId: request.playerId }, "Attempted to accept request for player already in another alliance. Request cancelled.");
+                return { error: "Player is already in an alliance" };
+            }
         }
 
         // Add player to alliance

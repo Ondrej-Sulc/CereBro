@@ -46,7 +46,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           // 2. Check if user has any Player profiles
           const existingPlayers = await prisma.player.findMany({
-            where: { discordId }
+            where: { discordId },
+            orderBy: { createdAt: 'asc' }
           });
 
           if (existingPlayers.length === 0) {

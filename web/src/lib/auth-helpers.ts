@@ -51,7 +51,10 @@ export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAllianc
   // Fallback 1: Use the BotUser's activeProfileId if set
   if (!player && botUser?.activeProfileId) {
     player = await prisma.player.findUnique({
-      where: { id: botUser.activeProfileId },
+      where: { 
+          id: botUser.activeProfileId,
+          discordId: account.providerAccountId 
+      },
       include: { alliance: true },
     });
   }

@@ -47,7 +47,6 @@ interface AdminUsersPageProps {
 
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
   const user = await ensureAdmin("MANAGE_USERS")
-  const isGlobalAdmin = user.isBotAdmin === true || (user.permissions && user.permissions.includes("MANAGE_USERS"));
 
   const params = await searchParams
   const query = params.query || ""
@@ -240,24 +239,12 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                   </TableCell>
                   <TableCell>
                     {player.botUser ? (
-                        isGlobalAdmin ? (
-                            <EditPermissionsDialog 
-                                botUserId={player.botUser.id} 
-                                initialPermissions={player.botUser.permissions} 
-                                userName={player.ingameName}
-                                isBotAdmin={player.botUser.isBotAdmin}
-                            />
-                        ) : (
-                            <div className="flex flex-wrap gap-1">
-                                {player.botUser.isBotAdmin ? (
-                                    <Badge className="bg-purple-500 text-white text-[10px] h-5 px-1.5">Full Admin</Badge>
-                                ) : player.botUser.permissions.length > 0 ? (
-                                    <Badge variant="outline" className="text-[10px] h-5 px-1.5">{player.botUser.permissions.length} Perms</Badge>
-                                ) : (
-                                    <span className="text-xs text-muted-foreground">-</span>
-                                )}
-                            </div>
-                        )
+                        <EditPermissionsDialog 
+                            botUserId={player.botUser.id} 
+                            initialPermissions={player.botUser.permissions} 
+                            userName={player.ingameName}
+                            isBotAdmin={player.botUser.isBotAdmin}
+                        />
                     ) : (
                         <span className="text-xs text-muted-foreground">No BotUser</span>
                     )}
