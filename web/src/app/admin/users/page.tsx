@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { UserCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { UserCircle, ArrowUpDown, ArrowUp, ArrowDown, Settings } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -28,8 +28,11 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { SortHeader } from "../components/sort-header"
 import { computePaginationWindow } from "@/lib/pagination"
+import { EditPermissionsDialog } from "./components/edit-permissions-dialog"
+import { auth } from "@/auth"
+import { ensureAdmin } from "../actions"
 
-interface AdminPlayersPageProps {
+interface AdminUsersPageProps {
   searchParams: Promise<{
     query?: string
     page?: string
@@ -42,7 +45,12 @@ interface AdminPlayersPageProps {
   }>
 }
 
-export default async function AdminPlayersPage({ searchParams }: AdminPlayersPageProps) {
+export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
+  await ensureAdmin("MANAGE_USERS")
+  const session = await auth()
+  const currentUser = session?.user as any;
+  const isGlobalAdmin = currentUser?.isBotAdmin === true;
+
   const params = await searchParams
   const query = params.query || ""
   const page = Math.max(1, parseInt(params.page || "1") || 1)
@@ -151,7 +159,7 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Players</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
         <Badge variant="outline" className="px-3 py-1 text-sm">
           {totalCount.toLocaleString()} Total Profiles
         </Badge>
@@ -163,16 +171,17 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle>Player Profiles Directory</CardTitle>
+          <CardTitle>User Profiles Directory</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader field="ingameName" label="Player Profile" sortBy={sortBy} order={order} params={params} />
+                <SortHeader field="ingameName" label="User Profile" sortBy={sortBy} order={order} params={params} />
                 <TableHead>Alliance</TableHead>
                 <SortHeader field="summonerPrestige" label="Prestige" sortBy={sortBy} order={order} params={params} />
                 <TableHead>Status/Role</TableHead>
+                <TableHead>Admin Access</TableHead>
                 <SortHeader field="roster" label="Roster" sortBy={sortBy} order={order} params={params} />
                 <SortHeader field="createdAt" label="Joined" className="text-right" sortBy={sortBy} order={order} params={params} />
               </TableRow>
@@ -232,6 +241,30 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
                     </div>
                   </TableCell>
                   <TableCell>
+                    {player.botUser ? (
+                        isGlobalAdmin ? (
+                            <EditPermissionsDialog 
+                                botUserId={player.botUser.id} 
+                                initialPermissions={player.botUser.permissions} 
+                                userName={player.ingameName}
+                                isBotAdmin={player.botUser.isBotAdmin}
+                            />
+                        ) : (
+                            <div className="flex flex-wrap gap-1">
+                                {player.botUser.isBotAdmin ? (
+                                    <Badge className="bg-purple-500 text-white text-[10px] h-5 px-1.5">Full Admin</Badge>
+                                ) : player.botUser.permissions.length > 0 ? (
+                                    <Badge variant="outline" className="text-[10px] h-5 px-1.5">{player.botUser.permissions.length} Perms</Badge>
+                                ) : (
+                                    <span className="text-xs text-muted-foreground">-</span>
+                                )}
+                            </div>
+                        )
+                    ) : (
+                        <span className="text-xs text-muted-foreground">No BotUser</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Badge variant="secondary" className="font-mono text-xs">
                         {player._count.roster}
                     </Badge>
@@ -243,8 +276,8 @@ export default async function AdminPlayersPage({ searchParams }: AdminPlayersPag
               ))}
               {players.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
-                    No players found matching your search criteria.
+                  <TableCell colSpan={7} className="text-center text-muted-foreground h-24">
+                    No users found matching your search criteria.
                   </TableCell>
                 </TableRow>
               )}

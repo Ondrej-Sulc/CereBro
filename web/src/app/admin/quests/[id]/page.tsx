@@ -5,33 +5,12 @@ import { getQuestPlanById } from "@/app/actions/quests";
 import AdminQuestBuilderClient from "@/components/admin/quests/admin-quest-builder-client";
 import { QuestWithRelations } from "@/components/admin/quests/admin-quest-builder-client";
 import { Champion } from "@/types/champion";
+import { ensureAdmin } from "../../actions";
 
 export default async function AdminQuestBuilderPage({ params }: { params: Promise<{ id: string }> }) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        redirect("/api/auth/discord-login?redirectTo=/admin/quests");
-    }
+    await ensureAdmin("MANAGE_QUESTS");
 
     const { id } = await params;
-
-    const account = await prisma.account.findFirst({
-        where: {
-            userId: session.user.id,
-            provider: "discord",
-        },
-    });
-
-    if (!account?.providerAccountId) {
-        return <p>Error: No linked Discord account found.</p>;
-    }
-
-    const botUser = await prisma.botUser.findUnique({
-        where: { discordId: account.providerAccountId },
-    });
-
-    if (!botUser?.isBotAdmin) {
-        return <p>You must be a Bot Admin to access this page.</p>;
-    }
 
     const quest = await getQuestPlanById(id);
     if (!quest) {

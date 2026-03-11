@@ -1,8 +1,11 @@
 import { getChampions, getAbilities } from "./actions"
 import { ChampionList } from "./champion-list"
 import { AdminChampionData } from "./champion-card"
+import { ensureAdmin } from "../actions"
 
 export default async function AdminChampionsPage() {
+  await ensureAdmin("MANAGE_CHAMPIONS")
+
   const [champions, abilities] = await Promise.all([
     getChampions(),
     getAbilities()

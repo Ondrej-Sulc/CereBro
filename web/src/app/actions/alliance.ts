@@ -48,7 +48,7 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
         }
     });
 
-    clearCache(`alliance-members-${actingUser.allianceId}`);
+    clearCache(`alliance-members-${targetPlayer.allianceId}`);
     revalidatePath('/alliance');
     revalidatePath('/planning', 'layout');
     return { success: true };
@@ -276,6 +276,16 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
 
     logger.info({ userId: actingUser.id, requestId, status, type: request.type }, "Responding to membership request");
     if (status === 'ACCEPTED') {
+        if (request.player.allianceId && request.player.allianceId !== request.allianceId) {
+            // Player is already in another alliance, cannot accept.
+            await prisma.allianceMembershipRequest.update({
+                where: { id: requestId },
+                data: { status: 'CANCELLED' }
+            });
+            logger.warn({ userId: actingUser.id, requestId, playerId: request.playerId }, "Attempted to accept request for player already in another alliance. Request cancelled.");
+            return { error: "Player is already in an alliance" };
+        }
+
         // Add player to alliance
         await prisma.player.update({
             where: { id: request.playerId },

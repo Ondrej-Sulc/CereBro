@@ -70,7 +70,7 @@ function chunkArray<T>(array: T[], size: number): T[][] {
 }
 
 export async function getDiscordGuilds() {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_SYSTEM");
 
     if (!config.BOT_TOKEN) {
         throw new Error("BOT_TOKEN not configured");
@@ -169,7 +169,7 @@ export async function getDiscordGuilds() {
 }
 
 export async function leaveDiscordGuild(guildId: string, skipRevalidate = false) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_SYSTEM");
 
     // Protection for GLOBAL alliance
     const globalAlliance = await prisma.alliance.findFirst({

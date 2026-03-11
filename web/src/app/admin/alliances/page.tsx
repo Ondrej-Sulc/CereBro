@@ -28,6 +28,7 @@ import { buildSearchParams } from "@/lib/utils"
 import { CleanupAlliancesButton } from "./cleanup-button"
 import { computePaginationWindow } from "@/lib/pagination"
 import { SortHeader } from "../components/sort-header"
+import { ensureAdmin } from "../actions"
 
 interface AdminAlliancesPageProps {
   searchParams: Promise<{
@@ -41,6 +42,7 @@ interface AdminAlliancesPageProps {
 }
 
 export default async function AdminAlliancesPage({ searchParams }: AdminAlliancesPageProps) {
+  await ensureAdmin("MANAGE_ALLIANCES")
   const params = await searchParams
   const query = params.query || ""
   const page = Math.max(1, parseInt(params.page || "1", 10) || 1)

@@ -61,7 +61,8 @@ export async function getUserPlayerWithAlliance() {
     // Override the local isBotAdmin with the global BotUser permission
     return {
       ...player,
-      isBotAdmin: botUser.isBotAdmin
+      isBotAdmin: botUser.isBotAdmin,
+      permissions: botUser.permissions || []
     };
   }
 
@@ -88,18 +89,51 @@ export async function getUserProfiles() {
     }
   });
 
-  return botUser?.profiles || [];
+  let profiles = botUser?.profiles || [];
+
+  // Resolution logic to find the active profile if it's not in the botUser's linked profiles
+  let activeProfile = await prisma.player.findFirst({
+    where: { discordId: account.providerAccountId, isActive: true },
+    include: { alliance: true },
+  });
+
+  if (!activeProfile && botUser?.activeProfileId) {
+    activeProfile = await prisma.player.findUnique({
+      where: { id: botUser.activeProfileId },
+      include: { alliance: true },
+    });
+  }
+
+  if (!activeProfile) {
+    activeProfile = await prisma.player.findFirst({
+      where: { discordId: account.providerAccountId },
+      orderBy: { updatedAt: 'desc' },
+      include: { alliance: true },
+    });
+  }
+
+  if (activeProfile) {
+    const isAlreadyIncluded = profiles.some(p => p.id === activeProfile?.id);
+    if (!isAlreadyIncluded) {
+        profiles = [...profiles, activeProfile];
+    }
+  }
+
+  return profiles;
 }
 
-export async function requireBotAdmin() {
+export async function requireBotAdmin(requiredPermission?: string) {
   const actingUser = await getUserPlayerWithAlliance();
   if (!actingUser) throw new Error("Unauthorized");
 
   // getUserPlayerWithAlliance already populated isBotAdmin from BotUser table.
-  // If it's missing or false, we look up again just to be sure we have latest.
-  if (!actingUser.isBotAdmin) {
-    throw new Error("Unauthorized");
+  if (actingUser.isBotAdmin) {
+    return actingUser;
   }
 
-  return actingUser;
+  if (requiredPermission && (actingUser as any).permissions?.includes(requiredPermission)) {
+    return actingUser;
+  }
+
+  throw new Error("Unauthorized");
 }

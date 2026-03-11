@@ -1,42 +1,9 @@
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
 import PageBackground from "@/components/PageBackground";
-import { prisma } from "@/lib/prisma";
 import { DebugRosterForm } from "@/components/DebugRosterForm";
+import { ensureAdmin } from "../actions";
 
 export default async function DebugRosterPage() {
-    const session = await auth();
-    if (!session?.user?.id) {
-      redirect("/api/auth/discord-login?redirectTo=/admin/debug-roster");
-    }
-
-    // Check if user is admin
-    let isBotAdmin = false;
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            include: { accounts: true }
-        });
-        
-        const discordId = user?.accounts.find(a => a.provider === 'discord')?.providerAccountId;
-        if (discordId) {
-            const botUser = await prisma.botUser.findUnique({ where: { discordId } });
-            isBotAdmin = botUser?.isBotAdmin ?? false;
-        }
-    } catch (e) {
-        console.error("Failed to check admin status", e);
-    }
-
-    if (!isBotAdmin) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-white">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-red-500">Access Denied</h1>
-                    <p className="text-slate-400">You must be a bot administrator to view this page.</p>
-                </div>
-            </div>
-        );
-    }
+    await ensureAdmin("MANAGE_SYSTEM");
     
     return (
         <div className="min-h-screen relative">

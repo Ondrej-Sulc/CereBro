@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/table"
 
 import { LastUpdated } from "./last-updated"
+import { ensureAdmin } from "../actions"
 
 export default async function InsightsPage() {
+  await ensureAdmin("VIEW_INSIGHTS")
   const lastUpdated = new Date().toISOString()
   const [
     totalPlayers,

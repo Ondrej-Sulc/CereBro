@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireBotAdmin } from "@/lib/auth-helpers";
 
 export async function addSeasonBan(season: number, minTier: number | undefined, maxTier: number | undefined, championId: number) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.seasonBan.create({
         data: {
@@ -20,7 +20,7 @@ export async function addSeasonBan(season: number, minTier: number | undefined, 
 }
 
 export async function deleteSeasonBan(id: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.seasonBan.delete({
         where: { id },

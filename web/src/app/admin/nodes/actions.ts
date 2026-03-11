@@ -31,7 +31,7 @@ export async function addAllocation(
     season: number = 0,
     mapType: WarMapType = WarMapType.STANDARD
 ) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warNodeAllocation.create({
         data: {
@@ -57,7 +57,7 @@ export async function updateAllocation(
         mapType?: WarMapType;
     }
 ) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warNodeAllocation.update({
         where: { id: allocationId },
@@ -75,7 +75,7 @@ export async function copyAllocations(
     targetMaxTier: number | null,
     mapType: WarMapType
 ) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     const sourceAllocations = await prisma.warNodeAllocation.findMany({
         where: {
@@ -116,7 +116,7 @@ export async function massCopyAllocations(
     targetMaxTier: number | null,
     mapType: WarMapType
 ) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     const sourceAllocations = await prisma.warNodeAllocation.findMany({
         where: {
@@ -150,7 +150,7 @@ export async function massCopyAllocations(
 }
 
 export async function removeAllocation(allocationId: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warNodeAllocation.delete({
         where: { id: allocationId }

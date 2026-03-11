@@ -5,7 +5,7 @@ import { ensureAdmin } from "../actions"
 import { revalidatePath } from "next/cache"
 
 export async function cleanupEmptyAlliances() {
-  await ensureAdmin()
+  await ensureAdmin("MANAGE_ALLIANCES")
   
   // Find alliances with no members, excluding the protected GLOBAL alliance
   const orphans = await prisma.alliance.findMany({

@@ -28,7 +28,7 @@ export async function addTactic(season: number, minTier: number | undefined, max
         throw new Error("Name cannot be empty.");
     }
 
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.$transaction(async (tx) => {
         let attackTagId: number | null = null;
@@ -77,7 +77,7 @@ export async function addTactic(season: number, minTier: number | undefined, max
 }
 
 export async function deleteTactic(id: string) {
-    await requireBotAdmin();
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warTactic.delete({
         where: { id }

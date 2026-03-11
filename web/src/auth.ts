@@ -115,12 +115,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         
                 const botUser = await prisma.botUser.findUnique({
                     where: { discordId: account.providerAccountId },
-                    select: { isBotAdmin: true }
+                    select: { isBotAdmin: true, permissions: true }
                 });
         
                 return {
                     discordId: account.providerAccountId,
-                    isBotAdmin: botUser?.isBotAdmin || false
+                    isBotAdmin: botUser?.isBotAdmin || false,
+                    permissions: botUser?.permissions || []
                 };
                 },
                 (data) => data !== null
@@ -129,6 +130,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (extension) {
                 session.user.discordId = extension.discordId;
                 session.user.isBotAdmin = extension.isBotAdmin;
+                session.user.permissions = extension.permissions;
             }
           } catch (error) {
               logger.error({ error, userId: user.id }, "Error in session callback");
