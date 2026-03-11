@@ -74,10 +74,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
   if (roleFilter === "admin") {
     conditions.push({
-      OR: [
-        { isBotAdmin: true },
-        { botUser: { isBotAdmin: true } }
-      ]
+      botUser: { isBotAdmin: true }
     })
   } else if (roleFilter === "officer") {
     conditions.push({ isOfficer: true })
@@ -215,7 +212,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                        {(player.isBotAdmin || player.botUser?.isBotAdmin) && (
+                        {player.botUser?.isBotAdmin && (
                            <Badge className="bg-purple-500 text-white text-[10px] h-5 px-1.5">
                                 Admin
                            </Badge>
