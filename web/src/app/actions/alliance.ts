@@ -18,7 +18,11 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
         where: { id: targetPlayerId }
     });
 
-    if (!targetPlayer || targetPlayer.allianceId !== actingUser.allianceId) {
+    if (!targetPlayer) {
+        throw new Error("Target player not found");
+    }
+
+    if (targetPlayer.allianceId !== actingUser.allianceId) {
         // Allow Bot Admins to edit anyone? For now, stick to alliance scope.
         if (!actingUser.isBotAdmin) {
             throw new Error("Target player not in your alliance");
