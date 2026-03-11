@@ -28,12 +28,13 @@ import {
   ChevronRight,
   LucideIcon
 } from "lucide-react"
+import { Permission } from "@/lib/permissions"
 
 interface SidebarItem {
   title: string
   href: string
   icon: LucideIcon
-  permission?: string // If set, requires this permission OR isBotAdmin
+  permission?: Permission // If set, requires this permission OR isBotAdmin
 }
 
 interface SidebarGroup {

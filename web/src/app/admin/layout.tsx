@@ -9,10 +9,9 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await ensureAdmin()
-  const user = session.user as any;
+  const user = await ensureAdmin()
   const isBotAdmin = user.isBotAdmin || false;
-  const permissions = user.permissions || [];
+  const permissions: string[] = user.permissions || [];
 
   return (
     <div className="w-full max-w-[1600px] mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">

@@ -100,6 +100,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, user }) {
         if (session.user) {
+          session.user.isBotAdmin = false;
+          session.user.permissions = [];
+          
           try {
             // Cache the session extension data for 5 minutes to reduce DB load
             const extension = await getFromCache(
@@ -130,7 +133,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (extension) {
                 session.user.discordId = extension.discordId;
                 session.user.isBotAdmin = extension.isBotAdmin;
-                session.user.permissions = extension.permissions;
+                session.user.permissions = extension.permissions || [];
             }
           } catch (error) {
               logger.error({ error, userId: user.id }, "Error in session callback");

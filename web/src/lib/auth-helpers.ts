@@ -1,5 +1,13 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { Player, Alliance } from "@prisma/client";
+import { Permission } from "./permissions";
+
+export type UserPlayerWithAlliance = Player & {
+  alliance: Alliance | null;
+  isBotAdmin: boolean;
+  permissions: string[];
+};
 
 export async function isUserBotAdmin(): Promise<boolean> {
   const session = await auth();
@@ -18,7 +26,7 @@ export async function isUserBotAdmin(): Promise<boolean> {
   return !!botUser?.isBotAdmin;
 }
 
-export async function getUserPlayerWithAlliance() {
+export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAlliance | null> {
   const session = await auth();
   if (!session?.user?.id) return null;
 
@@ -122,7 +130,7 @@ export async function getUserProfiles() {
   return profiles;
 }
 
-export async function requireBotAdmin(requiredPermission?: string) {
+export async function requireBotAdmin(requiredPermission?: Permission) {
   const actingUser = await getUserPlayerWithAlliance();
   if (!actingUser) throw new Error("Unauthorized");
 
@@ -131,7 +139,7 @@ export async function requireBotAdmin(requiredPermission?: string) {
     return actingUser;
   }
 
-  if (requiredPermission && (actingUser as any).permissions?.includes(requiredPermission)) {
+  if (requiredPermission && actingUser.permissions?.includes(requiredPermission)) {
     return actingUser;
   }
 
