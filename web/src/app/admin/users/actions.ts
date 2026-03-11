@@ -7,9 +7,9 @@ import logger from "@/lib/logger"
 
 export async function updateBotUserPermissions(botUserId: string, data: { permissions: string[], isBotAdmin: boolean }) {
   // CRITICAL: Only actual BotAdmins should be able to manage permissions
-  const session = await ensureAdmin();
-  if (!session.user.isBotAdmin) {
-    logger.warn({ botUserId, actor: session.user.id }, "Unauthorized attempt to update permissions");
+  const user = await ensureAdmin();
+  if (!user.isBotAdmin) {
+    logger.warn({ botUserId, actor: user.id }, "Unauthorized attempt to update permissions");
     return { success: false, error: "Only Full Admins can manage permissions" };
   }
 
