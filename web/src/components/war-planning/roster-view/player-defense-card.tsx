@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Shield, AlertTriangle } from "lucide-react";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
@@ -255,7 +255,7 @@ export const PlayerDefenseCard = ({
                             {/* Champion Info */}
                             <div className="flex-1 flex items-center gap-2 min-w-0">
                                 <Image 
-                                    src={getChampionImageUrl(champ.images, '64')} 
+                                    src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
                                     alt={champ.name}
                                     width={32}
                                     height={32}

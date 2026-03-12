@@ -2,7 +2,7 @@ import { memo } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
+import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionImages } from "@/types/champion";
 import { ChampionClass } from "@prisma/client";
@@ -81,7 +81,7 @@ export const ChampionAvatar = memo(({
             )}
 
             <Image
-                src={getChampionImageUrl(images, "128")}
+                src={getChampionImageUrlOrPlaceholder(images, "128")}
                 alt={name}
                 fill
                 sizes={{ sm: '32px', md: '40px', lg: '72px', xl: '80px' }[size]}

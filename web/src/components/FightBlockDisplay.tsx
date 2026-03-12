@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Swords, Shield, Skull, Diamond } from 'lucide-react';
-import { getChampionImageUrl } from '@/lib/championHelper';
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from '@/types/champion';
 
 interface Champion {
@@ -66,7 +66,7 @@ export function FightBlockDisplay({
                   <h3>Attacker</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selectedAttacker && <Image src={getChampionImageUrl(selectedAttacker.images, '128', 'primary')} alt={selectedAttacker.name} width={50} height={50} className="rounded-full" />}
+                  {selectedAttacker && <Image src={getChampionImageUrlOrPlaceholder(selectedAttacker.images, '128', 'primary')} alt={selectedAttacker.name} width={50} height={50} className="rounded-full" />}
                   <p className="text-lg font-medium">{selectedAttacker?.name || 'N/A'}</p>
                 </div>
               </div>
@@ -78,7 +78,7 @@ export function FightBlockDisplay({
                   <h3>Defender</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selectedDefender && <Image src={getChampionImageUrl(selectedDefender.images, '128', 'primary')} alt={selectedDefender.name} width={50} height={50} className="rounded-full" />}
+                  {selectedDefender && <Image src={getChampionImageUrlOrPlaceholder(selectedDefender.images, '128', 'primary')} alt={selectedDefender.name} width={50} height={50} className="rounded-full" />}
                   <p className="text-lg font-medium">{selectedDefender?.name || 'N/A'}</p>
                 </div>
               </div>
@@ -92,7 +92,7 @@ export function FightBlockDisplay({
                 {selectedPrefightChampions.length > 0 ? (
                   selectedPrefightChampions.map((champ: Champion) => (
                     <div key={champ.id} className="flex items-center gap-1 text-sm bg-muted px-2 py-1 rounded-full">
-                      <Image src={getChampionImageUrl(champ.images, '64', 'primary')} alt={champ.name} width={20} height={20} className="rounded-full" />
+                      <Image src={getChampionImageUrlOrPlaceholder(champ.images, '64', 'primary')} alt={champ.name} width={20} height={20} className="rounded-full" />
                       <span>{champ.name}</span>
                     </div>
                   ))

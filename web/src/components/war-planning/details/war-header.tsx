@@ -12,7 +12,7 @@ import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { InfoPopover } from "@/components/ui/info-popover";
 import {
@@ -324,7 +324,7 @@ export function WarHeader({
                   <TooltipTrigger asChild>
                     <div className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-red-900/50 opacity-80 hover:opacity-100 transition-opacity shrink-0">
                       <Image
-                        src={getChampionImageUrl(ban.champion.images, '64')}
+                        src={getChampionImageUrlOrPlaceholder(ban.champion.images, '64')}
                         alt={ban.champion.name}
                         fill
                         className="object-cover grayscale"
@@ -349,7 +349,7 @@ export function WarHeader({
                   <TooltipTrigger asChild>
                     <div className="group relative h-8 w-8 rounded-full overflow-hidden border-2 border-red-500 cursor-pointer shrink-0">
                       <Image
-                        src={getChampionImageUrl(ban.champion.images, '64')}
+                        src={getChampionImageUrlOrPlaceholder(ban.champion.images, '64')}
                         alt={ban.champion.name}
                         fill
                         className="object-cover"

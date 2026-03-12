@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { getPlayerRoster, getOwnersOfChampion } from "@/app/planning/actions";
 import Image from "next/image";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -329,7 +329,7 @@ export default function PlanningToolsPanel({
                       >
                         <div className={cn("relative h-10 w-10 rounded-full overflow-hidden flex-shrink-0 bg-slate-800 border", classColors.border)}>
                           <Image
-                            src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64')}
+                            src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, '64')}
                             alt={item.champion.name}
                             fill
                             className="object-cover"

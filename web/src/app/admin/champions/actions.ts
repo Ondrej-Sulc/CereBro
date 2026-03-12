@@ -19,6 +19,7 @@ export async function getChampions(): Promise<AdminChampionData[]> {
       images: true,
       releaseDate: true,
       obtainable: true,
+      fullAbilities: true,
       attacks: {
         include: {
             hits: true
@@ -98,6 +99,49 @@ export async function updateChampionDetails(
             releaseDate: data.releaseDate,
             obtainable: data.obtainable
         }
+    })
+    revalidatePath('/admin/champions')
+}
+
+export async function updateChampionFullAbilities(id: number, fullAbilities: any) {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+
+    if (fullAbilities) {
+        const jsonString = JSON.stringify(fullAbilities);
+        const MAX_JSON_SIZE = 50 * 1024; // 50KB max length
+        if (jsonString.length > MAX_JSON_SIZE) {
+            throw new Error(`JSON payload too large. Max allowed is ${MAX_JSON_SIZE / 1024}KB.`);
+        }
+
+        if (typeof fullAbilities !== 'object' || Array.isArray(fullAbilities)) {
+            throw new Error("Root of fullAbilities must be an object.");
+        }
+        if (fullAbilities.signature && (typeof fullAbilities.signature !== 'object' || Array.isArray(fullAbilities.signature) || typeof fullAbilities.signature.name !== 'string')) {
+            throw new Error("Invalid signature format: must be an object with a 'name' string.");
+        }
+        if (fullAbilities.abilities_breakdown) {
+            if (!Array.isArray(fullAbilities.abilities_breakdown)) {
+                throw new Error("abilities_breakdown must be an array.");
+            }
+            
+            for (let i = 0; i < fullAbilities.abilities_breakdown.length; i++) {
+                const item = fullAbilities.abilities_breakdown[i];
+                if (typeof item !== 'object' || Array.isArray(item) || item === null) {
+                    throw new Error(`abilities_breakdown item at index ${i} must be an object.`);
+                }
+                if (item.title !== undefined && typeof item.title !== 'string') {
+                    throw new Error(`abilities_breakdown item at index ${i} must have a string 'title' if provided.`);
+                }
+                if (item.description !== undefined && typeof item.description !== 'string') {
+                    throw new Error(`abilities_breakdown item at index ${i} must have a string 'description' if provided.`);
+                }
+            }
+        }
+    }
+
+    await prisma.champion.update({
+        where: { id },
+        data: { fullAbilities }
     })
     revalidatePath('/admin/champions')
 }

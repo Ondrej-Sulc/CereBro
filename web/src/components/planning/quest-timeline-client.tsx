@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users } from "lucide-react";
 import { savePlayerQuestCounter } from "@/app/actions/quests";
-import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
+import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
@@ -318,7 +318,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                         {assignedEncounters.map((enc: EncounterWithRelations) => (
                                                                             <div key={`tgt-${enc.id}`} title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-help shadow-sm">
                                                                                 {enc.defender ? (
-                                                                                    <Image src={getChampionImageUrl(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                                                                                    <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
                                                                                 ) : (
                                                                                     <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
                                                                                 )}
@@ -421,7 +421,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                     <div className={`h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
                                                         {encounter.defender ? (
                                                             <Image
-                                                                src={getChampionImageUrl(encounter.defender.images, "128")}
+                                                                src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "128")}
                                                                 alt={encounter.defender.name}
                                                                 fill
                                                                 sizes="80px"
@@ -509,7 +509,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                             getStarBorderClass(selectedRosterItem.stars)
                                                                         )}>
                                                                             <Image
-                                                                                src={getChampionImageUrl(selectedRosterItem.champion.images, "128")}
+                                                                                src={getChampionImageUrlOrPlaceholder(selectedRosterItem.champion.images, "128")}
                                                                                 alt={selectedRosterItem.champion.name}
                                                                                 fill
                                                                                 sizes="80px"

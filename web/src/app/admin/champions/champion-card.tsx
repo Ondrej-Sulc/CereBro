@@ -4,10 +4,12 @@ import Image from "next/image"
 import { ChampionClass, ChampionAbilityLink, Ability, Attack, Hit, AttackType } from "@prisma/client"
 import { ChampionImages } from "@/types/champion"
 import { cn } from "@/lib/utils"
-import { getChampionImageUrl } from "@/lib/championHelper"
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper'
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { Badge } from "@/components/ui/badge"
 import { Zap, Shield } from "lucide-react"
+
+import { Prisma } from "@prisma/client"
 
 export type AdminChampionData = {
     id: number
@@ -17,6 +19,7 @@ export type AdminChampionData = {
     images: ChampionImages
     releaseDate: Date
     obtainable: string[]
+    fullAbilities: Prisma.JsonValue
     _count: { abilities: number }
     attacks: (Attack & { hits: Hit[] })[]
     abilities: (ChampionAbilityLink & { 
@@ -50,7 +53,7 @@ export function AdminChampionCard({ champion, onClick }: AdminChampionCardProps)
         >
             {/* Background Image */}
             <Image 
-                src={getChampionImageUrl(champion.images, '128')} 
+                src={getChampionImageUrlOrPlaceholder(champion.images, '128')} 
                 alt={champion.name}
                 fill
                 sizes="(max-width: 768px) 25vw, (max-width: 1200px) 15vw, 10vw"

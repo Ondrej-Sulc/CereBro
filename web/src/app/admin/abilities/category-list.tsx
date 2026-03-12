@@ -1,0 +1,235 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Edit2, Trash2, Plus, LayoutGrid } from "lucide-react"
+import { createAbilityCategory, updateAbilityCategory, deleteAbilityCategory } from "./actions"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+
+type Category = {
+    id: number;
+    name: string;
+    description: string;
+    _count: { abilities: number };
+}
+
+export function CategoryList({ initialCategories }: { initialCategories: Category[] }) {
+    const categories = initialCategories;
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+    const [name, setName] = useState("")
+    const [description, setDescription] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [deleteCategory, setDeleteCategory] = useState<Category | null>(null)
+    const { toast } = useToast()
+    const router = useRouter()
+
+    const handleOpenDialog = (category?: Category) => {
+        if (category) {
+            setEditingCategory(category)
+            setName(category.name)
+            setDescription(category.description)
+        } else {
+            setEditingCategory(null)
+            setName("")
+            setDescription("")
+        }
+        setIsDialogOpen(true)
+    }
+
+    const handleSave = async () => {
+        const normalizedName = name.trim().replace(/\s+/g, ' ')
+        if (!normalizedName) return
+
+        setIsSubmitting(true)
+        try {
+            if (editingCategory) {
+                await updateAbilityCategory(editingCategory.id, normalizedName, description)
+                toast({ title: "Category updated" })
+            } else {
+                await createAbilityCategory(normalizedName, description)
+                toast({ title: "Category created" })
+            }
+            router.refresh()
+            setIsDialogOpen(false)
+        } catch (error: any) {
+            if (error.message?.includes('Unique constraint') || error.message?.includes('P2002')) {
+                toast({ title: "Category name already exists", variant: "destructive" })
+            } else {
+                toast({ title: "Error saving category", variant: "destructive" })
+            }
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    const confirmDelete = (category: Category) => {
+        if (category._count.abilities > 0) {
+            toast({ 
+                title: "Cannot delete category", 
+                description: `This category has ${category._count.abilities} linked abilities. Remove them first before deleting.`,
+                variant: "destructive" 
+            })
+            return
+        }
+        setDeleteCategory(category)
+    }
+
+    const handleDelete = async () => {
+        if (!deleteCategory) return
+
+        setIsSubmitting(true)
+        try {
+            await deleteAbilityCategory(deleteCategory.id)
+            toast({ title: "Category deleted" })
+            router.refresh()
+        } catch (error: any) {
+            toast({ 
+                title: "Error deleting category", 
+                description: error.message?.includes('Foreign key constraint') 
+                    ? "Cannot delete because abilities are still linked to this category."
+                    : "An unexpected error occurred.",
+                variant: "destructive" 
+            })
+        } finally {
+            setIsSubmitting(false)
+            setDeleteCategory(null)
+        }
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-between items-center gap-4">
+                <div className="text-sm text-muted-foreground">
+                    Organize abilities into logical groupings for easier management.
+                </div>
+                <Button onClick={() => handleOpenDialog()}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Category
+                </Button>
+            </div>
+
+            <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead className="w-[300px]">Name</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead className="w-[150px] text-center">Linked Abilities</TableHead>     
+                            <TableHead className="w-[100px] text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {categories.map((category) => (
+                            <TableRow key={category.id} className="group">
+                                <TableCell className="font-medium">
+                                    <div className="flex items-center gap-2">
+                                        <LayoutGrid className="w-4 h-4 text-muted-foreground/50" />       
+                                        {category.name}
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground text-sm">{category.description || <span className="italic opacity-50">No description</span>}</TableCell>
+                                <TableCell className="text-center">
+                                    <span className="inline-flex items-center justify-center bg-primary/10 text-primary rounded-full px-2.5 py-0.5 text-xs font-semibold">
+                                        {category._count.abilities}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(category)} aria-label="Edit category">     
+                                            <Edit2 className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => confirmDelete(category)} aria-label="Delete category">
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {categories.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center gap-2">     
+                                        <LayoutGrid className="w-8 h-8 opacity-20" />
+                                        <p>No categories found.</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingCategory ? "Edit Category" : "Add Category"}</DialogTitle>   
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="category-name">Name</Label>
+                            <Input id="category-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Damage, Utility" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="category-description">Description</Label>
+                            <Textarea id="category-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description..." className="resize-none h-24" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>  
+                        <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>Save Category</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog open={!!deleteCategory} onOpenChange={(open) => !open && setDeleteCategory(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the <strong className="text-foreground">{deleteCategory?.name}</strong> category. 
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={(e) => {
+                            e.preventDefault();
+                            handleDelete();
+                        }} disabled={isSubmitting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {isSubmitting ? "Deleting..." : "Delete Category"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    )
+}

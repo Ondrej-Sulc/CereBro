@@ -5,7 +5,7 @@ import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
 import { Champion, ChampionImages } from "@/types/champion";
 import { PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils"; // Explicitly added cn import
@@ -86,7 +86,7 @@ export function PrefightSelector({
               {/* Champion Image */}
               <div className="relative flex-shrink-0">
                  <Image
-                    src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64')}
+                    src={getChampionImageUrlOrPlaceholder(champ.images as unknown as ChampionImages, '64')}
                     alt={champ.name}
                     width={32}
                     height={32}

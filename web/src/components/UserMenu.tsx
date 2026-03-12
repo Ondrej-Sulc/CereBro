@@ -12,16 +12,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LogOut, User, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { signOutAction } from "@/app/actions/auth"
+import { Session } from "next-auth"
 
 interface UserMenuProps {
-  user: {
-    name?: string | null
-    image?: string | null
-    isBotAdmin?: boolean
-  }
+  user: Session["user"]
 }
 
 export function UserMenu({ user }: UserMenuProps) {
+  const hasAdminAccess = user.isBotAdmin || (user.permissions && user.permissions.length > 0)
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="focus:outline-none">
@@ -40,7 +39,7 @@ export function UserMenu({ user }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-800" />
         
-        {user.isBotAdmin && (
+        {hasAdminAccess && (
             <>
                 <DropdownMenuItem asChild>
                   <Link href="/admin" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">

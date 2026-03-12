@@ -1,7 +1,7 @@
 import { useState, useEffect, memo } from "react";
 import { War } from "@prisma/client";
 import { HistoricalFightStat, getHistoricalCounters } from "@/app/planning/history-actions";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -162,7 +162,7 @@ const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFi
           <ChevronRight className={cn("h-3 w-3 text-slate-500 transition-transform", expanded && "rotate-90")} />
           <div className="relative h-8 w-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
             <Image
-              src={getChampionImageUrl(stat.attackerImages, '64')}
+              src={getChampionImageUrlOrPlaceholder(stat.attackerImages, '64')}
               alt={stat.attackerName}
               fill
               unoptimized
@@ -178,7 +178,7 @@ const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFi
                 {stat.prefightChampions.map((pf, idx) => (
                   <div key={idx} className="relative h-3 w-3 rounded-full ring-1 ring-slate-900 overflow-hidden bg-slate-800" title={pf.name}>
                     <Image
-                      src={getChampionImageUrl(pf.images, '64')}
+                      src={getChampionImageUrlOrPlaceholder(pf.images, '64')}
                       alt={pf.name}
                       fill
                       unoptimized
@@ -254,7 +254,7 @@ const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFi
                     {player.prefightChampions.map((pf, i) => (
                       <div key={i} className="relative h-4 w-4 rounded-full ring-1 ring-slate-900 overflow-hidden bg-slate-800" title={pf.name}>
                         <Image
-                          src={getChampionImageUrl(pf.images, '64')}
+                          src={getChampionImageUrlOrPlaceholder(pf.images, '64')}
                           alt={pf.name}
                           fill
                           unoptimized

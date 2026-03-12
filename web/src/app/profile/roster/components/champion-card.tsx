@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trophy, Edit2, Shield, Zap, Tag as TagIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
+import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionImages } from "@/types/champion";
 import { ChampionClass } from "@prisma/client";
@@ -41,7 +41,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
             }}
         >
             <Image
-                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, 'full')}
+                src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full')}
                 alt={item.champion.name}
                 fill
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 10vw"
@@ -122,7 +122,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                     <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                             <Image
-                                src={getChampionImageUrl(item.champion.images as unknown as ChampionImages, '64') || '/assets/icons/glossary.svg'}
+                                src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, '64')}
                                 alt={item.champion.name}
                                 fill
                                 className="object-cover"
@@ -218,7 +218,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                                                     <div className="flex -space-x-1.5">
                                                                                         {inst.synergyChampions.map((sc, scIdx) => (
                                                                                             <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                                <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/assets/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
+                                                                                                <Image src={getChampionImageUrlOrPlaceholder(sc.images as unknown as ChampionImages, '64') || '/assets/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
                                                                                             </div>
                                                                                         ))}
                                                                                     </div>
@@ -258,7 +258,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                                                                                     <div className="flex -space-x-1.5">
                                                                                         {inst.synergyChampions.map((sc, scIdx) => (
                                                                                             <div key={scIdx} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                                <Image src={getChampionImageUrl(sc.images as unknown as ChampionImages, '64') || '/assets/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
+                                                                                                <Image src={getChampionImageUrlOrPlaceholder(sc.images as unknown as ChampionImages, '64') || '/assets/icons/unknown.png'} alt={sc.name} fill className="object-cover" />
                                                                                             </div>
                                                                                         ))}
                                                                                     </div>

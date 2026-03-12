@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { ChampionClass } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { GroupedVirtuoso } from "react-virtuoso";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import Fuse from "fuse.js";
@@ -158,7 +158,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                   )}
                 >
                   <Image
-                    src={getChampionImageUrl(
+                    src={getChampionImageUrlOrPlaceholder(
                       selectedChampion.images,
                       "128"
                     )}
@@ -282,7 +282,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                             )}
                           >
                             <Image
-                              src={getChampionImageUrl(item.images, "64")}
+                              src={getChampionImageUrlOrPlaceholder(item.images, "64")}
                               alt={item.name}
                               fill
                               className="object-cover"

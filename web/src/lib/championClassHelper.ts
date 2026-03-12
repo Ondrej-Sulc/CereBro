@@ -11,5 +11,5 @@ export const championClassColorMap: Record<ChampionClass, { text: string; border
 };
 
 export const getChampionClassColors = (championClass?: ChampionClass) => {
-  return championClass ? championClassColorMap[championClass] : { text: 'text-white', border: 'border-gray-500/50', bg: 'bg-gray-500/10', color: '#ffffff' };
+  return championClass ? championClassColorMap[championClass] : { text: 'text-white', border: 'ring-2 ring-inset ring-gray-500/50', bg: 'bg-gray-500/10', color: '#ffffff' };
 };
