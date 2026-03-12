@@ -12,14 +12,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { LogOut, User, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
 import { signOutAction } from "@/app/actions/auth"
+import { Session } from "next-auth"
 
 interface UserMenuProps {
-  user: {
-    name?: string | null
-    image?: string | null
-    isBotAdmin?: boolean
-    permissions?: string[]
-  }
+  user: Session["user"]
 }
 
 export function UserMenu({ user }: UserMenuProps) {

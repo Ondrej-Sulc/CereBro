@@ -93,7 +93,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
   // Load data on open
   useEffect(() => {
-    if (champion) {
+    if (champion && open) {
         // Form Data
         setName(champion.name)
         setShortName(champion.shortName)
@@ -112,7 +112,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
         setJsonError(null)
         setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
     }
-  }, [champion])
+  }, [champion, open])
 
   // Group abilities and sort alphabetically
   const groupedAbilities = useMemo(() => {
@@ -164,16 +164,24 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   }
 
   const handleSaveJson = async () => {
+    let parsedJson;
     try {
+      parsedJson = JSON.parse(fullAbilitiesJson)
       setJsonError(null)
-      const parsedJson = JSON.parse(fullAbilitiesJson)
-      setIsSubmitting(true)
+    } catch (error: any) {
+      setJsonError(error.message || "Invalid JSON format")
+      toast({ title: "Invalid JSON format", variant: "destructive" })
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
       await updateChampionFullAbilities(champion.id, parsedJson)
       toast({ title: "Descriptions JSON updated" })
       setIsEditingJson(false)
     } catch (error: any) {
-      setJsonError(error.message || "Invalid JSON")
-      toast({ title: "Invalid JSON format", variant: "destructive" })
+      setJsonError(error.message || "Server Error")
+      toast({ title: "Failed to save JSON", description: error.message, variant: "destructive" })
     } finally {
       setIsSubmitting(false)
     }
@@ -395,7 +403,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                     </div>
                                     <div className="relative aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors">
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
-                                        <Image src={getChampionImageUrl(images, 'full', 'primary')} alt="Primary" fill className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
+                                        <Image src={getChampionImageUrl(images, 'full', 'primary')} alt="Primary" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                                 <div className="space-y-2 group">
@@ -404,7 +412,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                     </div>
                                     <div className="relative aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors">
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
-                                        <Image src={getChampionImageUrl(images, 'full', 'secondary')} alt="Secondary" fill className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
+                                        <Image src={getChampionImageUrl(images, 'full', 'secondary')} alt="Secondary" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                                 <div className="space-y-2 group">
@@ -413,7 +421,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                     </div>
                                     <div className="relative aspect-video sm:aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors flex items-center justify-center">
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
-                                        <Image src={getChampionImageUrl(images, 'full', 'hero')} alt="Hero" fill className="object-contain hover:scale-105 transition-transform duration-500" />
+                                        <Image src={getChampionImageUrl(images, 'full', 'hero')} alt="Hero" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                             </div>
@@ -619,7 +627,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                         <Label className="text-sm font-semibold tracking-wide text-slate-300">Editing fullAbilities JSON</Label>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm" className="hover:bg-slate-800 hover:text-white" onClick={() => {
+                                        <Button variant="ghost" size="sm" disabled={isSubmitting} className="hover:bg-slate-800 hover:text-white" onClick={() => {
                                             setIsEditingJson(false);
                                             setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}");
                                             setJsonError(null);
@@ -635,9 +643,11 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                 <div className="flex-1 rounded-xl overflow-hidden border border-slate-800/60 bg-[#0d1117] relative group shadow-inner">
                                     <div className="absolute top-2 right-4 text-[10px] font-mono font-bold text-slate-600 uppercase pointer-events-none">JSON</div>
                                     <Textarea 
+                                        disabled={isSubmitting}
                                         className={cn(
                                             "flex-1 font-mono text-sm resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-slate-300 h-full p-6",
-                                            jsonError && "bg-destructive/5 text-destructive"
+                                            jsonError && "bg-destructive/5 text-destructive",
+                                            isSubmitting && "opacity-50 cursor-not-allowed"
                                         )} 
                                         value={fullAbilitiesJson} 
                                         onChange={e => setFullAbilitiesJson(e.target.value)} 

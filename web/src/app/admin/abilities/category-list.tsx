@@ -23,6 +23,7 @@ import {
 import { Edit2, Trash2, Plus, LayoutGrid } from "lucide-react"
 import { createAbilityCategory, updateAbilityCategory, deleteAbilityCategory } from "./actions"
 import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 type Category = {
     id: number;
@@ -32,13 +33,14 @@ type Category = {
 }
 
 export function CategoryList({ initialCategories }: { initialCategories: Category[] }) {
-    const [categories, setCategories] = useState(initialCategories)
+    const categories = initialCategories;
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const { toast } = useToast()
+    const router = useRouter()
 
     const handleOpenDialog = (category?: Category) => {
         if (category) {
@@ -60,12 +62,12 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
         try {
             if (editingCategory) {
                 await updateAbilityCategory(editingCategory.id, name, description)
-                setCategories(categories.map(c => c.id === editingCategory.id ? { ...c, name, description } : c))
                 toast({ title: "Category updated" })
             } else {
                 await createAbilityCategory(name, description)
-                window.location.reload()
+                toast({ title: "Category created" })
             }
+            router.refresh()
             setIsDialogOpen(false)
         } catch (error) {
             toast({ title: "Error saving category", variant: "destructive" })
@@ -78,8 +80,8 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
         if (!confirm("Are you sure?")) return
         try {
             await deleteAbilityCategory(id)
-            setCategories(categories.filter(c => c.id !== id))
             toast({ title: "Category deleted" })
+            router.refresh()
         } catch (error) {
             toast({ title: "Error deleting category", variant: "destructive" })
         }
@@ -122,11 +124,11 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(category)}>
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(category)} aria-label="Edit category">
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(category.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(category.id)} aria-label="Delete category">
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
                                     </div>

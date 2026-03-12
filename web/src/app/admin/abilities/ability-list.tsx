@@ -26,6 +26,7 @@ import { createAbility, updateAbility, deleteAbility } from "./actions"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useRouter } from "next/navigation"
 
 type Ability = {
     id: number;
@@ -64,7 +65,7 @@ function DiscordEmoji({ emoji, className }: { emoji: string | null, className?: 
 }
 
 export function AbilityList({ initialAbilities, allCategories }: { initialAbilities: Ability[], allCategories: Category[] }) {
-    const [abilities, setAbilities] = useState(initialAbilities)
+    const abilities = initialAbilities;
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingAbility, setEditingAbility] = useState<Ability | null>(null)
     const [name, setName] = useState("")
@@ -74,6 +75,7 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const { toast } = useToast()
+    const router = useRouter()
 
     const handleOpenDialog = (ability?: Ability) => {
         if (ability) {
@@ -106,12 +108,12 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
             if (editingAbility) {
                 await updateAbility(editingAbility.id, name, description || null, emoji || null, selectedCategoryIds)
                 toast({ title: "Ability updated" })
-                window.location.reload()
             } else {
                 await createAbility(name, description || null, emoji || null, selectedCategoryIds)
                 toast({ title: "Ability created" })
-                window.location.reload()
             }
+            setIsDialogOpen(false)
+            router.refresh()
         } catch (error) {
             toast({ title: "Error saving ability", variant: "destructive" })
         } finally {
@@ -123,8 +125,8 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
         if (!confirm("Are you sure? This will remove this ability from all champions.")) return
         try {
             await deleteAbility(id)
-            setAbilities(abilities.filter(a => a.id !== id))
             toast({ title: "Ability deleted" })
+            router.refresh()
         } catch (error) {
             toast({ title: "Error deleting ability", variant: "destructive" })
         }
@@ -200,11 +202,11 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(ability)}>
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(ability)} aria-label="Edit ability">
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(ability.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(ability.id)} aria-label="Delete ability">
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
                                     </div>
@@ -274,6 +276,7 @@ export function AbilityList({ initialAbilities, allCategories }: { initialAbilit
                                                     key={category.id}
                                                     type="button"
                                                     onClick={() => toggleCategory(category.id)}
+                                                    aria-pressed={isSelected}
                                                     className={cn(
                                                         "flex items-center w-full px-2 py-2 text-sm rounded-md transition-all border border-transparent",
                                                         isSelected 

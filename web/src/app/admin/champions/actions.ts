@@ -106,6 +106,14 @@ export async function updateChampionDetails(
 export async function updateChampionFullAbilities(id: number, fullAbilities: any) {
     await ensureAdmin("MANAGE_CHAMPIONS")
 
+    if (fullAbilities) {
+        const jsonString = JSON.stringify(fullAbilities);
+        const MAX_JSON_SIZE = 50 * 1024; // 50KB max length
+        if (jsonString.length > MAX_JSON_SIZE) {
+            throw new Error(`JSON payload too large. Max allowed is ${MAX_JSON_SIZE / 1024}KB.`);
+        }
+    }
+
     await prisma.champion.update({
         where: { id },
         data: { fullAbilities }

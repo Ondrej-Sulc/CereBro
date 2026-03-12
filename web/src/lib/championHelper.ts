@@ -20,27 +20,36 @@ export function isChampionImages(obj: any): obj is ChampionImages {
 const FALLBACK_IMAGE_URL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 export function getChampionImageUrl(
-  images: ChampionImages | Prisma.JsonValue,
+  images: ChampionImages | Prisma.JsonValue | null | undefined,
   size: "32" | "64" | "128" | "full" = "full",
   type: "primary" | "secondary" | "hero" = "primary"
-): string {
+): string | null {
   if (!isChampionImages(images)) {
-    return FALLBACK_IMAGE_URL;
+    return null;
   }
 
   const imgs = images as ChampionImages;
   if (type === "hero") {
-    return imgs.hero || FALLBACK_IMAGE_URL;
+    return imgs.hero || null;
   }
 
   if (size === "full") {
     return (type === "primary"
       ? imgs.full_primary
-      : imgs.full_secondary) || FALLBACK_IMAGE_URL;
+      : imgs.full_secondary) || null;
   }
 
   const key = `${type.charAt(0)}_${size}` as keyof ChampionImages;
-  return imgs[key] || FALLBACK_IMAGE_URL;
+  return imgs[key] || null;
+}
+
+export function getChampionImageUrlOrPlaceholder(
+  images: ChampionImages | Prisma.JsonValue | null | undefined,
+  size: "32" | "64" | "128" | "full" = "full",
+  type: "primary" | "secondary" | "hero" = "primary"
+): string {
+  const url = getChampionImageUrl(images, size, type);
+  return url || FALLBACK_IMAGE_URL;
 }
 
 export function getMaxRank(stars: number): number {
