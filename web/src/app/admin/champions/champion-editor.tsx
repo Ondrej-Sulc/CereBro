@@ -41,7 +41,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, Trash2, Plus, CalendarIcon, Save, X, Edit2, Sword } from "lucide-react"
+import { Check, ChevronsUpDown, Trash2, Plus, CalendarIcon, Save, X, Edit2, Sword, Shield, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -52,6 +52,7 @@ import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { CLASSES } from "@/app/profile/roster/constants"
 import { Badge } from "@/components/ui/badge"
+import { getChampionClassColors } from "@/lib/championClassHelper"
 
 interface ChampionEditorProps {
   champion: AdminChampionData | null
@@ -246,130 +247,192 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   }
 
   const images = champion.images
+  const classColors = getChampionClassColors(champion.class)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden">
-        <div className="flex flex-col h-full">
-            <DialogHeader className="px-6 py-4 border-b shrink-0">
-                <div className="flex items-center gap-4">
-                    <div className="relative w-12 h-12 rounded-full border border-slate-700 overflow-hidden">
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden bg-slate-950 border-slate-800 shadow-2xl sm:rounded-2xl">
+        <div className="flex flex-col h-full relative">
+            {/* Header with Class Gradient Background */}
+            <DialogHeader className="px-8 py-6 border-b border-slate-800 shrink-0 relative overflow-hidden bg-slate-900/50">
+                {/* Dynamic Class Background Effect */}
+                <div className={cn(
+                    "absolute inset-0 opacity-10 blur-3xl pointer-events-none transition-colors duration-500",
+                    classColors.bg
+                )} />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-white/5 to-transparent pointer-events-none rounded-bl-full" />
+                
+                <div className="flex items-center gap-5 relative z-10">
+                    <div className={cn(
+                        "relative w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 transition-colors",
+                        classColors.border,
+                        "ring-4 ring-slate-950"
+                    )}>
                         <Image src={getChampionImageUrl(images, '64')} alt={champion.name} fill className="object-cover" />
+                        <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.6)] pointer-events-none" />
                     </div>
                     <div>
-                        <DialogTitle className="text-xl">{champion.name}</DialogTitle>
-                        <DialogDescription>
-                            {champion.class} • Released {format(new Date(champion.releaseDate), 'MMM yyyy')}
+                        <DialogTitle className="text-3xl font-extrabold tracking-tight text-white mb-1 flex items-center gap-2">
+                            {champion.name}
+                            <Badge variant="outline" className={cn(
+                                "ml-2 text-[10px] uppercase font-bold tracking-wider px-2 py-0 border-transparent shadow-sm",
+                                classColors.bg, classColors.text
+                            )}>
+                                {champion.class}
+                            </Badge>
+                        </DialogTitle>
+                        <DialogDescription className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                            <span className="bg-slate-800/50 px-2 py-0.5 rounded text-xs font-mono">{champion.shortName}</span>
+                            <span>•</span>
+                            Released {format(new Date(champion.releaseDate), 'MMMM yyyy')}
                         </DialogDescription>
                     </div>
                 </div>
             </DialogHeader>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-                <div className="px-6 border-b shrink-0">
-                    <TabsList className="bg-transparent h-12 w-full justify-start gap-6 p-0">
-                        <TabsTrigger value="info" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Info</TabsTrigger>
-                        <TabsTrigger value="descriptions" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Description</TabsTrigger>
-                        <TabsTrigger value="abilities" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Abilities & Immunities</TabsTrigger>
-                        <TabsTrigger value="attacks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-0">Attacks</TabsTrigger>
+            {/* Refined Tabs Segmented Control */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 bg-slate-950">
+                <div className="px-8 py-3 border-b border-slate-800/50 shrink-0 bg-slate-900/30">
+                    <TabsList className="bg-slate-900 border border-slate-800 h-10 p-1 w-full flex gap-1 rounded-lg">
+                        <TabsTrigger value="info" className="flex-1 rounded-md text-xs font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all">
+                            Configuration
+                        </TabsTrigger>
+                        <TabsTrigger value="descriptions" className="flex-1 rounded-md text-xs font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all">
+                            Descriptions
+                        </TabsTrigger>
+                        <TabsTrigger value="abilities" className="flex-1 rounded-md text-xs font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all">
+                            Abilities & Links
+                        </TabsTrigger>
+                        <TabsTrigger value="attacks" className="flex-1 rounded-md text-xs font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm transition-all">
+                            Attacks & Hits
+                        </TabsTrigger>
                     </TabsList>
                 </div>
 
-                <div className="flex-1 bg-slate-950/50 min-h-0 flex flex-col">
-                    <TabsContent value="info" className="mt-0 data-[state=active]:flex-1 overflow-y-auto p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Name</Label>
-                                    <Input value={name} onChange={(e) => setName(e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Short Name (Internal ID)</Label>
-                                    <Input value={shortName} onChange={(e) => setShortName(e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Class</Label>
-                                    <Select value={champClass} onValueChange={setChampClass}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {CLASSES.map(c => (
-                                                <SelectItem key={c} value={c}>{c}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                <div className="flex-1 bg-[url('/assets/noise.svg')] bg-[length:100px_100px] min-h-0 flex flex-col relative">
+                    <div className="absolute inset-0 bg-slate-950/95 pointer-events-none" />
+                    
+                    {/* Info Tab Content */}
+                    <TabsContent value="info" className="mt-0 data-[state=active]:flex-1 overflow-y-auto p-8 relative z-10 space-y-8 scrollbar-thin scrollbar-thumb-slate-800">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Left Column */}
+                            <div className="space-y-6">
+                                <section className="p-5 rounded-xl border border-slate-800/60 bg-slate-900/40 shadow-sm space-y-5">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Core Identity</h3>
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Display Name</Label>
+                                            <Input value={name} onChange={(e) => setName(e.target.value)} className="bg-slate-950/50 border-slate-800/80 focus-visible:ring-primary/50" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Short Name (ID)</Label>
+                                            <Input value={shortName} onChange={(e) => setShortName(e.target.value)} className="bg-slate-950/50 border-slate-800/80 focus-visible:ring-primary/50 font-mono text-sm" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Champion Class</Label>
+                                            <Select value={champClass} onValueChange={setChampClass}>
+                                                <SelectTrigger className="bg-slate-950/50 border-slate-800/80 focus:ring-primary/50">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-900 border-slate-800">
+                                                    {CLASSES.map(c => (
+                                                        <SelectItem key={c} value={c} className="hover:bg-slate-800 focus:bg-slate-800">{c}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
-                            <div className="space-y-4">
-                                <div className="space-y-2 flex flex-col">
-                                    <Label>Release Date</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn(
-                                                    "w-full justify-start text-left font-normal",
-                                                    !releaseDate && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {releaseDate ? format(releaseDate, "PPP") : <span>Pick a date</span>}
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0">
-                                            <Calendar
-                                                mode="single"
-                                                selected={releaseDate}
-                                                onSelect={setReleaseDate}
-                                                autoFocus
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Obtainable In (Comma separated)</Label>
-                                    <Input value={obtainable} onChange={(e) => setObtainable(e.target.value)} placeholder="3, 4, 5, 6, 7" />
-                                </div>
+
+                            {/* Right Column */}
+                            <div className="space-y-6">
+                                <section className="p-5 rounded-xl border border-slate-800/60 bg-slate-900/40 shadow-sm space-y-5">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Availability</h3>
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5 flex flex-col">
+                                            <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Release Date</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal bg-slate-950/50 border-slate-800/80 hover:bg-slate-900",
+                                                        !releaseDate && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
+                                                    {releaseDate ? format(releaseDate, "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-800" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={releaseDate}
+                                                    onSelect={setReleaseDate}
+                                                    initialFocus
+                                                    className="bg-slate-900 rounded-md"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Rarities (CSV)</Label>
+                                        <Input value={obtainable} onChange={(e) => setObtainable(e.target.value)} placeholder="3, 4, 5, 6, 7" className="bg-slate-950/50 border-slate-800/80 font-mono text-sm focus-visible:ring-primary/50" />
+                                    </div>
+                                    </div>
+                                </section>
                             </div>
                         </div>
 
                         {/* Image Assets View */}
-                        <div className="space-y-3">
-                            <Label>Assets</Label>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <span className="text-xs text-muted-foreground">Primary (Full)</span>
-                                    <div className="relative aspect-square rounded-lg border border-slate-800 bg-slate-900 overflow-hidden">
-                                        <Image src={getChampionImageUrl(images, 'full', 'primary')} alt="Primary" fill className="object-contain" />
+                        <section className="p-6 rounded-xl border border-slate-800/60 bg-slate-900/40 shadow-sm space-y-4">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Visual Assets</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                <div className="space-y-2 group">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Model</span>
+                                    </div>
+                                    <div className="relative aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors">
+                                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
+                                        <Image src={getChampionImageUrl(images, 'full', 'primary')} alt="Primary" fill className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <span className="text-xs text-muted-foreground">Secondary (Full)</span>
-                                    <div className="relative aspect-square rounded-lg border border-slate-800 bg-slate-900 overflow-hidden">
-                                        <Image src={getChampionImageUrl(images, 'full', 'secondary')} alt="Secondary" fill className="object-contain" />
+                                <div className="space-y-2 group">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary Model</span>
+                                    </div>
+                                    <div className="relative aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors">
+                                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
+                                        <Image src={getChampionImageUrl(images, 'full', 'secondary')} alt="Secondary" fill className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <span className="text-xs text-muted-foreground">Hero (Landscape)</span>
-                                    <div className="relative aspect-square rounded-lg border border-slate-800 bg-slate-900 overflow-hidden">
-                                        <Image src={getChampionImageUrl(images, 'full', 'hero')} alt="Hero" fill className="object-contain" />
+                                <div className="space-y-2 group">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Landscape</span>
+                                    </div>
+                                    <div className="relative aspect-video sm:aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
+                                        <Image src={getChampionImageUrl(images, 'full', 'hero')} alt="Hero" fill className="object-contain hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
-                        <div className="flex justify-end">
-                            <Button onClick={handleSaveDetails} disabled={isSubmitting}>Save Changes</Button>
+                        <div className="flex justify-end pt-4 pb-12">
+                            <Button size="lg" className="rounded-full shadow-lg hover:shadow-primary/20 px-8" onClick={handleSaveDetails} disabled={isSubmitting}>
+                                <Save className="w-4 h-4 mr-2" /> Save Configuration
+                            </Button>
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="abilities" className="mt-0 data-[state=active]:flex flex-col flex-1 p-6 h-full min-h-0">
+                    <TabsContent value="abilities" className="mt-0 data-[state=active]:flex flex-col flex-1 p-8 h-full min-h-0 relative z-10 scrollbar-thin scrollbar-thumb-slate-800">
                         {/* Add New Ability Bar */}
-                        <div className="p-4 border rounded-lg bg-background/50 space-y-4 shrink-0 shadow-sm mb-6">
-                            <div className="flex items-end gap-3">
+                        <div className="p-4 border rounded-xl bg-slate-900/60 border-slate-800/60 shadow-sm backdrop-blur-md mb-8 shrink-0 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="flex items-end gap-3 relative z-10">
                                 <div className="flex-1 space-y-2">
-                                    <Label>Add New Ability/Immunity</Label>
+                                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Add New Ability / Immunity</Label>
                                     <div className="flex gap-2">
                                         <Popover open={abilityComboboxOpen} onOpenChange={setAbilityComboboxOpen}>
                                             <PopoverTrigger asChild>
@@ -377,19 +440,19 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                 variant="outline"
                                                 role="combobox"
                                                 aria-expanded={abilityComboboxOpen}
-                                                className="w-full justify-between"
+                                                className="w-full justify-between bg-slate-950/50 border-slate-800/80 hover:bg-slate-900 hover:text-white"
                                                 >
                                                 {newAbilityId
                                                     ? allAbilities.find((a) => a.id === newAbilityId)?.name
-                                                    : "Select ability..."}
+                                                    : <span className="text-slate-500 font-normal">Select ability...</span>}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
-                                            <PopoverContent className="w-[300px] p-0">
-                                                <Command>
-                                                <CommandInput placeholder="Search ability..." />
+                                            <PopoverContent className="w-[300px] p-0 bg-slate-900 border-slate-800">
+                                                <Command className="bg-transparent">
+                                                <CommandInput placeholder="Search ability..." className="border-b border-slate-800" />
                                                 <CommandList>
-                                                    <CommandEmpty>No ability found.</CommandEmpty>
+                                                    <CommandEmpty className="p-4 text-center text-sm text-slate-500">No ability found.</CommandEmpty>
                                                     <CommandGroup>
                                                     {allAbilities.map((ability) => (
                                                         <CommandItem
@@ -399,10 +462,11 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                             setNewAbilityId(ability.id)
                                                             setAbilityComboboxOpen(false)
                                                         }}
+                                                        className="hover:bg-slate-800/50 cursor-pointer"
                                                         >
                                                         <Check
                                                             className={cn(
-                                                            "mr-2 h-4 w-4",
+                                                            "mr-2 h-4 w-4 text-primary",
                                                             newAbilityId === ability.id ? "opacity-100" : "opacity-0"
                                                             )}
                                                         />
@@ -416,16 +480,16 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                         </Popover>
 
                                         <Select value={newType} onValueChange={(v) => setNewType(v as AbilityLinkType)}>
-                                            <SelectTrigger className="w-[140px]">
+                                            <SelectTrigger className="w-[140px] bg-slate-950/50 border-slate-800/80">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ABILITY">Ability</SelectItem>
-                                                <SelectItem value="IMMUNITY">Immunity</SelectItem>
+                                            <SelectContent className="bg-slate-900 border-slate-800">
+                                                <SelectItem value="ABILITY" className="hover:bg-slate-800 focus:bg-slate-800 cursor-pointer">Ability</SelectItem>
+                                                <SelectItem value="IMMUNITY" className="hover:bg-slate-800 focus:bg-slate-800 cursor-pointer">Immunity</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         
-                                        <Button onClick={handleAddAbilityLink} disabled={!newAbilityId || isSubmitting}>
+                                        <Button onClick={handleAddAbilityLink} disabled={!newAbilityId || isSubmitting} className="shadow-lg shadow-primary/20">
                                             <Plus className="w-4 h-4 mr-2" /> Add
                                         </Button>
                                     </div>
@@ -435,33 +499,38 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
                         {/* Grouped Abilities List */}
                         <ScrollArea className="flex-1 pr-4 -mr-4">
-                            <div className="space-y-6 pb-20 pr-4">
+                            <div className="space-y-8 pb-20 pr-4">
                                 {groupedAbilities.abilities.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">Abilities</h3>
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                            <div className="w-4 h-px bg-slate-700/50" />
+                                            Abilities
+                                            <div className="flex-1 h-px bg-slate-700/50" />
+                                        </h3>
+                                        <div className="space-y-4">
                                         {groupedAbilities.abilities.map(([title, links]) => {
                                             const firstLink = links[0]
                                             return (
-                                                <div key={`ability-${title}`} className="border rounded-lg bg-card overflow-hidden">
-                                                    <div className="px-4 py-2 border-b flex items-center gap-3 bg-amber-500/10 border-amber-500/20">
-                                                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-amber-500">
+                                                <div key={`ability-${title}`} className="border border-slate-800/60 rounded-xl bg-slate-900/40 relative overflow-hidden group/card transition-all hover:border-amber-500/30 shadow-sm">
+                                                    <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50 group-hover/card:bg-amber-500 transition-colors" />
+                                                    <div className="px-5 py-3 border-b border-slate-800/50 flex items-center gap-3 bg-slate-900/80">
+                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-amber-500/90 group-hover/card:text-amber-400 transition-colors">
                                                             {title}
                                                         </h4>
                                                         <div className="ml-auto">
                                                             <Button 
                                                                 variant="ghost" 
                                                                 size="sm" 
-                                                                className="h-6 text-xs"
+                                                                className="h-7 text-[11px] font-semibold text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-full px-3"
                                                                 onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
                                                                 disabled={isAddingInstance}
                                                             >
-                                                                <Plus className="w-3 h-3 mr-1" /> Add Instance
+                                                                <Plus className="w-3 h-3 mr-1" /> Add Source
                                                             </Button>
                                                         </div>
                                                     </div>
 
-                                                    <div className="divide-y divide-border/50">
+                                                    <div className="divide-y divide-slate-800/50">
                                                         {links.map((link) => (
                                                             <AbilityLinkRow 
                                                                 key={link.id} 
@@ -477,35 +546,41 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                 </div>
                                             )
                                         })}
+                                        </div>
                                     </div>
                                 )}
 
                                 {groupedAbilities.immunities.length > 0 && (
-                                    <div className="space-y-3 mt-6">
-                                        <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">Immunities</h3>
+                                    <div className="space-y-4 mt-8">
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                            <div className="w-4 h-px bg-slate-700/50" />
+                                            Immunities
+                                            <div className="flex-1 h-px bg-slate-700/50" />
+                                        </h3>
+                                        <div className="space-y-4">
                                         {groupedAbilities.immunities.map(([title, links]) => {
                                             const firstLink = links[0]
                                             return (
-                                                <div key={`immunity-${title}`} className="border rounded-lg bg-card overflow-hidden">
-                                                    <div className="px-4 py-2 border-b flex items-center gap-3 bg-sky-500/10 border-sky-500/20">
-                                                        <span className="w-2 h-2 rounded-full bg-sky-500" />
-                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-sky-500">
+                                                <div key={`immunity-${title}`} className="border border-slate-800/60 rounded-xl bg-slate-900/40 relative overflow-hidden group/card transition-all hover:border-sky-500/30 shadow-sm">
+                                                    <div className="absolute top-0 left-0 w-1 h-full bg-sky-500/50 group-hover/card:bg-sky-500 transition-colors" />
+                                                    <div className="px-5 py-3 border-b border-slate-800/50 flex items-center gap-3 bg-slate-900/80">
+                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-sky-500/90 group-hover/card:text-sky-400 transition-colors">
                                                             {title}
                                                         </h4>
                                                         <div className="ml-auto">
                                                             <Button 
                                                                 variant="ghost" 
                                                                 size="sm" 
-                                                                className="h-6 text-xs"
+                                                                className="h-7 text-[11px] font-semibold text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-full px-3"
                                                                 onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
                                                                 disabled={isAddingInstance}
                                                             >
-                                                                <Plus className="w-3 h-3 mr-1" /> Add Instance
+                                                                <Plus className="w-3 h-3 mr-1" /> Add Source
                                                             </Button>
                                                         </div>
                                                     </div>
 
-                                                    <div className="divide-y divide-border/50">
+                                                    <div className="divide-y divide-slate-800/50">
                                                         {links.map((link) => (
                                                             <AbilityLinkRow 
                                                                 key={link.id} 
@@ -521,66 +596,92 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                 </div>
                                             )
                                         })}
+                                        </div>
                                     </div>
                                 )}
                                 {groupedAbilities.abilities.length === 0 && groupedAbilities.immunities.length === 0 && (
-                                    <div className="text-center text-muted-foreground py-10">No abilities or immunities assigned.</div>
+                                    <div className="flex flex-col items-center justify-center py-20 bg-slate-900/40 border border-slate-800/60 border-dashed rounded-xl">
+                                        <Shield className="w-8 h-8 text-slate-700 mb-3" />
+                                        <p className="text-slate-500 font-medium">No abilities or immunities assigned.</p>
+                                        <p className="text-xs text-slate-600 mt-1">Use the command bar above to add one.</p>
+                                    </div>
                                 )}
                             </div>
                         </ScrollArea>
                     </TabsContent>
 
-                    <TabsContent value="descriptions" className="mt-0 data-[state=active]:flex flex-col flex-1 p-6 h-full min-h-0">
+                    <TabsContent value="descriptions" className="mt-0 data-[state=active]:flex flex-col flex-1 p-8 h-full min-h-0 relative z-10 scrollbar-thin scrollbar-thumb-slate-800">
                         {isEditingJson ? (
                             <div className="flex flex-col h-full space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-primary">Edit fullAbilities JSON</Label>
+                                <div className="flex items-center justify-between bg-slate-900/80 border border-slate-800/60 p-3 rounded-xl backdrop-blur-sm shadow-sm">
                                     <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="sm" onClick={() => {
+                                        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                                        <Label className="text-sm font-semibold tracking-wide text-slate-300">Editing fullAbilities JSON</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="ghost" size="sm" className="hover:bg-slate-800 hover:text-white" onClick={() => {
                                             setIsEditingJson(false);
                                             setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}");
                                             setJsonError(null);
                                         }}>
                                             Cancel
                                         </Button>
-                                        <Button size="sm" onClick={handleSaveJson} disabled={isSubmitting}>
+                                        <Button size="sm" onClick={handleSaveJson} disabled={isSubmitting} className="shadow-sm shadow-primary/20">
                                             <Save className="w-4 h-4 mr-2" /> Save JSON
                                         </Button>
                                     </div>
                                 </div>
-                                {jsonError && <p className="text-destructive text-sm font-mono">{jsonError}</p>}
-                                <Textarea 
-                                    className={cn(
-                                        "flex-1 font-mono text-sm resize-none bg-slate-950/80 border-slate-800 focus-visible:ring-primary h-full min-h-[300px]",
-                                        jsonError && "border-destructive focus-visible:ring-destructive"
-                                    )} 
-                                    value={fullAbilitiesJson} 
-                                    onChange={e => setFullAbilitiesJson(e.target.value)} 
-                                    spellCheck={false}
-                                />
+                                {jsonError && <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm font-mono">{jsonError}</div>}
+                                <div className="flex-1 rounded-xl overflow-hidden border border-slate-800/60 bg-[#0d1117] relative group shadow-inner">
+                                    <div className="absolute top-2 right-4 text-[10px] font-mono font-bold text-slate-600 uppercase pointer-events-none">JSON</div>
+                                    <Textarea 
+                                        className={cn(
+                                            "flex-1 font-mono text-sm resize-none bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-slate-300 h-full p-6",
+                                            jsonError && "bg-destructive/5 text-destructive"
+                                        )} 
+                                        value={fullAbilitiesJson} 
+                                        onChange={e => setFullAbilitiesJson(e.target.value)} 
+                                        spellCheck={false}
+                                    />
+                                </div>
                             </div>
                         ) : (
                             <ScrollArea className="flex-1 pr-4 -mr-4 relative group">
-                                <div className="absolute top-0 right-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity mt-2 mr-2">
-                                    <Button variant="outline" size="sm" onClick={() => setIsEditingJson(true)} className="bg-background/80 backdrop-blur-sm shadow-sm border-primary/20 hover:border-primary">
-                                        <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit JSON
+                                <div className="absolute top-0 right-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity mt-2 mr-2">
+                                    <Button variant="outline" size="sm" onClick={() => setIsEditingJson(true)} className="bg-slate-900/80 backdrop-blur-md shadow-lg border-primary/30 hover:border-primary text-slate-300 hover:text-white rounded-full px-4 h-8">
+                                        <Edit2 className="w-3.5 h-3.5 mr-2" /> Quick Edit JSON
                                     </Button>
                                 </div>
                                 <div className="space-y-8 pb-20 pr-4">
                                     {(() => {
                                         const fa = champion.fullAbilities as any;
                                         if (!fa || (!fa.signature && (!fa.abilities_breakdown || fa.abilities_breakdown.length === 0))) {
-                                            return <div className="text-center text-muted-foreground py-10">No full abilities descriptions available.</div>;
+                                            return (
+                                                <div className="flex flex-col items-center justify-center py-32 bg-slate-900/40 border border-slate-800/60 border-dashed rounded-xl">
+                                                    <div className="w-12 h-12 rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center mb-4">
+                                                        <span className="font-mono text-slate-500 text-xl">{'{ }'}</span>
+                                                    </div>
+                                                    <p className="text-slate-400 font-medium">No full abilities descriptions available.</p>
+                                                    <Button variant="link" onClick={() => setIsEditingJson(true)} className="text-primary mt-2">Edit JSON to add content</Button>
+                                                </div>
+                                            );
                                         }
 
                                         return (
                                             <>
                                                 {fa.signature && (
-                                                    <section>
-                                                        <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2">Signature Ability</h3>
-                                                        <div className="p-4 border rounded-lg bg-card/50">
-                                                            <h4 className="font-bold text-lg mb-2 text-amber-400">{fa.signature.name}</h4>
-                                                            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                    <section className="bg-gradient-to-br from-amber-500/10 to-transparent p-px rounded-2xl">
+                                                        <div className="bg-slate-950/80 rounded-[15px] p-6 backdrop-blur-xl">
+                                                            <div className="flex items-center gap-3 mb-4">
+                                                                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
+                                                                    <Zap className="w-4 h-4 text-amber-500" />
+                                                                </div>
+                                                                <div>
+                                                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80">Signature Ability</h3>
+                                                                    <h4 className="font-bold text-xl text-amber-400 tracking-tight">{fa.signature.name}</h4>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
                                                                 {fa.signature.description}
                                                             </p>
                                                         </div>
@@ -589,19 +690,23 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
                                                 {fa.abilities_breakdown && fa.abilities_breakdown.length > 0 && (
                                                     <section>
-                                                        <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 px-1 border-b border-primary/20 pb-2 mt-6">Abilities Breakdown</h3>
+                                                        <div className="flex items-center gap-3 mb-6">
+                                                            <div className="h-px bg-slate-800/80 flex-1" />
+                                                            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 text-center">Abilities Breakdown</h3>
+                                                            <div className="h-px bg-slate-800/80 flex-1" />
+                                                        </div>
                                                         <div className="space-y-4">
                                                             {fa.abilities_breakdown.map((ability: any, idx: number) => (
-                                                                <div key={idx} className="p-4 border rounded-lg bg-card/50">
-                                                                    <div className="flex items-baseline gap-2 mb-2">
+                                                                <div key={idx} className="p-5 border border-slate-800/60 rounded-xl bg-slate-900/40 shadow-sm transition-colors hover:border-slate-700/80">
+                                                                    <div className="flex items-baseline gap-3 mb-3 border-b border-slate-800/40 pb-3">
                                                                         <h4 className="font-bold text-lg text-slate-200">{ability.title}</h4>
                                                                         {ability.type && (
-                                                                            <span className="text-xs font-mono text-muted-foreground tracking-tight uppercase px-1.5 py-0.5 rounded bg-muted/50 border border-muted">
+                                                                            <Badge variant="outline" className="text-[10px] font-mono text-slate-400 tracking-tight uppercase px-1.5 py-0 border-slate-700 bg-slate-800/50">
                                                                                 {ability.type}
-                                                                            </span>
+                                                                            </Badge>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                                                    <p className="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed">
                                                                         {ability.description}
                                                                     </p>
                                                                 </div>
@@ -617,12 +722,16 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         )}
                     </TabsContent>
 
-                    <TabsContent value="attacks" className="mt-0 data-[state=active]:flex-1 p-6 h-full min-h-0">
+                    <TabsContent value="attacks" className="mt-0 data-[state=active]:flex-1 p-8 h-full min-h-0 relative z-10 scrollbar-thin scrollbar-thumb-slate-800">
                         <ScrollArea className="h-full pr-4 -mr-4">
-                            <div className="space-y-8 pb-10 pr-4">
+                            <div className="space-y-12 pb-10 pr-4">
                                 <section>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4 px-1">Basic Attacks</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-px bg-slate-800/80 flex-1" />
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 text-center">Basic Attacks</h3>
+                                        <div className="h-px bg-slate-800/80 flex-1" />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                         {ATTACK_TYPES_BASIC.map(type => (
                                             <AttackEditor 
                                                 key={type} 
@@ -635,8 +744,12 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                 </section>
 
                                 <section>
-                                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4 px-1">Special Attacks</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-px bg-slate-800/80 flex-1" />
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-primary text-center">Special Attacks</h3>
+                                        <div className="h-px bg-slate-800/80 flex-1" />
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 shadow-lg shadow-primary/5 rounded-2xl p-4 md:p-6 bg-primary/5 border border-primary/20 gap-6">
                                         {ATTACK_TYPES_SPECIAL.map(type => (
                                             <AttackEditor 
                                                 key={type} 
@@ -955,16 +1068,16 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
 
     return (
         <div className={cn(
-            "border rounded-xl bg-slate-900/40 flex flex-col h-auto min-h-[180px] max-h-[400px] transition-all border-slate-800",
-            hasChanges && "ring-1 ring-primary/30 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.1)]"
+            "border rounded-xl bg-slate-900/60 flex flex-col h-auto min-h-[180px] max-h-[400px] transition-all border-slate-800 shadow-sm backdrop-blur-sm",
+            hasChanges && "ring-1 ring-primary/40 border-primary/40 shadow-[0_0_20px_rgba(var(--primary),0.15)] bg-slate-900/80"
         )}>
-            <div className="px-4 py-3 border-b flex items-center justify-between bg-slate-800/30 border-slate-800">
+            <div className="px-4 py-3 border-b flex items-center justify-between bg-slate-950/40 border-slate-800">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-slate-950 border border-slate-700 flex items-center justify-center font-bold text-sm font-mono text-primary shadow-inner">
+                    <div className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center font-bold text-sm font-mono text-primary shadow-inner ring-1 ring-black/50">
                         {type}
                     </div>
                     <div>
-                        <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground leading-none mb-1">
+                        <div className="text-[10px] uppercase tracking-widest font-bold text-slate-500 leading-none mb-1.5">
                             {type.startsWith('S') ? 'Special' : 'Basic'}
                         </div>
                         <div className="text-xs font-semibold text-slate-300 leading-none">
@@ -976,18 +1089,18 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
                     <Button 
                         size="sm" 
                         variant="secondary" 
-                        className="h-7 w-7 p-0 rounded-full bg-primary/20 text-primary hover:bg-primary hover:text-white transition-all shadow-sm animate-in fade-in zoom-in"
+                        className="h-8 px-3 rounded-full bg-primary/20 hover:bg-primary text-primary hover:text-white transition-all shadow-sm animate-in fade-in zoom-in font-semibold text-[11px]"
                         onClick={handleSave} 
                         disabled={isSaving}
                     >
-                        <Save className="w-3.5 h-3.5" />
+                        <Save className="w-3.5 h-3.5 mr-1.5" /> Save
                     </Button>
                 )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-800">
                 {groups.map((group, i) => (
-                    <div key={group.id} className="space-y-2 p-3 rounded-lg bg-slate-950/40 border border-slate-800/50 group relative">
+                    <div key={group.id} className="space-y-3 p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/60 group relative shadow-inner">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center bg-slate-900 border border-slate-800 rounded-md overflow-hidden">
                                 <button 
@@ -1044,11 +1157,11 @@ function AttackEditor({ type, championId, existingAttack }: { type: AttackType, 
                 <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="w-full border-dashed border-2 border-slate-800/50 hover:border-primary/30 hover:bg-primary/5 text-slate-500 hover:text-primary h-10 transition-dashed" 
+                    className="w-full border-dashed border-2 border-slate-800 hover:border-primary/50 hover:bg-primary/10 text-slate-400 hover:text-primary h-11 transition-all rounded-xl shadow-sm" 
                     onClick={addGroup}
                 >
-                    <Plus className="w-3.5 h-3.5 mr-2" /> 
-                    <span className="text-xs">Add Hit Group</span>
+                    <Plus className="w-4 h-4 mr-2" /> 
+                    <span className="text-xs font-bold uppercase tracking-wider">Add Hit Group</span>
                 </Button>
             </div>
         </div>
