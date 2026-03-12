@@ -23,24 +23,24 @@ export function getChampionImageUrl(
   images: ChampionImages | Prisma.JsonValue | null | undefined,
   size: "32" | "64" | "128" | "full" = "full",
   type: "primary" | "secondary" | "hero" = "primary"
-): string | null {
+): string {
   if (!isChampionImages(images)) {
-    return null;
+    return FALLBACK_IMAGE_URL;
   }
 
   const imgs = images as ChampionImages;
   if (type === "hero") {
-    return imgs.hero || null;
+    return imgs.hero || FALLBACK_IMAGE_URL;
   }
 
   if (size === "full") {
     return (type === "primary"
       ? imgs.full_primary
-      : imgs.full_secondary) || null;
+      : imgs.full_secondary) || FALLBACK_IMAGE_URL;
   }
 
   const key = `${type.charAt(0)}_${size}` as keyof ChampionImages;
-  return imgs[key] || null;
+  return imgs[key] || FALLBACK_IMAGE_URL;
 }
 
 export function getChampionImageUrlOrPlaceholder(

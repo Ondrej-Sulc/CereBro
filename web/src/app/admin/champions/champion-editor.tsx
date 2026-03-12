@@ -45,7 +45,7 @@ import { Check, ChevronsUpDown, Trash2, Plus, CalendarIcon, Save, X, Edit2, Swor
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { getChampionImageUrl } from "@/lib/championHelper"
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import Image from "next/image"
 import { ChampionImages } from "@/types/champion"
 import { format } from "date-fns"
@@ -276,7 +276,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         classColors.border,
                         "ring-4 ring-slate-950"
                     )}>
-                        <Image src={getChampionImageUrl(images, '64')} alt={champion.name} fill className="object-cover" />
+                        <Image src={getChampionImageUrlOrPlaceholder(images, '64')} alt={champion.name} fill className="object-cover" />
                         <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.6)] pointer-events-none" />
                     </div>
                     <div>
@@ -403,7 +403,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                     </div>
                                     <div className="relative aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors">
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
-                                        <Image src={getChampionImageUrl(images, 'full', 'primary')} alt="Primary" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
+                                        <Image src={getChampionImageUrlOrPlaceholder(images, 'full', 'primary')} alt="Primary" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                                 <div className="space-y-2 group">
@@ -412,7 +412,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                     </div>
                                     <div className="relative aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors">
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
-                                        <Image src={getChampionImageUrl(images, 'full', 'secondary')} alt="Secondary" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
+                                        <Image src={getChampionImageUrlOrPlaceholder(images, 'full', 'secondary')} alt="Secondary" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain p-2 hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                                 <div className="space-y-2 group">
@@ -421,7 +421,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                     </div>
                                     <div className="relative aspect-video sm:aspect-square rounded-xl border-2 border-slate-800 bg-slate-950 overflow-hidden shadow-inner group-hover:border-slate-600 transition-colors flex items-center justify-center">
                                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800/40 via-slate-950/10 to-transparent pointer-events-none" />
-                                        <Image src={getChampionImageUrl(images, 'full', 'hero')} alt="Hero" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain hover:scale-105 transition-transform duration-500" />
+                                        <Image src={getChampionImageUrlOrPlaceholder(images, 'full', 'hero')} alt="Hero" fill sizes="(max-width: 640px) 100vw, 33vw" className="object-contain hover:scale-105 transition-transform duration-500" />
                                     </div>
                                 </div>
                             </div>
@@ -679,7 +679,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
                                         return (
                                             <>
-                                                {fa.signature && (
+                                                {fa?.signature && (fa.signature.name || fa.signature.description) && (
                                                     <section className="bg-gradient-to-br from-amber-500/10 to-transparent p-px rounded-2xl">
                                                         <div className="bg-slate-950/80 rounded-[15px] p-6 backdrop-blur-xl">
                                                             <div className="flex items-center gap-3 mb-4">
@@ -698,7 +698,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                     </section>
                                                 )}
 
-                                                {fa.abilities_breakdown && fa.abilities_breakdown.length > 0 && (
+                                                {fa?.abilities_breakdown && fa.abilities_breakdown.length > 0 && (
                                                     <section>
                                                         <div className="flex items-center gap-3 mb-6">
                                                             <div className="h-px bg-slate-800/80 flex-1" />
@@ -706,10 +706,12 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                             <div className="h-px bg-slate-800/80 flex-1" />
                                                         </div>
                                                         <div className="space-y-4">
-                                                            {fa.abilities_breakdown.map((ability: any, idx: number) => (
+                                                            {fa.abilities_breakdown.map((ability: any, idx: number) => {
+                                                                if (!ability?.title && !ability?.description) return null;
+                                                                return (
                                                                 <div key={idx} className="p-5 border border-slate-800/60 rounded-xl bg-slate-900/40 shadow-sm transition-colors hover:border-slate-700/80">
                                                                     <div className="flex items-baseline gap-3 mb-3 border-b border-slate-800/40 pb-3">
-                                                                        <h4 className="font-bold text-lg text-slate-200">{ability.title}</h4>
+                                                                        <h4 className="font-bold text-lg text-slate-200">{ability.title || 'Untitled'}</h4>
                                                                         {ability.type && (
                                                                             <Badge variant="outline" className="text-[10px] font-mono text-slate-400 tracking-tight uppercase px-1.5 py-0 border-slate-700 bg-slate-800/50">
                                                                                 {ability.type}
@@ -717,10 +719,10 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                                         )}
                                                                     </div>
                                                                     <p className="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed">
-                                                                        {ability.description}
+                                                                        {ability.description || ''}
                                                                     </p>
                                                                 </div>
-                                                            ))}
+                                                            )})}
                                                         </div>
                                                     </section>
                                                 )}

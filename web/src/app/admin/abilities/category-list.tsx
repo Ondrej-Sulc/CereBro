@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Edit2, Trash2, Plus, LayoutGrid } from "lucide-react"
 import { createAbilityCategory, updateAbilityCategory, deleteAbilityCategory } from "./actions"
 import { useToast } from "@/hooks/use-toast"
@@ -39,6 +49,7 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
     const [name, setName] = useState("")
     const [description, setDescription] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [deleteCategory, setDeleteCategory] = useState<Category | null>(null)
     const { toast } = useToast()
     const router = useRouter()
 
@@ -76,14 +87,37 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
         }
     }
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure?")) return
+    const confirmDelete = (category: Category) => {
+        if (category._count.abilities > 0) {
+            toast({ 
+                title: "Cannot delete category", 
+                description: `This category has ${category._count.abilities} linked abilities. Remove them first before deleting.`,
+                variant: "destructive" 
+            })
+            return
+        }
+        setDeleteCategory(category)
+    }
+
+    const handleDelete = async () => {
+        if (!deleteCategory) return
+
+        setIsSubmitting(true)
         try {
-            await deleteAbilityCategory(id)
+            await deleteAbilityCategory(deleteCategory.id)
             toast({ title: "Category deleted" })
             router.refresh()
-        } catch (error) {
-            toast({ title: "Error deleting category", variant: "destructive" })
+        } catch (error: any) {
+            toast({ 
+                title: "Error deleting category", 
+                description: error.message?.includes('Foreign key constraint') 
+                    ? "Cannot delete because abilities are still linked to this category."
+                    : "An unexpected error occurred.",
+                variant: "destructive" 
+            })
+        } finally {
+            setIsSubmitting(false)
+            setDeleteCategory(null)
         }
     }
 
@@ -104,7 +138,7 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                         <TableRow>
                             <TableHead className="w-[300px]">Name</TableHead>
                             <TableHead>Description</TableHead>
-                            <TableHead className="w-[150px] text-center">Linked Abilities</TableHead>
+                            <TableHead className="w-[150px] text-center">Linked Abilities</TableHead>     
                             <TableHead className="w-[100px] text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -113,7 +147,7 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                             <TableRow key={category.id} className="group">
                                 <TableCell className="font-medium">
                                     <div className="flex items-center gap-2">
-                                        <LayoutGrid className="w-4 h-4 text-muted-foreground/50" />
+                                        <LayoutGrid className="w-4 h-4 text-muted-foreground/50" />       
                                         {category.name}
                                     </div>
                                 </TableCell>
@@ -125,10 +159,10 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(category)} aria-label="Edit category">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => handleOpenDialog(category)} aria-label="Edit category">     
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(category.id)} aria-label="Delete category">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => confirmDelete(category)} aria-label="Delete category">
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
                                     </div>
@@ -138,7 +172,7 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                         {categories.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
-                                    <div className="flex flex-col items-center justify-center gap-2">
+                                    <div className="flex flex-col items-center justify-center gap-2">     
                                         <LayoutGrid className="w-8 h-8 opacity-20" />
                                         <p>No categories found.</p>
                                     </div>
@@ -152,7 +186,7 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{editingCategory ? "Edit Category" : "Add Category"}</DialogTitle>
+                        <DialogTitle>{editingCategory ? "Edit Category" : "Add Category"}</DialogTitle>   
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -165,11 +199,32 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>  
                         <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>Save Category</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={!!deleteCategory} onOpenChange={(open) => !open && setDeleteCategory(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the <strong className="text-foreground">{deleteCategory?.name}</strong> category. 
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={(e) => {
+                            e.preventDefault();
+                            handleDelete();
+                        }} disabled={isSubmitting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {isSubmitting ? "Deleting..." : "Delete Category"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
