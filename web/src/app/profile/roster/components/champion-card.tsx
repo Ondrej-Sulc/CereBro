@@ -122,7 +122,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                     <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                             <Image
-                                src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, '64') || '/assets/icons/glossary.svg'}
+                                src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, '64')}
                                 alt={item.champion.name}
                                 fill
                                 className="object-cover"

@@ -119,8 +119,23 @@ export async function updateChampionFullAbilities(id: number, fullAbilities: any
         if (fullAbilities.signature && (typeof fullAbilities.signature !== 'object' || Array.isArray(fullAbilities.signature) || typeof fullAbilities.signature.name !== 'string')) {
             throw new Error("Invalid signature format: must be an object with a 'name' string.");
         }
-        if (fullAbilities.abilities_breakdown && !Array.isArray(fullAbilities.abilities_breakdown)) {
-            throw new Error("abilities_breakdown must be an array.");
+        if (fullAbilities.abilities_breakdown) {
+            if (!Array.isArray(fullAbilities.abilities_breakdown)) {
+                throw new Error("abilities_breakdown must be an array.");
+            }
+            
+            for (let i = 0; i < fullAbilities.abilities_breakdown.length; i++) {
+                const item = fullAbilities.abilities_breakdown[i];
+                if (typeof item !== 'object' || Array.isArray(item) || item === null) {
+                    throw new Error(`abilities_breakdown item at index ${i} must be an object.`);
+                }
+                if (item.title !== undefined && typeof item.title !== 'string') {
+                    throw new Error(`abilities_breakdown item at index ${i} must have a string 'title' if provided.`);
+                }
+                if (item.description !== undefined && typeof item.description !== 'string') {
+                    throw new Error(`abilities_breakdown item at index ${i} must have a string 'description' if provided.`);
+                }
+            }
         }
     }
 

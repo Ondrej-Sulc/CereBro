@@ -233,8 +233,8 @@ export function MatchupAnalysisView({
                         <div className="flex items-center gap-4">
                           <div className="relative rounded-lg p-0.5 shrink-0 shadow-lg group-hover/counter:scale-110 transition-transform" style={{ border: `1.5px solid ${attColors.color}`, backgroundColor: attColors.bg }}>
                             <Avatar className="h-10 w-10 border-none">
-                              <AvatarImage src={getChampionImageUrlOrPlaceholder(stat.attackerImages!, '64')} />
-                              <AvatarFallback>{stat.attackerName!.substring(0,2)}</AvatarFallback>
+                              <AvatarImage src={getChampionImageUrlOrPlaceholder(stat.attackerImages, '64')} />
+                              <AvatarFallback>{stat.attackerName?.substring(0,2) || '??'}</AvatarFallback>
                             </Avatar>
                           </div>
                           <span className={cn("font-black text-base italic uppercase tracking-tight truncate max-w-[120px] sm:max-w-none pr-2", attColors.text)}>{stat.attackerName}</span>

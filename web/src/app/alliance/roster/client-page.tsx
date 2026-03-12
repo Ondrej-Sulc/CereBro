@@ -237,7 +237,7 @@ export function AllianceRosterMatrix({
                                             {/* Portrait */}
                                             {champ.championImages && (
                                                 <Image
-                                                    src={getChampionImageUrlOrPlaceholder(champ.championImages, '64') || '/assets/icons/glossary.svg'}
+                                                    src={getChampionImageUrlOrPlaceholder(champ.championImages, '64')}
                                                     alt={champ.championName}
                                                     fill
                                                     sizes="48px"
@@ -267,7 +267,7 @@ export function AllianceRosterMatrix({
                                         <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
                                             {champ.championImages && (
                                                 <Image
-                                                    src={getChampionImageUrlOrPlaceholder(champ.championImages, '64') || '/assets/icons/glossary.svg'}
+                                                    src={getChampionImageUrlOrPlaceholder(champ.championImages, '64')}
                                                     alt={champ.championName}
                                                     fill
                                                     className="object-cover"
