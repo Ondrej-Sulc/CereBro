@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning/types";
 import { War, WarMapType, ChampionClass } from "@prisma/client";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox"; 
 import { Champion, ChampionImages } from "@/types/champion";
@@ -248,7 +248,7 @@ export const PlayerListContent = ({
                                   {stat?.champions.map(champ => (
                                       <div key={champ.id} className="relative group/champ">
                                           <Image 
-                                              src={getChampionImageUrl(champ.images, '64')} 
+                                              src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
                                               alt={champ.name}
                                               width={28}
                                               height={28}
@@ -295,7 +295,7 @@ export const PlayerListContent = ({
                                               return (
                                                   <div key={champ.id} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
                                                       <Image 
-                                                          src={getChampionImageUrl(champ.images, '64')} 
+                                                          src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
                                                           alt={champ.name}
                                                           width={32}
                                                           height={32}
@@ -350,7 +350,7 @@ export const PlayerListContent = ({
                                               <div key={ex.id} className="flex items-center justify-between bg-slate-950/50 p-1.5 rounded border border-pink-900/30">
                                                   <div className="flex items-center gap-2 overflow-hidden">
                                                       <Image 
-                                                          src={getChampionImageUrl(ex.champion.images, '64')} 
+                                                          src={getChampionImageUrlOrPlaceholder(ex.champion.images, '64')} 
                                                           alt={ex.champion.name}
                                                           width={32}
                                                           height={32}

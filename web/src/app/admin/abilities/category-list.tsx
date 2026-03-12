@@ -67,21 +67,26 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
     }
 
     const handleSave = async () => {
-        if (!name.trim()) return
+        const normalizedName = name.trim().replace(/\s+/g, ' ')
+        if (!normalizedName) return
 
         setIsSubmitting(true)
         try {
             if (editingCategory) {
-                await updateAbilityCategory(editingCategory.id, name, description)
+                await updateAbilityCategory(editingCategory.id, normalizedName, description)
                 toast({ title: "Category updated" })
             } else {
-                await createAbilityCategory(name, description)
+                await createAbilityCategory(normalizedName, description)
                 toast({ title: "Category created" })
             }
             router.refresh()
             setIsDialogOpen(false)
-        } catch (error) {
-            toast({ title: "Error saving category", variant: "destructive" })
+        } catch (error: any) {
+            if (error.message?.includes('Unique constraint') || error.message?.includes('P2002')) {
+                toast({ title: "Category name already exists", variant: "destructive" })
+            } else {
+                toast({ title: "Error saving category", variant: "destructive" })
+            }
         } finally {
             setIsSubmitting(false)
         }
@@ -190,12 +195,12 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Name</Label>
-                            <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Damage, Utility" />
+                            <Label htmlFor="category-name">Name</Label>
+                            <Input id="category-name" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Damage, Utility" />
                         </div>
                         <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description..." className="resize-none h-24" />
+                            <Label htmlFor="category-description">Description</Label>
+                            <Textarea id="category-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description..." className="resize-none h-24" />
                         </div>
                     </div>
                     <DialogFooter>

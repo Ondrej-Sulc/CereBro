@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { DeepDiveTab, DeepDiveSubTab, ChampionEntity } from "./deep-dive-types";
 
 interface DeepDiveSidebarProps {
@@ -131,7 +131,7 @@ export function DeepDiveSidebar({
                             {uniqueDefenders.map((defender) => (
                               <CommandItem key={defender.id} value={defender.name} onSelect={() => { onDefenderSelect(defender.id); setDefenderOpen(false); }} className="data-[selected=true]:bg-purple-600/20 data-[selected=true]:text-purple-400">
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6"><AvatarImage src={getChampionImageUrl(defender.images, '64')} /><AvatarFallback>{defender.name.substring(0,2)}</AvatarFallback></Avatar>
+                                  <Avatar className="h-6 w-6"><AvatarImage src={getChampionImageUrlOrPlaceholder(defender.images, '64')} /><AvatarFallback>{defender.name.substring(0,2)}</AvatarFallback></Avatar>
                                   {defender.name}
                                 </div>
                               </CommandItem>
@@ -172,7 +172,7 @@ export function DeepDiveSidebar({
                             {uniqueAttackers.map((attacker) => (
                               <CommandItem key={attacker.id} value={attacker.name} onSelect={() => { onAttackerSelect(attacker.id); setAttackerOpen(false); }} className="data-[selected=true]:bg-sky-600/20 data-[selected=true]:text-sky-400">
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6"><AvatarImage src={getChampionImageUrl(attacker.images, '64')} /><AvatarFallback>{attacker.name.substring(0,2)}</AvatarFallback></Avatar>
+                                  <Avatar className="h-6 w-6"><AvatarImage src={getChampionImageUrlOrPlaceholder(attacker.images, '64')} /><AvatarFallback>{attacker.name.substring(0,2)}</AvatarFallback></Avatar>
                                   {attacker.name}
                                 </div>
                               </CommandItem>
@@ -204,7 +204,7 @@ export function DeepDiveSidebar({
                             {uniqueDefenders.map((defender) => (
                               <CommandItem key={defender.id} value={defender.name} onSelect={() => { onCounterDefenderSelect(defender.id); setCounterDefenderOpen(false); }} className="data-[selected=true]:bg-sky-600/20 data-[selected=true]:text-sky-400">
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6"><AvatarImage src={getChampionImageUrl(defender.images, '64')} /><AvatarFallback>{defender.name.substring(0,2)}</AvatarFallback></Avatar>
+                                  <Avatar className="h-6 w-6"><AvatarImage src={getChampionImageUrlOrPlaceholder(defender.images, '64')} /><AvatarFallback>{defender.name.substring(0,2)}</AvatarFallback></Avatar>
                                   {defender.name}
                                 </div>
                               </CommandItem>

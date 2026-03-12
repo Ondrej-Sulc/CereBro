@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Shield, Swords, Target, Skull, ChevronDown, ChevronUp, Trophy, TrendingUp } from "lucide-react";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { DeepDiveSelection } from "./deep-dive-types";
 import { Button } from "@/components/ui/button";
@@ -77,7 +77,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                     className={cn("h-10 w-10 border-none transition-transform duration-500 group-hover/row:scale-110 shadow-lg", classColors.bg)}
                                                     style={{ boxShadow: `0 0 10px ${classColors.color}40`, border: `1.5px solid ${classColors.color}` }}
                                                 >
-                                                    <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
+                                                    <AvatarImage src={getChampionImageUrlOrPlaceholder(champ.images, '64')} />
                                                     <AvatarFallback className="text-[10px]">{champ.name.substring(0, 2)}</AvatarFallback>
                                                 </Avatar>
                                                 {i === 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-950 animate-pulse" />}
@@ -182,7 +182,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                                                     className={cn("h-10 w-10 border-none transition-transform duration-500 group-hover/row:scale-110 shadow-lg", classColors.bg)}
                                                     style={{ boxShadow: `0 0 10px ${classColors.color}40`, border: `1.5px solid ${classColors.color}` }}
                                                 >
-                                                    <AvatarImage src={getChampionImageUrl(champ.images, '64')} />
+                                                    <AvatarImage src={getChampionImageUrlOrPlaceholder(champ.images, '64')} />
                                                     <AvatarFallback className="text-[10px]">{champ.name.substring(0, 2)}</AvatarFallback>
                                                 </Avatar>
                                                 {i < 3 && <div className="absolute -top-1 -right-1"><Trophy className={cn("w-4 h-4", i === 0 ? "text-yellow-500" : i === 1 ? "text-slate-300" : "text-amber-600")} /></div>}

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Skull, Swords, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { DetailedPlacementStat, ChampionEntity } from "./deep-dive-types";
 
@@ -76,7 +76,7 @@ export function MatchupAnalysisView({
         <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
           <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
             <div className="absolute inset-0 opacity-[0.15] flex justify-end items-center">
-              <img src={getChampionImageUrl(att.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
+              <img src={getChampionImageUrlOrPlaceholder(att.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
           </div>
@@ -87,7 +87,7 @@ export function MatchupAnalysisView({
               style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}`, width: 'fit-content' }}
             >
               <Avatar className={cn("h-32 w-32 border-none", classColors.bg)}>
-                <AvatarImage src={getChampionImageUrl(att.images, 'full')} className="object-contain" />
+                <AvatarImage src={getChampionImageUrlOrPlaceholder(att.images, 'full')} className="object-contain" />
                 <AvatarFallback>{att.name.substring(0,2)}</AvatarFallback>
               </Avatar>
             </div>
@@ -140,7 +140,7 @@ export function MatchupAnalysisView({
                         <div className="flex items-center gap-4">
                           <div className="relative rounded-lg p-0.5 shrink-0" style={{ border: `1px solid ${targetColors.color}40`, backgroundColor: `${targetColors.color}10` }}>
                             <Avatar className="h-10 w-10 border-none">
-                              <AvatarImage src={getChampionImageUrl(stat.defenderImages, '64')} />
+                              <AvatarImage src={getChampionImageUrlOrPlaceholder(stat.defenderImages, '64')} />
                               <AvatarFallback>{stat.defenderName.substring(0,2)}</AvatarFallback>
                             </Avatar>
                           </div>
@@ -182,7 +182,7 @@ export function MatchupAnalysisView({
         <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
           <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
             <div className="absolute inset-0 opacity-[0.15] flex justify-end items-center">
-              <img src={getChampionImageUrl(def.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
+              <img src={getChampionImageUrlOrPlaceholder(def.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
           </div>
@@ -193,7 +193,7 @@ export function MatchupAnalysisView({
               style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}`, width: 'fit-content' }}
             >
               <Avatar className={cn("h-32 w-32 border-none", classColors.bg)}>
-                <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-contain" />
+                <AvatarImage src={getChampionImageUrlOrPlaceholder(def.images, 'full')} className="object-contain" />
                 <AvatarFallback>{def.name.substring(0,2)}</AvatarFallback>
               </Avatar>
             </div>
@@ -233,7 +233,7 @@ export function MatchupAnalysisView({
                         <div className="flex items-center gap-4">
                           <div className="relative rounded-lg p-0.5 shrink-0 shadow-lg group-hover/counter:scale-110 transition-transform" style={{ border: `1.5px solid ${attColors.color}`, backgroundColor: attColors.bg }}>
                             <Avatar className="h-10 w-10 border-none">
-                              <AvatarImage src={getChampionImageUrl(stat.attackerImages!, '64')} />
+                              <AvatarImage src={getChampionImageUrlOrPlaceholder(stat.attackerImages!, '64')} />
                               <AvatarFallback>{stat.attackerName!.substring(0,2)}</AvatarFallback>
                             </Avatar>
                           </div>

@@ -112,6 +112,16 @@ export async function updateChampionFullAbilities(id: number, fullAbilities: any
         if (jsonString.length > MAX_JSON_SIZE) {
             throw new Error(`JSON payload too large. Max allowed is ${MAX_JSON_SIZE / 1024}KB.`);
         }
+
+        if (typeof fullAbilities !== 'object' || Array.isArray(fullAbilities)) {
+            throw new Error("Root of fullAbilities must be an object.");
+        }
+        if (fullAbilities.signature && (typeof fullAbilities.signature !== 'object' || Array.isArray(fullAbilities.signature) || typeof fullAbilities.signature.name !== 'string')) {
+            throw new Error("Invalid signature format: must be an object with a 'name' string.");
+        }
+        if (fullAbilities.abilities_breakdown && !Array.isArray(fullAbilities.abilities_breakdown)) {
+            throw new Error("abilities_breakdown must be an array.");
+        }
     }
 
     await prisma.champion.update({

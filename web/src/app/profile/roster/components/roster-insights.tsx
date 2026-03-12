@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClassFilterToggle } from "./class-filter-toggle";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { Recommendation, SigRecommendation } from "../types";
@@ -155,7 +155,7 @@ export function RosterInsights({
                                     return (
                                         <div key={i} className={cn("flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative", colors.bg, "bg-opacity-10 hover:bg-opacity-20", colors.border, "border-opacity-30")}>
                                             <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                                                <Image src={getChampionImageUrl(rec.championImage, 'full')} alt={rec.championName} fill className="object-cover" />
+                                                <Image src={getChampionImageUrlOrPlaceholder(rec.championImage, 'full')} alt={rec.championName} fill className="object-cover" />
                                             </div>
                                             <div className="flex flex-col min-w-0 flex-1">
                                                 <div className="flex items-center justify-between mb-0.5">
@@ -248,7 +248,7 @@ export function RosterInsights({
                                     return (
                                         <div key={i} onClick={() => onRecommendationClick(rec)} className={cn("flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer hover:scale-[1.02] active:scale-[0.98]", colors.bg, "bg-opacity-10 hover:bg-opacity-20", colors.border, "border-opacity-30")}>
                                             <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                                                <Image src={getChampionImageUrl(rec.championImage, 'full')} alt={rec.championName} fill className="object-cover" />
+                                                <Image src={getChampionImageUrlOrPlaceholder(rec.championImage, 'full')} alt={rec.championName} fill className="object-cover" />
                                             </div>
                                             <div className="flex flex-col min-w-0 flex-1">
                                                 <div className="flex items-center justify-between mb-0.5">

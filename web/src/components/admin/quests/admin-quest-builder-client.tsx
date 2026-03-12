@@ -22,7 +22,7 @@ import { AsyncBotUserCombobox } from "@/components/comboboxes/AsyncBotUserCombob
 import { NodeModifier, QuestEncounterNode } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
@@ -838,7 +838,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                     {encounter.defender ? (
                                                         <div className={cn("relative h-12 w-12 rounded-lg overflow-hidden flex-shrink-0 border-2 shadow-sm", colors.border)}>
                                                             <Image
-                                                                src={getChampionImageUrl(encounter.defender.images, "128")}
+                                                                src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "128")}
                                                                 alt={encounter.defender.name}
                                                                 fill
                                                                 className="object-cover"
@@ -911,7 +911,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                         title={champ.name}
                                                                     >
                                                                         <Image
-                                                                            src={getChampionImageUrl(champ.images, "64")}
+                                                                            src={getChampionImageUrlOrPlaceholder(champ.images, "64")}
                                                                             alt={champ.name}
                                                                             fill
                                                                             className="object-cover"

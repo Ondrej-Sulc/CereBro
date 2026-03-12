@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
 import { WarMapType, ChampionClass } from "@prisma/client";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from "@/types/champion";
 import { motion } from "framer-motion";
 import { usePlayerColor } from "../player-color-context";
@@ -181,7 +181,7 @@ export const DefensePlayerListPanel = ({
                                     {stat?.champions.map((champ, idx) => (
                                         <div key={`${champ.id}-${idx}`} className="relative group/champ">
                                             <Image 
-                                                src={getChampionImageUrl(champ.images, '64')} 
+                                                src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
                                                 alt={champ.name}
                                                 width={28}
                                                 height={28}
@@ -226,7 +226,7 @@ export const DefensePlayerListPanel = ({
                                                     #{champ.nodeId}
                                                 </div>
                                                 <Image 
-                                                    src={getChampionImageUrl(champ.images, '64')} 
+                                                    src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
                                                     alt={champ.name}
                                                     width={32}
                                                     height={32}

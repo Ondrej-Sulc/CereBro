@@ -167,10 +167,22 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     let parsedJson;
     try {
       parsedJson = JSON.parse(fullAbilitiesJson)
+
+      if (parsedJson && typeof parsedJson === 'object' && !Array.isArray(parsedJson)) {
+          if (parsedJson.signature && (typeof parsedJson.signature !== 'object' || Array.isArray(parsedJson.signature) || typeof parsedJson.signature.name !== 'string')) {
+              throw new Error("Invalid signature format: must be an object with a 'name' string.");
+          }
+          if (parsedJson.abilities_breakdown && !Array.isArray(parsedJson.abilities_breakdown)) {
+              throw new Error("abilities_breakdown must be an array.");
+          }
+      } else if (parsedJson !== null) {
+          throw new Error("Root of fullAbilities must be an object or null.");
+      }
+
       setJsonError(null)
     } catch (error: any) {
       setJsonError(error.message || "Invalid JSON format")
-      toast({ title: "Invalid JSON format", variant: "destructive" })
+      toast({ title: "Invalid JSON format", description: error.message, variant: "destructive" })
       return
     }
 
@@ -826,7 +838,7 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
                                     const images = synergy.champion.images
                                     return (
                                         <div key={synergy.champion.id} className="relative w-6 h-6 rounded-full border border-background overflow-hidden ring-1 ring-border" title={synergy.champion.name}>
-                                            <Image src={getChampionImageUrl(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
+                                            <Image src={getChampionImageUrlOrPlaceholder(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
                                         </div>
                                     )
                                 })}
@@ -948,7 +960,7 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
                          return (
                             <Badge key={synergy.champion.id} variant="secondary" className="pl-1 pr-2 py-0.5 h-7 gap-1.5 bg-background border">
                                 <div className="relative w-5 h-5 rounded-full overflow-hidden border border-muted-foreground/20">
-                                    <Image src={getChampionImageUrl(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
+                                    <Image src={getChampionImageUrlOrPlaceholder(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
                                 </div>
                                 <span className="font-normal">{synergy.champion.name}</span>
                                 <Button 

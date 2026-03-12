@@ -4,7 +4,7 @@ import useImage from 'use-image';
 import { WarTactic, ChampionClass } from '@prisma/client';
 import { WarNodePosition } from "@cerebro/core/data/war-planning/nodes-data";
 import { WarPlacement } from "@cerebro/core/data/war-planning/types";
-import { getChampionImageUrl } from '@/lib/championHelper';
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from '@/types/champion';
 import { HistoricalFightStat } from '@/app/planning/history-actions';
 import { Swords, Shield } from 'lucide-react'; // Import Lucide icons
@@ -210,8 +210,8 @@ export const CanvasNode = memo(function CanvasNode({
     const attacker = fight?.attacker;
     const player = fight?.player;
     
-    const defenderImgUrl = defender ? getChampionImageUrl(defender.images as unknown as ChampionImages, '128') : null;
-    const attackerImgUrl = attacker ? getChampionImageUrl(attacker.images as unknown as ChampionImages, '128') : null;
+    const defenderImgUrl = defender ? getChampionImageUrlOrPlaceholder(defender.images as unknown as ChampionImages, '128') : null;
+    const attackerImgUrl = attacker ? getChampionImageUrlOrPlaceholder(attacker.images as unknown as ChampionImages, '128') : null;
     
     // Type guard for fight
     const prefightChampions = fight?.type === 'attack' ? fight.prefightChampions : undefined; 
@@ -402,7 +402,7 @@ export const CanvasNode = memo(function CanvasNode({
                         return (
                         <CircularImage
                             key={`pf-${i}`}
-                            src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64')}
+                            src={getChampionImageUrlOrPlaceholder(champ.images as unknown as ChampionImages, '64')}
                             x={i * 26}
                             y={0}
                             radius={12}
@@ -447,7 +447,7 @@ export const CanvasNode = memo(function CanvasNode({
                             }}
                         >
                             <CircularImage
-                                src={getChampionImageUrl(stat.attackerImages as unknown as ChampionImages, '64')}
+                                src={getChampionImageUrlOrPlaceholder(stat.attackerImages as unknown as ChampionImages, '64')}
                                 x={0} y={0}
                                 radius={11}
                                 border={1.5}

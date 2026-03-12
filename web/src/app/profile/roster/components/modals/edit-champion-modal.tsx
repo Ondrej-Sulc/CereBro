@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
-import { getChampionImageUrl, getMaxRank } from "@/lib/championHelper";
+import { getChampionImageUrl, getMaxRank, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ProfileRosterEntry } from "../../types";
@@ -29,7 +29,7 @@ export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemCha
                 <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
                     <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
                         <div className={cn("relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0", getChampionClassColors(item.champion.class).border)}>
-                            <Image src={getChampionImageUrl(item.champion.images, 'full')} alt={item.champion.name} fill sizes="64px" className="object-cover" />
+                            <Image src={getChampionImageUrlOrPlaceholder(item.champion.images, 'full')} alt={item.champion.name} fill sizes="64px" className="object-cover" />
                         </div>
                         <div className="flex flex-col gap-1 text-left">
                             <DialogTitle className={cn("text-xl flex items-center gap-2", getChampionClassColors(item.champion.class).text)}>

@@ -17,7 +17,7 @@ const ChampionCombobox = dynamic(
 );
 import { Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MCOC_TIER_PRESETS = [
@@ -206,7 +206,7 @@ export default function AdminBansManagerClient({ initialBans, champions }: Admin
                                         <div className="flex items-center gap-3">
                                             <div className="relative h-8 w-8 rounded-full overflow-hidden bg-slate-800">
                                                 <Image 
-                                                    src={getChampionImageUrl(ban.champion.images, '64')}
+                                                    src={getChampionImageUrlOrPlaceholder(ban.champion.images, '64')}
                                                     alt={ban.champion.name}
                                                     fill
                                                     className="object-cover"

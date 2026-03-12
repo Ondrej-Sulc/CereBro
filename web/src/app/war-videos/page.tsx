@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, User, Shield, Swords, EyeOff, Skull, UploadCloud } from "lucide-react";
 import Image from "next/image";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from "@/types/champion";
 import { ChampionClass, WarFight, Champion, War, Player, WarNode, WarVideo, Alliance, Tag, WarMapType } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -244,7 +244,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 <div className="relative">
                                     <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
                                     <Image 
-                                        src={getChampionImageUrl(fight.attacker.images as unknown as ChampionImages, '128', 'primary')} 
+                                        src={getChampionImageUrlOrPlaceholder(fight.attacker.images as unknown as ChampionImages, '128', 'primary')} 
                                         alt={fight.attacker.name}
                                         width={44} height={44}
                                         sizes="48px"
@@ -280,7 +280,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 <div className="relative">
                                     <div className={cn("absolute inset-0 rounded-full blur-md opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
                                     <Image 
-                                        src={getChampionImageUrl(fight.defender.images as unknown as ChampionImages, '128', 'primary')} 
+                                        src={getChampionImageUrlOrPlaceholder(fight.defender.images as unknown as ChampionImages, '128', 'primary')} 
                                         alt={fight.defender.name}
                                         width={44} height={44}
                                         sizes="48px"
@@ -303,7 +303,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                                                         {fight.prefightChampions.map((champ) => (
                                                                             <Image
                                                                                 key={champ.id}
-                                                                                src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64', 'primary')}
+                                                                                src={getChampionImageUrlOrPlaceholder(champ.images as unknown as ChampionImages, '64', 'primary')}
                                                                                 alt={champ.name}                                        width={16}
                                         height={16}
                                         unoptimized
@@ -419,7 +419,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                             <div className="relative flex-shrink-0">
                                                 <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.attacker.class as ChampionClass).bg)} />
                                                 <Image 
-                                                    src={getChampionImageUrl(fight.attacker.images as unknown as ChampionImages, '128', 'primary')} 
+                                                    src={getChampionImageUrlOrPlaceholder(fight.attacker.images as unknown as ChampionImages, '128', 'primary')} 
                                                     alt={fight.attacker.name}
                                                     width={36} height={36}
                                                     sizes="48px"
@@ -458,7 +458,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                             <div className="relative flex-shrink-0">
                                                 <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", getChampionClassColors(fight.defender.class as ChampionClass).bg)} />
                                                 <Image 
-                                                    src={getChampionImageUrl(fight.defender.images as unknown as ChampionImages, '128', 'primary')} 
+                                                    src={getChampionImageUrlOrPlaceholder(fight.defender.images as unknown as ChampionImages, '128', 'primary')} 
                                                     alt={fight.defender.name}
                                                     width={36} height={36}
                                                     sizes="48px"
@@ -484,7 +484,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                         {fight.prefightChampions.map((champ) => (
                                             <Image
                                                 key={champ.id}
-                                                src={getChampionImageUrl(champ.images as unknown as ChampionImages, '64', 'primary')}
+                                                src={getChampionImageUrlOrPlaceholder(champ.images as unknown as ChampionImages, '64', 'primary')}
                                                 alt={champ.name}
                                                 width={28}
                                                 height={28}

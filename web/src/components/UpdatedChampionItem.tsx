@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Trophy } from "lucide-react";
 import Image from "next/image";
-import { getChampionImageUrl, getStarBorderClass } from "@/lib/championHelper";
+import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from "@/types/champion";
 import { CLASS_ICONS } from "@/app/profile/roster/constants";
 import { ChampionClass } from "@prisma/client";
@@ -54,7 +54,7 @@ export const UpdatedChampionItem = memo(({
                 )}
             >
                 <Image
-                    src={getChampionImageUrl(item.champion.images, 'full')}
+                    src={getChampionImageUrlOrPlaceholder(item.champion.images, 'full')}
                     alt={item.champion.name}
                     fill
                     sizes="120px"
@@ -128,7 +128,7 @@ export const UpdatedChampionItem = memo(({
                 isMissing ? "border-slate-800" : getStarBorderClass(item.stars)
             )}>
                 <Image
-                    src={getChampionImageUrl(item.champion.images, '128')}
+                    src={getChampionImageUrlOrPlaceholder(item.champion.images, '128')}
                     alt={item.champion.name}
                     width={128}
                     height={128}

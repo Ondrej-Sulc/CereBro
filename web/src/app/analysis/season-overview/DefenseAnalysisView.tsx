@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skull, Target, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getChampionImageUrl } from "@/lib/championHelper";
+import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { DetailedPlacementStat, ChampionEntity } from "./deep-dive-types";
 
@@ -113,7 +113,7 @@ export function DefenseAnalysisView({
                             style={{ boxShadow: `0 0 10px ${classColors.color}40`, border: `1.5px solid ${classColors.color}` }}
                           >
                             <Avatar className={cn("h-10 w-10 border-none", classColors.bg)}>
-                              <AvatarImage src={getChampionImageUrl(stat.defenderImages, '64')} />
+                              <AvatarImage src={getChampionImageUrlOrPlaceholder(stat.defenderImages, '64')} />
                               <AvatarFallback>{stat.defenderName.substring(0,2)}</AvatarFallback>
                             </Avatar>
                           </div>
@@ -159,7 +159,7 @@ export function DefenseAnalysisView({
         <Card className="bg-slate-950/50 border-slate-800/60 overflow-hidden relative shadow-2xl">
           <div className="absolute inset-x-0 top-0 h-64 overflow-hidden pointer-events-none">
             <div className="absolute inset-0 opacity-[0.15] flex justify-end items-center">
-              <img src={getChampionImageUrl(def.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
+              <img src={getChampionImageUrlOrPlaceholder(def.images, 'full', 'secondary')} className="h-[100%] object-cover grayscale brightness-200" alt="" />
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
           </div>
@@ -170,7 +170,7 @@ export function DefenseAnalysisView({
               style={{ boxShadow: `0 0 30px ${classColors.color}25`, border: `3px solid ${classColors.color}`, width: 'fit-content' }}
             >
               <Avatar className={cn("h-32 w-32 border-none", classColors.bg)}>
-                <AvatarImage src={getChampionImageUrl(def.images, 'full')} className="object-contain" />
+                <AvatarImage src={getChampionImageUrlOrPlaceholder(def.images, 'full')} className="object-contain" />
                 <AvatarFallback className="text-3xl">{def.name.substring(0,2)}</AvatarFallback>
               </Avatar>
             </div>
