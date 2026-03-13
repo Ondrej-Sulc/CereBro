@@ -12,6 +12,7 @@ import { ChampionImages } from "@/types/champion";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
@@ -29,6 +30,8 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
 
     if (!player) notFound();
 
+    const currentUser = await getUserPlayerWithAlliance();
+
     const questPlans = await getPlayerQuestPlansForProfile(id);
 
     const roster = await prisma.roster.findMany({
@@ -44,7 +47,16 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
     });
 
     const recentVideos = await prisma.warVideo.findMany({
-        where: { submittedById: id, visibility: "public", status: "PUBLISHED" },
+        where: {
+            submittedById: id,
+            status: "PUBLISHED",
+            OR: [
+                { visibility: "public" },
+                ...(currentUser?.allianceId ? [{
+                    fights: { some: { war: { allianceId: currentUser.allianceId } } }
+                }] : [])
+            ]
+        },
         include: {
             fights: {
                 take: 1,
@@ -56,7 +68,15 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
     });
 
     const recentFights = await prisma.warFight.findMany({
-        where: { playerId: id },
+        where: {
+            playerId: id,
+            OR: [
+                { video: { status: "PUBLISHED", visibility: "public" } },
+                ...(currentUser?.allianceId ? [{
+                    war: { allianceId: currentUser.allianceId }
+                }] : [])
+            ]
+        },
         include: {
             attacker: true,
             defender: true,
