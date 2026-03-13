@@ -581,10 +581,31 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
         : [];
 
     // Build a map: championId -> best roster entry
-    const rosterMap = new Map<number, typeof rosterEntries[0]>();
+    const rosterMap = new Map<number, typeof rosterEntries[0] | any>();
     for (const entry of rosterEntries) {
         if (!rosterMap.has(entry.championId)) {
             rosterMap.set(entry.championId, entry);
+        }
+    }
+
+    // Add fallback for selections with no current roster entry
+    for (const enc of playerPlan.encounters) {
+        if (enc.selectedChampionId && enc.selectedChampion && !rosterMap.has(enc.selectedChampionId)) {
+            rosterMap.set(enc.selectedChampionId, {
+                id: `fallback-${enc.selectedChampionId}`,
+                playerId: playerPlan.playerId,
+                championId: enc.selectedChampionId,
+                stars: 0,
+                rank: 0,
+                level: 0,
+                sigLevel: null,
+                isAwakened: false,
+                isAscended: false,
+                powerRating: 0,
+                champion: enc.selectedChampion,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
         }
     }
 

@@ -32,61 +32,60 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
 
     const currentUser = await getUserPlayerWithAlliance();
 
-    const questPlans = await getPlayerQuestPlansForProfile(id);
-
-    const roster = await prisma.roster.findMany({
-        where: { playerId: id },
-        include: { champion: true },
-        orderBy: [
-            { stars: 'desc' },
-            { rank: 'desc' },
-            { sigLevel: 'desc' },
-            { powerRating: 'desc' }
-        ],
-        take: 12
-    });
-
-    const recentVideos = await prisma.warVideo.findMany({
-        where: {
-            submittedById: id,
-            status: "PUBLISHED",
-            OR: [
-                { visibility: "public" },
-                ...(currentUser?.allianceId ? [{
-                    fights: { some: { war: { allianceId: currentUser.allianceId } } }
-                }] : [])
-            ]
-        },
-        include: {
-            fights: {
-                take: 1,
-                include: { war: { include: { alliance: true } } }
-            }
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 4
-    });
-
-    const recentFights = await prisma.warFight.findMany({
-        where: {
-            playerId: id,
-            OR: [
-                { video: { status: "PUBLISHED", visibility: "public" } },
-                ...(currentUser?.allianceId ? [{
-                    war: { allianceId: currentUser.allianceId }
-                }] : [])
-            ]
-        },
-        include: {
-            attacker: true,
-            defender: true,
-            war: { include: { alliance: true } },
-            node: true,
-            video: true
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 6
-    });
+    const [questPlans, roster, recentVideos, recentFights] = await Promise.all([
+        getPlayerQuestPlansForProfile(id),
+        prisma.roster.findMany({
+            where: { playerId: id },
+            include: { champion: true },
+            orderBy: [
+                { stars: 'desc' },
+                { rank: 'desc' },
+                { sigLevel: 'desc' },
+                { powerRating: 'desc' }
+            ],
+            take: 12
+        }),
+        prisma.warVideo.findMany({
+            where: {
+                submittedById: id,
+                status: "PUBLISHED",
+                OR: [
+                    { visibility: "public" },
+                    ...(currentUser?.allianceId ? [{
+                        fights: { some: { war: { allianceId: currentUser.allianceId } } }
+                    }] : [])
+                ]
+            },
+            include: {
+                fights: {
+                    take: 1,
+                    include: { war: { include: { alliance: true } } }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 4
+        }),
+        prisma.warFight.findMany({
+            where: {
+                playerId: id,
+                OR: [
+                    { video: { status: "PUBLISHED", visibility: "public" } },
+                    ...(currentUser?.allianceId ? [{
+                        war: { allianceId: currentUser.allianceId }
+                    }] : [])
+                ]
+            },
+            include: {
+                attacker: true,
+                defender: true,
+                war: { include: { alliance: true } },
+                node: true,
+                video: true
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 6
+        })
+    ]);
 
     return (
         <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-12">

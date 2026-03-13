@@ -109,6 +109,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     }, []);
 
     const handleShare = async () => {
+        if (quest.status !== "VISIBLE") return;
         setIsSharing(true);
         try {
             const planId = await getShareablePlanId(quest.id);
@@ -264,69 +265,73 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
     return (
         <div className="relative pt-4 pb-20">
-            {quest.teamLimit !== null && quest.teamLimit > 0 && (
-                <>
-                    {/* Invisible marker for scroll detection */}
-                    <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
+            {/* Invisible marker for scroll detection */}
+            <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
-                    <div className="sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
-                        <div className={cn(
-                            "transition-all duration-500 ease-in-out pointer-events-auto",
-                            isScrolled ? "scale-[0.98] py-2" : "scale-100 py-0"
-                        )}>
-                            <Card className={cn(
-                                "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-500 ease-in-out overflow-hidden flex flex-col",
-                                isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
-                                isTeamExpanded ? "w-[95vw] sm:w-[90vw] md:max-w-5xl" : "w-fit min-w-[200px]"
-                            )}>
-                                <div
+            <div className="sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
+                <div className={cn(
+                    "transition-all duration-500 ease-in-out pointer-events-auto",
+                    isScrolled ? "scale-[0.98] py-2" : "scale-100 py-0"
+                )}>
+                    <Card className={cn(
+                        "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-500 ease-in-out overflow-hidden flex flex-col",
+                        isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
+                        isTeamExpanded ? "w-[95vw] sm:w-[90vw] md:max-w-5xl" : "w-fit min-w-[200px]"
+                    )}>
+                        <div
+                            className={cn(
+                                "py-2 px-4 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all group/team-header",
+                                isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
+                            )}
+                            onClick={() => setIsTeamExpanded(!isTeamExpanded)}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-header:bg-sky-500/20 transition-colors",
+                                    isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
+                                )}>
+                                    <Users className="w-3.5 h-3.5" />
+                                </div>
+                                <span className={cn(
+                                    "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-header:text-sky-400 transition-colors",
+                                    isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
+                                )}>
+                                    {readOnly ? 'Team' : 'Your Team'}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {!readOnly && quest.status === 'VISIBLE' && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                                    disabled={isSharing}
                                     className={cn(
-                                        "py-2 px-4 flex items-center justify-between cursor-pointer hover:bg-slate-900/40 transition-all group/team-header",
-                                        isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
+                                        "p-1.5 rounded-lg border transition-all",
+                                        shareSuccess
+                                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                                            : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
                                     )}
-                                    onClick={() => setIsTeamExpanded(!isTeamExpanded)}
+                                    title="Share your plan"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn(
-                                            "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-header:bg-sky-500/20 transition-colors",
-                                            isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                        )}>
-                                            <Users className="w-3.5 h-3.5" />
-                                        </div>
-                                        <span className={cn(
-                                            "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-header:text-sky-400 transition-colors",
-                                            isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                        )}>
-                                            {readOnly ? 'Team' : 'Your Team'}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        {!readOnly && (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleShare(); }}
-                                            disabled={isSharing}
-                                            className={cn(
-                                                "p-1.5 rounded-lg border transition-all",
-                                                shareSuccess
-                                                    ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                                                    : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
-                                            )}
-                                            title="Share your plan"
-                                        >
-                                            {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                                        </button>
-                                        )}
-                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
-                                            <span className={cn(
-                                                "text-[10px] font-black",
-                                                selectedTeam.length > quest.teamLimit ? "text-red-400" : "text-sky-400"
-                                            )}>
-                                                {selectedTeam.length}
-                                            </span>
+                                    {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                                </button>
+                                )}
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
+                                    <span className={cn(
+                                        "text-[10px] font-black",
+                                        (quest.teamLimit && selectedTeam.length > quest.teamLimit) ? "text-red-400" : "text-sky-400"
+                                    )}>
+                                        {selectedTeam.length}
+                                    </span>
+                                    {quest.teamLimit ? (
+                                        <>
                                             <span className="text-[10px] text-slate-600 font-bold">/</span>
                                             <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
-                                        </div>
+                                        </>
+                                    ) : (
+                                        <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
+                                    )}
+                                </div>
                                         <div className={cn(
                                             "transition-transform duration-300",
                                             isTeamExpanded ? "rotate-180" : ""
@@ -411,7 +416,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                 })}
                                             </div>
 
-                                            {isTeamExpanded && selectedTeam.length > quest.teamLimit && (
+                                            {isTeamExpanded && quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
                                                 <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 animate-in slide-in-from-bottom-2">
                                                     <AlertCircle className="w-4 h-4 shrink-0" />
                                                     <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
@@ -423,8 +428,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             </Card>
                         </div>
                     </div>
-                </>
-            )}
 
             <div className="relative pl-6 md:pl-10 pb-8">
                 {/* Continuous Vertical Timeline Line */}

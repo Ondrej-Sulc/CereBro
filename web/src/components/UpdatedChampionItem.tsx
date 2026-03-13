@@ -66,7 +66,7 @@ export const UpdatedChampionItem = memo(({
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
-                <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
+                <div className={cn("absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10", (isSelected || isInTeam) && "mt-7")}>
                     {!isMissing ? (
                         <>
                             {item.stars > 0 && item.rank > 0 && (
