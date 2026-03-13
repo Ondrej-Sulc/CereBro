@@ -321,7 +321,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                     <div className="flex items-center gap-1.5 text-slate-400 min-w-0">
                         <User className="h-3 w-3 shrink-0" />
                         {fight.player ? (
-                            <Link href={`/player/${fight.player.id}`} className="text-[11px] font-medium truncate hover:text-sky-400 transition-colors" onClick={(e) => e.stopPropagation()}>{fight.player.ingameName}</Link>
+                            <Link href={`/player/${fight.player.id}`} className="text-[11px] font-medium truncate hover:text-sky-400 transition-colors">{fight.player.ingameName}</Link>
                         ) : (
                             <span className="text-[11px] font-medium truncate">Unknown</span>
                         )}
