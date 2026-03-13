@@ -580,39 +580,41 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
         })
         : [];
 
-    // Build a map: championId -> best roster entry
-    const rosterMap = new Map<number, typeof rosterEntries[0] | any>();
-    for (const entry of rosterEntries) {
-        if (!rosterMap.has(entry.championId)) {
-            rosterMap.set(entry.championId, entry);
-        }
-    }
-
-    // Add fallback for selections with no current roster entry
+    // Build a map: questEncounterId -> roster entry
+    const rosterMap = new Map<string, any>();
     for (const enc of playerPlan.encounters) {
-        if (enc.selectedChampionId && enc.selectedChampion && !rosterMap.has(enc.selectedChampionId)) {
-            rosterMap.set(enc.selectedChampionId, {
-                id: `fallback-${enc.selectedChampionId}`,
-                playerId: playerPlan.playerId,
-                championId: enc.selectedChampionId,
-                stars: 0,
-                rank: 0,
-                level: 0,
-                sigLevel: null,
-                isAwakened: false,
-                isAscended: false,
-                powerRating: 0,
-                champion: enc.selectedChampion,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
+        if (enc.selectedChampionId) {
+            // Find "best" entry for this champion
+            // If we had a persisted rosterId, we'd prefer it here
+            const bestEntry = rosterEntries.find(r => r.championId === enc.selectedChampionId);
+            
+            if (bestEntry) {
+                rosterMap.set(enc.questEncounterId, bestEntry);
+            } else if (enc.selectedChampion) {
+                // Fallback using the snapshot data (selectedChampion) loaded on the encounter
+                rosterMap.set(enc.questEncounterId, {
+                    id: `fallback-${enc.id}`,
+                    playerId: playerPlan.playerId,
+                    championId: enc.selectedChampionId,
+                    stars: 0,
+                    rank: 0,
+                    level: 0,
+                    sigLevel: null,
+                    isAwakened: false,
+                    isAscended: false,
+                    powerRating: 0,
+                    champion: enc.selectedChampion,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
         }
     }
 
     return {
         ...playerPlan,
         rosterMap: Object.fromEntries(
-            Array.from(rosterMap.entries()).map(([id, entry]) => [id.toString(), entry])
+            Array.from(rosterMap.entries())
         ) as Record<string, any>
     };
 }

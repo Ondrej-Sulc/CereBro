@@ -41,7 +41,7 @@ interface Props {
     savedEncounters?: PlayerQuestEncounter[];
     filterMetadata?: FilterMetadata;
     readOnly?: boolean;
-    /** Map of championId -> roster entry, used in readOnly mode to resolve selected champion details */
+    /** Map of questEncounterId -> roster entry, used in readOnly mode to resolve selected champion details */
     rosterMap?: Record<string, any>;
     /** Pre-built selections map (encounterId -> championId), used in readOnly mode */
     initialSelections?: Record<string, number | null>;
@@ -241,25 +241,26 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     };
 
     /** Resolve a roster item for a given champion ID — works for both interactive and readOnly modes */
-    const resolveRosterItem = (championId: number): RosterWithChampion | undefined => {
+    const resolveRosterItem = (championId: number, encounterId: string): RosterWithChampion | undefined => {
         if (readOnly) {
-            return rosterMap[championId];
+            return rosterMap[encounterId];
         }
         return roster.find(r => r.championId === championId);
     };
 
     const selectedTeam = useMemo(() => {
-        const uniqueChampionIds = new Set<number>();
-        Object.values(selections).forEach(id => {
-            if (id !== null) uniqueChampionIds.add(id);
+        const teamMap = new Map<string, RosterWithChampion>();
+        
+        Object.entries(selections).forEach(([encId, champId]) => {
+            if (champId !== null) {
+                const r = resolveRosterItem(champId, encId);
+                if (r) {
+                    teamMap.set(r.id, r);
+                }
+            }
         });
-
-        const team: RosterWithChampion[] = [];
-        uniqueChampionIds.forEach(id => {
-            const r = resolveRosterItem(id);
-            if (r) team.push(r);
-        });
-        return team;
+        
+        return Array.from(teamMap.values());
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selections, roster, rosterMap, readOnly]);
 
@@ -361,7 +362,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                             )}>
                                                 {selectedTeam.map(r => {
                                                     const assignedEncounterIds = Object.entries(selections)
-                                                        .filter(([_, champId]) => champId === r.championId)
+                                                        .filter(([encId, champId]) => champId === r.championId && resolveRosterItem(champId, encId)?.id === r.id)
                                                         .map(([encId]) => encId);
 
                                                     const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
@@ -453,7 +454,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                         {quest.encounters.map((encounter: EncounterWithRelations, index: number) => {
                             const isExpanded = expandedId === encounter.id;
                             const selectedChampId = selections[encounter.id];
-                            const selectedRosterItem = selectedChampId ? resolveRosterItem(selectedChampId) ?? null : null;
+                            const selectedRosterItem = selectedChampId ? resolveRosterItem(selectedChampId, encounter.id) ?? null : null;
                             const hasSelection = !!selectedChampId;
                             const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : null;
                             const isLast = index === quest.encounters.length - 1;
