@@ -55,6 +55,34 @@ function getYoutubeId(url: string) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+function toChampionImages(images: unknown): ChampionImages {
+    if (!images || typeof images !== "object") {
+        return {
+            hero: "",
+            full_primary: "",
+            full_secondary: "",
+            p_32: "",
+            s_32: "",
+            p_64: "",
+            s_64: "",
+            p_128: "",
+            s_128: "",
+        };
+    }
+    const imgObj = images as Record<string, unknown>;
+    return {
+        hero: typeof imgObj.hero === "string" ? imgObj.hero : "",
+        full_primary: typeof imgObj.full_primary === "string" ? imgObj.full_primary : "",
+        full_secondary: typeof imgObj.full_secondary === "string" ? imgObj.full_secondary : "",
+        p_32: typeof imgObj.p_32 === "string" ? imgObj.p_32 : "",
+        s_32: typeof imgObj.s_32 === "string" ? imgObj.s_32 : "",
+        p_64: typeof imgObj.p_64 === "string" ? imgObj.p_64 : "",
+        s_64: typeof imgObj.s_64 === "string" ? imgObj.s_64 : "",
+        p_128: typeof imgObj.p_128 === "string" ? imgObj.p_128 : "",
+        s_128: typeof imgObj.s_128 === "string" ? imgObj.s_128 : "",
+    };
+}
+
 export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
@@ -786,7 +814,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                                 id: c.id,
                                                                                                 name: c.shortName || c.name,
                                                                                                 championClass: c.class,
-                                                                                                images: (c.images as any) as ChampionImages
+                                                                                                images: toChampionImages(c.images)
                                                                                             }
                                                                                         }}
                                                                                         isRecommended
@@ -830,7 +858,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                             id: userChamp.champion.id,
                                                                                             name: userChamp.champion.shortName || userChamp.champion.name,
                                                                                             championClass: userChamp.champion.class,
-                                                                                                images: (userChamp.champion.images as any) as ChampionImages
+                                                                                                images: toChampionImages(userChamp.champion.images)
                                                                                         },
                                                                                         isAscended: userChamp.isAscended
                                                                                     } : {
@@ -840,7 +868,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                             id: c.id,
                                                                                             name: c.shortName || c.name,
                                                                                             championClass: c.class,
-                                                                                            images: (c.images as any) as ChampionImages
+                                                                                            images: toChampionImages(c.images)
                                                                                         }
                                                                                     }}
                                                                                     isSelected={isSelected}

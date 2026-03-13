@@ -648,6 +648,15 @@ export async function getShareablePlanId(questPlanId: string) {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
+    const questPlan = await prisma.questPlan.findUnique({
+        where: { id: questPlanId },
+        select: { status: true }
+    });
+
+    if (!questPlan || questPlan.status !== QuestPlanStatus.VISIBLE) {
+        throw new Error("Quest plan not found or not visible");
+    }
+
     const playerPlan = await prisma.playerQuestPlan.upsert({
         where: {
             playerId_questPlanId: {
