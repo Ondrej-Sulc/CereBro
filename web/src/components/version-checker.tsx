@@ -14,20 +14,43 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
 
   useEffect(() => {
     lastVisibleTimeRef.current = Date.now();
-    // 1. Listen for Server Action failures (common Next.js error message)
+    // 1. Listen for Server Action failures or Chunk Load errors (common Next.js deployment issues)
+    const isStaleError = (msg: string, name?: string) => {
+        return msg.includes("Failed to find Server Action") || 
+               msg.includes("older or newer deployment") || 
+               msg.includes("c[e] is undefined") || 
+               msg.includes("property 'call' of undefined") ||
+               msg.includes("ChunkLoadError") ||
+               msg.includes("loading chunk") ||
+               name === "ChunkLoadError";
+    };
+
+    const safeReload = () => {
+        try {
+            const lastReload = sessionStorage.getItem('last-deployment-reload');
+            const now = Date.now();
+            if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+                sessionStorage.setItem('last-deployment-reload', now.toString());
+                window.location.reload();
+            }
+        } catch (e) {
+            window.location.reload();
+        }
+    };
+
     const handleGlobalError = (event: ErrorEvent) => {
       const msg = event.message || "";
-      if (msg.includes("Failed to find Server Action")) {
-        console.warn("Detected Server Action mismatch, reloading...", msg);
-        window.location.reload();
+      if (isStaleError(msg, event.error?.name)) {
+        console.warn("Detected deployment/chunk mismatch, reloading...", msg);
+        safeReload();
       }
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
         const msg = event.reason?.message || String(event.reason || "");
-        if (msg.includes("Failed to find Server Action")) {
-          console.warn("Detected Server Action mismatch (unhandled rejection), reloading...", msg);
-          window.location.reload();
+        if (isStaleError(msg, event.reason?.name)) {
+          console.warn("Detected deployment/chunk mismatch (unhandled rejection), reloading...", msg);
+          safeReload();
         }
     };
 

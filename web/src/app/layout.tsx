@@ -31,6 +31,56 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var isStaleError = function(msg, name) {
+                  return msg && (
+                    msg.indexOf("Failed to find Server Action") !== -1 || 
+                    msg.indexOf("older or newer deployment") !== -1 || 
+                    msg.indexOf("c[e] is undefined") !== -1 || 
+                    msg.indexOf("property 'call' of undefined") !== -1 ||
+                    msg.indexOf("ChunkLoadError") !== -1 ||
+                    msg.indexOf("loading chunk") !== -1 ||
+                    name === "ChunkLoadError"
+                  );
+                };
+
+                var safeReload = function() {
+                  try {
+                    var lastReload = sessionStorage.getItem('last-deployment-reload');
+                    var now = Date.now();
+                    if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+                      sessionStorage.setItem('last-deployment-reload', now.toString());
+                      window.location.reload();
+                    }
+                  } catch (e) {
+                    window.location.reload();
+                  }
+                };
+
+                window.onerror = function(msg, url, line, col, error) {
+                  if (isStaleError(msg, error && error.name)) {
+                    console.warn("Critical deployment mismatch detected (window.onerror), reloading...");
+                    safeReload();
+                    return true;
+                  }
+                };
+
+                window.onunhandledrejection = function(event) {
+                  var msg = (event.reason && event.reason.message) || String(event.reason || "");
+                  if (isStaleError(msg, event.reason && event.reason.name)) {
+                    console.warn("Critical deployment mismatch detected (unhandledrejection), reloading...");
+                    safeReload();
+                  }
+                };
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased text-slate-100 min-h-screen scroll-smooth bg-slate-950`}
       >

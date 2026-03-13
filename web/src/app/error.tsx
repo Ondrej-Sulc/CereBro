@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function RootError({
   error,
@@ -9,12 +9,27 @@ export default function RootError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const [isStale, setIsStale] = useState(false);
+
   useEffect(() => {
-    // Check if the error is related to a stale server action deployment
+    // Check if the error is related to a stale server action deployment or chunk load failure
     const msg = error.message || "";
-    if (msg.includes('Failed to find Server Action') || msg.includes('older or newer deployment')) {
-      console.warn('Stale deployment detected, reloading page...')
-      window.location.reload()
+    const isStaleAction = msg.includes('Failed to find Server Action') || msg.includes('older or newer deployment');
+    const isChunkError = error.name === 'ChunkLoadError' || msg.includes('ChunkLoadError') || msg.includes('loading chunk') || msg.includes('c[e] is undefined') || msg.includes('property \'call\' of undefined');
+
+    if (isStaleAction || isChunkError) {
+      setIsStale(true);
+      console.warn('Deployment mismatch or chunk failure detected, reloading page...', { 
+        name: error.name, 
+        message: error.message 
+      });
+      // Add a small delay to avoid infinite reload loops
+      const lastReload = sessionStorage.getItem('last-deployment-reload');
+      const now = Date.now();
+      if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+        sessionStorage.setItem('last-deployment-reload', now.toString());
+        window.location.reload();
+      }
     } else {
       console.error("Global Error Boundary caught:", error)
     }
@@ -24,13 +39,16 @@ export default function RootError({
     <div className="flex min-h-[400px] flex-col items-center justify-center p-4 text-center">
       <h2 className="mb-4 text-2xl font-bold">Something went wrong!</h2>
       <p className="mb-4 text-slate-400">
-        We encountered an error loading this page. 
+        {isStale 
+          ? "A new version has been deployed and your current session is out of date. Reloading now..."
+          : "We encountered an error loading this page."
+        }
       </p>
       <button
-        onClick={() => reset()}
+        onClick={() => isStale ? window.location.reload() : reset()}
         className="rounded-md bg-sky-600 px-4 py-2 text-white hover:bg-sky-700"
       >
-        Try again
+        {isStale ? "Refresh Page" : "Try again"}
       </button>
     </div>
   )
