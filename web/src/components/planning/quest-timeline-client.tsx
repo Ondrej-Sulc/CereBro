@@ -1060,7 +1060,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
                                                         return (
                                                             <div className="space-y-4">
-                                                                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
+                                                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
                                                                     {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
                                                                         const isSelected = selections[encounter.id] === r.championId;
                                                                         const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
