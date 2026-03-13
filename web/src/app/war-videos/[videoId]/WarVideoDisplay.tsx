@@ -136,34 +136,42 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
   const war = warVideo.fights[0].war;
 
   const handleApprove = async () => {
-    const response = await fetch('/api/admin/war-videos/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId: warVideo.id }),
-    });
+    try {
+      const response = await fetch('/api/admin/war-videos/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: warVideo.id }),
+      });
 
-    if (response.ok) {
-      toast({ title: 'Video Approved' });
-      router.refresh();
-    } else {
-      const { error } = await response.json();
-      toast({ title: 'Error', description: error, variant: 'destructive' });
+      if (response.ok) {
+        toast({ title: 'Video Approved' });
+        router.refresh();
+      } else {
+        const { error } = await response.json();
+        toast({ title: 'Error', description: error, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Network Error', description: error.message, variant: 'destructive' });
     }
   };
 
   const handleReject = async () => {
-    const response = await fetch('/api/admin/war-videos/reject', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId: warVideo.id }),
-    });
+    try {
+      const response = await fetch('/api/admin/war-videos/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: warVideo.id }),
+      });
 
-    if (response.ok) {
-      toast({ title: 'Video Rejected' });
-      router.push('/'); // Redirect to home after rejection
-    } else {
-      const { error } = await response.json();
-      toast({ title: 'Error', description: error, variant: 'destructive' });
+      if (response.ok) {
+        toast({ title: 'Video Rejected' });
+        router.push('/'); // Redirect to home after rejection
+      } else {
+        const { error } = await response.json();
+        toast({ title: 'Error', description: error, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Network Error', description: error.message, variant: 'destructive' });
     }
   };
 
