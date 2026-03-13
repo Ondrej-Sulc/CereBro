@@ -86,18 +86,26 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
                             selectedModifiers.map(modifier => (
                                 <Badge key={modifier.id} variant="secondary" className="pl-2 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
                                     <span className="text-xs font-bold max-w-[120px] truncate">{modifier.name}</span>
-                                    <button
-                                        type="button"
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
                                         aria-label={`Remove ${modifier.name}`}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             e.preventDefault();
                                             handleRemove(modifier.id);
                                         }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleRemove(modifier.id);
+                                            }
+                                        }}
                                         className="ml-0.5 rounded-full hover:bg-slate-600 p-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500"
                                     >
                                         <X className="h-3 w-3" />
-                                    </button>
+                                    </span>
                                 </Badge>
                             ))
                         ) : (

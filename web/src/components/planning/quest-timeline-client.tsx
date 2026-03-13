@@ -19,6 +19,7 @@ import { ChampionImages, Champion } from "@/types/champion";
 import { MultiSelectFilter } from "@/components/ui/filters";
 import { useToast } from "@/hooks/use-toast";
 import { getQuestPlanById } from "@/app/actions/quests";
+import { getYoutubeEmbedUrl } from "@/lib/youtube";
 
 export type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 export type EncounterWithRelations = QuestWithRelations["encounters"][0];
@@ -48,12 +49,6 @@ interface Props {
 }
 
 const CLASSES = Object.values(ChampionClass);
-
-function getYoutubeId(url: string) {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-}
 
 function toChampionImages(images: unknown): ChampionImages {
     if (!images || typeof images !== "object") {
@@ -670,11 +665,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                         {showVideoId === encounter.id ? (
                                                             <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
                                                                 {(() => {
-                                                                    const videoId = getYoutubeId(encounter.videoUrl);
-                                                                    if (videoId) {
+                                                                    const embedUrl = getYoutubeEmbedUrl(encounter.videoUrl);
+                                                                    if (embedUrl) {
                                                                         return (
                                                                             <iframe
-                                                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                                                                                src={embedUrl}
                                                                                 title="YouTube video player"
                                                                                 frameBorder="0"
                                                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

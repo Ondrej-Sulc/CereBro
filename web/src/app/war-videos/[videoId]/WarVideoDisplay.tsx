@@ -14,6 +14,7 @@ import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
 import { useState } from 'react';
+import { getYoutubeEmbedUrl, getYoutubeVideoId } from '@/lib/youtube';
 
 export interface WarFight {
   id: string;
@@ -42,42 +43,6 @@ interface WarVideoDisplayProps {
   warVideo: WarVideo;
   isAdmin: boolean;
   activeTactic?: (WarTactic & { attackTag: Tag | null; defenseTag: Tag | null }) | null;
-}
-
-function getYouTubeVideoId(url: string | null): string | null {
-  if (!url) return null;
-
-  let videoId: string | null = null;
-
-  // Regex to match YouTube video IDs from various URL formats.
-  const patterns = [
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})/,
-    /(?:https?:\/\/)?youtu\.be\/([\w-]{11})/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      videoId = match[1];
-      break;
-    }
-  }
-
-  // Fallback for cases where the ID might just be in the path
-  if (!videoId) {
-    try {
-      const urlObj = new URL(url.startsWith('http') ? url : `https://` + url);
-      const pathSegments = urlObj.pathname.split('/');
-      const potentialId = pathSegments[pathSegments.length - 1];
-      if (potentialId && potentialId.length === 11) {
-        videoId = potentialId;
-      }
-    } catch {
-      // Ignore URL parsing errors if regex fails
-    }
-  }
-
-  return videoId;
 }
 
 const VideoThumbnail = ({ videoId }: { videoId: string }) => {
@@ -118,7 +83,8 @@ const VideoThumbnail = ({ videoId }: { videoId: string }) => {
 export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: WarVideoDisplayProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const videoId = getYouTubeVideoId(warVideo.url);
+  const videoId = getYoutubeVideoId(warVideo.url);
+  const embedUrl = getYoutubeEmbedUrl(warVideo.url);
   const [isPlaying, setIsPlaying] = useState(false);
 
   if (!warVideo.fights || warVideo.fights.length === 0) {
@@ -225,7 +191,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
               <iframe
                 width="100%"
                 height="100%"
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                src={embedUrl || ''}
                 title="YouTube video player"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
