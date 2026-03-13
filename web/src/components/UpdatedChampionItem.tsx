@@ -107,14 +107,14 @@ export const UpdatedChampionItem = memo(({
                 </div>
 
                 {isSelected && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-sky-500 rounded-full p-1 shadow-md border border-sky-900">
+                    <div className="absolute top-1 left-1 z-30 bg-sky-500 rounded-full p-1 shadow-md border border-sky-900" title="Selected for this fight">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </div>
                 )}
                 
                 {isInTeam && !isSelected && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-emerald-600/90 rounded border border-emerald-900 shadow-md px-1.5 py-0.5 backdrop-blur-sm">
-                        <span className="text-[9px] font-black text-white uppercase tracking-widest">In Team</span>
+                    <div className="absolute top-1 left-1 z-30 bg-emerald-600 rounded-full p-1 shadow-md border border-emerald-900" title="Already in team">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                 )}
 
@@ -149,14 +149,14 @@ export const UpdatedChampionItem = memo(({
 
                 {/* Selection Checkmark */}
                 {isSelected && (
-                    <div className="absolute top-1 right-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900">
+                    <div className="absolute top-1 left-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900" title="Selected for this fight">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </div>
                 )}
                 
                 {isInTeam && !isSelected && (
-                    <div className="absolute top-1 left-1/2 -translate-x-1/2 z-30 bg-emerald-600/90 rounded border border-emerald-900 shadow-sm px-1 py-0 backdrop-blur-sm">
-                        <span className="text-[8px] font-black text-white uppercase tracking-wider">In Team</span>
+                    <div className="absolute top-1 left-1 z-30 bg-emerald-600 rounded-full p-0.5 shadow-md border border-emerald-900" title="Already in team">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                 )}
 
