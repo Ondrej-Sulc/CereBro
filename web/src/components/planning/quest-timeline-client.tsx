@@ -800,7 +800,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
                                                             {/* Recommended Champions List */}
                                                             {encounter.recommendedChampions.length > 0 ? (
-                                                                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
                                                                     {encounter.recommendedChampions.map((c) => {
                                                                         if (readOnly) {
                                                                             // In readOnly mode, just show the champion reference without roster matching
