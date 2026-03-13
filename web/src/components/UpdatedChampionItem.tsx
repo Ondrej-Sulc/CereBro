@@ -66,9 +66,11 @@ export const UpdatedChampionItem = memo(({
                 <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
                     {!isMissing ? (
                         <>
-                            <div className="bg-black/80 border border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none rounded-sm flex items-center">
-                                {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
-                            </div>
+                            {item.stars > 0 && item.rank > 0 && (
+                                <div className="bg-black/80 border border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none rounded-sm flex items-center">
+                                    {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
+                                </div>
+                            )}
                             {item.isAwakened && (
                                 <div className="bg-sky-950/80 border border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none rounded-sm flex items-center">
                                     S{item.sigLevel}
@@ -170,9 +172,11 @@ export const UpdatedChampionItem = memo(({
                 <div className="flex items-center gap-1.5 text-[9px] font-bold">
                     {!isMissing ? (
                         <>
-                            <span className={item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}>
-                                {item.stars}★ R{item.rank}
-                            </span>
+                            {item.stars > 0 && item.rank > 0 && (
+                                <span className={item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}>
+                                    {item.stars}★ R{item.rank}
+                                </span>
+                            )}
                             {item.isAwakened && typeof item.sigLevel === 'number' && (
                                 <span className="text-sky-400 bg-sky-950/50 px-1 rounded-sm border border-sky-800/50">
                                     S{item.sigLevel}
