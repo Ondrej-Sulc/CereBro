@@ -96,14 +96,20 @@ export class RosterImageService {
 
     const t6 = performance.now(); // Champion Matching done
 
-    // 5. Sanity Check: Filter out nonsense records based on Prestige Thresholds
+    // 5. Sanity Check: Filter out noise and nonsense records based on Prestige Thresholds
     const prestigeThresholds = await getMinPrestigeThresholds();
     const originalCount = grid.length;
     // Allow for some variance (e.g. masteries not accounted for, or DB missing the absolute lowest prestige char)
     // We mainly want to catch gross errors like 4* detected as 7* (5k PI vs 20k Min).
     const PRESTIGE_TOLERANCE = 0.9; 
-
+    
+    // Noise Filter: If a cell has no name and lacks basic champion features, it's likely OCR noise from UI elements.
     grid = grid.filter(cell => {
+        if (!cell.championName && !cell.class && !cell.rank && (!cell.stars || cell.stars <= 1)) {
+            logger.debug({ bounds: cell.bounds, PI: cell.powerRating }, "Discarding noise cell (no class/rank/stars/name)");
+            return false;
+        }
+
         if (cell.stars && cell.rank && cell.powerRating) {
             const key = `${cell.stars}-${cell.rank}`;
             const minPrestige = prestigeThresholds.get(key);
@@ -123,7 +129,7 @@ export class RosterImageService {
     });
 
     if (grid.length < originalCount) {
-        logger.info({ removed: originalCount - grid.length }, "Filtered invalid roster entries.");
+        logger.info({ removed: originalCount - grid.length }, "Filtered invalid/noise roster entries.");
     }
 
     let debugImage: Buffer | undefined;

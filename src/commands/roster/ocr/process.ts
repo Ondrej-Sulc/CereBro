@@ -283,7 +283,13 @@ async function saveBGViewRoster(
                 }, msg);
                 errors.push(msg);
             } else {
-                unidentifiedCount++;
+                // If the cell has no name, only count as "unidentified" if it has basic champion features (class, rank, high stars).
+                // Random UI numbers (noise) typically have none of these.
+                if (cell.class || cell.rank || (cell.stars && cell.stars > 1)) {
+                    unidentifiedCount++;
+                } else {
+                    logger.debug({ bounds: cell.bounds, PI: cell.powerRating }, "Skipping noise cell in report");
+                }
             }
         }
     }
