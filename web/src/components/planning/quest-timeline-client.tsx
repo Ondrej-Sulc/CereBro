@@ -840,6 +840,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             .sort((a, b) => b.stars - a.stars || b.rank - a.rank)[0];
 
                                                                         const isSelected = selections[encounter.id] === userChamp?.championId;
+                                                                        const isInTeam = userChamp ? Object.values(selections).includes(userChamp.championId) : Object.values(selections).includes(c.id);
 
                                                                         return (
                                                                             <div
@@ -874,6 +875,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     isSelected={isSelected}
                                                                                     isRecommended={!isSelected}
                                                                                     isMissing={!userChamp}
+                                                                                    isInTeam={isInTeam}
                                                                                 />
                                                                             </div>
                                                                         );
@@ -1062,6 +1064,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                     {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
                                                                         const isSelected = selections[encounter.id] === r.championId;
                                                                         const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
+                                                                        const isInTeam = Object.values(selections).includes(r.championId);
 
                                                                         return (
                                                                             <div
@@ -1087,6 +1090,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     }}
                                                                                     isSelected={isSelected}
                                                                                     isRecommended={isRecommended}
+                                                                                    isInTeam={isInTeam}
                                                                                 />
                                                                             </div>
                                                                         );

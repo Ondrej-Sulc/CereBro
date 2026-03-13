@@ -30,12 +30,14 @@ export const UpdatedChampionItem = memo(({
     isSelected,
     isRecommended,
     isMissing,
+    isInTeam,
     variant = "square"
 }: {
     item: RosterWithChampion;
     isSelected?: boolean;
     isRecommended?: boolean;
     isMissing?: boolean;
+    isInTeam?: boolean;
     variant?: "square" | "tall";
 }) => {
     const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
@@ -49,7 +51,8 @@ export const UpdatedChampionItem = memo(({
                     classColors.bg,
                     borderClass,
                     isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
-                    isRecommended && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+                    isRecommended && !isSelected && !isInTeam && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+                    isInTeam && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
                     isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
                 )}
             >
@@ -108,6 +111,12 @@ export const UpdatedChampionItem = memo(({
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </div>
                 )}
+                
+                {isInTeam && !isSelected && (
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-emerald-600/90 rounded border border-emerald-900 shadow-md px-1.5 py-0.5 backdrop-blur-sm">
+                        <span className="text-[9px] font-black text-white uppercase tracking-widest">In Team</span>
+                    </div>
+                )}
 
                 <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
                     <p className="text-[10px] font-bold text-white leading-tight truncate text-center drop-shadow-sm">{item.champion.name}</p>
@@ -120,7 +129,8 @@ export const UpdatedChampionItem = memo(({
         <div className={cn(
             "flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950 group transition-all duration-300 relative",
             isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
-            isRecommended && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+            isRecommended && !isSelected && !isInTeam && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+            isInTeam && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)] z-10",
             isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
         )}>
             {/* Top Section: Smaller Portrait */}
@@ -141,6 +151,12 @@ export const UpdatedChampionItem = memo(({
                 {isSelected && (
                     <div className="absolute top-1 right-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                )}
+                
+                {isInTeam && !isSelected && (
+                    <div className="absolute top-1 left-1/2 -translate-x-1/2 z-30 bg-emerald-600/90 rounded border border-emerald-900 shadow-sm px-1 py-0 backdrop-blur-sm">
+                        <span className="text-[8px] font-black text-white uppercase tracking-wider">In Team</span>
                     </div>
                 )}
 
