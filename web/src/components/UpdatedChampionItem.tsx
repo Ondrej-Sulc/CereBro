@@ -30,12 +30,14 @@ export const UpdatedChampionItem = memo(({
     isSelected,
     isRecommended,
     isMissing,
+    isInTeam,
     variant = "square"
 }: {
     item: RosterWithChampion;
     isSelected?: boolean;
     isRecommended?: boolean;
     isMissing?: boolean;
+    isInTeam?: boolean;
     variant?: "square" | "tall";
 }) => {
     const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
@@ -49,7 +51,8 @@ export const UpdatedChampionItem = memo(({
                     classColors.bg,
                     borderClass,
                     isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
-                    isRecommended && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+                    isRecommended && !isSelected && !isInTeam && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+                    isInTeam && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
                     isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
                 )}
             >
@@ -63,12 +66,14 @@ export const UpdatedChampionItem = memo(({
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
-                <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
+                <div className={cn("absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10", (isSelected || isInTeam) && "mt-7")}>
                     {!isMissing ? (
                         <>
-                            <div className="bg-black/80 border border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none rounded-sm flex items-center">
-                                {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
-                            </div>
+                            {item.stars > 0 && item.rank > 0 && (
+                                <div className="bg-black/80 border border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none rounded-sm flex items-center">
+                                    {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
+                                </div>
+                            )}
                             {item.isAwakened && (
                                 <div className="bg-sky-950/80 border border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none rounded-sm flex items-center">
                                     S{item.sigLevel}
@@ -102,8 +107,14 @@ export const UpdatedChampionItem = memo(({
                 </div>
 
                 {isSelected && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-sky-500 rounded-full p-1 shadow-md border border-sky-900">
+                    <div className="absolute top-1 left-1 z-30 bg-sky-500 rounded-full p-1 shadow-md border border-sky-900" title="Selected for this fight">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                )}
+                
+                {isInTeam && !isSelected && (
+                    <div className="absolute top-1 left-1 z-30 bg-emerald-600 rounded-full p-1 shadow-md border border-emerald-900" title="Already in team">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                 )}
 
@@ -118,7 +129,8 @@ export const UpdatedChampionItem = memo(({
         <div className={cn(
             "flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950 group transition-all duration-300 relative",
             isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
-            isRecommended && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+            isRecommended && !isSelected && !isInTeam && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+            isInTeam && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)] z-10",
             isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
         )}>
             {/* Top Section: Smaller Portrait */}
@@ -137,8 +149,14 @@ export const UpdatedChampionItem = memo(({
 
                 {/* Selection Checkmark */}
                 {isSelected && (
-                    <div className="absolute top-1 right-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900">
+                    <div className="absolute top-1 left-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900" title="Selected for this fight">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                )}
+                
+                {isInTeam && !isSelected && (
+                    <div className="absolute top-1 left-1 z-30 bg-emerald-600 rounded-full p-0.5 shadow-md border border-emerald-900" title="Already in team">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                 )}
 
@@ -170,9 +188,11 @@ export const UpdatedChampionItem = memo(({
                 <div className="flex items-center gap-1.5 text-[9px] font-bold">
                     {!isMissing ? (
                         <>
-                            <span className={item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}>
-                                {item.stars}★ R{item.rank}
-                            </span>
+                            {item.stars > 0 && item.rank > 0 && (
+                                <span className={item.isAwakened ? 'text-sky-400' : 'text-yellow-500'}>
+                                    {item.stars}★ R{item.rank}
+                                </span>
+                            )}
                             {item.isAwakened && typeof item.sigLevel === 'number' && (
                                 <span className="text-sky-400 bg-sky-950/50 px-1 rounded-sm border border-sky-800/50">
                                     S{item.sigLevel}

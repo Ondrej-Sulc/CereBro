@@ -512,3 +512,188 @@ export async function deleteQuestEncounter(questPlanId: string, encounterId: str
     revalidatePath(`/planning/quests/${questPlanId}`);
     return { success: true };
 }
+
+// --- Sharing & Public Viewing ---
+
+/**
+ * Fetch a player's quest plan for read-only viewing. No auth required.
+ * Used by share links and player profile quest views.
+ */
+export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
+    const playerPlan = await prisma.playerQuestPlan.findUnique({
+        where: { id: playerQuestPlanId },
+        include: {
+            player: {
+                select: { id: true, ingameName: true, avatar: true, allianceId: true }
+            },
+            questPlan: {
+                include: {
+                    category: true,
+                    requiredTags: true,
+                    creators: true,
+                    encounters: {
+                        orderBy: { sequence: 'asc' },
+                        include: {
+                            defender: true,
+                            requiredTags: true,
+                            recommendedChampions: true,
+                            nodes: {
+                                include: {
+                                    nodeModifier: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            encounters: {
+                include: {
+                    selectedChampion: true
+                }
+            }
+        }
+    });
+
+    if (!playerPlan) return null;
+
+    // Only allow viewing plans for VISIBLE quests
+    if (playerPlan.questPlan.status !== QuestPlanStatus.VISIBLE) return null;
+
+    // Enrich encounter selections with roster data (star/rank/sig)
+    const selectedChampionIds = playerPlan.encounters
+        .map(e => e.selectedChampionId)
+        .filter((id): id is number => id !== null);
+
+    const rosterEntries = selectedChampionIds.length > 0
+        ? await prisma.roster.findMany({
+            where: {
+                playerId: playerPlan.playerId,
+                championId: { in: selectedChampionIds }
+            },
+            include: {
+                champion: true
+            },
+            orderBy: [
+                { stars: 'desc' },
+                { rank: 'desc' }
+            ]
+        })
+        : [];
+
+    // Build a map: questEncounterId -> roster entry
+    const rosterMap = new Map<string, any>();
+    for (const enc of playerPlan.encounters) {
+        if (enc.selectedChampionId) {
+            // Find "best" entry for this champion
+            // If we had a persisted rosterId, we'd prefer it here
+            const bestEntry = rosterEntries.find(r => r.championId === enc.selectedChampionId);
+            
+            if (bestEntry) {
+                rosterMap.set(enc.questEncounterId, bestEntry);
+            } else if (enc.selectedChampion) {
+                // Fallback using the snapshot data (selectedChampion) loaded on the encounter
+                rosterMap.set(enc.questEncounterId, {
+                    id: `fallback-${enc.id}`,
+                    playerId: playerPlan.playerId,
+                    championId: enc.selectedChampionId,
+                    stars: 0,
+                    rank: 0,
+                    level: 0,
+                    sigLevel: null,
+                    isAwakened: false,
+                    isAscended: false,
+                    powerRating: 0,
+                    champion: enc.selectedChampion,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
+    }
+
+    return {
+        ...playerPlan,
+        rosterMap: Object.fromEntries(
+            Array.from(rosterMap.entries())
+        ) as Record<string, any>
+    };
+}
+
+/**
+ * Fetch all quest plans with at least one selection for a given player.
+ * No auth required — for the public player profile page.
+ */
+export async function getPlayerQuestPlansForProfile(playerId: string) {
+    const plans = await prisma.playerQuestPlan.findMany({
+        where: {
+            playerId,
+            encounters: {
+                some: {
+                    selectedChampionId: { not: null }
+                }
+            },
+            questPlan: {
+                status: QuestPlanStatus.VISIBLE
+            }
+        },
+        include: {
+            questPlan: {
+                select: {
+                    id: true,
+                    title: true,
+                    bannerUrl: true,
+                    bannerFit: true,
+                    bannerPosition: true,
+                    teamLimit: true,
+                    category: { select: { name: true } },
+                    encounters: { select: { id: true } },
+                    minStarLevel: true,
+                    maxStarLevel: true,
+                    requiredClasses: true
+                }
+            },
+            encounters: {
+                where: { selectedChampionId: { not: null } },
+                select: { id: true }
+            }
+        },
+        orderBy: { updatedAt: 'desc' }
+    });
+
+    return plans;
+}
+
+/**
+ * Get or create the PlayerQuestPlan ID for the current user on a specific quest.
+ * Used by the "Share" button to generate a shareable URL.
+ */
+export async function getShareablePlanId(questPlanId: string) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+
+    const questPlan = await prisma.questPlan.findUnique({
+        where: { id: questPlanId },
+        select: { status: true }
+    });
+
+    if (!questPlan || questPlan.status !== QuestPlanStatus.VISIBLE) {
+        throw new Error("Quest plan not found or not visible");
+    }
+
+    const playerPlan = await prisma.playerQuestPlan.upsert({
+        where: {
+            playerId_questPlanId: {
+                playerId: actingUser.id,
+                questPlanId: questPlanId
+            }
+        },
+        create: {
+            playerId: actingUser.id,
+            questPlanId: questPlanId
+        },
+        update: {},
+        select: { id: true }
+    });
+
+    return playerPlan.id;
+}

@@ -320,7 +320,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                 <div className="px-3 py-2 bg-slate-950/30 border-t border-slate-800/60 flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-slate-400 min-w-0">
                         <User className="h-3 w-3 shrink-0" />
-                        <span className="text-[11px] font-medium truncate">{fight.player?.ingameName || 'Unknown'}</span>
+                        {fight.player ? (
+                            <Link href={`/player/${fight.player.id}`} className="text-[11px] font-medium truncate hover:text-sky-400 transition-colors">{fight.player.ingameName}</Link>
+                        ) : (
+                            <span className="text-[11px] font-medium truncate">Unknown</span>
+                        )}
                     </div>
                     <div className="shrink-0 ml-2">
                         {fight.video ? (
@@ -498,17 +502,16 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                                 )}
                             </td>
                             <td className="px-4 py-3 align-middle">
-                                <Link 
-                                    href={fight.video ? `/war-videos/${fight.video.id}` : '#'} 
-                                    className={cn("block", !fight.video && "pointer-events-none")}
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="font-medium text-slate-300">{fight.player?.ingameName || 'Unknown'}</span>
-                                        {(fight.battlegroup ?? 0) > 0 && (
-                                            <span className="text-[10px] text-slate-500">BG {fight.battlegroup}</span>
-                                        )}
-                                    </div>
-                                </Link>
+                                <div className="flex flex-col">
+                                    {fight.player ? (
+                                        <Link href={`/player/${fight.player.id}`} className="font-medium text-slate-300 hover:text-sky-400 transition-colors">{fight.player.ingameName}</Link>
+                                    ) : (
+                                        <span className="font-medium text-slate-300">Unknown</span>
+                                    )}
+                                    {(fight.battlegroup ?? 0) > 0 && (
+                                        <span className="text-[10px] text-slate-500">BG {fight.battlegroup}</span>
+                                    )}
+                                </div>
                             </td>
                             <td className="px-4 py-3 align-middle text-right">
                                 {fight.video ? (

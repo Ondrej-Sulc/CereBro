@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,34 +136,42 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
   const war = warVideo.fights[0].war;
 
   const handleApprove = async () => {
-    const response = await fetch('/api/admin/war-videos/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId: warVideo.id }),
-    });
+    try {
+      const response = await fetch('/api/admin/war-videos/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: warVideo.id }),
+      });
 
-    if (response.ok) {
-      toast({ title: 'Video Approved' });
-      router.refresh();
-    } else {
-      const { error } = await response.json();
-      toast({ title: 'Error', description: error, variant: 'destructive' });
+      if (response.ok) {
+        toast({ title: 'Video Approved' });
+        router.refresh();
+      } else {
+        const { error } = await response.json();
+        toast({ title: 'Error', description: error, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Network Error', description: error.message, variant: 'destructive' });
     }
   };
 
   const handleReject = async () => {
-    const response = await fetch('/api/admin/war-videos/reject', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoId: warVideo.id }),
-    });
+    try {
+      const response = await fetch('/api/admin/war-videos/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId: warVideo.id }),
+      });
 
-    if (response.ok) {
-      toast({ title: 'Video Rejected' });
-      router.push('/'); // Redirect to home after rejection
-    } else {
-      const { error } = await response.json();
-      toast({ title: 'Error', description: error, variant: 'destructive' });
+      if (response.ok) {
+        toast({ title: 'Video Rejected' });
+        router.push('/'); // Redirect to home after rejection
+      } else {
+        const { error } = await response.json();
+        toast({ title: 'Error', description: error, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      toast({ title: 'Network Error', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -178,7 +187,7 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
             {`MCOC AW: S${war.season}${war.warNumber ? ` W${war.warNumber}` : ' Offseason'} T${war.warTier}${war.enemyAlliance ? ` vs ${war.enemyAlliance}` : ''}`}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
-            <span>Submitted by <span className="text-sky-400 font-medium">{warVideo.submittedBy.ingameName}</span></span>
+            <span>Submitted by <Link href={`/player/${warVideo.submittedBy.id}`} className="text-sky-400 hover:text-sky-300 font-medium transition-colors">{warVideo.submittedBy.ingameName}</Link></span>
             <span className="hidden sm:inline">•</span>
             <span>{new Date(warVideo.createdAt).toISOString().split('T')[0]}</span>
             <span className="hidden sm:inline">•</span>
