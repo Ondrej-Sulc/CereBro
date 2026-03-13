@@ -10,6 +10,7 @@ interface RecommendationOptions {
     sigClassFilter: ChampionClass[];
     rankSagaFilter: boolean;
     sigSagaFilter: boolean;
+    sigAwakenedOnly?: boolean;
     limit?: number;
 }
 
@@ -144,6 +145,9 @@ export async function calculateRosterRecommendations(
     const sigCandidates = roster.filter(r => {
         if (options.sigClassFilter.length > 0 && !options.sigClassFilter.includes(r.champion.class)) return false;
         if (options.sigSagaFilter && !r.champion.tags.some(t => t.name === '#Saga Champions')) return false;
+
+        const isDupped = r.isAwakened && (r.sigLevel || 0) > 0;
+        if (options.sigAwakenedOnly && !isDupped) return false;
 
         if ((r.sigLevel || 0) >= 200) return false;
         if (r.stars === 7) return true;

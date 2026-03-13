@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { FlipToggle } from "@/components/ui/flip-toggle";
 
 export const FilterGroup = ({ options, value, onChange, className }: { options: { value: string, label: string }[], value: string, onChange: (v: string) => void, className?: string }) => (
-    <div className={cn("flex items-center bg-slate-950 rounded-md border border-slate-800 p-1 shrink-0 overflow-x-auto no-scrollbar", className)}>
+    <div className={cn("flex items-center bg-slate-950 rounded-md border border-slate-800 p-1 overflow-x-auto no-scrollbar", className)}>
         {options.map(opt => (
             <Button
                 key={opt.value}
@@ -35,7 +35,7 @@ export const MultiFilterGroup = ({ options, values, onChange, className }: { opt
     };
 
     return (
-        <div className={cn("flex items-center bg-slate-950 rounded-md border border-slate-800 p-1 shrink-0 overflow-x-auto no-scrollbar", className)}>
+        <div className={cn("flex items-center bg-slate-950 rounded-md border border-slate-800 p-1 overflow-x-auto no-scrollbar", className)}>
             {options.map(opt => (
                 <Button
                     key={opt.value}
@@ -79,7 +79,7 @@ export const MultiSelectFilter = ({ title, icon: Icon, options, selectedValues, 
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[150px]">
+                <Button variant="outline" role="combobox" className="h-9 border-slate-700 bg-slate-950 text-slate-300 justify-between min-w-[130px] sm:min-w-[150px] flex-1 sm:flex-initial">
                     <div className="flex items-center gap-2 truncate">
                         <Icon className="w-3.5 h-3.5" />
                         {selectedValues.length > 0 ? (

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string; limit?: string }>;
+  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string; limit?: string; insights?: string; sigAwakenedOnly?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
@@ -26,7 +26,7 @@ export default async function RosterPage(props: {
     redirect("/api/auth/discord-login?redirectTo=/profile/roster");
   }
 
-  // Parallel fetch for data
+  // ... (rest of data fetching logic remains same)
   const [rosterEntries, allChampions, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
     prisma.roster.findMany({
       where: { playerId: player.id },
@@ -71,10 +71,12 @@ export default async function RosterPage(props: {
   const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
   const rankSagaFilter = searchParams.rankSagaFilter === 'true';
   const sigSagaFilter = searchParams.sigSagaFilter === 'true';
+  const sigAwakenedOnly = searchParams.sigAwakenedOnly === 'true';
 
   const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : 0; // 0 lets the client/api decide default
   const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
   const limit = searchParams.limit ? Math.min(Math.max(parseInt(searchParams.limit, 10) || 5, 1), 100) : 5;
+  const showInsights = searchParams.insights === 'true';
 
   // Safely map and type-cast the roster entries to ensure JsonValue fields match our local interfaces
   const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
@@ -111,6 +113,7 @@ export default async function RosterPage(props: {
       sigClassFilter,
       rankSagaFilter,
       sigSagaFilter,
+      sigAwakenedOnly,
       limit
     }
   );
@@ -118,7 +121,7 @@ export default async function RosterPage(props: {
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView
-        key={`${player.id}-${sigBudget}-${rankClassFilter.join(',')}-${sigClassFilter.join(',')}-${rankSagaFilter}-${sigSagaFilter}-${limit}-${effectiveTargetRank}`}
+        key={player.id}
         initialRoster={typedRosterEntries}
         allChampions={allChampions}
         player={player}
@@ -133,11 +136,13 @@ export default async function RosterPage(props: {
         initialSigClassFilter={sigClassFilter}
         initialRankSagaFilter={rankSagaFilter}
         initialSigSagaFilter={sigSagaFilter}
+        initialSigAwakenedOnly={sigAwakenedOnly}
         initialTags={tags}
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}
         initialImmunities={immunities}
         initialLimit={limit}
+        initialShowInsights={showInsights}
       />
     </div>
   );

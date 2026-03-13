@@ -110,7 +110,7 @@ export function RosterFilters({
             <div className="flex flex-col gap-2.5">
                 {/* Row 1: Search + View Toggle + Sort + Add */}
                 <div className="flex flex-wrap gap-2.5 items-center justify-between">
-                    <div className="flex gap-2 flex-1 min-w-[200px] max-w-md">
+                    <div className="flex gap-2 flex-1 min-w-[200px] max-w-full sm:max-w-md">
                         <div className="relative flex-1">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 z-10" />
                             <Input
@@ -122,7 +122,7 @@ export function RosterFilters({
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
                         <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-0.5 shrink-0">
                             <Button
                                 variant="ghost" size="sm"
@@ -149,7 +149,7 @@ export function RosterFilters({
                         </Button>
 
                         <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
-                            <SelectTrigger className="h-8 w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
+                            <SelectTrigger className="h-8 w-full sm:w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
                                 <span className="text-slate-500 mr-1">Sort:</span>
                                 <SelectValue placeholder="Sort" />
                             </SelectTrigger>
@@ -159,15 +159,15 @@ export function RosterFilters({
                             </SelectContent>
                         </Select>
 
-                        <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3" onClick={onAddClick}>
-                            <Plus className="w-3.5 h-3.5 mr-1" /> <span className="hidden sm:inline">Add</span>
+                        <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3 flex-1 sm:flex-initial" onClick={onAddClick}>
+                            <Plus className="w-3.5 h-3.5 mr-1" /> <span className="sm:inline">Add</span>
                         </Button>
                     </div>
                 </div>
 
                 {/* Row 2: Standard Selection Filters + Advanced Filters */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-800/50 pt-2.5">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
                         <MultiFilterGroup
                             options={[
                                 { value: "7", label: "7★" },
@@ -176,19 +176,23 @@ export function RosterFilters({
                             ]}
                             values={filterStars.map(String)}
                             onChange={(vals) => onFilterStarsChange(vals.map(Number))}
+                            className="flex-1 sm:flex-initial"
                         />
                         <MultiFilterGroup
                             options={[1, 2, 3, 4, 5, 6].map(r => ({ value: String(r), label: `R${r}` }))}
                             values={filterRanks.map(String)}
                             onChange={(vals) => onFilterRanksChange(vals.map(Number))}
+                            className="flex-1 sm:flex-initial"
                         />
                     </div>
 
-                    <ClassFilterToggle selectedClasses={filterClasses} onChange={onFilterClassesChange} />
+                    <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
+                        <ClassFilterToggle selectedClasses={filterClasses} onChange={onFilterClassesChange} />
+                    </div>
 
-                    <div className="h-6 w-px bg-slate-800 hidden sm:block mx-1" />
+                    <div className="h-6 w-px bg-slate-800 hidden lg:block mx-1" />
 
-                    <div className="flex flex-wrap gap-2 items-center">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-center w-full sm:w-auto">
                         <MultiSelectFilter title="Tags" icon={TagIcon} options={initialTags} selectedValues={tagFilter} onSelect={onTagFilterChange} logic={tagLogic} onLogicChange={onTagLogicChange} />
                         <MultiSelectFilter title="Categories" icon={BookOpen} options={initialAbilityCategories} selectedValues={abilityCategoryFilter} onSelect={onAbilityCategoryFilterChange} logic={abilityCategoryLogic} onLogicChange={onAbilityCategoryLogicChange} />
                         <MultiSelectFilter title="Abilities" icon={Zap} options={initialAbilities} selectedValues={abilityFilter} onSelect={onAbilityFilterChange} logic={abilityLogic} onLogicChange={onAbilityLogicChange} />

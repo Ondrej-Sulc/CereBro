@@ -31,6 +31,7 @@ function buildRosterQueryParams(params: {
   initialSigClassFilter: ChampionClass[];
   initialRankSagaFilter: boolean;
   initialSigSagaFilter: boolean;
+  sigAwakenedOnly: boolean;
   limit?: number;
 }) {
   const searchParams = new URLSearchParams();
@@ -40,6 +41,7 @@ function buildRosterQueryParams(params: {
   if (params.initialSigClassFilter.length) searchParams.set("sigClassFilter", params.initialSigClassFilter.join(','));
   if (params.initialRankSagaFilter) searchParams.set("rankSagaFilter", 'true');
   if (params.initialSigSagaFilter) searchParams.set("sigSagaFilter", 'true');
+  if (params.sigAwakenedOnly) searchParams.set("sigAwakenedOnly", 'true');
   if (params.limit && params.limit !== 5) searchParams.set("limit", params.limit.toString());
   return searchParams.toString();
 }
@@ -59,11 +61,13 @@ interface RosterViewProps {
   initialSigClassFilter: ChampionClass[];
   initialRankSagaFilter: boolean;
   initialSigSagaFilter: boolean;
+  initialSigAwakenedOnly: boolean;
   initialTags: { id: string | number, name: string }[];
   initialAbilityCategories: { id: string | number, name: string }[];
   initialAbilities: { id: string | number, name: string }[];
   initialImmunities: { id: string | number, name: string }[];
   initialLimit: number;
+  initialShowInsights?: boolean;
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
@@ -83,8 +87,9 @@ interface ApiRosterResponse {
 export function RosterView({
   initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
-  initialRankSagaFilter, initialSigSagaFilter,
-  initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit
+  initialRankSagaFilter, initialSigSagaFilter, initialSigAwakenedOnly,
+  initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit,
+  initialShowInsights = false
 }: RosterViewProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -97,8 +102,9 @@ export function RosterView({
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
   const [showUnowned, setShowUnowned] = useState(false);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
-  const [showInsights, setShowInsights] = useState(false);
+  const [showInsights, setShowInsights] = useState(initialShowInsights);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
+  const [sigAwakenedOnly, setSigAwakenedOnly] = useState(initialSigAwakenedOnly);
   const [limit, setLimit] = useState<number>(initialLimit || 5);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
 
@@ -121,17 +127,30 @@ export function RosterView({
   const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
   const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
 
-  // Stabilize initialPrestigeMap to avoid re-renders when parent (Server Component) provides new object
+  // Stabilize initial values to avoid unnecessary re-renders/effects
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
-
+  const memoizedRoster = useDeepMemo(initialRoster);
+  const memoizedRankClassFilter = useDeepMemo(initialRankClassFilter);
+  const memoizedSigClassFilter = useDeepMemo(initialSigClassFilter);
 
   const [rankUpClassFilter, setRankUpClassFilter] = useState<ChampionClass[]>(initialRankClassFilter);
   const [sigClassFilter, setSigClassFilter] = useState<ChampionClass[]>(initialSigClassFilter);
   const [rankUpSagaFilter, setRankUpSagaFilter] = useState<boolean>(initialRankSagaFilter);
   const [sigSagaFilter, setSigSagaFilter] = useState<boolean>(initialSigSagaFilter);
 
+  // Sync state with props (for back/forward navigation or server-side updates)
+  useEffect(() => { setRoster(memoizedRoster); }, [memoizedRoster]);
+  useEffect(() => { setSigBudget(initialSigBudget); }, [initialSigBudget]);
+  useEffect(() => { setLimit(initialLimit); }, [initialLimit]);
+  useEffect(() => { setRankUpClassFilter(memoizedRankClassFilter); }, [memoizedRankClassFilter]);
+  useEffect(() => { setSigClassFilter(memoizedSigClassFilter); }, [memoizedSigClassFilter]);
+  useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
+  useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
+  useEffect(() => { setSigAwakenedOnly(initialSigAwakenedOnly); }, [initialSigAwakenedOnly]);
+  useEffect(() => { setShowInsights(initialShowInsights); }, [initialShowInsights]);
+
   const currentParams = buildRosterQueryParams({
-    simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, limit: limit
+    simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, sigAwakenedOnly, limit: limit
   });
 
   const usePropsData = lastFetchedParams.current === currentParams || lastFetchedParams.current === null;
@@ -219,11 +238,6 @@ export function RosterView({
     updateUrlParams({ rankSagaFilter: val ? 'true' : null });
   };
 
-  const handleSigSagaFilterChange = (val: boolean) => {
-    setSigSagaFilter(val); setPendingSection('sig');
-    updateUrlParams({ sigSagaFilter: val ? 'true' : null });
-  };
-
   const handleAddChampion = async () => {
     if (newChampion.championId === null) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
     try {
@@ -245,6 +259,11 @@ export function RosterView({
     } catch {
       toast({ title: "Error", description: "Failed to add champion. It might already exist.", variant: "destructive" });
     }
+  };
+
+  const handleSigSagaFilterChange = (val: boolean) => {
+    setSigSagaFilter(val); setPendingSection('sig');
+    updateUrlParams({ sigSagaFilter: val ? 'true' : null });
   };
 
   const handleRecommendationClick = async (rec: SigRecommendation) => {
@@ -459,7 +478,11 @@ export function RosterView({
 
           <Button
             variant="outline"
-            onClick={() => setShowInsights(!showInsights)}
+            onClick={() => {
+              const newValue = !showInsights;
+              setShowInsights(newValue);
+              updateUrlParams({ insights: newValue ? 'true' : null });
+            }}
             className={cn(
               "h-10 px-4 gap-2 border-slate-700 transition-all",
               showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
@@ -487,6 +510,7 @@ export function RosterView({
         sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
         rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
         sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
+        sigAwakenedOnly={sigAwakenedOnly} onSigAwakenedOnlyChange={(val) => { setSigAwakenedOnly(val); setPendingSection('sig'); updateUrlParams({ sigAwakenedOnly: val ? 'true' : null }); }}
         limit={limit} onLimitChange={(val) => { setLimit(val); updateUrlParams({ limit: val !== 5 ? val.toString() : null }); }}
         isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />

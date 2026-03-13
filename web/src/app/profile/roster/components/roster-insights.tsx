@@ -33,6 +33,8 @@ interface RosterInsightsProps {
     onRankUpSagaFilterChange: (val: boolean) => void;
     sigSagaFilter: boolean;
     onSigSagaFilterChange: (val: boolean) => void;
+    sigAwakenedOnly: boolean;
+    onSigAwakenedOnlyChange: (val: boolean) => void;
     limit: number;
     onLimitChange: (val: number) => void;
     isPending: boolean;
@@ -67,6 +69,7 @@ export function RosterInsights({
     simulationTargetRank, onTargetRankChange, sigBudget, onSigBudgetChange,
     rankUpClassFilter, onRankUpClassFilterChange, sigClassFilter, onSigClassFilterChange,
     rankUpSagaFilter, onRankUpSagaFilterChange, sigSagaFilter, onSigSagaFilterChange,
+    sigAwakenedOnly, onSigAwakenedOnlyChange,
     limit, onLimitChange,
     isPending, pendingSection, onRecommendationClick
 }: RosterInsightsProps) {
@@ -199,6 +202,20 @@ export function RosterInsights({
                             </Popover>
                         </div>
                         <div className="flex items-center gap-2">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className={cn(
+                                    "h-7 px-2 gap-1.5 rounded-full border transition-all text-[10px] font-bold uppercase tracking-wider",
+                                    sigAwakenedOnly
+                                        ? "bg-purple-500/20 border-purple-500/40 text-purple-400"
+                                        : "bg-slate-900/50 border-slate-800 text-slate-500 hover:text-slate-300"
+                                )}
+                                onClick={() => onSigAwakenedOnlyChange(!sigAwakenedOnly)}
+                            >
+                                <Sparkles className={cn("w-3 h-3", sigAwakenedOnly ? "text-purple-400" : "text-slate-500")} />
+                                Dupped
+                            </Button>
                             <Button
                                 variant="ghost"
                                 size="sm"

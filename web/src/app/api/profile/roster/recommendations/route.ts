@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
   const rankSagaFilter = searchParams.get("rankSagaFilter") === 'true';
   const sigSagaFilter = searchParams.get("sigSagaFilter") === 'true';
+  const sigAwakenedOnly = searchParams.get("sigAwakenedOnly") === 'true';
 
   // Fetch roster
   const roster = await prisma.roster.findMany({
@@ -67,6 +68,7 @@ export async function GET(req: NextRequest) {
     sigClassFilter,
     rankSagaFilter,
     sigSagaFilter,
+    sigAwakenedOnly,
     limit
   });
 
