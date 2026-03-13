@@ -55,7 +55,7 @@ export function ReadOnlyPlanShell({
                 {quest.bannerUrl ? (
                     <div className="relative rounded-xl overflow-hidden h-48 md:h-64 mb-6 border border-slate-800">
                         <Image
-                            src={quest.bannerUrl}
+                            src={quest.bannerUrl.replace(/#/g, '%23')}
                             alt={quest.title}
                             fill
                             className="object-cover"

@@ -207,7 +207,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                                         {plan.questPlan.bannerUrl ? (
                                             <div className="relative h-24 overflow-hidden shrink-0">
                                                 <Image
-                                                    src={plan.questPlan.bannerUrl}
+                                                    src={plan.questPlan.bannerUrl.replace(/#/g, '%23')}
                                                     alt={plan.questPlan.title}
                                                     fill
                                                     className="object-cover group-hover:scale-105 transition-transform duration-500"
