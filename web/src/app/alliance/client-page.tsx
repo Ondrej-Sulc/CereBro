@@ -4,6 +4,7 @@ import { Player } from "@prisma/client";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings } from "../actions/alliance";
@@ -268,7 +269,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             
                             <div className="flex-1 overflow-hidden">
                                 <div className="flex items-center gap-1.5">
-                                    <p className="font-semibold text-sm truncate">{player.ingameName}</p>
+                                    <Link href={`/player/${player.id}`} className="font-semibold text-sm truncate hover:text-sky-400 transition-colors" onClick={(e) => e.stopPropagation()}>{player.ingameName}</Link>
                                     {player.isOfficer && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
                                 </div>
                                 <p className="text-[10px] text-slate-400">Prestige: {player.championPrestige?.toLocaleString('en-US') || "N/A"}</p>

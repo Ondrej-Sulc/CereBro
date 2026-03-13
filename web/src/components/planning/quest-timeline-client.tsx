@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users } from "lucide-react";
-import { savePlayerQuestCounter } from "@/app/actions/quests";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check } from "lucide-react";
+import { savePlayerQuestCounter, getShareablePlanId } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -37,9 +37,14 @@ interface FilterMetadata {
 
 interface Props {
     quest: QuestWithRelations;
-    roster: RosterWithChampion[];
-    savedEncounters: PlayerQuestEncounter[];
-    filterMetadata: FilterMetadata;
+    roster?: RosterWithChampion[];
+    savedEncounters?: PlayerQuestEncounter[];
+    filterMetadata?: FilterMetadata;
+    readOnly?: boolean;
+    /** Map of championId -> roster entry, used in readOnly mode to resolve selected champion details */
+    rosterMap?: Record<string, any>;
+    /** Pre-built selections map (encounterId -> championId), used in readOnly mode */
+    initialSelections?: Record<string, number | null>;
 }
 
 const CLASSES = Object.values(ChampionClass);
@@ -50,7 +55,7 @@ function getYoutubeId(url: string) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function QuestTimelineClient({ quest, roster, savedEncounters, filterMetadata }: Props) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -59,6 +64,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
     const [isTeamExpanded, setIsTeamExpanded] = useState(false);
     const [showVideoId, setShowVideoId] = useState<string | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
+    const [shareSuccess, setShareSuccess] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -73,6 +80,22 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    const handleShare = async () => {
+        setIsSharing(true);
+        try {
+            const planId = await getShareablePlanId(quest.id);
+            const url = `${window.location.origin}/planning/quests/shared/${planId}`;
+            await navigator.clipboard.writeText(url);
+            setShareSuccess(true);
+            toast({ title: "Link Copied!", description: "Share link copied to clipboard." });
+            setTimeout(() => setShareSuccess(false), 2000);
+        } catch {
+            toast({ title: "Error", description: "Failed to generate share link.", variant: "destructive" });
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [tagFilter, setTagFilter] = useState<string[]>([]);
@@ -86,6 +109,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
 
     // Track selections locally for immediate UI updates
     const [selections, setSelections] = useState<Record<string, number | null>>(() => {
+        if (initialSelections) return initialSelections;
         const initial: Record<string, number | null> = {};
         savedEncounters.forEach(se => {
             initial[se.questEncounterId] = se.selectedChampionId;
@@ -187,6 +211,14 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
         }
     };
 
+    /** Resolve a roster item for a given champion ID — works for both interactive and readOnly modes */
+    const resolveRosterItem = (championId: number): RosterWithChampion | undefined => {
+        if (readOnly) {
+            return rosterMap[championId];
+        }
+        return roster.find(r => r.championId === championId);
+    };
+
     const selectedTeam = useMemo(() => {
         const uniqueChampionIds = new Set<number>();
         Object.values(selections).forEach(id => {
@@ -195,11 +227,12 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
 
         const team: RosterWithChampion[] = [];
         uniqueChampionIds.forEach(id => {
-            const r = roster.find(rosterItem => rosterItem.championId === id);
+            const r = resolveRosterItem(id);
             if (r) team.push(r);
         });
         return team;
-    }, [selections, roster]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selections, roster, rosterMap, readOnly]);
 
     return (
         <div className="relative pt-4 pb-20">
@@ -236,11 +269,26 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                             "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-header:text-sky-400 transition-colors",
                                             isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
                                         )}>
-                                            Your Team
+                                            {readOnly ? 'Team' : 'Your Team'}
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
+                                        {!readOnly && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                                            disabled={isSharing}
+                                            className={cn(
+                                                "p-1.5 rounded-lg border transition-all",
+                                                shareSuccess
+                                                    ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                                                    : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
+                                            )}
+                                            title="Share your plan"
+                                        >
+                                            {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                                        </button>
+                                        )}
                                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
                                             <span className={cn(
                                                 "text-[10px] font-black",
@@ -374,7 +422,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                         {quest.encounters.map((encounter: EncounterWithRelations, index: number) => {
                             const isExpanded = expandedId === encounter.id;
                             const selectedChampId = selections[encounter.id];
-                            const selectedRosterItem = selectedChampId ? roster.find(r => r.championId === selectedChampId) : null;
+                            const selectedRosterItem = selectedChampId ? resolveRosterItem(selectedChampId) ?? null : null;
                             const hasSelection = !!selectedChampId;
                             const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : null;
                             const isLast = index === quest.encounters.length - 1;
@@ -554,12 +602,12 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                 ) : (
                                                     <div className="flex-1 flex justify-center md:justify-end items-center">
                                                         <div className="text-xs font-bold uppercase tracking-widest text-slate-500 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800 border-dashed group-hover:border-slate-600 transition-colors flex items-center gap-2">
-                                                            <Crosshair className="w-4 h-4" /> Pick Counter
+                                                            <Crosshair className="w-4 h-4" /> {readOnly ? 'No Counter Selected' : 'Pick Counter'}
                                                         </div>
                                                     </div>
                                                 )}
                                                 <div className="flex items-center flex-col md:flex-row gap-1 md:gap-2 ml-2 self-center md:self-auto">
-                                                    {hasSelection && (
+                                                    {!readOnly && hasSelection && (
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -726,6 +774,27 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                             {encounter.recommendedChampions.length > 0 ? (
                                                                 <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                                                     {encounter.recommendedChampions.map((c) => {
+                                                                        if (readOnly) {
+                                                                            // In readOnly mode, just show the champion reference without roster matching
+                                                                            return (
+                                                                                <div key={c.id}>
+                                                                                    <UpdatedChampionItem
+                                                                                        item={{
+                                                                                            stars: 0,
+                                                                                            rank: 0,
+                                                                                            champion: {
+                                                                                                id: c.id,
+                                                                                                name: c.shortName || c.name,
+                                                                                                championClass: c.class,
+                                                                                                images: (c.images as any) as ChampionImages
+                                                                                            }
+                                                                                        }}
+                                                                                        isRecommended
+                                                                                    />
+                                                                                </div>
+                                                                            );
+                                                                        }
+
                                                                         // Find highest version in roster that matches restrictions
                                                                         const userChamp = roster
                                                                             .filter(r => r.championId === c.id)
@@ -761,7 +830,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                             id: userChamp.champion.id,
                                                                                             name: userChamp.champion.shortName || userChamp.champion.name,
                                                                                             championClass: userChamp.champion.class,
-                                                                                            images: userChamp.champion.images as unknown as ChampionImages
+                                                                                                images: (userChamp.champion.images as any) as ChampionImages
                                                                                         },
                                                                                         isAscended: userChamp.isAscended
                                                                                     } : {
@@ -771,7 +840,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                                                             id: c.id,
                                                                                             name: c.shortName || c.name,
                                                                                             championClass: c.class,
-                                                                                            images: c.images as unknown as ChampionImages
+                                                                                            images: (c.images as any) as ChampionImages
                                                                                         }
                                                                                     }}
                                                                                     isSelected={isSelected}
@@ -789,7 +858,8 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                     </div>
                                                 </div>
 
-                                                {/* Roster Selection */}
+                                                {/* Roster Selection — hidden in readOnly mode */}
+                                                {!readOnly && (
                                                 <div className="space-y-4 pt-8 border-t border-slate-800/50">
                                                     <div className="flex flex-col gap-4">
                                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1005,6 +1075,7 @@ export default function QuestTimelineClient({ quest, roster, savedEncounters, fi
                                                         );
                                                     })()}
                                                 </div>
+                                                )}
 
                                             </div>
                                         )}
