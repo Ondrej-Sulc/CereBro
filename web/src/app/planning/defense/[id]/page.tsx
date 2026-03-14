@@ -98,6 +98,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         availableTags={tags}
         isOfficer={isOfficer}
         bgColors={bgColors}
+        userBattlegroup={player.battlegroup}
       />
     </>
   );

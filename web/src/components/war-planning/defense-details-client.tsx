@@ -49,6 +49,7 @@ interface DefenseDetailsClientProps {
   availableTags: Tag[];
   isOfficer?: boolean;
   bgColors?: Record<number, string>;
+  userBattlegroup?: number | null;
 }
 
 interface WarNodeWithAllocations {

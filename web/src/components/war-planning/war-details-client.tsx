@@ -28,6 +28,7 @@ interface WarDetailsClientProps {
   isOfficer?: boolean;
   bgColors?: Record<number, string>;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
+  userBattlegroup?: number | null;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {

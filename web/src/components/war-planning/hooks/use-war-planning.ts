@@ -39,6 +39,7 @@ interface UseWarPlanningProps {
   updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
+  userBattlegroup?: number | null;
 }
 
 export function useWarPlanning({
@@ -50,12 +51,13 @@ export function useWarPlanning({
   updateWarStatus,
   seasonBans,
   warBans: initialWarBans,
+  userBattlegroup,
 }: UseWarPlanningProps) {
   const router = useRouter();
 
   // UI State
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
-  const [activeTab, setActiveTab] = useState("bg1");
+  const [activeTab, setActiveTab] = useState(userBattlegroup ? `bg${userBattlegroup}` : "bg1");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Selection State

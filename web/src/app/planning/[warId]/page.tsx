@@ -131,6 +131,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       isOfficer={isOfficer}
       bgColors={bgColors}
       activeDefensePlan={activeDefensePlan?.activeDefensePlan}
+      userBattlegroup={player.battlegroup}
     />
   );
 }

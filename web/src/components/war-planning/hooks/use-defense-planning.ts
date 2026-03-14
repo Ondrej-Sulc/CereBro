@@ -13,6 +13,7 @@ interface UseDefensePlanningProps {
   champions: (Champion & { tags?: { name: string }[] })[];
   players: PlayerWithRoster[];
   updatePlacement: (updatedPlacement: Partial<WarDefensePlacement>) => Promise<void>;
+  userBattlegroup?: number | null;
 }
 
 export function useDefensePlanning({
@@ -20,10 +21,11 @@ export function useDefensePlanning({
   champions,
   players,
   updatePlacement,
+  userBattlegroup,
 }: UseDefensePlanningProps) {
   // UI State
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
-  const [activeTab, setActiveTab] = useState("bg1");
+  const [activeTab, setActiveTab] = useState(userBattlegroup ? `bg${userBattlegroup}` : "bg1");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Selection State
