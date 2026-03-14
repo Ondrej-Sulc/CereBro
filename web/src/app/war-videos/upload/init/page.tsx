@@ -27,9 +27,8 @@ export default async function InitUploadPage() {
 
   if (!player) {
     // Handle case where player is not registered in the bot yet
-    // Redirect to a page telling them to register or auto-register?
-    // For now, let's redirect to home with an error or just home.
-    // Ideally, show a message "Please register with /register in Discord first".
+    // Redirect to home with an error for now.
+    // Better UX: send users to onboarding guidance (role sync or website alliance request).
     redirect("/?error=unregistered_player"); 
   }
 

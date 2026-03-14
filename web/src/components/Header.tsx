@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, HelpCircle, Map } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -125,12 +125,8 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                 </Link>
             )}
 
-            <Link href="/about" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-              <Heart className="w-4 h-4" />
-              About
-            </Link>
             <Link href="/support" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-              <HelpCircle className="w-4 h-4" />
+              <Heart className="w-4 h-4" />
               Support
             </Link>
             <DropdownMenu>
@@ -207,7 +203,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                         href="/support" 
                         className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                     >
-                      <HelpCircle className="w-5 h-5" />
+                      <Heart className="w-5 h-5" />
                       Support
                     </Link>
                     

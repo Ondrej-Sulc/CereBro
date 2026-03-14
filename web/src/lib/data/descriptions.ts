@@ -85,11 +85,11 @@ export const commandDescriptions = new Map<string, CommandInfo>([
         [
           "join",
           {
-            description: "Join an alliance and optionally register your in-game name. If you're new to the server and your alliance uses this bot, this is the best way to get started.",
+            description: "Officer/admin command for assigning a player to an alliance role in Discord. Regular members should join via Discord role sync or the website join-request flow.",
             usage: "/alliance join <role> [name]",
             examples: [
-              "/alliance join role:@BG1 MyIGN - Joins the alliance with the BG1 role and sets your name to MyIGN.",
-              "/alliance join role:@Member - Joins the alliance with the Member role if you're already registered.",
+              "/alliance join role:@BG1 MyIGN - Assigns player MyIGN to the BG1 role and alliance mapping.",
+              "/alliance join role:@Member - Assigns a registered player to the Member role/alliance.",
             ],
           },
         ],
@@ -415,7 +415,7 @@ export const commandDescriptions = new Map<string, CommandInfo>([
     "register",
     {
       description:
-        "For new users to register their in-game name with the bot. This is the first step to unlock features like roster management and prestige tracking. If you are part of an alliance, use '/alliance join' instead to register and join your alliance simultaneously.",
+        "Registers your in-game name with the bot and unlocks features like roster management and prestige tracking. Alliance membership is managed through Discord role sync or website join requests approved by officers.",
       access: CommandAccess.USER,
       group: "User Management",
       subcommands: new Map([

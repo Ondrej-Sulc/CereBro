@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { HeroVisual } from "@/components/HeroVisual";
 import { LiveSetup } from "@/components/LiveSetup";
+import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import {
   LayoutDashboard,
   Map,
@@ -11,8 +13,9 @@ import {
   Swords,
   Gamepad2,
   Users,
-  ChevronRight,
-  Heart
+  Shield,
+  Server,
+  ChevronRight
 } from "lucide-react";
 import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
@@ -20,7 +23,42 @@ import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDec
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { DISCORD_INVITE } from "@/lib/links";
 
+const getHomeHeroStats = unstable_cache(
+  async () => {
+    const [players, alliances, discordServers, warVideos] = await Promise.all([
+      prisma.player.count(),
+      prisma.alliance.count(),
+      prisma.alliance.count({
+        where: {
+          guildId: { not: null },
+        },
+      }),
+      prisma.warVideo.count(),
+    ]);
+
+    return {
+      players,
+      alliances,
+      discordServers,
+      warVideos,
+    };
+  },
+  ["home-hero-live-stats"],
+  { revalidate: 900, tags: ["home", "hero-stats"] }
+);
+
 export default async function Home() {
+  const { players, alliances, discordServers, warVideos } = await getHomeHeroStats();
+
+  const heroStats = [
+    { label: "Registered Players", value: players, icon: Users },
+    { label: "Active Alliances", value: alliances, icon: Shield },
+    { label: "Connected Servers", value: discordServers, icon: Server },
+    { label: "War Videos Uploaded", value: warVideos, icon: Video },
+  ];
+
+  const numberFormatter = new Intl.NumberFormat("en-US");
+
   return (
     <div className="min-h-screen relative page-container">
       <PageBackground />
@@ -30,47 +68,66 @@ export default async function Home() {
           <div className="max-w-7xl mx-auto px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="flex flex-col justify-center order-1 lg:order-1 relative z-10">
-              <span className="inline-flex items-center gap-2 text-xs bg-slate-900/50 border border-slate-700/50 rounded-full px-3 py-1 w-fit mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Ready for Battle
-              </span>
-              
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1] mb-6">
                 Your Alliance&apos;s <br className="hidden lg:block"/>
                 <span className="gradient-text">Tactical Advantage</span>
               </h1>
               
               <p className="text-slate-300 text-lg leading-relaxed mb-8 max-w-xl">
-                CereBro is the complete operating system for MCOC alliances. It combines a <strong>strategic Web Dashboard</strong> for war planning with a <strong>Discord Bot</strong> for daily utility.
+                CereBro is the complete operating system for MCOC alliances. It combines <strong>powerful planning tools</strong> for war strategy with a <strong>Discord Bot</strong> for daily alliance utility.
               </p>
 
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
-                  target="_blank"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 transition-all hover:-translate-y-0.5"
-                >
-                  <Gamepad2 className="w-5 h-5" />
-                  Add to Discord
-                </Link>
+              <div className="flex flex-col items-start gap-4 max-w-xl">
                 <Link
                   href={DISCORD_INVITE}
                   target="_blank"
-                  className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg border border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-all"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 transition-all hover:-translate-y-0.5"
                 >
+                  <Users className="w-5 h-5" />
                   Join Community Discord
                 </Link>
+                <div className="flex flex-col items-start gap-2">
+                  <Link
+                    href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
+                    target="_blank"
+                    className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg border border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-all"
+                  >
+                    <Gamepad2 className="w-5 h-5" />
+                    Add to Your Server
+                  </Link>
+                  <p className="text-sm text-slate-400 max-w-md">
+                    New here? Join the community first for help and updates. Add CereBro to your own Discord server when you&apos;re ready to set it up for your alliance.
+                  </p>
+                  <Link
+                    href="/support"
+                    className="inline-flex items-center gap-1 text-sm text-pink-300 hover:text-pink-200 transition-colors"
+                  >
+                    Support CereBro
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
 
-              {/* Stats / Trust */}
-              <div className="mt-10 pt-8 border-t border-slate-800/50 flex gap-8">
-                <div>
-                  <p className="text-2xl font-bold text-white">24/7</p>
-                  <p className="text-sm text-slate-400">Uptime</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">Active</p>
-                  <p className="text-sm text-slate-400">Development</p>
+              {/* Live Stats */}
+              <div className="mt-10 pt-8 border-t border-slate-800/50 w-full max-w-2xl">
+                <p className="text-xs uppercase tracking-[0.18em] text-sky-300/80 mb-3">
+                  Live Community Stats
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {heroStats.map(({ label, value, icon: Icon }) => (
+                  <div
+                    key={label}
+                    className="rounded-xl border border-slate-700/70 bg-gradient-to-b from-slate-900/80 to-slate-900/40 px-4 py-4 shadow-sm shadow-sky-900/10"
+                  >
+                    <div className="flex items-center gap-2 text-slate-400 mb-2 min-h-[2rem]">
+                      <Icon className="w-4 h-4 shrink-0 text-sky-300/80" />
+                      <span className="text-[11px] uppercase tracking-wide leading-4">{label}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {numberFormatter.format(value)}+
+                    </p>
+                  </div>
+                ))}
                 </div>
               </div>
             </div>
@@ -316,61 +373,33 @@ export default async function Home() {
         <section id="setup" className="py-16 bg-slate-900/30 border-y border-slate-800/50">
           <div className="max-w-6xl mx-auto px-4 lg:px-6">
              <div className="text-center mb-12">
-                <span className="text-emerald-400 font-mono text-xs uppercase tracking-wider mb-2 block">Easy Onboarding</span>
-                <h2 className="text-3xl font-bold text-white">Setup in Seconds</h2>
-                <p className="text-slate-400 mt-2">No complex config files. Just invite and link.</p>
+                <span className="text-emerald-400 font-mono text-xs uppercase tracking-wider mb-2 block">Getting Started</span>
+                <h2 className="text-3xl font-bold text-white">Real Setup Flow</h2>
+                <p className="text-slate-400 mt-2">A practical onboarding path for both officers and members.</p>
              </div>
              <LiveSetup />
           </div>
         </section>
         
-        {/* About & Support Teaser */}
-        <section className="py-20 bg-slate-950">
-            <div className="max-w-6xl mx-auto px-4 lg:px-6">
-                <div className="glass rounded-3xl border border-slate-800 p-10 md:p-16 text-center relative overflow-hidden">
-                     {/* Decorative Gradients */}
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[100px] -z-10" />
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-500/5 blur-[100px] -z-10" />
-
-                    <Heart className="w-12 h-12 text-pink-500/50 mx-auto mb-6" />
-                    
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                        Built for the Community
-                    </h2>
-                    <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        CereBro is a passion project maintained by an active player. Learn more about the developer and support the project with a custom donation.
-                    </p>
-
-                    <Link 
-                        href="/support" 
-                        className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-medium px-8 py-4 rounded-full transition-all hover:scale-105"
-                    >
-                        Support CereBro
-                        <ChevronRight className="w-4 h-4" />
-                    </Link>
-                </div>
-            </div>
-        </section>
-
         {/* Final CTA */}
         <section id="get" className="py-10 pb-16">
           <div className="max-w-6xl mx-auto px-4 lg:px-6">
             <div className="glass rounded-xl border border-slate-800/50 px-6 py-6 md:py-8 flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
                 <h3 className="text-lg font-semibold text-white mb-1">
-                  Ready to upgrade your alliance?
+                  Ready to get started?
                 </h3>
-                <p className="text-sm text-slate-300">
-                  Invite CereBro now to get started.
+                <p className="text-sm text-slate-300 max-w-xl">
+                  Join the community Discord for setup help, updates, and support. Add CereBro to your own server once you&apos;re ready to use it with your alliance.
                 </p>
               </div>
-              <div className="flex gap-3 items-center">
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
                 <Link
-                  href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
+                  href={DISCORD_INVITE}
                   target="_blank"
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm font-medium px-5 py-2 rounded-lg shadow-lg shadow-sky-500/25"
                 >
-                  Invite to Discord
+                  Join Community Discord
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="w-4 h-4"
@@ -385,6 +414,34 @@ export default async function Home() {
                       d="M7 17 17 7m0 0H8m9 0v9"
                     />
                   </svg>
+                </Link>
+                <Link
+                  href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
+                  target="_blank"
+                  className="inline-flex items-center gap-2 border border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-200 text-sm font-medium px-5 py-2 rounded-lg transition-colors"
+                >
+                  Add to Your Server
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.6"
+                      d="M7 17 17 7m0 0H8m9 0v9"
+                    />
+                  </svg>
+                </Link>
+                <Link
+                  href="/support"
+                  className="inline-flex items-center gap-1 text-sm text-pink-300 hover:text-pink-200 transition-colors"
+                >
+                  Support CereBro
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
