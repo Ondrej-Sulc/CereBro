@@ -57,7 +57,7 @@ export function useWarPlanning({
 
   // UI State
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
-  const [activeTab, setActiveTab] = useState(userBattlegroup ? `bg${userBattlegroup}` : "bg1");
+  const [activeTab, setActiveTab] = useState(userBattlegroup != null ? `bg${userBattlegroup}` : "bg1");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Selection State

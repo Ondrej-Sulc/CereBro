@@ -158,10 +158,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             const element = document.getElementById(`encounter-${id}`);
             if (element) {
                 // Find the header to account for its height (sticky)
-                // When team is collapsed, the header is roughly 120-140px depending on scroll state
-                const headerHeight = 140; 
+                const stickyHeader = document.querySelector('.sticky.top-\\[68px\\]');
+                const headerHeight = stickyHeader ? stickyHeader.getBoundingClientRect().height + 68 : 140; 
+                
                 const rect = element.getBoundingClientRect();
-                const offsetPosition = rect.top + window.pageYOffset - headerHeight;
+                const offsetPosition = rect.top + window.scrollY - headerHeight;
 
                 window.scrollTo({
                     top: offsetPosition,
@@ -426,11 +427,21 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                         {assignedEncounters.map((enc: EncounterWithRelations) => (
                                                                             <div 
                                                                                 key={`tgt-${enc.id}`} 
+                                                                                role="button"
+                                                                                tabIndex={0}
+                                                                                aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
                                                                                 title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} 
-                                                                                className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm active:scale-95"
+                                                                                className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
                                                                                     scrollToEncounter(enc.id);
+                                                                                }}
+                                                                                onKeyDown={(e) => {
+                                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                                        e.preventDefault();
+                                                                                        e.stopPropagation();
+                                                                                        scrollToEncounter(enc.id);
+                                                                                    }
                                                                                 }}
                                                                             >
                                                                                 {enc.defender ? (
