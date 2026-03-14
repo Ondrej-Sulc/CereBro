@@ -163,14 +163,26 @@ export async function updateChampionAbility(
             }
         })
     } else {
-        await prisma.championAbilityLink.create({
-            data: {
+        // Check if a link already exists with these unique fields to avoid constraint error
+        const existing = await prisma.championAbilityLink.findFirst({
+            where: {
                 championId,
                 abilityId,
                 type,
-                source
+                source: source || null
             }
         })
+
+        if (!existing) {
+            await prisma.championAbilityLink.create({
+                data: {
+                    championId,
+                    abilityId,
+                    type,
+                    source
+                }
+            })
+        }
     }
     revalidatePath('/admin/champions')
 }
@@ -185,11 +197,20 @@ export async function removeChampionAbility(linkId: number) {
 
 export async function addSynergy(linkId: number, championId: number) {
     await ensureAdmin("MANAGE_CHAMPIONS")
-    await prisma.championAbilitySynergy.create({
-        data: {
+    
+    // Use upsert to avoid unique constraint error if it already exists
+    await prisma.championAbilitySynergy.upsert({
+        where: {
+            championAbilityLinkId_championId: {
+                championAbilityLinkId: linkId,
+                championId
+            }
+        },
+        create: {
             championAbilityLinkId: linkId,
             championId
-        }
+        },
+        update: {} // Do nothing if already exists
     })
     revalidatePath('/admin/champions')
 }

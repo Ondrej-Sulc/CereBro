@@ -68,6 +68,10 @@ const COMMON_HIT_PROPERTIES = ["Contact", "Physical", "Energy", "Projectile"]
 
 export function ChampionEditor({ champion, allChampions, allAbilities, open, onOpenChange }: ChampionEditorProps) {
   const { toast } = useToast()
+  
+  // Track current champion ID to reset state only when needed (React 19 pattern)
+  const [currentId, setCurrentId] = useState<number | null>(null)
+
   const [activeTab, setActiveTab] = useState("info")
 
   // Form States
@@ -91,28 +95,35 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAddingInstance, setIsAddingInstance] = useState(false)
 
-  // Load data on open
-  useEffect(() => {
-    if (champion && open) {
-        // Form Data
-        setName(champion.name)
-        setShortName(champion.shortName)
-        setChampClass(champion.class)
-        setReleaseDate(new Date(champion.releaseDate))
-        setObtainable(champion.obtainable.join(", "))
+  // Sync props to state when champion ID changes or dialog is opened
+  if (open && champion && champion.id !== currentId) {
+    setCurrentId(champion.id)
+    
+    // Initial data load for this champion
+    setName(champion.name)
+    setShortName(champion.shortName)
+    setChampClass(champion.class)
+    setReleaseDate(champion.releaseDate ? new Date(champion.releaseDate) : undefined)
+    setObtainable(champion.obtainable.join(", "))
 
-        // Reset Editor State
-        setActiveTab("info")
-        setNewAbilityId(null)
-        setNewType("ABILITY")
-        setAbilityComboboxOpen(false)
-        setIsAddingInstance(false)
-        
-        setIsEditingJson(false)
-        setJsonError(null)
-        setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
+    // Reset Editor State
+    setActiveTab("info")
+    setNewAbilityId(null)
+    setNewType("ABILITY")
+    setAbilityComboboxOpen(false)
+    setIsAddingInstance(false)
+    
+    setIsEditingJson(false)
+    setJsonError(null)
+    setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
+  }
+
+  // Clear currentId when closed so it resets if reopened for same champ
+  useEffect(() => {
+    if (!open) {
+      setCurrentId(null)
     }
-  }, [champion, open])
+  }, [open])
 
   // Group abilities and sort alphabetically
   const groupedAbilities = useMemo(() => {
