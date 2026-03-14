@@ -98,14 +98,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const supporterEmail: string | null = session?.user?.email || null;
 
   if (session?.user?.discordId) {
-    const player = await prisma.player.findFirst({
-      where: { discordId: session.user.discordId, isActive: true },
-      select: { id: true, ingameName: true },
-    });
+    try {
+      const player = await prisma.player.findFirst({
+        where: { discordId: session.user.discordId, isActive: true },
+        select: { id: true, ingameName: true },
+      });
 
-    if (player) {
-      playerId = player.id;
-      supporterName = player.ingameName || supporterName;
+      if (player) {
+        playerId = player.id;
+        supporterName = player.ingameName || supporterName;
+      }
+    } catch (error) {
+      logger.error(
+        { error, discordId: session.user.discordId },
+        "Failed to resolve player during support checkout session creation",
+      );
     }
   }
 

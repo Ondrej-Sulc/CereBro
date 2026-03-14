@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
 import { getAbilityCategories, getAbilities } from "./actions"
 import { CategoryList } from "./category-list"
 import { AbilityList } from "./ability-list"
 import { ensureAdmin } from "../actions"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+export const metadata: Metadata = {
+  title: "Abilities & Categories - CereBro",
+  description:
+    "Manage ability categories and individual abilities used in champion data.",
+}
 
 export default async function AdminAbilitiesPage() {
   await ensureAdmin("MANAGE_CHAMPIONS")

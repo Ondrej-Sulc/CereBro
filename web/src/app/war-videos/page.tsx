@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,12 @@ import { UploadFightButton } from "@/components/UploadFightButton";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
+
+export const metadata: Metadata = {
+  title: "War Archive - CereBro",
+  description:
+    "Browse and search community uploaded Alliance War videos and fight logs by attacker, defender, node, season, tier, player, and alliance.",
+};
 
 export const dynamic = 'force-dynamic';
 

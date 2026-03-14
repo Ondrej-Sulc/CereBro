@@ -1,7 +1,14 @@
+import type { Metadata } from "next"
 import { getChampions, getAbilities } from "./actions"
 import { ChampionList } from "./champion-list"
 import { AdminChampionData } from "./champion-card"
 import { ensureAdmin } from "../actions"
+
+export const metadata: Metadata = {
+  title: "Champion Management - CereBro",
+  description:
+    "Manage champion data and related ability mappings used throughout CereBro.",
+}
 
 export default async function AdminChampionsPage() {
   await ensureAdmin("MANAGE_CHAMPIONS")

@@ -136,10 +136,13 @@ export const LiveSetup = () => {
                   <Link
                     href={step.ctaHref}
                     target={step.external ? "_blank" : undefined}
+                    rel={step.external ? "noopener noreferrer" : undefined}
                     className={`w-full inline-flex items-center justify-center gap-2 bg-slate-950/80 hover:bg-slate-900 text-slate-200 text-xs font-semibold py-2.5 rounded-lg border border-slate-700/80 transition-colors ${accent.cta}`}
+                    aria-label={step.external ? `${step.ctaLabel} (opens in a new tab)` : step.ctaLabel}
                   >
                     {step.external ? <MessageSquare size={13} /> : <Bot size={13} />}
                     {step.ctaLabel}
+                    {step.external ? <span className="sr-only">(opens in a new tab)</span> : null}
                   </Link>
                 </div>
               </div>

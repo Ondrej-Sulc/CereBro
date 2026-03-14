@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import PageBackground from "@/components/PageBackground";
 import { DebugRosterForm } from "@/components/DebugRosterForm";
 import { ensureAdmin } from "../actions";
+
+export const metadata: Metadata = {
+  title: "Debug Roster Processing - CereBro",
+  description:
+    "Upload roster screenshots to inspect OCR output, bounding boxes, and detected text.",
+};
 
 export default async function DebugRosterPage() {
     await ensureAdmin("MANAGE_SYSTEM");

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +15,12 @@ import { Users, Server, Shield } from "lucide-react";
 import { CleanupButton, LeaveButton } from "./discord-client";
 import { cn } from "@/lib/utils";
 import { ensureAdmin } from "../actions";
+
+export const metadata: Metadata = {
+  title: "Discord Servers - CereBro",
+  description:
+    "Monitor and manage the Discord servers connected to CereBro.",
+};
 
 export default async function AdminDiscordPage() {
     await ensureAdmin("MANAGE_SYSTEM");

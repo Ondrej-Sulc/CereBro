@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import QuestListClient from "@/components/planning/quest-list-client";
 import { QuestWithRelations } from "@/components/planning/quest-list-client";
 import { QuestPlanStatus } from "@prisma/client";
+
+export const metadata: Metadata = {
+  title: "Quest Planner - CereBro",
+  description:
+    "Browse published quest plans, guides, and counters to prepare your next run.",
+};
 
 export default async function QuestsPage() {
     const session = await auth();

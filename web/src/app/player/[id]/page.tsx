@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getPlayerQuestPlansForProfile } from "@/app/actions/quests";
@@ -13,20 +14,45 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { cache } from "react";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
 }
 
-export default async function PlayerProfilePage({ params }: PlayerProfilePageProps) {
-    const { id } = await params;
-
-    const player = await prisma.player.findUnique({
+const getPlayerProfile = cache(async (id: string) => {
+    return prisma.player.findUnique({
         where: { id },
         include: {
             alliance: { select: { id: true, name: true } }
         }
     });
+});
+
+export async function generateMetadata({ params }: PlayerProfilePageProps): Promise<Metadata> {
+    const { id } = await params;
+    const player = await getPlayerProfile(id);
+
+    if (!player) {
+        return {
+            title: "Player Profile - CereBro",
+            description:
+                "View this player's top champions, quest plans, recent war videos, and recent fights.",
+        };
+    }
+
+    return {
+        title: `${player.ingameName} - Player Profile - CereBro`,
+        description: player.alliance?.name
+            ? `View ${player.ingameName}'s top champions, quest plans, recent war videos, and alliance activity for ${player.alliance.name}.`
+            : `View ${player.ingameName}'s top champions, quest plans, recent war videos, and recent fights.`,
+    };
+}
+
+export default async function PlayerProfilePage({ params }: PlayerProfilePageProps) {
+    const { id } = await params;
+
+    const player = await getPlayerProfile(id);
 
     if (!player) notFound();
 

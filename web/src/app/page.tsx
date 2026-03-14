@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroVisual } from "@/components/HeroVisual";
 import { LiveSetup } from "@/components/LiveSetup";
@@ -18,6 +19,12 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Faq } from "@/components/Faq";
+
+export const metadata: Metadata = {
+  title: "Alliance War Planning & Discord Bot - CereBro",
+  description:
+    "CereBro is the complete operating system for MCOC alliances, combining war planning tools, roster utilities, a Discord bot, and a searchable war video library.",
+};
 import PageBackground from "@/components/PageBackground";
 import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDeck";
 import { ScrollReveal } from "@/components/ScrollReveal";

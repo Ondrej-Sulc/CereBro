@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { RosterUpdateForm } from "@/components/RosterUpdateForm";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
@@ -6,6 +7,12 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Wrench } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Update Roster - CereBro",
+  description:
+    "Upload roster screenshots to automatically refresh your profile and champion data.",
+};
 
 export default async function RosterUpdatePage() {
     const session = await auth();

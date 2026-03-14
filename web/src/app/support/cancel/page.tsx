@@ -2,6 +2,11 @@ import Link from "next/link";
 import { RotateCcw } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 
+export const metadata = {
+  title: "Cancel Support - CereBro",
+  description: "No charge was made. Return anytime to try supporting CereBro again.",
+};
+
 export default function SupportCancelPage() {
   return (
     <div className="min-h-screen relative page-container pt-20 pb-20">

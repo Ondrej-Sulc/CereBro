@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -6,13 +7,38 @@ import AdminQuestBuilderClient from "@/components/admin/quests/admin-quest-build
 import { QuestWithRelations } from "@/components/admin/quests/admin-quest-builder-client";
 import { Champion } from "@/types/champion";
 import { ensureAdmin } from "../../actions";
+import { cache } from "react";
+
+const getQuestPlan = cache(async (id: string) => getQuestPlanById(id));
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const quest = await getQuestPlan(id);
+
+  if (!quest) {
+    return {
+      title: "Quest Builder - CereBro",
+      description:
+        "Edit a quest plan's settings, encounters, tags, creators, and recommended champions.",
+    };
+  }
+
+  return {
+    title: `${quest.title} - Quest Builder - CereBro`,
+    description: `Edit settings, encounters, tags, creators, and recommended champions for ${quest.title}.`,
+  };
+}
 
 export default async function AdminQuestBuilderPage({ params }: { params: Promise<{ id: string }> }) {
     await ensureAdmin("MANAGE_QUESTS");
 
     const { id } = await params;
 
-    const quest = await getQuestPlanById(id);
+    const quest = await getQuestPlan(id);
     if (!quest) {
         return <p>Quest Plan not found.</p>;
     }

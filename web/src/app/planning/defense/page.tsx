@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import DefenseDashboard from "@/components/war-planning/defense-dashboard";
 import { redirect } from "next/navigation";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
+
+export const metadata: Metadata = {
+  title: "Defense Planning - CereBro",
+  description:
+    "Create, manage, and activate alliance war defense plans for your team.",
+};
 
 export const dynamic = "force-dynamic";
 

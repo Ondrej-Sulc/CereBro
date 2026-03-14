@@ -75,9 +75,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const session = event.data.object as Stripe.Checkout.Session;
   const donationStatus = mapDonationStatus(event, session);
-  const amountMinor = session.amount_total ?? 0;
-  const currency = (session.currency || "").toLowerCase();
+  const amountMinor = session.amount_total;
+  const sessionCurrency = session.currency;
   const checkoutSessionId = session.id;
+
+  if (typeof amountMinor !== "number" || amountMinor <= 0) {
+    logger.error(
+      { checkoutSessionId, eventType: event.type, amountMinor },
+      "Skipping support donation webhook with invalid amount_total",
+    );
+    return NextResponse.json({ received: true });
+  }
+
+  if (typeof sessionCurrency !== "string" || sessionCurrency.trim().length === 0) {
+    logger.error(
+      { checkoutSessionId, eventType: event.type, currency: sessionCurrency },
+      "Skipping support donation webhook with invalid currency",
+    );
+    return NextResponse.json({ received: true });
+  }
+
+  const currency = sessionCurrency.toLowerCase();
   const paymentIntentId = getPaymentIntentId(session.payment_intent);
   const stripeCustomerId = getCustomerId(session.customer);
   const supporterEmail = session.customer_details?.email || session.customer_email || null;

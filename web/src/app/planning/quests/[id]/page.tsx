@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -11,6 +12,33 @@ import { Edit3, Youtube, ArrowLeft } from "lucide-react";
 import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { Champion, ChampionImages } from "@/types/champion";
+import { cache } from "react";
+
+const getQuestPlan = cache(async (id: string) => getQuestPlanById(id));
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const quest = await getQuestPlan(id);
+
+  if (!quest) {
+    return {
+      title: "Quest Plan Details - CereBro",
+      description:
+        "Build your quest plan, review requirements, and pick counters for each encounter.",
+    };
+  }
+
+  return {
+    title: `${quest.title} - Quest Planner - CereBro`,
+    description: quest.category?.name
+      ? `Build your ${quest.category.name} quest plan, review requirements, and pick counters for each encounter.`
+      : "Build your quest plan, review requirements, and pick counters for each encounter.",
+  };
+}
 
 export default async function QuestTimelinePage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -48,7 +76,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     }
 
     // Fetch the Quest
-    const quest = await getQuestPlanById(id);
+    const quest = await getQuestPlan(id);
     if (!quest) return <p>Quest not found</p>;
 
     // Visibility check

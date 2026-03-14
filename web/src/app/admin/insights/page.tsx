@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Shield, UserPlus, Activity, ExternalLink } from "lucide-react"
@@ -14,6 +15,12 @@ import {
 
 import { LastUpdated } from "./last-updated"
 import { ensureAdmin } from "../actions"
+
+export const metadata: Metadata = {
+  title: "Database Insights - CereBro",
+  description:
+    "Monitor player, alliance, prestige, and recent join statistics across CereBro.",
+}
 
 export default async function InsightsPage() {
   await ensureAdmin("VIEW_INSIGHTS")

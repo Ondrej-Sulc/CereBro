@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map, Info } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -148,7 +148,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/about" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                    <Heart className="w-4 h-4 text-slate-300" />
+                    <Info className="w-4 h-4 text-slate-300" />
                     <span>About</span>
                   </Link>
                 </DropdownMenuItem>
@@ -264,7 +264,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                         href="/about" 
                         className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                     >
-                      <Heart className="w-5 h-5" />
+                      <Info className="w-5 h-5" />
                       About
                     </Link>
                   </div>

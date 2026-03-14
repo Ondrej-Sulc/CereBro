@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -8,9 +9,37 @@ import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { cache } from "react";
 
 interface DefenseDetailsPageProps {
   params: Promise<{ id: string }>;
+}
+
+const getDefensePlanForMetadata = cache(async (id: string) => {
+  return prisma.warDefensePlan.findUnique({
+    where: { id },
+    include: {
+      alliance: true,
+    },
+  });
+});
+
+export async function generateMetadata({ params }: DefenseDetailsPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const plan = await getDefensePlanForMetadata(id);
+
+  if (!plan) {
+    return {
+      title: "Defense Plan Details - CereBro",
+      description:
+        "Assign defenders, organize battlegroups, and review placements for this defense plan.",
+    };
+  }
+
+  return {
+    title: `${plan.name} - Defense Planning - CereBro`,
+    description: `Assign defenders, organize battlegroups, and review placements for ${plan.alliance.name}.`,
+  };
 }
 
 export default async function DefenseDetailsPage({ params }: DefenseDetailsPageProps) {

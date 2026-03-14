@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import crypto from 'crypto';
 import { add } from 'date-fns';
+
+export const metadata: Metadata = {
+  title: "Start War Video Upload - CereBro",
+  description:
+    "Authenticate with Discord and create a secure upload session for submitting Alliance War videos.",
+};
 
 export default async function InitUploadPage() {
   const session = await auth();

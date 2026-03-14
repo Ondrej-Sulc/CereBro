@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AllianceOnboardingClient } from "./client-page";
+
+export const metadata: Metadata = {
+  title: "Alliance Onboarding - CereBro",
+  description:
+    "Join an existing alliance or create a new one to start planning with CereBro.",
+};
 
 export default async function AllianceOnboardingPage() {
     const player = await getUserPlayerWithAlliance();

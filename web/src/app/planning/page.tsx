@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import WarPlanningDashboard from "@/components/war-planning/war-planning-dashboard";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
+
+export const metadata: Metadata = {
+  title: "War Planning - CereBro",
+  description:
+    "Create and manage alliance war plans, review past wars, and launch new war setups.",
+};
 
 export default async function WarPlanningPage() {
   const player = await getUserPlayerWithAlliance();
