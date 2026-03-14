@@ -15,6 +15,8 @@ const getWarVideoForMetadata = cache(async (videoId: string) => {
   return prisma.warVideo.findUnique({
     where: { id: videoId },
     select: {
+      status: true,
+      visibility: true,
       submittedBy: {
         select: {
           ingameName: true,
@@ -49,6 +51,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: "Alliance War Video - CereBro",
       description:
         "Watch a submitted Alliance War video with fight details, nodes, attackers, defenders, and uploader information.",
+    };
+  }
+
+  const isAdmin = await isUserBotAdmin();
+  if (!isAdmin && (warVideo.status !== 'PUBLISHED' || warVideo.visibility !== 'public')) {
+    return {
+      title: "Alliance War Video - CereBro",
+      description: "Watch a submitted Alliance War video.",
     };
   }
 

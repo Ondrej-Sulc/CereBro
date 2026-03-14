@@ -101,6 +101,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const supporterEmail = session.customer_details?.email || session.customer_email || null;
   const supporterName = session.customer_details?.name || session.metadata?.supporterName || null;
   const metadataPlayerId = session.metadata?.playerId || null;
+  const discordId = session.metadata?.discordId || null;
+  const botUserId = session.metadata?.botUserId || null;
   const playerId = metadataPlayerId || session.client_reference_id || null;
 
   try {
@@ -114,6 +116,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       supporterName,
       supporterEmail,
       playerId,
+      discordId,
+      botUserId,
     });
 
     return NextResponse.json({ received: true });

@@ -16,6 +16,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await ensureAdmin("MANAGE_QUESTS");
+  
   const { id } = await params;
   const quest = await getQuestPlan(id);
 

@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { VersionChecker } from "@/components/version-checker";
+import { QueryErrorToast } from "@/components/QueryErrorToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -109,6 +110,7 @@ export default function RootLayout({
           <MainLayout>
             {children}
           </MainLayout>
+          <QueryErrorToast />
           <Toaster />
         </PHProvider>
       </body>

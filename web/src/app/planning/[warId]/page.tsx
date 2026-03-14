@@ -23,9 +23,19 @@ const getWar = cache(async (warId: string) => {
 
 export async function generateMetadata({ params }: WarDetailsPageProps): Promise<Metadata> {
   const { warId } = await params;
+  
+  const player = await getUserPlayerWithAlliance();
+  let isAuthorized = false;
+
   const war = await getWar(warId);
 
-  if (!war) {
+  if (player && war) {
+    const isBotAdmin = player.isBotAdmin;
+    const isMember = player.allianceId === war.allianceId;
+    isAuthorized = isBotAdmin || isMember;
+  }
+
+  if (!war || !isAuthorized) {
     return {
       title: "War Plan Details - CereBro",
       description:

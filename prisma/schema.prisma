@@ -180,6 +180,7 @@ model BotUser {
   activeProfileId   String?
   profiles          Player[]
   createdQuestPlans QuestPlan[] @relation("QuestPlanCreators")
+  supportDonations  SupportDonation[]
 }
 
 model Player {
@@ -235,13 +236,18 @@ model SupportDonation {
   anonymizedAt           DateTime?
   deletedAt              DateTime?
   consentRevoked         Boolean  @default(false)
+  discordId              String?
+  botUserId              String?
   playerId               String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   player                 Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  botUser                BotUser? @relation(fields: [botUserId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([playerId, createdAt])
+  @@index([botUserId, createdAt])
+  @@index([discordId, createdAt])
   @@index([retentionState, anonymizedAt, deletedAt])
 }
 

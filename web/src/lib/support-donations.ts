@@ -21,6 +21,8 @@ type UpsertDonationInput = {
   supporterName: string | null;
   supporterEmail: string | null;
   playerId: string | null;
+  botUserId: string | null;
+  discordId: string | null;
 };
 
 export async function upsertSupportDonation(input: UpsertDonationInput) {
@@ -32,6 +34,8 @@ export async function upsertSupportDonation(input: UpsertDonationInput) {
       stripePaymentIntentId: input.stripePaymentIntentId,
       stripeCustomerId: input.stripeCustomerId,
       playerId: input.playerId,
+      botUserId: input.botUserId,
+      discordId: input.discordId,
     };
 
     // Only update with PII when the row is still in an ACTIVE (non-anonymized) state.

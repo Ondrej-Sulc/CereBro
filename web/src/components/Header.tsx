@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map, Info } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -64,7 +64,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                       </Link>
           
                       <Link href="/planning/quests" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                        <Map className="w-4 h-4" />
+                        <MapIcon className="w-4 h-4" />
                         Quest Planner
                       </Link>
           
@@ -189,7 +189,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                                           href="/planning/quests"
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                                       >
-                                        <Map className="w-5 h-5" />
+                                        <MapIcon className="w-5 h-5" />
                                         Quest Planner
                                       </Link>
                                       <Link

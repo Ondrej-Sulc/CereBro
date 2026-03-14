@@ -99,7 +99,7 @@ export const LiveSetup = () => {
           return (
             <div key={step.id} className="h-full">
               <div
-                className={`group relative h-full rounded-2xl border border-slate-800/80 bg-gradient-to-b from-slate-900/90 to-slate-900/50 p-5 transition-all duration-200 shadow-lg shadow-black/10 ${accent.card}`}
+                className={`flex flex-col group relative h-full rounded-2xl border border-slate-800/80 bg-gradient-to-b from-slate-900/90 to-slate-900/50 p-5 transition-all duration-200 shadow-lg shadow-black/10 ${accent.card}`}
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="inline-flex items-center gap-2">

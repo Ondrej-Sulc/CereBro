@@ -32,6 +32,29 @@ export async function generateMetadata({
     };
   }
 
+  const session = await auth();
+  let isBotAdmin = false;
+  
+  if (session?.user?.id) {
+    const account = await prisma.account.findFirst({
+        where: { userId: session.user.id, provider: "discord" }
+    });
+    if (account?.providerAccountId) {
+        const botUser = await prisma.botUser.findUnique({
+            where: { discordId: account.providerAccountId }
+        });
+        isBotAdmin = botUser?.isBotAdmin || false;
+    }
+  }
+
+  if (quest.status !== QuestPlanStatus.VISIBLE && !isBotAdmin) {
+    return {
+      title: "Quest Plan Details - CereBro",
+      description:
+        "Build your quest plan, review requirements, and pick counters for each encounter.",
+    };
+  }
+
   return {
     title: `${quest.title} - Quest Planner - CereBro`,
     description: quest.category?.name

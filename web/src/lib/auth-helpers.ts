@@ -161,8 +161,15 @@ export async function hasCurrentUserSupportedCereBro(): Promise<boolean> {
 
   const donation = await prisma.supportDonation.findFirst({
     where: {
-      playerId: player.id,
+      OR: [
+        { playerId: player.id },
+        { discordId: player.discordId },
+        { botUserId: player.botUserId || undefined },
+      ],
       status: "succeeded",
+      anonymizedAt: null,
+      deletedAt: null,
+      consentRevoked: false,
     },
     select: { id: true },
   });

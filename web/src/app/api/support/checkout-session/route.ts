@@ -94,23 +94,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const session = await auth();
 
   let playerId: string | null = null;
+  let botUserId: string | null = null;
+  const discordId: string | null = session?.user?.discordId || null;
   let supporterName: string | null = session?.user?.name || null;
   const supporterEmail: string | null = session?.user?.email || null;
 
-  if (session?.user?.discordId) {
+  if (discordId) {
     try {
       const player = await prisma.player.findFirst({
-        where: { discordId: session.user.discordId, isActive: true },
-        select: { id: true, ingameName: true },
+        where: { discordId, isActive: true },
+        select: { id: true, ingameName: true, botUserId: true },
       });
 
       if (player) {
         playerId = player.id;
         supporterName = player.ingameName || supporterName;
+        botUserId = player.botUserId;
       }
     } catch (error) {
       logger.error(
-        { error, discordId: session.user.discordId },
+        { error, discordId },
         "Failed to resolve player during support checkout session creation",
       );
     }
@@ -140,6 +143,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       metadata: {
         source: "cerebro_support_page",
         playerId: playerId ?? "",
+        botUserId: botUserId ?? "",
+        discordId: discordId ?? "",
         supporterName: supporterName ?? "",
       },
     });

@@ -22,12 +22,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
-
-export const metadata: Metadata = {
-  title: "User Management - CereBro",
-  description:
-    "Browse, filter, and manage player profiles, alliance membership, roles, and admin permissions.",
-}
 import { Prisma } from "@prisma/client"
 import { Suspense } from "react"
 import { buildSearchParams, cn } from "@/lib/utils"
@@ -38,6 +32,12 @@ import { computePaginationWindow } from "@/lib/pagination"
 import { EditPermissionsDialog } from "./components/edit-permissions-dialog"
 import { auth } from "@/auth"
 import { ensureAdmin } from "../actions"
+
+export const metadata: Metadata = {
+  title: "User Management - CereBro",
+  description:
+    "Browse, filter, and manage player profiles, alliance membership, roles, and admin permissions.",
+}
 
 interface AdminUsersPageProps {
   searchParams: Promise<{

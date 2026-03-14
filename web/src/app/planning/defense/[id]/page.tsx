@@ -26,9 +26,19 @@ const getDefensePlanForMetadata = cache(async (id: string) => {
 
 export async function generateMetadata({ params }: DefenseDetailsPageProps): Promise<Metadata> {
   const { id } = await params;
+  
+  const player = await getUserPlayerWithAlliance();
+  let isAuthorized = false;
+
   const plan = await getDefensePlanForMetadata(id);
 
-  if (!plan) {
+  if (player && plan) {
+    const isBotAdmin = player.isBotAdmin;
+    const isMember = player.allianceId === plan.allianceId;
+    isAuthorized = isBotAdmin || isMember;
+  }
+
+  if (!plan || !isAuthorized) {
     return {
       title: "Defense Plan Details - CereBro",
       description:

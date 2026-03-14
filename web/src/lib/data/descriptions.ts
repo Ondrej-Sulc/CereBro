@@ -88,7 +88,7 @@ export const commandDescriptions = new Map<string, CommandInfo>([
             description: "Officer/admin command for assigning a player to an alliance role in Discord. Regular members should join via Discord role sync or the website join-request flow.",
             usage: "/alliance join <role> [name]",
             examples: [
-              "/alliance join role:@BG1 MyIGN - Assigns player MyIGN to the BG1 role and alliance mapping.",
+              "/alliance join role:@BG1 name:MyIGN - Assigns player MyIGN to the BG1 role and alliance mapping.",
               "/alliance join role:@Member - Assigns a registered player to the Member role/alliance.",
             ],
           },

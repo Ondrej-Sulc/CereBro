@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MembersTable } from "./members-table"
 import { cache } from "react"
+import { ensureAdmin } from "../../actions"
 
 interface AdminAllianceDetailPageProps {
   params: Promise<{
@@ -48,6 +49,7 @@ export async function generateMetadata({ params }: AdminAllianceDetailPageProps)
 }
 
 export default async function AdminAllianceDetailPage({ params }: AdminAllianceDetailPageProps) {
+  await ensureAdmin("MANAGE_ALLIANCES")
   const { id } = await params
 
   const alliance = await getAlliance(id)

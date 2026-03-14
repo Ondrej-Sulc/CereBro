@@ -3,13 +3,79 @@ import Link from "next/link";
 import { CheckCircle2, Heart } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { DISCORD_INVITE } from "@/lib/links";
+import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = {
-  title: "Support Successful - CereBro",
-  description: "Thank you for supporting CereBro and helping fund hosting and active development.",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>;
+}): Promise<Metadata> {
+  const { session_id } = await searchParams;
+  
+  if (session_id) {
+    const donation = await prisma.supportDonation.findUnique({
+      where: { stripeCheckoutSessionId: session_id }
+    });
+    
+    if (donation?.status === 'succeeded') {
+      return {
+        title: "Support Successful - CereBro",
+        description: "Thank you for supporting CereBro and helping fund hosting and active development.",
+      };
+    }
+  }
 
-export default function SupportSuccessPage() {
+  return {
+    title: "Support Status - CereBro",
+    description: "Verifying your support status.",
+  };
+}
+
+export default async function SupportSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>;
+}) {
+  const { session_id } = await searchParams;
+  let isSuccess = false;
+
+  if (session_id) {
+    const donation = await prisma.supportDonation.findUnique({
+      where: { stripeCheckoutSessionId: session_id }
+    });
+    if (donation?.status === 'succeeded') {
+      isSuccess = true;
+    }
+  }
+
+  if (!isSuccess) {
+    return (
+      <div className="min-h-screen relative page-container pt-20 pb-20">
+        <PageBackground />
+        <main className="relative z-10">
+          <section className="max-w-3xl mx-auto px-4 lg:px-6">
+            <div className="rounded-3xl border border-slate-500/30 bg-slate-900/60 p-8 md:p-10 text-center">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
+                Support Status
+              </h1>
+              <p className="text-slate-300 text-lg max-w-xl mx-auto mb-8">
+                We could not verify your support session. If you completed a payment, it may take a few moments to process.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href="/"
+                  className="inline-flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium px-6 py-3 transition-colors"
+                >
+                  Back to Home
+                </Link>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen relative page-container pt-20 pb-20">
       <PageBackground />
