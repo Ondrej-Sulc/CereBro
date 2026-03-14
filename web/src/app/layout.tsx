@@ -20,6 +20,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CereBro — MCOC Alliance Operating System",
   description: "CereBro is a comprehensive management platform for MCOC Alliances, offering advanced roster tracking via image processing, strategic war planning, automated AQ management, and deep champion insights.",
+  applicationName: "CereBro",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/CereBro_logo_512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: ["/icon-192.png"],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "CereBro",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({
