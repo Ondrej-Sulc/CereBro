@@ -152,3 +152,20 @@ export async function requireBotAdmin(requiredPermission?: Permission) {
 
   throw new Error("Unauthorized");
 }
+
+export async function hasCurrentUserSupportedCereBro(): Promise<boolean> {
+  const player = await getUserPlayerWithAlliance();
+  if (!player) {
+    return false;
+  }
+
+  const donation = await prisma.supportDonation.findFirst({
+    where: {
+      playerId: player.id,
+      status: "succeeded",
+    },
+    select: { id: true },
+  });
+
+  return !!donation;
+}

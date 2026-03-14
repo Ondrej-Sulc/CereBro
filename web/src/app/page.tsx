@@ -18,6 +18,7 @@ import { Faq } from "@/components/Faq";
 import PageBackground from "@/components/PageBackground";
 import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDeck";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { DISCORD_INVITE } from "@/lib/links";
 
 export default async function Home() {
   return (
@@ -53,7 +54,7 @@ export default async function Home() {
                   Add to Discord
                 </Link>
                 <Link
-                  href="https://discord.gg/eRv7fkMHmU"
+                  href={DISCORD_INVITE}
                   target="_blank"
                   className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-lg border border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-all"
                 >
@@ -337,14 +338,14 @@ export default async function Home() {
                         Built for the Community
                     </h2>
                     <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        CereBro is a passion project maintained by an active player. Learn more about the developer and how you can support the project&apos;s growth.
+                        CereBro is a passion project maintained by an active player. Learn more about the developer and support the project with a custom donation.
                     </p>
 
                     <Link 
-                        href="/about" 
+                        href="/support" 
                         className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-medium px-8 py-4 rounded-full transition-all hover:scale-105"
                     >
-                        View About & Support
+                        Support CereBro
                         <ChevronRight className="w-4 h-4" />
                     </Link>
                 </div>

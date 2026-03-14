@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { 
-  Coffee, 
   Server, 
   Sparkles, 
   Code,
@@ -14,6 +13,7 @@ import {
 import PageBackground from "@/components/PageBackground";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Metadata } from "next";
+import { DISCORD_INVITE } from "@/lib/links";
 
 export const metadata: Metadata = {
   title: "About & Support - CereBro",
@@ -58,7 +58,7 @@ export default function AboutPage() {
                     </div>
                     
                     <Link
-                        href="https://discord.gg/eRv7fkMHmU"
+                        href={DISCORD_INVITE}
                         target="_blank"
                         className="flex items-center gap-3 bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
                     >
@@ -191,22 +191,21 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-1 gap-4 max-w-xl mx-auto">
+              <div className="flex justify-center max-w-xl mx-auto">
                 <Link
-                  href="https://ko-fi.com/cerebrobot"
-                  target="_blank"
-                  className="group relative overflow-hidden rounded-xl bg-[#FF5E5B] transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#FF5E5B]/20"
+                  href="/support"
+                  className="group relative overflow-hidden rounded-xl bg-pink-500 hover:bg-pink-600 transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-pink-500/20"
                 >
                   <div className="relative flex items-center justify-center gap-4 px-6 py-4 text-white">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <Coffee className="w-6 h-6" />
+                    <div className="bg-white/20 p-2 rounded-lg text-sm font-bold leading-none px-3 py-2">
+                      EUR
                     </div>
                     <div className="text-left">
                       <div className="font-bold text-lg leading-none">
-                        Support on Ko-fi
+                        Support CereBro
                       </div>
                       <div className="text-xs text-white/90 mt-1 font-medium">
-                        One-time/recurring donation
+                        Donate any custom amount with Stripe
                       </div>
                     </div>
                   </div>
