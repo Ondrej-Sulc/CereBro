@@ -23,9 +23,6 @@ export async function handleChampionModalPart1(interaction: ModalSubmitInteracti
     const secondaryImageUrl = interaction.fields.getTextInputValue(
       "championSecondaryImage"
     );
-    const isPlayable = interaction.fields.getTextInputValue(
-      "championIsPlayable"
-    ).toLowerCase() === "true";
 
     const partialChampionData = {
       name,
@@ -33,7 +30,6 @@ export async function handleChampionModalPart1(interaction: ModalSubmitInteracti
       champClass,
       primaryImageUrl,
       secondaryImageUrl,
-      isPlayable,
     };
 
     pendingChampions.set(interaction.user.id, partialChampionData);
@@ -88,6 +84,9 @@ export async function handleChampionModalPart2(interaction: ModalSubmitInteracti
       const obtainableRange =
         interaction.fields.getTextInputValue("championObtainableRange") ||
         "2-7";
+      const isPlayable = interaction.fields.getTextInputValue(
+        "championIsPlayable"
+      ).toLowerCase() === "true";
 
       if (
         !Object.values(ChampionClass).includes(
@@ -106,6 +105,7 @@ export async function handleChampionModalPart2(interaction: ModalSubmitInteracti
         tagsImageUrl,
         heroImageUrl,
         obtainableRange,
+        isPlayable,
         releaseDate: new Date(releaseDate),
       };
 

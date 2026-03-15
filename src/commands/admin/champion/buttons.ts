@@ -39,13 +39,21 @@ export async function showChampionModalPart2(
       .setRequired(false)
       .setValue("2-7");
 
+    const isPlayableInput = new TextInputBuilder()
+      .setCustomId("championIsPlayable")
+      .setLabel("Is Playable? (true/false)")
+      .setStyle(TextInputStyle.Short)
+      .setValue("true")
+      .setRequired(true);
+
     modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(tagsImageInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(heroImageInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(releaseDateInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         obtainableRangeInput
-      )
+      ),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(isPlayableInput)
     );
 
     await interaction.showModal(modal);
