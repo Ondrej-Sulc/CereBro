@@ -7,7 +7,7 @@ export const championClassColorMap: Record<ChampionClass, { text: string; border
   COSMIC:   { text: 'text-cyan-500',   border: 'ring-2 ring-inset ring-cyan-500/75',   bg: 'bg-cyan-500/20',   color: '#06b6d4' },  // cyan-500
   TECH:     { text: 'text-blue-700',   border: 'ring-2 ring-inset ring-blue-700/75',   bg: 'bg-blue-700/20',   color: '#1d4ed8' },  // blue-700
   MUTANT:   { text: 'text-yellow-500', border: 'ring-2 ring-inset ring-yellow-500/75', bg: 'bg-yellow-500/20', color: '#eab308' }, // yellow-500
-  SUPERIOR: { text: 'text-gray-400',   border: 'ring-2 ring-inset ring-gray-400/75',   bg: 'bg-gray-400/20',   color: '#9ca3af' },  // gray-400
+  SUPERIOR: { text: 'text-emerald-500',   border: 'ring-2 ring-inset ring-emerald-500/75',   bg: 'bg-emerald-500/20',   color: '#10b981' },  // emerald-500
 };
 
 export const getChampionClassColors = (championClass?: ChampionClass) => {
