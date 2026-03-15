@@ -13,11 +13,21 @@ declare global {
   var __LOGGER_INITIALIZED__: boolean | undefined;
 }
 
+export const isAbortedResponse = (error: unknown): boolean => {
+  if (!error) return false;
+  const err = error as any;
+  return (
+    err.name === 'ResponseAborted' ||
+    (typeof err.message === 'string' && err.message.includes('ResponseAborted')) ||
+    String(error).includes('ResponseAborted')
+  );
+};
+
 // Intercept console.error and console.warn on server to ensure they are logged in JSON
 if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
   globalThis.__LOGGER_INITIALIZED__ = true;
 
-  const formatArgs = (args: any[]) => {
+  const formatArgs = (args: any[]): string | any[] => {
     if (args.length === 1 && typeof args[0] === 'string') return args[0];
     return args;
   };
@@ -39,11 +49,7 @@ if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
 
   // Capture unhandled rejections and uncaught exceptions on the server
   process.on('unhandledRejection', (reason, promise) => {
-    const isAborted = 
-      (reason instanceof Error && (reason.name === 'ResponseAborted' || reason.message.includes('ResponseAborted'))) ||
-      String(reason).includes('ResponseAborted');
-    
-    if (isAborted) {
+    if (isAbortedResponse(reason)) {
       logger.trace({ reason }, 'Unhandled Rejection (Aborted Response)');
     } else {
       logger.error({ reason, promise }, 'Unhandled Rejection');

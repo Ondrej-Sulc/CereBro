@@ -1,5 +1,5 @@
 import { handlers } from "@/auth";
-import logger from "@/lib/logger";
+import logger, { isAbortedResponse } from "@/lib/logger";
 
 const { GET: _GET, POST: _POST } = handlers;
 
@@ -8,7 +8,9 @@ const { GET: _GET, POST: _POST } = handlers;
  * 1. Catch and log errors in JSON format via Pino.
  * 2. Handle 'ResponseAborted' which is common in Next.js 15/Auth.js v5 redirects.
  */
-const wrapHandler = (handler: any) => async (req: Request, ...args: any[]) => {
+const wrapHandler = <Req extends Request, Args extends any[], R>(
+  handler: (req: Req, ...args: Args) => Promise<R> | R
+) => async (req: Req, ...args: Args): Promise<R | Response> => {
   try {
     return await handler(req, ...args);
   } catch (error: any) {
@@ -16,11 +18,7 @@ const wrapHandler = (handler: any) => async (req: Request, ...args: any[]) => {
       throw error;
     }
 
-    const isAborted = 
-      error?.name === 'ResponseAborted' || 
-      error?.message?.includes('ResponseAborted');
-
-    if (isAborted) {
+    if (isAbortedResponse(error)) {
       // For aborted responses (common during redirects), we log at trace/debug level
       // and return a 204 No Content to satisfy the request.
       logger.trace({ url: req.url }, "Auth handler response aborted (expected during redirect)");
@@ -43,3 +41,4 @@ const wrapHandler = (handler: any) => async (req: Request, ...args: any[]) => {
 
 export const GET = wrapHandler(_GET);
 export const POST = wrapHandler(_POST);
+

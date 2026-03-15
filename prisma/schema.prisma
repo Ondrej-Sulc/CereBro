@@ -660,13 +660,16 @@ model VerificationToken {
 }
 
 model BotJob {
-  id        String       @id @default(cuid())
-  type      BotJobType
-  status    BotJobStatus @default(PENDING)
-  payload   Json
-  error     String?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id          String       @id @default(cuid())
+  type        BotJobType
+  status      BotJobStatus @default(PENDING)
+  payload     Json
+  referenceId String?
+  error       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([type, referenceId])
 }
 
 model QuestCategory {
