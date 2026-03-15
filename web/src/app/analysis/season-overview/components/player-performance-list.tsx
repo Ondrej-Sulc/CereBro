@@ -57,7 +57,7 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
             {players.map((player, idx) => {
                 const rank = getRank(player, idx, sortedGlobalPlayers);
                 const isTop3 = rank <= 3;
-                const soloRate = player.fights > 0 ? ((player.fights - player.deaths) / player.fights) * 100 : 0;
+                const soloRate = player.fights > 0 ? Math.max(0, ((player.fights - player.deaths) / player.fights) * 100) : 0;
                 const bgAccent = bgColors[player.battlegroup as 1|2|3] || "#94a3b8";
 
                 return (

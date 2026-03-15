@@ -27,6 +27,11 @@ type UpsertDonationInput = {
 
 export async function upsertSupportDonation(input: UpsertDonationInput) {
   const donation = await prisma.$transaction(async (tx) => {
+    const existingBefore = await tx.supportDonation.findUnique({
+      where: { stripeCheckoutSessionId: input.stripeCheckoutSessionId },
+      select: { status: true },
+    });
+
     const commonUpdateData = {
       amountMinor: input.amountMinor,
       currency: input.currency,
@@ -120,6 +125,38 @@ export async function upsertSupportDonation(input: UpsertDonationInput) {
 
     if (!persisted) {
       throw new Error("Support donation upsert failed: record not found after transaction.");
+    }
+
+    const targetDiscordId = persisted.discordId || input.discordId;
+
+    if (
+      persisted.status === "succeeded" &&
+      existingBefore?.status !== "succeeded" &&
+      targetDiscordId
+    ) {
+      // Check if a pending or processing job already exists for this donation
+      // to avoid duplicates on webhook retries.
+      const existingJob = await tx.botJob.findFirst({
+        where: {
+          type: "ASSIGN_SUPPORTER_ROLE",
+          status: { in: ["PENDING", "PROCESSING"] },
+          // Using raw raw query pattern or array filter if payload is queryable 
+          // or just fallback to filtering on donationId in payload (if possible in prisma JSON)
+          // For simplicity, we just look for any job created very recently or we use string containment 
+          // Since Prisma's JSON filtering varies, we use string containment on the serialized payload
+          payload: { string_contains: persisted.id }
+        }
+      });
+      
+      if (!existingJob) {
+        // Create a bot job to assign the supporter role on Discord
+        await tx.botJob.create({
+          data: {
+            type: "ASSIGN_SUPPORTER_ROLE",
+            payload: { discordId: targetDiscordId, donationId: persisted.id },
+          },
+        });
+      }
     }
 
     return persisted;
