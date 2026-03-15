@@ -81,7 +81,7 @@ export async function processRosterScreenshot(
   }
 
   // 5. Identify champions in grid
-  const allChampions = await prisma.champion.findMany();
+  const allChampions = await prisma.champion.findMany({ where: { isPlayable: true } });
   const fuse = new Fuse(allChampions, {
     keys: ["name", "shortName"],
     includeScore: true,
@@ -216,7 +216,7 @@ async function saveBGViewRoster(
     const { prisma } = await import("../../../services/prismaService.js");
     const savedChampions: RosterWithChampion[] = [];
     const errors: string[] = [];
-    const allChampions = await prisma.champion.findMany();
+    const allChampions = await prisma.champion.findMany({ where: { isPlayable: true } });
     const championMap = new Map(allChampions.map((c) => [c.name, c]));
 
     logger.info({ 
@@ -310,7 +310,7 @@ async function saveRoster(
 ): Promise<RosterWithChampion[][]> {
   const { prisma } = await import("../../../services/prismaService.js");
   const savedChampions: RosterWithChampion[][] = [];
-  const allChampions = await prisma.champion.findMany();
+  const allChampions = await prisma.champion.findMany({ where: { isPlayable: true } });
   const championMap = new Map(allChampions.map((c) => [c.name, c]));
 
   for (const row of grid) {

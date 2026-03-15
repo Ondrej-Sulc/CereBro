@@ -139,7 +139,8 @@ export async function saveChampionToDb(
     obtainableRange: string,
     imageUrls: any,
     tags: any,
-    emoji: any | undefined
+    emoji: any | undefined,
+    isPlayable: boolean = true
   ) {
     logger.info(`_saveChampionToDb for ${name}`);
     const [start, end] = obtainableRange.split("-").map(Number);
@@ -158,6 +159,7 @@ export async function saveChampionToDb(
       images: imageUrls,
       discordEmoji,
       fullAbilities: {},
+      isPlayable,
     };
 
     const { prisma } = await import("../../../services/prismaService.js");
@@ -230,10 +232,15 @@ export async function addChampion(
       logger.info("Image processing complete.");
 
       // 2. Process tags
-      await interaction.editReply("Processing tags...");
-      logger.info("Processing tags...");
-      const tags = await processTags(tagsImageUrl);
-      logger.info("Tag processing complete.");
+      let tags = {};
+      if (tagsImageUrl) {
+        await interaction.editReply("Processing tags...");
+        logger.info("Processing tags...");
+        tags = await processTags(tagsImageUrl);
+        logger.info("Tag processing complete.");
+      } else {
+        logger.info("No tags image provided, skipping tag processing.");
+      }
 
       // 3. Create Discord Emoji
       await interaction.editReply("Creating Discord emoji...");
@@ -256,7 +263,8 @@ export async function addChampion(
         obtainableRange,
         imageUrls,
         tags,
-        emoji
+        emoji,
+        championData.isPlayable
       );
       logger.info("Champion saved to database.");
 

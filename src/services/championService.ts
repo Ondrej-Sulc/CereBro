@@ -14,12 +14,19 @@ import logger from "./loggerService";
 
 export let championsByName = new Map<string, Champion>();
 export let championList: Champion[] = [];
+export let allChampionsByName = new Map<string, Champion>();
+export let allChampionList: Champion[] = [];
 
 export async function loadChampions() {
   const allChampions = await prisma.champion.findMany();
-  championsByName = new Map(allChampions.map(c => [normalizeChampionName(c.name), c]));
-  championList = allChampions;
-  logger.info(`Loaded ${allChampions.length} champions into cache.`);
+  allChampionList = allChampions;
+  allChampionsByName = new Map(allChampions.map(c => [normalizeChampionName(c.name), c]));
+  
+  const playableChampions = allChampions.filter(c => c.isPlayable);
+  championsByName = new Map(playableChampions.map(c => [normalizeChampionName(c.name), c]));
+  championList = playableChampions;
+  
+  logger.info(`Loaded ${allChampions.length} champions total, ${playableChampions.length} playable champions into cache.`);
 }
 
 export async function getChampionByName(name: string) {

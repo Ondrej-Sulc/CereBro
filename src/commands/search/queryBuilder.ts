@@ -64,7 +64,7 @@ export function isAttackType(value: string): value is AttackTypeEnum {
 export async function buildSearchWhereClause(
   params: Omit<SearchCoreParams, "userId" | "page" | "searchId">
 ): Promise<Prisma.ChampionWhereInput> {
-  const where: Prisma.ChampionWhereInput = { AND: [] };
+  const where: Prisma.ChampionWhereInput = { AND: [{ isPlayable: true }] };
   const {
     abilities,
     immunities,

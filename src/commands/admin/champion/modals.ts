@@ -23,6 +23,9 @@ export async function handleChampionModalPart1(interaction: ModalSubmitInteracti
     const secondaryImageUrl = interaction.fields.getTextInputValue(
       "championSecondaryImage"
     );
+    const isPlayable = interaction.fields.getTextInputValue(
+      "championIsPlayable"
+    ).toLowerCase() === "true";
 
     const partialChampionData = {
       name,
@@ -30,6 +33,7 @@ export async function handleChampionModalPart1(interaction: ModalSubmitInteracti
       champClass,
       primaryImageUrl,
       secondaryImageUrl,
+      isPlayable,
     };
 
     pendingChampions.set(interaction.user.id, partialChampionData);

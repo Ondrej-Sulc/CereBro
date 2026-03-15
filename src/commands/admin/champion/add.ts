@@ -41,6 +41,13 @@ export async function handleChampionAdd(interaction: CommandInteraction) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
+  const isPlayableInput = new TextInputBuilder()
+    .setCustomId("championIsPlayable")
+    .setLabel("Is Playable? (true/false)")
+    .setStyle(TextInputStyle.Short)
+    .setValue("true")
+    .setRequired(true);
+
   modal.addComponents(
     new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput),
     new ActionRowBuilder<TextInputBuilder>().addComponents(shortNameInput),
@@ -48,7 +55,8 @@ export async function handleChampionAdd(interaction: CommandInteraction) {
     new ActionRowBuilder<TextInputBuilder>().addComponents(primaryImageInput),
     new ActionRowBuilder<TextInputBuilder>().addComponents(
       secondaryImageInput
-    )
+    ),
+    new ActionRowBuilder<TextInputBuilder>().addComponents(isPlayableInput)
   );
 
   await interaction.showModal(modal);

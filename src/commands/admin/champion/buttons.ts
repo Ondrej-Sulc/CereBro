@@ -18,7 +18,7 @@ export async function showChampionModalPart2(
       .setCustomId("championTagsImage")
       .setLabel("Tags Image URL")
       .setStyle(TextInputStyle.Short)
-      .setRequired(true);
+      .setRequired(false);
 
     const heroImageInput = new TextInputBuilder()
       .setCustomId("championHeroImage")

@@ -83,7 +83,7 @@ export class RosterChampionService {
     
     if (!championsInDb) {
         championsInDb = await prisma.champion.findMany({
-            where: { class: championClass }
+            where: { class: championClass, isPlayable: true }
         });
         this.classCache.set(championClass, championsInDb);
     }

@@ -8,6 +8,7 @@ const CACHE_TTL = 3600;
 export async function getCachedChampions(): Promise<Champion[]> {
   return await getFromCache("all-champions-full-v2", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
+      where: { isPlayable: true },
       orderBy: { name: 'asc' },
       select: {
         id: true,
@@ -19,6 +20,44 @@ export async function getCachedChampions(): Promise<Champion[]> {
         obtainable: true,
         discordEmoji: true,
         fullAbilities: true,
+        isPlayable: true,
+        createdAt: true,
+        updatedAt: true,
+        abilities: {
+          select: {
+            type: true,
+            ability: {
+              select: {
+                name: true,
+                categories: { select: { name: true } }
+              }
+            }
+          }
+        },
+        tags: {
+          select: { id: true, name: true }
+        }
+      }
+    });
+    return champions as unknown as Champion[];
+  });
+}
+
+export async function getCachedAllChampions(): Promise<Champion[]> {
+  return await getFromCache("all-champions-full-total", CACHE_TTL, async () => {
+    const champions = await prisma.champion.findMany({
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        images: true,
+        class: true,
+        shortName: true,
+        releaseDate: true,
+        obtainable: true,
+        discordEmoji: true,
+        fullAbilities: true,
+        isPlayable: true,
         createdAt: true,
         updatedAt: true,
         abilities: {
