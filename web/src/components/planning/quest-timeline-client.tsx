@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check, Target, Swords } from "lucide-react";
 import { savePlayerQuestCounter, getShareablePlanId } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -266,12 +266,12 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     };
 
     /** Resolve a roster item for a given champion ID — works for both interactive and readOnly modes */
-    const resolveRosterItem = (championId: number, encounterId: string): RosterWithChampion | undefined => {
+    const resolveRosterItem = useCallback((championId: number, encounterId: string): RosterWithChampion | undefined => {
         if (readOnly) {
             return rosterMap[encounterId];
         }
         return roster.find(r => r.championId === championId);
-    };
+    }, [readOnly, roster, rosterMap]);
 
     const selectedTeam = useMemo(() => {
         const teamMap = new Map<string, RosterWithChampion>();
@@ -286,8 +286,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         });
         
         return Array.from(teamMap.values());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selections, roster, rosterMap, readOnly]);
+    }, [selections, resolveRosterItem]);
 
     return (
         <div className="relative pt-4 pb-20">
@@ -301,9 +300,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 )}>
                     <Card 
                         className={cn(
-                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
+                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card mx-auto",
                             isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
-                            isTeamExpanded ? "w-[95vw] sm:w-[90vw] md:max-w-5xl bg-slate-900/90" : "w-fit min-w-[200px] hover:bg-slate-900/60 hover:border-sky-500/50"
+                            isTeamExpanded 
+                                ? "w-[95vw] sm:w-[90vw] md:max-w-5xl bg-slate-900/90" 
+                                : "w-fit max-w-[calc(100vw-2rem)] hover:bg-slate-900/60 hover:border-sky-500/50"
                         )}
                         onClick={() => setIsTeamExpanded(!isTeamExpanded)}
                     >
@@ -475,10 +476,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                         </div>
                     </div>
 
-            <div className="relative pl-6 md:pl-10 pb-8">
+            <div className="relative pl-6 md:pl-10 pb-20">
                 {/* Continuous Vertical Timeline Line */}
-                <div className="absolute top-8 bottom-12 left-6 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full">
-                    {/* Progress Fill (Optional later, currently static styling) */}
+                <div className="absolute top-14 bottom-[120px] left-6 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full">
                     <div className="w-full h-full bg-gradient-to-b from-slate-800 via-sky-900/20 to-slate-800 rounded-full" />
                 </div>
 
@@ -486,14 +486,40 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     <p className="text-center text-slate-400 italic mt-8">No encounters have been added to this quest yet.</p>
                 ) : (
                     <div className="space-y-6">
-                        {/* Start Node */}
-                        <div className="relative flex items-center h-12 pl-8 md:pl-10 group">
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
-                                <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-slate-950 bg-slate-800 shadow-[0_0_10px_rgba(0,0,0,0.5)]">
-                                    <div className="w-2 h-2 rounded-full bg-slate-500" />
+                        {/* Column Header */}
+                        <div className="flex items-center pl-8 md:pl-10 mb-8 py-3 bg-slate-950/40 border-y border-slate-800/50 -mx-4 px-2 md:px-4 rounded-xl">
+                            <div className="flex-1 flex items-center justify-start px-2 md:px-6 gap-2 md:gap-3">
+                                <div className="relative shrink-0">
+                                    <div className="absolute -inset-1 bg-red-500/20 blur-sm rounded-full" />
+                                    <Target className="relative w-3.5 h-3.5 md:w-4 md:h-4 text-red-500" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-500 truncate">
+                                        Target
+                                    </span>
+                                    <div className="h-0.5 w-8 md:w-12 bg-gradient-to-r from-red-500/50 to-transparent rounded-full mt-0.5" />
                                 </div>
                             </div>
-                            <div className="text-xs font-black uppercase tracking-widest text-slate-500">Quest Start</div>
+                            
+                            <div className="w-12 md:w-24 shrink-0 flex items-center justify-center">
+                                <div className="relative flex items-center justify-center w-6 h-6 md:w-8 md:h-8">
+                                     <div className="absolute inset-0 border border-slate-800 rotate-45 rounded-sm" />
+                                     <span className="relative z-10 text-[8px] md:text-[10px] font-black text-slate-600 uppercase italic">VS</span>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex items-center justify-end px-2 md:px-6 gap-2 md:gap-3 text-right">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-l from-sky-400 to-indigo-500 truncate">
+                                        Counter
+                                    </span>
+                                    <div className="h-0.5 w-8 md:w-12 bg-gradient-to-l from-sky-500/50 to-transparent rounded-full mt-0.5" />
+                                </div>
+                                <div className="relative shrink-0">
+                                    <div className="absolute -inset-1 bg-sky-500/20 blur-sm rounded-full" />
+                                    <Swords className="relative w-3.5 h-3.5 md:w-4 md:h-4 text-sky-500" />
+                                </div>
+                            </div>
                         </div>
 
                         {quest.encounters.map((encounter: EncounterWithRelations, index: number) => {
@@ -510,25 +536,31 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             );
 
                             return (
-                                <div key={encounter.id} className="relative flex items-stretch group is-active pl-8 md:pl-10">
+                                <div key={encounter.id} className="relative flex items-stretch group/encounter is-active pl-8 md:pl-10">
                                     {/* Timeline Node (Circle on the line) */}
                                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                                         <div className={cn(
-                                            "flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-[3px] shadow-lg font-black transition-all duration-300",
+                                            "flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-300 font-black",
                                             hasSelection
-                                                ? "bg-sky-600 border-slate-950 text-white shadow-[0_0_15px_rgba(2,132,199,0.5)] scale-110"
+                                                ? "bg-slate-950 border-sky-500/60 text-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.15)]"
                                                 : isLast
-                                                    ? "bg-red-950 border-red-800 text-red-500 scale-110 shadow-[0_0_15px_rgba(220,38,38,0.2)]"
-                                                    : "bg-slate-900 border-slate-800 text-slate-400 group-hover:border-slate-600"
+                                                    ? "bg-slate-950 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                                                    : "bg-slate-900 border-slate-800 text-slate-500 group-hover/encounter:border-slate-600"
                                         )}>
-                                            {hasSelection ? <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5" /> : (isLast ? <Crosshair className="h-4 w-4 md:h-5 md:w-5" /> : encounter.sequence)}
+                                            {hasSelection ? (
+                                                <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 animate-in zoom-in duration-300" />
+                                            ) : (
+                                                <span className="text-[10px] md:text-xs">
+                                                    {isLast ? <Crosshair className="h-4 w-4 md:h-5 md:w-5" /> : encounter.sequence}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Horizontal Connector Line (from circle to card) */}
                                     <div className={cn(
                                         "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-8 md:w-10 z-10 transition-colors duration-300",
-                                        hasSelection ? "bg-sky-500/50" : (isLast ? "bg-red-800/50" : "bg-slate-800 group-hover:bg-slate-700")
+                                        hasSelection ? "bg-sky-500/50" : (isLast ? "bg-red-800/50" : "bg-slate-800 group-hover/encounter:bg-slate-700")
                                     )} />
 
                                     {/* Card Content */}
@@ -548,7 +580,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                             {/* Left Side: Defender (Red/Orange Theme) */}
                                             <div className="relative flex-1 flex items-center p-4 md:p-5 md:pr-14 lg:pr-16 gap-4 z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-red-950/20 before:to-transparent before:-z-10 min-w-0">
                                                 {/* Defender Avatar */}
-                                                <div className="relative shrink-0 group-hover:scale-105 transition-transform duration-300">
+                                                <div className="relative shrink-0 group-hover/encounter:scale-105 transition-transform duration-300">
                                                     <div className={`h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
                                                         {encounter.defender ? (
                                                             <Image
@@ -579,12 +611,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                 </div>
 
                                                 <div className="flex flex-col flex-1 min-w-0">
-                                                    <div className="text-[10px] text-red-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center justify-between">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                                                            Target
-                                                        </div>
-                                                    </div>
                                                     <div className="flex items-center gap-2">
                                                         <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
                                                             {encounter.defender?.name || "Unknown Defender"}
@@ -660,10 +686,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                     </div>
 
                                                                     <div className="flex flex-col flex-1 min-w-0 text-left md:text-right">
-                                                                        <div className="text-[10px] text-sky-500/80 font-black uppercase tracking-[0.2em] mb-0.5 flex items-center md:flex-row-reverse gap-1.5">
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.8)] shrink-0" />
-                                                                            Counter
-                                                                        </div>
                                                                         <div className={cn("text-lg md:text-2xl font-black leading-none truncate w-full", champColors.text)}>
                                                                             {selectedRosterItem.champion.name}
                                                                         </div>

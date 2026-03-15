@@ -2,8 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, ShieldCheck, Server, Sparkles } from "lucide-react";
+import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
+import { signInAction } from "@/app/actions/auth";
 
 const CURRENCY = "EUR";
 const SUGGESTED_AMOUNTS = [5, 10, 25, 50];
@@ -20,7 +21,7 @@ function parseAmount(rawAmount: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export default function SupportPageClient() {
+export default function SupportPageClient({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [amount, setAmount] = useState("10");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,6 +177,31 @@ export default function SupportPageClient() {
               Any custom amount is supported.
             </p>
 
+            {!isLoggedIn && (
+              <div className="mb-8 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-200 text-sm">
+                <div className="flex items-start gap-3">
+                  <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <Info className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-amber-300 mb-1">Not signed in</p>
+                    <p className="text-amber-200/80 leading-relaxed mb-3">
+                      To receive the <strong>Supporter role</strong> on our Discord server, please sign in before donating. You can still donate without signing in, but we won&apos;t be able to link it to your Discord account automatically.
+                    </p>
+                    <form action={signInAction}>
+                      <button 
+                        type="submit"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors"
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        Sign in with Discord
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <label htmlFor="donation-amount" className="block text-sm text-slate-300 font-medium">
                 Amount ({CURRENCY})
@@ -209,7 +235,7 @@ export default function SupportPageClient() {
                   );
                 })}
               </div>
-              <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 px-4">
+              <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 px-4 focus-within:ring-2 focus-within:ring-pink-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-950 transition-shadow">
                 <span className="text-slate-400 mr-2">{CURRENCY}</span>
                 <input
                   id="donation-amount"
@@ -219,7 +245,7 @@ export default function SupportPageClient() {
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                   placeholder="10"
-                  className="w-full bg-transparent py-3 text-white border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 rounded-md"
+                  className="w-full bg-transparent py-3 text-white border-0 focus:outline-none"
                 />
               </div>
 

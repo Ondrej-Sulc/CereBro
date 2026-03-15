@@ -8,12 +8,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit3, Youtube, ArrowLeft } from "lucide-react";
+import { Edit3, Youtube, ArrowLeft, Users } from "lucide-react";
 import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
-import { Champion, ChampionImages } from "@/types/champion";
+import { ChampionImages } from "@/types/champion";
 import { cache } from "react";
 import { isUserBotAdmin } from "@/lib/auth-helpers";
+
+function PlayerCount({ count, className, iconOnly = false }: { count: number; className?: string; iconOnly?: boolean }) {
+    if (count <= 0) return null;
+    return (
+        <div className={cn("flex items-center gap-1.5", className)}>
+            <Users className="w-3.5 h-3.5 text-sky-500/70" />
+            {!iconOnly && <span>{count} {count === 1 ? 'Player' : 'Players'} Used</span>}
+            {iconOnly && <span className="font-black">{count}</span>}
+        </div>
+    );
+}
 
 const getQuestPlan = cache(async (id: string) => getQuestPlanById(id));
 
@@ -86,7 +97,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         return <p>Please create a player profile first.</p>;
     }
 
-    // Fetch the Quest
+    // Fetch the Quest (now enriched with creators)
     const quest = await getQuestPlan(id);
     if (!quest) return <p>Quest not found</p>;
 
@@ -166,42 +177,14 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         }
     }));
 
-    // Map creators to User data to get their names and images (Batched)
-    const creatorDiscordIds = (quest.creators || []).map(c => c.discordId).filter((id): id is string => !!id);
-
-    // Build map for users found via providerAccountId
-    const userLookup = new Map<string, { name: string | null; image: string | null }>();
-
-    if (creatorDiscordIds.length > 0) {
-        const users = await prisma.user.findMany({
-            where: {
-                accounts: {
-                    some: {
-                        provider: "discord",
-                        providerAccountId: { in: creatorDiscordIds }
-                    }
-                }
-            },
-            include: { accounts: true }
-        });
-
-        users.forEach(u => {
-            const acc = u.accounts.find(a => a.provider === "discord");
-            if (acc) {
-                userLookup.set(acc.providerAccountId, { name: u.name, image: u.image });
-            }
-        });
+    interface QuestCreator {
+        id: string;
+        discordId: string;
+        name: string;
+        image: string | null;
     }
 
-    const creatorsWithUsers = (quest.creators || []).map(creator => {
-        const userData = creator.discordId ? userLookup.get(creator.discordId) : null;
-        return {
-            ...creator,
-            name: userData?.name || "Unknown Creator",
-            image: userData?.image || null
-        };
-    });
-
+    const creatorsWithUsers = (quest.creators || []) as QuestCreator[];
     const bannerUrl = quest.bannerUrl ? quest.bannerUrl.replace(/#/g, '%23') : null;
 
     return (
@@ -237,7 +220,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                                                     <Image src={c.image} alt={c.name} fill className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full bg-slate-800 flex items-center justify-center text-[8px] font-bold text-white">
-                                                        {c.name.charAt(0)}
+                                                        {c.name?.trim() ? c.name.trim().charAt(0) : '?'}
                                                     </div>
                                                 )}
                                             </div>
@@ -245,6 +228,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                                     </div>
                                     <span className="text-xs font-medium text-slate-300 drop-shadow-md">
                                         By {creatorsWithUsers.map(c => c.name).join(", ")}
+                                        {quest._count && quest._count.playerPlans > 0 && ` • ${quest._count.playerPlans} ${quest._count.playerPlans === 1 ? 'Player' : 'Players'} Used`}
                                     </span>
                                 </div>
                             )}
@@ -294,8 +278,9 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                             <h1 className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">{quest.title}</h1>
-                            <div className="flex items-center gap-3 mt-2">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
                                 {quest.category && <p className="text-slate-400 font-medium">{quest.category.name}</p>}
+                                <PlayerCount count={quest._count?.playerPlans || 0} className="text-slate-500 text-sm font-medium" />
                                 {quest.videoUrl && (
                                     <a href={quest.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-red-400 hover:text-red-300 transition-colors text-sm font-bold uppercase tracking-wider">
                                         <Youtube className="w-4 h-4" /> Watch Guide
@@ -346,8 +331,8 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             )}
 
             <QuestTimelineClient
-                quest={quest as QuestWithRelations}
-                roster={roster as RosterWithChampion[]}
+                quest={quest}
+                roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
                 filterMetadata={{
                     tags,

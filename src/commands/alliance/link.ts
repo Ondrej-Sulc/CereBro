@@ -29,14 +29,17 @@ export async function handleAllianceLink(interaction: ChatInputCommandInteractio
     }
 
     // Check if there are empty auto-created alliances in this server that we should clean up
-    const emptyAlliances = await prisma.alliance.findMany({
+    const guildAlliances = await prisma.alliance.findMany({
       where: { guildId: interaction.guildId }
     });
     
-    for (const empty of emptyAlliances) {
-      const memberCount = await prisma.player.count({ where: { allianceId: empty.id } });
+    for (const alliance of guildAlliances) {
+      // Don't delete the target alliance or the GLOBAL/Mercenaries alliance
+      if (alliance.id === targetAlliance.id || alliance.id === 'GLOBAL') continue;
+
+      const memberCount = await prisma.player.count({ where: { allianceId: alliance.id } });
       if (memberCount === 0) {
-         await prisma.alliance.delete({ where: { id: empty.id } });
+         await prisma.alliance.delete({ where: { id: alliance.id } });
       }
     }
 

@@ -288,7 +288,7 @@ model Alliance {
   linkCodeExpires        DateTime?
   deathChannelId         String?
   activeDefensePlanId    String?                     @unique
-  removeMissingMembers   Boolean                     @default(true)
+  removeMissingMembers   Boolean                     @default(false)
   aqReminderSettings     AQReminderSettings?
   aqSchedules            AQSchedule[]
   aqSkip                 AQSkip?

@@ -1,5 +1,7 @@
 import SupportPageClient from "./SupportPageClient";
+import { auth } from "@/auth";
 
-export default function SupportPage() {
-  return <SupportPageClient />;
+export default async function SupportPage() {
+  const session = await auth();
+  return <SupportPageClient isLoggedIn={!!session?.user} />;
 }

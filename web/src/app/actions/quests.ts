@@ -2,21 +2,26 @@
 
 import { prisma } from "@/lib/prisma";
 import { getUserPlayerWithAlliance, requireBotAdmin } from "@/lib/auth-helpers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache, revalidateTag } from "next/cache";
 import logger from "@/lib/logger";
 import { ChampionClass, QuestPlanStatus } from "@prisma/client";
 import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
+import { QuestWithRelations, QuestSummary } from "@/types/quests";
 
 // --- Quest Categories ---
 
-export async function getQuestCategories() {
-    return prisma.questCategory.findMany({
-        orderBy: { order: 'asc' },
-        include: {
-            children: true,
-        }
-    });
-}
+export const getQuestCategories = unstable_cache(
+    async () => {
+        return prisma.questCategory.findMany({
+            orderBy: { order: 'asc' },
+            include: {
+                children: true,
+            }
+        });
+    },
+    ['quest-categories'],
+    { tags: ['quest-categories'] }
+);
 
 export async function createQuestCategory(name: string, order: number = 0, parentId?: string) {
     await requireBotAdmin("MANAGE_QUESTS");
@@ -36,45 +41,190 @@ export async function createQuestCategory(name: string, order: number = 0, paren
 
 // --- Quest Plans ---
 
-export async function getQuestPlans(categoryId?: string) {
-    return prisma.questPlan.findMany({
-        where: categoryId ? { categoryId } : undefined,
-        orderBy: { createdAt: 'desc' },
-        include: {
-            category: true,
-            creator: true,
-            encounters: {
+export async function getQuestPlans(categoryId?: string, status?: QuestPlanStatus, currentPlayerId?: string): Promise<QuestSummary[]> {
+    const plans = await unstable_cache(
+        async () => {
+            const plans = await prisma.questPlan.findMany({
+                where: {
+                    categoryId: categoryId ? categoryId : undefined,
+                    status: status ? status : undefined
+                },
+                orderBy: { createdAt: 'desc' },
                 include: {
-                    defender: true
-                }
-            }
-        }
-    });
-}
-
-export async function getQuestPlanById(id: string) {
-    return prisma.questPlan.findUnique({
-        where: { id },
-        include: {
-            category: true,
-            requiredTags: true,
-            creators: true,
-            encounters: {
-                orderBy: { sequence: 'asc' },
-                include: {
-                    defender: true,
-                    requiredTags: true,
-                    recommendedChampions: true,
-                    nodes: {
+                    category: true,
+                    creator: true,
+                    creators: {
                         include: {
-                            nodeModifier: true
+                            profiles: {
+                                include: {
+                                    alliance: {
+                                        select: { name: true }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    requiredTags: true,
+                    encounters: {
+                        select: { id: true } // Just need count for summary
+                    },
+                    _count: {
+                        select: {
+                            playerPlans: true
+                        }
+                    }
+                }
+            });
+
+            // Enrich creators with user data to avoid direct prisma calls in pages
+            return Promise.all(plans.map(async (quest) => {
+                const creatorsWithUsers = await Promise.all((quest.creators || []).map(async (creator) => {
+                    const user = await prisma.user.findFirst({
+                        where: {
+                            accounts: {
+                                some: {
+                                    provider: "discord",
+                                    providerAccountId: creator.discordId
+                                }
+                            }
+                        }
+                    });
+
+                    // Find best name and alliance tag: User name -> Active profile -> First profile -> "Unknown"
+                    const activeProfile = creator.profiles.find(p => p.isActive) || 
+                                        creator.profiles.find(p => p.id === creator.activeProfileId) || 
+                                        creator.profiles[0];
+                    
+                    const profileName = activeProfile?.ingameName;
+                    const allianceTag = activeProfile?.alliance?.name;
+
+                    return {
+                        id: creator.id,
+                        discordId: creator.discordId,
+                        name: user?.name || profileName || "Unknown",
+                        image: user?.image || null,
+                        allianceTag: allianceTag || null
+                    };
+                }));
+
+                return {
+                    ...quest,
+                    creators: creatorsWithUsers
+                };
+            }));
+        },
+        ['quest-plans', categoryId || 'all', status || 'all'],
+        { tags: ['quest-plans'] }
+    )();
+
+    // If currentPlayerId is provided, fetch their progress for these plans
+    const playerProgressMap = new Map<string, number>();
+    if (currentPlayerId) {
+        const playerPlans = await prisma.playerQuestPlan.findMany({
+            where: {
+                playerId: currentPlayerId,
+                questPlanId: { in: plans.map(p => p.id) }
+            },
+            include: {
+                _count: {
+                    select: {
+                        encounters: {
+                            where: { selectedChampionId: { not: null } }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+        playerPlans.forEach(pp => {
+            playerProgressMap.set(pp.questPlanId, pp._count.encounters);
+        });
+    }
+
+    return plans.map(quest => ({
+        ...quest,
+        personalProgress: playerProgressMap.get(quest.id) || 0
+    }));
 }
+
+export const getQuestPlanById = unstable_cache(
+    async (id: string): Promise<QuestWithRelations | null> => {
+        const quest = await prisma.questPlan.findUnique({
+            where: { id },
+            include: {
+                category: true,
+                requiredTags: true,
+                creators: {
+                    include: {
+                        profiles: {
+                            include: {
+                                alliance: {
+                                    select: { name: true }
+                                }
+                            }
+                        }
+                    }
+                },
+                encounters: {
+                    orderBy: { sequence: 'asc' },
+                    include: {
+                        defender: true,
+                        requiredTags: true,
+                        recommendedChampions: true,
+                        nodes: {
+                            include: {
+                                nodeModifier: true
+                            }
+                        }
+                    }
+                },
+                _count: {
+                    select: {
+                        playerPlans: true
+                    }
+                }
+            }
+        });
+
+        if (!quest) return null;
+
+        // Enrich creators with user data
+        const creatorsWithUsers = await Promise.all((quest.creators || []).map(async (creator) => {
+            const user = await prisma.user.findFirst({
+                where: {
+                    accounts: {
+                        some: {
+                            provider: "discord",
+                            providerAccountId: creator.discordId
+                        }
+                    }
+                }
+            });
+
+            // Find best name: User name -> Active profile -> First profile -> "Unknown"
+            const activeProfile = creator.profiles.find(p => p.isActive) || 
+                                creator.profiles.find(p => p.id === creator.activeProfileId) || 
+                                creator.profiles[0];
+
+            const profileName = activeProfile?.ingameName;
+            const allianceTag = activeProfile?.alliance?.name;
+
+            return {
+                id: creator.id,
+                discordId: creator.discordId,
+                name: user?.name || profileName || "Unknown",
+                image: user?.image || null,
+                allianceTag: allianceTag || null
+            };
+        }));
+
+        return {
+            ...quest,
+            creators: creatorsWithUsers
+        };
+    },
+    ['quest-plan-detail'],
+    { tags: ['quest-plan-detail'] }
+);
 
 export type QuestPlanCreateInput = {
     title: string;
@@ -386,6 +536,8 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     });
 
     revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
     return { success: true };
 }
 
@@ -542,6 +694,11 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
                                     nodeModifier: true
                                 }
                             }
+                        }
+                    },
+                    _count: {
+                        select: {
+                            playerPlans: true
                         }
                     }
                 }

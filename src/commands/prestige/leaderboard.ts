@@ -1,4 +1,4 @@
-import { Player } from "@prisma/client";
+import { Player, Alliance } from "@prisma/client";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -22,7 +22,7 @@ const prestigeLabels: Record<PrestigeType, string> = {
 };
 
 function buildLeaderboardContainer(
-  players: Player[],
+  players: (Player & { alliance?: Alliance | null })[],
   prestigeType: PrestigeType
 ): any {
   const container = new ContainerBuilder();
@@ -41,12 +41,15 @@ function buildLeaderboardContainer(
     .filter((p) => p[prestigeField] !== null)
     .sort((a, b) => (b[prestigeField] ?? 0) - (a[prestigeField] ?? 0));
 
+  const alliancesCount = new Set(players.map((p) => p.allianceId).filter(Boolean)).size;
+
   let leaderboardString = "";
   if (sortedPlayers.length > 0) {
     sortedPlayers.forEach((p, index) => {
       const prestigeValue = p[prestigeField];
       let rank = index + 1;
-      let line = `${rank}. **${p.ingameName}** - ${prestigeValue}`;
+      const allianceTag = (alliancesCount > 1 && p.alliance?.name) ? ` [${p.alliance.name}]` : "";
+      let line = `${rank}. **${p.ingameName}**${allianceTag} - ${prestigeValue}`;
 
       if (rank === 1) line = `## 🥇 ${line}`;
       if (rank === 2) line = `### 🥈 ${line}`;
@@ -85,6 +88,19 @@ function buildLeaderboardContainer(
   };
 }
 
+async function getPlayersWithAlliance(prisma: any, guildId: string) {
+  return prisma.player.findMany({
+    where: {
+      alliance: {
+        guildId: guildId,
+      },
+    },
+    include: {
+      alliance: true,
+    },
+  });
+}
+
 export async function handleLeaderboard(
   interaction: ChatInputCommandInteraction
 ) {
@@ -96,21 +112,7 @@ export async function handleLeaderboard(
     return;
   }
 
-  const alliance = await prisma.alliance.findFirst({
-    where: { guildId },
-    select: { id: true },
-  });
-
-  if (!alliance) {
-    await interaction.editReply("No players found in this server.");
-    return;
-  }
-
-  const players = await prisma.player.findMany({
-    where: {
-      allianceId: alliance.id,
-    },
-  });
+  const players = await getPlayersWithAlliance(prisma, guildId);
 
   if (players.length === 0) {
     await interaction.editReply("No players found in this server.");
@@ -133,21 +135,7 @@ async function handleLeaderboardButton(interaction: ButtonInteraction) {
   const customIdParts = interaction.customId.split(":");
   const prestigeType = customIdParts[2] as PrestigeType;
 
-  const alliance = await prisma.alliance.findFirst({
-    where: { guildId },
-    select: { id: true },
-  });
-
-  if (!alliance) {
-    // Alliance should exist if the button is being clicked
-    return;
-  }
-
-  const players = await prisma.player.findMany({
-    where: {
-      allianceId: alliance.id,
-    },
-  });
+  const players = await getPlayersWithAlliance(prisma, guildId);
 
   // No need to check for players.length === 0, as the message already exists.
 

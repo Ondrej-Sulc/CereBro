@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { QuestPlan, QuestCategory, Player, QuestPlanStatus, Tag, ChampionClass } from "@prisma/client";
+import { QuestWithRelations, QuestSummary } from "@/types/quests";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,22 +16,8 @@ import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image
 import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan } from "@/app/actions/quests";
 import { cn } from "@/lib/utils";
 
-export type CreatorInfo = {
-    id: string;
-    name: string;
-    image: string | null;
-};
-
-export type QuestWithRelations = QuestPlan & {
-    category: QuestCategory | null;
-    creator: Player | null;
-    creators: CreatorInfo[];
-    requiredTags: Tag[];
-    encounters: { id: string }[];
-};
-
 interface Props {
-    initialQuests: QuestWithRelations[];
+    initialQuests: QuestSummary[];
     categories: QuestCategory[];
 }
 
@@ -127,11 +114,11 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
     const getStatusBadge = (status: QuestPlanStatus) => {
         switch (status) {
             case QuestPlanStatus.DRAFT:
-                return <Badge variant="outline" className="text-amber-500 border-amber-500/30 bg-amber-950/20 font-black uppercase text-[9px] tracking-widest px-2 py-0.5">Draft</Badge>;
+                return <Badge variant="outline" className="text-amber-400 border-amber-500/50 bg-amber-950/80 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50">Draft</Badge>;
             case QuestPlanStatus.VISIBLE:
-                return <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 bg-emerald-950/20 font-black uppercase text-[9px] tracking-widest px-2 py-0.5">Visible</Badge>;
+                return <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-emerald-950/80 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50">Visible</Badge>;
             case QuestPlanStatus.ARCHIVED:
-                return <Badge variant="outline" className="text-slate-500 border-slate-700 bg-slate-900/50 font-black uppercase text-[9px] tracking-widest px-2 py-0.5">Archived</Badge>;
+                return <Badge variant="outline" className="text-slate-300 border-slate-600 bg-slate-900 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50">Archived</Badge>;
         }
     };
 
@@ -252,159 +239,170 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-max">
-                        {filteredQuests.map(quest => (
-                            <Card key={quest.id} className="bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all flex flex-col group overflow-hidden relative">
-                                <div className="relative aspect-[21/9] w-full overflow-hidden bg-slate-900 border-b border-slate-800">
-                                    {quest.bannerUrl ? (
-                                        <Image
-                                            src={quest.bannerUrl.replace(/#/g, '%23')}
-                                            alt={quest.title}
-                                            fill
-                                            sizes="(max-width: 768px) 100vw, 25vw"
-                                            className={cn(
-                                                "transition-transform duration-500 group-hover:scale-105 opacity-60 group-hover:opacity-100",
-                                                quest.bannerFit === "contain" ? "object-contain" : "object-cover",
-                                                quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
-                                            )}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950 opacity-40">
-                                            <ImageIcon className="w-8 h-8 text-slate-800" />
-                                        </div>
-                                    )}
-                                    <div className="absolute top-3 right-3 flex gap-2">
-                                        {getStatusBadge(quest.status)}
-                                    </div>
-
-                                    <div className="absolute bottom-2.5 right-4 flex gap-3 z-10">
-                                        <div className="flex items-center gap-1.5 text-white drop-shadow-lg">
-                                            <Swords className="w-3.5 h-3.5 text-red-500" />
-                                            <span className="text-xs font-black">{quest.encounters?.length || 0}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-white drop-shadow-lg">
-                                            <Users className="w-3.5 h-3.5 text-sky-400" />
-                                            <span className="text-xs font-black">{quest.teamLimit || "∞"}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <CardContent className="p-5 flex flex-col flex-1 gap-4">
-                                    <div className="space-y-1.5">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <Badge variant="secondary" className="bg-slate-900/80 border border-slate-800 text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 mb-1">
-                                                {quest.category ? quest.category.name : "Uncategorized"}
-                                            </Badge>
-                                            {quest.videoUrl && (
-                                                <Youtube className="w-4 h-4 text-red-600 shrink-0 mb-1" />
-                                            )}
-                                        </div>
-                                        <CardTitle className="text-lg font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-none">
-                                            {quest.title}
-                                        </CardTitle>
-
-                                        {/* Creators Bar */}
-                                        {quest.creators && quest.creators.length > 0 ? (
-                                            <div className="flex items-center gap-2 mt-2.5">
-                                                <div className="flex -space-x-1.5">
-                                                    {quest.creators.slice(0, 3).map(c => (
-                                                        <div key={c.id} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden bg-slate-800" title={c.name}>
-                                                            {c.image ? (
-                                                                <Image src={c.image} alt={c.name} fill className="object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-[7px] font-black text-white uppercase">
-                                                                    {c.name.charAt(0)}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                                    By {quest.creators.length === 1 ? quest.creators[0].name : `${quest.creators.length} Creators`}
-                                                </span>
-                                            </div>
+                        {filteredQuests.map(quest => {
+                            const fightCount = quest.encounters?.length || 0;
+                            return (
+                                <Card key={quest.id} className="bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all flex flex-col group overflow-hidden relative">
+                                    <div className="relative aspect-[21/9] w-full overflow-hidden bg-slate-900 border-b border-slate-800">
+                                        {quest.bannerUrl ? (
+                                            <Image
+                                                src={quest.bannerUrl.replace(/#/g, '%23')}
+                                                alt={quest.title}
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, 25vw"
+                                                className={cn(
+                                                    "transition-transform duration-500 group-hover:scale-105 opacity-60 group-hover:opacity-100",
+                                                    quest.bannerFit === "contain" ? "object-contain" : "object-cover",
+                                                    quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                                                )}
+                                            />
                                         ) : (
-                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-2.5">
-                                                By {quest.creator?.ingameName || "Cerebro Admin"}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Metadata Grid */}
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {/* Star Req */}
-                                        {(quest.minStarLevel || quest.maxStarLevel) && (
-                                            <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-1.5 flex items-center gap-2">
-                                                <Trophy className="w-3 h-3 text-amber-500" />
-                                                <span className="text-[10px] font-black text-amber-500">
-                                                    {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
-                                                </span>
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950 opacity-40">
+                                                <ImageIcon className="w-8 h-8 text-slate-800" />
                                             </div>
                                         )}
+                                        {/* Subtle Overlay Gradient for the bottom info */}
+                                        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90" />
 
-                                        {/* Classes */}
-                                        {quest.requiredClasses && quest.requiredClasses.length > 0 && (
-                                            <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-1.5 flex items-center gap-2">
-                                                <ShieldAlert className="w-3 h-3 text-sky-500" />
-                                                <div className="flex gap-0.5">
-                                                    {quest.requiredClasses.slice(0, 3).map(cls => (
-                                                        <div key={cls} className="relative w-2.5 h-2.5">
-                                                            <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                        <div className="absolute bottom-2.5 left-4 flex gap-2 z-10">
+                                            {getStatusBadge(quest.status)}
+                                        </div>
+
+                                        <div className="absolute bottom-2.5 right-4 flex gap-3 z-10">
+                                            <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-xl" title={`${fightCount} Fights`}>
+                                                <Swords className="w-3.5 h-3.5 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                                <span className="text-[11px] font-black uppercase tracking-tight">{fightCount} Fights</span>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
 
-                                    {/* Tags */}
-                                    {quest.requiredTags && quest.requiredTags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1">
-                                            {quest.requiredTags.slice(0, 3).map(tag => (
-                                                <Badge key={tag.id} variant="outline" className="bg-slate-900/30 text-slate-400 border-slate-800 text-[8px] uppercase font-black px-1.5 py-0 h-4">
-                                                    <TagIcon className="w-2 h-2 mr-1 text-slate-600" /> {tag.name}
+                                    <CardContent className="p-5 flex flex-col flex-1 gap-4">
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <Badge variant="secondary" className="bg-slate-900/80 border border-slate-800 text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 mb-1">
+                                                    {quest.category ? quest.category.name : "Uncategorized"}
                                                 </Badge>
-                                            ))}
-                                            {quest.requiredTags.length > 3 && <span className="text-[8px] text-slate-600 font-bold self-center">+{quest.requiredTags.length - 3}</span>}
-                                        </div>
-                                    )}
+                                                {quest.videoUrl && (
+                                                    <Youtube className="w-4 h-4 text-red-600 shrink-0 mb-1" />
+                                                )}
+                                            </div>
+                                            <CardTitle className="text-lg font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-none">
+                                                {quest.title}
+                                            </CardTitle>
 
-                                    {quest.encounters?.length === 0 && (
-                                        <div className="flex items-center gap-1.5 text-amber-500/80 bg-amber-500/5 border border-amber-500/20 p-2 rounded-lg">
-                                            <FileWarning className="w-3.5 h-3.5" />
-                                            <span className="text-[10px] font-black uppercase tracking-wider">Empty Plan - Needs fights</span>
-                                        </div>
-                                    )}
-                                </CardContent>
+                                            {/* Creators Bar */}
+                                            <div className="flex items-center justify-between gap-2 mt-2.5">
+                                                {quest.creators && quest.creators.length > 0 ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex -space-x-1.5">
+                                                            {quest.creators.slice(0, 3).map(c => (
+                                                                <div key={c.id} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden bg-slate-800" title={c.name}>
+                                                                    {c.image ? (
+                                                                        <Image src={c.image} alt={c.name} fill className="object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-[7px] font-black text-white uppercase">
+                                                                            {c.name?.trim() ? c.name.trim().charAt(0) : '?'}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                            By {quest.creators.length === 1 ? quest.creators[0].name : `${quest.creators.length} Creators`}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                        By {quest.creator?.ingameName || "Cerebro Admin"}
+                                                    </p>
+                                                )}
 
-                                <CardFooter className="p-4 bg-slate-900/40 border-t border-slate-800/50 flex gap-2">
-                                    <Button
-                                        variant="secondary"
-                                        className="flex-1 bg-slate-800 hover:bg-slate-700 h-9 font-bold text-xs uppercase tracking-widest"
-                                        onClick={() => router.push(`/admin/quests/${quest.id}`)}
-                                    >
-                                        <Edit className="h-4 w-4 mr-2 text-sky-400" /> Edit
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDuplicate(quest.id)}
-                                        className="text-slate-400 hover:text-indigo-400 hover:bg-indigo-950/30 shrink-0 h-9 w-9"
-                                        title="Duplicate Quest"
-                                    >
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleDelete(quest.id)}
-                                        className="text-slate-400 hover:text-red-400 hover:bg-red-950/30 shrink-0 h-9 w-9"
-                                        title="Delete Quest"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
+                                                {quest._count && quest._count.playerPlans > 0 && (
+                                                    <div className="flex items-center gap-1 text-slate-500 bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-800/50 shadow-sm" title={`${quest._count.playerPlans} players using this plan`}>
+                                                        <Users className="w-2.5 h-2.5 text-sky-500/70" />
+                                                        <span className="text-[9px] font-black">{quest._count.playerPlans}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Metadata Grid */}
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {/* Star Req */}
+                                            {(quest.minStarLevel || quest.maxStarLevel) && (
+                                                <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-1.5 flex items-center gap-2">
+                                                    <Trophy className="w-3 h-3 text-amber-500" />
+                                                    <span className="text-[10px] font-black text-amber-500">
+                                                        {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {/* Classes */}
+                                            {quest.requiredClasses && quest.requiredClasses.length > 0 && (
+                                                <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-1.5 flex items-center gap-2">
+                                                    <ShieldAlert className="w-3 h-3 text-sky-500" />
+                                                    <div className="flex gap-0.5">
+                                                        {quest.requiredClasses.slice(0, 3).map(cls => (
+                                                            <div key={cls} className="relative w-2.5 h-2.5">
+                                                                <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Tags */}
+                                        {quest.requiredTags && quest.requiredTags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {quest.requiredTags.slice(0, 3).map(tag => (
+                                                    <Badge key={tag.id} variant="outline" className="bg-slate-900/30 text-slate-400 border-slate-800 text-[8px] uppercase font-black px-1.5 py-0 h-4">
+                                                        <TagIcon className="w-2 h-2 mr-1 text-slate-600" /> {tag.name}
+                                                    </Badge>
+                                                ))}
+                                                {quest.requiredTags.length > 3 && <span className="text-[8px] text-slate-600 font-bold self-center">+{quest.requiredTags.length - 3}</span>}
+                                            </div>
+                                        )}
+
+                                        {fightCount === 0 && (
+                                            <div className="flex items-center gap-1.5 text-amber-500/80 bg-amber-500/5 border border-amber-500/20 p-2 rounded-lg">
+                                                <FileWarning className="w-3.5 h-3.5" />
+                                                <span className="text-[10px] font-black uppercase tracking-wider">Empty Plan - Needs fights</span>
+                                            </div>
+                                        )}
+                                    </CardContent>
+
+                                    <CardFooter className="p-4 bg-slate-900/40 border-t border-slate-800/50 flex gap-2">
+                                        <Button
+                                            variant="secondary"
+                                            className="flex-1 bg-slate-800 hover:bg-slate-700 h-9 font-bold text-xs uppercase tracking-widest"
+                                            onClick={() => router.push(`/admin/quests/${quest.id}`)}
+                                        >
+                                            <Edit className="h-4 w-4 mr-2 text-sky-400" /> Edit
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDuplicate(quest.id)}
+                                            className="text-slate-400 hover:text-indigo-400 hover:bg-indigo-950/30 shrink-0 h-9 w-9"
+                                            title="Duplicate Quest"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDelete(quest.id)}
+                                            className="text-slate-400 hover:text-red-400 hover:bg-red-950/30 shrink-0 h-9 w-9"
+                                            title="Delete Quest"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            );
+                        })}
                     </div>
                 )}
             </div>

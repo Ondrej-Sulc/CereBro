@@ -18,10 +18,32 @@ export async function checkAndCleanupAlliance(allianceId: string | null | undefi
       if (memberCount === 0) {
         const alliance = await tx.alliance.findUnique({
           where: { id: allianceId },
-          select: { name: true, guildId: true }
+          select: { 
+            name: true, 
+            guildId: true,
+            _count: {
+              select: {
+                wars: true,
+                defensePlans: true,
+                aqSchedules: true,
+                membershipRequests: true,
+              }
+            }
+          }
         });
 
         if (!alliance) return false;
+
+        // Never delete an alliance that has data
+        const hasData = alliance._count.wars > 0 || 
+                        alliance._count.defensePlans > 0 || 
+                        alliance._count.aqSchedules > 0 || 
+                        alliance._count.membershipRequests > 0;
+        
+        if (hasData) {
+          loggerService.info({ allianceId, allianceName: alliance.name }, `Empty alliance "${alliance.name}" has associated data and will NOT be deleted.`);
+          return false;
+        }
 
         await tx.alliance.delete({
           where: { id: allianceId }

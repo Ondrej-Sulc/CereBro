@@ -337,7 +337,7 @@ export async function getOwnersOfChampion(championId: number, allianceId: string
   });
 }
 
-export async function updateWarStatus(warId: string, status: WarStatus) {
+export async function updateWarStatus(warId: string, status: WarStatus, data?: { result?: WarResult; enemyDeaths?: number }) {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -346,6 +346,11 @@ export async function updateWarStatus(warId: string, status: WarStatus) {
 
   if (!player.isOfficer && !player.isBotAdmin) {
     throw new Error("You must be an Alliance Officer or Bot Admin to update war status.");
+  }
+
+  // Validate enemy deaths
+  if (data?.enemyDeaths !== undefined && (typeof data.enemyDeaths !== 'number' || data.enemyDeaths < 0)) {
+    throw new Error("enemyDeaths must be a non-negative number");
   }
 
   const war = await prisma.war.findUnique({ where: { id: warId } });
@@ -357,15 +362,25 @@ export async function updateWarStatus(warId: string, status: WarStatus) {
 
   // Server-side validation for finishing a war
   if (status === WarStatus.FINISHED) {
-      if (war.result === WarResult.UNKNOWN || war.enemyDeaths === null) {
+      const effectiveResult = data?.result !== undefined ? data.result : war.result;
+      const effectiveDeaths = data?.enemyDeaths !== undefined ? data.enemyDeaths : war.enemyDeaths;
+
+      if (effectiveResult === WarResult.UNKNOWN || effectiveDeaths === null) {
           throw new Error("A war result and enemy deaths must be set before finishing the war.");
       }
   }
 
   await prisma.war.update({
     where: { id: warId },
-    data: { status },
+    data: { 
+        status,
+        ...(data?.result !== undefined && { result: data.result }),
+        ...(data?.enemyDeaths !== undefined && { enemyDeaths: data.enemyDeaths }),
+    },
   });
+
+  revalidatePath("/planning");
+  revalidatePath(`/planning/${warId}`);
 }
 
 export async function deleteWar(warId: string) {

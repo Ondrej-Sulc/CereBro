@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { updateWarDetails } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
+import { ResultSwitch, DeathCounter } from "./war-result-controls";
 
 interface EditWarDialogProps {
   war: War;
@@ -190,34 +191,23 @@ export function EditWarDialog({
                         </Select>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-enemyDeaths">Enemy Deaths</Label>
-                        <Input
+                <div className="grid grid-cols-1 gap-6 pt-2">
+                    <div className="space-y-3">
+                        <Label htmlFor="edit-enemyDeaths" className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Enemy Deaths</Label>
+                        <DeathCounter 
                             id="edit-enemyDeaths"
-                            type="number"
-                            value={editData.enemyDeaths}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                setEditData({ ...editData, enemyDeaths: val === "" ? "" : parseInt(val) });
-                            }}
-                            onFocus={(e) => e.target.select()}
-                            className="bg-slate-900 border-slate-800 no-spin-buttons"
+                            value={typeof editData.enemyDeaths === 'number' ? editData.enemyDeaths : 0} 
+                            onChange={(val) => setEditData({ ...editData, enemyDeaths: val })} 
                         />
                     </div>
                     {isFinished && (
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-result">War Result</Label>
-                            <Select value={editData.result} onValueChange={(val) => setEditData({ ...editData, result: val as WarResult })}>
-                                <SelectTrigger className="bg-slate-900 border-slate-800">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-950 border-slate-800">
-                                    <SelectItem value={WarResult.UNKNOWN}>Unknown</SelectItem>
-                                    <SelectItem value={WarResult.WIN}>Win</SelectItem>
-                                    <SelectItem value={WarResult.LOSS}>Loss</SelectItem>
-                                </SelectContent>
-                            </Select>
+                        <div className="space-y-3">
+                            <Label htmlFor="edit-result" className="text-sm font-semibold text-slate-400 uppercase tracking-wider">War Result</Label>
+                            <ResultSwitch 
+                                id="edit-result"
+                                value={editData.result} 
+                                onChange={(val) => setEditData({ ...editData, result: val })} 
+                            />
                         </div>
                     )}
                 </div>

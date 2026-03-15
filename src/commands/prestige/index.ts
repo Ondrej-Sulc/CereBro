@@ -13,19 +13,11 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
   const guildId = interaction.guildId;
   if (!guildId) return;
 
-  const alliance = await prisma.alliance.findFirst({
-    where: { guildId },
-    select: { id: true },
-  });
-
-  if (!alliance) {
-    await interaction.respond([]);
-    return;
-  }
-
   const players = await prisma.player.findMany({
     where: {
-      allianceId: alliance.id,
+      alliance: {
+        guildId: guildId,
+      },
       ingameName: {
         contains: focusedValue,
         mode: "insensitive",
