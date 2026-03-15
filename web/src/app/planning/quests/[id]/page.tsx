@@ -13,6 +13,7 @@ import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { Champion, ChampionImages } from "@/types/champion";
 import { cache } from "react";
+import { isUserBotAdmin } from "@/lib/auth-helpers";
 
 const getQuestPlan = cache(async (id: string) => getQuestPlanById(id));
 
@@ -32,20 +33,7 @@ export async function generateMetadata({
     };
   }
 
-  const session = await auth();
-  let isBotAdmin = false;
-  
-  if (session?.user?.id) {
-    const account = await prisma.account.findFirst({
-        where: { userId: session.user.id, provider: "discord" }
-    });
-    if (account?.providerAccountId) {
-        const botUser = await prisma.botUser.findUnique({
-            where: { discordId: account.providerAccountId }
-        });
-        isBotAdmin = botUser?.isBotAdmin || false;
-    }
-  }
+  const isBotAdmin = await isUserBotAdmin();
 
   if (quest.status !== QuestPlanStatus.VISIBLE && !isBotAdmin) {
     return {
@@ -103,7 +91,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     if (!quest) return <p>Quest not found</p>;
 
     // Visibility check
-    const isAdmin = botUser?.isBotAdmin || false;
+    const isAdmin = await isUserBotAdmin();
     if (quest.status !== QuestPlanStatus.VISIBLE && !isAdmin) {
         return <div className="p-8 text-center text-slate-400 italic">This quest plan is currently hidden or archived.</div>;
     }

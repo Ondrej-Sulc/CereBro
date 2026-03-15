@@ -32,16 +32,28 @@ function parseBound(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function toMinorUnits(amount: number): number {
+function toMinorUnits(amount: number, currency: string): number {
+  const zeroDecimalCurrencies = [
+    "bif", "clp", "djf", "gnf", "jpy", "kmf", "krw", "mga", "pyg", "rwf", "ugx", "vnd", "vuv", "xaf", "xof", "xpf"
+  ];
+  const threeDecimalCurrencies = ["bhd", "jod", "kwd", "omr", "tnd"];
+
+  const lowerCurrency = currency.toLowerCase();
+  if (zeroDecimalCurrencies.includes(lowerCurrency)) {
+    return Math.round(amount);
+  }
+  if (threeDecimalCurrencies.includes(lowerCurrency)) {
+    return Math.round(amount * 1000);
+  }
   return Math.round(amount * 100);
 }
 
-function getBaseUrl(request: NextRequest): string {
-  if (process.env.BOT_BASE_URL) {
-    return process.env.BOT_BASE_URL;
+function getBaseUrl(): string {
+  const baseUrl = process.env.BOT_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) {
+    throw new Error("Missing BOT_BASE_URL or NEXT_PUBLIC_BASE_URL environment variable.");
   }
-
-  return new URL(request.url).origin;
+  return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -89,8 +101,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const stripe = new Stripe(stripeSecretKey);
-  const amountMinor = toMinorUnits(amount);
-  const baseUrl = getBaseUrl(request);
+  const amountMinor = toMinorUnits(amount, currency);
+  let baseUrl: string;
+  try {
+    baseUrl = getBaseUrl();
+  } catch (error) {
+    logger.error({ error }, "Configuration error in checkout-session route");
+    return NextResponse.json(
+      { error: "Internal server configuration error." },
+      { status: 500 },
+    );
+  }
+  
   const session = await auth();
 
   let playerId: string | null = null;
@@ -112,8 +134,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         botUserId = player.botUserId;
       }
     } catch (error) {
+      // Avoid raw discordId in logs - use surrogate or redacted value
+      const safeDiscordId = discordId.length > 8 
+        ? `${discordId.slice(0, 4)}...${discordId.slice(-4)}` 
+        : "present";
+
       logger.error(
-        { error, discordId },
+        { error, discordId: safeDiscordId },
         "Failed to resolve player during support checkout session creation",
       );
     }

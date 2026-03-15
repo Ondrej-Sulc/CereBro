@@ -148,6 +148,7 @@ export async function anonymizeSupportDonationById(
       data: {
         supporterName: null,
         supporterEmail: null,
+        // Only set to true if revoked; using undefined skips updating this field in the DB
         consentRevoked: reason === "consent_revoked" ? true : undefined,
         anonymizedAt: new Date(),
         retentionState: "ANONYMIZED",

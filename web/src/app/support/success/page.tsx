@@ -8,20 +8,26 @@ import { prisma } from "@/lib/prisma";
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string | string[] }>;
 }): Promise<Metadata> {
   const { session_id } = await searchParams;
+  const normalizedSessionId = Array.isArray(session_id) ? session_id[0] : session_id;
   
-  if (session_id) {
-    const donation = await prisma.supportDonation.findUnique({
-      where: { stripeCheckoutSessionId: session_id }
-    });
-    
-    if (donation?.status === 'succeeded') {
-      return {
-        title: "Support Successful - CereBro",
-        description: "Thank you for supporting CereBro and helping fund hosting and active development.",
-      };
+  if (normalizedSessionId) {
+    try {
+      const donation = await prisma.supportDonation.findUnique({
+        where: { stripeCheckoutSessionId: normalizedSessionId },
+        select: { status: true }
+      });
+      
+      if (donation?.status === 'succeeded') {
+        return {
+          title: "Support Successful - CereBro",
+          description: "Thank you for supporting CereBro and helping fund hosting and active development.",
+        };
+      }
+    } catch (error) {
+      console.error("Metadata verification failed for support donation:", error);
     }
   }
 
@@ -34,17 +40,23 @@ export async function generateMetadata({
 export default async function SupportSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string | string[] }>;
 }) {
   const { session_id } = await searchParams;
+  const normalizedSessionId = Array.isArray(session_id) ? session_id[0] : session_id;
   let isSuccess = false;
 
-  if (session_id) {
-    const donation = await prisma.supportDonation.findUnique({
-      where: { stripeCheckoutSessionId: session_id }
-    });
-    if (donation?.status === 'succeeded') {
-      isSuccess = true;
+  if (normalizedSessionId) {
+    try {
+      const donation = await prisma.supportDonation.findUnique({
+        where: { stripeCheckoutSessionId: normalizedSessionId },
+        select: { status: true }
+      });
+      if (donation?.status === 'succeeded') {
+        isSuccess = true;
+      }
+    } catch (error) {
+      console.error("Support status verification failed:", error);
     }
   }
 

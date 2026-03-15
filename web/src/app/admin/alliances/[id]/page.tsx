@@ -32,19 +32,26 @@ const getAlliance = cache(async (id: string) => {
 
 export async function generateMetadata({ params }: AdminAllianceDetailPageProps): Promise<Metadata> {
   const { id } = await params
-  const alliance = await getAlliance(id)
+  
+  // Try to authorize before leaking the name
+  try {
+    await ensureAdmin("MANAGE_ALLIANCES")
+    const alliance = await getAlliance(id)
 
-  if (!alliance) {
-    return {
-      title: "Alliance Details - CereBro",
-      description:
-        "Review alliance members, configuration, reminders, enabled features, and settings.",
+    if (alliance) {
+      return {
+        title: `${alliance.name} - Alliance Details - CereBro`,
+        description: `Review members, configuration, reminders, enabled features, and settings for ${alliance.name}.`,
+      }
     }
+  } catch {
+    // If not authorized, return generic metadata
   }
 
   return {
-    title: `${alliance.name} - Alliance Details - CereBro`,
-    description: `Review members, configuration, reminders, enabled features, and settings for ${alliance.name}.`,
+    title: "Alliance Details - CereBro",
+    description:
+      "Review alliance members, configuration, reminders, enabled features, and settings.",
   }
 }
 

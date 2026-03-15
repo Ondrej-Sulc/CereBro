@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Player, Alliance } from "@prisma/client";
 import { Permission } from "./permissions";
+import { cache } from "react";
 
 export type UserPlayerWithAlliance = Player & {
   alliance: Alliance | null;
@@ -26,7 +27,7 @@ export async function isUserBotAdmin(): Promise<boolean> {
   return !!botUser?.isBotAdmin;
 }
 
-export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAlliance | null> {
+export const getUserPlayerWithAlliance = cache(async (): Promise<UserPlayerWithAlliance | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
 
@@ -78,7 +79,7 @@ export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAllianc
   }
 
   return null;
-}
+});
 
 export async function getUserProfiles() {
   const session = await auth();

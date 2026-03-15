@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { DISCORD_INVITE } from "@/lib/links";
@@ -9,6 +9,8 @@ import { DISCORD_INVITE } from "@/lib/links";
 function QueryErrorToastInner() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const error = searchParams.get("error");
 
   useEffect(() => {
@@ -31,8 +33,15 @@ function QueryErrorToastInner() {
         variant: "destructive",
         duration: 10000,
       });
+
+      // Clear the error param from the URL
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("error");
+      const newQuery = params.toString();
+      const newUrl = `${pathname}${newQuery ? `?${newQuery}` : ""}`;
+      router.replace(newUrl, { scroll: false });
     }
-  }, [error, toast]);
+  }, [error, toast, router, pathname, searchParams]);
 
   return null;
 }

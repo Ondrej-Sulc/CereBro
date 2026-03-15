@@ -142,7 +142,6 @@ export const LiveSetup = () => {
                   >
                     {step.external ? <MessageSquare size={13} /> : <Bot size={13} />}
                     {step.ctaLabel}
-                    {step.external ? <span className="sr-only">(opens in a new tab)</span> : null}
                   </Link>
                 </div>
               </div>
