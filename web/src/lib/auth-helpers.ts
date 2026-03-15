@@ -1,7 +1,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Player, Alliance } from "@prisma/client";
+import { Player, Alliance, Prisma } from "@prisma/client";
 import { Permission } from "./permissions";
+import { cache } from "react";
 
 export type UserPlayerWithAlliance = Player & {
   alliance: Alliance | null;
@@ -26,7 +27,7 @@ export async function isUserBotAdmin(): Promise<boolean> {
   return !!botUser?.isBotAdmin;
 }
 
-export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAlliance | null> {
+export const getUserPlayerWithAlliance = cache(async (): Promise<UserPlayerWithAlliance | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
 
@@ -68,17 +69,17 @@ export async function getUserPlayerWithAlliance(): Promise<UserPlayerWithAllianc
     });
   }
 
-  if (player && botUser) {
-    // Override the local isBotAdmin with the global BotUser permission
+  if (player) {
+    // Override the local isBotAdmin with the global BotUser permission if available
     return {
       ...player,
-      isBotAdmin: botUser.isBotAdmin,
-      permissions: botUser.permissions || []
+      isBotAdmin: botUser?.isBotAdmin ?? false,
+      permissions: botUser?.permissions ?? []
     };
   }
 
   return null;
-}
+});
 
 export async function getUserProfiles() {
   const session = await auth();
@@ -151,4 +152,33 @@ export async function requireBotAdmin(requiredPermission?: Permission) {
   }
 
   throw new Error("Unauthorized");
+}
+
+export async function hasCurrentUserSupportedCereBro(): Promise<boolean> {
+  const player = await getUserPlayerWithAlliance();
+  if (!player) {
+    return false;
+  }
+
+  const orConditions: Prisma.SupportDonationWhereInput[] = [
+    { playerId: player.id },
+    { discordId: player.discordId },
+  ];
+
+  if (player.botUserId) {
+    orConditions.push({ botUserId: player.botUserId });
+  }
+
+  const donation = await prisma.supportDonation.findFirst({
+    where: {
+      OR: orConditions,
+      status: "succeeded",
+      anonymizedAt: null,
+      deletedAt: null,
+      consentRevoked: false,
+    },
+    select: { id: true },
+  });
+
+  return !!donation;
 }

@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import crypto from 'crypto';
 import { add } from 'date-fns';
+
+export const metadata: Metadata = {
+  title: "Start War Video Upload - CereBro",
+  description:
+    "Authenticate with Discord and create a secure upload session for submitting Alliance War videos.",
+};
 
 export default async function InitUploadPage() {
   const session = await auth();
@@ -27,10 +34,7 @@ export default async function InitUploadPage() {
 
   if (!player) {
     // Handle case where player is not registered in the bot yet
-    // Redirect to a page telling them to register or auto-register?
-    // For now, let's redirect to home with an error or just home.
-    // Ideally, show a message "Please register with /register in Discord first".
-    redirect("/?error=unregistered_player"); 
+    redirect("/alliance/onboarding?error=unregistered_player"); 
   }
 
   // Generate token

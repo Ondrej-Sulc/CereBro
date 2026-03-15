@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -64,14 +64,10 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                       </Link>
           
                       <Link href="/planning/quests" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                        <Map className="w-4 h-4" />
+                        <MapIcon className="w-4 h-4" />
                         Quest Planner
                       </Link>
           
-                      <Link href="/war-videos" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                        <Book className="w-4 h-4" />
-                        War Archive
-                      </Link>
             {isInAlliance ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -129,10 +125,35 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                 </Link>
             )}
 
-            <Link href="/about" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+            <Link href="/support" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
               <Heart className="w-4 h-4" />
-              About & Support
+              Support
             </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/50 h-auto py-2 px-3 data-[state=open]:text-white data-[state=open]:bg-slate-800/50"
+                >
+                  More
+                  <ChevronDown className="w-3 h-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-slate-950 border-slate-800 text-slate-300">
+                <DropdownMenuItem asChild>
+                  <Link href="/war-videos" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
+                    <Book className="w-4 h-4 text-slate-300" />
+                    <span>War Archive</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/about" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
+                    <Info className="w-4 h-4 text-slate-300" />
+                    <span>About</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -168,7 +189,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                                           href="/planning/quests"
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                                       >
-                                        <Map className="w-5 h-5" />
+                                        <MapIcon className="w-5 h-5" />
                                         Quest Planner
                                       </Link>
                                       <Link
@@ -179,11 +200,11 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                                         War Archive
                                       </Link>
                     <Link 
-                        href="/about" 
+                        href="/support" 
                         className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                     >
                       <Heart className="w-5 h-5" />
-                      About
+                      Support
                     </Link>
                     
                     {isInAlliance ? (
@@ -243,7 +264,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                         href="/about" 
                         className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                     >
-                      <Heart className="w-5 h-5" />
+                      <Info className="w-5 h-5" />
                       About
                     </Link>
                   </div>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import WarDetailsClient from "@/components/war-planning/war-details-client";
@@ -7,9 +8,48 @@ import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import logger from "@/lib/logger";
+import { cache } from "react";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
+}
+
+const getWar = cache(async (warId: string) => {
+  return prisma.war.findUnique({
+    where: { id: warId },
+    include: { alliance: true },
+  });
+});
+
+export async function generateMetadata({ params }: WarDetailsPageProps): Promise<Metadata> {
+  const { warId } = await params;
+  
+  const player = await getUserPlayerWithAlliance();
+  let isAuthorized = false;
+
+  const war = await getWar(warId);
+
+  if (player && war) {
+    const isBotAdmin = player.isBotAdmin;
+    const isMember = player.allianceId === war.allianceId;
+    isAuthorized = isBotAdmin || isMember;
+  }
+
+  if (!war || !isAuthorized) {
+    return {
+      title: "War Plan Details - CereBro",
+      description:
+        "Review assignments, bans, defenders, and fight tracking for this alliance war plan.",
+    };
+  }
+
+  const warLabel = war.warNumber ? `War ${war.warNumber}` : "Off-Season";
+  const versusLabel = war.enemyAlliance ? ` vs ${war.enemyAlliance}` : "";
+
+  return {
+    title: `AW S${war.season} ${warLabel}${versusLabel} - CereBro`,
+    description: `Review assignments, bans, defenders, and fight tracking for ${war.alliance.name}${war.enemyAlliance ? ` against ${war.enemyAlliance}` : ""}.`,
+  };
 }
 
 export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
@@ -21,10 +61,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
   }
 
   // 1. Fetch the War
-  const war = await prisma.war.findUnique({
-    where: { id: warId },
-    include: { alliance: true }
-  });
+  const war = await getWar(warId);
 
   if (!war) {
     return <p>War not found.</p>;

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import AdminNodeManagerClient from "@/components/admin/admin-node-manager-client";
 import { ensureAdmin } from "../actions";
+
+export const metadata: Metadata = {
+  title: "War Node Manager - CereBro",
+  description:
+    "Manage war node modifiers, tier ranges, and map allocations for alliance war planning.",
+};
 
 export default async function AdminNodeManagerPage() {
   await ensureAdmin("MANAGE_WAR_CONFIG");

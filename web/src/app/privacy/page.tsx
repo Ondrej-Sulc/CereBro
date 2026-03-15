@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy - CereBro",
+  description:
+    "Learn what data CereBro collects, how it uses Discord and YouTube data, and how video uploads and account information are handled.",
+};
 
 export default function PrivacyPolicyPage() {
   return (

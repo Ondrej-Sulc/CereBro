@@ -1,112 +1,176 @@
-import React from 'react';
-import { Bot, RefreshCw, CheckCircle2, Link as LinkIcon } from 'lucide-react';
-import Tilt from "@/components/TiltWrapper";
-import Link from 'next/link';
+import React from "react";
+import Link from "next/link";
+import { Bot, MessageSquare, UserPlus, Link2, Shield, TerminalSquare } from "lucide-react";
+import { DISCORD_INVITE } from "@/lib/links";
+
+const steps: Step[] = [
+  {
+    id: "01",
+    title: "Join the Community",
+    subtitle: "Start here if you are new",
+    icon: MessageSquare,
+    accent: "sky",
+    description:
+      "Join the CereBro Discord server first. You can ask setup questions, see updates, and avoid common mistakes.",
+    chips: ["Community support", "Setup help", "Announcements"],
+    ctaLabel: "Join Community Discord",
+    ctaHref: DISCORD_INVITE,
+    external: true,
+  },
+  {
+    id: "02",
+    title: "Start from Discord or Website",
+    subtitle: "Two valid officer paths",
+    icon: UserPlus,
+    accent: "indigo",
+    description:
+      "Preferred flow: invite CereBro to your Discord server and the alliance is created automatically. Website onboarding is also available for create/join requests.",
+    chips: ["Invite bot (auto-create)", "Website onboarding", "Join requests"],
+    ctaLabel: "Open Alliance Onboarding",
+    ctaHref: "/alliance/onboarding",
+  },
+  {
+    id: "03",
+    title: "Link Server (Only If Needed)",
+    subtitle: "Website-first alliance fallback",
+    icon: Link2,
+    accent: "violet",
+    description:
+      "Only needed when an alliance was created on the website before Discord setup. Generate a link code in Alliance settings, then run the link command in Discord.",
+    chips: ["Website-first alliance", "Generate link code", "/alliance link code:XXXX"],
+    ctaLabel: "View Linking Guide",
+    ctaHref: "/alliance",
+  },
+  {
+    id: "04",
+    title: "Complete Member Setup",
+    subtitle: "Actual member onboarding",
+    icon: TerminalSquare,
+    accent: "emerald",
+    description:
+      "Members are added through Discord role sync or by requesting to join an alliance on the website. Officers review and accept requests.",
+    chips: ["Discord role sync", "Website join request", "Officer approval"],
+    ctaLabel: "Browse Commands",
+    ctaHref: "/commands",
+  },
+];
+
+type Accent = "sky" | "indigo" | "violet" | "emerald";
+
+interface Step {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: any;
+  accent: Accent;
+  description: string;
+  chips: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  external?: boolean;
+}
+
+const accentStyles: Record<Accent, { card: string; icon: string; step: string; chip: string; cta: string }> = {
+  sky: {
+    card: "hover:border-sky-500/40 hover:shadow-sky-500/15",
+    icon: "bg-sky-500/10 text-sky-400",
+    step: "text-sky-400 border-sky-500/30",
+    chip: "border-sky-900/50 text-sky-200/90",
+    cta: "hover:border-sky-500/50 hover:text-sky-100",
+  },
+  indigo: {
+    card: "hover:border-indigo-500/40 hover:shadow-indigo-500/15",
+    icon: "bg-indigo-500/10 text-indigo-400",
+    step: "text-indigo-400 border-indigo-500/30",
+    chip: "border-indigo-900/50 text-indigo-200/90",
+    cta: "hover:border-indigo-500/50 hover:text-indigo-100",
+  },
+  violet: {
+    card: "hover:border-violet-500/40 hover:shadow-violet-500/15",
+    icon: "bg-violet-500/10 text-violet-400",
+    step: "text-violet-400 border-violet-500/30",
+    chip: "border-violet-900/50 text-violet-200/90",
+    cta: "hover:border-violet-500/50 hover:text-violet-100",
+  },
+  emerald: {
+    card: "hover:border-emerald-500/40 hover:shadow-emerald-500/15",
+    icon: "bg-emerald-500/10 text-emerald-400",
+    step: "text-emerald-400 border-emerald-500/30",
+    chip: "border-emerald-900/50 text-emerald-200/90",
+    cta: "hover:border-emerald-500/50 hover:text-emerald-100",
+  },
+};
 
 export const LiveSetup = () => {
   return (
     <div className="relative">
-      {/* Connecting Line (Desktop) */}
-      <div className="hidden md:block absolute top-12 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-sky-500/0 via-sky-500/30 to-sky-500/0 border-t border-dashed border-slate-700/50 -z-10" />
+      <div className="hidden xl:block absolute top-11 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent -z-10" />
 
-      <div className="grid md:grid-cols-3 gap-8">
-        
-        {/* Step 1: Invite */}
-        <Tilt className="h-full">
-          <div className="relative h-full bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-sm group hover:border-sky-500/30 transition-colors flex flex-col">
-            <div className="absolute -top-3 left-6 bg-slate-950 px-2 text-xs font-bold text-sky-500 border border-sky-500/20 rounded-full uppercase tracking-wider">
-              Step 01
-            </div>
-            
-            <div className="mb-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 group-hover:scale-110 transition-transform shadow-lg shadow-sky-500/10">
-                <Bot size={24} />
+      <ol className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {steps.map((step) => {
+          const accent = accentStyles[step.accent];
+          const Icon = step.icon;
+
+          return (
+            <li key={step.id} className="h-full list-none">
+              <div
+                className={`flex flex-col group relative h-full rounded-2xl border border-slate-800/80 bg-gradient-to-b from-slate-900/90 to-slate-900/50 p-5 transition-all duration-200 shadow-lg shadow-black/10 ${accent.card}`}
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="inline-flex items-center gap-2">
+                    <div
+                      className={`w-8 h-8 rounded-full border bg-slate-950/80 text-[11px] font-bold flex items-center justify-center uppercase tracking-wide ${accent.step}`}
+                    >
+                      {step.id}
+                    </div>
+                    <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">Step</p>
+                  </div>
+                  <div
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${accent.icon}`}
+                  >
+                    <Icon size={18} />
+                  </div>
+                </div>
+
+                <h3 className="text-base font-bold text-white leading-tight mb-1">{step.title}</h3>
+                <p className="text-xs text-slate-400 mb-3">{step.subtitle}</p>
+                <p className="text-sm text-slate-300 leading-relaxed mb-4">{step.description}</p>
+
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {step.chips.map((chip) => (
+                    <span
+                      key={chip}
+                      className={`text-[10px] font-mono px-2 py-1 rounded-md border bg-slate-950/80 ${accent.chip}`}
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-auto">
+                  <Link
+                    href={step.ctaHref}
+                    target={step.external ? "_blank" : undefined}
+                    rel={step.external ? "noopener noreferrer" : undefined}
+                    className={`w-full inline-flex items-center justify-center gap-2 bg-slate-950/80 hover:bg-slate-900 text-slate-200 text-xs font-semibold py-2.5 rounded-lg border border-slate-700/80 transition-colors ${accent.cta}`}
+                    aria-label={step.external ? `${step.ctaLabel} (opens in a new tab)` : step.ctaLabel}
+                  >
+                    {step.external ? <MessageSquare size={13} /> : <Bot size={13} />}
+                    {step.ctaLabel}
+                  </Link>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-white">Invite & Auto-Init</h3>
-                <p className="text-xs text-slate-400">Bot starts setup on join</p>
-              </div>
-            </div>
-            
-            {/* Visual Mockup */}
-            <div className="bg-slate-950/80 rounded-lg p-3 border border-slate-800/50 font-mono text-[10px] text-slate-300 mb-4 flex-grow">
-               <span className="text-emerald-400">➜</span> /invite <br/>
-               <span className="text-sky-400 opacity-80">CereBro:</span> Setup wizard started.<br/>
-               <span className="opacity-50">Creating alliance workspace...</span>
-            </div>
+            </li>
+          );
+        })}
+      </ol>
 
-            <Link
-                href="https://discord.com/oauth2/authorize"
-                target="_blank"
-                className="w-full flex items-center justify-center gap-2 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-semibold py-2 rounded-lg border border-sky-500/20 transition-colors"
-            >
-                <LinkIcon size={12} />
-                Get Invite Link
-            </Link>
-          </div>
-        </Tilt>
-
-        {/* Step 2: Configure */}
-        <Tilt className="h-full">
-          <div className="relative h-full bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-sm group hover:border-indigo-500/30 transition-colors flex flex-col">
-            <div className="absolute -top-3 left-6 bg-slate-950 px-2 text-xs font-bold text-indigo-500 border border-indigo-500/20 rounded-full uppercase tracking-wider">
-              Step 02
-            </div>
-
-            <div className="mb-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:rotate-12 transition-transform duration-700 shadow-lg shadow-indigo-500/10">
-                <RefreshCw size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-white">Configure Roles</h3>
-                <p className="text-xs text-slate-400">Map Discord roles once</p>
-              </div>
-            </div>
-
-            {/* Visual Mockup */}
-            <div className="bg-slate-950/80 rounded-lg p-3 border border-slate-800/50 font-mono text-[10px] text-slate-300 flex-grow">
-               <span className="text-emerald-400">➜</span> /setup roles <br/>
-               <div className="mt-1 pl-2 border-l border-slate-700">
-                   Officers: <span className="text-indigo-400">@Council</span><br/>
-                   Member: <span className="text-indigo-400">@Symbiote</span>
-               </div>
-               <span className="text-green-400">✔ Configuration saved.</span>
-            </div>
-          </div>
-        </Tilt>
-
-        {/* Step 3: Auto-Sync */}
-        <Tilt className="h-full">
-          <div className="relative h-full bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-sm group hover:border-emerald-500/30 transition-colors flex flex-col">
-            <div className="absolute -top-3 left-6 bg-slate-950 px-2 text-xs font-bold text-emerald-500 border border-emerald-500/20 rounded-full uppercase tracking-wider">
-              Step 03
-            </div>
-
-            <div className="mb-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/10">
-                <CheckCircle2 size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-white">Auto-Sync</h3>
-                <p className="text-xs text-slate-400">Background magic</p>
-              </div>
-            </div>
-
-            {/* Visual Mockup */}
-            <div className="bg-slate-950/80 rounded-lg p-3 border border-slate-800/50 font-mono text-[10px] text-slate-300 flex-grow">
-               <div className="flex items-center gap-2 mb-1">
-                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-white font-bold">Sync Active</span>
-               </div>
-               <div className="space-y-1 opacity-70">
-                   <p>• 30 members linked</p>
-                   <p>• Permissions granted</p>
-                   <p>• Web access enabled</p>
-               </div>
-            </div>
-          </div>
-        </Tilt>
-
+      <div className="mt-5 flex items-start gap-2 text-xs text-slate-400">
+        <Shield className="w-4 h-4 mt-0.5 text-sky-400/90 shrink-0" />
+        <p>
+          Officer flow and member flow are different. Members join through role sync or website requests;
+          server linking is only for website-first alliances, while channel configuration remains an officer task.
+        </p>
       </div>
     </div>
   );

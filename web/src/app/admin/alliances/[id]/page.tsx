@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -5,6 +6,8 @@ import { Shield, Users, Settings, Clock, MapPin, Hash, Check, X, Award } from "l
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MembersTable } from "./members-table"
+import { cache } from "react"
+import { ensureAdmin } from "../../actions"
 
 interface AdminAllianceDetailPageProps {
   params: Promise<{
@@ -12,10 +15,8 @@ interface AdminAllianceDetailPageProps {
   }>
 }
 
-export default async function AdminAllianceDetailPage({ params }: AdminAllianceDetailPageProps) {
-  const { id } = await params
-
-  const alliance = await prisma.alliance.findUnique({
+const getAlliance = cache(async (id: string) => {
+  return prisma.alliance.findUnique({
     where: { id },
     include: {
       _count: {
@@ -27,6 +28,38 @@ export default async function AdminAllianceDetailPage({ params }: AdminAllianceD
       activeDefensePlan: true
     }
   })
+})
+
+export async function generateMetadata({ params }: AdminAllianceDetailPageProps): Promise<Metadata> {
+  const { id } = await params
+  
+  // Try to authorize before leaking the name
+  try {
+    await ensureAdmin("MANAGE_ALLIANCES")
+    const alliance = await getAlliance(id)
+
+    if (alliance) {
+      return {
+        title: `${alliance.name} - Alliance Details - CereBro`,
+        description: `Review members, configuration, reminders, enabled features, and settings for ${alliance.name}.`,
+      }
+    }
+  } catch {
+    // If not authorized, return generic metadata
+  }
+
+  return {
+    title: "Alliance Details - CereBro",
+    description:
+      "Review alliance members, configuration, reminders, enabled features, and settings.",
+  }
+}
+
+export default async function AdminAllianceDetailPage({ params }: AdminAllianceDetailPageProps) {
+  await ensureAdmin("MANAGE_ALLIANCES")
+  const { id } = await params
+
+  const alliance = await getAlliance(id)
 
   if (!alliance) {
     notFound()

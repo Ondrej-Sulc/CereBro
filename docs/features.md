@@ -20,7 +20,7 @@
 *   **Scheduling:** General purpose reminders and event scheduling.
 *   **Automatic Guild Init:** Auto-initializes `Alliance` records when joining new servers.
 *   **Role Sync:**
-    *   `/setup`: Interactive wizard for configuring roles.
+    *   Officer/admin alliance commands are used to configure Discord role mappings.
     *   Background jobs sync Discord roles to the database hourly.
     *   **Hybrid Support:** Optional `removeMissingMembers` flag (configurable via `/alliance config-roles`) allows hybrid alliances to keep members who are added via the web but don't have specific Discord roles.
     *   `/alliance manage`: Officer tools to remove/list members.
@@ -140,15 +140,15 @@ A dedicated system for planning fights across complex quests (e.g., Story conten
 *   **Conflict Visuals:** Player lists show warning icons for champions that are currently placed on defense.
 *   **Battlegroup Colors:** Customize BG identity colors (used in Discord maps and Web headers).
 *   **Discord Linking:**
-    *   Officers generate `CB-XXXXXX` code on web.
-    *   Redeem via `/alliance link` in Discord to bridge the two platforms.
+    *   **Default path:** Inviting the bot to a Discord server automatically creates the alliance record.
+    *   **Fallback path:** If an alliance is created on the website first, officers can generate a `CB-XXXXXX` code and redeem via `/alliance link` in Discord to bridge the two platforms.
 
 ### Admin Portal & Data Management
 A secure, web-based suite for managing core game data and system-wide alliance/player records.
 *   **Access Control:** Strictly protected via RBAC. Only users with the `BotUser.isBotAdmin` flag can access the portal.
 *   **Database Insights:** Real-time dashboard with key metrics (Total Players/Alliances, Affiliation rates) and high-performance visualizations of top-tier alliances and prestige leaders.
 *   **Directory Management:**
-    *   **Alliances:** Searchable, sortable, and paginated directory of all registered Discord servers.
+    *   **Alliances:** Searchable, sortable, and paginated directory of alliance records.
     *   **Discord Servers:** Real-time monitoring of all servers the bot is connected to. Features include:
         *   **Member Tracking:** Displays approximate member counts to identify small/test servers.
         *   **Manual Leave:** Admins can trigger the bot to leave specific servers via the `LEAVE_GUILD` job queue.

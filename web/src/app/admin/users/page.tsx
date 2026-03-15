@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { UserCircle, ArrowUpDown, ArrowUp, ArrowDown, Settings } from "lucide-react"
@@ -31,6 +32,12 @@ import { computePaginationWindow } from "@/lib/pagination"
 import { EditPermissionsDialog } from "./components/edit-permissions-dialog"
 import { auth } from "@/auth"
 import { ensureAdmin } from "../actions"
+
+export const metadata: Metadata = {
+  title: "User Management - CereBro",
+  description:
+    "Browse, filter, and manage player profiles, alliance membership, roles, and admin permissions.",
+}
 
 interface AdminUsersPageProps {
   searchParams: Promise<{

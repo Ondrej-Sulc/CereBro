@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Shield, Check, X, Settings } from "lucide-react"
@@ -22,6 +23,12 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+
+export const metadata: Metadata = {
+  title: "Alliance Directory - CereBro",
+  description:
+    "View, filter, and manage alliance records, AQ reminders, features, and details.",
+}
 import { Prisma } from "@prisma/client"
 import { Suspense } from "react"
 import { buildSearchParams } from "@/lib/utils"

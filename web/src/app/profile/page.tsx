@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getRoster, RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { redirect } from "next/navigation";
@@ -16,6 +17,12 @@ import { Upload, LayoutGrid } from "lucide-react";
 import logger from "@/lib/logger";
 
 import { ProfileManager } from "./components/profile-manager";
+
+export const metadata: Metadata = {
+  title: "My Profile - CereBro",
+  description:
+    "View your active profile, prestige history, and roster summary in one place.",
+};
 
 const CLASS_ICONS: Record<Exclude<ChampionClass, 'SUPERIOR'>, string> = {
     SCIENCE: "/assets/icons/Science.png",

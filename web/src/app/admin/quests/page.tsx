@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import AdminQuestManagerClient, { QuestWithRelations } from "@/components/admin/quests/admin-quest-manager-client";
 import { ensureAdmin } from "../actions";
+
+export const metadata: Metadata = {
+  title: "Quest Planner Management - CereBro",
+  description:
+    "Create and manage standardized quest counters, categories, and guides for the alliance.",
+};
 
 export default async function AdminQuestsPage() {
     await ensureAdmin("MANAGE_QUESTS");

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { ensureAdmin } from "../actions";
+
+export const metadata: Metadata = {
+  title: "YouTube Authentication - CereBro",
+  description:
+    "Connect and manage the YouTube account authorization used by CereBro.",
+};
 
 export default async function YouTubeAdminPage({
   searchParams,

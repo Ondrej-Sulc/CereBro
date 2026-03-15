@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Card } from "@/components/ui/card";
 import { Skull, Trophy, BarChart2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,12 @@ import logger from "@/lib/logger";
 import { SeasonOverviewView } from "./season-overview-view";
 import { SeasonAnalysisContainer } from "./season-analysis-container";
 import { getAvailableSeasons, getSeasonData } from "./season-data";
+
+export const metadata: Metadata = {
+  title: "Season Overview - CereBro",
+  description:
+    "Review alliance war season performance, top attackers and defenders, hardest nodes, and placement trends.",
+};
 
 // Force dynamic rendering to ensure up-to-date data
 export const dynamic = 'force-dynamic';

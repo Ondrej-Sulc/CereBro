@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Terms of Service - CereBro",
+  description:
+    "Read the terms for using the CereBro Discord bot, web app, and Alliance War video upload features.",
+};
 
 export default function TermsOfServicePage() {
   return (

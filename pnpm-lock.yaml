@@ -273,6 +273,9 @@ importers:
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
+      stripe:
+        specifier: ^20.4.1
+        version: 20.4.1(@types/node@20.19.24)
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.4.0
@@ -924,8 +927,8 @@ packages:
   '@maxim_mazurok/gapi.client.discovery-v1@0.4.20200806':
     resolution: {integrity: sha512-Jeo/KZqK39DI6ExXHcJ4lqnn1O/wEqboQ6eQ8WnNpu5eJ7wUnX/C5KazOgs1aRhnIB/dVzDe8wm62nmtkMIoaw==}
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260225':
-    resolution: {integrity: sha512-9uCa3AJNihDUnQy2o+9gLwpxxhzSA9VfJKvrZY4V7LjD2y1qt9D5p51npdu5xDfYSyDAz9RZ6ViCd4TH6sKklw==}
+  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260309':
+    resolution: {integrity: sha512-+YtHoj6XlBX86kjyT07Xtk8e+JrvfisTYJEU+BOinwBn6aJin8xqEXpNiwAPAdPaHIbXjL7lH3AP4CaZGRM+GA==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -4438,6 +4441,15 @@ packages:
   strip-literal@3.1.0:
     resolution: {integrity: sha512-8r3mkIM/2+PpjHoOtiAW8Rg3jJLHaV7xPwG+YRGrv6FP0wwk/toTpATxWYOW0BKdWwl82VT2tFYi5DlROa0Mxg==}
 
+  stripe@20.4.1:
+    resolution: {integrity: sha512-axCguHItc8Sxt0HC6aSkdVRPffjYPV7EQqZRb2GkIa8FzWDycE7nHJM19C6xAIynH1Qp1/BHiopSi96jGBxT0w==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      '@types/node': '>=16'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   strnum@1.1.2:
     resolution: {integrity: sha512-vrN+B7DBIoTTZjnPNewwhx6cBA/H+IS7rfW68n7XxC1y7uoiGQBxaKzqucGUgavX15dJgiGztLJ8vxuEzwqBdA==}
 
@@ -5495,7 +5507,7 @@ snapshots:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
 
-  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260225':
+  '@maxim_mazurok/gapi.client.sheets-v4@0.2.20260309':
     dependencies:
       '@types/gapi.client': 1.0.8
       '@types/gapi.client.discovery-v1': 0.0.4
@@ -6370,7 +6382,7 @@ snapshots:
 
   '@types/gapi.client.sheets-v4@0.0.4':
     dependencies:
-      '@maxim_mazurok/gapi.client.sheets-v4': 0.2.20260225
+      '@maxim_mazurok/gapi.client.sheets-v4': 0.2.20260309
 
   '@types/gapi.client@1.0.8': {}
 
@@ -9272,6 +9284,10 @@ snapshots:
   strip-literal@3.1.0:
     dependencies:
       js-tokens: 9.0.1
+
+  stripe@20.4.1(@types/node@20.19.24):
+    optionalDependencies:
+      '@types/node': 20.19.24
 
   strnum@1.1.2: {}
 

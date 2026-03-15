@@ -180,6 +180,7 @@ model BotUser {
   activeProfileId   String?
   profiles          Player[]
   createdQuestPlans QuestPlan[] @relation("QuestPlanCreators")
+  supportDonations  SupportDonation[]
 }
 
 model Player {
@@ -214,10 +215,40 @@ model Player {
   extraChampions     WarExtraChampion[]
   playedInFights     WarFight[]                  @relation("PlayerInFight")
   submittedVideos    WarVideo[]                  @relation("SubmittedBy")
+  supportDonations   SupportDonation[]
 
   @@unique([discordId, ingameName])
   @@index([discordId])
   @@index([allianceId])
+}
+
+model SupportDonation {
+  id                     String   @id @default(cuid())
+  amountMinor            Int
+  currency               String
+  status                 String
+  stripeCheckoutSessionId String  @unique
+  stripePaymentIntentId  String?
+  stripeCustomerId       String?
+  supporterName          String?
+  supporterEmail         String?
+  retentionState         String   @default("ACTIVE")
+  anonymizedAt           DateTime?
+  deletedAt              DateTime?
+  consentRevoked         Boolean  @default(false)
+  discordId              String?
+  botUserId              String?
+  playerId               String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  player                 Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  botUser                BotUser? @relation(fields: [botUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([playerId, createdAt])
+  @@index([botUserId, createdAt])
+  @@index([discordId, createdAt])
+  @@index([retentionState, anonymizedAt, deletedAt])
 }
 
 model PrestigeLog {

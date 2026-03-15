@@ -833,16 +833,16 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
 
     if (!isEditing) {
         return (
-            <div className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors group">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">
+            <div className="flex items-start justify-between p-3 hover:bg-muted/30 transition-colors group">
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 py-1">
+                        <div className="font-medium text-sm break-words whitespace-normal">
                             {link.source || <span className="text-muted-foreground italic">No specific source</span>}
                         </div>
                     </div>
                     
                     {/* Compact Synergy View */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 py-1">
                         {link.synergyChampions.length > 0 ? (
                             <div className="flex -space-x-2">
                                 {link.synergyChampions.slice(0, 5).map(synergy => {
