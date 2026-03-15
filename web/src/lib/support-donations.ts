@@ -27,6 +27,11 @@ type UpsertDonationInput = {
 
 export async function upsertSupportDonation(input: UpsertDonationInput) {
   const donation = await prisma.$transaction(async (tx) => {
+    const existingBefore = await tx.supportDonation.findUnique({
+      where: { stripeCheckoutSessionId: input.stripeCheckoutSessionId },
+      select: { status: true },
+    });
+
     const commonUpdateData = {
       amountMinor: input.amountMinor,
       currency: input.currency,
@@ -120,6 +125,22 @@ export async function upsertSupportDonation(input: UpsertDonationInput) {
 
     if (!persisted) {
       throw new Error("Support donation upsert failed: record not found after transaction.");
+    }
+
+    const targetDiscordId = persisted.discordId || input.discordId;
+
+    if (
+      persisted.status === "succeeded" &&
+      existingBefore?.status !== "succeeded" &&
+      targetDiscordId
+    ) {
+      // Create a bot job to assign the supporter role on Discord
+      await tx.botJob.create({
+        data: {
+          type: "ASSIGN_SUPPORTER_ROLE",
+          payload: { discordId: targetDiscordId, donationId: persisted.id },
+        },
+      });
     }
 
     return persisted;

@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "BotJobType" ADD VALUE 'ASSIGN_SUPPORTER_ROLE';

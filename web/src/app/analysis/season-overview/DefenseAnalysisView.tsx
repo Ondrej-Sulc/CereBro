@@ -103,7 +103,7 @@ export function DefenseAnalysisView({
               <tbody className="divide-y divide-slate-800/40 text-sm">
                 {nodeStats.map((stat) => {
                   const classColors = getChampionClassColors(stat.defenderClass);
-                  const lethality = (stat.deaths / (stat.fights || 1));
+                  const lethality = Math.max(0, (stat.deaths / (stat.fights || 1)));
                   return (
                     <tr key={stat.defenderId} className="hover:bg-slate-800/30 transition-all duration-300 group/row">
                       <td className="px-6 py-4">
@@ -228,9 +228,9 @@ export function DefenseAnalysisView({
                       <div className="flex flex-col gap-1.5 w-full max-w-[140px] ml-auto">
                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
                           <span className="flex items-center gap-1"><Skull className="w-2.5 h-2.5" /> {stat.deaths}</span>
-                          <span>{(stat.deaths / (stat.fights || 1) * 100).toFixed(0)}%</span>
+                          <span>{Math.max(0, (stat.deaths / (stat.fights || 1) * 100)).toFixed(0)}%</span>
                         </div>
-                        <Progress value={(stat.deaths / (stat.fights || 1)) * 100} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: stat.deaths > 0 ? '#ef4444' : '#334155' }} />
+                        <Progress value={Math.max(0, (stat.deaths / (stat.fights || 1)) * 100)} className="h-1 bg-slate-800" indicatorStyle={{ backgroundColor: stat.deaths > 0 ? '#ef4444' : '#334155' }} />
                       </div>
                     </td>
                   </tr>
