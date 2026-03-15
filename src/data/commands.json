@@ -490,12 +490,6 @@
       },
       {
         "type": 1,
-        "name": "join",
-        "description": "Join the alliance associated with this server.",
-        "options": []
-      },
-      {
-        "type": 1,
         "name": "name",
         "description": "Update your alliance's name.",
         "options": [
@@ -625,6 +619,19 @@
         "name": "view",
         "description": "Display an overview of the alliance.",
         "options": []
+      },
+      {
+        "type": 1,
+        "name": "create",
+        "description": "Create an additional alliance for this server (Server Admin only).",
+        "options": [
+          {
+            "type": 3,
+            "name": "name",
+            "description": "The name of the new alliance.",
+            "required": true
+          }
+        ]
       },
       {
         "type": 1,
@@ -785,7 +792,7 @@
   {
     "name": "aw",
     "description": "Commands for Alliance War planning and details.",
-    "access": 4,
+    "access": 0,
     "group": "Alliance Tools",
     "color": "sky",
     "options": [
