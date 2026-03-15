@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Player, Alliance } from "@prisma/client";
+import { Player, Alliance, Prisma } from "@prisma/client";
 import { Permission } from "./permissions";
 import { cache } from "react";
 
@@ -69,12 +69,12 @@ export const getUserPlayerWithAlliance = cache(async (): Promise<UserPlayerWithA
     });
   }
 
-  if (player && botUser) {
-    // Override the local isBotAdmin with the global BotUser permission
+  if (player) {
+    // Override the local isBotAdmin with the global BotUser permission if available
     return {
       ...player,
-      isBotAdmin: botUser.isBotAdmin,
-      permissions: botUser.permissions || []
+      isBotAdmin: botUser?.isBotAdmin ?? false,
+      permissions: botUser?.permissions ?? []
     };
   }
 
@@ -160,13 +160,18 @@ export async function hasCurrentUserSupportedCereBro(): Promise<boolean> {
     return false;
   }
 
+  const orConditions: Prisma.SupportDonationWhereInput[] = [
+    { playerId: player.id },
+    { discordId: player.discordId },
+  ];
+
+  if (player.botUserId) {
+    orConditions.push({ botUserId: player.botUserId });
+  }
+
   const donation = await prisma.supportDonation.findFirst({
     where: {
-      OR: [
-        { playerId: player.id },
-        { discordId: player.discordId },
-        { botUserId: player.botUserId || undefined },
-      ],
+      OR: orConditions,
       status: "succeeded",
       anonymizedAt: null,
       deletedAt: null,

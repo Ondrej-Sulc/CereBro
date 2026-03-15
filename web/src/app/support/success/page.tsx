@@ -5,30 +5,35 @@ import PageBackground from "@/components/PageBackground";
 import { DISCORD_INVITE } from "@/lib/links";
 import { prisma } from "@/lib/prisma";
 
+async function fetchDonationStatus(session_id?: string | string[]): Promise<string | null> {
+  const normalizedSessionId = Array.isArray(session_id) ? session_id[0] : session_id;
+  if (!normalizedSessionId) return null;
+
+  try {
+    const donation = await prisma.supportDonation.findUnique({
+      where: { stripeCheckoutSessionId: normalizedSessionId },
+      select: { status: true }
+    });
+    return donation?.status || null;
+  } catch (error) {
+    console.error("Donation status verification failed:", error);
+    return null;
+  }
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: Promise<{ session_id?: string | string[] }>;
 }): Promise<Metadata> {
   const { session_id } = await searchParams;
-  const normalizedSessionId = Array.isArray(session_id) ? session_id[0] : session_id;
+  const status = await fetchDonationStatus(session_id);
   
-  if (normalizedSessionId) {
-    try {
-      const donation = await prisma.supportDonation.findUnique({
-        where: { stripeCheckoutSessionId: normalizedSessionId },
-        select: { status: true }
-      });
-      
-      if (donation?.status === 'succeeded') {
-        return {
-          title: "Support Successful - CereBro",
-          description: "Thank you for supporting CereBro and helping fund hosting and active development.",
-        };
-      }
-    } catch (error) {
-      console.error("Metadata verification failed for support donation:", error);
-    }
+  if (status === 'succeeded') {
+    return {
+      title: "Support Successful - CereBro",
+      description: "Thank you for supporting CereBro and helping fund hosting and active development.",
+    };
   }
 
   return {
@@ -43,22 +48,8 @@ export default async function SupportSuccessPage({
   searchParams: Promise<{ session_id?: string | string[] }>;
 }) {
   const { session_id } = await searchParams;
-  const normalizedSessionId = Array.isArray(session_id) ? session_id[0] : session_id;
-  let isSuccess = false;
-
-  if (normalizedSessionId) {
-    try {
-      const donation = await prisma.supportDonation.findUnique({
-        where: { stripeCheckoutSessionId: normalizedSessionId },
-        select: { status: true }
-      });
-      if (donation?.status === 'succeeded') {
-        isSuccess = true;
-      }
-    } catch (error) {
-      console.error("Support status verification failed:", error);
-    }
-  }
+  const status = await fetchDonationStatus(session_id);
+  const isSuccess = status === 'succeeded';
 
   if (!isSuccess) {
     return (

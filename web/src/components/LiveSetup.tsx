@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Bot, MessageSquare, UserPlus, Link2, Shield, TerminalSquare } from "lucide-react";
 import { DISCORD_INVITE } from "@/lib/links";
 
-const steps = [
+const steps: Step[] = [
   {
     id: "01",
     title: "Join the Community",
@@ -55,7 +55,22 @@ const steps = [
   },
 ];
 
-const accentStyles: Record<string, { card: string; icon: string; step: string; chip: string; cta: string }> = {
+type Accent = "sky" | "indigo" | "violet" | "emerald";
+
+interface Step {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: any;
+  accent: Accent;
+  description: string;
+  chips: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  external?: boolean;
+}
+
+const accentStyles: Record<Accent, { card: string; icon: string; step: string; chip: string; cta: string }> = {
   sky: {
     card: "hover:border-sky-500/40 hover:shadow-sky-500/15",
     icon: "bg-sky-500/10 text-sky-400",
@@ -91,13 +106,13 @@ export const LiveSetup = () => {
     <div className="relative">
       <div className="hidden xl:block absolute top-11 left-[8%] right-[8%] h-px bg-gradient-to-r from-transparent via-slate-600/50 to-transparent -z-10" />
 
-      <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
+      <ol className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
         {steps.map((step) => {
           const accent = accentStyles[step.accent];
           const Icon = step.icon;
 
           return (
-            <div key={step.id} className="h-full">
+            <li key={step.id} className="h-full list-none">
               <div
                 className={`flex flex-col group relative h-full rounded-2xl border border-slate-800/80 bg-gradient-to-b from-slate-900/90 to-slate-900/50 p-5 transition-all duration-200 shadow-lg shadow-black/10 ${accent.card}`}
               >
@@ -145,10 +160,10 @@ export const LiveSetup = () => {
                   </Link>
                 </div>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
 
       <div className="mt-5 flex items-start gap-2 text-xs text-slate-400">
         <Shield className="w-4 h-4 mt-0.5 text-sky-400/90 shrink-0" />
