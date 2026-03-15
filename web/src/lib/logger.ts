@@ -17,9 +17,8 @@ export const isAbortedResponse = (error: unknown): boolean => {
   if (!error) return false;
   const err = error as any;
   return (
-    err.name === 'ResponseAborted' ||
-    (typeof err.message === 'string' && err.message.includes('ResponseAborted')) ||
-    String(error).includes('ResponseAborted')
+    err?.name === 'ResponseAborted' ||
+    (typeof err?.message === 'string' && err.message.includes('ResponseAborted'))
   );
 };
 

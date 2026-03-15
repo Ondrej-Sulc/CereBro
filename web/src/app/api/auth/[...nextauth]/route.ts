@@ -14,7 +14,7 @@ const wrapHandler = <Req extends Request, Args extends any[], R>(
   try {
     return await handler(req, ...args);
   } catch (error: any) {
-    if (error?.message?.includes('next_redirect') || error?.name?.startsWith('NEXT_REDIRECT')) {
+    if (error?.message?.includes('next_redirect') || error?.digest?.startsWith('NEXT_REDIRECT')) {
       throw error;
     }
 
