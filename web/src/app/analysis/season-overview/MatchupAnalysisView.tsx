@@ -69,7 +69,7 @@ export function MatchupAnalysisView({
     const classColors = getChampionClassColors(att.class);
     const totalFights = attackerMatchupStats.reduce((acc, curr) => acc + curr.fights, 0);
     const totalDeaths = attackerMatchupStats.reduce((acc, curr) => acc + curr.deaths, 0);
-    const globalSoloRate = ((totalFights - totalDeaths) / (totalFights || 1)) * 100;
+    const globalSoloRate = Math.max(0, ((totalFights - totalDeaths) / (totalFights || 1)) * 100);
 
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -132,7 +132,7 @@ export function MatchupAnalysisView({
               </thead>
               <tbody className="divide-y divide-slate-800/40 text-sm">
                 {attackerMatchupStats.map((stat) => {
-                  const soloRate = ((stat.fights - stat.deaths) / stat.fights) * 100;
+                  const soloRate = Math.max(0, ((stat.fights - stat.deaths) / stat.fights) * 100);
                   const targetColors = getChampionClassColors(stat.defenderClass);
                   return (
                     <tr key={stat.defenderId} className="hover:bg-slate-800/20 transition-all group/target">
@@ -225,7 +225,7 @@ export function MatchupAnalysisView({
               </thead>
               <tbody className="divide-y divide-slate-800/40 text-sm">
                 {counterStats.map((stat) => {
-                  const soloRate = ((stat.fights - stat.deaths) / stat.fights) * 100;
+                  const soloRate = Math.max(0, ((stat.fights - stat.deaths) / stat.fights) * 100);
                   const attColors = getChampionClassColors(stat.attackerClass!);
                   return (
                     <tr key={stat.attackerId} className="hover:bg-slate-800/20 transition-all group/counter">

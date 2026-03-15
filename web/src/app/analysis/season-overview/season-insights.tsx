@@ -62,7 +62,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         <tbody className="divide-y divide-slate-800/30 text-sm">
                             {displayedDefenders.map((champ, i) => {
                                 const classColors = getChampionClassColors(champ.class);
-                                const lethality = (champ.deaths / (champ.fights || 1));
+                                const lethality = Math.max(0, (champ.deaths / (champ.fights || 1)));
                                 return (
                                 <tr 
                                     key={champ.id} 
@@ -166,7 +166,7 @@ export function SeasonInsights({ topDefenders, topAttackers, hardestNodes, onSel
                         <table className="w-full text-sm table-fixed">
                         <tbody className="divide-y divide-slate-800/30 text-sm">
                             {displayedAttackers.map((champ, i) => {
-                                const soloRate = champ.fights > 0 ? ((champ.fights - champ.deaths) / champ.fights) * 100 : 0;
+                                const soloRate = champ.fights > 0 ? Math.max(0, ((champ.fights - champ.deaths) / champ.fights) * 100) : 0;
                                 const classColors = getChampionClassColors(champ.class);
                                 return (
                                 <tr 
