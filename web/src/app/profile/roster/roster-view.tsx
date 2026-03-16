@@ -324,6 +324,7 @@ export function RosterView({
         sigLevel: 0,
         isAwakened: false,
         isAscended: false,
+        ascensionLevel: 0,
         powerRating: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
