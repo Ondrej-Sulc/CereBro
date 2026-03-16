@@ -11,6 +11,7 @@ const updateSchema = z.object({
   rank: z.number().min(1).max(10).optional(),
   isAwakened: z.boolean().optional(),
   isAscended: z.boolean().optional(),
+  ascensionLevel: z.number().min(0).max(2).optional(),
   sigLevel: z.number().min(0).max(200).optional(),
 });
 
@@ -26,7 +27,7 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { id, rank, isAwakened, isAscended, sigLevel } = updateSchema.parse(body);
+    const { id, rank, isAwakened, isAscended, ascensionLevel, sigLevel } = updateSchema.parse(body);
 
     const rosterEntry = await prisma.roster.findUnique({
       where: { id },
@@ -46,6 +47,7 @@ export async function PUT(req: Request) {
         rank,
         isAwakened,
         isAscended,
+        ascensionLevel,
         sigLevel,
       },
       include: {

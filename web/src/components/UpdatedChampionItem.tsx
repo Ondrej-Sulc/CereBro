@@ -21,6 +21,7 @@ export interface RosterWithChampion {
     isAwakened?: boolean;
     sigLevel?: number;
     isAscended?: boolean;
+    ascensionLevel?: number;
     powerRating?: number | null;
     champion: ChampionData;
 }
@@ -172,9 +173,10 @@ export const UpdatedChampionItem = memo(({
                 </div>
 
                 {/* Ascension Overlay */}
-                {item.isAscended && (
-                    <div className="absolute top-1 right-1 z-20 h-5 w-5 bg-yellow-950/80 rounded-sm border border-yellow-500/30 flex items-center justify-center p-0.5 shadow-sm">
+                {(item.isAscended || (item.ascensionLevel && item.ascensionLevel > 0)) && (
+                    <div className="absolute top-1 right-1 z-20 h-5 bg-yellow-950/80 rounded-sm border border-yellow-500/30 flex items-center justify-center p-0.5 shadow-sm min-w-[20px] px-1 gap-0.5" title={item.ascensionLevel ? `Ascension Level ${item.ascensionLevel}` : "Ascended"}>
                         <Trophy className="w-3 h-3 text-yellow-400 fill-yellow-500" />
+                        {item.ascensionLevel ? <span className="text-[10px] font-bold text-yellow-400 leading-none">{item.ascensionLevel}</span> : null}
                     </div>
                 )}
             </div>

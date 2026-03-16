@@ -18,6 +18,7 @@ export type AllianceRosterEntry = {
     sigLevel: number;
     isAwakened: boolean;
     isAscended: boolean;
+    ascensionLevel: number;
     tags: string[];
     tactics: { attack: boolean; defense: boolean };
     abilities: {
@@ -137,6 +138,7 @@ export async function getAllianceRoster(
             sigLevel: entry.sigLevel,
             isAwakened: entry.isAwakened,
             isAscended: entry.isAscended,
+            ascensionLevel: entry.ascensionLevel,
             tags: entry.champion.tags.map(t => t.name),
             tactics: {
                 attack: hasAttackTactic,

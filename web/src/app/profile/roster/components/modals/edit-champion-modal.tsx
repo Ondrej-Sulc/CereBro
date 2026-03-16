@@ -82,8 +82,29 @@ export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemCha
                                     <Label htmlFor="awakened">Awakened</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <Checkbox id="ascended" checked={item.isAscended} onCheckedChange={(c) => onItemChange({...item, isAscended: !!c})} className="border-slate-600 data-[state=checked]:bg-sky-600" />
-                                    <Label htmlFor="ascended">Ascended</Label>
+                                    {item.stars === 7 ? (
+                                        <div className="flex items-center gap-2">
+                                            <Label htmlFor="ascensionLevel" className="whitespace-nowrap">Ascension</Label>
+                                            <Select value={String(item.ascensionLevel || 0)} onValueChange={(v) => {
+                                                const level = parseInt(v);
+                                                onItemChange({...item, ascensionLevel: level, isAscended: level > 0});
+                                            }}>
+                                                <SelectTrigger id="ascensionLevel" className="w-[80px] h-8 bg-slate-950 border-slate-700">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[0, 1, 2, 3, 4, 5].map(level => (
+                                                        <SelectItem key={level} value={String(level)}>{level === 0 ? 'None' : `Level ${level}`}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Checkbox id="ascended" checked={item.isAscended} onCheckedChange={(c) => onItemChange({...item, isAscended: !!c})} className="border-slate-600 data-[state=checked]:bg-sky-600" />
+                                            <Label htmlFor="ascended">Ascended</Label>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -93,7 +114,7 @@ export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemCha
                         <Button variant="destructive" size="icon" onClick={() => onDelete(item.id)}><Trash2 className="w-4 h-4" /></Button>
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={onClose}>Cancel</Button>
-                            <Button onClick={() => onUpdate({ id: item.id, rank: item.rank, isAwakened: item.isAwakened, isAscended: item.isAscended, sigLevel: item.sigLevel })} className="bg-sky-600 hover:bg-sky-700">Save Changes</Button>
+                            <Button onClick={() => onUpdate({ id: item.id, rank: item.rank, isAwakened: item.isAwakened, isAscended: item.isAscended, ascensionLevel: item.ascensionLevel, sigLevel: item.sigLevel })} className="bg-sky-600 hover:bg-sky-700">Save Changes</Button>
                         </div>
                     </DialogFooter>
                 </DialogContent>

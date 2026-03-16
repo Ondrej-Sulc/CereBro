@@ -52,33 +52,41 @@ export async function calculateRosterRecommendations(
     }
 
     // Helper for Linear Interpolation
-    const getInterpolatedPrestige = (champId: number, rarity: number, rank: number, sig: number): number => {
+    const getInterpolatedPrestige = (champId: number, rarity: number, rank: number, sig: number, ascensionLevel: number = 0): number => {
         const sigs = prestigeLookup.get(champId)?.get(rarity)?.get(rank);
         if (!sigs) return 0;
 
-        if (sigs.has(sig)) return sigs.get(sig)!;
+        let basePrestige = 0;
 
-        // Find bounds
-        const sortedSigs = Array.from(sigs.keys()).sort((a, b) => a - b);
-        const lowerSig = sortedSigs.filter(s => s <= sig).pop();
-        const upperSig = sortedSigs.find(s => s > sig);
+        if (sigs.has(sig)) {
+            basePrestige = sigs.get(sig)!;
+        } else {
+            // Find bounds
+            const sortedSigs = Array.from(sigs.keys()).sort((a, b) => a - b);
+            const lowerSig = sortedSigs.filter(s => s <= sig).pop();
+            const upperSig = sortedSigs.find(s => s > sig);
 
-        if (lowerSig !== undefined && upperSig !== undefined) {
-            const lowerVal = sigs.get(lowerSig)!;
-            const upperVal = sigs.get(upperSig)!;
-            const fraction = (sig - lowerSig) / (upperSig - lowerSig);
-            return Math.round(lowerVal + (upperVal - lowerVal) * fraction);
+            if (lowerSig !== undefined && upperSig !== undefined) {
+                const lowerVal = sigs.get(lowerSig)!;
+                const upperVal = sigs.get(upperSig)!;
+                const fraction = (sig - lowerSig) / (upperSig - lowerSig);
+                basePrestige = Math.round(lowerVal + (upperVal - lowerVal) * fraction);
+            } else if (lowerSig !== undefined) {
+                basePrestige = sigs.get(lowerSig)!;
+            } else if (upperSig !== undefined) {
+                basePrestige = sigs.get(upperSig)!;
+            }
         }
 
-        // Fallback if out of bounds
-        if (lowerSig !== undefined) return sigs.get(lowerSig)!;
-        if (upperSig !== undefined) return sigs.get(upperSig)!;
+        if (basePrestige > 0 && rarity === 7 && ascensionLevel > 0) {
+            basePrestige = Math.round(basePrestige * Math.pow(1.08, ascensionLevel));
+        }
 
-        return 0;
+        return basePrestige;
     };
 
     const rosterWithPrestige = roster.map(r => {
-        const prestige = getInterpolatedPrestige(r.championId, r.stars, r.rank, r.sigLevel || 0);
+        const prestige = getInterpolatedPrestige(r.championId, r.stars, r.rank, r.sigLevel || 0, r.ascensionLevel || 0);
         return { ...r, prestige };
     });
 

@@ -368,6 +368,7 @@ model Roster {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   isAscended  Boolean  @default(false)
+  ascensionLevel Int   @default(0)
   sigLevel    Int      @default(0)
   champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
   player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)

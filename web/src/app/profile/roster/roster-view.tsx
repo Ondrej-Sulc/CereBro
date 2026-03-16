@@ -243,7 +243,7 @@ export function RosterView({
     try {
       const response = await fetch("/api/profile/roster/add", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended }),
+        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended, ascensionLevel: newChampion.ascensionLevel }),
       });
       if (!response.ok) throw new Error("Failed to add champion");
       const addedItem = await response.json();
@@ -253,7 +253,7 @@ export function RosterView({
       });
       toast({ title: "Success", description: "Champion added to roster" });
       setIsAddingChampion(false);
-      setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false });
+      setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false, ascensionLevel: 0 });
       setPendingSection('all');
       startTransition(() => { router.refresh(); });
     } catch {
@@ -291,8 +291,9 @@ export function RosterView({
     sigLevel: number;
     isAwakened: boolean;
     isAscended: boolean;
+    ascensionLevel: number;
   }>({
-    championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false,
+    championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false, ascensionLevel: 0,
   });
 
 

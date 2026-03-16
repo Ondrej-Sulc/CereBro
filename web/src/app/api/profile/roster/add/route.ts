@@ -14,6 +14,7 @@ const addSchema = z.object({
   sigLevel: z.number().int().min(0).max(200).optional().default(0),
   isAwakened: z.boolean().optional().default(false),
   isAscended: z.boolean().optional().default(false),
+  ascensionLevel: z.number().int().min(0).max(2).optional().default(0),
 });
 
 async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchema>) {
@@ -30,6 +31,7 @@ async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchem
         sigLevel: data.sigLevel,
         isAwakened: data.isAwakened,
         isAscended: data.isAscended,
+        ascensionLevel: data.ascensionLevel,
       },
       create: {
         playerId,
@@ -39,6 +41,7 @@ async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchem
         sigLevel: data.sigLevel,
         isAwakened: data.isAwakened,
         isAscended: data.isAscended,
+        ascensionLevel: data.ascensionLevel,
       },
       include: {
         champion: {

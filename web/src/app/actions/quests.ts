@@ -759,6 +759,7 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
                     sigLevel: null,
                     isAwakened: false,
                     isAscended: false,
+                    ascensionLevel: 0,
                     powerRating: 0,
                     champion: enc.selectedChampion,
                     createdAt: new Date(),

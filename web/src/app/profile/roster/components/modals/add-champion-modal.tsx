@@ -17,6 +17,7 @@ interface NewChampionFormData {
     sigLevel: number;
     isAwakened: boolean;
     isAscended: boolean;
+    ascensionLevel: number;
 }
 
 interface AddChampionModalProps {
@@ -97,8 +98,29 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                             <Label htmlFor="new-awakened">Awakened</Label>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Checkbox id="new-ascended" checked={newChampion.isAscended} onCheckedChange={(c) => onNewChampionChange({...newChampion, isAscended: !!c})} className="border-slate-600 data-[state=checked]:bg-sky-600" />
-                            <Label htmlFor="new-ascended">Ascended</Label>
+                            {newChampion.stars === 7 ? (
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="new-ascensionLevel" className="whitespace-nowrap">Ascension</Label>
+                                    <Select value={String(newChampion.ascensionLevel || 0)} onValueChange={(v) => {
+                                        const level = parseInt(v);
+                                        onNewChampionChange({...newChampion, ascensionLevel: level, isAscended: level > 0});
+                                    }}>
+                                        <SelectTrigger id="new-ascensionLevel" className="w-[80px] h-8 bg-slate-950 border-slate-700">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {[0, 1, 2, 3, 4, 5].map(level => (
+                                                <SelectItem key={level} value={String(level)}>{level === 0 ? 'None' : `Level ${level}`}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <>
+                                    <Checkbox id="new-ascended" checked={newChampion.isAscended} onCheckedChange={(c) => onNewChampionChange({...newChampion, isAscended: !!c})} className="border-slate-600 data-[state=checked]:bg-sky-600" />
+                                    <Label htmlFor="new-ascended">Ascended</Label>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

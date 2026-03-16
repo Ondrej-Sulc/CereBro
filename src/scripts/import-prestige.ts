@@ -24,20 +24,20 @@ function parseCSVLine(text: string): string[] {
 }
 
 async function main() {
-  const csvPath = path.join(process.cwd(), 'prestige_new.csv');
+  // Use the provided CSV file name
+  const csvFilename = process.argv[2] || '@mcoc_prestige_master.csv';
+  const csvPath = path.resolve(process.cwd(), csvFilename);
+  
   console.log(`Reading CSV from ${csvPath}`);
   
   if (!fs.existsSync(csvPath)) {
-    console.error('File not found');
+    console.error(`File not found: ${csvPath}`);
+    console.error('Usage: pnpm tsx src/scripts/import-prestige.ts [path/to/csv]');
     return;
   }
 
   const fileContent = fs.readFileSync(csvPath, 'utf-8');
   const lines = fileContent.split(/\r?\n/).filter(l => l.trim().length > 0);
-  
-  // Headers: fullname,Stars,Rank,sig_0,sig_20,sig_40,sig_60,sig_80,sig_100,sig_120,sig_140,sig_160,sig_180,sig_200
-  const header = parseCSVLine(lines[0]);
-  const sigColumns = header.slice(3).map(h => parseInt(h.replace('sig_', '')));
   
   console.log(`Found ${lines.length - 1} rows to process.`);
   
@@ -58,89 +58,92 @@ async function main() {
 
   let updatedCount = 0;
   let notFoundCount = 0;
+  const notFoundSet = new Set<string>();
 
   // Process in chunks to avoid overwhelming the DB connection pool
-  const CHUNK_SIZE = 10;
-  for (let i = 1; i < lines.length; i += CHUNK_SIZE) {
-    const chunk = lines.slice(i, i + CHUNK_SIZE);
+  const CHUNK_SIZE = 1000;
+  
+  // id,name,tier,rank,sig,prestige
+  // Skip header line
+  const dataLines = lines.slice(1);
+  
+  for (let i = 0; i < dataLines.length; i += CHUNK_SIZE) {
+    const chunk = dataLines.slice(i, i + CHUNK_SIZE);
     
     await Promise.all(chunk.map(async (line) => {
       const cols = parseCSVLine(line);
-      if (cols.length < 3) return;
+      // We expect: id,name,tier,rank,sig,prestige
+      if (cols.length < 6) return;
 
-      const fullname = cols[0];
-      const stars = parseInt(cols[1]);
-      const rankStr = cols[2]; // "Rank 1"
-      const rank = parseInt(rankStr.replace(/Rank\s*/i, ''));
+      const csvId = cols[0];
+      const csvName = cols[1];
+      const tier = parseInt(cols[2]);
+      const rank = parseInt(cols[3]);
+      const sig = parseInt(cols[4]);
+      const prestige = parseInt(cols[5]);
       
-      const champId = championMap.get(fullname.toLowerCase());
+      let champId = championMap.get(csvName.toLowerCase());
+      
+      // Fallback strategies for name matching
+      if (!champId) {
+          // try removing special characters and parenthesis
+          const cleanName = csvName.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^a-z0-9\s]/g, '').trim();
+          for (const [name, id] of championMap.entries()) {
+              const cleanDbName = name.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^a-z0-9\s]/g, '').trim();
+              if (cleanDbName === cleanName) {
+                  champId = id;
+                  break;
+              }
+          }
+      }
       
       if (!champId) {
-        console.warn(`Champion not found: ${fullname}`);
-        notFoundCount++;
+        if (!notFoundSet.has(csvName)) {
+          console.warn(`Champion not found in DB: ${csvName}`);
+          notFoundSet.add(csvName);
+          notFoundCount++;
+        }
         return;
       }
 
-      const upserts = [];
-      for (let j = 0; j < sigColumns.length; j++) {
-        let sig = sigColumns[j];
-        const prestigeStr = cols[3 + j];
-        
-        if (!prestigeStr) continue;
+      if (isNaN(prestige) || isNaN(tier) || isNaN(rank) || isNaN(sig)) return;
 
-        // Special handling for 4-star champions:
-        // - Max sig is 99.
-        // - The CSV stores sig 99 in the 'sig_100' column.
-        // - Ignore columns > 100 for 4* champs.
-        if (stars === 4) {
-          if (sig === 100) {
-            sig = 99;
-          } else if (sig > 100) {
-            continue; 
-          }
-        }
-        
-        // Remove commas from "13,064" -> 13064
-        const prestige = parseInt(prestigeStr.replace(/,/g, ''));
-        
-        if (isNaN(prestige)) continue;
-
-        upserts.push(
-          prisma.championPrestige.upsert({
-            where: {
-              championId_rarity_rank_sig: {
-                championId: champId,
-                rarity: stars,
-                rank: rank,
-                sig: sig
-              }
-            },
-            update: {
-              prestige: prestige
-            },
-            create: {
+      try {
+        await prisma.championPrestige.upsert({
+          where: {
+            championId_rarity_rank_sig: {
               championId: champId,
-              rarity: stars,
+              rarity: tier,
               rank: rank,
-              sig: sig,
-              prestige: prestige
+              sig: sig
             }
-          })
-        );
+          },
+          update: {
+            prestige: prestige
+          },
+          create: {
+            championId: champId,
+            rarity: tier,
+            rank: rank,
+            sig: sig,
+            prestige: prestige
+          }
+        });
+        updatedCount++;
+      } catch (err) {
+        console.error(`Failed to upsert prestige for ${csvName} (Tier ${tier} Rank ${rank} Sig ${sig}):`, err);
       }
-      
-      await Promise.all(upserts);
-      updatedCount += upserts.length;
     }));
 
-    if (i % 100 === 1) {
-      console.log(`Processed ${i - 1 + chunk.length} rows...`);
-    }
+    console.log(`Processed ${Math.min(i + CHUNK_SIZE, dataLines.length)} rows...`);
   }
   
   console.log('Done!');
-  console.log(`Total operations: ${updatedCount}`);
-  console.log(`Champions not found: ${notFoundCount}`);
+  console.log(`Total prestige entries updated/created: ${updatedCount}`);
+  console.log(`Unique champions not found: ${notFoundCount}`);
+  if (notFoundCount > 0) {
+      console.log('Unmatched champions:', Array.from(notFoundSet).join(', '));
+  }
 }
 
 main()
