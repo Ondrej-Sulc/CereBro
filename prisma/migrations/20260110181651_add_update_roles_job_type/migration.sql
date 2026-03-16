@@ -1,2 +1,0 @@
--- AlterEnum
-ALTER TYPE "BotJobType" ADD VALUE 'UPDATE_MEMBER_ROLES';

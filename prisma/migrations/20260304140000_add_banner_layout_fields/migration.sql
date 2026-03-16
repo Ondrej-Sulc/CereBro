@@ -1,1 +1,0 @@
--- AlterTable`nALTER TABLE "QuestPlan" ADD COLUMN "bannerFit" TEXT DEFAULT 'cover', ADD COLUMN "bannerPosition" TEXT DEFAULT 'center';
