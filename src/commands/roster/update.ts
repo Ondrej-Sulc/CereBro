@@ -7,7 +7,7 @@ import {
   MediaGalleryItemBuilder,
   MessageFlags,
 } from "discord.js";
-import { getPlayer } from "../../utils/playerHelper";
+import { getActivePlayer, getPlayer, isAuthorizedToManage } from "../../utils/playerHelper";
 import { processRosterScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
@@ -31,10 +31,24 @@ export async function handleUpdate(
       ascensionLevel = 1;
   }
 
-  const player = await getPlayer(interaction);
-  if (!player) {
+  const callerPlayer = await getActivePlayer(interaction.user.id);
+  if (!callerPlayer) {
+    await interaction.editReply("❌ Your profile not found. Please register first.");
     return;
   }
+
+  const targetPlayer = await getPlayer(interaction);
+  if (!targetPlayer) {
+    // getPlayer already notifies via safeReply (which handles interaction.editReply)
+    return;
+  }
+
+  if (!isAuthorizedToManage(callerPlayer, targetPlayer)) {
+    await interaction.editReply(`❌ You are not authorized to update **${targetPlayer.ingameName}**'s roster. Only the player themselves, bot admins, or alliance officers can do this.`);
+    return;
+  }
+
+  const player = targetPlayer;
 
   const images: Attachment[] = [];
   for (let i = 1; i <= 5; i++) {

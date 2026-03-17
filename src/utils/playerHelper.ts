@@ -49,6 +49,20 @@ export async function getActivePlayer(discordId: string): Promise<ActivePlayerWi
   return null;
 }
 
+/**
+ * Checks if the caller is authorized to manage (update/delete) the target player's data.
+ * Authorization rules:
+ * 1. Bot Admins can manage anyone.
+ * 2. Players can manage their own profiles.
+ * 3. Alliance Officers can manage members of their own alliance.
+ */
+export function isAuthorizedToManage(caller: ActivePlayerWithAlliance, target: ActivePlayerWithAlliance): boolean {
+  if (caller.isBotAdmin) return true;
+  if (caller.id === target.id) return true;
+  if (caller.allianceId && caller.allianceId === target.allianceId && caller.isOfficer) return true;
+  return false;
+}
+
 export async function getPlayer(
   interaction: ChatInputCommandInteraction | ButtonInteraction
 ): Promise<ActivePlayerWithAlliance | null> {

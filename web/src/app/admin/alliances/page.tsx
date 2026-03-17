@@ -33,6 +33,7 @@ import { Prisma } from "@prisma/client"
 import { Suspense } from "react"
 import { buildSearchParams } from "@/lib/utils"
 import { CleanupAlliancesButton } from "./cleanup-button"
+import { JoinAllianceButton } from "./join-button"
 import { computePaginationWindow } from "@/lib/pagination"
 import { SortHeader } from "../components/sort-header"
 import { ensureAdmin } from "../actions"
@@ -191,12 +192,15 @@ export default async function AdminAlliancesPage({ searchParams }: AdminAlliance
                     {new Date(alliance.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/admin/alliances/${alliance.id}`}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        Details
-                      </Link>
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <JoinAllianceButton allianceId={alliance.id} allianceName={alliance.name} />
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/admin/alliances/${alliance.id}`}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Details
+                        </Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

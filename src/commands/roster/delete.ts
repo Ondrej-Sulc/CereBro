@@ -6,7 +6,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
-import { getPlayer } from "../../utils/playerHelper";
+import { getActivePlayer, getPlayer, isAuthorizedToManage } from "../../utils/playerHelper";
 import { deleteRoster } from "../../services/rosterService";
 import { registerButtonHandler } from "../../utils/buttonHandlerRegistry";
 import { Prisma } from "@prisma/client";
@@ -36,8 +36,19 @@ export async function handleDelete(
 ): Promise<void> {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const player = await getPlayer(interaction);
-  if (!player) {
+  const callerPlayer = await getActivePlayer(interaction.user.id);
+  const targetPlayer = await getPlayer(interaction);
+  if (!targetPlayer) {
+    return;
+  }
+
+  if (!callerPlayer) {
+    await interaction.editReply("❌ Your profile not found. Please register first.");
+    return;
+  }
+
+  if (!isAuthorizedToManage(callerPlayer, targetPlayer)) {
+    await interaction.editReply(`❌ You are not authorized to delete **${targetPlayer.ingameName}**'s roster. Only the player themselves, bot admins, or alliance officers can do this.`);
     return;
   }
 
@@ -49,7 +60,7 @@ export async function handleDelete(
   if (!championId && !stars && !rank && isAscended === null) {
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`roster_delete_all_confirm:${player.id}`)
+        .setCustomId(`roster_delete_all_confirm:${targetPlayer.id}`)
         .setLabel("Yes, delete all")
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
@@ -59,12 +70,12 @@ export async function handleDelete(
     );
 
     await interaction.editReply({
-      content: `Are you sure you want to delete the entire roster for ${player.ingameName}? This action cannot be undone.`,
+      content: `Are you sure you want to delete the entire roster for ${targetPlayer.ingameName}? This action cannot be undone.`,
       components: [row],
     });
   } else {
     const where: Prisma.RosterWhereInput = {
-      playerId: player.id,
+      playerId: targetPlayer.id,
     };
     if (championId) {
       where.championId = parseInt(championId, 10);
@@ -80,7 +91,7 @@ export async function handleDelete(
     }
     const result = await deleteRoster(where);
     await interaction.editReply({
-      content: `${result} for ${player.ingameName}.`,
+      content: `${result} for ${targetPlayer.ingameName}.`,
     });
   }
 }

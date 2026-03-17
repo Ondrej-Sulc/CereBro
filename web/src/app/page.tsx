@@ -32,21 +32,17 @@ import { DISCORD_INVITE } from "@/lib/links";
 
 const getHomeHeroStats = unstable_cache(
   async () => {
-    const [players, alliances, discordServers, warVideos] = await Promise.all([
+    const [players, alliances, rosters, warVideos] = await Promise.all([
       prisma.player.count(),
       prisma.alliance.count(),
-      prisma.alliance.count({
-        where: {
-          guildId: { not: null },
-        },
-      }),
+      prisma.roster.count(),
       prisma.warVideo.count(),
     ]);
 
     return {
       players,
       alliances,
-      discordServers,
+      rosters,
       warVideos,
     };
   },
@@ -55,12 +51,12 @@ const getHomeHeroStats = unstable_cache(
 );
 
 export default async function Home() {
-  const { players, alliances, discordServers, warVideos } = await getHomeHeroStats();
+  const { players, alliances, rosters, warVideos } = await getHomeHeroStats();
 
   const heroStats = [
     { label: "Registered Players", value: players, icon: Users },
     { label: "Active Alliances", value: alliances, icon: Shield },
-    { label: "Connected Servers", value: discordServers, icon: Server },
+    { label: "Champions Managed", value: rosters, icon: LayoutDashboard },
     { label: "War Videos Uploaded", value: warVideos, icon: Video },
   ];
 
