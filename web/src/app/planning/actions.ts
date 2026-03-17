@@ -206,15 +206,15 @@ export async function createWar(formData: FormData) {
 
 export async function updateWarFight(updatedFight: Partial<WarFight> & {
   prefightUpdates?: { championId: number; playerId?: string | null }[]
-}) {
+}): Promise<{ success: boolean; error?: string }> {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
-      throw new Error("Unauthorized.");
+      return { success: false, error: "Unauthorized." };
   }
 
   if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to update war fights.");
+    return { success: false, error: "You must be an Alliance Officer or Bot Admin to update war fights." };
   }
 
   const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
@@ -231,21 +231,21 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
           }
       });
 
-      if (!existingFight) throw new Error("Fight not found.");
+      if (!existingFight) return { success: false, error: "Fight not found." };
 
       if (!player.isBotAdmin && existingFight.war.alliance.id !== player.allianceId) {
-          throw new Error("Unauthorized: Cannot edit fights from another alliance.");
+          return { success: false, error: "Unauthorized: Cannot edit fights from another alliance." };
       }
-      if (!existingFight.node) throw new Error("Node data missing for this fight.");
+      if (!existingFight.node) return { success: false, error: "Node data missing for this fight." };
       targetWar = existingFight.war;
       targetNodeNumber = existingFight.node.nodeNumber;
       updatedFight.warId = existingFight.war.id;
   } else {
-      if (!warId) throw new Error("War ID is required for creating a fight.");
-      if (!nodeId) throw new Error("Node ID is required for creating a fight.");
+      if (!warId) return { success: false, error: "War ID is required for creating a fight." };
+      if (!nodeId) return { success: false, error: "Node ID is required for creating a fight." };
 
       const node = await prisma.warNode.findUnique({ where: { id: nodeId } });
-      if (!node) throw new Error("Node not found.");
+      if (!node) return { success: false, error: "Node not found." };
       targetNodeNumber = node.nodeNumber;
 
       targetWar = await prisma.war.findUnique({
@@ -253,10 +253,10 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
           include: { alliance: true }
       });
 
-      if (!targetWar) throw new Error("War not found.");
+      if (!targetWar) return { success: false, error: "War not found." };
 
-      if (!player.isBotAdmin && targetWar.alliance.id !== player.allianceId) {
-          throw new Error("Unauthorized: Cannot edit fights from another alliance.");
+      if (!player.isBotAdmin && targetWar.allianceId !== player.allianceId) {
+          return { success: false, error: "Unauthorized: Cannot edit fights from another alliance." };
       }
   }
 
@@ -279,7 +279,7 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
       const validation = validateNodeAssignment(targetNodeNumber, existingNodes);
 
       if (!validation.valid) {
-          throw new Error(validation.message);
+          return { success: false, error: validation.message };
       }
   }
 
@@ -305,7 +305,7 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
       });
   } else {
       if (!updatedFight.warId || !battlegroup || !nodeId) {
-          throw new Error("WarFight ID is missing, and WarID/BG/NodeID are not sufficient to create it.");
+          return { success: false, error: "WarFight ID is missing, and WarID/BG/NodeID are not sufficient to create it." };
       }
       
       if (targetWar.warNumber === null) {
@@ -359,6 +359,8 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
         }
       }
   }
+
+  return { success: true };
 }
 
 export async function getPlayerRoster(playerId: string) {

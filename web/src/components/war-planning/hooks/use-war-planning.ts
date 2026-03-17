@@ -156,12 +156,13 @@ export function useWarPlanning({
         
         // Merge static node data into fights
         const hydratedFights: FightWithNode[] = rawFights.map(f => {
+            if (!f.node) return null;
             const nodeData = nodesMap.get(f.node.nodeNumber);
             return {
                 ...f,
-                node: nodeData || { ...f.node, allocations: [] } // Fallback if missing (shouldn't happen)
+                node: nodeData || { ...f.node, allocations: [] }
             };
-        });
+        }).filter((f): f is FightWithNode => f !== null);
 
         setCurrentFights(hydratedFights);
         setExtraChampions(extrasData);
@@ -595,7 +596,12 @@ export function useWarPlanning({
     }
 
     try {
-      await updateWarFight(updatedFight);
+      const result = await updateWarFight(updatedFight) as any;
+      if (result && result.success === false) {
+          setFightsError(result.error || "Failed to save changes.");
+          // Rollback
+          setCurrentFights(previousFights);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("Failed to save fight:", err);

@@ -19,7 +19,9 @@ import { PlayerColorProvider } from "./player-color-context";
 interface WarDetailsClientProps {
   war: War;
   warId: string;
-  updateWarFight: (updatedFight: Partial<WarFight>) => Promise<void>;
+  updateWarFight: (updatedFight: Partial<WarFight> & { 
+    prefightUpdates?: { championId: number; playerId?: string | null }[] 
+  }) => Promise<{ success: boolean; error?: string }>;
   updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
   champions: Champion[];
   players: PlayerWithRoster[];
