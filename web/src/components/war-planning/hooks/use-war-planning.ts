@@ -40,7 +40,7 @@ interface UseWarPlanningProps {
   players: PlayerWithRoster[];
   updateWarFight: (updatedFight: Partial<WarFight> & {
     prefightUpdates?: { championId: number; playerId?: string | null }[]
-  }) => Promise<void>;
+  }) => Promise<{ success: boolean; error?: string }>;
   updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
