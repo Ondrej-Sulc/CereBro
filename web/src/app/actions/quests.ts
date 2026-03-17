@@ -257,7 +257,7 @@ export async function createQuestPlan(data: QuestPlanCreateInput) {
             creatorId: actingUser.id,
             minStarLevel: data.minStarLevel,
             maxStarLevel: data.maxStarLevel,
-            teamLimit: data.teamLimit ?? undefined,
+            teamLimit: data.teamLimit,
             requiredClasses: data.requiredClasses || [],
             requiredTags: data.requiredTagIds ? {
                 connect: data.requiredTagIds.map(id => ({ id }))
@@ -305,7 +305,7 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
             categoryId: data.categoryId,
             minStarLevel: data.minStarLevel,
             maxStarLevel: data.maxStarLevel,
-            teamLimit: data.teamLimit ?? undefined,
+            teamLimit: data.teamLimit,
             requiredClasses: data.requiredClasses,
             requiredTags: data.requiredTagIds !== undefined ? {
                 set: data.requiredTagIds.map(id => ({ id }))

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy, Ban } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from "@/types/champion";
@@ -32,6 +32,7 @@ export const UpdatedChampionItem = memo(({
     isRecommended,
     isMissing,
     isInTeam,
+    isUnavailable,
     variant = "square"
 }: {
     item: RosterWithChampion;
@@ -39,6 +40,7 @@ export const UpdatedChampionItem = memo(({
     isRecommended?: boolean;
     isMissing?: boolean;
     isInTeam?: boolean;
+    isUnavailable?: boolean;
     variant?: "square" | "tall";
 }) => {
     const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
@@ -52,9 +54,11 @@ export const UpdatedChampionItem = memo(({
                     classColors.bg,
                     borderClass,
                     isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
-                    isRecommended && !isSelected && !isInTeam && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
-                    isInTeam && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
-                    isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
+                    isRecommended && !isSelected && !isInTeam && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+                    isInTeam && !isSelected && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
+                    isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)]",
+                    isMissing && !isUnavailable && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed",
+                    isUnavailable && "opacity-60 saturate-50 contrast-125 cursor-not-allowed"
                 )}
             >
                 <Image
@@ -66,6 +70,13 @@ export const UpdatedChampionItem = memo(({
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
+
+                {isUnavailable && (
+                    <div className="absolute inset-0 z-40 bg-red-950/40 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                        <Ban className="w-8 h-8 text-red-500 drop-shadow-md mb-1" strokeWidth={3} />
+                        <span className="text-[10px] font-black text-red-400 uppercase tracking-widest bg-black/60 px-2 py-0.5 rounded-sm">Used</span>
+                    </div>
+                )}
 
                 <div className={cn("absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10", (isSelected || isInTeam) && "mt-7")}>
                     {!isMissing ? (
@@ -128,26 +139,34 @@ export const UpdatedChampionItem = memo(({
 
     return (
         <div className={cn(
-            "flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950 group transition-all duration-300 relative",
+            "flex flex-col rounded-lg overflow-hidden border border-slate-800 bg-slate-950 group transition-all duration-300 relative shadow-lg",
             isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-sky-500 shadow-[0_0_15px_rgba(14,165,233,0.5)] z-10",
-            isRecommended && !isSelected && !isInTeam && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
-            isInTeam && !isSelected && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)] z-10",
-            isMissing && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed"
-        )}>
+            isRecommended && !isSelected && !isInTeam && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+            isInTeam && !isSelected && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)] z-10",
+            isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)] z-10",
+            isMissing && !isUnavailable && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed",
+            isUnavailable && "opacity-60 saturate-50 contrast-125 cursor-not-allowed"
+            )}>
             {/* Top Section: Smaller Portrait */}
             <div className={cn(
-                "relative aspect-square w-full overflow-hidden border-b-2",
-                classColors.bg,
-                isMissing ? "border-slate-800" : getStarBorderClass(item.stars)
+            "relative aspect-square w-full overflow-hidden border-b-2",
+            classColors.bg,
+            isMissing ? "border-slate-800" : getStarBorderClass(item.stars)
             )}>
-                <Image
-                    src={getChampionImageUrlOrPlaceholder(item.champion.images, '128')}
-                    alt={item.champion.name}
-                    width={128}
-                    height={128}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            <Image
+            src={getChampionImageUrlOrPlaceholder(item.champion.images, '128')}
+            alt={item.champion.name}
+            width={128}
+            height={128}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
 
+            {isUnavailable && (
+            <div className="absolute inset-0 z-40 bg-red-950/40 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                <Ban className="w-8 h-8 text-red-500 drop-shadow-md mb-1" strokeWidth={3} />
+                <span className="text-[10px] font-black text-red-400 uppercase tracking-widest bg-black/60 px-2 py-0.5 rounded-sm">Used</span>
+            </div>
+            )}
                 {/* Selection Checkmark */}
                 {isSelected && (
                     <div className="absolute top-1 left-1 z-30 bg-sky-500 rounded-full p-0.5 shadow-md border border-sky-900" title="Selected for this fight">

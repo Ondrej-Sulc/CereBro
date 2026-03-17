@@ -29,6 +29,46 @@ export type RosterWithChampion = Roster & {
     champion: Champion;
 };
 
+const isChampionValidForEncounterOrQuest = (
+    r: RosterWithChampion,
+    quest: QuestWithRelations,
+    encounter: EncounterWithRelations | undefined
+) => {
+    // Quest-level restrictions
+    if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
+    if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
+    if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
+    if (quest.requiredTags && quest.requiredTags.length > 0) {
+        const hasTag = (quest.requiredTags as Tag[]).some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
+        if (!hasTag) return false;
+    }
+
+    // Encounter-level restrictions
+    if (encounter) {
+        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
+        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
+        if (encounter.requiredTags && encounter.requiredTags.length > 0) {
+            const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+            if (!hasTag) return false;
+        }
+    }
+
+    return true;
+};
+
+const getValidRosterCountForChampion = (
+    championId: number,
+    roster: RosterWithChampion[],
+    quest: QuestWithRelations,
+    encounter: EncounterWithRelations | undefined
+) => {
+    return roster.filter(r => 
+        r.championId === championId && 
+        isChampionValidForEncounterOrQuest(r, quest, encounter)
+    ).length;
+};
+
 interface FilterMetadata {
     tags: { id: string | number, name: string }[];
     abilityCategories: { id: string | number, name: string }[];
@@ -132,11 +172,38 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
 
     // Track selections locally for immediate UI updates
-    const [selections, setSelections] = useState<Record<string, number | null>>(() => {
-        if (initialSelections) return initialSelections;
-        const initial: Record<string, number | null> = {};
+    const [selections, setSelections] = useState<Record<string, string | null>>(() => {
+        const initial: Record<string, string | null> = {};
+        
+        if (readOnly) {
+            // In read-only mode, we use the rosterMap to get the IDs directly
+            Object.keys(initialSelections || {}).forEach(encId => {
+                const rosterEntry = rosterMap[encId];
+                initial[encId] = rosterEntry ? rosterEntry.id : null;
+            });
+            return initial;
+        }
+
+        // For interactive mode, initialize from savedEncounters and find matching roster entries
+        const availableRoster = [...roster];
         savedEncounters.forEach(se => {
-            initial[se.questEncounterId] = se.selectedChampionId;
+            if (se.selectedChampionId) {
+                const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
+                const rosterIndex = availableRoster.findIndex(r => 
+                    r.championId === se.selectedChampionId && 
+                    isChampionValidForEncounterOrQuest(r, quest, encounter)
+                );
+                
+                if (rosterIndex !== -1) {
+                    initial[se.questEncounterId] = availableRoster[rosterIndex].id;
+                    // Remove from available so it's not assigned to another encounter
+                    availableRoster.splice(rosterIndex, 1);
+                } else {
+                    initial[se.questEncounterId] = null;
+                }
+            } else {
+                initial[se.questEncounterId] = null;
+            }
         });
         return initial;
     });
@@ -229,26 +296,50 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         setImmunityFilter([]);
     };
 
-    const handleSelectCounter = async (encounterId: string, championId: number) => {
-        const previousValue = selections[encounterId];
+    const handleSelectCounter = async (encounterId: string, rosterId: string) => {
+        const previousRosterId = selections[encounterId];
+        const rosterEntry = roster.find(r => r.id === rosterId);
+        if (!rosterEntry) return;
+        
+        const championId = rosterEntry.championId;
 
-        // If selecting a NEW champion (not unselecting, and not already selected for this fight)
-        if (previousValue !== championId) {
-            // Check if this champion is already in the team for another fight
-            const isAlreadyInTeam = Object.values(selections).includes(championId);
+        // If selecting a NEW roster entry (not unselecting, and not already selected for this fight)
+        if (previousRosterId !== rosterId) {
+            // Check if this specific roster entry is already in the team for another fight
+            const isAlreadyInTeam = Object.values(selections).includes(rosterId);
 
-            // If they aren't in the team, and adding them would exceed the limit, block it
-            if (!isAlreadyInTeam && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
-                toast({
-                    title: "Team Limit Reached",
-                    description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
-                    variant: "destructive"
+            if (quest.teamLimit !== null) {
+                // Check if the CHAMPION is already in the team
+                const isChampInTeam = Object.values(selections).some(rid => {
+                    if (!rid) return false;
+                    return roster.find(r => r.id === rid)?.championId === championId;
                 });
-                return; // Stop here, do not select
+
+                // If they aren't in the team, and adding them would exceed the limit, block it
+                if (!isChampInTeam && selectedTeam.length >= quest.teamLimit) {
+                    toast({
+                        title: "Team Limit Reached",
+                        description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
+                        variant: "destructive"
+                    });
+                    return; // Stop here, do not select
+                }
+            } else {
+                // Infinite team limit: check if this specific roster entry is already used
+                if (isAlreadyInTeam) {
+                    toast({
+                        title: "Rarity Already Used",
+                        description: `This specific rarity of the champion is already used in another fight.`,
+                        variant: "destructive"
+                    });
+                    return; // Stop here
+                }
             }
         }
 
-        const newValue = previousValue === championId ? null : championId;
+        const newValue = previousRosterId === rosterId ? null : rosterId;
+        const newChampValue = newValue ? roster.find(r => r.id === newValue)?.championId || null : null;
+        
         setSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
         // Autoclose the card if a selection was made
@@ -257,30 +348,31 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         }
 
         try {
-            await savePlayerQuestCounter(quest.id, encounterId, newValue);
+            await savePlayerQuestCounter(quest.id, encounterId, newChampValue);
         } catch (error) {
             console.error("Failed to save counter selection", error);
-            setSelections(prev => ({ ...prev, [encounterId]: previousValue }));
+            setSelections(prev => ({ ...prev, [encounterId]: previousRosterId }));
             toast({ title: "Error", description: "Failed to save selection.", variant: "destructive" });
         }
     };
 
-    /** Resolve a roster item for a given champion ID — works for both interactive and readOnly modes */
-    const resolveRosterItem = useCallback((championId: number, encounterId: string): RosterWithChampion | undefined => {
+    /** Resolve a roster item for a given roster ID — works for both interactive and readOnly modes */
+    const resolveRosterItem = useCallback((rosterId: string, encounterId: string): RosterWithChampion | undefined => {
         if (readOnly) {
             return rosterMap[encounterId];
         }
-        return roster.find(r => r.championId === championId);
+        return roster.find(r => r.id === rosterId);
     }, [readOnly, roster, rosterMap]);
 
     const selectedTeam = useMemo(() => {
         const teamMap = new Map<string, RosterWithChampion>();
         
-        Object.entries(selections).forEach(([encId, champId]) => {
-            if (champId !== null) {
-                const r = resolveRosterItem(champId, encId);
+        Object.entries(selections).forEach(([encId, rosterId]) => {
+            if (rosterId !== null) {
+                const r = resolveRosterItem(rosterId, encId);
                 if (r) {
-                    teamMap.set(r.id, r);
+                    // Use rosterId as key to ensure each unique rarity is counted once
+                    teamMap.set(rosterId, r);
                 }
             }
         });
@@ -300,7 +392,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 )}>
                     <Card 
                         className={cn(
-                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card mx-auto",
+                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-[background-color,border-color,transform,opacity,box-shadow,border-radius] duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
                             isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
                             isTeamExpanded 
                                 ? "w-[95vw] sm:w-[90vw] md:max-w-5xl bg-slate-900/90" 
@@ -390,7 +482,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                             )}>
                                                 {selectedTeam.map(r => {
                                                     const assignedEncounterIds = Object.entries(selections)
-                                                        .filter(([encId, champId]) => champId === r.championId && resolveRosterItem(champId, encId)?.id === r.id)
+                                                        .filter(([encId, rosterId]) => rosterId === r.id)
                                                         .map(([encId]) => encId);
 
                                                     const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
@@ -524,9 +616,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
                         {quest.encounters.map((encounter: EncounterWithRelations, index: number) => {
                             const isExpanded = expandedId === encounter.id;
-                            const selectedChampId = selections[encounter.id];
-                            const selectedRosterItem = selectedChampId ? resolveRosterItem(selectedChampId, encounter.id) ?? null : null;
-                            const hasSelection = !!selectedChampId;
+                            const selectedRosterId = selections[encounter.id];
+                            const selectedRosterItem = selectedRosterId ? resolveRosterItem(selectedRosterId, encounter.id) ?? null : null;
+                            const hasSelection = !!selectedRosterId;
                             const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : null;
                             const isLast = index === quest.encounters.length - 1;
 
@@ -740,7 +832,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             title="Remove selected counter"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                handleSelectCounter(encounter.id, selectedChampId as number);
+                                                                handleSelectCounter(encounter.id, selectedRosterId as string);
                                                             }}
                                                         >
                                                             <X className="h-4 w-4" />
@@ -921,29 +1013,52 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                         }
 
                                                                         // Find highest version in roster that matches restrictions
-                                                                        const userChamp = roster
-                                                                            .filter(r => r.championId === c.id)
-                                                                            .filter(r => {
-                                                                                if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                                                                if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-                                                                                if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                                                                if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-                                                                                if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                                                                    const hasTag = encounter.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                                                                    if (!hasTag) return false;
-                                                                                }
-                                                                                return true;
-                                                                            })
-                                                                            .sort((a, b) => b.stars - a.stars || b.rank - a.rank)[0];
+                                                                        const validRosterEntries = roster
+                                                                            .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
+                                                                            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
 
-                                                                        const isSelected = selections[encounter.id] === userChamp?.championId;
-                                                                        const isInTeam = userChamp ? Object.values(selections).includes(userChamp.championId) : Object.values(selections).includes(c.id);
+                                                                        // Best version that is either unused or used in THIS encounter
+                                                                        const userChamp = validRosterEntries.find(r => 
+                                                                            !Object.values(selections).includes(r.id) || 
+                                                                            selections[encounter.id] === r.id
+                                                                        ) || validRosterEntries[0];
+
+                                                                        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
+                                                                        
+                                                                        // Check if any version of this champion is in the team
+                                                                        const isChampInTeam = Object.values(selections).some(rid => {
+                                                                            if (!rid) return false;
+                                                                            return roster.find(r => r.id === rid)?.championId === c.id;
+                                                                        });
+                                                                        
+                                                                        let isUnavailable = false;
+                                                                        if (userChamp && quest.teamLimit === null && !isSelected) {
+                                                                            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+                                                                                if (encId !== encounter.id && rid !== null) {
+                                                                                    const r = roster.find(re => re.id === rid);
+                                                                                    if (r?.championId === userChamp.championId) {
+                                                                                        return acc + 1;
+                                                                                    }
+                                                                                }
+                                                                                return acc;
+                                                                            }, 0);
+
+                                                                            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
+
+                                                                            if (otherSelectionsCount >= validRosterCount) {
+                                                                                isUnavailable = true;
+                                                                            }
+                                                                        }
 
                                                                         return (
                                                                             <div
                                                                                 key={c.id}
-                                                                                onClick={() => userChamp && handleSelectCounter(encounter.id, userChamp.championId)}
-                                                                                className="cursor-pointer group"
+                                                                                onClick={() => {
+                                                                                    if (userChamp && !isUnavailable) {
+                                                                                        handleSelectCounter(encounter.id, userChamp.id);
+                                                                                    }
+                                                                                }}
+                                                                                className={cn(isUnavailable ? "cursor-not-allowed" : "cursor-pointer group")}
                                                                             >
                                                                                 <UpdatedChampionItem
                                                                                     item={userChamp ? {
@@ -972,7 +1087,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     isSelected={isSelected}
                                                                                     isRecommended={!isSelected}
                                                                                     isMissing={!userChamp}
-                                                                                    isInTeam={isInTeam}
+                                                                                    isInTeam={isChampInTeam}
+                                                                                    isUnavailable={isUnavailable}
                                                                                 />
                                                                             </div>
                                                                         );
@@ -1112,7 +1228,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                     </div>
 
                                                     {(() => {
-                                                        const encounterRoster = filteredGlobalRoster.filter(r => {
+                                                        let encounterRoster = filteredGlobalRoster.filter(r => {
                                                             // Quest-level restrictions
                                                             if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
                                                             if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
@@ -1131,10 +1247,39 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             }
 
                                                             return true;
-                                                        }).sort((a, b) => {
+                                                        });
+
+                                                        // Handle infinite team limit - hide champion if all valid rarities are used in other encounters
+                                                        if (quest.teamLimit === null) {
+                                                            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+                                                                if (encId !== encounter.id && rid !== null) {
+                                                                    const rosterEntry = roster.find(re => re.id === rid);
+                                                                    if (rosterEntry) {
+                                                                        acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
+                                                                    }
+                                                                }
+                                                                return acc;
+                                                            }, {} as Record<number, number>);
+
+                                                            const availableCount = encounterRoster.reduce((acc, r) => {
+                                                                acc[r.championId] = (acc[r.championId] || 0) + 1;
+                                                                return acc;
+                                                            }, {} as Record<number, number>);
+
+                                                            encounterRoster = encounterRoster.filter(r => {
+                                                                // Always keep it visible if it's currently selected in THIS encounter
+                                                                if (selections[encounter.id] === r.id) return true;
+                                                                
+                                                                const used = otherSelectionsCount[r.championId] || 0;
+                                                                const available = availableCount[r.championId] || 0;
+                                                                return used < available;
+                                                            });
+                                                        }
+
+                                                        encounterRoster = encounterRoster.sort((a, b) => {
                                                             // Selected first
-                                                            if (selections[encounter.id] === a.championId) return -1;
-                                                            if (selections[encounter.id] === b.championId) return 1;
+                                                            if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
+                                                            if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
                                                             return 0;
                                                         });
 
@@ -1159,14 +1304,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             <div className="space-y-4">
                                                                 <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
                                                                     {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
-                                                                        const isSelected = selections[encounter.id] === r.championId;
+                                                                        const isSelected = selections[encounter.id] === r.id;
                                                                         const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
-                                                                        const isInTeam = Object.values(selections).includes(r.championId);
+                                                                        const isInTeam = Object.values(selections).includes(r.id);
 
                                                                         return (
                                                                             <div
                                                                                 key={r.id}
-                                                                                onClick={() => handleSelectCounter(encounter.id, r.championId)}
+                                                                                onClick={() => handleSelectCounter(encounter.id, r.id)}
                                                                                 title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
                                                                                 className="cursor-pointer"
                                                                             >
