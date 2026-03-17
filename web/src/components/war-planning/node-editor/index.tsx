@@ -29,7 +29,7 @@ interface NodeEditorProps {
   }) => void;
   champions: Champion[];
   players: PlayerWithRoster[];
-  onNavigate?: (direction: number) => void;
+  onNavigate?: (direction: 'up' | 'down' | 'left' | 'right') => void;
   currentWar?: War;
   historyFilters: {
       onlyCurrentTier: boolean;
@@ -49,6 +49,7 @@ interface NodeEditorProps {
   extraChampions: ExtraChampion[];
   isReadOnly?: boolean;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
+  error?: string | null;
 }
 
 export default function NodeEditor({
@@ -72,6 +73,7 @@ export default function NodeEditor({
   extraChampions,
   isReadOnly = false,
   activeDefensePlan,
+  error,
 }: NodeEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentFight?.defenderId || undefined);
   const [attackerId, setAttackerId] = useState<number | undefined>(currentFight?.attackerId || undefined);
@@ -175,13 +177,13 @@ export default function NodeEditor({
         }
 
         if (e.key === 'ArrowRight') {
-            onNavigate?.(1);
+            onNavigate?.('right');
         } else if (e.key === 'ArrowLeft') {
-            onNavigate?.(-1);
+            onNavigate?.('left');
         } else if (e.key === 'ArrowUp') {
-            onNavigate?.(9);
+            onNavigate?.('up');
         } else if (e.key === 'ArrowDown') {
-            onNavigate?.(-9);
+            onNavigate?.('down');
         }
 
     };
@@ -400,17 +402,26 @@ export default function NodeEditor({
 
   return (
     <div className="flex flex-col h-full bg-slate-950 border-l border-slate-800">
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="p-4 border-b border-slate-800">
+        <div className="flex items-start justify-between">
+          <div>
             <h3 className="font-semibold text-lg">Node {nodeId}</h3>
-            <ActiveModifiers modifiers={activeModifiers} />
           </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="-mt-1 -mr-2">
+              <X className="h-4 w-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-        </Button>
+        <ActiveModifiers modifiers={activeModifiers} />
       </div>
+
+      {error && (
+          <div className="mx-4 mt-4 p-3 rounded-md bg-red-500/10 border border-red-500/20 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-2">
+              <TriangleAlert className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+              <div className="text-xs text-red-200 leading-relaxed">
+                  {error}
+              </div>
+          </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="grid gap-4">

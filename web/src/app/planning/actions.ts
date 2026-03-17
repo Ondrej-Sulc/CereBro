@@ -10,6 +10,7 @@ import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { ChampionImages } from "@/types/champion";
 import { config } from "@cerebro/core/config";
+import { validateNodeAssignment } from "@cerebro/core/data/war-planning/path-logic";
 
 export interface ExtraChampion {
   id: string;
@@ -93,6 +94,57 @@ export async function getActiveTactic(season: number, tier: number) {
     return tactic;
 }
 
+export type WarProgress = Record<number, { total: number; planned: number; missingNodes: number[] }>;
+
+export async function getWarProgress(warId: string): Promise<WarProgress | null> {
+  const player = await getUserPlayerWithAlliance();
+  if (!player) return null;
+
+  const war = await prisma.war.findUnique({
+    where: { id: warId },
+    select: { mapType: true, allianceId: true }
+  });
+
+  if (!war) return null;
+
+  if (!player.isBotAdmin && war.allianceId !== player.allianceId) {
+      return null;
+  }
+
+  const fights = await prisma.warFight.findMany({
+    where: { warId },
+    select: {
+      battlegroup: true,
+      defenderId: true,
+      attackerId: true,
+      playerId: true,
+      node: { select: { nodeNumber: true } }
+    }
+  });
+
+  const progress: WarProgress = {
+    1: { total: 0, planned: 0, missingNodes: [] },
+    2: { total: 0, planned: 0, missingNodes: [] },
+    3: { total: 0, planned: 0, missingNodes: [] },
+  };
+
+  fights.forEach(f => {
+    const bg = f.battlegroup;
+    if (bg < 1 || bg > 3) return;
+
+    if (f.defenderId) {
+      progress[bg].total += 1;
+      if (f.attackerId && f.playerId) {
+        progress[bg].planned += 1;
+      } else if (f.node) {
+        progress[bg].missingNodes.push(f.node.nodeNumber);
+      }
+    }
+  });
+
+  return progress;
+}
+
 export async function createWar(formData: FormData) {
   const player = await getUserPlayerWithAlliance();
 
@@ -152,8 +204,8 @@ export async function createWar(formData: FormData) {
   redirect(`/planning/${war.id}`);
 }
 
-export async function updateWarFight(updatedFight: Partial<WarFight> & { 
-  prefightUpdates?: { championId: number; playerId?: string | null }[] 
+export async function updateWarFight(updatedFight: Partial<WarFight> & {
+  prefightUpdates?: { championId: number; playerId?: string | null }[]
 }) {
   const player = await getUserPlayerWithAlliance();
 
@@ -168,11 +220,15 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
   const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
 
   let targetWar: (War & { alliance: Alliance }) | null = null;
+  let targetNodeNumber: number | null = null;
 
   if (id) {
       const existingFight = await prisma.warFight.findUnique({
           where: { id },
-          include: { war: { include: { alliance: true } } }
+          include: { 
+            war: { include: { alliance: true } },
+            node: true
+          }
       });
 
       if (!existingFight) throw new Error("Fight not found.");
@@ -180,10 +236,17 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
       if (!player.isBotAdmin && existingFight.war.alliance.id !== player.allianceId) {
           throw new Error("Unauthorized: Cannot edit fights from another alliance.");
       }
+      if (!existingFight.node) throw new Error("Node data missing for this fight.");
       targetWar = existingFight.war;
+      targetNodeNumber = existingFight.node.nodeNumber;
       updatedFight.warId = existingFight.war.id;
   } else {
       if (!warId) throw new Error("War ID is required for creating a fight.");
+      if (!nodeId) throw new Error("Node ID is required for creating a fight.");
+
+      const node = await prisma.warNode.findUnique({ where: { id: nodeId } });
+      if (!node) throw new Error("Node not found.");
+      targetNodeNumber = node.nodeNumber;
 
       targetWar = await prisma.war.findUnique({
           where: { id: warId },
@@ -194,6 +257,29 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
 
       if (!player.isBotAdmin && targetWar.alliance.id !== player.allianceId) {
           throw new Error("Unauthorized: Cannot edit fights from another alliance.");
+      }
+  }
+
+  // --- Validation Logic ---
+  if (rest.playerId && targetWar.mapType === WarMapType.STANDARD && targetNodeNumber !== null) {
+      // Fetch all existing fights for this player in this war/bg
+      const existingPlayerFights = await prisma.warFight.findMany({
+          where: {
+              warId: targetWar.id,
+              battlegroup: battlegroup || updatedFight.battlegroup,
+              playerId: rest.playerId,
+              id: { not: id } // Exclude the current fight being updated
+          },
+          include: { node: true }
+      });
+
+      const existingNodes = existingPlayerFights
+          .filter(f => f.node)
+          .map(f => f.node.nodeNumber);
+      const validation = validateNodeAssignment(targetNodeNumber, existingNodes);
+
+      if (!validation.valid) {
+          throw new Error(validation.message);
       }
   }
 

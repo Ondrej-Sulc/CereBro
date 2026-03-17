@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { WarDefensePlacement, WarNode, WarNodeAllocation, NodeModifier } from "@prisma/client";
+import { WarDefensePlacement, WarNode, WarNodeAllocation, NodeModifier, WarMapType } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { RightPanelState } from "./use-war-planning";
+import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 
 interface WarNodeWithAllocations extends WarNode {
     allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
@@ -14,6 +15,7 @@ interface UseDefensePlanningProps {
   players: PlayerWithRoster[];
   updatePlacement: (updatedPlacement: Partial<WarDefensePlacement>) => Promise<void>;
   userBattlegroup?: number | null;
+  mapType: WarMapType;
 }
 
 export function useDefensePlanning({
@@ -22,6 +24,7 @@ export function useDefensePlanning({
   players,
   updatePlacement,
   userBattlegroup,
+  mapType,
 }: UseDefensePlanningProps) {
   // UI State
   const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
@@ -155,30 +158,58 @@ export function useDefensePlanning({
     setRightPanelState('editor');
   }, []);
 
-  const handleNavigateNode = useCallback((direction: number) => {
+  const handleNavigateNode = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (!selectedNodeId) return;
 
-    // Use nodesMap to determine valid nodes for the current map configuration
-    const validNodeNumbers = Array.from(nodesMap.keys()).sort((a, b) => a - b);
+    const currentNodesData = mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
+    const currentNode = currentNodesData.find(n => n.id === selectedNodeId);
+    
+    if (!currentNode) return;
 
-    if (validNodeNumbers.length === 0) return;
+    // Filter nodes in the general direction
+    const candidates = currentNodesData.filter(n => {
+      // Only navigate to actual nodes (numeric IDs), not portals
+      if (typeof n.id !== 'number') return false;
+      if (n.id === selectedNodeId) return false;
 
-    const currentIndex = validNodeNumbers.indexOf(selectedNodeId);
+      switch (direction) {
+        case 'up':
+          return n.y < currentNode.y;
+        case 'down':
+          return n.y > currentNode.y;
+        case 'left':
+          return n.x < currentNode.x;
+        case 'right':
+          return n.x > currentNode.x;
+        default:
+          return false;
+      }
+    });
 
-    if (currentIndex === -1) return;
+    if (candidates.length === 0) return;
 
-    let newIndex = currentIndex + direction;
+    // Find the one with the smallest weighted distance
+    const bestNode = candidates.reduce((best, current) => {
+      const dx = current.x - currentNode.x;
+      const dy = current.y - currentNode.y;
+      
+      let score;
+      if (direction === 'up' || direction === 'down') {
+        score = Math.abs(dy) + Math.abs(dx) * 2; 
+      } else {
+        score = Math.abs(dx) + Math.abs(dy) * 2;
+      }
 
-    const count = validNodeNumbers.length;
-    if (newIndex < 0) {
-      newIndex = (newIndex % count + count) % count;
-    } else if (newIndex >= count) {
-      newIndex = newIndex % count;
+      if (!best || score < best.score) {
+        return { node: current, score };
+      }
+      return best;
+    }, null as { node: (typeof currentNodesData)[0], score: number } | null);
+
+    if (bestNode) {
+      handleNodeClick(bestNode.node.id as number);
     }
-
-    const newNodeId = validNodeNumbers[newIndex];
-    handleNodeClick(newNodeId);
-  }, [selectedNodeId, handleNodeClick, nodesMap]);
+  }, [selectedNodeId, handleNodeClick, mapType]);
 
   const handleEditorClose = useCallback(() => {
     setRightPanelState('closed');

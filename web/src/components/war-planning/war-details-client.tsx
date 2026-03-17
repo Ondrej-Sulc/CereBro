@@ -58,6 +58,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     setHistoryFilters,
     historyCache,
     currentBattlegroup,
+    validationError,
+    warProgress,
     // Bans
     seasonBans,
     warBans,
@@ -73,7 +75,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     handleAddExtra,
     handleRemoveExtra,
     handleAddWarBan,
-    handleRemoveWarBan
+    handleRemoveWarBan,
+    fightsError
   } = useWarPlanning(props);
 
   const [isDesktop, setIsDesktop] = useState(true);
@@ -125,7 +128,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   const isRosterVisible = isDesktop ? isPlayerPanelOpen : rightPanelState === 'roster';
 
   useEffect(() => {
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
@@ -222,6 +225,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               activeTag={activeTactic?.attackTag}
               isReadOnly={isReadOnly}
               bgColors={props.bgColors}
+              warProgress={warProgress}
             />
             
             <WarTabs 
@@ -244,6 +248,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               isPlayerPanelOpen={isRosterVisible}
               hideTabsList={true}
               bgColors={props.bgColors}
+              warProgress={warProgress}
             />
           </div>
         </div>
@@ -273,6 +278,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             extraChampions={extraChampions}
             isReadOnly={isReadOnly}
             activeDefensePlan={props.activeDefensePlan}
+            error={validationError || fightsError}
           />
         ) : (
           // MobileSheet now rendered directly within the flex-col layout
@@ -304,6 +310,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onRemoveExtra={handleRemoveExtra}
             isReadOnly={isReadOnly}
             activeDefensePlan={props.activeDefensePlan}
+            error={validationError || fightsError}
           />
         )}
       </div>

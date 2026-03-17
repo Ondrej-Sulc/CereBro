@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import WarMap from "../war-map";
 import { WarPlacement } from "@cerebro/core/data/war-planning/types";
 import { War, WarTactic, WarMapType } from "@prisma/client";
-import { RightPanelState } from "../hooks/use-war-planning";
+import { RightPanelState, WarProgress } from "../hooks/use-war-planning";
 
 interface WarTabsProps {
   activeTab: string;
@@ -31,6 +31,7 @@ interface WarTabsProps {
   isPlayerPanelOpen?: boolean;
   hideTabsList?: boolean;
   bgColors?: Record<number, string>;
+  warProgress?: WarProgress | null;
 }
 
 export const WarTabs = memo(function WarTabs({
@@ -53,8 +54,30 @@ export const WarTabs = memo(function WarTabs({
   onTogglePlayerPanel,
   isPlayerPanelOpen,
   hideTabsList,
-  bgColors
+  bgColors,
+  warProgress
 }: WarTabsProps) {
+
+  const getTabContent = (bg: number, label: string) => {
+    if (!warProgress) return label;
+    const progress = warProgress[bg];
+    if (!progress || progress.total === 0) return label;
+
+    const isComplete = progress.planned === progress.total;
+    
+    return (
+      <div className="flex items-center gap-1.5">
+        <span>{label}</span>
+        <span className={cn(
+          "text-[10px] font-medium px-1.5 py-0.5 rounded-full ml-1",
+          isComplete ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
+        )}>
+          {progress.planned}/{progress.total}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full flex-1 flex flex-col min-h-0">
       {!hideTabsList && (
@@ -64,23 +87,24 @@ export const WarTabs = memo(function WarTabs({
                 value="bg1" 
                 className="px-6 py-1.5 h-auto text-xs font-bold uppercase tracking-wider rounded-md text-slate-500 data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400 data-[state=active]:border-red-500/20 data-[state=active]:ring-1 data-[state=active]:ring-red-500/20 shadow-none border border-transparent"
             >
-                BG 1
+                {getTabContent(1, "BG 1")}
             </TabsTrigger>
             <TabsTrigger 
                 value="bg2" 
                 className="px-6 py-1.5 h-auto text-xs font-bold uppercase tracking-wider rounded-md text-slate-500 data-[state=active]:bg-blue-500/10 data-[state=active]:text-blue-400 data-[state=active]:border-blue-500/20 data-[state=active]:ring-1 data-[state=active]:ring-blue-500/20 shadow-none border border-transparent"
             >
-                BG 2
+                {getTabContent(2, "BG 2")}
             </TabsTrigger>
             <TabsTrigger 
                 value="bg3" 
                 className="px-6 py-1.5 h-auto text-xs font-bold uppercase tracking-wider rounded-md text-slate-500 data-[state=active]:bg-yellow-500/10 data-[state=active]:text-yellow-400 data-[state=active]:border-yellow-500/20 data-[state=active]:ring-1 data-[state=active]:ring-yellow-500/20 shadow-none border border-transparent"
             >
-                BG 3
+                {getTabContent(3, "BG 3")}
             </TabsTrigger>
         </TabsList>
       </div>
       )}
+
       
       <div className={cn(
           "relative overflow-hidden flex-1 min-h-0",

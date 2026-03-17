@@ -3,8 +3,13 @@ import { useRouter } from "next/navigation";
 import { War, WarFight, WarStatus, WarResult, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, type ExtraChampion } from "@/app/planning/actions";
+import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, getWarProgress, type WarProgress, type ExtraChampion } from "@/app/planning/actions";
+
+export type { WarProgress };
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
+import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
+
+import { validateNodeAssignment } from "@cerebro/core/data/war-planning/path-logic";
 
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
@@ -90,6 +95,7 @@ export function useWarPlanning({
   const [fightsError, setFightsError] = useState<string | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [warProgress, setWarProgress] = useState<WarProgress | null>(null);
 
   // History State
   const [historyFilters, setHistoryFilters] = useState({
@@ -137,9 +143,10 @@ export function useWarPlanning({
       setLoadingFights(true);
       setFightsError(null);
       try {
-        const [fightsRes, extrasData] = await Promise.all([
+        const [fightsRes, extrasData, progressData] = await Promise.all([
             fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${currentBattlegroup}`),
-            getExtraChampions(warId, currentBattlegroup)
+            getExtraChampions(warId, currentBattlegroup),
+            getWarProgress(warId)
         ]);
 
         if (!fightsRes.ok) {
@@ -158,6 +165,7 @@ export function useWarPlanning({
 
         setCurrentFights(hydratedFights);
         setExtraChampions(extrasData);
+        if (progressData) setWarProgress(progressData);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         console.error({ err }, "Failed to fetch war data");
@@ -175,9 +183,10 @@ export function useWarPlanning({
 
     const pollInterval = setInterval(async () => {
         try {
-            const [fightsRes, extrasData] = await Promise.all([
+            const [fightsRes, extrasData, progressData] = await Promise.all([
                 fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${currentBattlegroup}`),
-                getExtraChampions(warId, currentBattlegroup)
+                getExtraChampions(warId, currentBattlegroup),
+                getWarProgress(warId)
             ]);
 
             if (fightsRes.ok) {
@@ -222,6 +231,15 @@ export function useWarPlanning({
                  return prev;
             });
 
+            if (progressData) {
+              setWarProgress(prev => {
+                 if (JSON.stringify(prev) !== JSON.stringify(progressData)) {
+                     return progressData;
+                 }
+                 return prev;
+              });
+            }
+
         } catch (error) {
             console.error({ err: error }, "Polling failed in useWarPlanning");
         }
@@ -259,11 +277,22 @@ export function useWarPlanning({
     if (usedChampionIds.size >= limit && !usedChampionIds.has(newChampionId)) {
       return { isValid: false, error: `Player already has ${limit} unique champions assigned.` };
     }
+
+    // 3. Map Restrictions (Path/Island/Final Side)
+    if (war.mapType === WarMapType.STANDARD) {
+      const existingNodes = playerFights.map(f => f.node.nodeNumber);
+      const pathValidation = validateNodeAssignment(nodeId, existingNodes);
+      if (!pathValidation.valid) {
+        return { isValid: false, error: pathValidation.message };
+      }
+    }
+
     return { isValid: true };
   }, [currentFights, extraChampions, currentBattlegroup, seasonBans, warBans, war.mapType]);
 
   // Handlers
   const handleToggleStatus = useCallback(async () => {
+    setFightsError(null);
     // Check if moving to FINISHED and result is not set
     if (status === WarStatus.PLANNING && (war.result === WarResult.UNKNOWN || war.enemyDeaths === null)) {
         setIsCloseDialogOpen(true);
@@ -286,6 +315,7 @@ export function useWarPlanning({
   }, [status, warId, updateWarStatus, router, war.result, war.enemyDeaths]);
 
   const handleCloseSuccess = useCallback(() => {
+    setFightsError(null);
     // CloseWarDialog already updated the server state; synchronize locally
     setStatus(WarStatus.FINISHED);
     setIsCloseDialogOpen(false);
@@ -293,36 +323,72 @@ export function useWarPlanning({
   }, [router, setStatus, setIsCloseDialogOpen]);
 
   const handleNodeClick = useCallback((nodeId: number) => {
+    setValidationError(null);
+    setFightsError(null);
     setSelectedNodeId(nodeId);
     setRightPanelState('editor');
   }, []);
 
-  const validNodeNumbers = useMemo(() => Array.from(nodesMap.keys()).sort((a, b) => a - b), [nodesMap]);
-
-  const handleNavigateNode = useCallback((direction: number) => {
+  const handleNavigateNode = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (!selectedNodeId) return;
 
-    if (validNodeNumbers.length === 0) return;
-
-    const currentIndex = validNodeNumbers.indexOf(selectedNodeId);
-
-    if (currentIndex === -1) return;
-
-    let newIndex = currentIndex + direction;
-
-    const count = validNodeNumbers.length;
-    if (newIndex < 0) {
-      newIndex = (newIndex % count + count) % count;
-    } else if (newIndex >= count) {
-      newIndex = newIndex % count;
-    }
-
-    const newNodeId = validNodeNumbers[newIndex];
+    const currentNodesData = war.mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
+    const currentNode = currentNodesData.find(n => n.id === selectedNodeId);
     
-    handleNodeClick(newNodeId);
-  }, [selectedNodeId, handleNodeClick, validNodeNumbers]);
+    if (!currentNode) return;
+
+    // Filter nodes in the general direction
+    const candidates = currentNodesData.filter(n => {
+      // Only navigate to actual nodes (numeric IDs), not portals
+      if (typeof n.id !== 'number') return false;
+      if (n.id === selectedNodeId) return false;
+
+      switch (direction) {
+        case 'up':
+          return n.y < currentNode.y;
+        case 'down':
+          return n.y > currentNode.y;
+        case 'left':
+          return n.x < currentNode.x;
+        case 'right':
+          return n.x > currentNode.x;
+        default:
+          return false;
+      }
+    });
+
+    if (candidates.length === 0) return;
+
+    // Find the one with the smallest weighted distance
+    const bestNode = candidates.reduce((best, current) => {
+      const dx = current.x - currentNode.x;
+      const dy = current.y - currentNode.y;
+      
+      let score;
+      if (direction === 'up' || direction === 'down') {
+        // Vertical movement: dy is primary, dx is secondary
+        // We prefer nodes that are more vertically aligned (smaller dx)
+        score = Math.abs(dy) + Math.abs(dx) * 2; 
+      } else {
+        // Horizontal movement: dx is primary, dy is secondary
+        // We prefer nodes that are more horizontally aligned (smaller dy)
+        score = Math.abs(dx) + Math.abs(dy) * 2;
+      }
+
+      if (!best || score < best.score) {
+        return { node: current, score };
+      }
+      return best;
+    }, null as { node: (typeof currentNodesData)[0], score: number } | null);
+
+    if (bestNode) {
+      handleNodeClick(bestNode.node.id as number);
+    }
+  }, [selectedNodeId, handleNodeClick, war.mapType]);
 
   const handleEditorClose = useCallback(() => {
+    setValidationError(null);
+    setFightsError(null);
     setRightPanelState('closed');
     setSelectedNodeId(null);
   }, []);
@@ -332,6 +398,7 @@ export function useWarPlanning({
   }, []);
 
   const handleAddExtra = useCallback(async (playerId: string, championId: number) => {
+    setFightsError(null);
     const champ = champions.find(c => c.id === championId);
     if (!champ) return;
 
@@ -359,6 +426,7 @@ export function useWarPlanning({
   }, [warId, currentBattlegroup, champions]);
 
   const handleRemoveExtra = useCallback(async (extraId: string) => {
+    setFightsError(null);
     const toRemove = extraChampions.find((x: ExtraChampion) => x.id === extraId);
     if (!toRemove) return;
 
@@ -375,6 +443,7 @@ export function useWarPlanning({
   }, [extraChampions]);
 
   const handleAddWarBan = useCallback(async (championId: number) => {
+    setFightsError(null);
     const champ = champions.find(c => c.id === championId);
     if (!champ) return;
 
@@ -402,6 +471,7 @@ export function useWarPlanning({
   }, [warId, champions]);
 
   const handleRemoveWarBan = useCallback(async (banId: string) => {
+    setFightsError(null);
     const toRemove = warBans.find((x: WarBanWithChampion) => x.id === banId);
     if (!toRemove) return;
 
@@ -421,6 +491,7 @@ export function useWarPlanning({
     prefightUpdates?: { championId: number; playerId?: string | null }[]
   }) => {
     setValidationError(null);
+    setFightsError(null);
 
     // Capture previous state for rollback
     const previousFights = currentFights;
@@ -527,7 +598,7 @@ export function useWarPlanning({
       await updateWarFight(updatedFight);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error({ err }, "Failed to save fight");
+      console.error("Failed to save fight:", err);
       // Rollback
       setCurrentFights(previousFights);
       setFightsError(message || "Failed to save changes. Please try again.");
@@ -574,6 +645,7 @@ export function useWarPlanning({
     currentBattlegroup,
     validationError,
     setValidationError,
+    warProgress,
     // Bans
     seasonBans,
     warBans,

@@ -24,7 +24,7 @@ interface DefenseMobileSheetProps {
   selectedDbNodeId: number | undefined;
   selectedPlacement: PlacementWithNode | null;
   handleSavePlacement: (placement: Partial<WarDefensePlacement>) => Promise<void>;
-  handleNavigateNode: (direction: number) => void;
+  handleNavigateNode: (direction: 'up' | 'down' | 'left' | 'right') => void;
   mapType: WarMapType;
   activeTier: number | null;
   nodesMap: Map<number, WarNodeWithAllocations>;

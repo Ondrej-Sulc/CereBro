@@ -30,7 +30,7 @@ interface DesktopSidebarProps {
   }>>;
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
   onClose: () => void;
-  onNavigate: (direction: number) => void;
+  onNavigate: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
@@ -39,6 +39,7 @@ interface DesktopSidebarProps {
   extraChampions: ExtraChampion[];
   isReadOnly?: boolean;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
+  error?: string | null;
 }
 
 export function DesktopSidebar({
@@ -64,11 +65,12 @@ export function DesktopSidebar({
   extraChampions,
   isReadOnly = false,
   activeDefensePlan,
+  error,
 }: DesktopSidebarProps) {
   return (
     <div 
       className={cn(
-        "hidden md:block border-l border-slate-800 bg-slate-950 transition-all duration-300 ease-in-out overflow-hidden",
+        "hidden lg:block border-l border-slate-800 bg-slate-950 transition-all duration-300 ease-in-out overflow-hidden",
         rightPanelState !== 'closed' ? "w-[400px]" : "w-0"
       )}
     >
@@ -114,6 +116,7 @@ export function DesktopSidebar({
               extraChampions={extraChampions}
               isReadOnly={isReadOnly}
               activeDefensePlan={activeDefensePlan}
+              error={error}
           />
         )}
       </div>

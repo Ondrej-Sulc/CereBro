@@ -28,7 +28,7 @@ interface MobileSheetProps {
   onHistoryFiltersChange: React.Dispatch<React.SetStateAction<HistoryFilters>>; 
   historyCache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
   onClose: () => void;
-  onNavigate: (direction: number) => void;
+  onNavigate: (direction: 'up' | 'down' | 'left' | 'right') => void;
   onSave: (updatedFight: Partial<WarFight> & { prefightChampionIds?: number[] }) => void;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
@@ -42,6 +42,7 @@ interface MobileSheetProps {
   onRemoveExtra: (extraId: string) => void;
   isReadOnly?: boolean;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
+  error?: string | null;
 }
 
 export function MobileSheet({
@@ -71,6 +72,7 @@ export function MobileSheet({
   onRemoveExtra,
   isReadOnly = false,
   activeDefensePlan,
+  error,
 }: MobileSheetProps) {
   const controls = useAnimation();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -229,6 +231,7 @@ export function MobileSheet({
                     extraChampions={extraChampions}
                     isReadOnly={isReadOnly}
                     activeDefensePlan={activeDefensePlan}
+                    error={error}
                 />
                ) : (
                  <PlayerListContent

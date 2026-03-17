@@ -146,7 +146,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     handleSavePlacement,
     toggleTools,
     nodesMap, // Destructure nodesMap
-  } = useDefensePlanning(props);
+  } = useDefensePlanning({ ...props, mapType: props.plan.mapType });
 
   const [isDesktop, setIsDesktop] = useState(true);
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true);
@@ -229,7 +229,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const activeTag = props.availableTags.find(t => t.id === activeTagId);
 
   useEffect(() => {
-    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
@@ -515,11 +515,11 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         )}>
           {/* Header */}
           <div className={cn(
-              "flex-none flex flex-col md:flex-row md:items-center justify-between p-3 sm:px-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10 gap-3 md:gap-4",
+              "flex-none flex flex-col lg:flex-row lg:items-center justify-between p-3 sm:px-4 border-b border-slate-800 bg-slate-950/50 backdrop-blur-sm z-10 gap-3 lg:gap-4",
               isFullscreen && "hidden"
           )}>
              {/* Top Row on Mobile: Context & View Toggle */}
-             <div className="flex items-center justify-between w-full md:w-auto gap-4">
+             <div className="flex items-center justify-between w-full lg:w-auto gap-4">
                  {/* LEFT: Context & Metadata */}
                  <div className="flex items-center gap-4 overflow-hidden min-w-0">
                     <Link href="/planning/defense" className="flex-none">
@@ -622,7 +622,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                  </div>
 
                  {/* Mobile Controls */}
-                 <div className="flex md:hidden items-center gap-2">
+                 <div className="flex lg:hidden items-center gap-2">
                      {/* View Toggle */}
                      <div className="flex items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800 shrink-0">
                         <Button
@@ -688,7 +688,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
              </div>
 
              {/* CENTER: BG Navigation */}
-             <div className="flex items-center p-1 rounded-lg bg-slate-900 border border-slate-800 md:absolute md:left-1/2 md:-translate-x-1/2 mx-auto shrink-0">
+             <div className="flex items-center p-1 rounded-lg bg-slate-900 border border-slate-800 lg:absolute lg:left-1/2 lg:-translate-x-1/2 mx-auto shrink-0">
                 <button
                     onClick={() => setActiveTab('bg1')}
                     className={cn(
@@ -728,7 +728,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
              </div>
 
              {/* RIGHT: View & Actions */}
-             <div className="hidden md:flex items-center gap-2">
+             <div className="hidden lg:flex items-center gap-2">
                  <div className="flex items-center bg-slate-900/50 p-1 rounded-lg border border-slate-800">
                     <Button
                         variant={viewMode === 'roster' ? 'secondary' : 'ghost'}

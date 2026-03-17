@@ -1,8 +1,8 @@
 import { War, WarStatus, Tag, WarResult, WarMapType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle, Loader2 } from "lucide-react";
-import { RightPanelState } from "../hooks/use-war-planning";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle, Loader2, AlertTriangle } from "lucide-react";
+import { RightPanelState, WarProgress } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
 import { PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
@@ -51,6 +51,7 @@ interface WarHeaderProps {
   activeTag?: Tag | null;
   isReadOnly?: boolean;
   bgColors?: Record<number, string>;
+  warProgress?: WarProgress | null;
 }
 
 export function WarHeader({
@@ -75,7 +76,8 @@ export function WarHeader({
   assignedChampions = [],
   activeTag,
   isReadOnly = false,
-  bgColors
+  bgColors,
+  warProgress
 }: WarHeaderProps) {
   const { toast } = useToast();
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
@@ -86,6 +88,64 @@ export function WarHeader({
   const [channels, setChannels] = useState<DiscordChannel[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string>("");
   const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+
+  // Share Warning State
+  const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+  const [pendingShare, setPendingShare] = useState<{ bg?: number, channelId?: string } | null>(null);
+  const [warningMessage, setWarningMessage] = useState<React.ReactNode>("");
+
+  const checkProgressAndShare = (bg?: number, channelId?: string) => {
+      if (!warProgress) {
+          // If progress isn't loaded yet, just proceed
+          onDistribute(bg, channelId);
+          return;
+      }
+
+      const incompleteBgs: { bg: number, missing: number[] }[] = [];
+
+      if (bg) {
+          if (warProgress[bg] && warProgress[bg].planned < warProgress[bg].total) {
+              incompleteBgs.push({ bg, missing: warProgress[bg].missingNodes });
+          }
+      } else {
+          [1, 2, 3].forEach(b => {
+              if (warProgress[b] && warProgress[b].planned < warProgress[b].total) {
+                  incompleteBgs.push({ bg: b, missing: warProgress[b].missingNodes });
+              }
+          });
+      }
+
+      if (incompleteBgs.length > 0) {
+          const message = (
+              <div className="space-y-4">
+                  <p>You are about to share an incomplete plan. The following battlegroups have fights without assigned attackers or players:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                      {incompleteBgs.map(info => (
+                          <li key={info.bg}>
+                              <strong>BG{info.bg}:</strong> Missing on nodes {info.missing.slice(0, 10).join(', ')}
+                              {info.missing.length > 10 ? '...' : ''}
+                          </li>
+                      ))}
+                  </ul>
+                  <p>Are you sure you want to distribute it anyway?</p>
+              </div>
+          );
+          setWarningMessage(message);
+          setPendingShare({ bg, channelId });
+          setIsWarningDialogOpen(true);
+      } else {
+          onDistribute(bg, channelId);
+      }
+  };
+
+  const confirmShare = () => {
+      if (pendingShare) {
+          onDistribute(pendingShare.bg, pendingShare.channelId);
+      }
+      setIsWarningDialogOpen(false);
+      setPendingShare(null);
+      setWarningMessage("");
+  };
 
   const handleOpenShareDialog = async () => {
     setIsShareDialogOpen(true);
@@ -106,8 +166,8 @@ export function WarHeader({
 
   const handleShareToChannel = () => {
     if (!selectedChannel) return;
-    onDistribute(currentBattlegroup, selectedChannel);
     setIsShareDialogOpen(false);
+    checkProgressAndShare(currentBattlegroup, selectedChannel);
   };
 
   // Filter out champions already banned
@@ -129,12 +189,35 @@ export function WarHeader({
     return {};
   };
 
+  const getTabContent = (bg: number, label: string) => {
+    if (!warProgress) return label;
+    const progress = warProgress[bg];
+    if (!progress || progress.total === 0) return label;
+
+    const isComplete = progress.planned === progress.total;
+    const isActive = activeTab === `bg${bg}`;
+    
+    return (
+      <div className="flex items-center gap-1.5">
+        <span>{label}</span>
+        <span className={cn(
+          "text-[10px] font-medium px-1.5 py-0.5 rounded-full ml-1",
+          isComplete 
+            ? (isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-500/10 text-emerald-500/70") 
+            : (isActive ? "bg-amber-500/20 text-amber-400" : "bg-amber-500/10 text-amber-500/70")
+        )}>
+          {progress.planned}/{progress.total}
+        </span>
+      </div>
+    );
+  };
+
   return (
     <div className={cn(
       "flex flex-col gap-4",
       isFullscreen && "hidden"
     )}>
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3 overflow-hidden">
           <Link href="/planning">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white shrink-0">
@@ -180,7 +263,7 @@ export function WarHeader({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+        <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
           {!isReadOnly && (
             <>
               <div className="flex items-center">
@@ -191,17 +274,17 @@ export function WarHeader({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onDistribute()}>
+                    <DropdownMenuItem onClick={() => checkProgressAndShare()}>
                       Share All
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onDistribute(1)}>
+                    <DropdownMenuItem onClick={() => checkProgressAndShare(1)}>
                       Share BG1
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onDistribute(2)}>
+                    <DropdownMenuItem onClick={() => checkProgressAndShare(2)}>
                       Share BG2
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onDistribute(3)}>
+                    <DropdownMenuItem onClick={() => checkProgressAndShare(3)}>
                       Share BG3
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -228,6 +311,24 @@ export function WarHeader({
                   }
                 />
               </div>
+
+              <Dialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-amber-500">
+                            <AlertTriangle className="h-5 w-5" />
+                            Incomplete Plan Warning
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-2 text-sm text-slate-300">
+                        {warningMessage}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsWarningDialogOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmShare}>Distribute Anyway</Button>
+                    </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
                 <DialogContent>
@@ -285,7 +386,7 @@ export function WarHeader({
           )}
 
           {/* Mobile Tools (Sheet) */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <PlanningTools
               players={players}
               champions={champions}
@@ -299,7 +400,7 @@ export function WarHeader({
           </div>
 
           {/* Desktop Tools (Sidebar Toggle) */}
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <Button variant="outline" onClick={onToggleTools} className="gap-2">
               {rightPanelState === 'tools' ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
               Tools
@@ -310,7 +411,7 @@ export function WarHeader({
 
       {/* Bans Section & BG Switcher */}
       <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 py-2 border-t border-slate-800/50">
-        <div className="flex items-center gap-4 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex items-center gap-4 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
           <div className="flex items-center gap-2 text-sm text-slate-400 font-medium shrink-0">
             <Ban className="h-4 w-4 text-red-500" />
             <span>Bans:</span>
@@ -413,7 +514,7 @@ export function WarHeader({
             )}
             style={getButtonStyle(1, activeTab === 'bg1')}
           >
-            BG 1
+            {getTabContent(1, "BG 1")}
           </button>
           <button
             onClick={() => onTabChange('bg2')}
@@ -425,7 +526,7 @@ export function WarHeader({
             )}
             style={getButtonStyle(2, activeTab === 'bg2')}
           >
-            BG 2
+            {getTabContent(2, "BG 2")}
           </button>
           <button
             onClick={() => onTabChange('bg3')}
@@ -437,7 +538,7 @@ export function WarHeader({
             )}
             style={getButtonStyle(3, activeTab === 'bg3')}
           >
-            BG 3
+            {getTabContent(3, "BG 3")}
           </button>
         </div>
       </div>

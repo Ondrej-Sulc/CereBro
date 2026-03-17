@@ -31,7 +31,7 @@ interface DefenseEditorProps {
   onSave: (updatedPlacement: Partial<WarDefensePlacement>) => void;
   champions: Champion[];
   players: PlayerWithRoster[];
-  onNavigate?: (direction: number) => void;
+  onNavigate?: (direction: 'up' | 'down' | 'left' | 'right') => void;
   activeTactic?: WarTacticWithTags | null;
   mapType: WarMapType;
   currentBattlegroup: number;
@@ -156,23 +156,21 @@ export default function DefenseEditor({
             return;
         }
 
-        const COLUMNS = mapType === WarMapType.BIG_THING ? 5 : 9;
-
         if (e.key === 'ArrowRight') {
-            onNavigate?.(1);
+            onNavigate?.('right');
         } else if (e.key === 'ArrowLeft') {
-            onNavigate?.(-1);
+            onNavigate?.('left');
         } else if (e.key === 'ArrowUp') {
-            onNavigate?.(COLUMNS);
+            onNavigate?.('up');
         } else if (e.key === 'ArrowDown') {
-            onNavigate?.(-COLUMNS);
+            onNavigate?.('down');
         }
 
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onNavigate, mapType]);
+  }, [onNavigate]);
 
   // Sort Players: Alphabetical, filtered by BG
   const availablePlayers = useMemo(() => {
