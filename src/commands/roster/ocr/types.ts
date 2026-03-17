@@ -14,6 +14,8 @@ export interface ChampionGridCell {
   champion?: ChampionData;
   powerRating?: string;
   isAwakened?: boolean;
+  isAscended?: boolean;
+  ascensionLevel?: number;
   awakenedCheckBounds?: Vertex[];
   shortNameSolveBounds?: Vertex[];
   innerPortraitCropBounds?: Vertex[];

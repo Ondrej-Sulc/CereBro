@@ -17,6 +17,7 @@ export async function processRosterScreenshot(
   stars: number,
   rank: number,
   isAscended: boolean = false,
+  ascensionLevel: number = 0,
   debugMode: boolean = false,
   playerId?: string
 ): Promise<RosterUpdateResult | RosterDebugResult> {
@@ -251,6 +252,7 @@ async function saveBGViewRoster(
                         isAwakened: sanitizedSigLevel > 0 || !!cell.isAscended, 
                         sigLevel: sanitizedSigLevel,
                         isAscended: cell.isAscended || false,
+                        ascensionLevel: cell.ascensionLevel || (cell.isAscended ? 1 : 0),
                         powerRating: sanitizedPowerRating,
                     },
                     create: {
@@ -261,6 +263,7 @@ async function saveBGViewRoster(
                         isAwakened: sanitizedSigLevel > 0 || !!cell.isAscended,
                         sigLevel: sanitizedSigLevel,
                         isAscended: cell.isAscended || false,
+                        ascensionLevel: cell.ascensionLevel || (cell.isAscended ? 1 : 0),
                         powerRating: sanitizedPowerRating,
                     },
                     include: { champion: true },
@@ -306,7 +309,8 @@ async function saveRoster(
   playerId: string,
   stars: number,
   rank: number,
-  isAscended: boolean
+  isAscended: boolean,
+  ascensionLevel: number = 0
 ): Promise<RosterWithChampion[][]> {
   const { prisma } = await import("../../../services/prismaService.js");
   const savedChampions: RosterWithChampion[][] = [];
@@ -330,6 +334,9 @@ async function saveRoster(
               powerRatingInt = undefined;
           }
 
+          const finalIsAscended = cell.isAscended || isAscended;
+          const finalAscensionLevel = cell.ascensionLevel || ascensionLevel || (finalIsAscended ? 1 : 0);
+
           const rosterEntry = await prisma.roster.upsert({
             where: {
               playerId_championId_stars: {
@@ -341,7 +348,8 @@ async function saveRoster(
             update: {
               rank,
               isAwakened: cell.isAwakened || false,
-              isAscended,
+              isAscended: finalIsAscended,
+              ascensionLevel: finalAscensionLevel,
               powerRating: powerRatingInt,
             },
             create: {
@@ -350,7 +358,8 @@ async function saveRoster(
               stars,
               rank,
               isAwakened: cell.isAwakened || false,
-              isAscended,
+              isAscended: finalIsAscended,
+              ascensionLevel: finalAscensionLevel,
               powerRating: powerRatingInt,
             },
             include: { champion: true },

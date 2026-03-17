@@ -43,6 +43,7 @@ export async function handleRosterDebug(
       stars,
       rank,
       false,
+      0,
       true
     )) as RosterDebugResult;
 

@@ -29,6 +29,7 @@ async function testRoster() {
         stars,
         rank,
         false,
+        0,
         true
       );
     } else {
@@ -52,6 +53,7 @@ async function testRoster() {
         stars,
         rank,
         false,
+        0,
         false,
         player.id
       );

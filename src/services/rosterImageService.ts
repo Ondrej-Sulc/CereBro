@@ -76,7 +76,9 @@ export class RosterImageService {
         // Identify Stars
         cell.stars = await this.featureService.identifyStars(rawImage, rawImageOpts, cell);
         // Identify Ascension
-        cell.isAscended = await this.featureService.identifyAscension(rawImage, rawImageOpts, cell);
+        const ascensionResult = await this.featureService.identifyAscension(rawImage, rawImageOpts, cell);
+        cell.isAscended = ascensionResult.isAscended;
+        cell.ascensionLevel = ascensionResult.ascensionLevel;
     }));
 
     const t4 = performance.now(); // Feature Detection done

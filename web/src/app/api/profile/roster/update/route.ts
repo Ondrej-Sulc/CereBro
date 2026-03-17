@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     const stars = parseInt(formData.get("stars") as string);
     const rank = parseInt(formData.get("rank") as string);
     const isAscended = formData.get("isAscended") === "true";
+    const ascensionLevel = parseInt(formData.get("ascensionLevel") as string) || 0;
     const files = formData.getAll("images") as File[];
 
     if (!files || files.length === 0) {
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
         stars, 
         rank, 
         isAscended, 
+        ascensionLevel,
         fileCount: files.length,
         fileNames: files.map(f => f.name)
     }, "Starting roster update via screenshot upload");
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
                 stars,
                 rank,
                 isAscended,
+                ascensionLevel,
                 false, // debugMode
                 player.id
              );

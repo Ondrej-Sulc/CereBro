@@ -7,6 +7,14 @@ import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
 import { getAssetsPath } from '../../utils/assets.js';
 
+export interface RawImageOptions {
+  raw: {
+    width: number;
+    height: number;
+    channels: number;
+  };
+}
+
 export class RosterFeatureService {
   private classIcons: Map<ChampionClass, Buffer> = new Map();
   private classHues: Map<ChampionClass, number> = new Map();
@@ -82,7 +90,7 @@ export class RosterFeatureService {
       return this.classIcons.get(className);
   }
 
-  public async identifyClass(rawImage: Buffer, rawOpts: any, cell: GridCell): Promise<ChampionClass | undefined> {
+  public async identifyClass(rawImage: Buffer, rawOpts: RawImageOptions, cell: GridCell): Promise<ChampionClass | undefined> {
     try {
       const { x, y, width, height } = cell.bounds;
       const imgW = rawOpts.raw.width;
@@ -160,7 +168,7 @@ export class RosterFeatureService {
     }
   }
 
-  public async identifyStars(rawImage: Buffer, rawOpts: any, cell: GridCell): Promise<number> {
+  public async identifyStars(rawImage: Buffer, rawOpts: RawImageOptions, cell: GridCell): Promise<number> {
     try {
       const { x, y, width, height } = cell.bounds;
       const imgW = rawOpts.raw.width;
@@ -228,7 +236,7 @@ export class RosterFeatureService {
     }
   }
 
-  public async identifyAscension(rawImage: Buffer, rawOpts: any, cell: GridCell): Promise<boolean> {
+  public async identifyAscension(rawImage: Buffer, rawOpts: RawImageOptions, cell: GridCell): Promise<{ isAscended: boolean, ascensionLevel: number }> {
     try {
       const { x, y, width, height } = cell.bounds;
       const imgW = rawOpts.raw.width;
@@ -264,22 +272,26 @@ export class RosterFeatureService {
       };
 
       const { h: hue, s, l } = this.rgbToHsl(avgColor.r, avgColor.g, avgColor.b);
-      
+
       const isGold = (hue >= 25 && hue <= 65) && (s > 0.20) && (l > 0.20);
-      
+
+      // Default to level 1 if ascended for now. 
+      // Further pixel/pattern analysis would be needed to differentiate level 2+.
+      const ascensionLevel = isGold ? 1 : 0;
+
       cell.debugInfo = {
         ...cell.debugInfo,
         ascensionColor: avgColor,
-        ascensionHsl: { h: hue.toFixed(0), s: s.toFixed(2), l: l.toFixed(2) }
+        ascensionHsl: { h: hue.toFixed(0), s: s.toFixed(2), l: l.toFixed(2) },
+        detectedAscensionLevel: ascensionLevel
       };
 
-      return isGold;
+      return { isAscended: isGold, ascensionLevel };
 
     } catch (err) {
-      return false;
+      return { isAscended: false, ascensionLevel: 0 };
     }
   }
-
   private rgbToHsl(r: number, g: number, b: number): { h: number, s: number, l: number } {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);

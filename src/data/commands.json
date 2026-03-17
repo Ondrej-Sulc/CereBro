@@ -1402,6 +1402,14 @@
             "type": 5
           },
           {
+            "max_value": 5,
+            "min_value": 0,
+            "type": 4,
+            "name": "ascension_level",
+            "description": "The ascension level of the champions (for 7-stars).",
+            "required": false
+          },
+          {
             "name": "image2",
             "description": "Another screenshot.",
             "required": false,

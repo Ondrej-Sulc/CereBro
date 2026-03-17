@@ -19,7 +19,17 @@ export async function handleUpdate(
   await interaction.deferReply();
   const stars = interaction.options.getInteger("stars", true);
   const rank = interaction.options.getInteger("rank", true);
-  const isAscended = interaction.options.getBoolean("is_ascended") ?? false;
+  let isAscended = interaction.options.getBoolean("is_ascended") ?? false;
+  let ascensionLevel = interaction.options.getInteger("ascension_level") ?? 0;
+  
+  // Implicitly set isAscended if an ascension level is provided
+  if (ascensionLevel > 0) {
+      isAscended = true;
+  }
+  // Implicitly default to level 1 if only isAscended is true (legacy fallback)
+  if (isAscended && ascensionLevel === 0) {
+      ascensionLevel = 1;
+  }
 
   const player = await getPlayer(interaction);
   if (!player) {
@@ -48,6 +58,7 @@ export async function handleUpdate(
       stars,
       rank,
       isAscended,
+      ascensionLevel,
       false,
       player.id
     ).catch((error) => {

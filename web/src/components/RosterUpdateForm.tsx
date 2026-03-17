@@ -69,12 +69,20 @@ export function RosterUpdateForm() {
     const [stars, setStars] = useState("6");
     const [rank, setRank] = useState("3");
     const [isAscended, setIsAscended] = useState(false);
+    const [ascensionLevel, setAscensionLevel] = useState("0");
     const [files, setFiles] = useState<File[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
 
     const [uploadProgress, setUploadProgress] = useState(0);
     const [statusMessage, setStatusMessage] = useState("");
     const previewUrlsRef = useRef<string[]>([]);
+
+    useEffect(() => {
+        if (stars !== "7") {
+            setAscensionLevel("0");
+            setIsAscended(false);
+        }
+    }, [stars]);
 
     // Cleanup object URLs on unmount to avoid memory leaks
     useEffect(() => {
@@ -190,7 +198,21 @@ export function RosterUpdateForm() {
         formData.append("mode", mode);
         formData.append("stars", stars);
         formData.append("rank", rank);
-        formData.append("isAscended", String(isAscended));
+        
+        // Compute implicit boolean based on level if necessary
+        let finalIsAscended = isAscended;
+        let finalAscensionLevel = 0;
+        
+        if (stars === "7") {
+            finalIsAscended = parseInt(ascensionLevel) > 0 ? true : isAscended;
+            finalAscensionLevel = parseInt(ascensionLevel) === 0 && isAscended ? 1 : parseInt(ascensionLevel);
+        } else {
+            finalIsAscended = isAscended;
+            finalAscensionLevel = 0;
+        }
+        
+        formData.append("isAscended", String(finalIsAscended));
+        formData.append("ascensionLevel", String(finalAscensionLevel));
 
         interface RosterUpdateResponse {
             count: number;
@@ -338,13 +360,34 @@ export function RosterUpdateForm() {
                                             </Select>
                                         </div>
                                         <div className="flex items-center space-x-2 pt-8 sm:pt-0">
-                                            <Checkbox
-                                                id="ascended"
-                                                checked={isAscended}
-                                                onCheckedChange={(c) => setIsAscended(!!c)}
-                                                className="border-slate-600 data-[state=checked]:bg-sky-600"
-                                            />
-                                            <Label htmlFor="ascended" className="cursor-pointer font-normal text-slate-300">Is Ascended?</Label>
+                                            {stars === "7" ? (
+                                                <div className="flex-1 space-y-2">
+                                                    <Label htmlFor="ascensionLevel">Ascension</Label>
+                                                    <Select value={ascensionLevel} onValueChange={(v) => {
+                                                        setAscensionLevel(v);
+                                                        setIsAscended(parseInt(v) > 0);
+                                                    }}>
+                                                        <SelectTrigger id="ascensionLevel" className="bg-slate-900 border-slate-700 w-[120px]">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {[0, 1, 2, 3, 4, 5].map(level => (
+                                                                <SelectItem key={level} value={String(level)}>{level === 0 ? 'None' : `Level ${level}`}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center space-x-2 h-full">
+                                                    <Checkbox
+                                                        id="ascended"
+                                                        checked={isAscended}
+                                                        onCheckedChange={(c) => setIsAscended(!!c)}
+                                                        className="border-slate-600 data-[state=checked]:bg-sky-600"
+                                                    />
+                                                    <Label htmlFor="ascended" className="cursor-pointer font-normal text-slate-300">Is Ascended?</Label>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </TabsContent>

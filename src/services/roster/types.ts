@@ -8,6 +8,7 @@ export interface GridCell {
   sigLevel?: number;
   stars?: number;
   isAscended?: boolean;
+  ascensionLevel?: number;
   powerRating?: number;
   class?: ChampionClass;
   championName?: string;
@@ -21,6 +22,7 @@ export interface GridCell {
     starContentWidth?: number;
     ascensionColor?: any;
     ascensionHsl?: any;
+    detectedAscensionLevel?: number;
     brightness?: number;
     bestMatchBuffer?: Buffer;
   };
