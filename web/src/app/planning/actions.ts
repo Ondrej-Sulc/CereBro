@@ -11,6 +11,10 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { ChampionImages } from "@/types/champion";
 import { config } from "@cerebro/core/config";
 import { validateNodeAssignment } from "@cerebro/core/data/war-planning/path-logic";
+import { MapImageService, NodeAssignment, LegendItem } from "@cerebro/core/services/mapImageService";
+import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
+import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
+import { getChampionImageUrl } from "@/lib/championHelper";
 
 export interface ExtraChampion {
   id: string;
@@ -63,13 +67,11 @@ export async function getGuildChannels(allianceId: string): Promise<DiscordChann
     });
 
     if (!response.ok) {
-        // If 403 or 404, maybe bot is not in guild or missing permissions
         console.error("Failed to fetch channels", await response.text());
         return [];
     }
 
     const channels = await response.json() as DiscordChannel[];
-    // Filter for Guild Text (0) and Announcement (5) channels
     return channels
         .filter(c => c.type === 0 || c.type === 5)
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -260,15 +262,13 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
       }
   }
 
-  // --- Validation Logic ---
   if (rest.playerId && targetWar.mapType === WarMapType.STANDARD && targetNodeNumber !== null) {
-      // Fetch all existing fights for this player in this war/bg
       const existingPlayerFights = await prisma.warFight.findMany({
           where: {
               warId: targetWar.id,
               battlegroup: battlegroup || updatedFight.battlegroup,
               playerId: rest.playerId,
-              id: { not: id } // Exclude the current fight being updated
+              id: { not: id } 
           },
           include: { node: true }
       });
@@ -436,7 +436,6 @@ export async function updateWarStatus(warId: string, status: WarStatus, data?: {
     throw new Error("You must be an Alliance Officer or Bot Admin to update war status.");
   }
 
-  // Validate enemy deaths
   if (data?.enemyDeaths !== undefined && (typeof data.enemyDeaths !== 'number' || data.enemyDeaths < 0)) {
     throw new Error("enemyDeaths must be a non-negative number");
   }
@@ -448,7 +447,6 @@ export async function updateWarStatus(warId: string, status: WarStatus, data?: {
       throw new Error("Unauthorized.");
   }
 
-  // Server-side validation for finishing a war
   if (status === WarStatus.FINISHED) {
       const effectiveResult = data?.result !== undefined ? data.result : war.result;
       const effectiveDeaths = data?.enemyDeaths !== undefined ? data.enemyDeaths : war.enemyDeaths;
@@ -672,7 +670,6 @@ export async function distributePlan(warId: string, battlegroup?: number, target
   const alliance = war.alliance;
   if (!alliance) throw new Error("Alliance not found");
 
-  // If distributing to a specific channel (e.g. current web view), skip config check
   if (!targetChannelId) {
       const requiredBgs = battlegroup ? [battlegroup] : Array.from(new Set(war.fights.map(p => p.battlegroup)));
       const missingChannels = [];
@@ -725,8 +722,7 @@ export async function updateWarDetails(warId: string, data: Partial<War>) {
       throw new Error("Unauthorized: Cannot update wars outside your alliance.");
   }
 
-  // State invariant validation: Finished wars must have a result and deaths
-  const effectiveStatus = war.status; // status isn't updatable via this action yet
+  const effectiveStatus = war.status;
   const effectiveResult = data.result !== undefined ? data.result : war.result;
   const effectiveDeaths = data.enemyDeaths !== undefined ? data.enemyDeaths : war.enemyDeaths;
 
@@ -752,4 +748,243 @@ export async function updateWarDetails(warId: string, data: Partial<War>) {
 
   revalidatePath("/planning");
   revalidatePath(`/planning/${warId}`);
+}
+
+export async function getFightVideos(nodeId: number, defenderId: number, attackerId: number) {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    const historicalFights = await prisma.warFight.findMany({
+        where: {
+            nodeId,
+            defenderId,
+            attackerId,
+            videoId: { not: null },
+            war: { status: WarStatus.FINISHED }
+        },
+        select: {
+            id: true,
+            death: true,
+            video: { select: { id: true, url: true } },
+            player: { select: { id: true, ingameName: true } }
+        },
+        orderBy: [
+            { death: 'asc' },
+            { createdAt: 'desc' }
+        ],
+        take: 3
+    });
+
+    return historicalFights.map(hf => ({
+        url: hf.video?.url,
+        videoId: hf.video?.id,
+        death: hf.death,
+        playerName: hf.player?.ingameName
+    }));
+}
+
+export async function getWarMapPng(warId: string, battlegroup: number, playerId?: string): Promise<string> {
+    const player = await getUserPlayerWithAlliance();
+    if (!player || (!player.allianceId && !player.isBotAdmin)) {
+        throw new Error("Unauthorized");
+    }
+
+    const war = await prisma.war.findUnique({
+        where: { id: warId },
+        include: {
+            alliance: true,
+            fights: {
+                where: { battlegroup },
+                include: {
+                    attacker: { include: { tags: true } },
+                    defender: { include: { tags: true } },
+                    node: { include: { allocations: { include: { nodeModifier: true } } } },
+                    player: true,
+                    prefightChampions: { include: { champion: true, player: true } }
+                }
+            },
+            extraChampions: {
+                where: { battlegroup },
+                include: {
+                    champion: true,
+                    player: true
+                }
+            },
+            bans: {
+                include: {
+                    champion: true
+                }
+            }
+        }
+    });
+
+    if (!war) throw new Error("War not found");
+    if (!player.isBotAdmin && war.allianceId !== player.allianceId) {
+        throw new Error("Unauthorized");
+    }
+
+    const alliance = war.alliance;
+
+    const activeTactic = await prisma.warTactic.findFirst({
+        where: {
+            season: war.season,
+            AND: [
+                { OR: [{ minTier: null }, { minTier: { lte: war.warTier } }] },
+                { OR: [{ maxTier: null }, { maxTier: { gte: war.warTier } }] }
+            ]
+        },
+        include: { attackTag: true, defenseTag: true }
+    });
+
+    const seasonBans = await prisma.seasonBan.findMany({
+        where: {
+            season: war.season,
+            OR: [
+                { minTier: null, maxTier: null },
+                { minTier: { lte: war.warTier }, maxTier: null },
+                { minTier: null, maxTier: { gte: war.warTier } },
+                { minTier: { lte: war.warTier }, maxTier: { gte: war.warTier } }
+            ]
+        },
+        include: { champion: true }
+    });
+
+    const bannedChampionsMap = new Map<number, { url: string, class: any }>();
+    const uniqueImageUrls = new Set<string>();
+
+    seasonBans.forEach(b => {
+        if (b.champion && b.champion.images) {
+            const url = getChampionImageUrl(b.champion.images as any, '64', 'primary');
+            bannedChampionsMap.set(b.champion.id, { url, class: b.champion.class });
+            uniqueImageUrls.add(url);
+        }
+    });
+
+    war.bans.forEach(b => {
+        if (b.champion && b.champion.images) {
+            const url = getChampionImageUrl(b.champion.images as any, '64', 'primary');
+            bannedChampionsMap.set(b.champion.id, { url, class: b.champion.class });
+            uniqueImageUrls.add(url);
+        }
+    });
+
+    const bannedChampions = Array.from(bannedChampionsMap.values());
+
+    const allPlayers = new Map<string, { id: string, name: string }>();
+    war.fights.forEach(f => {
+        if (f.player) allPlayers.set(f.player.id, { id: f.player.id, name: f.player.ingameName });
+    });
+    const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const globalColorMap = new Map<string, string>();
+    sortedPlayers.forEach((p, index) => {
+        globalColorMap.set(p.id, MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length]);
+    });
+
+    const assignments = new Map<number, NodeAssignment>();
+    for (const fight of war.fights) {
+        let defenderImage: string | undefined;
+        if (fight.defender?.images) {
+            defenderImage = getChampionImageUrl(fight.defender.images as any, '64', 'primary');
+            uniqueImageUrls.add(defenderImage);
+        }
+
+        let attackerImage: string | undefined;
+        if (fight.attacker?.images) {
+            attackerImage = getChampionImageUrl(fight.attacker.images as any, '64', 'primary');
+            uniqueImageUrls.add(attackerImage);
+        }
+
+        const prefightImages: { url: string; borderColor: string }[] = [];
+        fight.prefightChampions.forEach(pf => {
+            if (pf.champion?.images) {
+                const url = getChampionImageUrl(pf.champion.images as any, '64', 'primary');
+                uniqueImageUrls.add(url);
+                prefightImages.push({ url, borderColor: (pf.player?.id && globalColorMap.get(pf.player.id)) || '#94a3b8' });
+            }
+        });
+
+        const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some((t: any) => t.id === activeTactic.attackTag!.id));
+        const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some((t: any) => t.id === activeTactic.defenseTag!.id));
+
+        assignments.set(fight.node.nodeNumber, {
+            defenderName: fight.defender?.name,
+            defenderImage,
+            defenderClass: fight.defender?.class,
+            attackerImage,
+            attackerClass: fight.attacker?.class,
+            isTarget: playerId ? fight.player?.id === playerId : false,
+            prefightImages,
+            isAttackerTactic,
+            isDefenderTactic,
+            assignedColor: fight.player?.id ? globalColorMap.get(fight.player.id) : undefined
+        });
+    }
+
+    const legend: LegendItem[] = [];
+    if (!playerId) {
+        sortedPlayers.forEach(p => {
+            const pFights = war.fights.filter(f => f.player?.id === p.id);
+            const pExtras = war.extraChampions.filter(e => e.playerId === p.id);
+            
+            let pathLabel = "";
+            const nodes = pFights.map(f => f.node.nodeNumber).sort((a, b) => a - b);
+            if (war.mapType === WarMapType.BIG_THING) {
+                pathLabel = `Node ${nodes.join(", ")}`;
+            } else {
+                const s1Paths = new Set<number>();
+                const s2Paths = new Set<number>();
+                nodes.forEach(n => {
+                    const pathInfo = getPathInfo(n);
+                    if (pathInfo?.section === 1) s1Paths.add(pathInfo.path);
+                    if (pathInfo?.section === 2) s2Paths.add(pathInfo.path);
+                });
+                const s1Str = s1Paths.size > 0 ? `P${Array.from(s1Paths).sort((a,b)=>a-b).join(",")}` : "-";
+                const s2Str = s2Paths.size > 0 ? `P${Array.from(s2Paths).sort((a,b)=>a-b).join(",")}` : "-";
+                pathLabel = `${s1Str} / ${s2Str}`;
+            }
+
+            const assignedChampions: { url: string, class: any }[] = [];
+            const seenIds = new Set<number>();
+            pFights.forEach(f => {
+                if (f.attacker && !seenIds.has(f.attacker.id)) {
+                    seenIds.add(f.attacker.id);
+                    assignedChampions.push({ url: getChampionImageUrl(f.attacker.images as any, '64', 'primary'), class: f.attacker.class });
+                }
+            });
+            pExtras.forEach(e => {
+                if (e.champion && !seenIds.has(e.champion.id)) {
+                    seenIds.add(e.champion.id);
+                    assignedChampions.push({ url: getChampionImageUrl(e.champion.images as any, '64', 'primary'), class: e.champion.class });
+                }
+            });
+
+            legend.push({
+                name: p.name,
+                color: globalColorMap.get(p.id)!,
+                pathLabel,
+                assignedChampions
+            });
+        });
+    }
+
+    const mapType = war.mapType || WarMapType.STANDARD;
+    const nodesData = mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
+    const bgColors: Record<number, string> = {
+        1: alliance.battlegroup1Color || "#ef4444",
+        2: alliance.battlegroup2Color || "#22c55e",
+        3: alliance.battlegroup3Color || "#3b82f6"
+    };
+
+    const imageCache = await MapImageService.preloadImages(Array.from(uniqueImageUrls));
+    const mapBuffer = await MapImageService.generateMapImage(
+        mapType,
+        nodesData,
+        assignments,
+        imageCache,
+        playerId ? undefined : legend,
+        bgColors[battlegroup],
+        bannedChampions
+    );
+
+    return mapBuffer.toString('base64');
 }

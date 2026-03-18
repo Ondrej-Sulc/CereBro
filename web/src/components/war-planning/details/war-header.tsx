@@ -1,7 +1,7 @@
 import { War, WarStatus, Tag, WarResult, WarMapType } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle, Loader2, AlertTriangle } from "lucide-react";
+import { Lock, Unlock, PanelRightClose, PanelRightOpen, Ban, Plus, X, Share, ChevronLeft, Pencil, Trophy, XCircle, Loader2, AlertTriangle, Download } from "lucide-react";
 import { RightPanelState, WarProgress } from "../hooks/use-war-planning";
 import PlanningTools from "../planning-tools";
 import { Champion } from "@/types/champion";
@@ -26,7 +26,7 @@ import { EditWarDialog } from "../edit-war-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getGuildChannels, DiscordChannel } from "@/app/planning/actions";
+import { getGuildChannels, DiscordChannel, getWarMapPng } from "@/app/planning/actions";
 
 interface WarHeaderProps {
   war: War;
@@ -170,6 +170,36 @@ export function WarHeader({
     checkProgressAndShare(currentBattlegroup, selectedChannel);
   };
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadMap = async (bg?: number) => {
+    try {
+      setIsDownloading(true);
+      const targetBg = bg || currentBattlegroup;
+      const base64 = await getWarMapPng(war.id, targetBg);
+      
+      const link = document.createElement('a');
+      link.href = `data:image/png;base64,${base64}`;
+      link.download = `war-map-bg${targetBg}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Map Downloaded",
+        description: `Battlegroup ${targetBg} overview map has been generated and downloaded.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Download Failed",
+        description: "Could not generate map image.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   // Filter out champions already banned
   const availableChampions = champions.filter(c =>
     !warBans.some(b => b.championId === c.id) &&
@@ -290,6 +320,10 @@ export function WarHeader({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenShareDialog(); }}>
                       Share to Channel...
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleDownloadMap()} disabled={isDownloading}>
+                      <Download className="h-4 w-4 mr-2" /> Download BG{currentBattlegroup} Map (PNG)
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

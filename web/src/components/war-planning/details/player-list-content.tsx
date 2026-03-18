@@ -1,6 +1,6 @@
 import Image from "next/image";
-import React, { useMemo } from "react";
-import { Users, ChevronLeft, X, Star, TriangleAlert } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Users, ChevronLeft, X, Star, TriangleAlert, Swords, Zap, ExternalLink, Play, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,10 +11,11 @@ import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/cha
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox"; 
 import { Champion, ChampionImages } from "@/types/champion";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { usePlayerColor } from "../player-color-context";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
+import { getFightVideos } from "@/app/planning/actions";
 
 interface PlayerListContentProps {
   players: PlayerWithRoster[];
@@ -31,6 +32,49 @@ interface PlayerListContentProps {
   isReadOnly?: boolean;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
 }
+
+const FightVideos = ({ fight }: { fight: FightWithNode }) => {
+    const [videos, setVideos] = useState<{ url?: string | null; videoId?: string; death?: number; playerName?: string }[]>([]);
+    const [loading, setLoading] = useState(false);
+
+
+    useEffect(() => {
+        if (!fight.node?.id || !fight.defender?.id || !fight.attacker?.id) return;
+
+        async function fetchVideos() {
+            setLoading(true);
+            try {
+                const res = await getFightVideos(fight.nodeId, fight.defenderId!, fight.attackerId!);
+                setVideos(res);
+            } catch (e) {
+                console.error("Failed to fetch videos", e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchVideos();
+    }, [fight.nodeId, fight.defenderId, fight.attackerId]);
+
+    if (loading) return <div className="text-[10px] text-slate-500 animate-pulse flex items-center gap-1 mt-2"><Film className="h-3 w-3" /> Checking for videos...</div>;
+    if (videos.length === 0) return null;
+
+    return (
+        <div className="flex flex-wrap gap-2 mt-2">
+            {videos.map((v, i) => (
+                <a 
+                    key={i} 
+                    href={v.url || undefined} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-[10px] bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded hover:bg-sky-500/20 transition-colors"
+                >
+                    <Play className="h-2.5 w-2.5 fill-current" />
+                    <span>{v.playerName} ({v.death || 0}d)</span>
+                </a>
+            ))}
+        </div>
+    );
+};
 
 export const PlayerListContent = ({
   players,
@@ -273,57 +317,177 @@ export const PlayerListContent = ({
                               <motion.div 
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: "auto" }}
-                                className="pl-10 pr-1 space-y-3"
-                                onClick={(e) => e.stopPropagation()} // Prevent collapsing
+                                className="pl-10 pr-1 space-y-4 py-2"
+                                onClick={(e) => e.stopPropagation()} 
                               >
-                                  {/* Assigned Champions List */}
-                                  {assignedChampions.length > 0 && (
-                                      <div className="space-y-1">
-                                          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Assignments</div>
-                                          {assignedChampions.map(champ => {
-                                              // Find the BEST roster entry (highest stars > rank > ascended > sigLevel)
-                                              const roster = player.roster
-                                                  .filter(r => r.championId === champ.id)
-                                                  .sort((a, b) => {
-                                                      if (a.stars !== b.stars) return b.stars - a.stars;
-                                                      if (a.rank !== b.rank) return b.rank - a.rank;
-                                                      if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
-                                                      return b.sigLevel - a.sigLevel;
-                                                  })[0];
-
-                                              const classColors = getChampionClassColors(champ.class);
-                                              return (
-                                                  <div key={champ.id} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
-                                                      <Image 
-                                                          src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
-                                                          alt={champ.name}
-                                                          width={32}
-                                                          height={32}
-                                                          className={cn("rounded-full border-2", classColors.border)} 
-                                                      />
-                                                      <div className="flex-1 min-w-0">
-                                                          <div className={cn("text-xs font-bold truncate", classColors.text)}>{champ.name}</div>
-                                                          {roster && (
-                                                              <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                                                                  <span className={cn("flex items-center", roster.isAwakened ? "text-slate-300" : "text-yellow-500")}>
-                                                                      {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
-                                                                  </span>
-                                                                  <span className="font-mono">R{roster.rank}</span>
-                                                                  {roster.isAwakened && roster.sigLevel > 0 && (
-                                                                      <span className="text-sky-400 font-bold">S{roster.sigLevel}</span>
-                                                                  )}
-                                                                  {roster.isAscended && <span className="text-pink-400 font-bold">ASC</span>}
+                                  {/* Section: Fights (Attacker) */}
+                                  <div className="space-y-2">
+                                      <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                          <Swords className="h-3 w-3" />
+                                          Fight Assignments
+                                      </div>
+                                      
+                                      {currentFights.filter(f => f.player?.id === player.id).length === 0 ? (
+                                          <div className="text-xs text-slate-600 italic px-1">No attack assignments</div>
+                                      ) : (
+                                          <div className="space-y-2">
+                                              {currentFights.filter(f => f.player?.id === player.id).map(fight => (
+                                                  <div key={fight.id} className="p-2 rounded bg-slate-900/40 border border-slate-800">
+                                                      <div className="flex items-center justify-between mb-2">
+                                                          <div className="text-[11px] font-bold text-slate-300">Node {fight.node.nodeNumber}</div>
+                                                          {fight.node.allocations[0] && (
+                                                              <div className="text-[10px] text-slate-500 truncate max-w-[120px]">
+                                                                  {fight.node.allocations[0].nodeModifier.name}
                                                               </div>
                                                           )}
                                                       </div>
-                                                      {isChampionOnDefense(champ.id, player.id) && (
-                                                          <div className="text-amber-500" title="Placed on Defense">
-                                                              <TriangleAlert className="h-4 w-4" />
+                                                      
+                                                      <div className="flex items-center gap-2">
+                                                          <div className="flex -space-x-2 shrink-0">
+                                                              <Image 
+                                                                  src={getChampionImageUrlOrPlaceholder(fight.attacker?.images, '64')} 
+                                                                  alt={fight.attacker?.name || 'Attacker'}
+                                                                  width={28}
+                                                                  height={28}
+                                                                  className={cn("rounded-full border-2 bg-slate-900", fight.attacker && getChampionClassColors(fight.attacker.class).border)}
+                                                              />
+                                                              <div className="w-4 h-4 rounded-full bg-slate-950 flex items-center justify-center text-[8px] font-bold text-slate-400 border border-slate-800 z-10">VS</div>
+                                                              <Image 
+                                                                  src={getChampionImageUrlOrPlaceholder(fight.defender?.images, '64')} 
+                                                                  alt={fight.defender?.name || 'Defender'}
+                                                                  width={28}
+                                                                  height={28}
+                                                                  className={cn("rounded-full border-2 bg-slate-900", fight.defender && getChampionClassColors(fight.defender.class).border)}
+                                                              />
+                                                          </div>
+                                                          <div className="flex-1 min-w-0">
+                                                              <div className="text-[11px] font-medium text-slate-200 truncate">
+                                                                  {fight.attacker?.name || '?'} vs {fight.defender?.name || '?'}
+                                                              </div>
+                                                          </div>
+                                                      </div>
+
+                                                      {/* Prefights used in this fight */}
+                                                      {fight.prefightChampions && fight.prefightChampions.length > 0 && (
+                                                          <div className="flex flex-wrap gap-1 mt-2 pl-1">
+                                                              {fight.prefightChampions.map(pf => (
+                                                                  <div key={pf.id} className="flex items-center gap-1 text-[9px] bg-slate-950 rounded-full pr-2 border border-slate-800">
+                                                                      <Image 
+                                                                          src={getChampionImageUrlOrPlaceholder(pf.images, '64')} 
+                                                                          alt={pf.name}
+                                                                          width={16}
+                                                                          height={16}
+                                                                          className="rounded-full"
+                                                                      />
+                                                                      <span className="text-slate-400 truncate max-w-[60px]">{pf.name}</span>
+                                                                      <span className="text-slate-600">by {pf.player?.ingameName || '?'}</span>
+                                                                  </div>
+                                                              ))}
                                                           </div>
                                                       )}
+
+                                                      {/* Notes */}
+                                                      {fight.notes && (
+                                                          <div className="mt-2 text-[10px] text-slate-400 bg-slate-950/30 p-1.5 rounded border-l-2 border-slate-700 italic">
+                                                              {fight.notes}
+                                                          </div>
+                                                      )}
+
+                                                      {/* Historical Videos */}
+                                                      <FightVideos fight={fight} />
                                                   </div>
-                                              );
-                                          })}
+                                              ))}
+                                          </div>
+                                      )}
+                                  </div>
+
+                                  {/* Section: Prefight Tasks (Placing for others) */}
+                                  <div className="space-y-2">
+                                      <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                          <Zap className="h-3 w-3 text-amber-500" />
+                                          Prefight Tasks
+                                      </div>
+                                      
+                                      {currentFights.filter(f => f.prefightChampions?.some(pf => pf.player?.id === player.id)).length === 0 ? (
+                                          <div className="text-xs text-slate-600 italic px-1">No prefight tasks</div>
+                                      ) : (
+                                          <div className="space-y-1">
+                                              {currentFights.filter(f => f.prefightChampions?.some(pf => pf.player?.id === player.id)).map(fight => {
+                                                  const playerPfs = fight.prefightChampions?.filter(pf => pf.player?.id === player.id) || [];
+                                                  return playerPfs.map(pf => (
+                                                      <div key={`${fight.id}-${pf.id}`} className="flex items-center gap-2 p-1.5 rounded bg-slate-900/40 border border-slate-800 border-l-2 border-l-amber-500/50">
+                                                          <Image 
+                                                              src={getChampionImageUrlOrPlaceholder(pf.images, '64')} 
+                                                              alt={pf.name}
+                                                              width={24}
+                                                              height={24}
+                                                              className="rounded-full border border-slate-700"
+                                                          />
+                                                          <div className="flex-1 min-w-0">
+                                                              <div className="text-[11px] text-slate-200">
+                                                                  Place <span className="font-bold">{pf.name}</span>
+                                                              </div>
+                                                              <div className="text-[10px] text-slate-500">
+                                                                  For {fight.player?.ingameName || '?'} on Node {fight.node.nodeNumber}
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  ));
+                                              })}
+                                          </div>
+                                      )}
+                                  </div>
+
+                                  {/* Assigned Champions List (Roster Info) */}
+                                  {assignedChampions.length > 0 && (
+                                      <div className="space-y-2">
+                                          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Unique Attackers</div>
+                                          <div className="grid grid-cols-1 gap-1">
+                                              {assignedChampions.map(champ => {
+                                                  // Find the BEST roster entry (highest stars > rank > ascended > sigLevel)
+                                                  const roster = player.roster
+                                                      .filter(r => r.championId === champ.id)
+                                                      .sort((a, b) => {
+                                                          if (a.stars !== b.stars) return b.stars - a.stars;
+                                                          if (a.rank !== b.rank) return b.rank - a.rank;
+                                                          if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
+                                                          return b.sigLevel - a.sigLevel;
+                                                      })[0];
+
+                                                  const classColors = getChampionClassColors(champ.class);
+                                                  return (
+                                                      <div key={champ.id} className="flex items-center gap-2 p-1.5 rounded bg-slate-950/50 border border-slate-800">
+                                                          <Image 
+                                                              src={getChampionImageUrlOrPlaceholder(champ.images, '64')} 
+                                                              alt={champ.name}
+                                                              width={32}
+                                                              height={32}
+                                                              className={cn("rounded-full border-2", classColors.border)} 
+                                                          />
+                                                          <div className="flex-1 min-w-0">
+                                                              <div className={cn("text-xs font-bold truncate", classColors.text)}>{champ.name}</div>
+                                                              {roster && (
+                                                                  <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                                                                      <span className={cn("flex items-center", roster.isAwakened ? "text-slate-300" : "text-yellow-500")}>
+                                                                          {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
+                                                                      </span>
+                                                                      <span className="font-mono">R{roster.rank}</span>
+                                                                      {roster.isAwakened && roster.sigLevel > 0 && (
+                                                                          <span className="text-sky-400 font-bold">S{roster.sigLevel}</span>
+                                                                      )}
+                                                                      {roster.isAscended && <span className="text-pink-400 font-bold">ASC</span>}
+                                                                  </div>
+                                                              )}
+                                                          </div>
+                                                          {isChampionOnDefense(champ.id, player.id) && (
+                                                              <div className="text-amber-500" title="Placed on Defense">
+                                                                  <TriangleAlert className="h-4 w-4" />
+                                                              </div>
+                                                          )}
+                                                      </div>
+                                                  );
+                                              })}
+                                          </div>
                                       </div>
                                   )}
 
