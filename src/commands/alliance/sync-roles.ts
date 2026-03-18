@@ -43,6 +43,9 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
   // Key: Discord ID, Value: Player record
   const dbMembersMap = new Map(dbAllianceMembers.map(p => [p.discordId, p]));
 
+  const anyBgRoleConfigured = !!(alliance.battlegroup1Role || alliance.battlegroup2Role || alliance.battlegroup3Role);
+  const isOfficerRoleConfigured = !!alliance.officerRole;
+
   for (const member of members.values()) {
     try {
       // 1. Determine "Target State" based on Discord roles
@@ -71,16 +74,17 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
       if (hasRelevantRole) {
         if (existingAllianceMember) {
           // UPDATE existing alliance member
-          if (
-            existingAllianceMember.battlegroup !== battlegroup ||
-            existingAllianceMember.isOfficer !== isOfficer
-          ) {
+          const shouldUpdateBg = anyBgRoleConfigured && existingAllianceMember.battlegroup !== battlegroup;
+          const shouldUpdateOfficer = isOfficerRoleConfigured && existingAllianceMember.isOfficer !== isOfficer;
+
+          if (shouldUpdateBg || shouldUpdateOfficer) {
+            const updateData: any = {};
+            if (shouldUpdateBg) updateData.battlegroup = battlegroup;
+            if (shouldUpdateOfficer) updateData.isOfficer = isOfficer;
+
             await prisma.player.update({
               where: { id: existingAllianceMember.id },
-              data: {
-                battlegroup,
-                isOfficer,
-              },
+              data: updateData,
             });
             updatedCount++;
           }
@@ -120,15 +124,17 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
 
           if (globalPlayer) {
             // Player exists, link them to this alliance and ensure botUserId
+            const updateData: any = {
+              allianceId: alliance.id,
+              botUserId: botUser.id,
+              isActive: true // Ensure they are active if they are the primary player
+            };
+            if (anyBgRoleConfigured) updateData.battlegroup = battlegroup;
+            if (isOfficerRoleConfigured) updateData.isOfficer = isOfficer;
+
             await prisma.player.update({
               where: { id: globalPlayer.id },
-              data: {
-                allianceId: alliance.id,
-                battlegroup,
-                isOfficer,
-                botUserId: botUser.id,
-                isActive: true // Ensure they are active if they are the primary player
-              },
+              data: updateData,
             });
             
             // Ensure activeProfileId is set if not already
@@ -143,18 +149,20 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
           } else {
             // New player entirely
             const avatar = member.user.displayAvatarURL({ extension: 'png', size: 256 });
+            const data: any = {
+              ingameName: member.displayName,
+              discordId: member.id,
+              avatar,
+              useDiscordAvatar: true,
+              allianceId: alliance.id,
+              botUserId: botUser.id,
+              isActive: true // New profile is active by default
+            };
+            if (anyBgRoleConfigured) data.battlegroup = battlegroup;
+            if (isOfficerRoleConfigured) data.isOfficer = isOfficer;
+
             const newPlayer = await prisma.player.create({
-              data: {
-                ingameName: member.displayName,
-                discordId: member.id,
-                avatar,
-                useDiscordAvatar: true,
-                allianceId: alliance.id,
-                battlegroup,
-                isOfficer,
-                botUserId: botUser.id,
-                isActive: true // New profile is active by default
-              },
+              data
             });
 
             // Ensure activeProfileId is set
