@@ -59,6 +59,7 @@ export const command: Command = {
         discordId,
         ingameName,
         avatar,
+        useDiscordAvatar: true,
         allianceId,
         isActive: true, // First profile is active
         botUserId: botUser.id

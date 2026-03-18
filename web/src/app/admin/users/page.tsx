@@ -192,12 +192,19 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={player.avatar || ""} />
-                        <AvatarFallback><UserCircle className="h-5 w-5" /></AvatarFallback>
-                      </Avatar>
+                      <Link href={`/player/${player.id}`}>
+                        <Avatar className="h-8 w-8 hover:ring-2 hover:ring-primary transition-all">
+                          <AvatarImage src={player.avatar || ""} />
+                          <AvatarFallback><UserCircle className="h-5 w-5" /></AvatarFallback>
+                        </Avatar>
+                      </Link>
                       <div className="flex flex-col">
-                        <span>{player.ingameName}</span>
+                        <Link 
+                          href={`/player/${player.id}`} 
+                          className="font-bold hover:underline hover:text-primary transition-colors"
+                        >
+                          {player.ingameName}
+                        </Link>
                         <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{player.discordId}</span>
                       </div>
                     </div>

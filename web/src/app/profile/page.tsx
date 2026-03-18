@@ -15,6 +15,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { PrestigeHistoryChart } from "./prestige-chart";
 import { Upload, LayoutGrid } from "lucide-react";
 import logger from "@/lib/logger";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { ProfileManager } from "./components/profile-manager";
 
@@ -51,7 +52,14 @@ export default async function ProfilePage() {
         }),
         prisma.player.findMany({
             where: { discordId: player.discordId },
-            include: { alliance: true },
+            include: { 
+                alliance: true,
+                roster: {
+                    select: { updatedAt: true },
+                    orderBy: { updatedAt: 'desc' },
+                    take: 1
+                }
+            },
             orderBy: { ingameName: 'asc' }
         })
     ]);
@@ -72,19 +80,32 @@ export default async function ProfilePage() {
     return (
         <div className="container mx-auto p-4 sm:p-8 max-w-5xl space-y-8">
             {/* Profile Header */}
-            <div className="flex flex-col gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                        {player.ingameName}
-                        {player.isActive && <Badge variant="secondary" className="text-xs">Active</Badge>}
-                    </h1>
-                    <p className="text-slate-400 mt-1">
-                        {player.alliance ? `Alliance: ${player.alliance.name}` : "No Alliance"} • Timezone: {player.timezone || "Not set"}
-                    </p>
-                </div>
+            <div className="flex flex-col md:flex-row gap-6 md:items-center">
+                <Link href={`/player/${player.id}`}>
+                    <Avatar className="h-20 w-20 border-2 border-slate-700 shadow-xl hover:ring-4 hover:ring-sky-500/20 transition-all">
+                        <AvatarImage src={player.avatar || undefined} alt={player.ingameName} />
+                        <AvatarFallback className="text-2xl bg-slate-800 font-bold">
+                            {player.ingameName.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                </Link>
 
-                {/* Profile Manager */}
-                <ProfileManager profiles={allProfiles} activeProfileId={player.id} />
+                <div className="flex-1 flex flex-col gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <Link href={`/player/${player.id}`} className="hover:text-sky-400 transition-colors">
+                                {player.ingameName}
+                            </Link>
+                            {player.isActive && <Badge variant="secondary" className="text-xs">Active</Badge>}
+                        </h1>
+                        <p className="text-slate-400 mt-1">
+                            {player.alliance ? `Alliance: ${player.alliance.name}` : "No Alliance"} • Timezone: {player.timezone || "Not set"}
+                        </p>
+                    </div>
+
+                    {/* Profile Manager */}
+                    <ProfileManager profiles={allProfiles} activeProfileId={player.id} />
+                </div>
             </div>
 
             <Separator className="bg-slate-800" />
@@ -163,7 +184,10 @@ export default async function ProfilePage() {
                     </Card>
                 ) : (
                     starLevels.map((stars) => {
-                        const champions = byStar[stars];
+                        const allChampionsOfStar = byStar[stars];
+                        // Filter out SUPERIOR class as it's not in classOrder
+                        const champions = allChampionsOfStar.filter(c => c.champion.class !== 'SUPERIOR');
+                        
                         // Group by Rank then Class
                         const statsByRank = champions.reduce((acc, c) => {
                             if (!acc[c.rank]) acc[c.rank] = { total: 0 } as Record<ChampionClass | 'total', number>;

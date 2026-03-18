@@ -40,10 +40,14 @@ export async function handleProfileAdd(interaction: ChatInputCommandInteraction)
     }
   }
 
+  const avatar = interaction.user.displayAvatarURL({ extension: 'png', size: 256 });
+
   await prisma.player.create({
     data: {
       discordId,
       ingameName,
+      avatar,
+      useDiscordAvatar: true,
       allianceId,
       isActive: false, // Subsequent profiles are not active by default
       botUserId: botUser.id

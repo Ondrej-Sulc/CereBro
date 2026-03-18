@@ -26,17 +26,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, Pencil, Trash2, CheckCircle2, Info } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, CheckCircle2, Info, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Alliance } from "@prisma/client";
+
+type PlayerWithExtras = Player & {
+    alliance: Alliance | null;
+    roster: { updatedAt: Date }[];
+};
 
 interface ProfileManagerProps {
-  profiles: Player[];
+  profiles: PlayerWithExtras[];
   activeProfileId: string;
 }
 
@@ -79,7 +87,7 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
     startTransition(async () => {
       try {
         const result = await createProfile(newProfileName);
-        if ('error' in result) {
+        if (result && 'error' in result) {
             toast({ 
                 title: "Failed to create profile",
                 description: result.error,
@@ -215,12 +223,46 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="font-medium text-slate-200">{profile.ingameName}</div>
-                {isActive && (
-                  <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Active
-                  </Badge>
-                )}
+                <Link href={`/player/${profile.id}`}>
+                  <Avatar className="h-8 w-8 border border-slate-700 hover:ring-2 hover:ring-indigo-500 transition-all">
+                    <AvatarImage src={profile.avatar || undefined} alt={profile.ingameName} />
+                    <AvatarFallback className="text-xs bg-slate-800 font-bold">
+                      {profile.ingameName.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <Link 
+                      href={`/player/${profile.id}`}
+                      className="font-medium text-slate-200 hover:text-indigo-400 hover:underline transition-colors"
+                    >
+                      {profile.ingameName}
+                    </Link>
+                    {isActive && (
+                      <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 gap-1 h-5 text-[10px]">
+                        <CheckCircle2 className="w-3 h-3" /> Active
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {profile.alliance && (
+                      <Link 
+                          href={`/alliance/${profile.alliance.id}`}
+                          className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-sky-400 transition-colors"
+                      >
+                          <MapPin className="w-3 h-3" />
+                          <span>{profile.alliance.name}</span>
+                      </Link>
+                    )}
+                    {profile.roster?.[0] && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        <Clock className="w-3 h-3" />
+                        <span>Updated {new Date(profile.roster[0].updatedAt).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">

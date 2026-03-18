@@ -123,38 +123,70 @@ export async function handleUpdate(
   );
   container.addTextDisplayComponents(summary);
 
-  const resolveEmojis = createEmojiResolver(interaction.client);
-  let champList =
-    "## " +
-    allAddedChampions
-      .map((row) =>
-        row
-          .map((entry) => {
-            const awakened = entry.isAwakened ? "★" : "☆";
-            const ascended = entry.isAscended ? "🏆" : "";
-            const emoji = entry.champion.discordEmoji || "";
-            return `${awakened}${emoji}${ascended}`;
-          })
-          .join(" ")
-      )
-      .join("\n## ");
+  const containers: ContainerBuilder[] = [container];
+  let currentContainer = container;
+  let componentCount = 3; // gallery, title, summary
 
-  if (champList) {
-    const content = new TextDisplayBuilder().setContent(
-      resolveEmojis(champList)
+  function addTextDisplay(content: string) {
+    if (componentCount >= 5) {
+      currentContainer = new ContainerBuilder();
+      containers.push(currentContainer);
+      componentCount = 0;
+    }
+    currentContainer.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(content)
     );
-    container.addTextDisplayComponents(content);
+    componentCount++;
+  }
+
+  const resolveEmojis = createEmojiResolver(interaction.client);
+  let currentChunk = "";
+
+  for (const row of allAddedChampions) {
+    const rowContent = row
+      .map((entry) => {
+        const awakened = entry.isAwakened ? "★" : "☆";
+        const ascended = entry.isAscended ? "🏆" : "";
+        const emoji = entry.champion.discordEmoji || "";
+        return `${awakened}${emoji}${ascended}`;
+      })
+      .join(" ");
+
+    const formattedRow = `## ${rowContent}\n`;
+    const resolvedRow = resolveEmojis(formattedRow);
+
+    if (currentChunk.length + resolvedRow.length > 4000) {
+      if (currentChunk) {
+        addTextDisplay(currentChunk);
+      }
+      currentChunk = resolvedRow;
+    } else {
+      currentChunk += resolvedRow;
+    }
+  }
+
+  if (currentChunk) {
+    addTextDisplay(currentChunk);
   }
 
   if (errorMessages.length > 0) {
-    const errorContent = new TextDisplayBuilder().setContent(
-      `**Errors:**\n${errorMessages.join("\n")}`
-    );
-    container.addTextDisplayComponents(errorContent);
+    let currentErrorChunk = "**Errors:**\n";
+    for (const error of errorMessages) {
+      const formattedError = `${error}\n`;
+      if (currentErrorChunk.length + formattedError.length > 4000) {
+        addTextDisplay(currentErrorChunk);
+        currentErrorChunk = formattedError;
+      } else {
+        currentErrorChunk += formattedError;
+      }
+    }
+    if (currentErrorChunk) {
+      addTextDisplay(currentErrorChunk);
+    }
   }
 
   await interaction.editReply({
-    components: [container],
+    components: containers,
     flags: [MessageFlags.IsComponentsV2],
   });
 }

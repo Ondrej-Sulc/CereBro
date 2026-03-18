@@ -174,6 +174,7 @@ model AQState {
 model BotUser {
   id                String      @id @default(cuid())
   discordId         String      @unique
+  avatar            String?
   isBotAdmin        Boolean     @default(false)
   permissions       String[]    @default([])
   createdAt         DateTime    @default(now())
@@ -201,6 +202,7 @@ model Player {
   battlegroup        Int?
   isOfficer          Boolean                     @default(false)
   avatar             String?
+  useDiscordAvatar   Boolean                     @default(true)
   botUserId          String?
   sentInvitations    AllianceMembershipRequest[] @relation("OfficerInvites")
   membershipRequests AllianceMembershipRequest[] @relation("PlayerRequests")

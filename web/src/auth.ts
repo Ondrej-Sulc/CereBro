@@ -6,7 +6,7 @@ import { getFromCache } from "@/lib/cache"
 import logger from "@/lib/logger"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
-  console.error("❌ Missing Discord environment variables in auth.ts");
+  throw new Error("Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -37,14 +37,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           
           logger.info({ discordId, name: user.name }, "Processing sign in for Discord user");
 
-          // 1. Ensure BotUser exists (represents the Discord user globally)
+          const avatar = user.image || null;
+
+          // 1. Ensure BotUser exists and sync avatar
           const botUser = await prisma.botUser.upsert({
             where: { discordId },
-            update: {},
-            create: { discordId }
+            update: { avatar },
+            create: { discordId, avatar }
           });
 
-          // 2. Check if user has any Player profiles
+          // 2. Sync avatar to all player profiles that use the Discord avatar
+          await prisma.player.updateMany({
+              where: { 
+                  discordId,
+                  useDiscordAvatar: true
+              },
+              data: { avatar }
+          });
+
+          // 3. Check if user has any Player profiles
           const existingPlayers = await prisma.player.findMany({
             where: { discordId },
             orderBy: { createdAt: 'asc' }
@@ -54,7 +65,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             // Create a default profile if they don't have one
             const discordProfile = profile as { global_name?: string; name?: string };
             const ingameName = discordProfile.global_name || discordProfile.name || user.name || "New Player";
-            const avatar = user.image || null;
 
             logger.info({ discordId, ingameName }, "Creating new player profile");
             const newPlayer = await prisma.player.create({
@@ -62,6 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 discordId,
                 ingameName,
                 avatar,
+                useDiscordAvatar: true,
                 isActive: true,
                 botUserId: botUser.id
               }

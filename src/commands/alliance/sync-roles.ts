@@ -142,10 +142,13 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
             updatedCount++;
           } else {
             // New player entirely
+            const avatar = member.user.displayAvatarURL({ extension: 'png', size: 256 });
             const newPlayer = await prisma.player.create({
               data: {
                 ingameName: member.displayName,
                 discordId: member.id,
+                avatar,
+                useDiscordAvatar: true,
                 allianceId: alliance.id,
                 battlegroup,
                 isOfficer,

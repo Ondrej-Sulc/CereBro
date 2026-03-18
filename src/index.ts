@@ -38,6 +38,7 @@ import { prisma } from "./services/prismaService";
 import logger from "./services/loggerService";
 import { startJobProcessor } from "./services/jobProcessor";
 import { handleTranslationReaction } from "./services/translationService";
+import { syncUserAvatar } from "./utils/avatarSync";
 
 declare module "discord.js" {
   interface Client {
@@ -217,6 +218,9 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  // Sync avatar in background
+  syncUserAvatar(interaction.user).catch(err => logger.error({ err }, "Failed to sync avatar in InteractionCreate"));
+
   // Handle button interactions generically
   if (interaction.isButton()) {
     if (interaction.customId.startsWith("interactive:")) {

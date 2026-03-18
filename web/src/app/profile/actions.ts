@@ -46,6 +46,8 @@ export async function createProfile(name: string) {
     data: {
       discordId: user.discordId,
       ingameName: data.name,
+      avatar: user.avatar,
+      useDiscordAvatar: true,
       isActive: false,
       botUserId: user.id,
     }
@@ -116,30 +118,35 @@ export async function deleteProfile(profileId: string) {
   }
 
   logger.info({ userId: user.id, profileId, profileName: profile.ingameName }, "Deleting profile");
-  await prisma.player.delete({
-    where: { id: profileId }
+  
+  await prisma.$transaction(async (tx) => {
+    await tx.player.delete({
+      where: { id: profileId }
+    });
+
+    // If we deleted the active profile, switch to another one
+    if (user.activeProfileId === profileId) {
+      const remaining = user.profiles.filter(p => p.id !== profileId);
+      const nextActive = remaining[0];
+      
+      if (nextActive) {
+        await tx.botUser.update({
+          where: { id: user.id },
+          data: { activeProfileId: nextActive.id }
+        });
+
+        // Update legacy isActive flags
+        await tx.player.updateMany({
+            where: { botUserId: user.id },
+            data: { isActive: false }
+        });
+        await tx.player.update({
+            where: { id: nextActive.id },
+            data: { isActive: true }
+        });
+      }
+    }
   });
-
-  // If we deleted the active profile, switch to another one
-  if (user.activeProfileId === profileId) {
-    const remaining = user.profiles.filter(p => p.id !== profileId);
-    const nextActive = remaining[0];
-    
-    await prisma.botUser.update({
-      where: { id: user.id },
-      data: { activeProfileId: nextActive.id }
-    });
-
-    // Update legacy isActive flags
-    await prisma.player.updateMany({
-        where: { botUserId: user.id },
-        data: { isActive: false }
-    });
-    await prisma.player.update({
-        where: { id: nextActive.id },
-        data: { isActive: true }
-    });
-  }
 
   revalidatePath("/profile");
   return { success: true };
