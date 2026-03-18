@@ -197,7 +197,10 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 if (rosterIndex !== -1) {
                     initial[se.questEncounterId] = availableRoster[rosterIndex].id;
                     // Remove from available so it's not assigned to another encounter
-                    availableRoster.splice(rosterIndex, 1);
+                    // ONLY if it's an infinite quest (no team limit)
+                    if (quest.teamLimit === null) {
+                        availableRoster.splice(rosterIndex, 1);
+                    }
                 } else {
                     initial[se.questEncounterId] = null;
                 }
