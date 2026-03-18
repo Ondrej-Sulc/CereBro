@@ -6,7 +6,7 @@ import { getFromCache } from "@/lib/cache"
 import logger from "@/lib/logger"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
-  throw new Error("Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required");
+  console.error("❌ Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required for Auth.js");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
