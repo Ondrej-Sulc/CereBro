@@ -68,11 +68,11 @@ export async function handleScan(
       return;
     }
 
-    // 4. Initial Reply via followUp (public)
+    // 4. Initial Reply via editReply
     const isSelf = callerPlayer.id === targetPlayer.id;
     const targetName = isSelf ? "your" : `**${targetPlayer.ingameName}**'s`;
 
-    await interaction.followUp({
+    await interaction.editReply({
       content:
         `**Ready to scan ${targetName} roster!** 📸\n` +
         `Please upload **BG View** (Battlegrounds) screenshots now.\n` +
@@ -80,9 +80,6 @@ export async function handleScan(
         `- I will listen in this channel for the next **5 minutes**.\n` +
         `- Make sure you are in the "Battlegrounds" view (not "My Champions").`,
     });
-
-    // Delete the initial ephemeral reply to clean up
-    await interaction.deleteReply();
 
     const channel = interaction.channel as TextChannel;
     if (!channel) {
