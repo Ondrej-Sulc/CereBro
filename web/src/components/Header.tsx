@@ -45,7 +45,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
   }, []);
 
   return (
-    <header className={`sticky top-0 inset-x-0 z-[100] nav-blur transition-colors duration-300 ${isScrolled ? 'bg-slate-950/80 border-b border-slate-800/70' : 'bg-transparent border-b border-transparent'}`}>
+    <header className={`md:sticky top-0 inset-x-0 z-[100] nav-blur transition-colors duration-300 ${isScrolled ? 'bg-slate-950/80 border-b border-slate-800/70' : 'bg-slate-950/80 border-b border-slate-800/70 md:bg-transparent md:border-transparent'}`}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-3">
