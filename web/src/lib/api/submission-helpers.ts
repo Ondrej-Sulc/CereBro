@@ -225,11 +225,20 @@ export async function processNewFights(
                     warId: war.id,
                     battlegroup: targetBattlegroup,
                     nodeId: parseInt(fight.nodeId),
-                }
+                },
+                include: { prefightChampions: true }
             });
 
             if (existingFight) {
                 logger.info({ fightId: existingFight.id }, "Updating existing fight");
+                
+                const existingPrefightsMap = new Map<number, string | null>();
+                existingFight.prefightChampions.forEach(pf => existingPrefightsMap.set(pf.championId, pf.playerId));
+                
+                const newPrefightIds = (fight.prefightChampionIds || [])
+                    .map((id: string) => parseInt(id))
+                    .filter((id: number) => !isNaN(id));
+
                 return prisma.warFight.update({
                     where: { id: existingFight.id },
                     data: {
@@ -239,12 +248,10 @@ export async function processNewFights(
                         death: fight.death,
                         prefightChampions: {
                             deleteMany: {},
-                            create: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 
-                                ? fight.prefightChampionIds
-                                    .map((id: string) => parseInt(id))
-                                    .filter((id: number) => !isNaN(id))
-                                    .map((id: number) => ({ championId: id, playerId: finalPlayerId })) 
-                                : []
+                            create: newPrefightIds.map(id => ({
+                                championId: id,
+                                playerId: existingPrefightsMap.has(id) ? existingPrefightsMap.get(id) : finalPlayerId
+                            }))
                         }
                     }
                 });
@@ -271,6 +278,20 @@ export async function processFightUpdates(prisma: PrismaClient, updates: FightUp
                 defenderId: update.defenderId 
             }, "Updating fight record");
 
+            const existingFight = await prisma.warFight.findUnique({
+                where: { id: update.id },
+                include: { prefightChampions: true }
+            });
+
+            const existingPrefightsMap = new Map<number, string | null>();
+            if (existingFight) {
+                existingFight.prefightChampions.forEach(pf => existingPrefightsMap.set(pf.championId, pf.playerId));
+            }
+
+            const newPrefightIds = (update.prefightChampionIds || [])
+                .map((id: string) => parseInt(id))
+                .filter((id: number) => !isNaN(id));
+
             await prisma.warFight.update({
                 where: { id: update.id },
                 data: {
@@ -281,12 +302,10 @@ export async function processFightUpdates(prisma: PrismaClient, updates: FightUp
                     battlegroup: update.battlegroup ? parseInt(update.battlegroup) : undefined,
                     prefightChampions: {
                         deleteMany: {},
-                        create: update.prefightChampionIds 
-                            ? update.prefightChampionIds
-                                .map((id: string) => parseInt(id))
-                                .filter((id: number) => !isNaN(id))
-                                .map((id: number) => ({ championId: id })) 
-                            : []
+                        create: newPrefightIds.map(id => ({
+                            championId: id,
+                            playerId: existingPrefightsMap.has(id) ? existingPrefightsMap.get(id) : null
+                        }))
                     }
                 }
             });
