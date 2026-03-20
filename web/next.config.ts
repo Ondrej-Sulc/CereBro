@@ -7,12 +7,10 @@ let buildId = 'dev';
 try {
   buildId = execSync('git rev-parse HEAD').toString().trim();
 } catch {
-  buildId = process.env.DEPLOYMENT_ID || 'unknown-deployment';
+  buildId = process.env.RAILWAY_DEPLOYMENT_ID || process.env.DEPLOYMENT_ID || 'unknown-deployment';
 }
 
 const nextConfig: NextConfig = {
-  generateBuildId: async () => buildId,
-  deploymentId: buildId,
   env: {
     APP_VERSION: buildId,
   },
