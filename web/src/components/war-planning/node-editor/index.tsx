@@ -241,6 +241,19 @@ export default function NodeEditor({
     });
   }, [bgPlayers, players, attackerId, currentFight, playerId]);
 
+  const prefightAvailablePlayers = useMemo(() => {
+    const filtered = [...bgPlayers];
+    prefights.forEach(pf => {
+      if (pf.playerId) {
+        const assigned = players.find(p => p.id === pf.playerId);
+        if (assigned && !filtered.some(p => p.id === assigned.id)) {
+            filtered.push(assigned);
+        }
+      }
+    });
+    return filtered;
+  }, [bgPlayers, players, prefights]);
+
   // 2. Display Champions (Filtered by Player + Rank Info + BANS)
   const displayChampions = useMemo(() => {
     // Filter out BANS first
@@ -502,7 +515,7 @@ export default function NodeEditor({
                 onChange={handlePrefightsChange}
                 availableChampions={prefightChampionsList}
                 allChampions={champions}
-                players={bgPlayers}
+                players={prefightAvailablePlayers}
                 disabled={isReadOnly}
               />
             </div>
