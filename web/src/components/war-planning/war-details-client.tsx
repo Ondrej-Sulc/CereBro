@@ -12,6 +12,7 @@ import { DesktopSidebar } from "./details/desktop-sidebar";
 import { PlayerListPanel } from "./details/player-list-panel";
 import { MobileSheet } from "./details/mobile-sheet";
 import { CloseWarDialog } from "./close-war-dialog";
+import { PlayerBriefingModal } from "./details/player-briefing-modal";
 import { useToast } from "@/hooks/use-toast";
 import { distributePlan } from "@/app/planning/actions";
 import { PlayerColorProvider } from "./player-color-context";
@@ -159,6 +160,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     };
   }, [isFullscreen]);
 
+  const selectedPlayer = props.players.find(p => p.id === selectedPlayerId) || null;
+
   return (
     <PlayerColorProvider players={props.players}>
       <div className={cn(
@@ -166,6 +169,21 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-65px)]",
           isDesktop ? "flex-row" : "flex-col"
       )}>
+        {/* Briefing Modal */}
+        <PlayerBriefingModal
+            isOpen={!!selectedPlayerId}
+            onOpenChange={(open) => !open && setSelectedPlayerId(null)}
+            player={selectedPlayer}
+            currentFights={currentFights}
+            extraChampions={extraChampions}
+            war={props.war}
+            champions={props.champions}
+            activeDefensePlan={props.activeDefensePlan}
+            isReadOnly={isReadOnly}
+            onAddExtra={handleAddExtraWithToast}
+            onRemoveExtra={handleRemoveExtra}
+        />
+
         {/* Close War Dialog */}
         <CloseWarDialog 
           war={props.war}
