@@ -63,7 +63,7 @@ const FightVideos = ({ fight }: { fight: FightWithNode }) => {
 
         async function fetchVideos() {
             try {
-                const res = await getFightVideos(fight.nodeId, fight.defenderId, fight.attackerId);
+                const res = await getFightVideos(fight.nodeId, fight.defenderId!, fight.attackerId!);
                 setVideos(res);
             } catch (e) {
                 console.error("Failed to fetch videos", e);
@@ -200,7 +200,7 @@ export const PlayerBriefingModal = ({
     }, [player, playerFights, currentFights, extraChampions, champions]);
 
     const handleDownloadMyMap = async () => {
-        if (!player) return;
+        if (!player || player.battlegroup === null) return;
         try {
             setIsDownloading(true);
             const base64 = await getWarMapPng(war.id, player.battlegroup, player.id);
