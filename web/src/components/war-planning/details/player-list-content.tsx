@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React, { useMemo } from "react";
-import { Users, ChevronLeft, Star, TriangleAlert, ExternalLink } from "lucide-react";
+import { Users, ChevronLeft, Star, TriangleAlert, ExternalLink, Swords, Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -19,6 +19,7 @@ interface PlayerListContentProps {
   players: PlayerWithRoster[];
   currentFights: FightWithNode[];
   highlightedPlayerId: string | null;
+  onHighlightPlayer: (playerId: string | null) => void;
   onSelectPlayer: (playerId: string | null) => void;
   currentBattlegroup: number;
   extraChampions: ExtraChampion[];
@@ -35,6 +36,7 @@ export const PlayerListContent = ({
   players,
   currentFights,
   highlightedPlayerId,
+  onHighlightPlayer,
   onSelectPlayer,
   currentBattlegroup,
   extraChampions,
@@ -45,6 +47,11 @@ export const PlayerListContent = ({
 }: PlayerListContentProps) => {
   const { getPlayerColor } = usePlayerColor();
   const championLimit = war.mapType === WarMapType.BIG_THING ? 2 : 3;
+
+  const handleToggleHighlight = (e: React.MouseEvent, playerId: string) => {
+      e.stopPropagation();
+      onHighlightPlayer(highlightedPlayerId === playerId ? null : playerId);
+  };
 
   const isChampionOnDefense = (championId: number, playerId: string) => {
       return activeDefensePlan?.placements?.some(p => p.defenderId === championId && p.playerId === playerId) ?? false;
@@ -96,6 +103,9 @@ export const PlayerListContent = ({
                     const fullChamp = champions.find(c => c.id === pf.id);
                     if (fullChamp) {
                         addChamp(pf.player.id, pf.id, fullChamp.name, fullChamp.images, fullChamp.class);
+                        if (fight.node) {
+                            addNode(pf.player.id, fight.node.nodeNumber);
+                        }
                     }
                 }
             });
@@ -189,34 +199,54 @@ export const PlayerListContent = ({
                               borderLeftColor: playerColor,
                           }}
                       >
-                          <div className="flex items-center gap-3 mb-1">
-                              <Avatar 
-                                  className="h-8 w-8 border-2 transition-transform group-hover:scale-105"
-                                  style={{ borderColor: playerColor }}
-                              >
-                                  <AvatarImage src={player.avatar || undefined} />
-                                  <AvatarFallback className="bg-slate-800 text-xs">
-                                      {player.ingameName.substring(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                              </Avatar>
-                              
-                              <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-bold truncate text-slate-200 group-hover:text-white transition-colors">
-                                      {player.ingameName}
+                          <div className="flex items-center justify-between gap-3 mb-2">
+                              <div className="flex items-center gap-3 min-w-0">
+                                  <Avatar 
+                                      className="h-9 w-9 border-2 transition-transform group-hover:scale-105 shrink-0"
+                                      style={{ borderColor: playerColor }}
+                                  >
+                                      <AvatarImage src={player.avatar || undefined} />
+                                      <AvatarFallback className="bg-slate-800 text-xs">
+                                          {player.ingameName.substring(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                  </Avatar>
+                                  
+                                  <div className="min-w-0">
+                                      <div className="text-sm font-bold truncate text-slate-200 group-hover:text-white transition-colors">
+                                          {player.ingameName}
+                                      </div>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                          {stat?.assignedNodes.size && stat.assignedNodes.size > 0 ? (
+                                              <div className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-bold text-indigo-400">
+                                                  <Swords className="w-2.5 h-2.5" />
+                                                  {stat.assignedNodes.size}
+                                              </div>
+                                          ) : null}
+
+                                          <div className={cn(
+                                              "shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap",
+                                              count > championLimit ? "bg-red-900/20 border-red-900/50 text-red-400" :
+                                              isFull ? "bg-green-900/20 border-green-900/50 text-green-400" : 
+                                              count > 0 ? "bg-blue-900/20 border-blue-900/50 text-blue-400" : "bg-slate-800/50 border-slate-700/50 text-slate-500"
+                                          )}>
+                                              {assignmentLabel}
+                                          </div>
+                                      </div>
                                   </div>
                               </div>
 
-                              <div className="flex items-center gap-2">
-                                  <div className={cn(
-                                      "text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap",
-                                      count > championLimit ? "bg-red-900/50 text-red-400" :
-                                      isFull ? "bg-green-900/50 text-green-400" : 
-                                      count > 0 ? "bg-blue-900/50 text-blue-400" : "bg-slate-800 text-slate-500"
-                                  )}>
-                                      {assignmentLabel}
-                                  </div>
-                                  <ExternalLink className="h-4 w-4 text-slate-500 opacity-0 group-hover:opacity-100 group-hover:text-indigo-400 transition-all -ml-1 group-hover:ml-0" />
-                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className={cn(
+                                    "h-8 w-8 rounded-full shrink-0 transition-all",
+                                    isSelected ? "bg-indigo-500/20 text-indigo-400 opacity-100" : "text-slate-600 hover:text-indigo-400 hover:bg-slate-800 md:opacity-0 md:group-hover:opacity-100"
+                                )}
+                                onClick={(e) => handleToggleHighlight(e, player.id)}
+                                title="Toggle Map Highlight"
+                              >
+                                  <MapIcon className={cn("h-4 w-4", isSelected && "fill-current/20")} />
+                              </Button>
                           </div>
 
                           {count > 0 && (

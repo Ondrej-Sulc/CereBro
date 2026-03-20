@@ -12,6 +12,7 @@ interface PlayerListPanelProps {
   players: PlayerWithRoster[];
   currentFights: FightWithNode[];
   highlightedPlayerId: string | null;
+  onHighlightPlayer: (playerId: string | null) => void;
   onSelectPlayer: (playerId: string | null) => void;
   isDesktop: boolean;
   currentBattlegroup: number;
@@ -30,6 +31,7 @@ export const PlayerListPanel = ({
   players,
   currentFights,
   highlightedPlayerId,
+  onHighlightPlayer,
   onSelectPlayer,
   isDesktop,
   currentBattlegroup,
@@ -60,6 +62,7 @@ export const PlayerListPanel = ({
                 players={players}
                 currentFights={currentFights}
                 highlightedPlayerId={highlightedPlayerId}
+                onHighlightPlayer={onHighlightPlayer}
                 onSelectPlayer={onSelectPlayer}
                 currentBattlegroup={currentBattlegroup}
                 extraChampions={extraChampions}

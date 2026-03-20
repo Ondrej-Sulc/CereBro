@@ -323,7 +323,15 @@ export function WarHeader({
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => handleDownloadMap()} disabled={isDownloading}>
-                      <Download className="h-4 w-4 mr-2" /> Download BG{currentBattlegroup} Map (PNG)
+                      {isDownloading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin text-sky-400" /> Generating Map...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-2" /> Download BG{currentBattlegroup} Map (PNG)
+                        </>
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -23,7 +23,8 @@ import {
     Star,
     TriangleAlert,
     X,
-    Plus
+    Plus,
+    Loader2
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -58,11 +59,11 @@ const FightVideos = ({ fight }: { fight: FightWithNode }) => {
     const [videos, setVideos] = useState<{ url?: string | null; videoId?: string; death?: number; playerName?: string }[]>([]);
 
     useEffect(() => {
-        if (!fight.node?.id || !fight.defender?.id || !fight.attacker?.id) return;
+        if (!fight.nodeId || !fight.defenderId || !fight.attackerId) return;
 
         async function fetchVideos() {
             try {
-                const res = await getFightVideos(fight.nodeId, fight.defenderId!, fight.attackerId!);
+                const res = await getFightVideos(fight.nodeId, fight.defenderId, fight.attackerId);
                 setVideos(res);
             } catch (e) {
                 console.error("Failed to fetch videos", e);
@@ -226,6 +227,13 @@ export const PlayerBriefingModal = ({
         }
     };
 
+    const totalFights = useMemo(() => {
+        const nodes = new Set<number>();
+        playerFights.forEach(f => nodes.add(f.node.nodeNumber));
+        prefightTasks.forEach(f => nodes.add(f.node.nodeNumber));
+        return nodes.size;
+    }, [playerFights, prefightTasks]);
+
     if (!player) return null;
 
     const playerColor = getPlayerColor(player.id);
@@ -250,6 +258,15 @@ export const PlayerBriefingModal = ({
                                 <DialogTitle className="text-2xl font-bold text-slate-100 drop-shadow-sm">{player.ingameName}</DialogTitle>
                                 <DialogDescription className="text-slate-400 flex items-center gap-2">
                                     <span>War Briefing • Battlegroup {player.battlegroup}</span>
+                                    {totalFights > 0 && (
+                                        <>
+                                            <span className="w-1 h-1 rounded-full bg-slate-700" />
+                                            <span className="flex items-center gap-1 font-bold" style={{ color: playerColor }}>
+                                                <Swords className="h-3 w-3" />
+                                                {totalFights} {totalFights === 1 ? 'Fight' : 'Fights'}
+                                            </span>
+                                        </>
+                                    )}
                                 </DialogDescription>
                             </div>
                         </div>
@@ -261,7 +278,7 @@ export const PlayerBriefingModal = ({
                                 onClick={handleDownloadMyMap}
                                 disabled={isDownloading}
                             >
-                                {isDownloading ? <span className="animate-spin text-xs">...</span> : <Download className="h-4 w-4 text-sky-400" />}
+                                {isDownloading ? <Loader2 className="animate-spin h-4 w-4 text-sky-400" /> : <Download className="h-4 w-4 text-sky-400" />}
                                 Download My Map
                             </Button>
                         </div>
@@ -289,21 +306,27 @@ export const PlayerBriefingModal = ({
                                         {playerFights.map(fight => {
                                             const pathInfo = getPathInfo(fight.node.nodeNumber);
                                             return (
-                                                <div key={fight.id} className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 relative overflow-hidden group hover:bg-slate-900/60 transition-colors shadow-sm">
-                                                    <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                                                <div key={fight.id} className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 relative overflow-hidden group hover:bg-slate-900/60 hover:border-slate-700/60 transition-all shadow-sm">
                                                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
                                                     
-                                                    <div className="flex items-center justify-between mb-3 relative z-10">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded">Node {fight.node.nodeNumber}</span>
+                                                    <div className="flex items-center justify-between mb-4 relative z-10">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div 
+                                                                className="w-1 h-4 rounded-full" 
+                                                                style={{ 
+                                                                    backgroundColor: playerColor, 
+                                                                    boxShadow: `0 0 8px ${playerColor}60` 
+                                                                }} 
+                                                            />
+                                                            <span className="text-xs font-bold text-slate-200 tracking-tight">Node {fight.node.nodeNumber}</span>
                                                             {pathInfo && (
-                                                                <span className="text-[10px] font-bold text-slate-400 bg-slate-800/50 border border-slate-700/50 px-1.5 py-0.5 rounded">
+                                                                <span className="text-[10px] font-medium text-slate-500 bg-slate-800/30 px-1.5 py-0.5 rounded border border-slate-700/30">
                                                                     S{pathInfo.section} Path {pathInfo.path}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         {fight.node.allocations[0] && (
-                                                            <span className="text-[10px] font-medium text-slate-400 truncate max-w-[150px]">
+                                                            <span className="text-[10px] font-medium text-slate-500 truncate max-w-[150px]">
                                                                 {fight.node.allocations[0].nodeModifier.name}
                                                             </span>
                                                         )}
@@ -331,7 +354,6 @@ export const PlayerBriefingModal = ({
                                                             <div className="text-sm font-bold text-slate-100 truncate drop-shadow-sm">
                                                                 {fight.attacker?.name || '?'} vs {fight.defender?.name || '?'}
                                                             </div>
-                                                            <div className="text-[10px] text-slate-500">Node {fight.node.nodeNumber} Assignment</div>
                                                         </div>
                                                     </div>
 
@@ -385,6 +407,12 @@ export const PlayerBriefingModal = ({
                                     <Star className="h-4 w-4 text-emerald-400" />
                                 </div>
                                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Your Team</h3>
+                                {isOverLimit && (
+                                    <span className="ml-auto text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                                        <TriangleAlert className="h-3 w-3" />
+                                        Over Limit ({currentCount}/{championLimit})
+                                    </span>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 gap-2">
@@ -431,7 +459,7 @@ export const PlayerBriefingModal = ({
                                                         <span className={cn("flex items-center", roster.isAwakened ? "text-slate-300" : "text-yellow-500")}>
                                                             {roster.stars}<Star className="h-2 w-2 fill-current ml-0.5" />
                                                         </span>
-                                                        <span className="font-mono bg-slate-950/80 border border-slate-800 px-1 rounded shadow-inner">R{roster.rank}</span>
+                                                        <span className="font-bold text-slate-200">R{roster.rank}</span>
                                                         {roster.isAwakened && roster.sigLevel > 0 && (
                                                             <span className="text-sky-400 font-bold">SIG {roster.sigLevel}</span>
                                                         )}

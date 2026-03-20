@@ -34,6 +34,8 @@ interface MobileSheetProps {
   warBans: WarBanWithChampion[];
   // Roster props
   currentFights: FightWithNode[];
+  highlightedPlayerId: string | null;
+  onHighlightPlayer: (id: string | null) => void;
   selectedPlayerId: string | null;
   onSelectPlayer: (id: string | null) => void;
   currentBattlegroup: number;
@@ -64,7 +66,8 @@ export function MobileSheet({
   seasonBans,
   warBans,
   currentFights,
-  selectedPlayerId,
+  highlightedPlayerId,
+  onHighlightPlayer,
   onSelectPlayer,
   currentBattlegroup,
   extraChampions,
@@ -237,7 +240,8 @@ export function MobileSheet({
                  <PlayerListContent
                     players={players}
                     currentFights={currentFights}
-                    highlightedPlayerId={selectedPlayerId}
+                    highlightedPlayerId={highlightedPlayerId}
+                    onHighlightPlayer={onHighlightPlayer}
                     onSelectPlayer={onSelectPlayer}
                     currentBattlegroup={currentBattlegroup}
                     extraChampions={extraChampions}

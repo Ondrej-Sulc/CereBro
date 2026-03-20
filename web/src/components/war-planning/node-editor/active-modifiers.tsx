@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NodeModifier } from "@prisma/client";
 
 interface ActiveModifiersProps {
@@ -11,29 +11,28 @@ export function ActiveModifiers({ modifiers }: ActiveModifiersProps) {
 
   return (
     <div className="flex flex-wrap gap-1.5 mt-2">
-      <TooltipProvider delayDuration={300}>
-        {modifiers.map((mod) => (
-          <Tooltip key={mod.id}>
-            <TooltipTrigger asChild>
-              <Badge 
-                variant="outline" 
-                className="cursor-help border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 transition-colors"
-              >
-                {mod.name}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent 
-              side="bottom" 
-              className="max-w-[300px] bg-slate-950 border-slate-800 p-3 shadow-xl"
+      {modifiers.map((mod) => (
+        <Popover key={mod.id}>
+          <PopoverTrigger asChild>
+            <Badge 
+              variant="outline" 
+              tabIndex={0}
+              className="cursor-pointer border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 transition-colors focus:ring-1 focus:ring-sky-500/50"
             >
-              <div className="font-bold text-slate-200 mb-1">{mod.name}</div>
-              <div className="text-slate-400 text-xs leading-relaxed whitespace-pre-wrap">
-                {mod.description}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </TooltipProvider>
+              {mod.name}
+            </Badge>
+          </PopoverTrigger>
+          <PopoverContent 
+            side="bottom" 
+            className="w-80 bg-slate-950 border-slate-800 p-3 shadow-xl z-[100]"
+          >
+            <div className="font-bold text-slate-200 mb-1">{mod.name}</div>
+            <div className="text-slate-400 text-xs leading-relaxed whitespace-pre-wrap">
+              {mod.description}
+            </div>
+          </PopoverContent>
+        </Popover>
+      ))}
     </div>
   );
 }

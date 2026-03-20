@@ -882,6 +882,8 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
 
     const assignments = new Map<number, NodeAssignment>();
     for (const fight of war.fights) {
+        if (!fight.node) continue;
+
         let defenderImage: string | undefined;
         if (fight.defender?.images) {
             defenderImage = getChampionImageUrl(fight.defender.images as any, '64', 'primary');

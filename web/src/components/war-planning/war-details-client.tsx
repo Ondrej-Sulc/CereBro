@@ -84,6 +84,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
 
   const [isDesktop, setIsDesktop] = useState(true);
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true); // Default open
+  const [highlightedPlayerId, setHighlightedPlayerId] = useState<string | null>(null);
 
   const handleToggleFullscreen = useCallback(() => {
     setIsFullscreen((prev: boolean) => !prev);
@@ -202,7 +203,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           onAddExtra={handleAddExtraWithToast} 
           onRemoveExtra={handleRemoveExtra} 
           champions={props.champions} 
-          highlightedPlayerId={selectedPlayerId}
+          highlightedPlayerId={highlightedPlayerId}
+          onHighlightPlayer={setHighlightedPlayerId}
           onSelectPlayer={setSelectedPlayerId}
           isDesktop={isDesktop}
           currentBattlegroup={currentBattlegroup}
@@ -263,7 +265,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               onNodeClick={handleNodeClick}
               onToggleFullscreen={handleToggleFullscreen}
               rightPanelState={rightPanelState}
-              highlightedPlayerId={selectedPlayerId}
+              highlightedPlayerId={highlightedPlayerId}
               onTogglePlayerPanel={handleTogglePlayerPanel}
               isPlayerPanelOpen={isRosterVisible}
               hideTabsList={true}
@@ -322,6 +324,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             warBans={warBans}
             // Roster props
             currentFights={currentFights}
+            highlightedPlayerId={highlightedPlayerId}
+            onHighlightPlayer={setHighlightedPlayerId}
             selectedPlayerId={selectedPlayerId}
             onSelectPlayer={setSelectedPlayerId}
             currentBattlegroup={currentBattlegroup}
