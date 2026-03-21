@@ -214,9 +214,22 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
 
                                     {/* Footer Action */}
                                     <div className="mt-auto pt-4 border-t border-slate-900/50 flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-slate-500 group-hover:text-sky-500 group-hover:translate-x-1 transition-all">
-                                            <Map className="w-4 h-4" />
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Open Plan</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-2 text-slate-500 group-hover:text-sky-500 group-hover:translate-x-1 transition-all">
+                                                <Map className="w-4 h-4" />
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Open Plan</span>
+                                            </div>
+                                            {quest.personalProgress != null && quest.personalProgress > 0 && (
+                                                quest.personalProgress >= quest.encounters.length ? (
+                                                    <Badge className="text-[10px] h-5 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 font-black uppercase tracking-wider px-2">
+                                                        ✓ Completed
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="text-[10px] h-5 bg-sky-950/30 border border-sky-900/50 text-sky-400 font-bold px-2">
+                                                        {quest.personalProgress} / {quest.encounters.length} picked
+                                                    </Badge>
+                                                )
+                                            )}
                                         </div>
                                         <div className="h-9 w-9 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center group-hover:bg-sky-600 group-hover:border-sky-500 group-hover:scale-110 transition-all shadow-inner group-hover:shadow-[0_0_15px_rgba(2,132,199,0.5)]">
                                             <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-white" />

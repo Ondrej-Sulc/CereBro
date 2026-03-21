@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check, Target, Swords } from "lucide-react";
 import { savePlayerQuestCounter, getShareablePlanId } from "@/app/actions/quests";
+import type { PopularCountersMap } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -80,6 +81,7 @@ interface Props {
     quest: QuestWithRelations;
     roster?: RosterWithChampion[];
     savedEncounters?: PlayerQuestEncounter[];
+    popularCounters?: PopularCountersMap;
     filterMetadata?: FilterMetadata;
     readOnly?: boolean;
     /** Map of questEncounterId -> roster entry, used in readOnly mode to resolve selected champion details */
@@ -118,7 +120,7 @@ function toChampionImages(images: unknown): ChampionImages {
     };
 }
 
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -993,7 +995,23 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             {/* Recommended Champions List */}
                                                             {encounter.recommendedChampions.length > 0 ? (
                                                                 <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
-                                                                    {encounter.recommendedChampions.map((c) => {
+                                                                    {(() => {
+                                                                        const encounterPicks = popularCounters[encounter.id] || [];
+                                                                        const totalPlayers = quest._count?.playerPlans || 0;
+                                                                        const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
+
+                                                                        // Sort recommended champions by popularity (most picked first)
+                                                                        const sortedChampions = [...encounter.recommendedChampions].sort((a, b) => {
+                                                                            const countA = pickCountMap.get(a.id) || 0;
+                                                                            const countB = pickCountMap.get(b.id) || 0;
+                                                                            return countB - countA;
+                                                                        });
+
+                                                                        return sortedChampions.map((c) => {
+                                                                        const pickCount = pickCountMap.get(c.id) || 0;
+                                                                        const popularityLabel = totalPlayers > 0 && pickCount > 0
+                                                                            ? `${Math.round((pickCount / totalPlayers) * 100)}%`
+                                                                            : undefined;
                                                                         if (readOnly) {
                                                                             // In readOnly mode, just show the champion reference without roster matching
                                                                             return (
@@ -1010,6 +1028,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                             }
                                                                                         }}
                                                                                         isRecommended
+                                                                                        popularityLabel={popularityLabel}
                                                                                     />
                                                                                 </div>
                                                                             );
@@ -1092,10 +1111,12 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     isMissing={!userChamp}
                                                                                     isInTeam={isChampInTeam}
                                                                                     isUnavailable={isUnavailable}
+                                                                                    popularityLabel={popularityLabel}
                                                                                 />
                                                                             </div>
                                                                         );
-                                                                    })}
+                                                                    });
+                                                                    })()}
                                                                 </div>
                                                             ) : (
                                                                 <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg">No specific champions recommended for this encounter.</p>

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Trophy, Ban } from "lucide-react";
+import { Trophy, Ban, Users } from "lucide-react";
 import Image from "next/image";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from "@/types/champion";
@@ -33,6 +33,7 @@ export const UpdatedChampionItem = memo(({
     isMissing,
     isInTeam,
     isUnavailable,
+    popularityLabel,
     variant = "square"
 }: {
     item: RosterWithChampion;
@@ -41,6 +42,7 @@ export const UpdatedChampionItem = memo(({
     isMissing?: boolean;
     isInTeam?: boolean;
     isUnavailable?: boolean;
+    popularityLabel?: string;
     variant?: "square" | "tall";
 }) => {
     const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
@@ -130,6 +132,12 @@ export const UpdatedChampionItem = memo(({
                     </div>
                 )}
 
+                {popularityLabel && (
+                    <div className="absolute bottom-1 left-1 z-20 bg-emerald-950/90 border border-emerald-500/30 text-emerald-400 text-[9px] px-1.5 py-0 h-4 font-black leading-none rounded-sm flex items-center gap-0.5 shadow-sm">
+                        <Users className="w-2.5 h-2.5" />{popularityLabel}
+                    </div>
+                )}
+
                 <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
                     <p className="text-[10px] font-bold text-white leading-tight truncate text-center drop-shadow-sm">{item.champion.name}</p>
                 </div>
@@ -196,6 +204,13 @@ export const UpdatedChampionItem = memo(({
                     <div className="absolute top-1 right-1 z-20 h-5 bg-yellow-950/80 rounded-sm border border-yellow-500/30 flex items-center justify-center p-0.5 shadow-sm min-w-[20px] px-1 gap-0.5" title={item.ascensionLevel ? `Ascension Level ${item.ascensionLevel}` : "Ascended"}>
                         <Trophy className="w-3 h-3 text-yellow-400 fill-yellow-500" />
                         {item.ascensionLevel ? <span className="text-[10px] font-bold text-yellow-400 leading-none">{item.ascensionLevel}</span> : null}
+                    </div>
+                )}
+
+                {/* Popularity Overlay */}
+                {popularityLabel && (
+                    <div className="absolute bottom-1 left-1 z-20 bg-black/60 backdrop-blur-sm text-emerald-400 text-[9px] px-1.5 py-0.5 font-black leading-none rounded-sm flex items-center gap-0.5 shadow-sm border border-emerald-500/20">
+                        <Users className="w-2.5 h-2.5" />{popularityLabel}
                     </div>
                 )}
             </div>

@@ -226,6 +226,44 @@ export const getQuestPlanById = unstable_cache(
     { tags: ['quest-plan-detail'] }
 );
 
+/**
+ * Aggregate champion pick counts per encounter for a quest plan.
+ * Returns a map: encounterId -> { championId, count }[] sorted by count desc.
+ */
+export type PopularCountersMap = Record<string, { championId: number; count: number }[]>;
+
+export const getEncounterPopularCounters = unstable_cache(
+    async (questPlanId: string): Promise<PopularCountersMap> => {
+        const results = await prisma.playerQuestEncounter.groupBy({
+            by: ['questEncounterId', 'selectedChampionId'],
+            where: {
+                questPlanId,
+                selectedChampionId: { not: null }
+            },
+            _count: { selectedChampionId: true }
+        });
+
+        const map: PopularCountersMap = {};
+        for (const row of results) {
+            if (!row.selectedChampionId) continue;
+            if (!map[row.questEncounterId]) map[row.questEncounterId] = [];
+            map[row.questEncounterId].push({
+                championId: row.selectedChampionId,
+                count: row._count.selectedChampionId
+            });
+        }
+
+        // Sort each encounter's picks by count descending
+        for (const encId of Object.keys(map)) {
+            map[encId].sort((a, b) => b.count - a.count);
+        }
+
+        return map;
+    },
+    ['quest-popular-counters'],
+    { tags: ['quest-popular-counters'] }
+);
+
 export type QuestPlanCreateInput = {
     title: string;
     status?: QuestPlanStatus;
@@ -538,6 +576,7 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     revalidatePath(`/planning/quests/${questPlanId}`);
     revalidateTag('quest-plans', 'default');
     revalidateTag('quest-plan-detail', 'default');
+    revalidateTag('quest-popular-counters', 'default');
     return { success: true };
 }
 

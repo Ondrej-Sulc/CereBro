@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getQuestPlanById } from "@/app/actions/quests";
+import { getQuestPlanById, getEncounterPopularCounters } from "@/app/actions/quests";
+import type { PopularCountersMap } from "@/app/actions/quests";
 import QuestTimelineClient, { QuestWithRelations, RosterWithChampion } from "@/components/planning/quest-timeline-client";
 import Link from "next/link";
 import Image from "next/image";
@@ -122,7 +123,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
 
     // Fetch the user's roster with tags and abilities
     // Fetch filter metadata in parallel
-    const [rosterEntries, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
+    const [rosterEntries, tags, abilityCategories, abilityLinks, immunityLinks, popularCounters] = await Promise.all([
         prisma.roster.findMany({
             where: { playerId: activePlayer.id },
             include: {
@@ -151,7 +152,8 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         prisma.tag.findMany({ orderBy: { name: 'asc' } }),
         prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
         prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
-        prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] })
+        prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
+        getEncounterPopularCounters(id)
     ]);
 
     const [abilities, immunities] = await Promise.all([
@@ -334,6 +336,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 quest={quest}
                 roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
+                popularCounters={popularCounters}
                 filterMetadata={{
                     tags,
                     abilityCategories,
