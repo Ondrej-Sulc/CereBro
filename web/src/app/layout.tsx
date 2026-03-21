@@ -56,7 +56,9 @@ export default function RootLayout({
               (function() {
                 var isStaleError = function(msg, name) {
                   return msg && (
-                    msg.indexOf("Failed to find Server Action") !== -1 || 
+                    msg.indexOf("Failed to find Server Action") !== -1 ||
+                    msg.indexOf("failed-to-find-server-action") !== -1 ||
+                    msg.indexOf("was not found on the server") !== -1 ||
                     msg.indexOf("older or newer deployment") !== -1 || 
                     msg.indexOf("c[e] is undefined") !== -1 || 
                     msg.indexOf("property 'call' of undefined") !== -1 ||

@@ -145,7 +145,10 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   if (
     typeof props.description === 'string' && 
-    (props.description.includes('Failed to find Server Action') || props.description.includes('older or newer deployment'))
+    (props.description.includes('Failed to find Server Action') ||
+     props.description.includes('failed-to-find-server-action') ||
+     props.description.includes('was not found on the server') ||
+     props.description.includes('older or newer deployment'))
   ) {
     console.warn("Detected Server Action mismatch from toast, reloading...");
     props.title = "Update Required";

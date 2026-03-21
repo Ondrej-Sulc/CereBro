@@ -17,6 +17,8 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     // 1. Listen for Server Action failures or Chunk Load errors (common Next.js deployment issues)
     const isStaleError = (msg: string, name?: string) => {
         return msg.includes("Failed to find Server Action") || 
+               msg.includes("failed-to-find-server-action") ||
+               msg.includes("was not found on the server") ||
                msg.includes("older or newer deployment") || 
                msg.includes("c[e] is undefined") || 
                msg.includes("property 'call' of undefined") ||
@@ -57,10 +59,27 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
-    // 2. Helper to check version
-    const checkVersion = async (forceRefresh = false) => {
-      if (hasNotified) return;
+    // 2. Intercept fetch to check version proactively
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        const serverVersion = response.headers.get('x-app-version');
+        
+        // Only check if we have a server version and it's not the default 'dev'
+        if (serverVersion && initialVersion !== 'dev' && serverVersion !== initialVersion) {
+            console.warn("Detected version mismatch from header, reloading...", { server: serverVersion, client: initialVersion });
+            safeReload();
+        }
+        return response;
+      } catch (error) {
+        // Just rethrow, handleGlobalError/handleUnhandledRejection will catch it if it's a critical mismatch
+        throw error;
+      }
+    };
 
+    // 3. Helper to check version manually (polling)
+    const checkVersion = async () => {
       try {
         const res = await fetch('/api/version', { 
             cache: 'no-store',
@@ -70,19 +89,8 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
         const data = await res.json();
         
         if (data.version && data.version !== initialVersion) {
-          // If forceRefresh is true, we still show the toast so user can save work,
-          // but we might want to mark it as more urgent.
-          setHasNotified(true);
-          toast({
-            title: forceRefresh ? "Critical Update Available" : "Update Available",
-            description: "A new version has been deployed. Please refresh to avoid errors.",
-            duration: Infinity, 
-            action: (
-              <ToastAction altText="Refresh" onClick={() => window.location.reload()}>
-                Refresh
-              </ToastAction>
-            ),
-          });
+            console.warn("Detected version mismatch from poll, reloading...", { server: data.version, client: initialVersion });
+            safeReload();
         }
       } catch (error) {
         console.error("Failed to check version:", error);
@@ -95,9 +103,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     // Check on focus
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        const inactiveTime = lastVisibleTimeRef.current ? Date.now() - lastVisibleTimeRef.current : 0;
-        // If they've been away for 5+ mins, just refresh if version changed
-        checkVersion(inactiveTime > AUTO_REFRESH_THRESHOLD);
+        checkVersion();
         lastVisibleTimeRef.current = Date.now();
       } else {
         lastVisibleTimeRef.current = Date.now();
@@ -106,6 +112,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
+      window.fetch = originalFetch;
       window.removeEventListener('error', handleGlobalError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       clearInterval(intervalId);

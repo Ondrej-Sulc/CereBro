@@ -14,7 +14,7 @@ export default function RootError({
   useEffect(() => {
     // Check if the error is related to a stale server action deployment or chunk load failure
     const msg = error.message || "";
-    const isStaleAction = msg.includes('Failed to find Server Action') || msg.includes('older or newer deployment');
+    const isStaleAction = msg.includes('Failed to find Server Action') || msg.includes('failed-to-find-server-action') || msg.includes('was not found on the server') || msg.includes('older or newer deployment');
     const isChunkError = error.name === 'ChunkLoadError' || msg.includes('ChunkLoadError') || msg.includes('loading chunk') || msg.includes('c[e] is undefined') || msg.includes('property \'call\' of undefined');
 
     if (isStaleAction || isChunkError) {
