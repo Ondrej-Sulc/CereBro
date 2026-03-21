@@ -794,7 +794,6 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
         include: {
             alliance: true,
             fights: {
-                where: { battlegroup },
                 include: {
                     attacker: { include: { tags: true } },
                     defender: { include: { tags: true } },
@@ -804,7 +803,6 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
                 }
             },
             extraChampions: {
-                where: { battlegroup },
                 include: {
                     champion: true,
                     player: true
@@ -824,6 +822,10 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
     }
 
     const alliance = war.alliance;
+
+    // Filter fights and extras by BG for map generation
+    const bgFights = war.fights.filter(f => f.battlegroup === battlegroup);
+    const bgExtras = war.extraChampions.filter(e => e.battlegroup === battlegroup);
 
     const activeTactic = await prisma.warTactic.findFirst({
         where: {
@@ -870,18 +872,26 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
 
     const bannedChampions = Array.from(bannedChampionsMap.values());
 
-    const allPlayers = new Map<string, { id: string, name: string }>();
+    // COLOR CONSISTENCY: Use ALL fights to determine player colors
+    const allPlayers = new Map<string, { id: string, name: string, avatar: string | null }>();
     war.fights.forEach(f => {
-        if (f.player) allPlayers.set(f.player.id, { id: f.player.id, name: f.player.ingameName });
+        if (f.player) {
+            allPlayers.set(f.player.id, { 
+                id: f.player.id, 
+                name: f.player.ingameName,
+                avatar: f.player.avatar
+            });
+        }
     });
     const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => a.name.localeCompare(b.name));
     const globalColorMap = new Map<string, string>();
     sortedPlayers.forEach((p, index) => {
         globalColorMap.set(p.id, MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length]);
+        if (p.avatar) uniqueImageUrls.add(p.avatar);
     });
 
     const assignments = new Map<number, NodeAssignment>();
-    for (const fight of war.fights) {
+    for (const fight of bgFights) {
         if (!fight.node) continue;
 
         let defenderImage: string | undefined;
@@ -918,15 +928,19 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
             prefightImages,
             isAttackerTactic,
             isDefenderTactic,
-            assignedColor: fight.player?.id ? globalColorMap.get(fight.player.id) : undefined
+            assignedColor: !playerId && fight.player?.id ? globalColorMap.get(fight.player.id) : undefined
         });
     }
 
     const legend: LegendItem[] = [];
     if (!playerId) {
-        sortedPlayers.forEach(p => {
-            const pFights = war.fights.filter(f => f.player?.id === p.id);
-            const pExtras = war.extraChampions.filter(e => e.playerId === p.id);
+        // Legend only shows players in THIS BG
+        const bgPlayerIds = new Set(bgFights.map(f => f.player?.id).filter(Boolean));
+        const bgSortedPlayers = sortedPlayers.filter(p => bgPlayerIds.has(p.id));
+
+        bgSortedPlayers.forEach(p => {
+            const pFights = bgFights.filter(f => f.player?.id === p.id);
+            const pExtras = bgExtras.filter(e => e.playerId === p.id);
             
             let pathLabel = "";
             const nodes = pFights.map(f => f.node.nodeNumber).sort((a, b) => a - b);
@@ -963,6 +977,7 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
             legend.push({
                 name: p.name,
                 color: globalColorMap.get(p.id)!,
+                championImage: p.avatar || undefined,
                 pathLabel,
                 assignedChampions
             });

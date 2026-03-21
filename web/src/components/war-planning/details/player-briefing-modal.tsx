@@ -492,33 +492,35 @@ export const PlayerBriefingModal = ({
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                                                    <div className="flex items-center gap-2.5 sm:gap-4 relative z-10">
                                                         <div className="flex -space-x-2 sm:-space-x-3 shrink-0">
                                                             <Image 
                                                                 src={getChampionImageUrlOrPlaceholder(fight.attacker?.images, '128')} 
                                                                 alt={fight.attacker?.name || 'Attacker'}
-                                                                width={40}
-                                                                height={40}
-                                                                className={cn("rounded-full border-2 bg-slate-950 z-20 shadow-md sm:w-12 sm:h-12 w-10 h-10", fight.attacker && getChampionClassColors(fight.attacker.class).border)}
+                                                                width={36}
+                                                                height={36}
+                                                                className={cn("rounded-full border-2 bg-slate-950 z-20 shadow-md sm:w-12 sm:h-12 w-9 h-9", fight.attacker && getChampionClassColors(fight.attacker.class).border)}
                                                             />
-                                                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-950 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-slate-400 border border-slate-800 z-30 self-center shadow-md">VS</div>
+                                                            <div className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-slate-950 flex items-center justify-center text-[7px] sm:text-[10px] font-bold text-slate-400 border border-slate-800 z-30 self-center shadow-md">VS</div>
                                                             <Image 
                                                                 src={getChampionImageUrlOrPlaceholder(fight.defender?.images, '128')} 
                                                                 alt={fight.defender?.name || 'Defender'}
-                                                                width={40}
-                                                                height={40}
-                                                                className={cn("rounded-full border-2 bg-slate-950 z-10 shadow-md sm:w-12 sm:h-12 w-10 h-10", fight.defender && getChampionClassColors(fight.defender.class).border)}
+                                                                width={36}
+                                                                height={36}
+                                                                className={cn("rounded-full border-2 bg-slate-950 z-10 shadow-md sm:w-12 sm:h-12 w-9 h-9", fight.defender && getChampionClassColors(fight.defender.class).border)}
                                                             />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-xs sm:text-sm font-bold truncate drop-shadow-sm">
-                                                                <span className={cn(fight.attacker && getChampionClassColors(fight.attacker.class).text)}>
+                                                            <div className="flex flex-col sm:flex-row sm:items-center leading-[1.1] sm:leading-normal drop-shadow-sm">
+                                                                <div className={cn("text-xs sm:text-sm font-bold truncate", fight.attacker && getChampionClassColors(fight.attacker.class).text)}>
                                                                     {fight.attacker?.name || '?'}
-                                                                </span>
-                                                                <span className="text-slate-500 font-normal sm:mx-1 mx-0.5">vs</span>
-                                                                <span className={cn(fight.defender && getChampionClassColors(fight.defender.class).text)}>
-                                                                    {fight.defender?.name || '?'}
-                                                                </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1 sm:ml-1.5">
+                                                                    <span className="text-slate-500 font-medium text-[9px] sm:text-xs shrink-0">vs</span>
+                                                                    <div className={cn("text-xs sm:text-sm font-bold truncate", fight.defender && getChampionClassColors(fight.defender.class).text)}>
+                                                                        {fight.defender?.name || '?'}
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             
                                                             {/* Node Modifiers */}
@@ -527,7 +529,7 @@ export const PlayerBriefingModal = ({
                                                                     {getActiveModifiers(fight.node.allocations, war).map(mod => (
                                                                         <Popover key={mod.id}>
                                                                             <PopoverTrigger asChild>
-                                                                                <button className="text-[8px] sm:text-[9px] text-slate-400 bg-slate-800/40 border border-slate-700/50 px-1.5 py-0.5 rounded-md hover:bg-slate-700/50 hover:text-slate-200 transition-colors truncate max-w-[100px] sm:max-w-[140px]">
+                                                                                <button className="text-[8px] sm:text-[9px] text-slate-400 bg-slate-800/40 border border-slate-700/50 px-1.5 py-0.5 rounded-md hover:bg-slate-700/50 hover:text-slate-200 transition-colors truncate max-w-[110px] sm:max-w-[140px]">
                                                                                     {mod.name}
                                                                                 </button>
                                                                             </PopoverTrigger>
@@ -556,7 +558,7 @@ export const PlayerBriefingModal = ({
                                                                         height={18}
                                                                         className="rounded-full sm:w-5 sm:h-5 w-4 h-4"
                                                                     />
-                                                                    <span className="text-[8px] sm:text-[9px] text-slate-400 truncate max-w-[80px] sm:max-w-none">
+                                                                    <span className="text-[8px] sm:text-[9px] text-slate-400 truncate max-w-[100px] sm:max-w-none">
                                                                         <span className="text-slate-200 font-bold">{pf.name}</span>
                                                                     </span>
                                                                 </div>
