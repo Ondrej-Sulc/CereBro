@@ -286,120 +286,8 @@ export const PlayerBriefingModal = ({
                 </DialogHeader>
 
                 <div className="flex-1 w-full min-h-0 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar">
-                    {/* LEFT COLUMN: Attack Assignments */}
-                    <div className="flex-1 md:overflow-y-auto custom-scrollbar p-4 sm:p-6 md:border-r border-slate-800/60 bg-slate-950/50">
-                        <div className="space-y-6">
-                            <section>
-                                <div className="flex items-center gap-2 mb-4">
-                                    <div className="p-1.5 bg-indigo-500/10 rounded-md border border-indigo-500/20 shadow-[0_0_8px_rgba(99,102,241,0.15)]">
-                                        <Swords className="h-4 w-4 text-indigo-400" />
-                                    </div>
-                                    <h3 className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider">Attack Assignments</h3>
-                                </div>
-
-                                {playerFights.length === 0 ? (
-                                    <div className="bg-slate-900/30 rounded-xl border border-slate-800/60 border-dashed p-6 sm:p-8 text-center">
-                                        <p className="text-[10px] sm:text-xs text-slate-500 italic">No nodes assigned yet.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3 sm:space-y-4">
-                                        {playerFights.map(fight => {
-                                            const pathInfo = getPathInfo(fight.node.nodeNumber);
-                                            return (
-                                                <div key={fight.id} className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-3 sm:p-4 relative overflow-hidden group hover:bg-slate-900/60 hover:border-slate-700/60 transition-all shadow-sm">
-                                                    <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
-                                                    
-                                                    <div className="flex items-center justify-between mb-3 sm:mb-4 relative z-10">
-                                                        <div className="flex items-center gap-2 sm:gap-2.5">
-                                                            <div 
-                                                                className="w-1 h-3 sm:h-4 rounded-full" 
-                                                                style={{ 
-                                                                    backgroundColor: playerColor, 
-                                                                    boxShadow: `0 0 8px ${playerColor}60` 
-                                                                }} 
-                                                            />
-                                                            <span className="text-[10px] sm:text-xs font-bold text-slate-200 tracking-tight">Node {fight.node.nodeNumber}</span>
-                                                            {pathInfo && (
-                                                                <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 bg-slate-800/30 px-1.5 py-0.5 rounded border border-slate-700/30">
-                                                                    S{pathInfo.section} P{pathInfo.path}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {fight.node.allocations[0] && (
-                                                            <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 truncate max-w-[100px] sm:max-w-[150px]">
-                                                                {fight.node.allocations[0].nodeModifier.name}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex items-center gap-3 sm:gap-4 relative z-10">
-                                                        <div className="flex -space-x-2 sm:-space-x-3 shrink-0">
-                                                            <Image 
-                                                                src={getChampionImageUrlOrPlaceholder(fight.attacker?.images, '128')} 
-                                                                alt={fight.attacker?.name || 'Attacker'}
-                                                                width={40}
-                                                                height={40}
-                                                                className={cn("rounded-full border-2 bg-slate-950 z-20 shadow-md sm:w-12 sm:h-12 w-10 h-10", fight.attacker && getChampionClassColors(fight.attacker.class).border)}
-                                                            />
-                                                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-950 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-slate-400 border border-slate-800 z-30 self-center shadow-md">VS</div>
-                                                            <Image 
-                                                                src={getChampionImageUrlOrPlaceholder(fight.defender?.images, '128')} 
-                                                                alt={fight.defender?.name || 'Defender'}
-                                                                width={40}
-                                                                height={40}
-                                                                className={cn("rounded-full border-2 bg-slate-950 z-10 shadow-md sm:w-12 sm:h-12 w-10 h-10", fight.defender && getChampionClassColors(fight.defender.class).border)}
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-xs sm:text-sm font-bold text-slate-100 truncate drop-shadow-sm">
-                                                                {fight.attacker?.name || '?'} <span className="text-slate-500 font-normal sm:mx-1 mx-0.5">vs</span> {fight.defender?.name || '?'}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Prefights used */}
-                                                    {fight.prefightChampions && fight.prefightChampions.length > 0 && (
-                                                        <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2 relative z-10">
-                                                            {fight.prefightChampions.map(pf => (
-                                                                <div key={pf.id} className="flex items-center gap-1 sm:gap-1.5 bg-slate-950/80 border border-slate-800 rounded-full pr-2.5 sm:pr-3 pl-1 py-0.5 sm:py-1 shadow-sm">
-                                                                    <Image 
-                                                                        src={getChampionImageUrlOrPlaceholder(pf.images, '64')} 
-                                                                        alt={pf.name}
-                                                                        width={18}
-                                                                        height={18}
-                                                                        className="rounded-full sm:w-5 sm:h-5 w-4 h-4"
-                                                                    />
-                                                                    <span className="text-[8px] sm:text-[9px] text-slate-400 truncate max-w-[80px] sm:max-w-none">
-                                                                        <span className="text-slate-200 font-bold">{pf.name}</span>
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Fight Notes */}
-                                                    {fight.notes && (
-                                                        <div className="mt-2.5 sm:mt-3 p-2 sm:p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-md text-[10px] sm:text-[11px] text-amber-200/90 italic flex gap-2 relative z-10">
-                                                            <Info className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 mt-0.5 text-amber-400" />
-                                                            <span className="line-clamp-3 sm:line-clamp-none">{fight.notes}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Videos Component */}
-                                                    <div className="relative z-10">
-                                                        <FightVideos fight={fight} />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </section>
-                        </div>
-                    </div>
-
-                    {/* RIGHT COLUMN: Roster & Prefights */}
-                    <div className="flex-1 md:w-80 md:flex-none md:overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-slate-950/80 space-y-6">
+                    {/* RIGHT COLUMN: Roster & Prefights (Shown FIRST on mobile) */}
+                    <div className="flex-1 md:w-80 md:flex-none md:overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-slate-950/80 space-y-6 order-first md:order-last">
                         {/* Attacker Roster Information */}
                         <section>
                             <div className="flex items-center gap-2 mb-4">
@@ -559,6 +447,118 @@ export const PlayerBriefingModal = ({
                                 </div>
                             )}
                         </section>
+                    </div>
+
+                    {/* LEFT COLUMN: Attack Assignments */}
+                    <div className="flex-1 md:overflow-y-auto custom-scrollbar p-4 sm:p-6 md:border-r border-slate-800/60 bg-slate-950/50 order-last md:order-first">
+                        <div className="space-y-6">
+                            <section>
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="p-1.5 bg-indigo-500/10 rounded-md border border-indigo-500/20 shadow-[0_0_8px_rgba(99,102,241,0.15)]">
+                                        <Swords className="h-4 w-4 text-indigo-400" />
+                                    </div>
+                                    <h3 className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider">Attack Assignments</h3>
+                                </div>
+
+                                {playerFights.length === 0 ? (
+                                    <div className="bg-slate-900/30 rounded-xl border border-slate-800/60 border-dashed p-6 sm:p-8 text-center">
+                                        <p className="text-[10px] sm:text-xs text-slate-500 italic">No nodes assigned yet.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3 sm:space-y-4">
+                                        {playerFights.map(fight => {
+                                            const pathInfo = getPathInfo(fight.node.nodeNumber);
+                                            return (
+                                                <div key={fight.id} className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-3 sm:p-4 relative overflow-hidden group hover:bg-slate-900/60 hover:border-slate-700/60 transition-all shadow-sm">
+                                                    <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none -translate-y-1/2 translate-x-1/2" />
+                                                    
+                                                    <div className="flex items-center justify-between mb-3 sm:mb-4 relative z-10">
+                                                        <div className="flex items-center gap-2 sm:gap-2.5">
+                                                            <div 
+                                                                className="w-1 h-3 sm:h-4 rounded-full" 
+                                                                style={{ 
+                                                                    backgroundColor: playerColor, 
+                                                                    boxShadow: `0 0 8px ${playerColor}60` 
+                                                                }} 
+                                                            />
+                                                            <span className="text-[10px] sm:text-xs font-bold text-slate-200 tracking-tight">Node {fight.node.nodeNumber}</span>
+                                                            {pathInfo && (
+                                                                <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 bg-slate-800/30 px-1.5 py-0.5 rounded border border-slate-700/30">
+                                                                    S{pathInfo.section} P{pathInfo.path}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {fight.node.allocations[0] && (
+                                                            <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 truncate max-w-[100px] sm:max-w-[150px]">
+                                                                {fight.node.allocations[0].nodeModifier.name}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+                                                        <div className="flex -space-x-2 sm:-space-x-3 shrink-0">
+                                                            <Image 
+                                                                src={getChampionImageUrlOrPlaceholder(fight.attacker?.images, '128')} 
+                                                                alt={fight.attacker?.name || 'Attacker'}
+                                                                width={40}
+                                                                height={40}
+                                                                className={cn("rounded-full border-2 bg-slate-950 z-20 shadow-md sm:w-12 sm:h-12 w-10 h-10", fight.attacker && getChampionClassColors(fight.attacker.class).border)}
+                                                            />
+                                                            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-950 flex items-center justify-center text-[8px] sm:text-[10px] font-bold text-slate-400 border border-slate-800 z-30 self-center shadow-md">VS</div>
+                                                            <Image 
+                                                                src={getChampionImageUrlOrPlaceholder(fight.defender?.images, '128')} 
+                                                                alt={fight.defender?.name || 'Defender'}
+                                                                width={40}
+                                                                height={40}
+                                                                className={cn("rounded-full border-2 bg-slate-950 z-10 shadow-md sm:w-12 sm:h-12 w-10 h-10", fight.defender && getChampionClassColors(fight.defender.class).border)}
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-xs sm:text-sm font-bold text-slate-100 truncate drop-shadow-sm">
+                                                                {fight.attacker?.name || '?'} <span className="text-slate-500 font-normal sm:mx-1 mx-0.5">vs</span> {fight.defender?.name || '?'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Prefights used */}
+                                                    {fight.prefightChampions && fight.prefightChampions.length > 0 && (
+                                                        <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2 relative z-10">
+                                                            {fight.prefightChampions.map(pf => (
+                                                                <div key={pf.id} className="flex items-center gap-1 sm:gap-1.5 bg-slate-950/80 border border-slate-800 rounded-full pr-2.5 sm:pr-3 pl-1 py-0.5 sm:py-1 shadow-sm">
+                                                                    <Image 
+                                                                        src={getChampionImageUrlOrPlaceholder(pf.images, '64')} 
+                                                                        alt={pf.name}
+                                                                        width={18}
+                                                                        height={18}
+                                                                        className="rounded-full sm:w-5 sm:h-5 w-4 h-4"
+                                                                    />
+                                                                    <span className="text-[8px] sm:text-[9px] text-slate-400 truncate max-w-[80px] sm:max-w-none">
+                                                                        <span className="text-slate-200 font-bold">{pf.name}</span>
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Fight Notes */}
+                                                    {fight.notes && (
+                                                        <div className="mt-2.5 sm:mt-3 p-2 sm:p-2.5 bg-amber-500/5 border border-amber-500/20 rounded-md text-[10px] sm:text-[11px] text-amber-200/90 italic flex gap-2 relative z-10">
+                                                            <Info className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0 mt-0.5 text-amber-400" />
+                                                            <span className="line-clamp-3 sm:line-clamp-none">{fight.notes}</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Videos Component */}
+                                                    <div className="relative z-10">
+                                                        <FightVideos fight={fight} />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </section>
+                        </div>
                     </div>
                 </div>
 
