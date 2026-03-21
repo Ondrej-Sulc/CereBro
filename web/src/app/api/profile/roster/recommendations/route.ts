@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateRosterRecommendations } from "@/lib/roster-recommendation-service";
 import { ChampionClass } from "@prisma/client";
 import { ProfileRosterEntry } from "@/app/profile/roster/types";
+import logger from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   const player = await getUserPlayerWithAlliance();

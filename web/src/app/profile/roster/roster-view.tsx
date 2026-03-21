@@ -159,6 +159,20 @@ export function RosterView({
   const sigRecommendations = usePropsData ? (initialSigRecommendations || []) : clientSigRecommendations;
   const top30Average = usePropsData ? initialTop30Average : clientTop30Average;
 
+  const triggerPrestigeUpdate = useCallback((val: number) => {
+    if (val <= 0) return;
+    
+    // Check if we actually need to update to avoid redundant calls
+    const currentStored = player.championPrestige || 0;
+    if (Math.abs(val - currentStored) <= 1) return;
+
+    fetch("/api/profile/roster/update-prestige", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ championPrestige: val }),
+    }).catch(err => console.error("Failed to update prestige:", err));
+  }, [player.championPrestige]);
+
   // Fetch Recommendations & Prestige
   useEffect(() => {
 
@@ -173,6 +187,9 @@ export function RosterView({
       lastFetchedParams.current = currentParams;
       setIsLoadingRecommendations(false);
       setPendingSection(null);
+      
+      // Still trigger the update check for the initial server-provided data
+      triggerPrestigeUpdate(initialTop30Average);
       return;
     }
 
@@ -189,6 +206,10 @@ export function RosterView({
         setRecommendations(data.recommendations);
         setSigRecommendations(data.sigRecommendations);
         setTop30Average(data.top30Average);
+        
+        // Trigger background update of prestige in DB
+        triggerPrestigeUpdate(data.top30Average);
+
         lastFetchedParams.current = currentParams;
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') return;

@@ -1,7 +1,17 @@
 import type { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Shield, UserPlus, Activity, ExternalLink } from "lucide-react"
+import { 
+    Users, 
+    Shield, 
+    UserPlus, 
+    Activity, 
+    ExternalLink, 
+    Sword, 
+    Heart, 
+    ArrowUpRight, 
+    TrendingUp 
+} from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,19 +32,61 @@ export const metadata: Metadata = {
     "Monitor player, alliance, prestige, and recent join statistics across CereBro.",
 }
 
-export default async function InsightsPage() {
+import { GrowthCharts } from "./growth-charts"
+import { getGrowthData, getRosterDistribution, getPrestigeDistribution } from "./growth-data"
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select"
+import { TimeframeSelector } from "./timeframe-selector"
+import { subDays, startOfDay } from "date-fns"
+import { Suspense } from "react"
+
+export default async function InsightsPage(props: {
+  searchParams: Promise<{ days?: string }>;
+}) {
+  const searchParams = await props.searchParams
+  const rawDays = searchParams.days ? parseInt(searchParams.days, 10) : 30
+  const days = (Number.isFinite(rawDays) && rawDays > 0 && rawDays <= 3650) ? rawDays : 30
+  const startDate = startOfDay(subDays(new Date(), days))
+  
   await ensureAdmin("VIEW_INSIGHTS")
   const lastUpdated = new Date().toISOString()
+  
   const [
     totalPlayers,
+    newPlayers,
     totalAlliances,
+    newAlliances,
+    totalChampions,
+    newChampions,
+    totalDonations,
+    periodDonations,
     playersInAlliances,
     topAlliances,
     recentPlayers,
-    topPrestigePlayers
+    topPrestigePlayers,
+    growthData,
+    rosterDistribution,
+    prestigeDistribution
   ] = await Promise.all([
     prisma.player.count(),
+    prisma.player.count({ where: { createdAt: { gte: startDate } } }),
     prisma.alliance.count(),
+    prisma.alliance.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.roster.count(),
+    prisma.roster.count({ where: { createdAt: { gte: startDate } } }),
+    prisma.supportDonation.aggregate({
+        where: { status: 'succeeded' },
+        _sum: { amountMinor: true }
+    }).then(res => (res._sum.amountMinor || 0) / 100),
+    prisma.supportDonation.aggregate({
+        where: { status: 'succeeded', createdAt: { gte: startDate } },
+        _sum: { amountMinor: true }
+    }).then(res => (res._sum.amountMinor || 0) / 100),
     prisma.player.count({
       where: { allianceId: { not: null } }
     }),
@@ -65,61 +117,94 @@ export default async function InsightsPage() {
       where: { summonerPrestige: { not: null } },
       orderBy: { summonerPrestige: 'desc' },
       include: { alliance: true }
-    })
+    }),
+    getGrowthData(days),
+    getRosterDistribution(),
+    getPrestigeDistribution()
   ])
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Database Insights</h1>
-        <LastUpdated createdAtIso={lastUpdated} />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 className="text-3xl font-bold tracking-tight">Database Insights</h1>
+            <p className="text-muted-foreground mt-1">Platform growth, meta trends, and health metrics.</p>
+        </div>
+        <div className="flex items-center gap-3">
+            <Suspense fallback={<div className="w-[180px] h-10 bg-muted animate-pulse rounded-md" />}>
+                <TimeframeSelector currentDays={days} />
+            </Suspense>
+            <LastUpdated createdAtIso={lastUpdated} />
+        </div>
       </div>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Players</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalPlayers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Registered in CereBro</p>
+            <div className="flex items-center text-xs text-emerald-500 font-medium mt-1">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                <span>+{newPlayers.toLocaleString()} in period</span>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
+
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Alliances</CardTitle>
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalAlliances.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Active alliances</p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Affiliated Players</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{playersInAlliances.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              {((playersInAlliances / Math.max(totalPlayers, 1)) * 100).toFixed(1)}% of all players
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Alliance Size</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalAlliances > 0 ? (playersInAlliances / totalAlliances).toFixed(1) : 0}
+            <div className="flex items-center text-xs text-emerald-500 font-medium mt-1">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                <span>+{newAlliances.toLocaleString()} in period</span>
             </div>
-            <p className="text-xs text-muted-foreground">Players per alliance</p>
           </CardContent>
         </Card>
+
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Champions</CardTitle>
+            <Sword className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalChampions.toLocaleString()}</div>
+            <div className="flex items-center text-xs text-emerald-500 font-medium mt-1">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                <span>+{newChampions.toLocaleString()} in period</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Support Revenue</CardTitle>
+            <Heart className="h-4 w-4 text-rose-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totalDonations.toLocaleString()}</div>
+            <div className="flex items-center text-xs text-emerald-500 font-medium mt-1">
+                <ArrowUpRight className="h-3 w-3 mr-1" />
+                <span>+${periodDonations.toLocaleString()} in period</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold tracking-tight">Growth & Activity (Last {days} Days)</h2>
+        </div>
+        <GrowthCharts 
+            growthData={growthData} 
+            rosterDistribution={rosterDistribution} 
+            prestigeDistribution={prestigeDistribution}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
