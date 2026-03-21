@@ -10,6 +10,7 @@ import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
 import { X, Star } from "lucide-react";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
+import { getActiveModifiers } from "@/lib/node-modifier-utils";
 import { ActiveModifiers } from "./active-modifiers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -105,20 +106,7 @@ export default function DefenseEditor({
   // Filter active modifiers
   const activeModifiers = useMemo(() => {
     if (!nodeData?.allocations) return [];
-    
-    return nodeData.allocations.filter(alloc => {
-        // 1. Map Type Check
-        if (alloc.mapType !== mapType) return false;
-
-        // 2. Tier Check (if selected)
-        if (tier) {
-             const satisfiesMin = alloc.minTier ? tier >= alloc.minTier : true;
-             const satisfiesMax = alloc.maxTier ? tier <= alloc.maxTier : true;
-             return satisfiesMin && satisfiesMax;
-        }
-
-        return true;
-    }).map(a => a.nodeModifier);
+    return getActiveModifiers(nodeData.allocations, { warTier: tier || 1, mapType });
   }, [nodeData, mapType, tier]);
 
   // Sync state with props during render

@@ -17,6 +17,7 @@ import { PlayerWithRoster, FightWithNode, SeasonBanWithChampion, WarBanWithChamp
 import { ActiveModifiers } from "./active-modifiers";
 import { NodeHistory } from "./node-history";
 import { ExtraChampion, WarTacticWithTags } from "../hooks/use-war-planning";
+import { getActiveModifiers } from "@/lib/node-modifier-utils";
 
 interface NodeEditorProps {
   onClose: () => void;
@@ -112,15 +113,7 @@ export default function NodeEditor({
   // Filter active modifiers
   const activeModifiers = useMemo(() => {
     if (!currentFight?.node?.allocations || !currentWar) return [];
-    
-    return currentFight.node.allocations.filter(alloc => {
-        const tierMatch = (!alloc.minTier || alloc.minTier <= currentWar.warTier) && 
-                          (!alloc.maxTier || alloc.maxTier >= currentWar.warTier);
-        const seasonMatch = !alloc.season || alloc.season === currentWar.season;
-        const mapTypeMatch = alloc.mapType === (currentWar.mapType || WarMapType.STANDARD);
-        
-        return tierMatch && seasonMatch && mapTypeMatch;
-    }).map(a => a.nodeModifier);
+    return getActiveModifiers(currentFight.node.allocations, currentWar);
   }, [currentFight, currentWar]);
 
   // Sync state with props during render

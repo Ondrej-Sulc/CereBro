@@ -9,6 +9,7 @@ import {
     DialogDescription,
     DialogFooter
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -33,6 +34,7 @@ import { War, WarMapType, ChampionClass } from "@prisma/client";
 import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { getChampionClassColors } from "@/lib/championClassHelper";
+import { getActiveModifiers } from "@/lib/node-modifier-utils";
 import { getFightVideos, getWarMapPng } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
 import { usePlayerColor } from "../player-color-context";
@@ -244,42 +246,42 @@ export const PlayerBriefingModal = ({
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] md:max-h-[85vh] flex flex-col p-0 bg-slate-950/95 backdrop-blur-xl border-slate-800/60 shadow-2xl rounded-xl overflow-hidden">
-                <DialogHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-slate-800/60 bg-slate-900/40 relative shrink-0 rounded-t-xl">
+                <DialogHeader className="px-2.5 py-2 sm:p-6 pb-2 sm:pb-4 border-b border-slate-800/60 bg-slate-900/40 relative shrink-0 rounded-t-xl block text-left flex-none space-y-0">
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-transparent pointer-events-none rounded-t-xl" />
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-                        <div className="flex items-center gap-3 sm:gap-4">
-                            <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 shadow-lg shrink-0" style={{ borderColor: playerColor, boxShadow: `0 0 15px ${playerColor}40` }}>
+                    <div className="flex flex-nowrap items-center justify-between gap-2 relative z-10 w-full">
+                        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                            <Avatar className="h-8 w-8 sm:h-12 sm:w-12 border-2 shadow-lg shrink-0" style={{ borderColor: playerColor, boxShadow: `0 0 15px ${playerColor}40` }}>
                                 <AvatarImage src={player.avatar || undefined} />
-                                <AvatarFallback className="bg-slate-900 text-base sm:text-lg">
+                                <AvatarFallback className="bg-slate-900 text-[10px] sm:text-lg">
                                     {player.ingameName.substring(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                                <DialogTitle className="text-xl sm:text-2xl font-bold text-slate-100 drop-shadow-sm truncate">{player.ingameName}</DialogTitle>
-                                <DialogDescription className="text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm">
-                                    <span>Briefing • BG {player.battlegroup}</span>
+                                <DialogTitle className="text-sm sm:text-2xl font-bold text-slate-100 drop-shadow-sm truncate leading-none">{player.ingameName}</DialogTitle>
+                                <DialogDescription className="text-slate-400 flex items-center gap-x-1 sm:gap-x-2 text-[9px] sm:text-sm mt-1">
+                                    <span className="truncate">Briefing • BG {player.battlegroup}</span>
                                     {totalFights > 0 && (
                                         <>
-                                            <span className="hidden sm:inline w-1 h-1 rounded-full bg-slate-700" />
-                                            <span className="flex items-center gap-1 font-bold" style={{ color: playerColor }}>
-                                                <Swords className="h-3 w-3" />
-                                                {totalFights} {totalFights === 1 ? 'Fight' : 'Fights'}
+                                            <span className="w-0.5 h-0.5 rounded-full bg-slate-700 shrink-0" />
+                                            <span className="flex items-center gap-0.5 sm:gap-1 font-bold shrink-0" style={{ color: playerColor }}>
+                                                <Swords className="h-2 w-2 sm:h-3 sm:w-3" />
+                                                {totalFights}<span className="hidden sm:inline"> Fights</span>
                                             </span>
                                         </>
                                     )}
                                 </DialogDescription>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                        <div className="shrink-0">
                             <Button 
                                 variant="outline" 
                                 size="sm" 
-                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-2 hover:border-slate-500 transition-colors h-8 sm:h-9 text-xs sm:text-sm"
+                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
                                 onClick={handleDownloadMyMap}
                                 disabled={isDownloading}
                             >
-                                {isDownloading ? <Loader2 className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400" /> : <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-400" />}
-                                <span className="sm:inline">Download Map</span>
+                                {isDownloading ? <Loader2 className="animate-spin h-3 w-3 sm:h-4 sm:w-4 text-sky-400" /> : <Download className="h-3 w-3 sm:h-4 sm:w-4 text-sky-400" />}
+                                <span className="hidden sm:inline">Download Map</span>
                             </Button>
                         </div>
                     </div>
@@ -488,11 +490,6 @@ export const PlayerBriefingModal = ({
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        {fight.node.allocations[0] && (
-                                                            <span className="text-[9px] sm:text-[10px] font-medium text-slate-500 truncate max-w-[100px] sm:max-w-[150px]">
-                                                                {fight.node.allocations[0].nodeModifier.name}
-                                                            </span>
-                                                        )}
                                                     </div>
 
                                                     <div className="flex items-center gap-3 sm:gap-4 relative z-10">
@@ -514,9 +511,36 @@ export const PlayerBriefingModal = ({
                                                             />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="text-xs sm:text-sm font-bold text-slate-100 truncate drop-shadow-sm">
-                                                                {fight.attacker?.name || '?'} <span className="text-slate-500 font-normal sm:mx-1 mx-0.5">vs</span> {fight.defender?.name || '?'}
+                                                            <div className="text-xs sm:text-sm font-bold truncate drop-shadow-sm">
+                                                                <span className={cn(fight.attacker && getChampionClassColors(fight.attacker.class).text)}>
+                                                                    {fight.attacker?.name || '?'}
+                                                                </span>
+                                                                <span className="text-slate-500 font-normal sm:mx-1 mx-0.5">vs</span>
+                                                                <span className={cn(fight.defender && getChampionClassColors(fight.defender.class).text)}>
+                                                                    {fight.defender?.name || '?'}
+                                                                </span>
                                                             </div>
+                                                            
+                                                            {/* Node Modifiers */}
+                                                            {getActiveModifiers(fight.node.allocations, war).length > 0 && (
+                                                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                                                    {getActiveModifiers(fight.node.allocations, war).map(mod => (
+                                                                        <Popover key={mod.id}>
+                                                                            <PopoverTrigger asChild>
+                                                                                <button className="text-[8px] sm:text-[9px] text-slate-400 bg-slate-800/40 border border-slate-700/50 px-1.5 py-0.5 rounded-md hover:bg-slate-700/50 hover:text-slate-200 transition-colors truncate max-w-[100px] sm:max-w-[140px]">
+                                                                                    {mod.name}
+                                                                                </button>
+                                                                            </PopoverTrigger>
+                                                                            <PopoverContent side="top" align="start" className="w-72 sm:w-80 bg-slate-950 border-slate-800 p-3 shadow-2xl z-[100] rounded-xl backdrop-blur-xl">
+                                                                                <div className="font-bold text-slate-200 mb-1.5 text-xs border-b border-slate-800 pb-1.5">{mod.name}</div>
+                                                                                <div className="text-slate-400 text-[10px] sm:text-xs leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto custom-scrollbar">
+                                                                                    {mod.description}
+                                                                                </div>
+                                                                            </PopoverContent>
+                                                                        </Popover>
+                                                                    ))}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
