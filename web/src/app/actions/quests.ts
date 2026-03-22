@@ -272,29 +272,61 @@ export async function updateFeaturedPlayers(
 
 /**
  * Aggregate champion pick counts per encounter for a quest plan.
- * Returns a map: encounterId -> { championId, count }[] sorted by count desc.
+ * Returns a map: encounterId -> { championId, count, champion }[] sorted by count desc.
  */
-export type PopularCountersMap = Record<string, { championId: number; count: number }[]>;
+export type PopularCounter = {
+    championId: number;
+    count: number;
+    champion: { id: number; name: string; shortName: string; class: ChampionClass; images: any };
+};
+export type PopularCountersMap = Record<string, PopularCounter[]>;
 
 export const getEncounterPopularCounters = async (questPlanId: string): Promise<PopularCountersMap> => {
     return unstable_cache(
         async () => {
+            // Get total player plans to determine a sensible dynamic threshold
+            const totalPlayers = await prisma.playerQuestPlan.count({
+                where: { questPlanId }
+            });
+
+            // Threshold: At least 5 picks, or 2% of players (capped at 50 to avoid hiding consensus)
+            const threshold = Math.min(50, Math.max(5, Math.floor(totalPlayers * 0.02)));
+
             const results = await prisma.playerQuestEncounter.groupBy({
                 by: ['questEncounterId', 'selectedChampionId'],
                 where: {
                     questPlanId,
                     selectedChampionId: { not: null }
                 },
-                _count: { selectedChampionId: true }
+                _count: { selectedChampionId: true },
+                having: {
+                    selectedChampionId: {
+                        _count: {
+                            gte: threshold
+                        }
+                    }
+                }
+            });
+
+            // We need full champion objects for the popular counters
+            const championIds = Array.from(new Set(results.map(r => r.selectedChampionId).filter((id): id is number => id !== null)));
+            const champions = await prisma.champion.findMany({
+                where: { id: { in: championIds } },
+                select: { id: true, name: true, shortName: true, class: true, images: true }
             });
 
             const map: PopularCountersMap = {};
             for (const row of results) {
                 if (!row.selectedChampionId) continue;
                 if (!map[row.questEncounterId]) map[row.questEncounterId] = [];
+                
+                const champion = champions.find(c => c.id === row.selectedChampionId);
+                if (!champion) continue;
+
                 map[row.questEncounterId].push({
                     championId: row.selectedChampionId,
-                    count: row._count.selectedChampionId
+                    count: row._count.selectedChampionId,
+                    champion: champion as any
                 });
             }
 
@@ -333,6 +365,13 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
                     selectedChampionId: true,
                     selectedChampion: {
                         select: { id: true, name: true, shortName: true, class: true, images: true }
+                    },
+                    playerQuestPlan: {
+                        select: {
+                            player: {
+                                select: { id: true, ingameName: true, avatar: true }
+                            }
+                        }
                     }
                 }
             });
@@ -341,15 +380,29 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
             for (const pick of picks) {
                 if (!pick.selectedChampionId || !pick.selectedChampion) continue;
                 if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
-                
+
+                const player = {
+                    id: pick.playerQuestPlan.player.id,
+                    name: pick.playerQuestPlan.player.ingameName,
+                    avatar: pick.playerQuestPlan.player.avatar
+                };
+
                 const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
                 if (existing) {
                     existing.count++;
+                    if (existing.pickedBy) {
+                        if (!existing.pickedBy.some(p => p.id === player.id)) {
+                            existing.pickedBy.push(player);
+                        }
+                    } else {
+                        existing.pickedBy = [player];
+                    }
                 } else {
                     map[pick.questEncounterId].push({
                         championId: pick.selectedChampionId,
                         count: 1,
-                        champion: pick.selectedChampion as any
+                        champion: pick.selectedChampion as any,
+                        pickedBy: [player]
                     });
                 }
             }
@@ -364,7 +417,6 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
         { tags: [`quest-featured-picks-${questPlanId}`, 'quest-featured-picks'] }
     )();
 };
-
 export const getEncounterAlliancePicks = async (questPlanId: string, allianceId: string, excludePlayerId?: string): Promise<EnhancedCountersMap> => {
     const picks = await prisma.playerQuestEncounter.findMany({
         where: {

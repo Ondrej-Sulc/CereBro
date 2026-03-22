@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check, Target, Swords } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check, Target, Swords, Ban } from "lucide-react";
 import { savePlayerQuestCounter, getShareablePlanId } from "@/app/actions/quests";
 import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
@@ -134,6 +134,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [isSharing, setIsSharing] = useState(false);
     const [shareSuccess, setShareSuccess] = useState(false);
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
+    const [isRosterExpanded, setIsRosterExpanded] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -387,6 +388,239 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         
         return Array.from(teamMap.values());
     }, [selections, resolveRosterItem]);
+
+    const renderChampionItem = (c: any, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
+        if (readOnly) {
+            // In readOnly mode, just show the champion reference without roster matching
+            return (
+                <UpdatedChampionItem
+                    item={{
+                        stars: 0,
+                        rank: 0,
+                        champion: {
+                            id: c.id,
+                            name: c.shortName || c.name,
+                            championClass: c.class,
+                            images: toChampionImages(c.images)
+                        }
+                    }}
+                    isRecommended
+                    popularityLabel={popularityLabel}
+                />
+            );
+        }
+
+        // Find highest version in roster that matches restrictions
+        const validRosterEntries = roster
+            .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
+            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
+
+        // Best version that is either unused or used in THIS encounter
+        const userChamp = validRosterEntries.find(r => 
+            !Object.values(selections).includes(r.id) || 
+            selections[encounter.id] === r.id
+        ) || validRosterEntries[0];
+
+        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
+        
+        // Check if any version of this champion is in the team
+        const isChampInTeam = Object.values(selections).some(rid => {
+            if (!rid) return false;
+            return roster.find(r => r.id === rid)?.championId === c.id;
+        });
+        
+        let isUnavailable = false;
+        if (userChamp && quest.teamLimit === null && !isSelected) {
+            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+                if (encId !== encounter.id && rid !== null) {
+                    const r = roster.find(re => re.id === rid);
+                    if (r?.championId === userChamp.championId) {
+                        return acc + 1;
+                    }
+                }
+                return acc;
+            }, 0);
+
+            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
+
+            if (otherSelectionsCount >= validRosterCount) {
+                isUnavailable = true;
+            }
+        }
+
+        return (
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (userChamp && !isUnavailable) {
+                        handleSelectCounter(encounter.id, userChamp.id);
+                    }
+                }}
+                className={cn(
+                    "flex flex-col gap-1.5", 
+                    isUnavailable ? "cursor-not-allowed" : "cursor-pointer group"
+                )}
+            >
+                <div className="relative">
+                    <UpdatedChampionItem
+                        item={userChamp ? {
+                            stars: userChamp.stars,
+                            rank: userChamp.rank,
+                            isAwakened: userChamp.isAwakened,
+                            sigLevel: userChamp.sigLevel,
+                            powerRating: userChamp.powerRating,
+                            champion: {
+                                id: userChamp.champion.id,
+                                name: userChamp.champion.shortName || userChamp.champion.name,
+                                championClass: userChamp.champion.class,
+                                    images: toChampionImages(userChamp.champion.images)
+                            },
+                            isAscended: userChamp.isAscended
+                        } : {
+                            stars: 0,
+                            rank: 0,
+                            champion: {
+                                id: c.id,
+                                name: c.shortName || c.name,
+                                championClass: c.class,
+                                images: toChampionImages(c.images)
+                            }
+                        }}
+                        isSelected={isSelected}
+                        isRecommended={!isSelected && isRecommendedTab}
+                        isMissing={!userChamp}
+                        isInTeam={isChampInTeam}
+                        isUnavailable={isUnavailable}
+                        popularityLabel={!isCompact ? popularityLabel : undefined}
+                    />
+                </div>
+            </div>
+        );
+    };
+
+    const renderListPick = (p: any, encounter: EncounterWithRelations) => {
+        const validRosterEntries = roster
+            .filter(r => r.championId === p.championId && isChampionValidForEncounterOrQuest(r, quest, encounter))
+            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
+        const userChamp = validRosterEntries.find(r => 
+            !Object.values(selections).includes(r.id) || 
+            selections[encounter.id] === r.id
+        ) || validRosterEntries[0];
+        
+        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
+        const isMissing = !userChamp;
+        const isInTeam = Object.values(selections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
+
+        let isUnavailable = false;
+        if (userChamp && quest.teamLimit === null && !isSelected) {
+            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+                if (encId !== encounter.id && rid !== null) {
+                    const r = roster.find(re => re.id === rid);
+                    if (r?.championId === userChamp.championId) {
+                        return acc + 1;
+                    }
+                }
+                return acc;
+            }, 0);
+            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
+            if (otherSelectionsCount >= validRosterCount) {
+                isUnavailable = true;
+            }
+        }
+
+        const classColors = getChampionClassColors(p.champion.class as ChampionClass);
+
+        return (
+            <div 
+                key={p.championId} 
+                className={cn(
+                    "flex items-center gap-4 p-2.5 rounded-xl transition-all border relative overflow-hidden group/pick-card",
+                    isUnavailable ? "cursor-not-allowed opacity-60 saturate-50 contrast-125 border-red-900/40 bg-red-950/10" : "cursor-pointer bg-slate-900/40 backdrop-blur-sm",
+                    !isUnavailable && isSelected && "border-sky-500/60 shadow-[0_0_20px_rgba(14,165,233,0.15)] bg-sky-950/20",
+                    !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.1)] bg-emerald-950/10",
+                    !isUnavailable && isMissing && "opacity-60 grayscale hover:grayscale-0 border-slate-800",
+                    !isUnavailable && !isSelected && !isInTeam && !isMissing && cn(`border-slate-800 hover:${classColors.border}/50 hover:bg-slate-900/80`)
+                )}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (userChamp && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
+                }}
+            >
+                {/* Subtle Class Gradient Background */}
+                <div className={cn("absolute inset-0 opacity-10 transition-opacity group-hover/pick-card:opacity-20 pointer-events-none", classColors.bg)} />
+
+                {isUnavailable && (
+                    <div className="absolute inset-0 z-40 bg-red-950/40 flex items-center justify-center backdrop-blur-[1px] pointer-events-none">
+                        <Ban className="w-8 h-8 text-red-500 drop-shadow-md mb-1" strokeWidth={3} />
+                    </div>
+                )}
+                
+                {/* Status Badges */}
+                {isSelected && (
+                    <div className="absolute top-0 right-0 p-1.5 bg-sky-500 text-slate-950 rounded-bl-xl shadow-lg animate-in slide-in-from-top-1 slide-in-from-right-1 z-20">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                )}
+                {isInTeam && !isSelected && !isUnavailable && (
+                    <div className="absolute top-0 right-0 p-1.5 bg-emerald-600 text-white rounded-bl-xl shadow-lg z-20 animate-in slide-in-from-top-1 slide-in-from-right-1" title="Already in team">
+                        <Users className="w-3.5 h-3.5" />
+                    </div>
+                )}
+
+                <div className="shrink-0 relative z-10">
+                    <div className="scale-[0.85] origin-top-left -mb-4 -mr-4">
+                        <ChampionAvatar
+                            images={toChampionImages(p.champion.images)}
+                            name={p.champion.name}
+                            stars={userChamp?.stars || 0}
+                            rank={userChamp?.rank || 0}
+                            isAwakened={userChamp?.isAwakened || false}
+                            sigLevel={userChamp?.sigLevel || 0}
+                            championClass={p.champion.class}
+                            size="lg"
+                            showRank={!!userChamp}
+                            showStars={!!userChamp}
+                        />
+                    </div>
+                </div>
+                
+                <div className="flex-1 min-w-0 z-10 py-1">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className={cn(
+                            "text-sm font-black truncate drop-shadow-md", 
+                            isSelected ? "text-sky-400" : (isInTeam && !isUnavailable ? "text-emerald-400" : "text-slate-200 group-hover/pick-card:text-white transition-colors")
+                        )}>
+                            {p.champion.name}
+                        </span>
+                        {isMissing && (
+                            <Badge variant="outline" className="text-[8px] px-1.5 h-3.5 font-bold bg-slate-950 border-slate-800 text-slate-500 uppercase tracking-widest shrink-0">
+                                Missing
+                            </Badge>
+                        )}
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-1.5">
+                        {p.pickedBy?.map((user: any) => (
+                            <div key={user.id} className="flex items-center gap-1.5 bg-slate-950/60 border border-slate-800/80 rounded-full pl-0.5 pr-2 py-0.5" title={user.name}>
+                                <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0">
+                                    {user.avatar ? (
+                                        <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400">
+                                            {user.name.charAt(0)}
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="text-[9px] text-slate-400 font-medium truncate max-w-[80px]">
+                                    {user.name}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <div className="relative pt-4 pb-20">
@@ -982,6 +1216,26 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             <div className="flex items-center gap-2">
                                                                 <div className="h-6 w-1 bg-amber-500 rounded-full" />
                                                                 <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
+                                                                <div className="group/help relative">
+                                                                    <Info className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 cursor-help transition-colors" />
+                                                                    <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl opacity-0 invisible group-hover/help:opacity-100 group-hover/help:visible transition-all z-50 pointer-events-none">
+                                                                        <div className="space-y-3">
+                                                                            <div>
+                                                                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-wider mb-1">Recommended</p>
+                                                                                <p className="text-[10px] text-slate-400 leading-relaxed">Official suggestions merged with popular community favorites (used by 2+ players).</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-[10px] font-black text-purple-400 uppercase tracking-wider mb-1">Featured</p>
+                                                                                <p className="text-[10px] text-slate-400 leading-relaxed">Picks extracted from verified high-level community plans.</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider mb-1">Alliance</p>
+                                                                                <p className="text-[10px] text-slate-400 leading-relaxed">See exactly what your teammates are using for their own plans.</p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="absolute top-full left-2 -translate-y-1/2 w-2 h-2 bg-slate-900 border-r border-b border-slate-800 rotate-45" />
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             {/* Tabs if there are featured or alliance picks */}
                                                             {((featuredPicks[encounter.id] && featuredPicks[encounter.id].length > 0) || (alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0)) && (
@@ -999,7 +1253,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", 
                                                                                 encounterTabs[encounter.id] === 'featured' ? "bg-slate-800 text-purple-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}
                                                                         >
-                                                                            Featured Plans
+                                                                            Featured
                                                                         </button>
                                                                     )}
                                                                     {alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0 && (
@@ -1008,7 +1262,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", 
                                                                                 encounterTabs[encounter.id] === 'alliance' ? "bg-slate-800 text-emerald-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}
                                                                         >
-                                                                            Alliance Picks
+                                                                            Alliance
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -1031,192 +1285,100 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
                                                                 {(() => {
                                                                     const activeTab = encounterTabs[encounter.id] || 'recommended';
-                                                                    let championsToRender: any[] = [];
-                                                                    let pickCountMap = new Map<number, number>();
-                                                                    let pickedByMap = new Map<number, { id: string; name: string; avatar: string | null }[]>();
-
+                                                                    
                                                                     if (activeTab === 'recommended') {
                                                                         const encounterPicks = popularCounters[encounter.id] || [];
-                                                                        pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
-                                                                        championsToRender = [...encounter.recommendedChampions].sort((a, b) => {
+                                                                        const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
+                                                                        
+                                                                        // Merging strategy:
+                                                                        // 1. All explicitly recommended champions
+                                                                        // 2. Popular community picks (even if not recommended)
+                                                                        // Note: The threshold is now handled efficiently on the server (getEncounterPopularCounters)
+                                                                        const recommendedIds = new Set(encounter.recommendedChampions.map(c => c.id));
+                                                                        const communityPicks = encounterPicks
+                                                                            .filter(p => !recommendedIds.has(p.championId))
+                                                                            .map(p => ({ ...p.champion, isCommunity: true }));
+
+                                                                        const allCandidates = [
+                                                                            ...encounter.recommendedChampions.map(c => ({ ...c, isOfficial: true })),
+                                                                            ...communityPicks
+                                                                        ];
+
+                                                                        // Sort by pick count descending
+                                                                        const sortedChampions = allCandidates.sort((a, b) => {
                                                                             const countA = pickCountMap.get(a.id) || 0;
                                                                             const countB = pickCountMap.get(b.id) || 0;
                                                                             return countB - countA;
                                                                         });
-                                                                    } else if (activeTab === 'featured') {
-                                                                        const picks = featuredPicks[encounter.id] || [];
-                                                                        pickCountMap = new Map(picks.map(p => [p.championId, p.count]));
-                                                                        championsToRender = picks.map(p => p.champion);
-                                                                    } else if (activeTab === 'alliance') {
-                                                                        const picks = alliancePicks[encounter.id] || [];
-                                                                        pickCountMap = new Map(picks.map(p => [p.championId, p.count]));
-                                                                        pickedByMap = new Map(picks.map(p => [p.championId, p.pickedBy || []]));
-                                                                        championsToRender = picks.map(p => p.champion);
-                                                                    }
 
-                                                                    if (championsToRender.length === 0) {
-                                                                        return <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">
-                                                                            {activeTab === 'recommended' ? "No specific champions recommended for this encounter." : "No picks found for this encounter."}
-                                                                        </p>;
-                                                                    }
+                                                                        if (sortedChampions.length === 0) {
+                                                                            return <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">
+                                                                                No specific champions recommended for this encounter.
+                                                                            </p>;
+                                                                        }
 
-                                                                    return championsToRender.map((c) => {
-                                                                        const pickCount = pickCountMap.get(c.id) || 0;
-                                                                        let popularityLabel = undefined;
-                                                                        
-                                                                        if (activeTab === 'recommended') {
+                                                                        return sortedChampions.map((c) => {
+                                                                            const pickCount = pickCountMap.get(c.id) || 0;
                                                                             const totalPlayers = quest._count?.playerPlans || 0;
-                                                                            popularityLabel = totalPlayers > 0 && pickCount > 0
+                                                                            const popularityLabel = totalPlayers > 0 && pickCount > 0
                                                                                 ? `${Math.round((pickCount / totalPlayers) * 100)}%`
                                                                                 : undefined;
-                                                                        } else {
-                                                                            popularityLabel = `${pickCount} Pick${pickCount !== 1 ? 's' : ''}`;
-                                                                        }
 
-                                                                        if (readOnly) {
-                                                                            // In readOnly mode, just show the champion reference without roster matching
                                                                             return (
                                                                                 <div key={c.id}>
-                                                                                    <UpdatedChampionItem
-                                                                                        item={{
-                                                                                            stars: 0,
-                                                                                            rank: 0,
-                                                                                            champion: {
-                                                                                                id: c.id,
-                                                                                                name: c.shortName || c.name,
-                                                                                                championClass: c.class,
-                                                                                                images: toChampionImages(c.images)
-                                                                                            }
-                                                                                        }}
-                                                                                        isRecommended
-                                                                                        popularityLabel={popularityLabel}
-                                                                                    />
+                                                                                    {renderChampionItem(c, encounter, popularityLabel, true)}
                                                                                 </div>
                                                                             );
-                                                                        }
-
-                                                                        // Find highest version in roster that matches restrictions
-                                                                        const validRosterEntries = roster
-                                                                            .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
-                                                                            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
-
-                                                                        // Best version that is either unused or used in THIS encounter
-                                                                        const userChamp = validRosterEntries.find(r => 
-                                                                            !Object.values(selections).includes(r.id) || 
-                                                                            selections[encounter.id] === r.id
-                                                                        ) || validRosterEntries[0];
-
-                                                                        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
-                                                                        
-                                                                        // Check if any version of this champion is in the team
-                                                                        const isChampInTeam = Object.values(selections).some(rid => {
-                                                                            if (!rid) return false;
-                                                                            return roster.find(r => r.id === rid)?.championId === c.id;
                                                                         });
-                                                                        
-                                                                        let isUnavailable = false;
-                                                                        if (userChamp && quest.teamLimit === null && !isSelected) {
-                                                                            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                                                                                if (encId !== encounter.id && rid !== null) {
-                                                                                    const r = roster.find(re => re.id === rid);
-                                                                                    if (r?.championId === userChamp.championId) {
-                                                                                        return acc + 1;
-                                                                                    }
-                                                                                }
-                                                                                return acc;
-                                                                            }, 0);
-
-                                                                            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
-
-                                                                            if (otherSelectionsCount >= validRosterCount) {
-                                                                                isUnavailable = true;
-                                                                            }
-                                                                        }
-
-                                                                        return (
-                                                                            <div
-                                                                                key={c.id}
-                                                                                onClick={() => {
-                                                                                    if (userChamp && !isUnavailable) {
-                                                                                        handleSelectCounter(encounter.id, userChamp.id);
-                                                                                    }
-                                                                                }}
-                                                                                className={cn("flex flex-col gap-1.5", isUnavailable ? "cursor-not-allowed" : "cursor-pointer group")}
-                                                                            >
-                                                                                <div className="relative">
-                                                                                    <UpdatedChampionItem
-                                                                                        item={userChamp ? {
-                                                                                            stars: userChamp.stars,
-                                                                                            rank: userChamp.rank,
-                                                                                            isAwakened: userChamp.isAwakened,
-                                                                                            sigLevel: userChamp.sigLevel,
-                                                                                            powerRating: userChamp.powerRating,
-                                                                                            champion: {
-                                                                                                id: userChamp.champion.id,
-                                                                                                name: userChamp.champion.shortName || userChamp.champion.name,
-                                                                                                championClass: userChamp.champion.class,
-                                                                                                    images: toChampionImages(userChamp.champion.images)
-                                                                                            },
-                                                                                            isAscended: userChamp.isAscended
-                                                                                        } : {
-                                                                                            stars: 0,
-                                                                                            rank: 0,
-                                                                                            champion: {
-                                                                                                id: c.id,
-                                                                                                name: c.shortName || c.name,
-                                                                                                championClass: c.class,
-                                                                                                images: toChampionImages(c.images)
-                                                                                            }
-                                                                                        }}
-                                                                                        isSelected={isSelected}
-                                                                                        isRecommended={!isSelected}
-                                                                                        isMissing={!userChamp}
-                                                                                        isInTeam={isChampInTeam}
-                                                                                        isUnavailable={isUnavailable}
-                                                                                        popularityLabel={popularityLabel}
-                                                                                    />
-                                                                                </div>
-                                                                                
-                                                                                {activeTab === 'alliance' && pickedByMap.has(c.id) && (
-                                                                                    <div className="flex items-center -space-x-1" title={pickedByMap.get(c.id)!.map(u => u.name).join(', ')}>
-                                                                                        {pickedByMap.get(c.id)!.slice(0, 4).map(user => (
-                                                                                            <div key={user.id} className="relative w-4 h-4 rounded-full border border-slate-950 overflow-hidden bg-slate-800 flex-shrink-0 z-10 shadow-sm group-hover:-translate-y-0.5 transition-transform">
-                                                                                                {user.avatar ? (
-                                                                                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                                                                                                ) : (
-                                                                                                    <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400 bg-slate-800">
-                                                                                                        {user.name.charAt(0).toUpperCase()}
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        ))}
-                                                                                        {pickedByMap.get(c.id)!.length > 4 && (
-                                                                                            <div className="relative w-4 h-4 rounded-full border border-slate-950 bg-slate-800 flex items-center justify-center text-[7px] font-bold z-20 text-slate-300 group-hover:-translate-y-0.5 transition-transform">
-                                                                                                +{pickedByMap.get(c.id)!.length - 4}
-                                                                                            </div>
-                                                                                        )}
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        );
-                                                                    });
+                                                                    }
+                                                                    
+                                                                    return null; // Handled in separate blocks below for Featured/Alliance
                                                                 })()}
                                                             </div>
+
+                                                            {/* Featured Picks Layout */}
+                                                            {(encounterTabs[encounter.id] === 'featured' && featuredPicks[encounter.id]?.length > 0) && (
+                                                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                        {featuredPicks[encounter.id].map((p) => renderListPick(p, encounter))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Alliance Picks Layout */}
+                                                            {(encounterTabs[encounter.id] === 'alliance' && alliancePicks[encounter.id]?.length > 0) && (
+                                                                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                                        {alliancePicks[encounter.id].map((p) => renderListPick(p, encounter))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Roster Selection — hidden in readOnly mode */}
                                                 {!readOnly && (
-                                                <div className="space-y-4 pt-8 border-t border-slate-800/50">
+                                                <div className="pt-6 mt-4 border-t border-slate-800/50">
                                                     <div className="flex flex-col gap-4">
                                                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-6 w-1 bg-sky-600 rounded-full" />
-                                                                <h4 className="text-xs font-bold text-slate-100 uppercase tracking-[0.2em]">Select from Your Roster</h4>
-                                                            </div>
+                                                            <button 
+                                                                onClick={() => setIsRosterExpanded(!isRosterExpanded)}
+                                                                className="flex items-center justify-between w-full md:w-auto px-4 py-2.5 bg-slate-900/50 hover:bg-slate-800/50 border border-slate-800 hover:border-sky-800/50 rounded-xl transition-all group/roster-toggle"
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={cn("h-4 w-1 rounded-full transition-colors", isRosterExpanded ? "bg-sky-500" : "bg-slate-700 group-hover/roster-toggle:bg-sky-500/50")} />
+                                                                    <h4 className={cn("text-xs font-bold uppercase tracking-[0.2em] transition-colors", isRosterExpanded ? "text-sky-400" : "text-slate-400 group-hover/roster-toggle:text-slate-200")}>
+                                                                        Select from Your Roster
+                                                                    </h4>
+                                                                </div>
+                                                                <div className={cn("p-1 rounded-md transition-colors ml-4", isRosterExpanded ? "bg-sky-500/10 text-sky-400" : "bg-slate-800 text-slate-500 group-hover/roster-toggle:text-slate-300 group-hover/roster-toggle:bg-slate-700")}>
+                                                                    {isRosterExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                                </div>
+                                                            </button>
 
-                                                            <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
+                                                            {isRosterExpanded && (
+                                                            <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl animate-in fade-in zoom-in-95 duration-200">
                                                                 <div className="relative flex-1">
                                                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                                                                     <Input
@@ -1267,192 +1429,197 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                     </Button>
                                                                 </div>
                                                             </div>
-                                                        </div>
-
-                                                        {/* Advanced Filters Panel */}
-                                                        {showAdvancedFilters && (
-                                                            <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center animate-in slide-in-from-top-2 duration-200">
-                                                                <MultiSelectFilter title="Tags" icon={TagIcon} options={filterMetadata.tags} selectedValues={tagFilter} onSelect={setTagFilter} logic={tagLogic} onLogicChange={setTagLogic} />
-                                                                <MultiSelectFilter title="Categories" icon={BookOpen} options={filterMetadata.abilityCategories} selectedValues={abilityCategoryFilter} onSelect={setAbilityCategoryFilter} logic={abilityCategoryLogic} onLogicChange={setAbilityCategoryLogic} />
-                                                                <MultiSelectFilter title="Abilities" icon={Zap} options={filterMetadata.abilities} selectedValues={abilityFilter} onSelect={setAbilityFilter} logic={abilityLogic} onLogicChange={setAbilityLogic} />
-                                                                <MultiSelectFilter title="Immunities" icon={Shield} options={filterMetadata.immunities} selectedValues={immunityFilter} onSelect={setImmunityFilter} logic={immunityLogic} onLogicChange={setImmunityLogic} />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Active Filter Badges */}
-                                                        <div className="flex flex-wrap gap-2 items-center">
-                                                            {/* Read-only requirements from Quest/Encounter */}
-                                                            {quest.requiredTags?.map((t: Tag) => (
-                                                                <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
-                                                                    <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
-                                                                </Badge>
-                                                            ))}
-                                                            {encounter.requiredTags?.map((t: any) => (
-                                                                <Badge key={`req-e-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
-                                                                    <ShieldAlert className="w-3 h-3" /> Fight Req: {t.name}
-                                                                </Badge>
-                                                            ))}
-
-                                                            {/* User-selected removable filters */}
-                                                            {tagFilter.map(tag => (
-                                                                <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Tag: {tag}
-                                                                    <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-                                                            {abilityCategoryFilter.map(cat => (
-                                                                <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Cat: {cat}
-                                                                    <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-                                                            {abilityFilter.map(ab => (
-                                                                <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Ability: {ab}
-                                                                    <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-                                                            {immunityFilter.map(imm => (
-                                                                <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Immunity: {imm}
-                                                                    <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-
-                                                            {activeFiltersCount > 0 && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2"
-                                                                    onClick={clearAllFilters}
-                                                                >
-                                                                    <Trash2 className="w-3 h-3 mr-1" /> Clear All
-                                                                </Button>
                                                             )}
                                                         </div>
-                                                    </div>
 
-                                                    {(() => {
-                                                        let encounterRoster = filteredGlobalRoster.filter(r => {
-                                                            // Quest-level restrictions
-                                                            if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                                            if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-                                                            if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-                                                            if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                                                const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-                                                                if (!hasTag) return false;
-                                                            }
-                                                            // Encounter-level restrictions
-                                                            if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                                            if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-                                                            if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-                                                            if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                                                const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                                                if (!hasTag) return false;
-                                                            }
-
-                                                            return true;
-                                                        });
-
-                                                        // Handle infinite team limit - hide champion if all valid rarities are used in other encounters
-                                                        if (quest.teamLimit === null) {
-                                                            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                                                                if (encId !== encounter.id && rid !== null) {
-                                                                    const rosterEntry = roster.find(re => re.id === rid);
-                                                                    if (rosterEntry) {
-                                                                        acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
-                                                                    }
-                                                                }
-                                                                return acc;
-                                                            }, {} as Record<number, number>);
-
-                                                            const availableCount = encounterRoster.reduce((acc, r) => {
-                                                                acc[r.championId] = (acc[r.championId] || 0) + 1;
-                                                                return acc;
-                                                            }, {} as Record<number, number>);
-
-                                                            encounterRoster = encounterRoster.filter(r => {
-                                                                // Always keep it visible if it's currently selected in THIS encounter
-                                                                if (selections[encounter.id] === r.id) return true;
-                                                                
-                                                                const used = otherSelectionsCount[r.championId] || 0;
-                                                                const available = availableCount[r.championId] || 0;
-                                                                return used < available;
-                                                            });
-                                                        }
-
-                                                        encounterRoster = encounterRoster.sort((a, b) => {
-                                                            // Selected first
-                                                            if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
-                                                            if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
-                                                            return 0;
-                                                        });
-
-                                                        if (roster.length === 0) {
-                                                            return (
-                                                                <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl">
-                                                                    <p className="text-slate-400 text-lg">Your roster is empty.</p>
-                                                                    <p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p>
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        if (encounterRoster.length === 0) {
-                                                            return (
-                                                                <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
-                                                                    <p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p>
-                                                                </div>
-                                                            )
-                                                        }
-
-                                                        return (
-                                                            <div className="space-y-4">
-                                                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
-                                                                    {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
-                                                                        const isSelected = selections[encounter.id] === r.id;
-                                                                        const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
-                                                                        const isInTeam = Object.values(selections).includes(r.id);
-
-                                                                        return (
-                                                                            <div
-                                                                                key={r.id}
-                                                                                onClick={() => handleSelectCounter(encounter.id, r.id)}
-                                                                                title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
-                                                                                className="cursor-pointer"
-                                                                            >
-                                                                                <UpdatedChampionItem
-                                                                                    item={{
-                                                                                        stars: r.stars,
-                                                                                        rank: r.rank,
-                                                                                        isAwakened: r.isAwakened,
-                                                                                        sigLevel: r.sigLevel,
-                                                                                        powerRating: r.powerRating,
-                                                                                        champion: {
-                                                                                            id: r.champion.id,
-                                                                                            name: r.champion.shortName || r.champion.name,
-                                                                                            championClass: r.champion.class,
-                                                                                            images: r.champion.images
-                                                                                        },
-                                                                                        isAscended: r.isAscended
-                                                                                    }}
-                                                                                    isSelected={isSelected}
-                                                                                    isRecommended={isRecommended}
-                                                                                    isInTeam={isInTeam}
-                                                                                />
-                                                                            </div>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                                {encounterRoster.length > 30 && (
-                                                                    <div className="text-center p-3 bg-slate-900/30 border border-slate-800 border-dashed rounded-lg">
-                                                                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                                                                            Showing first 30 of {encounterRoster.length} matches. Use search or filters to narrow down.
-                                                                        </p>
+                                                        {isRosterExpanded && (
+                                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                                                                {/* Advanced Filters Panel */}
+                                                                {showAdvancedFilters && (
+                                                                    <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center animate-in slide-in-from-top-2 duration-200">
+                                                                        <MultiSelectFilter title="Tags" icon={TagIcon} options={filterMetadata.tags} selectedValues={tagFilter} onSelect={setTagFilter} logic={tagLogic} onLogicChange={setTagLogic} />
+                                                                        <MultiSelectFilter title="Categories" icon={BookOpen} options={filterMetadata.abilityCategories} selectedValues={abilityCategoryFilter} onSelect={setAbilityCategoryFilter} logic={abilityCategoryLogic} onLogicChange={setAbilityCategoryLogic} />
+                                                                        <MultiSelectFilter title="Abilities" icon={Zap} options={filterMetadata.abilities} selectedValues={abilityFilter} onSelect={setAbilityFilter} logic={abilityLogic} onLogicChange={setAbilityLogic} />
+                                                                        <MultiSelectFilter title="Immunities" icon={Shield} options={filterMetadata.immunities} selectedValues={immunityFilter} onSelect={setImmunityFilter} logic={immunityLogic} onLogicChange={setImmunityLogic} />
                                                                     </div>
                                                                 )}
+
+                                                                {/* Active Filter Badges */}
+                                                                <div className="flex flex-wrap gap-2 items-center">
+                                                                    {/* Read-only requirements from Quest/Encounter */}
+                                                                    {quest.requiredTags?.map((t: Tag) => (
+                                                                        <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
+                                                                            <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
+                                                                        </Badge>
+                                                                    ))}
+                                                                    {encounter.requiredTags?.map((t: any) => (
+                                                                        <Badge key={`req-e-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
+                                                                            <ShieldAlert className="w-3 h-3" /> Fight Req: {t.name}
+                                                                        </Badge>
+                                                                    ))}
+
+                                                                    {/* User-selected removable filters */}
+                                                                    {tagFilter.map(tag => (
+                                                                        <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                            Tag: {tag}
+                                                                            <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                        </Badge>
+                                                                    ))}
+                                                                    {abilityCategoryFilter.map(cat => (
+                                                                        <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                            Cat: {cat}
+                                                                            <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                        </Badge>
+                                                                    ))}
+                                                                    {abilityFilter.map(ab => (
+                                                                        <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                            Ability: {ab}
+                                                                            <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                        </Badge>
+                                                                    ))}
+                                                                    {immunityFilter.map(imm => (
+                                                                        <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                                                            Immunity: {imm}
+                                                                            <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                                                        </Badge>
+                                                                    ))}
+
+                                                                    {activeFiltersCount > 0 && (
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2"
+                                                                            onClick={clearAllFilters}
+                                                                        >
+                                                                            <Trash2 className="w-3 h-3 mr-1" /> Clear All
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
+
+                                                                {(() => {
+                                                                    let encounterRoster = filteredGlobalRoster.filter(r => {
+                                                                        // Quest-level restrictions
+                                                                        if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
+                                                                        if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
+                                                                        if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
+                                                                        if (quest.requiredTags && quest.requiredTags.length > 0) {
+                                                                            const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                            if (!hasTag) return false;
+                                                                        }
+                                                                        // Encounter-level restrictions
+                                                                        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
+                                                                        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+                                                                        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
+                                                                        if (encounter.requiredTags && encounter.requiredTags.length > 0) {
+                                                                            const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                                                            if (!hasTag) return false;
+                                                                        }
+
+                                                                        return true;
+                                                                    });
+
+                                                                    // Handle infinite team limit - hide champion if all valid rarities are used in other encounters
+                                                                    if (quest.teamLimit === null) {
+                                                                        const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+                                                                            if (encId !== encounter.id && rid !== null) {
+                                                                                const rosterEntry = roster.find(re => re.id === rid);
+                                                                                if (rosterEntry) {
+                                                                                    acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
+                                                                                }
+                                                                            }
+                                                                            return acc;
+                                                                        }, {} as Record<number, number>);
+
+                                                                        const availableCount = encounterRoster.reduce((acc, r) => {
+                                                                            acc[r.championId] = (acc[r.championId] || 0) + 1;
+                                                                            return acc;
+                                                                        }, {} as Record<number, number>);
+
+                                                                        encounterRoster = encounterRoster.filter(r => {
+                                                                            // Always keep it visible if it's currently selected in THIS encounter
+                                                                            if (selections[encounter.id] === r.id) return true;
+                                                                            
+                                                                            const used = otherSelectionsCount[r.championId] || 0;
+                                                                            const available = availableCount[r.championId] || 0;
+                                                                            return used < available;
+                                                                        });
+                                                                    }
+
+                                                                    encounterRoster = encounterRoster.sort((a, b) => {
+                                                                        // Selected first
+                                                                        if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
+                                                                        if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
+                                                                        return 0;
+                                                                    });
+
+                                                                    if (roster.length === 0) {
+                                                                        return (
+                                                                            <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl">
+                                                                                <p className="text-slate-400 text-lg">Your roster is empty.</p>
+                                                                                <p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p>
+                                                                            </div>
+                                                                        );
+                                                                    }
+
+                                                                    if (encounterRoster.length === 0) {
+                                                                        return (
+                                                                            <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
+                                                                                <p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p>
+                                                                            </div>
+                                                                        )
+                                                                    }
+
+                                                                    return (
+                                                                        <div className="space-y-4">
+                                                                            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
+                                                                                {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
+                                                                                    const isSelected = selections[encounter.id] === r.id;
+                                                                                    const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
+                                                                                    const isInTeam = Object.values(selections).includes(r.id);
+
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={r.id}
+                                                                                            onClick={() => handleSelectCounter(encounter.id, r.id)}
+                                                                                            title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
+                                                                                            className="cursor-pointer"
+                                                                                        >
+                                                                                            <UpdatedChampionItem
+                                                                                                item={{
+                                                                                                    stars: r.stars,
+                                                                                                    rank: r.rank,
+                                                                                                    isAwakened: r.isAwakened,
+                                                                                                    sigLevel: r.sigLevel,
+                                                                                                    powerRating: r.powerRating,
+                                                                                                    champion: {
+                                                                                                        id: r.champion.id,
+                                                                                                        name: r.champion.shortName || r.champion.name,
+                                                                                                        championClass: r.champion.class,
+                                                                                                        images: r.champion.images
+                                                                                                    },
+                                                                                                    isAscended: r.isAscended
+                                                                                                }}
+                                                                                                isSelected={isSelected}
+                                                                                                isRecommended={isRecommended}
+                                                                                                isInTeam={isInTeam}
+                                                                                            />
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                            {encounterRoster.length > 30 && (
+                                                                                <div className="text-center p-3 bg-slate-900/30 border border-slate-800 border-dashed rounded-lg">
+                                                                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                                                                                        Showing first 30 of {encounterRoster.length} matches. Use search or filters to narrow down.
+                                                                                    </p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })()}
                                                             </div>
-                                                        );
-                                                    })()}
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 )}
 
