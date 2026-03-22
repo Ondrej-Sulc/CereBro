@@ -31,13 +31,22 @@ export const parseFormData = async (req: NextRequest): Promise<ParsedFormData> =
         tempFilePath = path.join(tempDir, safeFilename);
 
         const writeStream = fs.createWriteStream(tempFilePath);
-        file.pipe(writeStream);
-
+        
+        // Use stream pipeline for individual file streams as well
+        const { pipeline } = require('stream');
         const writePromise = new Promise<void>((resolveWrite, rejectWrite) => {
-          writeStream.on('finish', resolveWrite);
-          writeStream.on('error', rejectWrite);
-          file.on('error', rejectWrite);
+          pipeline(file, writeStream, (err: any) => {
+            if (err) {
+              rejectWrite(err);
+            } else {
+              resolveWrite();
+            }
+          });
         });
+        
+        // Attach a dummy catch to prevent unhandled rejections if busboy crashes 
+        // the main pipeline stream before Promise.all is called
+        writePromise.catch(() => {});
         fileWritePromises.push(writePromise);
       });
 
@@ -66,15 +75,32 @@ export const parseFormData = async (req: NextRequest): Promise<ParsedFormData> =
       };
 
       bb.on('error', (err) => {
+        logger.error({ 
+            err, 
+            headers: Object.keys(headers).length ? headers : undefined, 
+            contentLength: headers['content-length'] 
+        }, "Busboy emitted error during formal data parsing");
         cleanup();
         reject(err);
       });
 
       if (req.body) {
         // Use Node.js stream utility to properly handle backpressure and chunks
-        const { Readable } = require('stream');
+        const { Readable, pipeline } = require('stream');
         const nodeStream = Readable.fromWeb(req.body as any);
-        nodeStream.pipe(bb);
+        
+        nodeStream.on('aborted', () => {
+            logger.warn({ contentLength: headers['content-length'] }, "Client aborted the stream prematurely (e.g. timeout or closed tab)");
+        });
+
+        // Use pipeline to safely pipe and catch unhandled stream destruction errors
+        pipeline(nodeStream, bb, (err: any) => {
+            if (err && err.message === 'Unexpected end of form') {
+                logger.warn("Pipeline successfully caught 'Unexpected end of form' due to client stream drop");
+            } else if (err) {
+                logger.error({ err }, "Stream pipeline encountered an error");
+            }
+        });
       } else {
         bb.end();
       }
