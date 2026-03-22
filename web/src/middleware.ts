@@ -16,12 +16,13 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api/war-videos/upload (large streaming uploads)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public (public files)
      * - manifest.webmanifest (PWA manifest)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/war-videos/upload|_next/static|_next/image|favicon.ico|public|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
