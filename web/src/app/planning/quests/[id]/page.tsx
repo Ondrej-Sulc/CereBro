@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getQuestPlanById, getEncounterPopularCounters } from "@/app/actions/quests";
-import type { PopularCountersMap } from "@/app/actions/quests";
+import { getQuestPlanById, getEncounterPopularCounters, getEncounterFeaturedPicks, getEncounterAlliancePicks } from "@/app/actions/quests";
+import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
 import QuestTimelineClient, { QuestWithRelations, RosterWithChampion } from "@/components/planning/quest-timeline-client";
 import Link from "next/link";
 import Image from "next/image";
@@ -123,7 +123,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
 
     // Fetch the user's roster with tags and abilities
     // Fetch filter metadata in parallel
-    const [rosterEntries, tags, abilityCategories, abilityLinks, immunityLinks, popularCounters] = await Promise.all([
+    const [rosterEntries, tags, abilityCategories, abilityLinks, immunityLinks, popularCounters, featuredPicks, alliancePicks] = await Promise.all([
         prisma.roster.findMany({
             where: { playerId: activePlayer.id },
             include: {
@@ -153,7 +153,9 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
         prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
         prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
-        getEncounterPopularCounters(id)
+        getEncounterPopularCounters(id),
+        getEncounterFeaturedPicks(id),
+        activePlayer?.allianceId ? getEncounterAlliancePicks(id, activePlayer.allianceId, activePlayer.id) : Promise.resolve({})
     ]);
 
     const [abilities, immunities] = await Promise.all([
@@ -337,6 +339,8 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
                 popularCounters={popularCounters}
+                featuredPicks={featuredPicks}
+                alliancePicks={alliancePicks as EnhancedCountersMap}
                 filterMetadata={{
                     tags,
                     abilityCategories,

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check, Target, Swords } from "lucide-react";
 import { savePlayerQuestCounter, getShareablePlanId } from "@/app/actions/quests";
-import type { PopularCountersMap } from "@/app/actions/quests";
+import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
 import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -82,6 +82,8 @@ interface Props {
     roster?: RosterWithChampion[];
     savedEncounters?: PlayerQuestEncounter[];
     popularCounters?: PopularCountersMap;
+    featuredPicks?: EnhancedCountersMap;
+    alliancePicks?: EnhancedCountersMap;
     filterMetadata?: FilterMetadata;
     readOnly?: boolean;
     /** Map of questEncounterId -> roster entry, used in readOnly mode to resolve selected champion details */
@@ -120,7 +122,7 @@ function toChampionImages(images: unknown): ChampionImages {
     };
 }
 
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -131,6 +133,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [isScrolled, setIsScrolled] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const [shareSuccess, setShareSuccess] = useState(false);
+    const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
 
     useEffect(() => {
         const handleScroll = () => {
@@ -975,14 +978,46 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
                                                     {/* Suggested Counters Area */}
                                                     <div className="xl:col-span-5 space-y-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
-                                                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
+                                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="h-6 w-1 bg-amber-500 rounded-full" />
+                                                                <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
+                                                            </div>
+                                                            {/* Tabs if there are featured or alliance picks */}
+                                                            {((featuredPicks[encounter.id] && featuredPicks[encounter.id].length > 0) || (alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0)) && (
+                                                                <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 self-start shadow-sm">
+                                                                    <button 
+                                                                        onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: 'recommended' }))}
+                                                                        className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", 
+                                                                            (!encounterTabs[encounter.id] || encounterTabs[encounter.id] === 'recommended') ? "bg-slate-800 text-amber-500 shadow-sm" : "text-slate-500 hover:text-slate-300")}
+                                                                    >
+                                                                        Recommended
+                                                                    </button>
+                                                                    {featuredPicks[encounter.id] && featuredPicks[encounter.id].length > 0 && (
+                                                                        <button 
+                                                                            onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: 'featured' }))}
+                                                                            className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", 
+                                                                                encounterTabs[encounter.id] === 'featured' ? "bg-slate-800 text-purple-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}
+                                                                        >
+                                                                            Featured Plans
+                                                                        </button>
+                                                                    )}
+                                                                    {alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0 && (
+                                                                        <button 
+                                                                            onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: 'alliance' }))}
+                                                                            className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", 
+                                                                                encounterTabs[encounter.id] === 'alliance' ? "bg-slate-800 text-emerald-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}
+                                                                        >
+                                                                            Alliance Picks
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 space-y-4">
                                                             {/* Suggested Tags */}
-                                                            {encounter.recommendedTags.length > 0 && (
+                                                            {encounter.recommendedTags.length > 0 && (!encounterTabs[encounter.id] || encounterTabs[encounter.id] === 'recommended') && (
                                                                 <div className="flex flex-wrap gap-2">
                                                                     {encounter.recommendedTags.map((tag: string) => (
                                                                         <Badge key={tag} variant="outline" className="text-[10px] uppercase font-bold bg-amber-950/20 border-amber-800/50 text-amber-400 py-1 px-2.5 rounded-full flex gap-2 items-center tracking-wider shadow-sm">
@@ -993,25 +1028,51 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             )}
 
                                                             {/* Recommended Champions List */}
-                                                            {encounter.recommendedChampions.length > 0 ? (
-                                                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
-                                                                    {(() => {
-                                                                        const encounterPicks = popularCounters[encounter.id] || [];
-                                                                        const totalPlayers = quest._count?.playerPlans || 0;
-                                                                        const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
+                                                            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
+                                                                {(() => {
+                                                                    const activeTab = encounterTabs[encounter.id] || 'recommended';
+                                                                    let championsToRender: any[] = [];
+                                                                    let pickCountMap = new Map<number, number>();
+                                                                    let pickedByMap = new Map<number, { id: string; name: string; avatar: string | null }[]>();
 
-                                                                        // Sort recommended champions by popularity (most picked first)
-                                                                        const sortedChampions = [...encounter.recommendedChampions].sort((a, b) => {
+                                                                    if (activeTab === 'recommended') {
+                                                                        const encounterPicks = popularCounters[encounter.id] || [];
+                                                                        pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
+                                                                        championsToRender = [...encounter.recommendedChampions].sort((a, b) => {
                                                                             const countA = pickCountMap.get(a.id) || 0;
                                                                             const countB = pickCountMap.get(b.id) || 0;
                                                                             return countB - countA;
                                                                         });
+                                                                    } else if (activeTab === 'featured') {
+                                                                        const picks = featuredPicks[encounter.id] || [];
+                                                                        pickCountMap = new Map(picks.map(p => [p.championId, p.count]));
+                                                                        championsToRender = picks.map(p => p.champion);
+                                                                    } else if (activeTab === 'alliance') {
+                                                                        const picks = alliancePicks[encounter.id] || [];
+                                                                        pickCountMap = new Map(picks.map(p => [p.championId, p.count]));
+                                                                        pickedByMap = new Map(picks.map(p => [p.championId, p.pickedBy || []]));
+                                                                        championsToRender = picks.map(p => p.champion);
+                                                                    }
 
-                                                                        return sortedChampions.map((c) => {
+                                                                    if (championsToRender.length === 0) {
+                                                                        return <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">
+                                                                            {activeTab === 'recommended' ? "No specific champions recommended for this encounter." : "No picks found for this encounter."}
+                                                                        </p>;
+                                                                    }
+
+                                                                    return championsToRender.map((c) => {
                                                                         const pickCount = pickCountMap.get(c.id) || 0;
-                                                                        const popularityLabel = totalPlayers > 0 && pickCount > 0
-                                                                            ? `${Math.round((pickCount / totalPlayers) * 100)}%`
-                                                                            : undefined;
+                                                                        let popularityLabel = undefined;
+                                                                        
+                                                                        if (activeTab === 'recommended') {
+                                                                            const totalPlayers = quest._count?.playerPlans || 0;
+                                                                            popularityLabel = totalPlayers > 0 && pickCount > 0
+                                                                                ? `${Math.round((pickCount / totalPlayers) * 100)}%`
+                                                                                : undefined;
+                                                                        } else {
+                                                                            popularityLabel = `${pickCount} Pick${pickCount !== 1 ? 's' : ''}`;
+                                                                        }
+
                                                                         if (readOnly) {
                                                                             // In readOnly mode, just show the champion reference without roster matching
                                                                             return (
@@ -1080,47 +1141,67 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                         handleSelectCounter(encounter.id, userChamp.id);
                                                                                     }
                                                                                 }}
-                                                                                className={cn(isUnavailable ? "cursor-not-allowed" : "cursor-pointer group")}
+                                                                                className={cn("flex flex-col gap-1.5", isUnavailable ? "cursor-not-allowed" : "cursor-pointer group")}
                                                                             >
-                                                                                <UpdatedChampionItem
-                                                                                    item={userChamp ? {
-                                                                                        stars: userChamp.stars,
-                                                                                        rank: userChamp.rank,
-                                                                                        isAwakened: userChamp.isAwakened,
-                                                                                        sigLevel: userChamp.sigLevel,
-                                                                                        powerRating: userChamp.powerRating,
-                                                                                        champion: {
-                                                                                            id: userChamp.champion.id,
-                                                                                            name: userChamp.champion.shortName || userChamp.champion.name,
-                                                                                            championClass: userChamp.champion.class,
-                                                                                                images: toChampionImages(userChamp.champion.images)
-                                                                                        },
-                                                                                        isAscended: userChamp.isAscended
-                                                                                    } : {
-                                                                                        stars: 0,
-                                                                                        rank: 0,
-                                                                                        champion: {
-                                                                                            id: c.id,
-                                                                                            name: c.shortName || c.name,
-                                                                                            championClass: c.class,
-                                                                                            images: toChampionImages(c.images)
-                                                                                        }
-                                                                                    }}
-                                                                                    isSelected={isSelected}
-                                                                                    isRecommended={!isSelected}
-                                                                                    isMissing={!userChamp}
-                                                                                    isInTeam={isChampInTeam}
-                                                                                    isUnavailable={isUnavailable}
-                                                                                    popularityLabel={popularityLabel}
-                                                                                />
+                                                                                <div className="relative">
+                                                                                    <UpdatedChampionItem
+                                                                                        item={userChamp ? {
+                                                                                            stars: userChamp.stars,
+                                                                                            rank: userChamp.rank,
+                                                                                            isAwakened: userChamp.isAwakened,
+                                                                                            sigLevel: userChamp.sigLevel,
+                                                                                            powerRating: userChamp.powerRating,
+                                                                                            champion: {
+                                                                                                id: userChamp.champion.id,
+                                                                                                name: userChamp.champion.shortName || userChamp.champion.name,
+                                                                                                championClass: userChamp.champion.class,
+                                                                                                    images: toChampionImages(userChamp.champion.images)
+                                                                                            },
+                                                                                            isAscended: userChamp.isAscended
+                                                                                        } : {
+                                                                                            stars: 0,
+                                                                                            rank: 0,
+                                                                                            champion: {
+                                                                                                id: c.id,
+                                                                                                name: c.shortName || c.name,
+                                                                                                championClass: c.class,
+                                                                                                images: toChampionImages(c.images)
+                                                                                            }
+                                                                                        }}
+                                                                                        isSelected={isSelected}
+                                                                                        isRecommended={!isSelected}
+                                                                                        isMissing={!userChamp}
+                                                                                        isInTeam={isChampInTeam}
+                                                                                        isUnavailable={isUnavailable}
+                                                                                        popularityLabel={popularityLabel}
+                                                                                    />
+                                                                                </div>
+                                                                                
+                                                                                {activeTab === 'alliance' && pickedByMap.has(c.id) && (
+                                                                                    <div className="flex items-center -space-x-1" title={pickedByMap.get(c.id)!.map(u => u.name).join(', ')}>
+                                                                                        {pickedByMap.get(c.id)!.slice(0, 4).map(user => (
+                                                                                            <div key={user.id} className="relative w-4 h-4 rounded-full border border-slate-950 overflow-hidden bg-slate-800 flex-shrink-0 z-10 shadow-sm group-hover:-translate-y-0.5 transition-transform">
+                                                                                                {user.avatar ? (
+                                                                                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                                                                                ) : (
+                                                                                                    <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400 bg-slate-800">
+                                                                                                        {user.name.charAt(0).toUpperCase()}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        ))}
+                                                                                        {pickedByMap.get(c.id)!.length > 4 && (
+                                                                                            <div className="relative w-4 h-4 rounded-full border border-slate-950 bg-slate-800 flex items-center justify-center text-[7px] font-bold z-20 text-slate-300 group-hover:-translate-y-0.5 transition-transform">
+                                                                                                +{pickedByMap.get(c.id)!.length - 4}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </div>
+                                                                                )}
                                                                             </div>
                                                                         );
                                                                     });
-                                                                    })()}
-                                                                </div>
-                                                            ) : (
-                                                                <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg">No specific champions recommended for this encounter.</p>
-                                                            )}
+                                                                })()}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
