@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
   env: {
     APP_VERSION: buildId,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10000mb',
+    },
+  },
   outputFileTracingRoot: path.join(__dirname, '../../'),
   images: {
     qualities: [10, 75, 90],
