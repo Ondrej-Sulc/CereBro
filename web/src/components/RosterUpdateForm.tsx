@@ -299,16 +299,16 @@ export function RosterUpdateForm() {
                             }}
                             className="w-full"
                         >
-                            <TabsList className="grid w-full grid-cols-2 bg-slate-950 p-1 border border-slate-800 rounded-lg h-auto">
+                            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-0 bg-slate-950 p-1 border border-slate-800 rounded-lg h-auto">
                                 <TabsTrigger
                                     value="stats-view"
-                                    className="data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-900/20 py-2.5 transition-all duration-300"
+                                    className="data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-900/20 py-2.5 transition-all duration-300 text-sm sm:text-base whitespace-normal h-auto"
                                 >
                                     Battlegrounds View (Battle Deck)
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="grid-view"
-                                    className="data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-900/20 py-2.5 transition-all duration-300"
+                                    className="data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-900/20 py-2.5 transition-all duration-300 text-sm sm:text-base whitespace-normal h-auto"
                                 >
                                     Champions View (My Champions)
                                 </TabsTrigger>
