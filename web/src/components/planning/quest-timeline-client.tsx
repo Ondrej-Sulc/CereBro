@@ -477,41 +477,23 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             <div 
                 key={p.championId} 
                 className={cn(
-                    "flex items-center gap-4 p-2.5 rounded-xl transition-all border relative overflow-hidden group/pick-card",
-                    isUnavailable ? "cursor-not-allowed opacity-60 saturate-50 contrast-125 border-red-900/40 bg-red-950/10" : "cursor-pointer bg-slate-900/40 backdrop-blur-sm",
-                    !isUnavailable && isSelected && "border-sky-500/60 shadow-[0_0_20px_rgba(14,165,233,0.15)] bg-sky-950/20",
-                    !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.1)] bg-emerald-950/10",
-                    !isUnavailable && isMissing && "opacity-60 grayscale hover:grayscale-0 border-slate-800",
-                    !isUnavailable && !isSelected && !isInTeam && !isMissing && cn("border-slate-800 hover:bg-slate-900/80", classColors.hoverBorder)
+                    "flex flex-col rounded-2xl transition-all duration-300 border relative overflow-hidden group/pick-card",
+                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : "cursor-pointer bg-slate-900/40 backdrop-blur-md hover:scale-[1.02] shadow-xl",
+                    !isUnavailable && isSelected && "border-sky-500/60 ring-1 ring-sky-500/30 bg-sky-950/20 shadow-sky-500/10",
+                    !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 bg-emerald-950/10 shadow-emerald-500/10",
+                    !isUnavailable && isMissing && "opacity-70 grayscale-[0.5] hover:grayscale-0 border-slate-800/50",
+                    !isUnavailable && !isSelected && !isInTeam && !isMissing && cn("border-slate-800/80 hover:bg-slate-800/40", classColors.hoverBorder)
                 )}
                 onClick={(e) => {
                     e.stopPropagation();
                     if (userChamp && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
                 }}
             >
-                {/* Subtle Class Gradient Background */}
-                <div className={cn("absolute inset-0 opacity-10 transition-opacity group-hover/pick-card:opacity-20 pointer-events-none", classColors.bg)} />
-
-                {isUnavailable && (
-                    <div className="absolute inset-0 z-40 bg-red-950/40 flex items-center justify-center backdrop-blur-[1px] pointer-events-none">
-                        <Ban className="w-8 h-8 text-red-500 drop-shadow-md mb-1" strokeWidth={3} />
-                    </div>
-                )}
+                {/* Subtle Class Ambient Glow */}
+                <div className={cn("absolute -inset-1 opacity-[0.03] transition-opacity group-hover/pick-card:opacity-[0.07] pointer-events-none blur-3xl", classColors.bg)} />
                 
-                {/* Status Badges */}
-                {isSelected && (
-                    <div className="absolute top-0 right-0 p-1.5 bg-sky-500 text-slate-950 rounded-bl-xl shadow-lg animate-in slide-in-from-top-1 slide-in-from-right-1 z-20">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
-                )}
-                {isInTeam && !isSelected && !isUnavailable && (
-                    <div className="absolute top-0 right-0 p-1.5 bg-emerald-600 text-white rounded-bl-xl shadow-lg z-20 animate-in slide-in-from-top-1 slide-in-from-right-1" title="Already in team">
-                        <Users className="w-3.5 h-3.5" />
-                    </div>
-                )}
-
-                <div className="shrink-0 relative z-10">
-                    <div className="scale-[0.85] origin-top-left -mb-4 -mr-4">
+                <div className="flex p-3 gap-4 items-start relative z-10">
+                    <div className="shrink-0 relative">
                         <ChampionAvatar
                             images={toChampionImages(p.champion.images)}
                             name={p.champion.name}
@@ -521,31 +503,52 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             sigLevel={userChamp?.sigLevel || 0}
                             championClass={p.champion.class}
                             size="lg"
-                            showRank={!!userChamp}
-                            showStars={!!userChamp}
+                            showRank={true}
+                            showStars={true}
+                            className="rounded-xl border-slate-800/50 shadow-lg"
                         />
-                    </div>
-                </div>
-                
-                <div className="flex-1 min-w-0 z-10 py-1">
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <span className={cn(
-                            "text-sm font-black truncate drop-shadow-md", 
-                            isSelected ? "text-sky-400" : (isInTeam && !isUnavailable ? "text-emerald-400" : "text-slate-200 group-hover/pick-card:text-white transition-colors")
-                        )}>
-                            {p.champion.name}
-                        </span>
-                        {isMissing && (
-                            <Badge variant="outline" className="text-[8px] px-1.5 h-3.5 font-bold bg-slate-950 border-slate-800 text-slate-500 uppercase tracking-widest shrink-0">
-                                Missing
-                            </Badge>
+
+                        {/* Status Checkmark */}
+                        {isSelected && (
+                            <div className="absolute -top-1.5 -left-1.5 p-1.5 bg-sky-500 text-slate-950 rounded-full shadow-lg z-20 border border-sky-400/50 animate-in zoom-in duration-300">
+                                <Check className="w-3.5 h-3.5 stroke-[4]" />
+                            </div>
+                        )}
+                        {isInTeam && !isSelected && !isUnavailable && (
+                            <div className="absolute -top-1.5 -left-1.5 p-1.5 bg-emerald-600 text-white rounded-full shadow-lg z-20 border border-emerald-400/50 animate-in zoom-in duration-300">
+                                <Users className="w-3.5 h-3.5 stroke-[2.5]" />
+                            </div>
                         )}
                     </div>
-                    
-                    <div className="flex flex-wrap gap-1.5">
-                        {p.pickedBy?.map((user) => (
-                            <div key={user.id} className="flex items-center gap-1.5 bg-slate-950/60 border border-slate-800/80 rounded-full pl-0.5 pr-2 py-0.5" title={user.name}>
-                                <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0">
+
+                    <div className="flex-1 min-w-0 py-0.5 space-y-2">
+                        <div className="flex flex-col">
+                            <h5 className={cn(
+                                "text-base font-black truncate tracking-tight transition-all",
+                                classColors.text,
+                                "group-hover/pick-card:brightness-125 hover:scale-[1.01] origin-left"
+                            )}>
+                                {p.champion.name}
+                            </h5>
+                            <div className="flex items-center gap-2 mt-1">
+                                {isMissing && (
+                                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800/50">Missing</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Attribution Bar */}
+                {p.pickedBy && p.pickedBy.length > 0 && (
+                    <div className="mt-auto px-3 py-2 bg-slate-950/40 border-t border-slate-800/50 flex flex-wrap gap-2 items-center relative z-10 transition-colors group-hover/pick-card:bg-slate-950/60">
+                        {p.pickedBy.map((user) => (
+                            <div 
+                                key={user.id} 
+                                className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-full pl-0.5 pr-2 py-0.5 group/user hover:border-sky-500/50 transition-all shadow-sm"
+                                title={`Suggested by ${user.name}`}
+                            >
+                                <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700">
                                     {user.avatar ? (
                                         <Image src={user.avatar} alt={user.name} fill className="object-cover" />
                                     ) : (
@@ -554,13 +557,22 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                         </div>
                                     )}
                                 </div>
-                                <span className="text-[9px] text-slate-400 font-medium truncate max-w-[80px]">
+                                <span className="text-[9px] text-slate-300 font-bold truncate max-w-[90px]">
                                     {user.name}
                                 </span>
                             </div>
                         ))}
                     </div>
-                </div>
+                )}
+
+                {isUnavailable && (
+                    <div className="absolute inset-0 z-40 bg-red-950/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
+                        <div className="bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full flex items-center gap-2 shadow-xl">
+                            <Ban className="w-3.5 h-3.5 text-red-500" strokeWidth={3} />
+                            <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">Unavailable</span>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };

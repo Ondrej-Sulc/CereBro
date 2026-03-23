@@ -24,6 +24,7 @@ import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/cham
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { getYoutubeEmbedUrl } from "@/lib/youtube";
 import { MultiSelectFilter } from "@/components/ui/filters";
+import { InfoPopover } from "@/components/ui/info-popover";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { EnhancedCountersMap, PickCounterWithChampion, PopularCountersMap } from "@/app/actions/quests";
 import { Champion } from "@/types/champion";
@@ -151,10 +152,17 @@ function EncounterHeader({
     handleSelectCounter
 }: EncounterHeaderProps) {
     return (
-        <button
-            type="button"
-            className="relative p-0 flex flex-col md:flex-row items-stretch min-h-[100px]"
+        <div
+            role="button"
+            tabIndex={0}
+            className="relative p-0 flex flex-col md:flex-row items-stretch min-h-[100px] cursor-pointer text-left w-full"
             onClick={() => toggleExpand(encounter.id)}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleExpand(encounter.id);
+                }
+            }}
             aria-expanded={isExpanded}
         >
             {/* Left Side: Defender (Red/Orange Theme) */}
@@ -319,7 +327,7 @@ function EncounterHeader({
                     </Button>
                 </div>
             </div>
-        </button>
+        </div>
     );
 }
 
@@ -694,6 +702,27 @@ function EncounterExpandedContent({
                         <div className="flex items-center gap-2">
                             <div className="h-6 w-1 bg-amber-500 rounded-full" />
                             <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
+                            <InfoPopover 
+                                content={
+                                    <div className="space-y-3">
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-amber-500 uppercase text-[10px] tracking-wider">Recommended</p>
+                                            <p className="text-slate-300 text-xs">Highly relevant counters based on current meta and community data.</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-purple-400 uppercase text-[10px] tracking-wider">Featured</p>
+                                            <p className="text-slate-300 text-xs">Specialized plans suggested by notable community members and creators.</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-emerald-400 uppercase text-[10px] tracking-wider">Alliance</p>
+                                            <p className="text-slate-300 text-xs">Counters successfully used by your alliance mates.</p>
+                                        </div>
+                                    </div>
+                                }
+                                side="top"
+                                align="center"
+                                iconClassName="h-3.5 w-3.5"
+                            />
                         </div>
                         {((featuredPicks[encounter.id] && featuredPicks[encounter.id].length > 0) || (alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0)) && (
                             <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 self-start shadow-sm">
