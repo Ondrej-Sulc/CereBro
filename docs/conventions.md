@@ -22,7 +22,15 @@
     1.  **RED**: Write a failing test first, verifying behavior through public interfaces.
     2.  **GREEN**: Implement the absolute minimal code to make the test pass.
     3.  **REFACTOR**: Improve code quality only while in a GREEN state.
-*   **Deep Modules**: Prioritize "Deep Modules" (simple interfaces, complex implementations) over fragmented, shallow modules.
+*   **Deep Modules**: Prioritize "Deep Modules" (simple interfaces, complex implementations) over fragmented, shallow modules (see John Ousterhout, *A Philosophy of Software Design*, for background and further reading).
+*   **Test Organization**:
+    *   **Location**: Place tests under `src/tests/` by default; co-locate tests with code only when file-local context materially improves readability.
+    *   **Naming**: Use `*.test.ts` (or `*.integration.test.ts` for integration-level coverage) for discoverable Vitest patterns.
+    *   **Structure**: Group by scope using clear folders or suffixes (unit/integration/e2e); prefer boundary-focused tests over implementation-detail tests.
+    *   **Run Commands**:
+        *   Local: `pnpm test` (canonical), `npm test`, or `yarn test`.
+        *   CI: `pnpm test -- --run` (or equivalent `npm test -- --run` / `yarn test --run`) for non-watch deterministic runs.
+    *   **Guided Sessions**: Use the `tdd-workflow` Gemini CLI skill for structured Red-Green-Refactor sessions.
 *   **Tooling**: 
     - Use the `tdd-workflow` Gemini CLI skill for guided TDD sessions.
     - Use the `improve-architecture` Gemini CLI skill for identifying and fixing architectural friction.

@@ -27,7 +27,7 @@ export interface QuestTimelineProps {
     alliancePicks?: EnhancedCountersMap;
     filterMetadata?: FilterMetadata;
     readOnly?: boolean;
-    rosterMap?: Record<string, any>;
+    rosterMap?: Record<string, unknown>;
     initialSelections?: Record<string, number | null>;
 }
 

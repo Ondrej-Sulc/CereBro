@@ -44,47 +44,68 @@ export function AsyncPlayerSearchCombobox({
   const [search, setSearch] = React.useState("");
   const [results, setResults] = React.useState<PlayerResult[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const listboxId = React.useId();
   
   const debouncedSearch = useDebounce(search, 300);
   const requestSeqRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open) {
+        setLoading(false);
+        setError(null);
+        setResults([]);
+        return;
+    }
     if (debouncedSearch.length < 2) {
+        setLoading(false);
+        setError(null);
         setResults([]);
         return;
     }
 
     const controller = new AbortController();
+    let active = true;
     const seq = ++requestSeqRef.current;
 
     const fetchPlayers = async () => {
         setLoading(true);
+        setError(null);
         try {
             const res = await fetch(`/api/search/players?q=${encodeURIComponent(debouncedSearch)}`, {
                 signal: controller.signal
             });
             if (res.ok) {
                 const data = await res.json();
-                if (seq === requestSeqRef.current && !controller.signal.aborted) {
+                if (active && seq === requestSeqRef.current && !controller.signal.aborted) {
+                    setError(null);
                     setResults(data.players || []);
                 }
             } else {
-                if (seq === requestSeqRef.current && !controller.signal.aborted) {
+                if (active && seq === requestSeqRef.current && !controller.signal.aborted) {
                     setResults([]);
+                    setError("Failed to load players. Please try again.");
                 }
             }
         } catch (error) {
             if (controller.signal.aborted) return;
             console.error("Failed to fetch players", error);
+            if (active && seq === requestSeqRef.current) {
+                setResults([]);
+                setError("Failed to load players. Please try again.");
+            }
         } finally {
-            if (seq === requestSeqRef.current) setLoading(false);
+            if (active && seq === requestSeqRef.current && !controller.signal.aborted) {
+                setLoading(false);
+            }
         }
     };
 
     fetchPlayers();
-    return () => controller.abort();
+    return () => {
+        active = false;
+        controller.abort();
+    };
   }, [debouncedSearch, open]);
 
   const handleSelect = React.useCallback((id: string, name: string, avatar: string | null) => {
@@ -161,7 +182,8 @@ export function AsyncPlayerSearchCombobox({
           />
           <CommandList>
             {loading && <div className="py-6 flex justify-center"><Loader2 className="h-4 w-4 animate-spin text-slate-500"/></div>}
-            {!loading && results.length === 0 && search.length >= 2 && <CommandEmpty>No players found.</CommandEmpty>}
+            {!loading && error && <div className="py-4 text-center text-xs text-red-500">{error}</div>}
+            {!loading && !error && results.length === 0 && search.length >= 2 && <CommandEmpty>No players found.</CommandEmpty>}
             {!loading && search.length < 2 && <div className="py-4 text-center text-xs text-slate-500">Type at least 2 characters</div>}
             
             <CommandGroup>

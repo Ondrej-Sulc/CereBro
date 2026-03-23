@@ -1,32 +1,62 @@
 import { RosterWithChampion, QuestWithRelations, EncounterWithRelations } from "./types";
 import { Tag } from "@prisma/client";
 
+type RestrictionInput = {
+    minStarLevel?: number | null;
+    maxStarLevel?: number | null;
+    requiredClasses?: RosterWithChampion["champion"]["class"][];
+    requiredTags?: Tag[];
+};
+
+const matchesRestrictions = (restrictions: RestrictionInput | undefined, r: RosterWithChampion): boolean => {
+    if (!restrictions) return true;
+
+    if (restrictions.minStarLevel && r.stars < restrictions.minStarLevel) return false;
+    if (restrictions.maxStarLevel && r.stars > restrictions.maxStarLevel) return false;
+    if (
+        restrictions.requiredClasses &&
+        restrictions.requiredClasses.length > 0 &&
+        !restrictions.requiredClasses.includes(r.champion.class)
+    ) {
+        return false;
+    }
+    if (restrictions.requiredTags && restrictions.requiredTags.length > 0) {
+        const hasTag = restrictions.requiredTags.some((tag) =>
+            r.champion.tags?.some(ct => ct.id === tag.id)
+        );
+        if (!hasTag) return false;
+    }
+
+    return true;
+};
+
 export const isChampionValidForEncounterOrQuest = (
     r: RosterWithChampion,
     quest: QuestWithRelations,
     encounter: EncounterWithRelations | undefined
 ) => {
-    // Quest-level restrictions
-    if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-    if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-    if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-    if (quest.requiredTags && quest.requiredTags.length > 0) {
-        const hasTag = (quest.requiredTags as Tag[]).some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-        if (!hasTag) return false;
-    }
-
-    // Encounter-level restrictions
-    if (encounter) {
-        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-        if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-            const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-            if (!hasTag) return false;
-        }
-    }
-
-    return true;
+    return (
+        matchesRestrictions(
+            {
+                minStarLevel: quest.minStarLevel,
+                maxStarLevel: quest.maxStarLevel,
+                requiredClasses: quest.requiredClasses,
+                requiredTags: quest.requiredTags as Tag[]
+            },
+            r
+        ) &&
+        matchesRestrictions(
+            encounter
+                ? {
+                    minStarLevel: encounter.minStarLevel,
+                    maxStarLevel: encounter.maxStarLevel,
+                    requiredClasses: encounter.requiredClasses,
+                    requiredTags: encounter.requiredTags as Tag[]
+                }
+                : undefined,
+            r
+        )
+    );
 };
 
 export const getValidRosterCountForChampion = (

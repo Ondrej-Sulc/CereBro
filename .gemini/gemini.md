@@ -19,6 +19,9 @@
 *   [🚀 Deployment & Docker](docs/deployment.md) - Railway, Dockerfiles, Local Dev.
 *   [📏 Conventions & Standards](docs/conventions.md) - **Critical Rules**, Logging, Code Style.
 
+## Skill Index
+*   [🧪 tdd-workflow](skills/tdd-workflow/SKILL.md) - Strict Red-Green-Refactor workflow for feature development and bug fixing.
+
 ## 🚨 Critical Rules
 1.  **Environment:** You are running on **win32 (Windows)**. All shell commands are executed via `powershell.exe`. 
     *   **NEVER** use `grep`, `&&` (in standard PS), or `mkdir -p`.

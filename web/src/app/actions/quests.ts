@@ -236,13 +236,14 @@ export async function updateFeaturedPlayers(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         await requireBotAdmin("MANAGE_QUESTS");
+        const uniquePlayerIds = [...new Set(playerIds)];
 
         await prisma.$transaction([
             prisma.playerQuestPlan.updateMany({
                 where: { questPlanId },
                 data: { isFeatured: false }
             }),
-            ...playerIds.map(playerId => 
+            ...uniquePlayerIds.map(playerId => 
                 prisma.playerQuestPlan.upsert({
                     where: {
                         playerId_questPlanId: {
@@ -281,9 +282,16 @@ export async function updateFeaturedPlayers(
 export type PopularCounter = {
     championId: number;
     count: number;
-    champion: { id: number; name: string; shortName: string; class: ChampionClass; images: any };
+    champion: ChampionCounterData;
 };
 export type PopularCountersMap = Record<string, PopularCounter[]>;
+type ChampionCounterData = {
+    id: number;
+    name: string;
+    shortName: string;
+    class: ChampionClass;
+    images: unknown;
+};
 
 export const getEncounterPopularCounters = async (questPlanId: string): Promise<PopularCountersMap> => {
     return unstable_cache(
@@ -330,7 +338,7 @@ export const getEncounterPopularCounters = async (questPlanId: string): Promise<
                 map[row.questEncounterId].push({
                     championId: row.selectedChampionId,
                     count: row._count.selectedChampionId,
-                    champion: champion as any
+                    champion
                 });
             }
 
@@ -349,7 +357,7 @@ export const getEncounterPopularCounters = async (questPlanId: string): Promise<
 export type PickCounterWithChampion = {
     championId: number;
     count: number;
-    champion: { id: number; name: string; shortName: string; class: ChampionClass; images: any };
+    champion: ChampionCounterData;
     pickedBy?: { id: string; name: string; avatar: string | null }[];
 };
 
@@ -405,7 +413,7 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
                     map[pick.questEncounterId].push({
                         championId: pick.selectedChampionId,
                         count: 1,
-                        champion: pick.selectedChampion as any,
+                        champion: pick.selectedChampion,
                         pickedBy: [player]
                     });
                 }
@@ -422,65 +430,73 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
     )();
 };
 export const getEncounterAlliancePicks = async (questPlanId: string, allianceId: string, excludePlayerId?: string): Promise<EnhancedCountersMap> => {
-    const picks = await prisma.playerQuestEncounter.findMany({
-        where: {
-            questPlanId,
-            selectedChampionId: { not: null },
-            playerQuestPlan: { 
-                player: { 
-                    allianceId,
-                    id: excludePlayerId ? { not: excludePlayerId } : undefined
-                } 
-            }
-        },
-        select: {
-            questEncounterId: true,
-            selectedChampionId: true,
-            selectedChampion: {
-                select: { id: true, name: true, shortName: true, class: true, images: true }
-            },
-            playerQuestPlan: {
+    return unstable_cache(
+        async () => {
+            const picks = await prisma.playerQuestEncounter.findMany({
+                where: {
+                    questPlanId,
+                    selectedChampionId: { not: null },
+                    playerQuestPlan: { 
+                        player: { 
+                            allianceId,
+                            id: excludePlayerId ? { not: excludePlayerId } : undefined
+                        } 
+                    }
+                },
                 select: {
-                    player: {
+                    questEncounterId: true,
+                    selectedChampionId: true,
+                    selectedChampion: {
+                        select: { id: true, name: true, shortName: true, class: true, images: true }
+                    },
+                    playerQuestPlan: {
                         select: {
-                            id: true,
-                            ingameName: true,
-                            avatar: true
+                            player: {
+                                select: {
+                                    id: true,
+                                    ingameName: true,
+                                    avatar: true
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-    });
-
-    const map: EnhancedCountersMap = {};
-    for (const pick of picks) {
-        if (!pick.selectedChampionId || !pick.selectedChampion) continue;
-        if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
-        
-        const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
-        const playerDetails = pick.playerQuestPlan.player;
-        const pickedByData = { id: playerDetails.id, name: playerDetails.ingameName, avatar: playerDetails.avatar };
-
-        if (existing) {
-            existing.count++;
-            if (!existing.pickedBy) existing.pickedBy = [];
-            existing.pickedBy.push(pickedByData);
-        } else {
-            map[pick.questEncounterId].push({
-                championId: pick.selectedChampionId,
-                count: 1,
-                champion: pick.selectedChampion as any,
-                pickedBy: [pickedByData]
             });
-        }
-    }
 
-    for (const encId of Object.keys(map)) {
-        map[encId].sort((a, b) => b.count - a.count);
-    }
+            const map: EnhancedCountersMap = {};
+            for (const pick of picks) {
+                if (!pick.selectedChampionId || !pick.selectedChampion) continue;
+                if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
+                
+                const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
+                const playerDetails = pick.playerQuestPlan.player;
+                const pickedByData = { id: playerDetails.id, name: playerDetails.ingameName, avatar: playerDetails.avatar };
 
-    return map;
+                if (existing) {
+                    existing.count++;
+                    if (!existing.pickedBy) existing.pickedBy = [];
+                    if (!existing.pickedBy.some(p => p.id === pickedByData.id)) {
+                        existing.pickedBy.push(pickedByData);
+                    }
+                } else {
+                    map[pick.questEncounterId].push({
+                        championId: pick.selectedChampionId,
+                        count: 1,
+                        champion: pick.selectedChampion,
+                        pickedBy: [pickedByData]
+                    });
+                }
+            }
+
+            for (const encId of Object.keys(map)) {
+                map[encId].sort((a, b) => b.count - a.count);
+            }
+
+            return map;
+        },
+        [`quest-alliance-picks-${questPlanId}-${allianceId}-${excludePlayerId || 'none'}`],
+        { tags: [`quest-alliance-picks-${questPlanId}-${allianceId}`, 'quest-alliance-picks'] }
+    )();
 };
 
 export type QuestPlanCreateInput = {

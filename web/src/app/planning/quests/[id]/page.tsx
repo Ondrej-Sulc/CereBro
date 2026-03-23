@@ -156,7 +156,9 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
         getEncounterPopularCounters(id),
         getEncounterFeaturedPicks(id),
-        activePlayer?.allianceId ? getEncounterAlliancePicks(id, activePlayer.allianceId, activePlayer.id) : Promise.resolve({})
+        activePlayer.allianceId
+            ? getEncounterAlliancePicks(id, activePlayer.allianceId, activePlayer.id)
+            : Promise.resolve<EnhancedCountersMap>({})
     ]);
 
     const [abilities, immunities] = await Promise.all([
@@ -341,7 +343,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 savedEncounters={playerPlan?.encounters || []}
                 popularCounters={popularCounters}
                 featuredPicks={featuredPicks}
-                alliancePicks={alliancePicks as EnhancedCountersMap}
+                alliancePicks={alliancePicks}
                 filterMetadata={{
                     tags,
                     abilityCategories,

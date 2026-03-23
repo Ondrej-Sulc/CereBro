@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
 import { getShareablePlanId, savePlayerQuestCounter } from "@/app/actions/quests";
+import type { PickCounterWithChampion } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -29,8 +30,57 @@ import {
 } from "./utils";
 
 import type { ChampionClass } from "@prisma/client";
+import type { Champion } from "@/types/champion";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
+
+const isReadOnlyRosterEntry = (value: unknown): value is RosterWithChampion => {
+    if (!value || typeof value !== "object") return false;
+    const candidate = value as Record<string, unknown>;
+    if (typeof candidate.id !== "string") return false;
+    if (typeof candidate.championId !== "number") return false;
+
+    const champion = candidate.champion;
+    if (!champion || typeof champion !== "object") return false;
+    const champCandidate = champion as Record<string, unknown>;
+    return (
+        typeof champCandidate.id === "number" &&
+        typeof champCandidate.name === "string"
+    );
+};
+
+const isChampionUnavailableForEncounter = ({
+    userChamp,
+    encounterId,
+    selections,
+    roster,
+    quest,
+    encounter
+}: {
+    userChamp: RosterWithChampion | undefined;
+    encounterId: string;
+    selections: Record<string, string | null>;
+    roster: RosterWithChampion[];
+    quest: QuestTimelineProps["quest"];
+    encounter: EncounterWithRelations;
+}): boolean => {
+    if (!userChamp || quest.teamLimit !== null || selections[encounterId] === userChamp.id) {
+        return false;
+    }
+
+    const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+        if (encId !== encounterId && rid !== null) {
+            const r = roster.find(re => re.id === rid);
+            if (r?.championId === userChamp.championId) {
+                return acc + 1;
+            }
+        }
+        return acc;
+    }, 0);
+
+    const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
+    return otherSelectionsCount >= validRosterCount;
+};
 
 export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
     const { toast } = useToast();
@@ -95,7 +145,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             // In read-only mode, we use the rosterMap to get the IDs directly
             Object.keys(initialSelections || {}).forEach(encId => {
                 const rosterEntry = rosterMap[encId];
-                initial[encId] = rosterEntry ? rosterEntry.id : null;
+                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
             });
             return initial;
         }
@@ -278,7 +328,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     /** Resolve a roster item for a given roster ID — works for both interactive and readOnly modes */
     const resolveRosterItem = useCallback((rosterId: string, encounterId: string): RosterWithChampion | undefined => {
         if (readOnly) {
-            return rosterMap[encounterId];
+            const rosterEntry = rosterMap[encounterId];
+            return isReadOnlyRosterEntry(rosterEntry) ? rosterEntry : undefined;
         }
         return roster.find(r => r.id === rosterId);
     }, [readOnly, roster, rosterMap]);
@@ -299,7 +350,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         return Array.from(teamMap.values());
     }, [selections, resolveRosterItem]);
 
-    const renderChampionItem = (c: any, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
+    const renderChampionItem = (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
         if (readOnly) {
             // In readOnly mode, just show the champion reference without roster matching
             return (
@@ -339,24 +390,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             return roster.find(r => r.id === rid)?.championId === c.id;
         });
         
-        let isUnavailable = false;
-        if (userChamp && quest.teamLimit === null && !isSelected) {
-            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                if (encId !== encounter.id && rid !== null) {
-                    const r = roster.find(re => re.id === rid);
-                    if (r?.championId === userChamp.championId) {
-                        return acc + 1;
-                    }
-                }
-                return acc;
-            }, 0);
-
-            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
-
-            if (otherSelectionsCount >= validRosterCount) {
-                isUnavailable = true;
-            }
-        }
+        const isUnavailable = isChampionUnavailableForEncounter({
+            userChamp,
+            encounterId: encounter.id,
+            selections,
+            roster,
+            quest,
+            encounter
+        });
 
         return (
             <div
@@ -408,7 +449,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         );
     };
 
-    const renderListPick = (p: any, encounter: EncounterWithRelations) => {
+    const renderListPick = (p: PickCounterWithChampion, encounter: EncounterWithRelations) => {
         const validRosterEntries = roster
             .filter(r => r.championId === p.championId && isChampionValidForEncounterOrQuest(r, quest, encounter))
             .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
@@ -421,22 +462,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         const isMissing = !userChamp;
         const isInTeam = Object.values(selections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
 
-        let isUnavailable = false;
-        if (userChamp && quest.teamLimit === null && !isSelected) {
-            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                if (encId !== encounter.id && rid !== null) {
-                    const r = roster.find(re => re.id === rid);
-                    if (r?.championId === userChamp.championId) {
-                        return acc + 1;
-                    }
-                }
-                return acc;
-            }, 0);
-            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
-            if (otherSelectionsCount >= validRosterCount) {
-                isUnavailable = true;
-            }
-        }
+        const isUnavailable = isChampionUnavailableForEncounter({
+            userChamp,
+            encounterId: encounter.id,
+            selections,
+            roster,
+            quest,
+            encounter
+        });
 
         const classColors = getChampionClassColors(p.champion.class as ChampionClass);
 
@@ -510,7 +543,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     </div>
                     
                     <div className="flex flex-wrap gap-1.5">
-                        {p.pickedBy?.map((user: any) => (
+                        {p.pickedBy?.map((user) => (
                             <div key={user.id} className="flex items-center gap-1.5 bg-slate-950/60 border border-slate-800/80 rounded-full pl-0.5 pr-2 py-0.5" title={user.name}>
                                 <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0">
                                     {user.avatar ? (
@@ -775,49 +808,55 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                 expandedId={expandedId}
                                 toggleExpand={toggleExpand}
                                 selections={selections}
-                                resolveRosterItem={resolveRosterItem}
-                                selectedTeam={selectedTeam}
                                 readOnly={readOnly}
                                 showVideoId={showVideoId}
                                 setShowVideoId={setShowVideoId}
-                                encounterTabs={encounterTabs}
-                                setEncounterTabs={setEncounterTabs}
-                                featuredPicks={featuredPicks}
-                                alliancePicks={alliancePicks}
-                                popularCounters={popularCounters}
+                                tabState={{
+                                    encounterTabs,
+                                    setEncounterTabs,
+                                    featuredPicks,
+                                    alliancePicks,
+                                    popularCounters
+                                }}
+                                filterState={{
+                                    searchQuery,
+                                    setSearchQuery,
+                                    showAdvancedFilters,
+                                    setShowAdvancedFilters,
+                                    activeFiltersCount,
+                                    filterMetadata,
+                                    tagFilter,
+                                    setTagFilter,
+                                    tagLogic,
+                                    setTagLogic,
+                                    abilityCategoryFilter,
+                                    setAbilityCategoryFilter,
+                                    abilityCategoryLogic,
+                                    setAbilityCategoryLogic,
+                                    abilityFilter,
+                                    setAbilityFilter,
+                                    abilityLogic,
+                                    setAbilityLogic,
+                                    immunityFilter,
+                                    setImmunityFilter,
+                                    immunityLogic,
+                                    setImmunityLogic,
+                                    clearAllFilters,
+                                    CLASSES,
+                                    selectedClass,
+                                    setSelectedClass
+                                }}
+                                rosterState={{
+                                    roster,
+                                    filteredGlobalRoster,
+                                    selectedTeam,
+                                    isRosterExpanded,
+                                    setIsRosterExpanded,
+                                    resolveRosterItem,
+                                    handleSelectCounter
+                                }}
                                 renderChampionItem={renderChampionItem}
                                 renderListPick={renderListPick}
-                                isRosterExpanded={isRosterExpanded}
-                                setIsRosterExpanded={setIsRosterExpanded}
-                                searchQuery={searchQuery}
-                                setSearchQuery={setSearchQuery}
-                                CLASSES={CLASSES}
-                                selectedClass={selectedClass}
-                                setSelectedClass={setSelectedClass}
-                                showAdvancedFilters={showAdvancedFilters}
-                                setShowAdvancedFilters={setShowAdvancedFilters}
-                                activeFiltersCount={activeFiltersCount}
-                                filterMetadata={filterMetadata}
-                                tagFilter={tagFilter}
-                                setTagFilter={setTagFilter}
-                                tagLogic={tagLogic}
-                                setTagLogic={setTagLogic}
-                                abilityCategoryFilter={abilityCategoryFilter}
-                                setAbilityCategoryFilter={setAbilityCategoryFilter}
-                                abilityCategoryLogic={abilityCategoryLogic}
-                                setAbilityCategoryLogic={setAbilityCategoryLogic}
-                                abilityFilter={abilityFilter}
-                                setAbilityFilter={setAbilityFilter}
-                                abilityLogic={abilityLogic}
-                                setAbilityLogic={setAbilityLogic}
-                                immunityFilter={immunityFilter}
-                                setImmunityFilter={setImmunityFilter}
-                                immunityLogic={immunityLogic}
-                                setImmunityLogic={setImmunityLogic}
-                                clearAllFilters={clearAllFilters}
-                                filteredGlobalRoster={filteredGlobalRoster}
-                                roster={roster}
-                                handleSelectCounter={handleSelectCounter}
                             />
                         ))}
                     </div>
