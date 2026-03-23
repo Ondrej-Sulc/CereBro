@@ -835,7 +835,7 @@ function EncounterExpandedContent({
                             
                             if (activeTab === "featured" && featuredPicks[encounter.id]?.length > 0) {
                                 return (
-                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         {featuredPicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
                                     </div>
                                 );
@@ -843,7 +843,7 @@ function EncounterExpandedContent({
 
                             if (activeTab === "alliance" && alliancePicks[encounter.id]?.length > 0) {
                                 return (
-                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         {alliancePicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
                                     </div>
                                 );

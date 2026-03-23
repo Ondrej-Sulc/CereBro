@@ -7,7 +7,7 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { getShareablePlanId, savePlayerQuestCounter } from "@/app/actions/quests";
@@ -137,6 +137,75 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
                         );
                     })}
                 </div>
+            </div>
+        </div>
+    );
+};
+
+const MultiPlayerPopover = ({ 
+    users, 
+    quest, 
+    scrollToEncounter, 
+    playerPicksMap 
+}: { 
+    users: { id: string; name: string; avatar: string | null }[];
+    quest: QuestTimelineProps["quest"];
+    scrollToEncounter: (id: string) => void;
+    playerPicksMap: any;
+}) => {
+    const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
+
+    if (selectedUser) {
+        return (
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
+                <div className="px-4 py-2 border-b border-slate-800 bg-slate-900/40 flex items-center">
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSelectedUser(null)}
+                        className="h-7 px-2 text-[10px] font-black uppercase text-slate-400 hover:text-white gap-1.5"
+                    >
+                        <ChevronLeft className="w-3 h-3" /> Back to List
+                    </Button>
+                </div>
+                <PlayerTeamSummary 
+                    user={selectedUser} 
+                    picks={playerPicksMap[selectedUser.id]?.picks || []} 
+                    quest={quest} 
+                    scrollToEncounter={scrollToEncounter} 
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col max-h-[60vh] animate-in fade-in slide-in-from-left-2 duration-300">
+            <div className="p-3 border-b border-slate-800 bg-slate-900/60">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Suggested By</h4>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                {users.map((user) => (
+                    <button
+                        key={user.id}
+                        onClick={() => setSelectedUser(user)}
+                        className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/60 transition-colors text-left group"
+                    >
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-sky-500/50 transition-colors">
+                            {user.avatar ? (
+                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                    {user.name.charAt(0)}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">{user.name}</span>
+                            <span className="text-[9px] text-slate-500 font-medium">Click to see plan</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 ml-auto text-slate-600 group-hover:text-sky-400 transition-colors" />
+                    </button>
+                ))}
             </div>
         </div>
     );
@@ -587,47 +656,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     };
 
     const renderListPick = (p: PickCounterWithChampion, encounter: EncounterWithRelations) => {
-        if (readOnly) {
-            return (
-                <div key={p.championId} className="relative group/pick-card">
-                    <UpdatedChampionItem
-                        item={{
-                            stars: 0,
-                            rank: 0,
-                            champion: {
-                                id: p.championId,
-                                name: p.champion.name,
-                                championClass: p.champion.class as ChampionClass,
-                                images: toChampionImages(p.champion.images)
-                            }
-                        }}
-                        isRecommended
-                    />
-                    
-                    {/* Attribution Overlay */}
-                    {p.pickedBy && p.pickedBy.length > 0 && (
-                        <div className="absolute top-1 right-1 flex -space-x-1.5 z-20">
-                            {p.pickedBy.map((user) => (
-                                <div 
-                                    key={user.id}
-                                    className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700 shadow-sm"
-                                    title={`Suggested by ${user.name}`}
-                                >
-                                    {user.avatar ? (
-                                        <Image src={user.avatar} alt={user.name} fill className="object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-[6px] font-bold text-slate-400">
-                                            {user.name.charAt(0)}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            );
-        }
-
         const validRosterEntries = roster
             .filter(r => r.championId === p.championId && isChampionValidForEncounterOrQuest(r, quest, encounter))
             .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
@@ -648,85 +676,129 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             encounter
         });
 
+        const users = p.pickedBy || [];
+        const MAX_SIDEBAR_USERS = 3;
+        const displayUsers = users.slice(0, MAX_SIDEBAR_USERS);
+        const hasMore = users.length > MAX_SIDEBAR_USERS;
+
+        const classColors = getChampionClassColors(p.champion.class as ChampionClass);
+
         return (
             <div 
                 key={p.championId} 
                 className={cn(
-                    "relative group/pick-card",
-                    isUnavailable ? "cursor-not-allowed" : "cursor-pointer"
+                    "flex bg-slate-900/40 rounded-2xl border transition-all duration-300 group/pick-card shadow-lg overflow-hidden",
+                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : "cursor-pointer bg-slate-900/40 backdrop-blur-md shadow-xl",
+                    !isUnavailable && isSelected && "border-sky-500/60 ring-1 ring-sky-500/30 bg-sky-950/20 shadow-sky-500/10",
+                    !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 bg-emerald-950/10 shadow-emerald-500/10",
+                    !isUnavailable && !isSelected && !isInTeam && cn("border-slate-800/80 hover:bg-slate-800/60 hover:border-slate-600", classColors.hoverBorder)
                 )}
                 onClick={(e) => {
                     e.stopPropagation();
                     if (userChamp && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
                 }}
             >
-                <UpdatedChampionItem
-                    item={userChamp ? {
-                        stars: userChamp.stars,
-                        rank: userChamp.rank,
-                        isAwakened: userChamp.isAwakened,
-                        sigLevel: userChamp.sigLevel,
-                        powerRating: userChamp.powerRating,
-                        champion: {
-                            id: userChamp.champion.id,
-                            name: userChamp.champion.shortName || userChamp.champion.name,
-                            championClass: userChamp.champion.class as ChampionClass,
-                            images: toChampionImages(userChamp.champion.images)
-                        },
-                        isAscended: userChamp.isAscended
-                    } : {
-                        stars: 0,
-                        rank: 0,
-                        champion: {
-                            id: p.championId,
-                            name: p.champion.name,
-                            championClass: p.champion.class as ChampionClass,
-                            images: toChampionImages(p.champion.images)
-                        }
-                    }}
-                    isSelected={isSelected}
-                    isRecommended={!isSelected}
-                    isMissing={!userChamp}
-                    isInTeam={isInTeam}
-                    isUnavailable={isUnavailable}
-                />
+                {/* Champion Side (Main Card) */}
+                <div className="flex-1 min-w-0">
+                    <UpdatedChampionItem
+                        item={userChamp ? {
+                            stars: userChamp.stars,
+                            rank: userChamp.rank,
+                            isAwakened: userChamp.isAwakened,
+                            sigLevel: userChamp.sigLevel,
+                            powerRating: userChamp.powerRating,
+                            champion: {
+                                id: userChamp.champion.id,
+                                name: userChamp.champion.shortName || userChamp.champion.name,
+                                championClass: userChamp.champion.class as ChampionClass,
+                                images: toChampionImages(userChamp.champion.images)
+                            },
+                            isAscended: userChamp.isAscended,
+                            ascensionLevel: userChamp.ascensionLevel
+                        } : {
+                            stars: 0,
+                            rank: 0,
+                            champion: {
+                                id: p.championId,
+                                name: p.champion.name,
+                                championClass: p.champion.class as ChampionClass,
+                                images: toChampionImages(p.champion.images)
+                            }
+                        }}
+                        // We handle borders/selection on the outer container
+                        isSelected={false}
+                        isRecommended={false}
+                        isMissing={!userChamp}
+                        isInTeam={false}
+                        isUnavailable={false}
+                        className="border-0 shadow-none ring-0 rounded-none bg-transparent"
+                    />
+                </div>
 
-                {/* Attribution Overlays - Using Popover for team view */}
-                {p.pickedBy && p.pickedBy.length > 0 && (
-                    <div className="absolute top-1 right-1 flex -space-x-1.5 z-20">
-                        {p.pickedBy.map((user) => (
-                            <Popover key={user.id}>
-                                <PopoverTrigger asChild>
-                                    <div 
-                                        className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer group/user hover:z-10 shadow-sm"
+                {/* Player Sidecar (Sidebar for Badges) */}
+                <div className="w-12 shrink-0 flex flex-col items-center justify-center gap-2.5 p-1 bg-slate-950/40 border-l border-slate-800/60">
+                    {users.length > 0 && (
+                        <>
+                            {displayUsers.map((user) => (
+                                <Popover key={user.id}>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="relative w-7 h-7 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer group/user hover:scale-110 shadow-lg"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={`Suggested by ${user.name} - Click to see their plan`}
+                                        >
+                                            {user.avatar ? (
+                                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent 
+                                        className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
+                                        align="end"
                                         onClick={(e) => e.stopPropagation()}
-                                        title={`Suggested by ${user.name} - Click to see their plan`}
                                     >
-                                        {user.avatar ? (
-                                            <Image src={user.avatar} alt={user.name} fill className="object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400">
-                                                {user.name.charAt(0)}
-                                            </div>
-                                        )}
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent 
-                                    className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
-                                    align="end"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <PlayerTeamSummary 
-                                        user={user} 
-                                        picks={playerPicksMap[user.id]?.picks || []} 
-                                        quest={quest} 
-                                        scrollToEncounter={scrollToEncounter} 
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        ))}
-                    </div>
-                )}
+                                        <PlayerTeamSummary 
+                                            user={user} 
+                                            picks={playerPicksMap[user.id]?.picks || []} 
+                                            quest={quest} 
+                                            scrollToEncounter={scrollToEncounter} 
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            ))}
+
+                            {hasMore && (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="relative w-7 h-7 rounded-full bg-slate-800 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 group/more-users"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={`Suggested by ${users.length} players - Click to see list`}
+                                        >
+                                            <span className="text-[10px] font-black text-sky-400">+{users.length - MAX_SIDEBAR_USERS}</span>
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent 
+                                        className="w-[280px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
+                                        align="end"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <MultiPlayerPopover 
+                                            users={users} 
+                                            quest={quest} 
+                                            scrollToEncounter={scrollToEncounter} 
+                                            playerPicksMap={playerPicksMap} 
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
         );
     };
