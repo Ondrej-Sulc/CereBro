@@ -11,14 +11,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Trash2, Plus, ArrowLeft, Save, Edit3, XCircle, Wand2, Loader2, ExternalLink, ClipboardPaste, Eraser, Upload, Image as ImageIcon } from "lucide-react";
-import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner } from "@/app/actions/quests";
+import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters } from "@/app/actions/quests";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+    ArrowLeft, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ExternalLink, 
+    XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2, 
+    ClipboardPaste, Plus, Trash2 
+} from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
 import { MultiNodeModifierCombobox } from "@/components/comboboxes/MultiNodeModifierCombobox";
 import { MultiTagCombobox } from "@/components/comboboxes/MultiTagCombobox";
 import { AsyncBotUserCombobox } from "@/components/comboboxes/AsyncBotUserCombobox";
+import { AsyncPlayerSearchCombobox } from "@/components/comboboxes/AsyncPlayerSearchCombobox";
 import { NodeModifier, QuestEncounterNode } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,6 +38,7 @@ import { ChampionImages, Champion } from "@/types/champion";
 type BaseQuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
     creators: (BaseQuestWithRelations["creators"][0] & { name?: string })[];
+    playerPlans: any[]; // Manual bypass for Prisma relation inference
 };
 type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
 type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
@@ -180,6 +187,15 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [requiredClasses, setRequiredClasses] = useState<ChampionClass[]>(initialQuest.requiredClasses || []);
     const [requiredTags, setRequiredTags] = useState<number[]>((initialQuest.requiredTags as Tag[])?.map(t => t.id) || []);
     const [creatorIds, setCreatorIds] = useState<string[]>(initialQuest.creators?.map(c => c.id) || []);
+    const [featuredPlayers, setFeaturedPlayers] = useState<{id: string, name: string, avatar: string | null}[]>(
+        (initialQuest?.playerPlans || [])
+            .filter((p: any) => p.player?.id)
+            .map((p: any) => ({
+                id: p.player.id,
+                name: p.player.ingameName || "Unknown",
+                avatar: p.player.avatar || null
+            }))
+    );
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -204,7 +220,18 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 requiredTagIds: requiredTags,
                 creatorIds
             });
-            toast({ title: "Success", description: "Settings saved successfully!" });
+            try {
+                await updateFeaturedPlayers(initialQuest.id, featuredPlayers.map(p => p.id));
+                toast({ title: "Success", description: "Settings saved successfully!" });
+            } catch (error: unknown) {
+                console.error(error);
+                const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to update featured players";
+                toast({
+                    title: "Partial Success",
+                    description: `Settings saved but featured players update failed: ${msg}`,
+                    variant: "destructive"
+                });
+            }
         } catch (error: unknown) {
             console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to save settings";
@@ -234,6 +261,31 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             toast({ title: "Error", description: msg, variant: "destructive" });
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handleMoveEncounter = async (encounterId: string, direction: 'up' | 'down') => {
+        const encounters = [...initialQuest.encounters].sort((a, b) => a.sequence - b.sequence);
+        const currentIndex = encounters.findIndex(e => e.id === encounterId);
+        
+        try {
+            if (direction === 'up' && currentIndex > 0) {
+                const newEncounters = [...encounters];
+                [newEncounters[currentIndex - 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex - 1]];
+                await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
+                router.refresh();
+                toast({ title: "Success", description: "Encounter moved up" });
+            } else if (direction === 'down' && currentIndex < encounters.length - 1) {
+                const newEncounters = [...encounters];
+                [newEncounters[currentIndex + 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex + 1]];
+                await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
+                router.refresh();
+                toast({ title: "Success", description: "Encounter moved down" });
+            }
+        } catch (error: unknown) {
+            console.error(error);
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder encounters";
+            toast({ title: "Error", description: `Failed to reorder encounter: ${msg}`, variant: "destructive" });
         }
     };
 
@@ -411,6 +463,49 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column Wrapper */}
+                        <div className="flex flex-col gap-8">
+                            {/* Requirements Section */}
+                            <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-4 w-1 bg-amber-500 rounded-full" />
+                                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Requirements & Limits</h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Team Limit</Label>
+                                    <select
+                                        value={teamLimit}
+                                        onChange={e => setTeamLimit(e.target.value)}
+                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                    >
+                                        <option value="1">1 Champion</option>
+                                        <option value="3">3 Champions</option>
+                                        <option value="5">5 Champions</option>
+                                        <option value="">Infinite (Swaps)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Min Stars</Label>
+                                    <Input type="number" value={minStars} onChange={e => setMinStars(e.target.value)} placeholder="e.g. 5" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Max Stars</Label>
+                                    <Input type="number" value={maxStars} onChange={e => setMaxStars(e.target.value)} placeholder="e.g. 7" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Staff & Features Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="h-4 w-1 bg-indigo-500 rounded-full" />
+                                <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Authors & Featured</h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2 sm:col-span-2">
                                     <Label>Creators</Label>
                                     <div className="flex flex-col gap-2">
@@ -442,38 +537,40 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         />
                                     </div>
                                 </div>
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label>Featured Players</Label>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex flex-wrap gap-2">
+                                            {featuredPlayers.map(p => (
+                                                <Badge key={p.id} variant="outline" className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 border-amber-500/30 text-slate-300">
+                                                    {p.avatar ? (
+                                                        <div className="w-4 h-4 rounded-full overflow-hidden bg-slate-800">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-[8px] text-slate-500">
+                                                            {p.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                    <span>{p.name}</span>
+                                                    <button onClick={() => setFeaturedPlayers(featuredPlayers.filter(x => x.id !== p.id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                        <AsyncPlayerSearchCombobox
+                                            value=""
+                                            onSelect={(id, name, avatar) => {
+                                                if (id && !featuredPlayers.some(p => p.id === id)) {
+                                                    setFeaturedPlayers([...featuredPlayers, { id, name, avatar }]);
+                                                }
+                                            }}
+                                            placeholder="Search to feature a player's plan..."
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        {/* Requirements Section */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="h-4 w-1 bg-amber-500 rounded-full" />
-                                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Requirements & Limits</h4>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Team Limit</Label>
-                                    <select
-                                        value={teamLimit}
-                                        onChange={e => setTeamLimit(e.target.value)}
-                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
-                                    >
-                                        <option value="1">1 Champion</option>
-                                        <option value="3">3 Champions</option>
-                                        <option value="5">5 Champions</option>
-                                        <option value="">Infinite (Swaps)</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Min Stars</Label>
-                                    <Input type="number" value={minStars} onChange={e => setMinStars(e.target.value)} placeholder="e.g. 5" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Max Stars</Label>
-                                    <Input type="number" value={maxStars} onChange={e => setMaxStars(e.target.value)} placeholder="e.g. 7" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -654,15 +751,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         placeholder="Search champions..."
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Sequence (Fight Number)</Label>
-                                    <Input
-                                        type="number"
-                                        value={effectiveSequence}
-                                        onChange={e => setSequence(e.target.value)}
-                                        className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
-                                    />
-                                </div>
                                 <div className="space-y-2 sm:col-span-2">
                                     <Label>YouTube Video URL (Fight Specific)</Label>
                                     <Input
@@ -815,123 +903,163 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     {initialQuest.encounters.length === 0 ? (
                         <p className="text-muted-foreground italic bg-slate-950/50 p-6 rounded-xl border border-dashed border-slate-800 text-center">No encounters added to this quest yet. Start by adding a fight on the left.</p>
                     ) : (
-                        <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-slate-800 before:via-slate-800 before:to-transparent">
-                            {initialQuest.encounters.map((encounter: EncounterWithRelations, index: number) => {
-                                const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : { border: "border-slate-700", text: "text-slate-300", bg: "bg-slate-900" };
-                                return (
-                                    <div key={encounter.id} className="relative flex items-center group is-active">
-                                        {/* Timeline dot */}
-                                        <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border bg-slate-950 text-slate-300 shadow shrink-0 absolute left-0 transform -translate-x-1/2 font-bold z-10 border-slate-700 transition-colors group-hover:border-slate-500">
-                                            {encounter.sequence}
-                                        </div>
+                        <div className="relative pl-6 md:pl-10 pb-20">
+                            {/* Continuous Vertical Timeline Line */}
+                            <div className="absolute top-0 bottom-0 left-6 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full overflow-hidden">
+                                <div className="w-full h-full bg-gradient-to-b from-slate-800 via-sky-900/20 to-transparent" />
+                            </div>
 
-                                        {/* Card Content */}
-                                        <Card
-                                            className={cn(
-                                                "w-[calc(100%-3rem)] ml-12 md:ml-16 bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer",
-                                                editingEncounterId === encounter.id ? "ring-1 ring-sky-500/50 border-sky-500/50 shadow-[0_0_15px_rgba(2,132,199,0.1)]" : ""
-                                            )}
-                                            onClick={() => startEditingEncounter(encounter)}
-                                        >
-                                            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between gap-4">
-                                                <div className="flex items-center gap-4 w-full">
-                                                    {encounter.defender ? (
-                                                        <div className={cn("relative h-12 w-12 rounded-lg overflow-hidden flex-shrink-0 border-2 shadow-sm", colors.border)}>
-                                                            <Image
-                                                                src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "128")}
-                                                                alt={encounter.defender.name}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="h-12 w-12 rounded-lg bg-slate-900 border-2 border-slate-700 flex items-center justify-center shrink-0 shadow-sm">
-                                                            <span className="text-lg font-bold text-slate-500">?</span>
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <CardTitle className={cn("text-lg", colors.text)}>
-                                                            {encounter.defender ? encounter.defender.name : "Unknown Defender"}
-                                                        </CardTitle>
-                                                        {encounter.nodes && encounter.nodes.length > 0 && (
-                                                            <div className="flex gap-1 mt-1 flex-wrap">
-                                                                {encounter.nodes.map((n) => (
-                                                                    <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-900 border-slate-800 text-slate-400 font-normal">
-                                                                        {n.nodeModifier.name}
-                                                                    </Badge>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {(encounter.requiredTags?.length > 0 || encounter.recommendedTags?.length > 0) && (
-                                                            <div className="flex gap-1 mt-1.5 flex-wrap">
-                                                                {encounter.requiredTags?.map((t: Tag) => (
-                                                                    <Badge key={t.id} variant="outline" className="text-[9px] py-0 h-3.5 bg-red-950/20 border-red-900/30 text-red-400 font-bold uppercase tracking-tighter">
-                                                                        REQ: {t.name}
-                                                                    </Badge>
-                                                                ))}
-                                                                {encounter.recommendedTags?.map((tag: string) => (
-                                                                    <Badge key={tag} variant="outline" className="text-[9px] py-0 h-3.5 bg-amber-950/20 border-amber-800/30 text-amber-400 font-bold uppercase tracking-tighter">
-                                                                        REC: {tag}
-                                                                    </Badge>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                        {encounter.videoUrl && (
-                                                            <div className="flex items-center gap-1.5 mt-2">
-                                                                <div className="h-4 w-4 rounded-full bg-red-600/20 flex items-center justify-center">
-                                                                    <div className="h-2 w-2 bg-red-600 rounded-full" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-medium italic">Video guide linked</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                            <div className="space-y-6">
+                                <AnimatePresence mode="popLayout">
+                                {initialQuest.encounters
+                                    .sort((a, b) => a.sequence - b.sequence)
+                                    .map((encounter: EncounterWithRelations, index: number) => {
+                                        const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : { border: "border-slate-700", text: "text-slate-300", bg: "bg-slate-900", glow: "from-slate-950/20" };
+                                        
+                                        // Generate a Class-specific glow for the card background
+                                        const classGlow = encounter.defender ? (
+                                            encounter.defender.class === 'SCIENCE' ? 'from-green-500/10' :
+                                            encounter.defender.class === 'SKILL' ? 'from-red-500/10' :
+                                            encounter.defender.class === 'MUTANT' ? 'from-amber-500/10' :
+                                            encounter.defender.class === 'COSMIC' ? 'from-sky-500/10' :
+                                            encounter.defender.class === 'TECH' ? 'from-blue-500/10' :
+                                            encounter.defender.class === 'MYSTIC' ? 'from-purple-500/10' : 'from-slate-500/10'
+                                        ) : 'from-slate-500/10';
+
+                                        return (
+                                            <motion.div
+                                                key={encounter.id}
+                                                layout
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: 20 }}
+                                                className="relative flex items-center group is-active"
+                                            >
+                                                {/* Timeline dot */}
+                                                <div className={cn(
+                                                    "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border bg-slate-950 text-slate-300 shadow shrink-0 absolute left-0 transform -translate-x-1/2 font-bold z-10 transition-colors border-slate-700 group-hover:border-slate-500",
+                                                    editingEncounterId === encounter.id && "border-sky-500 text-sky-400"
+                                                )}>
+                                                    {index + 1}
                                                 </div>
 
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEncounter(encounter.id); }}
-                                                    className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-950/50 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    title="Delete Encounter"
+                                                {/* Card Content */}
+                                                <Card
+                                                    className={cn(
+                                                        "w-full ml-8 md:ml-12 bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all cursor-pointer overflow-hidden relative group/card",
+                                                        editingEncounterId === encounter.id ? "ring-1 ring-sky-500/50 border-sky-500/50 shadow-[0_0_15px_rgba(2,132,199,0.1)]" : ""
+                                                    )}
+                                                    onClick={() => startEditingEncounter(encounter)}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </CardHeader>
+                                                    {/* Background Glow */}
+                                                    <div className={cn("absolute inset-0 bg-gradient-to-br to-transparent pointer-events-none opacity-50", classGlow)} />
+                                                    
+                                                    {/* Class Accent Bar */}
+                                                    <div className={cn("absolute left-0 top-0 bottom-0 w-1", colors.bg, "opacity-70")} />
 
-                                            {(encounter.tips || (encounter.recommendedChampions && encounter.recommendedChampions.length > 0)) && (
-                                                <CardContent className="px-4 pb-4 pt-0 space-y-3">
-                                                    {encounter.recommendedChampions && encounter.recommendedChampions.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 pb-1">
-                                                            {encounter.recommendedChampions.map((champ) => {
-                                                                const champColors = getChampionClassColors(champ.class as ChampionClass);
-                                                                return (
-                                                                    <div
-                                                                        key={champ.id}
-                                                                        className={cn("relative h-8 w-8 rounded-full overflow-hidden border-2 shadow-sm ring-1 ring-slate-950/50", champColors.border)}
-                                                                        title={champ.name}
-                                                                    >
-                                                                        <Image
-                                                                            src={getChampionImageUrlOrPlaceholder(champ.images, "64")}
-                                                                            alt={champ.name}
-                                                                            fill
-                                                                            className="object-cover"
-                                                                        />
+                                                    <CardHeader className="py-3 px-4 flex flex-row items-center justify-between gap-4 relative z-10">
+                                                        <div className="flex items-center gap-4 w-full">
+                                                            {encounter.defender ? (
+                                                                <div className={cn("relative h-14 w-14 rounded-lg overflow-hidden flex-shrink-0 border-2 shadow-md transition-transform group-hover/card:scale-105", colors.border)}>
+                                                                    <Image
+                                                                        src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "128")}
+                                                                        alt={encounter.defender.name}
+                                                                        fill
+                                                                        className="object-cover"
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="h-14 w-14 rounded-lg bg-slate-900 border-2 border-slate-700 flex items-center justify-center shrink-0 shadow-sm">
+                                                                    <span className="text-xl font-bold text-slate-500">?</span>
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <CardTitle className={cn("text-lg flex items-center gap-2", colors.text)}>
+                                                                    {encounter.defender ? encounter.defender.name : "Unknown Defender"}
+                                                                </CardTitle>
+                                                                {encounter.nodes && encounter.nodes.length > 0 && (
+                                                                    <div className="flex gap-1 mt-1 flex-wrap">
+                                                                        {encounter.nodes.map((n) => (
+                                                                            <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-900/80 border-slate-700/50 text-slate-400 font-normal">
+                                                                                {n.nodeModifier.name}
+                                                                            </Badge>
+                                                                        ))}
                                                                     </div>
-                                                                );
-                                                            })}
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    )}
 
-                                                    {encounter.tips && (
-                                                        <div className="text-sm text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
-                                                            <SimpleMarkdown content={encounter.tips} />
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                                                            <div className="flex flex-col gap-1 mr-2">
+                                                                <Button
+                                                                    variant="ghost" 
+                                                                    size="icon"
+                                                                    disabled={index === 0}
+                                                                    onClick={(e) => { e.stopPropagation(); handleMoveEncounter(encounter.id, 'up'); }}
+                                                                    className="h-6 w-6 rounded bg-slate-900 border border-slate-800 hover:bg-sky-950 hover:text-sky-400"
+                                                                >
+                                                                    <ChevronUp className="h-3 w-3" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost" 
+                                                                    size="icon"
+                                                                    disabled={index === initialQuest.encounters.length - 1}
+                                                                    onClick={(e) => { e.stopPropagation(); handleMoveEncounter(encounter.id, 'down'); }}
+                                                                    className="h-6 w-6 rounded bg-slate-900 border border-slate-800 hover:bg-sky-950 hover:text-sky-400"
+                                                                >
+                                                                    <ChevronDown className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteEncounter(encounter.id); }}
+                                                                className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-950/50 flex-shrink-0"
+                                                                title="Delete Encounter"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
+                                                    </CardHeader>
+
+                                                    {(encounter.tips || (encounter.recommendedChampions && encounter.recommendedChampions.length > 0)) && (
+                                                        <CardContent className="px-4 pb-4 pt-0 space-y-3 relative z-10">
+                                                            {encounter.recommendedChampions && encounter.recommendedChampions.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2 pb-1">
+                                                                    {encounter.recommendedChampions.map((champ) => {
+                                                                        const champColors = getChampionClassColors(champ.class as ChampionClass);
+                                                                        return (
+                                                                            <div
+                                                                                key={champ.id}
+                                                                                className={cn("relative h-9 w-9 rounded-full overflow-hidden border-2 shadow-sm ring-1 ring-slate-950/50 transition-transform hover:scale-110", champColors.border)}
+                                                                                title={champ.name}
+                                                                            >
+                                                                                <Image
+                                                                                    src={getChampionImageUrlOrPlaceholder(champ.images, "64")}
+                                                                                    alt={champ.name}
+                                                                                    fill
+                                                                                    className="object-cover"
+                                                                                />
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            )}
+
+                                                            {encounter.tips && (
+                                                                <div className="text-sm text-slate-300 bg-slate-900/30 backdrop-blur-sm p-3 rounded-lg border border-slate-800/50 line-clamp-2 hover:line-clamp-none transition-all">
+                                                                    <SimpleMarkdown content={encounter.tips} />
+                                                                </div>
+                                                            )}
+                                                        </CardContent>
                                                     )}
-                                                </CardContent>
-                                            )}                                        </Card>
-                                    </div>
-                                );
-                            })}
+                                                </Card>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     )}
                 </div>

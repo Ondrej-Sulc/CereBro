@@ -754,6 +754,7 @@ model PlayerQuestPlan {
   questPlanId String
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
+  isFeatured  Boolean                @default(false)
   encounters  PlayerQuestEncounter[]
   player      Player                 @relation(fields: [playerId], references: [id], onDelete: Cascade)
   questPlan   QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)

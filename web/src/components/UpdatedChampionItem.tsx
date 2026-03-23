@@ -1,3 +1,5 @@
+"use client";
+
 import { memo } from "react";
 import { Trophy, Ban, Users } from "lucide-react";
 import Image from "next/image";

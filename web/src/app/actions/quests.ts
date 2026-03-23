@@ -181,6 +181,10 @@ export const getQuestPlanById = unstable_cache(
                     select: {
                         playerPlans: true
                     }
+                },
+                playerPlans: {
+                    where: { isFeatured: true },
+                    include: { player: true }
                 }
             }
         });
@@ -226,31 +230,115 @@ export const getQuestPlanById = unstable_cache(
     { tags: ['quest-plan-detail'] }
 );
 
+export async function updateFeaturedPlayers(
+    questPlanId: string,
+    playerIds: string[]
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await requireBotAdmin("MANAGE_QUESTS");
+        const uniquePlayerIds = [...new Set(playerIds)];
+
+        await prisma.$transaction([
+            prisma.playerQuestPlan.updateMany({
+                where: { questPlanId },
+                data: { isFeatured: false }
+            }),
+            ...uniquePlayerIds.map(playerId => 
+                prisma.playerQuestPlan.upsert({
+                    where: {
+                        playerId_questPlanId: {
+                            playerId,
+                            questPlanId
+                        }
+                    },
+                    update: {
+                        isFeatured: true
+                    },
+                    create: {
+                        playerId,
+                        questPlanId,
+                        isFeatured: true
+                    }
+                })
+            )
+        ]);
+
+        revalidatePath(`/admin/quests/${questPlanId}`);
+        revalidatePath(`/planning/quests/${questPlanId}`);
+        revalidateTag('quest-plan-detail');
+        revalidateTag(`quest-featured-picks-${questPlanId}`);
+        
+        return { success: true };
+    } catch (e: any) {
+        console.error(e);
+        return { success: false, error: e.message || "Failed to update featured players" };
+    }
+}
+
 /**
  * Aggregate champion pick counts per encounter for a quest plan.
- * Returns a map: encounterId -> { championId, count }[] sorted by count desc.
+ * Returns a map: encounterId -> { championId, count, champion }[] sorted by count desc.
  */
-export type PopularCountersMap = Record<string, { championId: number; count: number }[]>;
+export type PopularCounter = {
+    championId: number;
+    count: number;
+    champion: ChampionCounterData;
+};
+export type PopularCountersMap = Record<string, PopularCounter[]>;
+export type ChampionCounterData = {
+    id: number;
+    name: string;
+    shortName: string;
+    class: ChampionClass;
+    images: unknown;
+};
 
 export const getEncounterPopularCounters = async (questPlanId: string): Promise<PopularCountersMap> => {
     return unstable_cache(
         async () => {
+            // Get total player plans to determine a sensible dynamic threshold
+            const totalPlayers = await prisma.playerQuestPlan.count({
+                where: { questPlanId }
+            });
+
+            // Threshold: At least 5 picks, or 2% of players (capped at 50 to avoid hiding consensus)
+            const threshold = Math.min(50, Math.max(5, Math.floor(totalPlayers * 0.02)));
+
             const results = await prisma.playerQuestEncounter.groupBy({
                 by: ['questEncounterId', 'selectedChampionId'],
                 where: {
                     questPlanId,
                     selectedChampionId: { not: null }
                 },
-                _count: { selectedChampionId: true }
+                _count: { selectedChampionId: true },
+                having: {
+                    selectedChampionId: {
+                        _count: {
+                            gte: threshold
+                        }
+                    }
+                }
+            });
+
+            // We need full champion objects for the popular counters
+            const championIds = Array.from(new Set(results.map(r => r.selectedChampionId).filter((id): id is number => id !== null)));
+            const champions = await prisma.champion.findMany({
+                where: { id: { in: championIds } },
+                select: { id: true, name: true, shortName: true, class: true, images: true }
             });
 
             const map: PopularCountersMap = {};
             for (const row of results) {
                 if (!row.selectedChampionId) continue;
                 if (!map[row.questEncounterId]) map[row.questEncounterId] = [];
+                
+                const champion = champions.find(c => c.id === row.selectedChampionId);
+                if (!champion) continue;
+
                 map[row.questEncounterId].push({
                     championId: row.selectedChampionId,
-                    count: row._count.selectedChampionId
+                    count: row._count.selectedChampionId,
+                    champion
                 });
             }
 
@@ -263,6 +351,151 @@ export const getEncounterPopularCounters = async (questPlanId: string): Promise<
         },
         [`quest-popular-counters-${questPlanId}`],
         { tags: [`quest-popular-counters-${questPlanId}`, 'quest-popular-counters'] }
+    )();
+};
+
+export type PickCounterWithChampion = {
+    championId: number;
+    count: number;
+    champion: ChampionCounterData;
+    pickedBy?: { id: string; name: string; avatar: string | null }[];
+};
+
+export type EnhancedCountersMap = Record<string, PickCounterWithChampion[]>;
+
+export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<EnhancedCountersMap> => {
+    return unstable_cache(
+        async () => {
+            const picks = await prisma.playerQuestEncounter.findMany({
+                where: {
+                    questPlanId,
+                    selectedChampionId: { not: null },
+                    playerQuestPlan: { isFeatured: true }
+                },
+                select: {
+                    questEncounterId: true,
+                    selectedChampionId: true,
+                    selectedChampion: {
+                        select: { id: true, name: true, shortName: true, class: true, images: true }
+                    },
+                    playerQuestPlan: {
+                        select: {
+                            player: {
+                                select: { id: true, ingameName: true, avatar: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const map: EnhancedCountersMap = {};
+            for (const pick of picks) {
+                if (!pick.selectedChampionId || !pick.selectedChampion) continue;
+                if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
+
+                const player = {
+                    id: pick.playerQuestPlan.player.id,
+                    name: pick.playerQuestPlan.player.ingameName,
+                    avatar: pick.playerQuestPlan.player.avatar
+                };
+
+                const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
+                if (existing) {
+                    existing.count++;
+                    if (existing.pickedBy) {
+                        if (!existing.pickedBy.some(p => p.id === player.id)) {
+                            existing.pickedBy.push(player);
+                        }
+                    } else {
+                        existing.pickedBy = [player];
+                    }
+                } else {
+                    map[pick.questEncounterId].push({
+                        championId: pick.selectedChampionId,
+                        count: 1,
+                        champion: pick.selectedChampion,
+                        pickedBy: [player]
+                    });
+                }
+            }
+
+            for (const encId of Object.keys(map)) {
+                map[encId].sort((a, b) => b.count - a.count);
+            }
+
+            return map;
+        },
+        [`quest-featured-picks-${questPlanId}`],
+        { tags: [`quest-featured-picks-${questPlanId}`, 'quest-featured-picks'] }
+    )();
+};
+export const getEncounterAlliancePicks = async (questPlanId: string, allianceId: string, excludePlayerId?: string): Promise<EnhancedCountersMap> => {
+    return unstable_cache(
+        async () => {
+            const picks = await prisma.playerQuestEncounter.findMany({
+                where: {
+                    questPlanId,
+                    selectedChampionId: { not: null },
+                    playerQuestPlan: { 
+                        player: { 
+                            allianceId,
+                            id: excludePlayerId ? { not: excludePlayerId } : undefined
+                        } 
+                    }
+                },
+                select: {
+                    questEncounterId: true,
+                    selectedChampionId: true,
+                    selectedChampion: {
+                        select: { id: true, name: true, shortName: true, class: true, images: true }
+                    },
+                    playerQuestPlan: {
+                        select: {
+                            player: {
+                                select: {
+                                    id: true,
+                                    ingameName: true,
+                                    avatar: true
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const map: EnhancedCountersMap = {};
+            for (const pick of picks) {
+                if (!pick.selectedChampionId || !pick.selectedChampion) continue;
+                if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
+                
+                const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
+                const playerDetails = pick.playerQuestPlan.player;
+                const pickedByData = { id: playerDetails.id, name: playerDetails.ingameName, avatar: playerDetails.avatar };
+
+                if (existing) {
+                    existing.count++;
+                    if (!existing.pickedBy) existing.pickedBy = [];
+                    if (!existing.pickedBy.some(p => p.id === pickedByData.id)) {
+                        existing.pickedBy.push(pickedByData);
+                    }
+                } else {
+                    map[pick.questEncounterId].push({
+                        championId: pick.selectedChampionId,
+                        count: 1,
+                        champion: pick.selectedChampion,
+                        pickedBy: [pickedByData]
+                    });
+                }
+            }
+
+            for (const encId of Object.keys(map)) {
+                map[encId].sort((a, b) => b.count - a.count);
+            }
+
+            return map;
+        },
+        [`quest-alliance-picks-${questPlanId}-${allianceId}-${excludePlayerId || 'none'}`],
+        { tags: [`quest-alliance-picks-${questPlanId}-${allianceId}`, 'quest-alliance-picks'] }
     )();
 };
 
@@ -580,6 +813,12 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     revalidateTag('quest-plan-detail', 'default');
     revalidateTag(`quest-popular-counters-${questPlanId}`, 'default');
     revalidateTag('quest-popular-counters', 'default');
+
+    if (actingUser.allianceId) {
+        revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`);
+        revalidateTag('quest-alliance-picks');
+    }
+
     return { success: true };
 }
 
@@ -704,6 +943,39 @@ export async function deleteQuestEncounter(questPlanId: string, encounterId: str
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
+    return { success: true };
+}
+
+export async function reorderQuestEncounters(questPlanId: string, encounterIds: string[]) {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    // Verify ownership and existence
+    const existingEncounters = await prisma.questEncounter.findMany({
+        where: { id: { in: encounterIds } },
+        select: { id: true, questPlanId: true }
+    });
+
+    if (existingEncounters.length !== encounterIds.length) {
+        throw new Error("One or more encounters not found.");
+    }
+
+    if (existingEncounters.some(e => e.questPlanId !== questPlanId)) {
+        throw new Error("One or more encounters do not belong to this quest plan.");
+    }
+
+    await prisma.$transaction(
+        encounterIds.map((id, index) =>
+            prisma.questEncounter.update({
+                where: { id },
+                data: { sequence: index + 1 }
+            })
+        )
+    );
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail');
+    
     return { success: true };
 }
 

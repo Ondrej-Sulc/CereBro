@@ -1,126 +1,265 @@
 "use client";
+import { EncounterCard } from "./encounter-card/EncounterCard";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma } from "@prisma/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, CheckCircle2, ShieldAlert, AlertCircle, Info, Search, X, Zap, Shield, BookOpen, Tag as TagIcon, Filter, Trash2, Crosshair, Youtube, PlayCircle, Users, Share2, Check, Target, Swords } from "lucide-react";
-import { savePlayerQuestCounter, getShareablePlanId } from "@/app/actions/quests";
-import type { PopularCountersMap } from "@/app/actions/quests";
-import { getChampionImageUrl, getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { getShareablePlanId, savePlayerQuestCounter } from "@/app/actions/quests";
+import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
+import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
-import { ChampionImages, Champion } from "@/types/champion";
 import { MultiSelectFilter } from "@/components/ui/filters";
 import { useToast } from "@/hooks/use-toast";
-import { getQuestPlanById } from "@/app/actions/quests";
-import { getYoutubeEmbedUrl } from "@/lib/youtube";
+import {
+    EncounterWithRelations,
+    RosterWithChampion,
+    QuestTimelineProps,
+    toChampionImages
+} from "./types";
+import {
+    isChampionValidForEncounterOrQuest,
+    getValidRosterCountForChampion
+} from "./utils";
 
-export type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
-export type EncounterWithRelations = QuestWithRelations["encounters"][0];
-export type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
+import type { ChampionClass } from "@prisma/client";
+import type { Champion } from "@/types/champion";
 
-export type RosterWithChampion = Roster & {
-    champion: Champion;
+const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
+
+const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: { 
+    user: { name: string; avatar: string | null };
+    picks: { encounterId: string; champion: ChampionCounterData }[];
+    quest: QuestTimelineProps["quest"];
+    scrollToEncounter: (id: string) => void;
+}) => {
+    // Group picks by champion
+    const teamMap = useMemo(() => {
+        const map: Record<number, { champion: ChampionCounterData; assignedEncounters: any[] }> = {};
+        picks.forEach(p => {
+            if (!map[p.champion.id]) {
+                map[p.champion.id] = { champion: p.champion, assignedEncounters: [] };
+            }
+            const enc = quest.encounters.find((e: any) => e.id === p.encounterId);
+            if (enc) map[p.champion.id].assignedEncounters.push(enc);
+        });
+        const result = Object.values(map);
+        result.forEach(v => v.assignedEncounters.sort((a, b) => a.sequence - b.sequence));
+        return result;
+    }, [picks, quest.encounters]);
+
+    return (
+        <div className="flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center gap-4">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-sky-500/30 shadow-lg">
+                    {user.avatar ? (
+                        <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-400 font-bold text-lg">
+                            {user.name.charAt(0)}
+                        </div>
+                    )}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-base font-black text-white tracking-tight">{user.name}'s Plan</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{teamMap.length} Champions selected</span>
+                </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-slate-950/20">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {teamMap.map(({ champion, assignedEncounters }) => {
+                        const classColors = getChampionClassColors(champion.class as ChampionClass);
+                        return (
+                            <div 
+                                key={champion.id}
+                                className={cn(
+                                    "relative flex flex-col bg-slate-900/60 border border-slate-800/60 rounded-2xl overflow-hidden transition-all duration-300",
+                                    classColors.hoverBorder.replace('hover:', '')
+                                )}
+                            >
+                                <div className="p-3 flex items-center gap-3">
+                                    <div className="shrink-0">
+                                        <ChampionAvatar
+                                            images={toChampionImages(champion.images)}
+                                            name={champion.name}
+                                            stars={0}
+                                            rank={0}
+                                            championClass={champion.class as ChampionClass}
+                                            size="md"
+                                            showRank={false}
+                                            showStars={false}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className={cn("text-[11px] font-black uppercase truncate tracking-wider", classColors.text)}>
+                                            {champion.name}
+                                        </h4>
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="h-1 w-1 rounded-full bg-slate-700" />
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{assignedEncounters.length} Fights</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="px-3 pb-3">
+                                    <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner">
+                                        {assignedEncounters.map((enc: any) => (
+                                            <div 
+                                                key={enc.id}
+                                                className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden cursor-pointer hover:border-sky-500 transition-all hover:scale-105 active:scale-95 group/tgt-mini"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    scrollToEncounter(enc.id);
+                                                }}
+                                                title={`Fight against ${enc.defender?.name || "Unknown"}`}
+                                            >
+                                                {enc.defender ? (
+                                                    <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt-mini:scale-110 transition-transform" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                )}
+                                                <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt-mini:opacity-100 transition-opacity" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
 };
 
-const isChampionValidForEncounterOrQuest = (
-    r: RosterWithChampion,
-    quest: QuestWithRelations,
-    encounter: EncounterWithRelations | undefined
-) => {
-    // Quest-level restrictions
-    if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-    if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-    if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-    if (quest.requiredTags && quest.requiredTags.length > 0) {
-        const hasTag = (quest.requiredTags as Tag[]).some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-        if (!hasTag) return false;
+const MultiPlayerPopover = ({ 
+    users, 
+    quest, 
+    scrollToEncounter, 
+    playerPicksMap 
+}: { 
+    users: { id: string; name: string; avatar: string | null }[];
+    quest: QuestTimelineProps["quest"];
+    scrollToEncounter: (id: string) => void;
+    playerPicksMap: any;
+}) => {
+    const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
+
+    if (selectedUser) {
+        return (
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300">
+                <div className="px-4 py-2 border-b border-slate-800 bg-slate-900/40 flex items-center">
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSelectedUser(null)}
+                        className="h-7 px-2 text-[10px] font-black uppercase text-slate-400 hover:text-white gap-1.5"
+                    >
+                        <ChevronLeft className="w-3 h-3" /> Back to List
+                    </Button>
+                </div>
+                <PlayerTeamSummary 
+                    user={selectedUser} 
+                    picks={playerPicksMap[selectedUser.id]?.picks || []} 
+                    quest={quest} 
+                    scrollToEncounter={scrollToEncounter} 
+                />
+            </div>
+        );
     }
 
-    // Encounter-level restrictions
-    if (encounter) {
-        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-        if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-            const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-            if (!hasTag) return false;
+    return (
+        <div className="flex flex-col max-h-[60vh] animate-in fade-in slide-in-from-left-2 duration-300">
+            <div className="p-3 border-b border-slate-800 bg-slate-900/60">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Suggested By</h4>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                {users.map((user) => (
+                    <button
+                        key={user.id}
+                        onClick={() => setSelectedUser(user)}
+                        className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/60 transition-colors text-left group"
+                    >
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-sky-500/50 transition-colors">
+                            {user.avatar ? (
+                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                    {user.name.charAt(0)}
+                                </div>
+                            )}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">{user.name}</span>
+                            <span className="text-[9px] text-slate-500 font-medium">Click to see plan</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 ml-auto text-slate-600 group-hover:text-sky-400 transition-colors" />
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const isReadOnlyRosterEntry = (value: unknown): value is RosterWithChampion => {
+    if (!value || typeof value !== "object") return false;
+    const candidate = value as Record<string, unknown>;
+    if (typeof candidate.id !== "string") return false;
+    if (typeof candidate.championId !== "number") return false;
+
+    const champion = candidate.champion;
+    if (!champion || typeof champion !== "object") return false;
+    const champCandidate = champion as Record<string, unknown>;
+    return (
+        typeof champCandidate.id === "number" &&
+        typeof champCandidate.name === "string"
+    );
+};
+
+const isChampionUnavailableForEncounter = ({
+    userChamp,
+    encounterId,
+    selections,
+    roster,
+    quest,
+    encounter
+}: {
+    userChamp: RosterWithChampion | undefined;
+    encounterId: string;
+    selections: Record<string, string | null>;
+    roster: RosterWithChampion[];
+    quest: QuestTimelineProps["quest"];
+    encounter: EncounterWithRelations;
+}): boolean => {
+    if (!userChamp || quest.teamLimit !== null || selections[encounterId] === userChamp.id) {
+        return false;
+    }
+
+    const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+        if (encId !== encounterId && rid !== null) {
+            const r = roster.find(re => re.id === rid);
+            if (r?.championId === userChamp.championId) {
+                return acc + 1;
+            }
         }
-    }
+        return acc;
+    }, 0);
 
-    return true;
+    const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
+    return otherSelectionsCount >= validRosterCount;
 };
 
-const getValidRosterCountForChampion = (
-    championId: number,
-    roster: RosterWithChampion[],
-    quest: QuestWithRelations,
-    encounter: EncounterWithRelations | undefined
-) => {
-    return roster.filter(r => 
-        r.championId === championId && 
-        isChampionValidForEncounterOrQuest(r, quest, encounter)
-    ).length;
-};
-
-interface FilterMetadata {
-    tags: { id: string | number, name: string }[];
-    abilityCategories: { id: string | number, name: string }[];
-    abilities: { id: string | number, name: string }[];
-    immunities: { id: string | number, name: string }[];
-}
-
-interface Props {
-    quest: QuestWithRelations;
-    roster?: RosterWithChampion[];
-    savedEncounters?: PlayerQuestEncounter[];
-    popularCounters?: PopularCountersMap;
-    filterMetadata?: FilterMetadata;
-    readOnly?: boolean;
-    /** Map of questEncounterId -> roster entry, used in readOnly mode to resolve selected champion details */
-    rosterMap?: Record<string, any>;
-    /** Pre-built selections map (encounterId -> championId), used in readOnly mode */
-    initialSelections?: Record<string, number | null>;
-}
-
-const CLASSES = Object.values(ChampionClass);
-
-function toChampionImages(images: unknown): ChampionImages {
-    if (!images || typeof images !== "object") {
-        return {
-            hero: "",
-            full_primary: "",
-            full_secondary: "",
-            p_32: "",
-            s_32: "",
-            p_64: "",
-            s_64: "",
-            p_128: "",
-            s_128: "",
-        };
-    }
-    const imgObj = images as Record<string, unknown>;
-    return {
-        hero: typeof imgObj.hero === "string" ? imgObj.hero : "",
-        full_primary: typeof imgObj.full_primary === "string" ? imgObj.full_primary : "",
-        full_secondary: typeof imgObj.full_secondary === "string" ? imgObj.full_secondary : "",
-        p_32: typeof imgObj.p_32 === "string" ? imgObj.p_32 : "",
-        s_32: typeof imgObj.s_32 === "string" ? imgObj.s_32 : "",
-        p_64: typeof imgObj.p_64 === "string" ? imgObj.p_64 : "",
-        s_64: typeof imgObj.s_64 === "string" ? imgObj.s_64 : "",
-        p_128: typeof imgObj.p_128 === "string" ? imgObj.p_128 : "",
-        s_128: typeof imgObj.s_128 === "string" ? imgObj.s_128 : "",
-    };
-}
-
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: Props) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -131,6 +270,37 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [isScrolled, setIsScrolled] = useState(false);
     const [isSharing, setIsSharing] = useState(false);
     const [shareSuccess, setShareSuccess] = useState(false);
+    const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
+    const [isRosterExpanded, setIsRosterExpanded] = useState(false);
+
+    // Group picks by player for the PlayerTeamPopover
+    const playerPicksMap = useMemo(() => {
+        const map: Record<string, { 
+            name: string;
+            avatar: string | null;
+            picks: { encounterId: string; champion: ChampionCounterData }[] 
+        }> = {};
+
+        const addPicks = (picksMap: Record<string, any[]>) => {
+            Object.entries(picksMap).forEach(([encId, counters]) => {
+                counters.forEach(c => {
+                    c.pickedBy?.forEach((user: any) => {
+                        if (!map[user.id]) {
+                            map[user.id] = { name: user.name, avatar: user.avatar, picks: [] };
+                        }
+                        // Only add if not already present for this encounter
+                        if (!map[user.id].picks.some(p => p.encounterId === encId)) {
+                            map[user.id].picks.push({ encounterId: encId, champion: c.champion });
+                        }
+                    });
+                });
+            });
+        };
+
+        addPicks(featuredPicks);
+        addPicks(alliancePicks);
+        return map;
+    }, [featuredPicks, alliancePicks]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -181,7 +351,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             // In read-only mode, we use the rosterMap to get the IDs directly
             Object.keys(initialSelections || {}).forEach(encId => {
                 const rosterEntry = rosterMap[encId];
-                initial[encId] = rosterEntry ? rosterEntry.id : null;
+                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
             });
             return initial;
         }
@@ -364,7 +534,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     /** Resolve a roster item for a given roster ID — works for both interactive and readOnly modes */
     const resolveRosterItem = useCallback((rosterId: string, encounterId: string): RosterWithChampion | undefined => {
         if (readOnly) {
-            return rosterMap[encounterId];
+            const rosterEntry = rosterMap[encounterId];
+            return isReadOnlyRosterEntry(rosterEntry) ? rosterEntry : undefined;
         }
         return roster.find(r => r.id === rosterId);
     }, [readOnly, roster, rosterMap]);
@@ -385,19 +556,274 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         return Array.from(teamMap.values());
     }, [selections, resolveRosterItem]);
 
+    const renderChampionItem = (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
+        if (readOnly) {
+            // In readOnly mode, just show the champion reference without roster matching
+            return (
+                <UpdatedChampionItem
+                    item={{
+                        stars: 0,
+                        rank: 0,
+                        champion: {
+                            id: c.id,
+                            name: c.shortName || c.name,
+                            championClass: c.class,
+                            images: toChampionImages(c.images)
+                        }
+                    }}
+                    isRecommended
+                    popularityLabel={popularityLabel}
+                />
+            );
+        }
+
+        // Find highest version in roster that matches restrictions
+        const validRosterEntries = roster
+            .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
+            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
+
+        // Best version that is either unused or used in THIS encounter
+        const userChamp = validRosterEntries.find(r => 
+            !Object.values(selections).includes(r.id) || 
+            selections[encounter.id] === r.id
+        ) || validRosterEntries[0];
+
+        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
+        
+        // Check if any version of this champion is in the team
+        const isChampInTeam = Object.values(selections).some(rid => {
+            if (!rid) return false;
+            return roster.find(r => r.id === rid)?.championId === c.id;
+        });
+        
+        const isUnavailable = isChampionUnavailableForEncounter({
+            userChamp,
+            encounterId: encounter.id,
+            selections,
+            roster,
+            quest,
+            encounter
+        });
+
+        return (
+            <div
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (userChamp && !isUnavailable) {
+                        handleSelectCounter(encounter.id, userChamp.id);
+                    }
+                }}
+                className={cn(
+                    "flex flex-col gap-1.5", 
+                    isUnavailable ? "cursor-not-allowed" : "cursor-pointer group"
+                )}
+            >
+                <div className="relative">
+                    <UpdatedChampionItem
+                        item={userChamp ? {
+                            stars: userChamp.stars,
+                            rank: userChamp.rank,
+                            isAwakened: userChamp.isAwakened,
+                            sigLevel: userChamp.sigLevel,
+                            powerRating: userChamp.powerRating,
+                            champion: {
+                                id: userChamp.champion.id,
+                                name: userChamp.champion.shortName || userChamp.champion.name,
+                                championClass: userChamp.champion.class,
+                                    images: toChampionImages(userChamp.champion.images)
+                            },
+                            isAscended: userChamp.isAscended
+                        } : {
+                            stars: 0,
+                            rank: 0,
+                            champion: {
+                                id: c.id,
+                                name: c.shortName || c.name,
+                                championClass: c.class,
+                                images: toChampionImages(c.images)
+                            }
+                        }}
+                        isSelected={isSelected}
+                        isRecommended={!isSelected && isRecommendedTab}
+                        isMissing={!userChamp}
+                        isInTeam={isChampInTeam}
+                        isUnavailable={isUnavailable}
+                        popularityLabel={!isCompact ? popularityLabel : undefined}
+                    />
+                </div>
+            </div>
+        );
+    };
+
+    const renderListPick = (p: PickCounterWithChampion, encounter: EncounterWithRelations) => {
+        const validRosterEntries = roster
+            .filter(r => r.championId === p.championId && isChampionValidForEncounterOrQuest(r, quest, encounter))
+            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
+        const userChamp = validRosterEntries.find(r => 
+            !Object.values(selections).includes(r.id) || 
+            selections[encounter.id] === r.id
+        ) || validRosterEntries[0];
+        
+        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
+        const isInTeam = Object.values(selections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
+
+        const isUnavailable = isChampionUnavailableForEncounter({
+            userChamp,
+            encounterId: encounter.id,
+            selections,
+            roster,
+            quest,
+            encounter
+        });
+
+        const users = p.pickedBy || [];
+        const MAX_SIDEBAR_USERS = 3;
+        const displayUsers = users.slice(0, MAX_SIDEBAR_USERS);
+        const hasMore = users.length > MAX_SIDEBAR_USERS;
+
+        const classColors = getChampionClassColors(p.champion.class as ChampionClass);
+
+        return (
+            <div 
+                key={p.championId} 
+                className={cn(
+                    "flex bg-slate-900/40 rounded-2xl border transition-all duration-300 group/pick-card shadow-lg overflow-hidden",
+                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : "cursor-pointer bg-slate-900/40 backdrop-blur-md shadow-xl",
+                    !isUnavailable && isSelected && "border-sky-500/60 ring-1 ring-sky-500/30 bg-sky-950/20 shadow-sky-500/10",
+                    !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 bg-emerald-950/10 shadow-emerald-500/10",
+                    !isUnavailable && !isSelected && !isInTeam && cn("border-slate-800/80 hover:bg-slate-800/60 hover:border-slate-600", classColors.hoverBorder)
+                )}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (userChamp && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
+                }}
+            >
+                {/* Champion Side (Main Card) */}
+                <div className="flex-1 min-w-0">
+                    <UpdatedChampionItem
+                        item={userChamp ? {
+                            stars: userChamp.stars,
+                            rank: userChamp.rank,
+                            isAwakened: userChamp.isAwakened,
+                            sigLevel: userChamp.sigLevel,
+                            powerRating: userChamp.powerRating,
+                            champion: {
+                                id: userChamp.champion.id,
+                                name: userChamp.champion.shortName || userChamp.champion.name,
+                                championClass: userChamp.champion.class as ChampionClass,
+                                images: toChampionImages(userChamp.champion.images)
+                            },
+                            isAscended: userChamp.isAscended,
+                            ascensionLevel: userChamp.ascensionLevel
+                        } : {
+                            stars: 0,
+                            rank: 0,
+                            champion: {
+                                id: p.championId,
+                                name: p.champion.name,
+                                championClass: p.champion.class as ChampionClass,
+                                images: toChampionImages(p.champion.images)
+                            }
+                        }}
+                        // We handle borders/selection on the outer container
+                        isSelected={false}
+                        isRecommended={false}
+                        isMissing={!userChamp}
+                        isInTeam={false}
+                        isUnavailable={false}
+                        className="border-0 shadow-none ring-0 rounded-none bg-transparent"
+                    />
+                </div>
+
+                {/* Player Sidecar (Sidebar for Badges) */}
+                <div className="w-12 shrink-0 flex flex-col items-center justify-center gap-2.5 p-1 bg-slate-950/40 border-l border-slate-800/60">
+                    {users.length > 0 && (
+                        <>
+                            {displayUsers.map((user) => (
+                                <Popover key={user.id}>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="relative w-7 h-7 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer group/user hover:scale-110 shadow-lg"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={`Suggested by ${user.name} - Click to see their plan`}
+                                        >
+                                            {user.avatar ? (
+                                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent 
+                                        className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
+                                        align="end"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <PlayerTeamSummary 
+                                            user={user} 
+                                            picks={playerPicksMap[user.id]?.picks || []} 
+                                            quest={quest} 
+                                            scrollToEncounter={scrollToEncounter} 
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            ))}
+
+                            {hasMore && (
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <div 
+                                            className="relative w-7 h-7 rounded-full bg-slate-800 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 group/more-users"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={`Suggested by ${users.length} players - Click to see list`}
+                                        >
+                                            <span className="text-[10px] font-black text-sky-400">+{users.length - MAX_SIDEBAR_USERS}</span>
+                                        </div>
+                                    </PopoverTrigger>
+                                    <PopoverContent 
+                                        className="w-[280px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
+                                        align="end"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <MultiPlayerPopover 
+                                            users={users} 
+                                            quest={quest} 
+                                            scrollToEncounter={scrollToEncounter} 
+                                            playerPicksMap={playerPicksMap} 
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="relative pt-4 pb-20">
             {/* Invisible marker for scroll detection */}
             <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
             <div className="sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
-                <div className={cn(
-                    "transition-all duration-500 ease-in-out pointer-events-auto",
-                    isScrolled ? "scale-[0.98] py-2" : "scale-100 py-0"
-                )}>
+                <motion.div 
+                    layout
+                    initial={false}
+                    className={cn(
+                        "pointer-events-auto",
+                        isScrolled ? "py-2" : "py-0"
+                    )}
+                    animate={{
+                        scale: isScrolled ? 0.98 : 1
+                    }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                >
                     <Card 
                         className={cn(
-                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-[background-color,border-color,transform,opacity,box-shadow,border-radius] duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
+                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-[background-color,border-color,opacity,box-shadow,border-radius] duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
                             isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
                             isTeamExpanded 
                                 ? "w-[95vw] sm:w-[90vw] md:max-w-5xl bg-slate-900/90" 
@@ -405,173 +831,237 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                         )}
                         onClick={() => setIsTeamExpanded(!isTeamExpanded)}
                     >
-                        <div
-                            className={cn(
-                                "py-2 px-4 flex items-center justify-between transition-all",
-                                isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
-                            )}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={cn(
-                                    "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-card:bg-sky-500/20 transition-colors",
-                                    isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                )}>
-                                    <Users className="w-3.5 h-3.5" />
-                                </div>
-                                <span className={cn(
-                                    "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-card:text-sky-400 transition-colors",
-                                    isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                )}>
-                                    {readOnly ? 'Team' : 'Your Team'}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                {!readOnly && quest.status === 'VISIBLE' && (
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleShare(); }}
-                                    disabled={isSharing}
-                                    className={cn(
-                                        "p-1.5 rounded-lg border transition-all",
-                                        shareSuccess
-                                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                                            : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
-                                    )}
-                                    title="Share your plan"
-                                >
-                                    {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                                </button>
+                        <motion.div layout className="flex flex-col">
+                            <div
+                                className={cn(
+                                    "py-2 px-4 flex items-center justify-between transition-all",
+                                    isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
                                 )}
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
-                                    <span className={cn(
-                                        "text-[10px] font-black",
-                                        (quest.teamLimit && selectedTeam.length > quest.teamLimit) ? "text-red-400" : "text-sky-400"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                        "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-card:bg-sky-500/20 transition-colors",
+                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
                                     )}>
-                                        {selectedTeam.length}
+                                        <Users className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span className={cn(
+                                        "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-card:text-sky-400 transition-colors",
+                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
+                                    )}>
+                                        {readOnly ? 'Team' : 'Your Team'}
                                     </span>
-                                    {quest.teamLimit ? (
-                                        <>
-                                            <span className="text-[10px] text-slate-600 font-bold">/</span>
-                                            <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
-                                        </>
-                                    ) : (
-                                        <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
-                                    )}
                                 </div>
-                                <div className={cn(
-                                    "transition-transform duration-300",
-                                    isTeamExpanded ? "rotate-180" : ""
-                                )}>
-                                    <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+
+                                <div className="flex items-center gap-2">
+                                    {!readOnly && quest.status === 'VISIBLE' && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                                        disabled={isSharing}
+                                        className={cn(
+                                            "p-1.5 rounded-lg border transition-all",
+                                            shareSuccess
+                                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                                                : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
+                                        )}
+                                        title="Share your plan"
+                                    >
+                                        {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                                    </button>
+                                    )}
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
+                                        <span className={cn(
+                                            "text-[10px] font-black",
+                                            (quest.teamLimit && selectedTeam.length > quest.teamLimit) ? "text-red-400" : "text-sky-400"
+                                        )}>
+                                            {selectedTeam.length}
+                                        </span>
+                                        {quest.teamLimit ? (
+                                            <>
+                                                <span className="text-[10px] text-slate-600 font-bold">/</span>
+                                                <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
+                                        )}
+                                    </div>
+                                    <motion.div
+                                        animate={{ rotate: isTeamExpanded ? 180 : 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                    </motion.div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className={cn(
-                            "transition-all duration-500 ease-in-out overflow-hidden px-4 pb-4",
-                            isTeamExpanded ? "max-h-[800px] opacity-100" : "max-h-[140px] opacity-90"
-                        )}>
-                                    {selectedTeam.length === 0 ? (
-                                        <div className="py-4 flex flex-col items-center justify-center gap-1">
-                                            <p className="text-[10px] text-slate-500 italic font-medium">No champions selected.</p>
-                                            {!isTeamExpanded && <p className="text-[8px] text-slate-600 uppercase tracking-tighter">Click to expand</p>}
-                                        </div>
-                                    ) : (
-                                        <div className={cn(
-                                            "flex items-end transition-all duration-500",
-                                            isTeamExpanded ? "flex-col gap-4" : "flex-row gap-3 justify-center"
-                                        )}>
-                                            <div className={cn(
-                                                "flex gap-3 pb-1 overflow-x-auto custom-scrollbar scroll-smooth",
-                                                isTeamExpanded ? "w-full justify-start" : "w-fit max-w-full"
-                                            )}>
-                                                {selectedTeam.map(r => {
-                                                    const assignedEncounterIds = Object.entries(selections)
-                                                        .filter(([encId, rosterId]) => rosterId === r.id)
-                                                        .map(([encId]) => encId);
+                            <AnimatePresence initial={false}>
+                                {isTeamExpanded && (
+                                    <motion.div 
+                                        key="team-expanded-content"
+                                        layout
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                                        className="overflow-hidden px-4 pb-4"
+                                    >
+                                        {selectedTeam.length === 0 ? (
+                                            <div className="py-8 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
+                                                <div className="p-3 rounded-full bg-slate-800/50 text-slate-500">
+                                                    <Users className="w-6 h-6" />
+                                                </div>
+                                                <p className="text-sm text-slate-400 font-medium">No champions selected yet</p>
+                                                <p className="text-xs text-slate-600">Assign counters to build your team</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-6">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    {selectedTeam.map(r => {
+                                                        const assignedEncounterIds = Object.entries(selections)
+                                                            .filter(([encId, rosterId]) => rosterId === r.id)
+                                                            .map(([encId]) => encId);
 
-                                                    const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
+                                                        const assignedEncounters = quest.encounters
+                                                            .filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id))
+                                                            .sort((a, b) => a.sequence - b.sequence);
 
-                                                    // Dynamic sizes based on expansion AND scroll state
-                                                    const avatarSize = isTeamExpanded
-                                                        ? (isScrolled ? "lg" : "xl")
-                                                        : (isScrolled ? "md" : "lg");
+                                                        const classColors = getChampionClassColors(r.champion.class);
 
-                                                    const containerWidth = isTeamExpanded
-                                                        ? (isScrolled ? "w-[75px] sm:w-[85px]" : "w-[85px] sm:w-[95px]")
-                                                        : (isScrolled ? "w-[50px] sm:w-[60px]" : "w-[75px] sm:w-[85px]");
+                                                        return (
+                                                            <motion.div 
+                                                                layout
+                                                                key={r.id} 
+                                                                className={cn(
+                                                                    "relative group/team-member flex flex-col bg-slate-950/40 border rounded-2xl overflow-hidden transition-all duration-300 hover:bg-slate-900/60",
+                                                                    classColors.hoverBorder.replace('hover:', 'group-hover/team-member:'),
+                                                                    "border-slate-800/60"
+                                                                )}
+                                                            >
+                                                                {/* Accent background based on class */}
+                                                                <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-5 transition-opacity group-hover/team-member:opacity-10", classColors.bg)} />
 
-                                                    return (
-                                                        <div key={r.id} className={cn(
-                                                            "shrink-0 flex flex-col gap-2 transition-all duration-300",
-                                                            containerWidth
-                                                        )}>
-                                                            <ChampionAvatar
-                                                                images={r.champion.images}
-                                                                name={r.champion.name}
-                                                                stars={r.stars}
-                                                                rank={r.rank}
-                                                                isAwakened={r.isAwakened}
-                                                                sigLevel={r.sigLevel}
-                                                                championClass={r.champion.class}
-                                                                size={avatarSize}
-                                                                showRank={isTeamExpanded}
-                                                                showStars={isTeamExpanded}
-                                                            />
-
-                                                            {isTeamExpanded && assignedEncounters.length > 0 && (
-                                                                <div className="bg-slate-900/60 rounded-lg border border-slate-800 p-1.5 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                                    <div className="flex flex-wrap gap-1 justify-center">
-                                                                        {assignedEncounters.map((enc: EncounterWithRelations) => (
-                                                                            <div 
-                                                                                key={`tgt-${enc.id}`} 
-                                                                                role="button"
-                                                                                tabIndex={0}
-                                                                                aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} 
-                                                                                className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    scrollToEncounter(enc.id);
-                                                                                }}
-                                                                                onKeyDown={(e) => {
-                                                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                                                        e.preventDefault();
-                                                                                        e.stopPropagation();
-                                                                                        scrollToEncounter(enc.id);
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                {enc.defender ? (
-                                                                                    <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
-                                                                                ) : (
-                                                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
-                                                                                )}
-                                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                    <span className="text-[9px] font-black text-white">{enc.sequence}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
+                                                                <div className="p-3 flex items-start gap-3 relative z-10">
+                                                                    <div className="shrink-0">
+                                                                        <ChampionAvatar
+                                                                            images={r.champion.images}
+                                                                            name={r.champion.name}
+                                                                            stars={r.stars}
+                                                                            rank={r.rank}
+                                                                            isAwakened={r.isAwakened}
+                                                                            sigLevel={r.sigLevel}
+                                                                            championClass={r.champion.class}
+                                                                            size="lg"
+                                                                            showRank={true}
+                                                                            showStars={true}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0 py-1">
+                                                                        <h4 className={cn("text-xs font-black uppercase tracking-wider truncate mb-0.5", classColors.text)}>
+                                                                            {r.champion.name}
+                                                                        </h4>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                                                {assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
 
-                                            {isTeamExpanded && quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
-                                                <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 animate-in slide-in-from-bottom-2">
-                                                    <AlertCircle className="w-4 h-4 shrink-0" />
-                                                    <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
+                                                                <div className="mt-auto px-3 pb-3 relative z-10">
+                                                                    {assignedEncounters.length > 0 ? (
+                                                                        <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner group-hover/team-member:border-slate-700/50 transition-colors">
+                                                                            {assignedEncounters.map((enc: EncounterWithRelations) => (
+                                                                                <motion.div 
+                                                                                    whileHover={{ scale: 1.05 }}
+                                                                                    whileTap={{ scale: 0.95 }}
+                                                                                    key={`tgt-${enc.id}`} 
+                                                                                    role="button"
+                                                                                    tabIndex={0}
+                                                                                    aria-label={`Fight: ${enc.defender?.name || "Unknown"}`}
+                                                                                    title={`Fight: ${enc.defender?.name || "Unknown"}`} 
+                                                                                    className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        scrollToEncounter(enc.id);
+                                                                                    }}
+                                                                                >
+                                                                                    {enc.defender ? (
+                                                                                        <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt:scale-110 transition-transform" />
+                                                                                    ) : (
+                                                                                        <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                                                    )}
+                                                                                    <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt:opacity-100 transition-opacity" />
+                                                                                </motion.div>
+                                                                            ))}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
+                                                                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic">Unassigned</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </motion.div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            )}
+
+                                                {quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
+                                                    <motion.div 
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 shadow-lg shadow-red-900/10"
+                                                    >
+                                                        <AlertCircle className="w-4 h-4 shrink-0" />
+                                                        <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                        )}                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Compact View when collapsed */}
+                            <AnimatePresence>
+                                {!isTeamExpanded && selectedTeam.length > 0 && (
+                                    <motion.div
+                                        key="team-collapsed-content"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="px-4 pb-3 flex flex-row gap-3 justify-center items-center"
+                                    >
+                                        <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
+                                            {selectedTeam.map(r => (
+                                                <div key={`collapsed-${r.id}`} className="relative group/mini-avatar">
+                                                    <div className="relative w-8 h-8 rounded-full border-2 border-slate-950 overflow-hidden shadow-lg transition-transform group-hover/mini-avatar:-translate-y-1">
+                                                        <Image src={getChampionImageUrlOrPlaceholder(r.champion.images, '64')} alt={r.champion.name} fill className="object-cover" />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    )}
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
+                                        {selectedTeam.length > 0 && (
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1">
+                                                Active Team
+                                            </span>
+                                        )}
+                                    </motion.div>
+                                )}
+                                {!isTeamExpanded && selectedTeam.length === 0 && (
+                                    <motion.div
+                                        key="team-empty-collapsed"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="px-4 pb-2 text-center"
+                                    >
+                                        <p className="text-[9px] text-slate-600 uppercase tracking-tighter font-bold">Click to expand</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </Card>
+                </motion.div>
+            </div>
 
             <div className="relative pl-6 md:pl-10 pb-20">
                 {/* Continuous Vertical Timeline Line */}
@@ -619,768 +1109,66 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             </div>
                         </div>
 
-                        {quest.encounters.map((encounter: EncounterWithRelations, index: number) => {
-                            const isExpanded = expandedId === encounter.id;
-                            const selectedRosterId = selections[encounter.id];
-                            const selectedRosterItem = selectedRosterId ? resolveRosterItem(selectedRosterId, encounter.id) ?? null : null;
-                            const hasSelection = !!selectedRosterId;
-                            const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : null;
-                            const isLast = index === quest.encounters.length - 1;
-
-                            // Find which champions in the currently selected team are recommended for this fight
-                            const suggestedTeamChamps = selectedTeam.filter(teamMember => 
-                                encounter.recommendedChampions.some(rc => rc.id === teamMember.championId)
-                            );
-
-                            return (
-                                <div key={encounter.id} className="relative flex items-stretch group/encounter is-active pl-8 md:pl-10">
-                                    {/* Timeline Node (Circle on the line) */}
-                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
-                                        <div className={cn(
-                                            "flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-300 font-black",
-                                            hasSelection
-                                                ? "bg-slate-950 border-sky-500/60 text-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.15)]"
-                                                : isLast
-                                                    ? "bg-slate-950 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                                                    : "bg-slate-900 border-slate-800 text-slate-500 group-hover/encounter:border-slate-600"
-                                        )}>
-                                            {hasSelection ? (
-                                                <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 animate-in zoom-in duration-300" />
-                                            ) : (
-                                                <span className="text-[10px] md:text-xs">
-                                                    {isLast ? <Crosshair className="h-4 w-4 md:h-5 md:w-5" /> : encounter.sequence}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Horizontal Connector Line (from circle to card) */}
-                                    <div className={cn(
-                                        "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-8 md:w-10 z-10 transition-colors duration-300",
-                                        hasSelection ? "bg-sky-500/50" : (isLast ? "bg-red-800/50" : "bg-slate-800 group-hover/encounter:bg-slate-700")
-                                    )} />
-
-                                    {/* Card Content */}
-                                    <Card
-                                        id={`encounter-${encounter.id}`}
-                                        className={cn(
-                                            "flex-1 bg-slate-950/90 backdrop-blur-md border transition-all cursor-pointer overflow-hidden z-10 relative",
-                                            hasSelection ? "border-sky-800/80 shadow-[0_0_20px_rgba(2,132,199,0.15)]" : (isLast ? "border-red-900/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]" : "border-slate-800 hover:border-slate-700 hover:bg-slate-900/90"),
-                                            isExpanded && "ring-1 ring-slate-700 shadow-xl"
-                                        )}
-                                    >
-                                        {/* Card Header (Always Visible) */}
-                                        <div
-                                            className="relative p-0 flex flex-col md:flex-row items-stretch min-h-[100px]"
-                                            onClick={() => toggleExpand(encounter.id)}
-                                        >
-                                            {/* Left Side: Defender (Red/Orange Theme) */}
-                                            <div className="relative flex-1 flex items-center p-4 md:p-5 md:pr-14 lg:pr-16 gap-4 z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-red-950/20 before:to-transparent before:-z-10 min-w-0">
-                                                {/* Defender Avatar */}
-                                                <div className="relative shrink-0 group-hover/encounter:scale-105 transition-transform duration-300">
-                                                    <div className={`h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
-                                                        {encounter.defender ? (
-                                                            <Image
-                                                                src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "128")}
-                                                                alt={encounter.defender.name}
-                                                                fill
-                                                                sizes="80px"
-                                                                className="object-cover"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-950">
-                                                                <ShieldAlert className="h-8 w-8 md:h-10 md:w-10 opacity-50" />
-                                                            </div>
-                                                        )}
-                                                        {/* Subtle inner gradient */}
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                                                    </div>
-                                                    {encounter.defender && (
-                                                        <div className="absolute -bottom-2.5 -right-2.5 z-20 h-7 w-7 md:h-8 md:w-8 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-lg">
-                                                            <Image
-                                                                src={`/assets/icons/${encounter.defender.class.charAt(0).toUpperCase() + encounter.defender.class.slice(1).toLowerCase()}.png`}
-                                                                alt={encounter.defender.class}
-                                                                fill
-                                                                className="object-contain p-1"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <div className="flex flex-col flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
-                                                        <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
-                                                            {encounter.defender?.name || "Unknown Defender"}
-                                                        </CardTitle>
-                                                        {encounter.videoUrl && (
-                                                            <Youtube className="w-5 h-5 text-red-600 shrink-0" />
-                                                        )}
-                                                    </div>
-                                                    {/* Mini node preview */}
-                                                    {encounter.nodes.length > 0 && !isExpanded && (
-                                                        <div className="flex gap-1 mt-2 flex-wrap">
-                                                            {encounter.nodes.slice(0, 3).map((n: EncounterNodeWithRelations) => (
-                                                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-400 font-medium">
-                                                                    {n.nodeModifier.name}
-                                                                </Badge>
-                                                            ))}
-                                                            {encounter.nodes.length > 3 && (
-                                                                <Badge variant="secondary" className="text-[10px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-500 font-medium">
-                                                                    +{encounter.nodes.length - 3}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* VS Centerpiece */}
-                                            <div className="hidden md:flex absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-24 items-center justify-center z-20 pointer-events-none">
-                                                <div className="relative flex items-center justify-center w-12 h-12">
-                                                    <svg width="100%" height="100%" viewBox="0 0 100 100" className="absolute inset-0 text-slate-800 fill-slate-950 drop-shadow-xl">
-                                                        <polygon points="50 0, 100 25, 100 75, 50 100, 0 75, 0 25" stroke="currentColor" strokeWidth="2" />
-                                                    </svg>
-                                                    <span className="relative z-10 text-sm font-black text-slate-500 italic uppercase tracking-tighter mix-blend-screen">VS</span>
-                                                    {/* Stylized slash */}
-                                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-slate-700/20 to-transparent opacity-50 transform rotate-12" />
-                                                </div>
-                                            </div>
-
-                                            {/* Right Side: Selected Counter (Blue/Sky Theme) */}
-                                            <div className={cn(
-                                                "relative flex-1 flex items-center p-4 md:p-5 md:pl-14 lg:pl-16 gap-4 border-t md:border-t-0 md:border-l border-slate-800/50 justify-between md:justify-end transition-colors z-10 min-w-0",
-                                                hasSelection ? "before:absolute before:inset-0 before:bg-gradient-to-l before:from-sky-950/20 before:to-transparent before:-z-10" : ""
-                                            )}>
-                                                {hasSelection && selectedRosterItem ? (
-                                                    <div className="flex items-center gap-4 w-full md:w-auto md:flex-row-reverse min-w-0 flex-1 md:flex-initial">
-                                                        {(() => {
-                                                            const champColors = getChampionClassColors(selectedRosterItem.champion.class as ChampionClass);
-                                                            return (
-                                                                <>
-                                                                    <div className="relative shrink-0 group-hover:scale-105 transition-transform duration-300">
-                                                                        <div className={cn(
-                                                                            "h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 shadow-[0_0_15px_rgba(2,132,199,0.3)]",
-                                                                            getStarBorderClass(selectedRosterItem.stars)
-                                                                        )}>
-                                                                            <Image
-                                                                                src={getChampionImageUrlOrPlaceholder(selectedRosterItem.champion.images, "128")}
-                                                                                alt={selectedRosterItem.champion.name}
-                                                                                fill
-                                                                                sizes="80px"
-                                                                                className="object-cover"
-                                                                            />
-                                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                                                                        </div>
-
-                                                                        <div className="absolute -bottom-2.5 -left-2.5 md:-left-auto md:-right-2.5 z-20 h-7 w-7 md:h-8 md:w-8 bg-slate-950 rounded-full border border-slate-700 flex items-center justify-center overflow-hidden p-1 shadow-lg">
-                                                                            <Image
-                                                                                src={`/assets/icons/${selectedRosterItem.champion.class.charAt(0).toUpperCase() + selectedRosterItem.champion.class.slice(1).toLowerCase()}.png`}
-                                                                                alt={selectedRosterItem.champion.class}
-                                                                                fill
-                                                                                className="object-contain p-1"
-                                                                            />
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="flex flex-col flex-1 min-w-0 text-left md:text-right">
-                                                                        <div className={cn("text-lg md:text-2xl font-black leading-none truncate w-full", champColors.text)}>
-                                                                            {selectedRosterItem.champion.name}
-                                                                        </div>
-                                                                        <div className="flex items-center md:justify-end gap-1.5 mt-1.5 flex-wrap">
-                                                                            <Badge variant="outline" className="text-[9px] font-black text-slate-300 bg-slate-900 border-slate-700 px-1.5 py-0 h-4 shrink-0">
-                                                                                {selectedRosterItem.stars}★ R{selectedRosterItem.rank}
-                                                                            </Badge>
-                                                                            {selectedRosterItem.isAwakened && (
-                                                                                <Badge variant="outline" className="text-[9px] font-black text-sky-400 bg-sky-950/50 border-sky-800 px-1.5 py-0 h-4 shrink-0">
-                                                                                    S{selectedRosterItem.sigLevel}
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </>
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex-1 flex flex-col md:flex-row justify-center md:justify-end items-center gap-3">
-                                                        {suggestedTeamChamps.length > 0 && !readOnly && (
-                                                            <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in zoom-in duration-300 shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-                                                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                                                                    <Users className="w-3 h-3 text-amber-500" />
-                                                                    <span className="text-[9px] font-black text-amber-500 uppercase tracking-tighter">YOUR TEAM</span>
-                                                                </div>
-                                                                <div className="flex -space-x-2">
-                                                                    {suggestedTeamChamps.map((r) => (
-                                                                        <div key={`sugg-${r.id}`} className="relative w-6 h-6 rounded-full border border-slate-900 overflow-hidden shadow-md group/sugg" title={`${r.champion.name} (In your team & recommended)`}>
-                                                                            <Image 
-                                                                                src={getChampionImageUrlOrPlaceholder(r.champion.images, "64")} 
-                                                                                alt={r.champion.name} 
-                                                                                fill 
-                                                                                className="object-cover group-hover/sugg:scale-110 transition-transform" 
-                                                                            />
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                        <div className="text-xs font-bold uppercase tracking-widest text-slate-500 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800 border-dashed group-hover:border-slate-600 transition-colors flex items-center gap-2">
-                                                            <Crosshair className="w-4 h-4" /> {readOnly ? 'No Counter Selected' : 'Pick Counter'}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center flex-col md:flex-row gap-1 md:gap-2 ml-2 self-center md:self-auto">
-                                                    {!readOnly && hasSelection && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="shrink-0 rounded-full hover:bg-red-950/80 hover:text-red-400 text-slate-500 h-8 w-8 transition-colors"
-                                                            title="Remove selected counter"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleSelectCounter(encounter.id, selectedRosterId as string);
-                                                            }}
-                                                        >
-                                                            <X className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                    <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-slate-800 h-8 w-8">
-                                                        {isExpanded ? <ChevronUp className="h-5 w-5 text-slate-400" /> : <ChevronDown className="h-5 w-5 text-slate-400" />}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Expanded Content */}
-                                        {isExpanded && (
-                                            <div className="border-t border-slate-800 bg-slate-900/20 p-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
-
-                                                {/* Video Guide Section */}
-                                                {encounter.videoUrl && (
-                                                    <div className="mb-4">
-                                                        {showVideoId === encounter.id ? (
-                                                            <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
-                                                                {(() => {
-                                                                    const embedUrl = getYoutubeEmbedUrl(encounter.videoUrl);
-                                                                    if (embedUrl) {
-                                                                        return (
-                                                                            <iframe
-                                                                                src={embedUrl}
-                                                                                title="YouTube video player"
-                                                                                frameBorder="0"
-                                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                                                allowFullScreen
-                                                                                className="absolute inset-0 w-full h-full"
-                                                                            ></iframe>
-                                                                        );
-                                                                    }
-                                                                    return <div className="p-8 text-center text-slate-500">Invalid video URL</div>;
-                                                                })()}
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full h-8 w-8 z-50"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setShowVideoId(null);
-                                                                    }}
-                                                                >
-                                                                    <X className="w-4 h-4" />
-                                                                </Button>
-                                                            </div>
-                                                        ) : (
-                                                            <div
-                                                                className="group/video relative overflow-hidden rounded-xl border border-red-900/30 bg-gradient-to-r from-red-950/20 to-slate-900/40 p-4 cursor-pointer hover:border-red-600/50 transition-all active:scale-[0.99]"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setShowVideoId(encounter.id);
-                                                                }}
-                                                            >
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="relative h-12 w-20 rounded bg-slate-950 flex items-center justify-center border border-slate-800 overflow-hidden shrink-0">
-                                                                        <Youtube className="w-6 h-6 text-red-600 group-hover/video:scale-110 transition-transform" />
-                                                                        <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover/video:opacity-100 transition-opacity" />
-                                                                    </div>
-                                                                    <div>
-                                                                        <h4 className="text-sm font-bold text-slate-200">Video Guide Available</h4>
-                                                                        <p className="text-xs text-slate-500">Click to watch the strategy for this encounter</p>
-                                                                    </div>
-                                                                    <div className="ml-auto">
-                                                                        <PlayCircle className="w-8 h-8 text-red-600/40 group-hover/video:text-red-600 transition-colors" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
-                                                    <div className="flex flex-col gap-2 mb-4 bg-red-950/10 p-4 rounded-lg border border-red-900/30">
-                                                        <div className="flex items-center gap-2 text-sm text-red-400 uppercase tracking-wide font-bold"><AlertCircle className="w-4 h-4" /> Quest & Encounter Restrictions Apply</div>
-                                                        <div className="flex flex-wrap gap-2 mt-1">
-                                                            {[
-                                                                quest.minStarLevel ? `Min ${quest.minStarLevel}★ (Quest)` : null,
-                                                                quest.maxStarLevel ? `Max ${quest.maxStarLevel}★ (Quest)` : null,
-                                                                quest.requiredClasses?.length ? `Class: ${quest.requiredClasses.join(', ')} (Quest)` : null,
-                                                                encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
-                                                                encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
-                                                                encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(', ')} (Encounter)` : null,
-                                                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t) => t.name).join(', ')}` : null,
-                                                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t) => t.name).join(', ')}` : null
-                                                            ].filter(Boolean).map((req, i) => (
-                                                                <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : null}
-
-                                                {/* Nodes & Tips Grid */}
-                                                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pt-2">
-                                                    {/* Nodes */}
-                                                    <div className="xl:col-span-7 space-y-4">
-                                                        {encounter.nodes.length > 0 && (
-                                                            <div className="space-y-3">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="h-6 w-1 bg-sky-500 rounded-full" />
-                                                                    <h4 className="text-xs font-bold text-sky-400 uppercase tracking-[0.2em]">Encounter Nodes</h4>
-                                                                </div>
-                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                                    {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                                                        <div key={n.id} className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 group/node transition-all hover:border-sky-800/50 hover:bg-slate-900/50">
-                                                                            <div className="flex items-center gap-2 mb-1">
-                                                                                <div className="p-1 rounded bg-sky-500/10 text-sky-500 shrink-0">
-                                                                                    <Info className="w-3.5 h-3.5" />
-                                                                                </div>
-                                                                                <span className="font-bold text-sm text-slate-100">{n.nodeModifier.name}</span>
-                                                                            </div>
-                                                                            <span className="text-xs text-slate-400 leading-normal block pl-8 pr-2">{n.nodeModifier.description}</span>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Tips */}
-                                                        {encounter.tips && (
-                                                            <div className="space-y-3">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="h-6 w-1 bg-indigo-500 rounded-full" />
-                                                                    <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-[0.2em]">Strategy & Tips</h4>
-                                                                </div>
-                                                                <div className="bg-indigo-950/20 p-5 rounded-xl border border-indigo-900/40 text-indigo-100 text-sm leading-relaxed shadow-inner">
-                                                                    <SimpleMarkdown content={encounter.tips} />
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Suggested Counters Area */}
-                                                    <div className="xl:col-span-5 space-y-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
-                                                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
-                                                        </div>
-
-                                                        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 space-y-4">
-                                                            {/* Suggested Tags */}
-                                                            {encounter.recommendedTags.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {encounter.recommendedTags.map((tag: string) => (
-                                                                        <Badge key={tag} variant="outline" className="text-[10px] uppercase font-bold bg-amber-950/20 border-amber-800/50 text-amber-400 py-1 px-2.5 rounded-full flex gap-2 items-center tracking-wider shadow-sm">
-                                                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span> {tag}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-
-                                                            {/* Recommended Champions List */}
-                                                            {encounter.recommendedChampions.length > 0 ? (
-                                                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
-                                                                    {(() => {
-                                                                        const encounterPicks = popularCounters[encounter.id] || [];
-                                                                        const totalPlayers = quest._count?.playerPlans || 0;
-                                                                        const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
-
-                                                                        // Sort recommended champions by popularity (most picked first)
-                                                                        const sortedChampions = [...encounter.recommendedChampions].sort((a, b) => {
-                                                                            const countA = pickCountMap.get(a.id) || 0;
-                                                                            const countB = pickCountMap.get(b.id) || 0;
-                                                                            return countB - countA;
-                                                                        });
-
-                                                                        return sortedChampions.map((c) => {
-                                                                        const pickCount = pickCountMap.get(c.id) || 0;
-                                                                        const popularityLabel = totalPlayers > 0 && pickCount > 0
-                                                                            ? `${Math.round((pickCount / totalPlayers) * 100)}%`
-                                                                            : undefined;
-                                                                        if (readOnly) {
-                                                                            // In readOnly mode, just show the champion reference without roster matching
-                                                                            return (
-                                                                                <div key={c.id}>
-                                                                                    <UpdatedChampionItem
-                                                                                        item={{
-                                                                                            stars: 0,
-                                                                                            rank: 0,
-                                                                                            champion: {
-                                                                                                id: c.id,
-                                                                                                name: c.shortName || c.name,
-                                                                                                championClass: c.class,
-                                                                                                images: toChampionImages(c.images)
-                                                                                            }
-                                                                                        }}
-                                                                                        isRecommended
-                                                                                        popularityLabel={popularityLabel}
-                                                                                    />
-                                                                                </div>
-                                                                            );
-                                                                        }
-
-                                                                        // Find highest version in roster that matches restrictions
-                                                                        const validRosterEntries = roster
-                                                                            .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
-                                                                            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
-
-                                                                        // Best version that is either unused or used in THIS encounter
-                                                                        const userChamp = validRosterEntries.find(r => 
-                                                                            !Object.values(selections).includes(r.id) || 
-                                                                            selections[encounter.id] === r.id
-                                                                        ) || validRosterEntries[0];
-
-                                                                        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
-                                                                        
-                                                                        // Check if any version of this champion is in the team
-                                                                        const isChampInTeam = Object.values(selections).some(rid => {
-                                                                            if (!rid) return false;
-                                                                            return roster.find(r => r.id === rid)?.championId === c.id;
-                                                                        });
-                                                                        
-                                                                        let isUnavailable = false;
-                                                                        if (userChamp && quest.teamLimit === null && !isSelected) {
-                                                                            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                                                                                if (encId !== encounter.id && rid !== null) {
-                                                                                    const r = roster.find(re => re.id === rid);
-                                                                                    if (r?.championId === userChamp.championId) {
-                                                                                        return acc + 1;
-                                                                                    }
-                                                                                }
-                                                                                return acc;
-                                                                            }, 0);
-
-                                                                            const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
-
-                                                                            if (otherSelectionsCount >= validRosterCount) {
-                                                                                isUnavailable = true;
-                                                                            }
-                                                                        }
-
-                                                                        return (
-                                                                            <div
-                                                                                key={c.id}
-                                                                                onClick={() => {
-                                                                                    if (userChamp && !isUnavailable) {
-                                                                                        handleSelectCounter(encounter.id, userChamp.id);
-                                                                                    }
-                                                                                }}
-                                                                                className={cn(isUnavailable ? "cursor-not-allowed" : "cursor-pointer group")}
-                                                                            >
-                                                                                <UpdatedChampionItem
-                                                                                    item={userChamp ? {
-                                                                                        stars: userChamp.stars,
-                                                                                        rank: userChamp.rank,
-                                                                                        isAwakened: userChamp.isAwakened,
-                                                                                        sigLevel: userChamp.sigLevel,
-                                                                                        powerRating: userChamp.powerRating,
-                                                                                        champion: {
-                                                                                            id: userChamp.champion.id,
-                                                                                            name: userChamp.champion.shortName || userChamp.champion.name,
-                                                                                            championClass: userChamp.champion.class,
-                                                                                                images: toChampionImages(userChamp.champion.images)
-                                                                                        },
-                                                                                        isAscended: userChamp.isAscended
-                                                                                    } : {
-                                                                                        stars: 0,
-                                                                                        rank: 0,
-                                                                                        champion: {
-                                                                                            id: c.id,
-                                                                                            name: c.shortName || c.name,
-                                                                                            championClass: c.class,
-                                                                                            images: toChampionImages(c.images)
-                                                                                        }
-                                                                                    }}
-                                                                                    isSelected={isSelected}
-                                                                                    isRecommended={!isSelected}
-                                                                                    isMissing={!userChamp}
-                                                                                    isInTeam={isChampInTeam}
-                                                                                    isUnavailable={isUnavailable}
-                                                                                    popularityLabel={popularityLabel}
-                                                                                />
-                                                                            </div>
-                                                                        );
-                                                                    });
-                                                                    })()}
-                                                                </div>
-                                                            ) : (
-                                                                <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg">No specific champions recommended for this encounter.</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Roster Selection — hidden in readOnly mode */}
-                                                {!readOnly && (
-                                                <div className="space-y-4 pt-8 border-t border-slate-800/50">
-                                                    <div className="flex flex-col gap-4">
-                                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="h-6 w-1 bg-sky-600 rounded-full" />
-                                                                <h4 className="text-xs font-bold text-slate-100 uppercase tracking-[0.2em]">Select from Your Roster</h4>
-                                                            </div>
-
-                                                            <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl">
-                                                                <div className="relative flex-1">
-                                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
-                                                                    <Input
-                                                                        placeholder="Search your roster..."
-                                                                        className="pl-9 h-10 bg-slate-900/50 border-slate-800 text-sm focus-visible:ring-sky-500"
-                                                                        value={searchQuery}
-                                                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                                                    />
-                                                                    {searchQuery && (
-                                                                        <button
-                                                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded"
-                                                                            onClick={() => setSearchQuery("")}
-                                                                        >
-                                                                            <X className="h-3 w-3 text-slate-500" />
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-
-                                                                <div className="flex gap-2">
-                                                                    <div className="flex gap-1.5 p-1 bg-slate-950/50 border border-slate-800 rounded-lg overflow-x-auto custom-scrollbar">
-                                                                        {CLASSES.filter(cls => cls !== 'SUPERIOR').map((cls) => (
-                                                                            <button
-                                                                                key={cls}
-                                                                                onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
-                                                                                className={cn(
-                                                                                    "p-1.5 rounded-md border transition-all shrink-0",
-                                                                                    selectedClass === cls ? "bg-sky-600 border-sky-400 shadow-[0_0_10px_rgba(2,132,199,0.3)]" : "bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-700"
-                                                                                )}
-                                                                                title={cls}
-                                                                            >
-                                                                                <div className="relative w-5 h-5">
-                                                                                    <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
-                                                                                </div>
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                                                                        className={cn(
-                                                                            "h-10 px-3 border-slate-800 gap-2 shrink-0",
-                                                                            showAdvancedFilters || activeFiltersCount > 0 ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900/50 text-slate-400"
-                                                                        )}
-                                                                    >
-                                                                        <Filter className="w-4 h-4" />
-                                                                        {activeFiltersCount > 0 && <span className="bg-white text-indigo-700 text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{activeFiltersCount}</span>}
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Advanced Filters Panel */}
-                                                        {showAdvancedFilters && (
-                                                            <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center animate-in slide-in-from-top-2 duration-200">
-                                                                <MultiSelectFilter title="Tags" icon={TagIcon} options={filterMetadata.tags} selectedValues={tagFilter} onSelect={setTagFilter} logic={tagLogic} onLogicChange={setTagLogic} />
-                                                                <MultiSelectFilter title="Categories" icon={BookOpen} options={filterMetadata.abilityCategories} selectedValues={abilityCategoryFilter} onSelect={setAbilityCategoryFilter} logic={abilityCategoryLogic} onLogicChange={setAbilityCategoryLogic} />
-                                                                <MultiSelectFilter title="Abilities" icon={Zap} options={filterMetadata.abilities} selectedValues={abilityFilter} onSelect={setAbilityFilter} logic={abilityLogic} onLogicChange={setAbilityLogic} />
-                                                                <MultiSelectFilter title="Immunities" icon={Shield} options={filterMetadata.immunities} selectedValues={immunityFilter} onSelect={setImmunityFilter} logic={immunityLogic} onLogicChange={setImmunityLogic} />
-                                                            </div>
-                                                        )}
-
-                                                        {/* Active Filter Badges */}
-                                                        <div className="flex flex-wrap gap-2 items-center">
-                                                            {/* Read-only requirements from Quest/Encounter */}
-                                                            {quest.requiredTags?.map((t: Tag) => (
-                                                                <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
-                                                                    <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
-                                                                </Badge>
-                                                            ))}
-                                                            {encounter.requiredTags?.map((t: any) => (
-                                                                <Badge key={`req-e-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
-                                                                    <ShieldAlert className="w-3 h-3" /> Fight Req: {t.name}
-                                                                </Badge>
-                                                            ))}
-
-                                                            {/* User-selected removable filters */}
-                                                            {tagFilter.map(tag => (
-                                                                <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Tag: {tag}
-                                                                    <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-                                                            {abilityCategoryFilter.map(cat => (
-                                                                <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Cat: {cat}
-                                                                    <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-                                                            {abilityFilter.map(ab => (
-                                                                <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Ability: {ab}
-                                                                    <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-                                                            {immunityFilter.map(imm => (
-                                                                <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                                                    Immunity: {imm}
-                                                                    <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                                                </Badge>
-                                                            ))}
-
-                                                            {activeFiltersCount > 0 && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2"
-                                                                    onClick={clearAllFilters}
-                                                                >
-                                                                    <Trash2 className="w-3 h-3 mr-1" /> Clear All
-                                                                </Button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {(() => {
-                                                        let encounterRoster = filteredGlobalRoster.filter(r => {
-                                                            // Quest-level restrictions
-                                                            if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                                            if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-                                                            if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-                                                            if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                                                const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-                                                                if (!hasTag) return false;
-                                                            }
-                                                            // Encounter-level restrictions
-                                                            if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                                            if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-                                                            if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-                                                            if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                                                const hasTag = (encounter.requiredTags as Tag[]).some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                                                if (!hasTag) return false;
-                                                            }
-
-                                                            return true;
-                                                        });
-
-                                                        // Handle infinite team limit - hide champion if all valid rarities are used in other encounters
-                                                        if (quest.teamLimit === null) {
-                                                            const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                                                                if (encId !== encounter.id && rid !== null) {
-                                                                    const rosterEntry = roster.find(re => re.id === rid);
-                                                                    if (rosterEntry) {
-                                                                        acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
-                                                                    }
-                                                                }
-                                                                return acc;
-                                                            }, {} as Record<number, number>);
-
-                                                            const availableCount = encounterRoster.reduce((acc, r) => {
-                                                                acc[r.championId] = (acc[r.championId] || 0) + 1;
-                                                                return acc;
-                                                            }, {} as Record<number, number>);
-
-                                                            encounterRoster = encounterRoster.filter(r => {
-                                                                // Always keep it visible if it's currently selected in THIS encounter
-                                                                if (selections[encounter.id] === r.id) return true;
-                                                                
-                                                                const used = otherSelectionsCount[r.championId] || 0;
-                                                                const available = availableCount[r.championId] || 0;
-                                                                return used < available;
-                                                            });
-                                                        }
-
-                                                        encounterRoster = encounterRoster.sort((a, b) => {
-                                                            // Selected first
-                                                            if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
-                                                            if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
-                                                            return 0;
-                                                        });
-
-                                                        if (roster.length === 0) {
-                                                            return (
-                                                                <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl">
-                                                                    <p className="text-slate-400 text-lg">Your roster is empty.</p>
-                                                                    <p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p>
-                                                                </div>
-                                                            );
-                                                        }
-
-                                                        if (encounterRoster.length === 0) {
-                                                            return (
-                                                                <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl">
-                                                                    <p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p>
-                                                                </div>
-                                                            )
-                                                        }
-
-                                                        return (
-                                                            <div className="space-y-4">
-                                                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
-                                                                    {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
-                                                                        const isSelected = selections[encounter.id] === r.id;
-                                                                        const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
-                                                                        const isInTeam = Object.values(selections).includes(r.id);
-
-                                                                        return (
-                                                                            <div
-                                                                                key={r.id}
-                                                                                onClick={() => handleSelectCounter(encounter.id, r.id)}
-                                                                                title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}
-                                                                                className="cursor-pointer"
-                                                                            >
-                                                                                <UpdatedChampionItem
-                                                                                    item={{
-                                                                                        stars: r.stars,
-                                                                                        rank: r.rank,
-                                                                                        isAwakened: r.isAwakened,
-                                                                                        sigLevel: r.sigLevel,
-                                                                                        powerRating: r.powerRating,
-                                                                                        champion: {
-                                                                                            id: r.champion.id,
-                                                                                            name: r.champion.shortName || r.champion.name,
-                                                                                            championClass: r.champion.class,
-                                                                                            images: r.champion.images
-                                                                                        },
-                                                                                        isAscended: r.isAscended
-                                                                                    }}
-                                                                                    isSelected={isSelected}
-                                                                                    isRecommended={isRecommended}
-                                                                                    isInTeam={isInTeam}
-                                                                                />
-                                                                            </div>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                                {encounterRoster.length > 30 && (
-                                                                    <div className="text-center p-3 bg-slate-900/30 border border-slate-800 border-dashed rounded-lg">
-                                                                        <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-                                                                            Showing first 30 of {encounterRoster.length} matches. Use search or filters to narrow down.
-                                                                        </p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })()}
-                                                </div>
-                                                )}
-
-                                            </div>
-                                        )}
-                                    </Card>
-                                </div>
-                            );
-                        })}
+                        {quest.encounters.map((encounter: EncounterWithRelations, index: number) => (
+                            <EncounterCard
+                                key={encounter.id}
+                                encounter={encounter}
+                                index={index}
+                                quest={quest}
+                                expandedId={expandedId}
+                                toggleExpand={toggleExpand}
+                                selections={selections}
+                                readOnly={readOnly}
+                                showVideoId={showVideoId}
+                                setShowVideoId={setShowVideoId}
+                                tabState={{
+                                    encounterTabs,
+                                    setEncounterTabs,
+                                    featuredPicks,
+                                    alliancePicks,
+                                    popularCounters
+                                }}
+                                filterState={{
+                                    searchQuery,
+                                    setSearchQuery,
+                                    showAdvancedFilters,
+                                    setShowAdvancedFilters,
+                                    activeFiltersCount,
+                                    filterMetadata,
+                                    tagFilter,
+                                    setTagFilter,
+                                    tagLogic,
+                                    setTagLogic,
+                                    abilityCategoryFilter,
+                                    setAbilityCategoryFilter,
+                                    abilityCategoryLogic,
+                                    setAbilityCategoryLogic,
+                                    abilityFilter,
+                                    setAbilityFilter,
+                                    abilityLogic,
+                                    setAbilityLogic,
+                                    immunityFilter,
+                                    setImmunityFilter,
+                                    immunityLogic,
+                                    setImmunityLogic,
+                                    clearAllFilters,
+                                    CLASSES,
+                                    selectedClass,
+                                    setSelectedClass
+                                }}
+                                rosterState={{
+                                    roster,
+                                    filteredGlobalRoster,
+                                    selectedTeam,
+                                    isRosterExpanded,
+                                    setIsRosterExpanded,
+                                    resolveRosterItem,
+                                    handleSelectCounter
+                                }}
+                                renderChampionItem={renderChampionItem}
+                                renderListPick={renderListPick}
+                            />
+                        ))}
                     </div>
                 )}
             </div>

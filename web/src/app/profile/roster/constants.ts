@@ -1,4 +1,4 @@
-import { ChampionClass } from "@prisma/client";
+import type { ChampionClass } from "@prisma/client";
 
 export const CLASS_ICONS: Record<ChampionClass, string> = {
     SCIENCE: "/assets/icons/Science.png",
