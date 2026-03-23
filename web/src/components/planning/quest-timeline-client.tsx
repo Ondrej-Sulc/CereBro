@@ -738,14 +738,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                                                                                 {assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}
                                                                             </span>
-                                                                            {assignedEncounters.length > 0 && (
-                                                                                <div className="h-1 w-1 rounded-full bg-slate-700" />
-                                                                            )}
-                                                                            {assignedEncounters.length > 0 && (
-                                                                                <span className="text-[10px] text-sky-500/80 font-black">
-                                                                                    #{assignedEncounters[0].sequence}{assignedEncounters.length > 1 ? `-${assignedEncounters[assignedEncounters.length-1].sequence}` : ''}
-                                                                                </span>
-                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -760,8 +752,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     key={`tgt-${enc.id}`} 
                                                                                     role="button"
                                                                                     tabIndex={0}
-                                                                                    aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                    title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} 
+                                                                                    aria-label={`Fight: ${enc.defender?.name || "Unknown"}`}
+                                                                                    title={`Fight: ${enc.defender?.name || "Unknown"}`} 
                                                                                     className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                                                                                     onClick={(e) => {
                                                                                         e.stopPropagation();
@@ -773,9 +765,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     ) : (
                                                                                         <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
                                                                                     )}
-                                                                                    <div className="absolute top-0 left-0 bg-black/80 px-1 rounded-br-md border-r border-b border-slate-800/50">
-                                                                                        <span className="text-[8px] font-black text-white leading-none">{enc.sequence}</span>
-                                                                                    </div>
                                                                                     <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt:opacity-100 transition-opacity" />
                                                                                 </motion.div>
                                                                             ))}
