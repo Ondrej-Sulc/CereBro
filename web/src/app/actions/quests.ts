@@ -264,8 +264,8 @@ export async function updateFeaturedPlayers(
 
         revalidatePath(`/admin/quests/${questPlanId}`);
         revalidatePath(`/planning/quests/${questPlanId}`);
-        revalidateTag('quest-plan-detail', 'default');
-        revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
+        revalidateTag('quest-plan-detail');
+        revalidateTag(`quest-featured-picks-${questPlanId}`);
         
         return { success: true };
     } catch (e: any) {

@@ -155,7 +155,7 @@ export function AsyncPlayerSearchCombobox({
       >
         <Command shouldFilter={false} className="h-auto">
           <CommandInput
-            placeholder="Search player..."
+            placeholder={placeholder || "Search player..."}
             value={search}
             onValueChange={setSearch}
           />

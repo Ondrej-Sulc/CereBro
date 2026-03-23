@@ -220,8 +220,18 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 requiredTagIds: requiredTags,
                 creatorIds
             });
-            await updateFeaturedPlayers(initialQuest.id, featuredPlayers.map(p => p.id));
-            toast({ title: "Success", description: "Settings saved successfully!" });
+            try {
+                await updateFeaturedPlayers(initialQuest.id, featuredPlayers.map(p => p.id));
+                toast({ title: "Success", description: "Settings saved successfully!" });
+            } catch (error: unknown) {
+                console.error(error);
+                const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to update featured players";
+                toast({
+                    title: "Partial Success",
+                    description: `Settings saved but featured players update failed: ${msg}`,
+                    variant: "destructive"
+                });
+            }
         } catch (error: unknown) {
             console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to save settings";
@@ -258,16 +268,24 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         const encounters = [...initialQuest.encounters].sort((a, b) => a.sequence - b.sequence);
         const currentIndex = encounters.findIndex(e => e.id === encounterId);
         
-        if (direction === 'up' && currentIndex > 0) {
-            const newEncounters = [...encounters];
-            [newEncounters[currentIndex - 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex - 1]];
-            await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
-            toast({ title: "Success", description: "Encounter moved up" });
-        } else if (direction === 'down' && currentIndex < encounters.length - 1) {
-            const newEncounters = [...encounters];
-            [newEncounters[currentIndex + 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex + 1]];
-            await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
-            toast({ title: "Success", description: "Encounter moved down" });
+        try {
+            if (direction === 'up' && currentIndex > 0) {
+                const newEncounters = [...encounters];
+                [newEncounters[currentIndex - 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex - 1]];
+                await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
+                router.refresh();
+                toast({ title: "Success", description: "Encounter moved up" });
+            } else if (direction === 'down' && currentIndex < encounters.length - 1) {
+                const newEncounters = [...encounters];
+                [newEncounters[currentIndex + 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex + 1]];
+                await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
+                router.refresh();
+                toast({ title: "Success", description: "Encounter moved down" });
+            }
+        } catch (error: unknown) {
+            console.error(error);
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder encounters";
+            toast({ title: "Error", description: `Failed to reorder encounter: ${msg}`, variant: "destructive" });
         }
     };
 
@@ -937,7 +955,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                     <div className={cn("absolute inset-0 bg-gradient-to-br to-transparent pointer-events-none opacity-50", classGlow)} />
                                                     
                                                     {/* Class Accent Bar */}
-                                                    <div className={cn("absolute left-0 top-0 bottom-0 w-1", colors.bg.replace('bg-', 'bg- opacity-70'))} />
+                                                    <div className={cn("absolute left-0 top-0 bottom-0 w-1", colors.bg, "opacity-70")} />
 
                                                     <CardHeader className="py-3 px-4 flex flex-row items-center justify-between gap-4 relative z-10">
                                                         <div className="flex items-center gap-4 w-full">

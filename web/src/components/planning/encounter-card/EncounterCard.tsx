@@ -186,9 +186,11 @@ export function EncounterCard({
                                         )}
                                     >
                                         {/* Card Header (Always Visible) */}
-                                        <div
+                                        <button
+                                            type="button"
                                             className="relative p-0 flex flex-col md:flex-row items-stretch min-h-[100px]"
                                             onClick={() => toggleExpand(encounter.id)}
+                                            aria-expanded={isExpanded}
                                         >
                                             {/* Left Side: Defender (Red/Orange Theme) */}
                                             <div className="relative flex-1 flex items-center p-4 md:p-5 md:pr-14 lg:pr-16 gap-4 z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-red-950/20 before:to-transparent before:-z-10 min-w-0">
@@ -364,7 +366,7 @@ export function EncounterCard({
                                                     </Button>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </button>
 
                                         {/* Expanded Content */}
                                         {isExpanded && (
