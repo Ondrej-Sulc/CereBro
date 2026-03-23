@@ -11,6 +11,7 @@ import {
     Filter, Info, PlayCircle, Search, Shield, ShieldAlert, TagIcon, Trash2, 
     X, Youtube, Zap, BookOpen, Users
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
     EncounterWithRelations, 
     QuestWithRelations, 
@@ -335,9 +336,17 @@ function EncounterDetails({
     children
 }: EncounterDetailsProps) {
     return (
-        <div className="border-t border-slate-800 bg-slate-900/20 p-4 space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
-            {children}
-        </div>
+        <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="border-t border-slate-800 bg-slate-900/20 overflow-hidden"
+        >
+            <div className="p-4 space-y-6">
+                {children}
+            </div>
+        </motion.div>
     );
 }
 
@@ -390,21 +399,57 @@ function RosterSelector({
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <button
                         onClick={() => setIsRosterExpanded(!isRosterExpanded)}
-                        className="flex items-center justify-between w-full md:w-auto px-4 py-2.5 bg-slate-900/50 hover:bg-slate-800/50 border border-slate-800 hover:border-sky-800/50 rounded-xl transition-all group/roster-toggle"
+                        className={cn(
+                            "flex items-center justify-between w-full md:w-auto px-5 py-3 rounded-xl transition-all group/roster-toggle relative overflow-hidden",
+                            isRosterExpanded 
+                                ? "bg-slate-900/80 border border-slate-700 shadow-inner" 
+                                : "bg-gradient-to-r from-sky-950/40 to-slate-900/60 border border-sky-500/30 hover:border-sky-400 shadow-[0_0_20px_rgba(14,165,233,0.05)] hover:shadow-[0_0_25px_rgba(14,165,233,0.1)]"
+                        )}
                     >
-                        <div className="flex items-center gap-3">
-                            <div className={cn("h-4 w-1 rounded-full transition-colors", isRosterExpanded ? "bg-sky-500" : "bg-slate-700 group-hover/roster-toggle:bg-sky-500/50")} />
-                            <h4 className={cn("text-xs font-bold uppercase tracking-[0.2em] transition-colors", isRosterExpanded ? "text-sky-400" : "text-slate-400 group-hover/roster-toggle:text-slate-200")}>
-                                Select from Your Roster
-                            </h4>
+                        {/* Subtle animated background for call-to-action */}
+                        {!isRosterExpanded && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 to-transparent animate-pulse" />
+                        )}
+
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="relative">
+                                <div className={cn(
+                                    "h-6 w-1 rounded-full transition-all duration-300", 
+                                    isRosterExpanded ? "bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]" : "bg-sky-400 group-hover/roster-toggle:scale-y-110 shadow-[0_0_8px_rgba(14,165,233,0.3)]"
+                                )} />
+                                {!isRosterExpanded && (
+                                    <div className="absolute inset-0 bg-sky-400 rounded-full blur-[4px] animate-ping opacity-20" />
+                                )}
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <h4 className={cn(
+                                    "text-[11px] font-black uppercase tracking-[0.25em] transition-colors leading-none mb-1", 
+                                    isRosterExpanded ? "text-sky-400" : "text-sky-300 group-hover/roster-toggle:text-white"
+                                )}>
+                                    Select from Your Roster
+                                </h4>
+                                <p className="text-[10px] text-slate-500 font-medium group-hover/roster-toggle:text-slate-400 transition-colors">
+                                    {isRosterExpanded ? "Close roster selection" : "Open your champions list"}
+                                </p>
+                            </div>
                         </div>
-                        <div className={cn("p-1 rounded-md transition-colors ml-4", isRosterExpanded ? "bg-sky-500/10 text-sky-400" : "bg-slate-800 text-slate-500 group-hover/roster-toggle:text-slate-300 group-hover/roster-toggle:bg-slate-700")}>
+                        <div className={cn(
+                            "p-1.5 rounded-lg transition-all ml-4 relative z-10", 
+                            isRosterExpanded 
+                                ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" 
+                                : "bg-sky-500/20 text-sky-300 group-hover/roster-toggle:text-white group-hover/roster-toggle:bg-sky-500 border border-sky-500/30"
+                        )}>
                             {isRosterExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </div>
                     </button>
 
                     {isRosterExpanded && (
-                        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex flex-col sm:flex-row gap-3 flex-1 max-w-2xl"
+                        >
                             <div className="relative flex-1">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                                 <Input
@@ -443,125 +488,140 @@ function RosterSelector({
                                     {activeFiltersCount > 0 && <span className="bg-white text-indigo-700 text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{activeFiltersCount}</span>}
                                 </Button>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                 </div>
 
-                {isRosterExpanded && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-                        {showAdvancedFilters && (
-                            <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center animate-in slide-in-from-top-2 duration-200">
-                                <MultiSelectFilter title="Tags" icon={TagIcon} options={filterMetadata.tags} selectedValues={tagFilter} onSelect={setTagFilter} logic={tagLogic} onLogicChange={setTagLogic} />
-                                <MultiSelectFilter title="Categories" icon={BookOpen} options={filterMetadata.abilityCategories} selectedValues={abilityCategoryFilter} onSelect={setAbilityCategoryFilter} logic={abilityCategoryLogic} onLogicChange={setAbilityCategoryLogic} />
-                                <MultiSelectFilter title="Abilities" icon={Zap} options={filterMetadata.abilities} selectedValues={abilityFilter} onSelect={setAbilityFilter} logic={abilityLogic} onLogicChange={setAbilityLogic} />
-                                <MultiSelectFilter title="Immunities" icon={Shield} options={filterMetadata.immunities} selectedValues={immunityFilter} onSelect={setImmunityFilter} logic={immunityLogic} onLogicChange={setImmunityLogic} />
-                            </div>
-                        )}
-                        <div className="flex flex-wrap gap-2 items-center">
-                            {quest.requiredTags?.map((t: Tag) => (
-                                <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
-                                    <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
-                                </Badge>
-                            ))}
-                            {encounter.requiredTags?.map((t: Tag) => (
-                                <Badge key={`req-e-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
-                                    <ShieldAlert className="w-3 h-3" /> Fight Req: {t.name}
-                                </Badge>
-                            ))}
-                            {tagFilter.map(tag => (
-                                <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                    Tag: {tag}
-                                    <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                </Badge>
-                            ))}
-                            {abilityCategoryFilter.map(cat => (
-                                <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                    Cat: {cat}
-                                    <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                </Badge>
-                            ))}
-                            {abilityFilter.map(ab => (
-                                <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                    Ability: {ab}
-                                    <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                </Badge>
-                            ))}
-                            {immunityFilter.map(imm => (
-                                <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
-                                    Immunity: {imm}
-                                    <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
-                                </Badge>
-                            ))}
-                            {activeFiltersCount > 0 && (
-                                <Button variant="ghost" size="sm" className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2" onClick={clearAllFilters}>
-                                    <Trash2 className="w-3 h-3 mr-1" /> Clear All
-                                </Button>
-                            )}
-                        </div>
-                        {(() => {
-                            let encounterRoster = filteredGlobalRoster.filter(r => {
-                                if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
-                                if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-                                if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                    const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-                                    if (!hasTag) return false;
-                                }
-                                if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
-                                if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-                                if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                    const hasTag = encounter.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                    if (!hasTag) return false;
-                                }
-                                return true;
-                            });
-                            if (quest.teamLimit === null) {
-                                const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                                    if (encId !== encounter.id && rid !== null) {
-                                        const rosterEntry = roster.find(re => re.id === rid);
-                                        if (rosterEntry) acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
-                                    }
-                                    return acc;
-                                }, {} as Record<number, number>);
-                                const availableCount = encounterRoster.reduce((acc, r) => {
-                                    acc[r.championId] = (acc[r.championId] || 0) + 1;
-                                    return acc;
-                                }, {} as Record<number, number>);
-                                encounterRoster = encounterRoster.filter(r => {
-                                    if (selections[encounter.id] === r.id) return true;
-                                    return (otherSelectionsCount[r.championId] || 0) < (availableCount[r.championId] || 0);
-                                });
-                            }
-                            encounterRoster = encounterRoster.sort((a, b) => {
-                                if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
-                                if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
-                                const nameCompare = a.champion.name.localeCompare(b.champion.name);
-                                if (nameCompare !== 0) return nameCompare;
-                                return a.id.localeCompare(b.id);
-                            });
-                            if (roster.length === 0) return <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl"><p className="text-slate-400 text-lg">Your roster is empty.</p><p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p></div>;
-                            if (encounterRoster.length === 0) return <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl"><p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p></div>;
-                            return (
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
-                                        {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
-                                            const isSelected = selections[encounter.id] === r.id;
-                                            const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
-                                            const isInTeam = Object.values(selections).includes(r.id);
-                                            return (
-                                                <div key={r.id} onClick={() => handleSelectCounter(encounter.id, r.id)} title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`} className="cursor-pointer">
-                                                    <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    {encounterRoster.length > 30 && <div className="text-center p-3 bg-slate-900/30 border border-slate-800 border-dashed rounded-lg"><p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Showing first 30 of {encounterRoster.length} matches. Use search or filters to narrow down.</p></div>}
+                <AnimatePresence>
+                    {isRosterExpanded && (
+                        <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="space-y-4 overflow-hidden"
+                        >
+                            <div className="pt-2 pb-4 space-y-4">
+                                {showAdvancedFilters && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl flex flex-wrap gap-4 items-center"
+                                    >
+                                        <MultiSelectFilter title="Tags" icon={TagIcon} options={filterMetadata.tags} selectedValues={tagFilter} onSelect={setTagFilter} logic={tagLogic} onLogicChange={setTagLogic} />
+                                        <MultiSelectFilter title="Categories" icon={BookOpen} options={filterMetadata.abilityCategories} selectedValues={abilityCategoryFilter} onSelect={setAbilityCategoryFilter} logic={abilityCategoryLogic} onLogicChange={setAbilityCategoryLogic} />
+                                        <MultiSelectFilter title="Abilities" icon={Zap} options={filterMetadata.abilities} selectedValues={abilityFilter} onSelect={setAbilityFilter} logic={abilityLogic} onLogicChange={setAbilityLogic} />
+                                        <MultiSelectFilter title="Immunities" icon={Shield} options={filterMetadata.immunities} selectedValues={immunityFilter} onSelect={setImmunityFilter} logic={immunityLogic} onLogicChange={setImmunityLogic} />
+                                    </motion.div>
+                                )}
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    {quest.requiredTags?.map((t: Tag) => (
+                                        <Badge key={`req-q-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
+                                            <ShieldAlert className="w-3 h-3" /> Quest Req: {t.name}
+                                        </Badge>
+                                    ))}
+                                    {encounter.requiredTags?.map((t: Tag) => (
+                                        <Badge key={`req-e-${t.id}`} variant="outline" className="bg-red-950/20 border-red-800/40 text-red-400 h-7 text-[10px] uppercase font-bold px-2.5 flex items-center gap-1.5">
+                                            <ShieldAlert className="w-3 h-3" /> Fight Req: {t.name}
+                                        </Badge>
+                                    ))}
+                                    {tagFilter.map(tag => (
+                                        <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                            Tag: {tag}
+                                            <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                        </Badge>
+                                    ))}
+                                    {abilityCategoryFilter.map(cat => (
+                                        <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                            Cat: {cat}
+                                            <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                        </Badge>
+                                    ))}
+                                    {abilityFilter.map(ab => (
+                                        <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                            Ability: {ab}
+                                            <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                        </Badge>
+                                    ))}
+                                    {immunityFilter.map(imm => (
+                                        <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
+                                            Immunity: {imm}
+                                            <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                        </Badge>
+                                    ))}
+                                    {activeFiltersCount > 0 && (
+                                        <Button variant="ghost" size="sm" className="h-7 text-[10px] text-red-400 hover:text-red-300 uppercase font-black tracking-widest px-2" onClick={clearAllFilters}>
+                                            <Trash2 className="w-3 h-3 mr-1" /> Clear All
+                                        </Button>
+                                    )}
                                 </div>
-                            );
-                        })()}
-                    </div>
-                )}
+                                {(() => {
+                                    let encounterRoster = filteredGlobalRoster.filter(r => {
+                                        if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
+                                        if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
+                                        if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
+                                        if (quest.requiredTags && quest.requiredTags.length > 0) {
+                                            const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
+                                            if (!hasTag) return false;
+                                        }
+                                        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
+                                        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+                                        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
+                                        if (encounter.requiredTags && encounter.requiredTags.length > 0) {
+                                            const hasTag = encounter.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                            if (!hasTag) return false;
+                                        }
+                                        return true;
+                                    });
+                                    if (quest.teamLimit === null) {
+                                        const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+                                            if (encId !== encounter.id && rid !== null) {
+                                                const rosterEntry = roster.find(re => re.id === rid);
+                                                if (rosterEntry) acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
+                                            }
+                                            return acc;
+                                        }, {} as Record<number, number>);
+                                        const availableCount = encounterRoster.reduce((acc, r) => {
+                                            acc[r.championId] = (acc[r.championId] || 0) + 1;
+                                            return acc;
+                                        }, {} as Record<number, number>);
+                                        encounterRoster = encounterRoster.filter(r => {
+                                            if (selections[encounter.id] === r.id) return true;
+                                            return (otherSelectionsCount[r.championId] || 0) < (availableCount[r.championId] || 0);
+                                        });
+                                    }
+                                    encounterRoster = encounterRoster.sort((a, b) => {
+                                        if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
+                                        if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
+                                        const nameCompare = a.champion.name.localeCompare(b.champion.name);
+                                        if (nameCompare !== 0) return nameCompare;
+                                        return a.id.localeCompare(b.id);
+                                    });
+                                    if (roster.length === 0) return <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl"><p className="text-slate-400 text-lg">Your roster is empty.</p><p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p></div>;
+                                    if (encounterRoster.length === 0) return <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl"><p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p></div>;
+                                    return (
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
+                                                {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
+                                                    const isSelected = selections[encounter.id] === r.id;
+                                                    const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
+                                                    const isInTeam = Object.values(selections).includes(r.id);
+                                                    return (
+                                                        <div key={r.id} onClick={() => handleSelectCounter(encounter.id, r.id)} title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`} className="cursor-pointer">
+                                                            <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            {encounterRoster.length > 30 && <div className="text-center p-3 bg-slate-900/30 border border-slate-800 border-dashed rounded-lg"><p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Showing first 30 of {encounterRoster.length} matches. Use search or filters to narrow down.</p></div>}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );
@@ -873,23 +933,25 @@ export function EncounterCard({
                                         />
 
                                         {/* Expanded Content */}
-                                        {isExpanded && (
-                                            <EncounterDetails>
-                                                <EncounterExpandedContent
-                                                    encounter={encounter}
-                                                    quest={quest}
-                                                    selections={selections}
-                                                    readOnly={readOnly}
-                                                    showVideoId={showVideoId}
-                                                    setShowVideoId={setShowVideoId}
-                                                    tabState={tabState}
-                                                    filterState={filterState}
-                                                    rosterState={rosterState}
-                                                    renderChampionItem={renderChampionItem}
-                                                    renderListPick={renderListPick}
-                                                />
-                                            </EncounterDetails>
-                                        )}
+                                        <AnimatePresence initial={false}>
+                                            {isExpanded && (
+                                                <EncounterDetails>
+                                                    <EncounterExpandedContent
+                                                        encounter={encounter}
+                                                        quest={quest}
+                                                        selections={selections}
+                                                        readOnly={readOnly}
+                                                        showVideoId={showVideoId}
+                                                        setShowVideoId={setShowVideoId}
+                                                        tabState={tabState}
+                                                        filterState={filterState}
+                                                        rosterState={rosterState}
+                                                        renderChampionItem={renderChampionItem}
+                                                        renderListPick={renderListPick}
+                                                    />
+                                                </EncounterDetails>
+                                            )}
+                                        </AnimatePresence>
                                     </Card>
                                 </div>
                             );

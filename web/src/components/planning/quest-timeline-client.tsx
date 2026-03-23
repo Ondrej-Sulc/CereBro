@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getShareablePlanId, savePlayerQuestCounter } from "@/app/actions/quests";
 import type { PickCounterWithChampion } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -583,13 +584,21 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
             <div className="sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
-                <div className={cn(
-                    "transition-all duration-500 ease-in-out pointer-events-auto",
-                    isScrolled ? "scale-[0.98] py-2" : "scale-100 py-0"
-                )}>
+                <motion.div 
+                    layout
+                    initial={false}
+                    className={cn(
+                        "pointer-events-auto",
+                        isScrolled ? "py-2" : "py-0"
+                    )}
+                    animate={{
+                        scale: isScrolled ? 0.98 : 1
+                    }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                >
                     <Card 
                         className={cn(
-                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-[background-color,border-color,transform,opacity,box-shadow,border-radius] duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
+                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-[background-color,border-color,opacity,box-shadow,border-radius] duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
                             isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
                             isTeamExpanded 
                                 ? "w-[95vw] sm:w-[90vw] md:max-w-5xl bg-slate-900/90" 
@@ -597,173 +606,223 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                         )}
                         onClick={() => setIsTeamExpanded(!isTeamExpanded)}
                     >
-                        <div
-                            className={cn(
-                                "py-2 px-4 flex items-center justify-between transition-all",
-                                isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
-                            )}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={cn(
-                                    "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-card:bg-sky-500/20 transition-colors",
-                                    isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                )}>
-                                    <Users className="w-3.5 h-3.5" />
-                                </div>
-                                <span className={cn(
-                                    "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-card:text-sky-400 transition-colors",
-                                    isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                )}>
-                                    {readOnly ? 'Team' : 'Your Team'}
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                {!readOnly && quest.status === 'VISIBLE' && (
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); handleShare(); }}
-                                    disabled={isSharing}
-                                    className={cn(
-                                        "p-1.5 rounded-lg border transition-all",
-                                        shareSuccess
-                                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                                            : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
-                                    )}
-                                    title="Share your plan"
-                                >
-                                    {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                                </button>
+                        <motion.div layout className="flex flex-col">
+                            <div
+                                className={cn(
+                                    "py-2 px-4 flex items-center justify-between transition-all",
+                                    isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
                                 )}
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
-                                    <span className={cn(
-                                        "text-[10px] font-black",
-                                        (quest.teamLimit && selectedTeam.length > quest.teamLimit) ? "text-red-400" : "text-sky-400"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                        "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-card:bg-sky-500/20 transition-colors",
+                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
                                     )}>
-                                        {selectedTeam.length}
+                                        <Users className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span className={cn(
+                                        "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-card:text-sky-400 transition-colors",
+                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
+                                    )}>
+                                        {readOnly ? 'Team' : 'Your Team'}
                                     </span>
-                                    {quest.teamLimit ? (
-                                        <>
-                                            <span className="text-[10px] text-slate-600 font-bold">/</span>
-                                            <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
-                                        </>
-                                    ) : (
-                                        <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
-                                    )}
                                 </div>
-                                <div className={cn(
-                                    "transition-transform duration-300",
-                                    isTeamExpanded ? "rotate-180" : ""
-                                )}>
-                                    <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+
+                                <div className="flex items-center gap-2">
+                                    {!readOnly && quest.status === 'VISIBLE' && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                                        disabled={isSharing}
+                                        className={cn(
+                                            "p-1.5 rounded-lg border transition-all",
+                                            shareSuccess
+                                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                                                : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
+                                        )}
+                                        title="Share your plan"
+                                    >
+                                        {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                                    </button>
+                                    )}
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
+                                        <span className={cn(
+                                            "text-[10px] font-black",
+                                            (quest.teamLimit && selectedTeam.length > quest.teamLimit) ? "text-red-400" : "text-sky-400"
+                                        )}>
+                                            {selectedTeam.length}
+                                        </span>
+                                        {quest.teamLimit ? (
+                                            <>
+                                                <span className="text-[10px] text-slate-600 font-bold">/</span>
+                                                <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
+                                        )}
+                                    </div>
+                                    <motion.div
+                                        animate={{ rotate: isTeamExpanded ? 180 : 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                    </motion.div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className={cn(
-                            "transition-all duration-500 ease-in-out overflow-hidden px-4 pb-4",
-                            isTeamExpanded ? "max-h-[800px] opacity-100" : "max-h-[140px] opacity-90"
-                        )}>
-                                    {selectedTeam.length === 0 ? (
-                                        <div className="py-4 flex flex-col items-center justify-center gap-1">
-                                            <p className="text-[10px] text-slate-500 italic font-medium">No champions selected.</p>
-                                            {!isTeamExpanded && <p className="text-[8px] text-slate-600 uppercase tracking-tighter">Click to expand</p>}
-                                        </div>
-                                    ) : (
-                                        <div className={cn(
-                                            "flex items-end transition-all duration-500",
-                                            isTeamExpanded ? "flex-col gap-4" : "flex-row gap-3 justify-center"
-                                        )}>
-                                            <div className={cn(
-                                                "flex gap-3 pb-1 overflow-x-auto custom-scrollbar scroll-smooth",
-                                                isTeamExpanded ? "w-full justify-start" : "w-fit max-w-full"
-                                            )}>
-                                                {selectedTeam.map(r => {
-                                                    const assignedEncounterIds = Object.entries(selections)
-                                                        .filter(([encId, rosterId]) => rosterId === r.id)
-                                                        .map(([encId]) => encId);
+                            <AnimatePresence initial={false}>
+                                {isTeamExpanded && (
+                                    <motion.div 
+                                        key="team-expanded-content"
+                                        layout
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                                        className="overflow-hidden px-4 pb-4"
+                                    >
+                                        {selectedTeam.length === 0 ? (
+                                            <div className="py-4 flex flex-col items-center justify-center gap-1">
+                                                <p className="text-[10px] text-slate-500 italic font-medium">No champions selected.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex gap-3 pb-1 overflow-x-auto custom-scrollbar scroll-smooth w-full justify-start">
+                                                    {selectedTeam.map(r => {
+                                                        const assignedEncounterIds = Object.entries(selections)
+                                                            .filter(([encId, rosterId]) => rosterId === r.id)
+                                                            .map(([encId]) => encId);
 
-                                                    const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
+                                                        const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
 
-                                                    // Dynamic sizes based on expansion AND scroll state
-                                                    const avatarSize = isTeamExpanded
-                                                        ? (isScrolled ? "lg" : "xl")
-                                                        : (isScrolled ? "md" : "lg");
+                                                        // Dynamic sizes based on expansion AND scroll state
+                                                        const avatarSize = isScrolled ? "lg" : "xl";
+                                                        const containerWidth = isScrolled ? "w-[75px] sm:w-[85px]" : "w-[85px] sm:w-[95px]";
 
-                                                    const containerWidth = isTeamExpanded
-                                                        ? (isScrolled ? "w-[75px] sm:w-[85px]" : "w-[85px] sm:w-[95px]")
-                                                        : (isScrolled ? "w-[50px] sm:w-[60px]" : "w-[75px] sm:w-[85px]");
+                                                        return (
+                                                            <motion.div 
+                                                                layout
+                                                                key={r.id} 
+                                                                className={cn(
+                                                                    "shrink-0 flex flex-col gap-2 transition-all duration-300",
+                                                                    containerWidth
+                                                                )}
+                                                            >
+                                                                <ChampionAvatar
+                                                                    images={r.champion.images}
+                                                                    name={r.champion.name}
+                                                                    stars={r.stars}
+                                                                    rank={r.rank}
+                                                                    isAwakened={r.isAwakened}
+                                                                    sigLevel={r.sigLevel}
+                                                                    championClass={r.champion.class}
+                                                                    size={avatarSize}
+                                                                    showRank={true}
+                                                                    showStars={true}
+                                                                />
 
-                                                    return (
-                                                        <div key={r.id} className={cn(
-                                                            "shrink-0 flex flex-col gap-2 transition-all duration-300",
-                                                            containerWidth
-                                                        )}>
-                                                            <ChampionAvatar
-                                                                images={r.champion.images}
-                                                                name={r.champion.name}
-                                                                stars={r.stars}
-                                                                rank={r.rank}
-                                                                isAwakened={r.isAwakened}
-                                                                sigLevel={r.sigLevel}
-                                                                championClass={r.champion.class}
-                                                                size={avatarSize}
-                                                                showRank={isTeamExpanded}
-                                                                showStars={isTeamExpanded}
-                                                            />
-
-                                                            {isTeamExpanded && assignedEncounters.length > 0 && (
-                                                                <div className="bg-slate-900/60 rounded-lg border border-slate-800 p-1.5 flex flex-col gap-1 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                                    <div className="flex flex-wrap gap-1 justify-center">
-                                                                        {assignedEncounters.map((enc: EncounterWithRelations) => (
-                                                                            <div 
-                                                                                key={`tgt-${enc.id}`} 
-                                                                                role="button"
-                                                                                tabIndex={0}
-                                                                                aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} 
-                                                                                className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    scrollToEncounter(enc.id);
-                                                                                }}
-                                                                                onKeyDown={(e) => {
-                                                                                    if (e.key === 'Enter' || e.key === ' ') {
-                                                                                        e.preventDefault();
+                                                                {assignedEncounters.length > 0 && (
+                                                                    <motion.div 
+                                                                        initial={{ opacity: 0, y: -5 }}
+                                                                        animate={{ opacity: 1, y: 0 }}
+                                                                        className="bg-slate-900/60 rounded-lg border border-slate-800 p-1.5 flex flex-col gap-1 shadow-sm"
+                                                                    >
+                                                                        <div className="flex flex-wrap gap-1 justify-center">
+                                                                            {assignedEncounters.map((enc: EncounterWithRelations) => (
+                                                                                <div 
+                                                                                    key={`tgt-${enc.id}`} 
+                                                                                    role="button"
+                                                                                    tabIndex={0}
+                                                                                    aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
+                                                                                    title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} 
+                                                                                    className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                                                                                    onClick={(e) => {
                                                                                         e.stopPropagation();
                                                                                         scrollToEncounter(enc.id);
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                {enc.defender ? (
-                                                                                    <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
-                                                                                ) : (
-                                                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
-                                                                                )}
-                                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                    <span className="text-[9px] font-black text-white">{enc.sequence}</span>
+                                                                                    }}
+                                                                                    onKeyDown={(e) => {
+                                                                                        if (e.key === 'Enter' || e.key === ' ') {
+                                                                                            e.preventDefault();
+                                                                                            e.stopPropagation();
+                                                                                            scrollToEncounter(enc.id);
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    {enc.defender ? (
+                                                                                        <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                                                                                    ) : (
+                                                                                        <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                                                    )}
+                                                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                                        <span className="text-[9px] font-black text-white">{enc.sequence}</span>
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-
-                                            {isTeamExpanded && quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
-                                                <div className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 animate-in slide-in-from-bottom-2">
-                                                    <AlertCircle className="w-4 h-4 shrink-0" />
-                                                    <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
+                                                                            ))}
+                                                                        </div>
+                                                                    </motion.div>
+                                                                )}
+                                                            </motion.div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            )}
+
+                                                {quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
+                                                    <motion.div 
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 shadow-lg shadow-red-900/10"
+                                                    >
+                                                        <AlertCircle className="w-4 h-4 shrink-0" />
+                                                        <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Compact View when collapsed */}
+                            <AnimatePresence>
+                                {!isTeamExpanded && selectedTeam.length > 0 && (
+                                    <motion.div
+                                        key="team-collapsed-content"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="px-4 pb-3 flex flex-row gap-3 justify-center items-center"
+                                    >
+                                        <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
+                                            {selectedTeam.map(r => (
+                                                <div key={`collapsed-${r.id}`} className="relative group/mini-avatar">
+                                                    <div className="relative w-8 h-8 rounded-full border-2 border-slate-950 overflow-hidden shadow-lg transition-transform group-hover/mini-avatar:-translate-y-1">
+                                                        <Image src={getChampionImageUrlOrPlaceholder(r.champion.images, '64')} alt={r.champion.name} fill className="object-cover" />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                    )}
-                                </div>
-                            </Card>
-                        </div>
-                    </div>
+                                        {selectedTeam.length > 0 && (
+                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1">
+                                                Active Team
+                                            </span>
+                                        )}
+                                    </motion.div>
+                                )}
+                                {!isTeamExpanded && selectedTeam.length === 0 && (
+                                    <motion.div
+                                        key="team-empty-collapsed"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="px-4 pb-2 text-center"
+                                    >
+                                        <p className="text-[9px] text-slate-600 uppercase tracking-tighter font-bold">Click to expand</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
+                    </Card>
+                </motion.div>
+            </div>
 
             <div className="relative pl-6 md:pl-10 pb-20">
                 {/* Continuous Vertical Timeline Line */}
