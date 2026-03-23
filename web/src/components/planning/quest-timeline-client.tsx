@@ -681,85 +681,111 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                         className="overflow-hidden px-4 pb-4"
                                     >
                                         {selectedTeam.length === 0 ? (
-                                            <div className="py-4 flex flex-col items-center justify-center gap-1">
-                                                <p className="text-[10px] text-slate-500 italic font-medium">No champions selected.</p>
+                                            <div className="py-8 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
+                                                <div className="p-3 rounded-full bg-slate-800/50 text-slate-500">
+                                                    <Users className="w-6 h-6" />
+                                                </div>
+                                                <p className="text-sm text-slate-400 font-medium">No champions selected yet</p>
+                                                <p className="text-xs text-slate-600">Assign counters to build your team</p>
                                             </div>
                                         ) : (
-                                            <div className="flex flex-col gap-4">
-                                                <div className="flex gap-3 pb-1 overflow-x-auto custom-scrollbar scroll-smooth w-full justify-start">
+                                            <div className="flex flex-col gap-6">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {selectedTeam.map(r => {
                                                         const assignedEncounterIds = Object.entries(selections)
                                                             .filter(([encId, rosterId]) => rosterId === r.id)
                                                             .map(([encId]) => encId);
 
-                                                        const assignedEncounters = quest.encounters.filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id));
+                                                        const assignedEncounters = quest.encounters
+                                                            .filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id))
+                                                            .sort((a, b) => a.sequence - b.sequence);
 
-                                                        // Dynamic sizes based on expansion AND scroll state
-                                                        const avatarSize = isScrolled ? "lg" : "xl";
-                                                        const containerWidth = isScrolled ? "w-[75px] sm:w-[85px]" : "w-[85px] sm:w-[95px]";
+                                                        const classColors = getChampionClassColors(r.champion.class);
 
                                                         return (
                                                             <motion.div 
                                                                 layout
                                                                 key={r.id} 
                                                                 className={cn(
-                                                                    "shrink-0 flex flex-col gap-2 transition-all duration-300",
-                                                                    containerWidth
+                                                                    "relative group/team-member flex flex-col bg-slate-950/40 border rounded-2xl overflow-hidden transition-all duration-300 hover:bg-slate-900/60",
+                                                                    classColors.hoverBorder.replace('hover:', 'group-hover/team-member:'),
+                                                                    "border-slate-800/60"
                                                                 )}
                                                             >
-                                                                <ChampionAvatar
-                                                                    images={r.champion.images}
-                                                                    name={r.champion.name}
-                                                                    stars={r.stars}
-                                                                    rank={r.rank}
-                                                                    isAwakened={r.isAwakened}
-                                                                    sigLevel={r.sigLevel}
-                                                                    championClass={r.champion.class}
-                                                                    size={avatarSize}
-                                                                    showRank={true}
-                                                                    showStars={true}
-                                                                />
+                                                                {/* Accent background based on class */}
+                                                                <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-5 transition-opacity group-hover/team-member:opacity-10", classColors.bg)} />
 
-                                                                {assignedEncounters.length > 0 && (
-                                                                    <motion.div 
-                                                                        initial={{ opacity: 0, y: -5 }}
-                                                                        animate={{ opacity: 1, y: 0 }}
-                                                                        className="bg-slate-900/60 rounded-lg border border-slate-800 p-1.5 flex flex-col gap-1 shadow-sm"
-                                                                    >
-                                                                        <div className="flex flex-wrap gap-1 justify-center">
+                                                                <div className="p-3 flex items-start gap-3 relative z-10">
+                                                                    <div className="shrink-0">
+                                                                        <ChampionAvatar
+                                                                            images={r.champion.images}
+                                                                            name={r.champion.name}
+                                                                            stars={r.stars}
+                                                                            rank={r.rank}
+                                                                            isAwakened={r.isAwakened}
+                                                                            sigLevel={r.sigLevel}
+                                                                            championClass={r.champion.class}
+                                                                            size="lg"
+                                                                            showRank={true}
+                                                                            showStars={true}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0 py-1">
+                                                                        <h4 className={cn("text-xs font-black uppercase tracking-wider truncate mb-0.5", classColors.text)}>
+                                                                            {r.champion.name}
+                                                                        </h4>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                                                {assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}
+                                                                            </span>
+                                                                            {assignedEncounters.length > 0 && (
+                                                                                <div className="h-1 w-1 rounded-full bg-slate-700" />
+                                                                            )}
+                                                                            {assignedEncounters.length > 0 && (
+                                                                                <span className="text-[10px] text-sky-500/80 font-black">
+                                                                                    #{assignedEncounters[0].sequence}{assignedEncounters.length > 1 ? `-${assignedEncounters[assignedEncounters.length-1].sequence}` : ''}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="mt-auto px-3 pb-3 relative z-10">
+                                                                    {assignedEncounters.length > 0 ? (
+                                                                        <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner group-hover/team-member:border-slate-700/50 transition-colors">
                                                                             {assignedEncounters.map((enc: EncounterWithRelations) => (
-                                                                                <div 
+                                                                                <motion.div 
+                                                                                    whileHover={{ scale: 1.05 }}
+                                                                                    whileTap={{ scale: 0.95 }}
                                                                                     key={`tgt-${enc.id}`} 
                                                                                     role="button"
                                                                                     tabIndex={0}
                                                                                     aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
                                                                                     title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`} 
-                                                                                    className="relative w-6 h-6 rounded-md border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                                                                                    className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                                                                                     onClick={(e) => {
                                                                                         e.stopPropagation();
                                                                                         scrollToEncounter(enc.id);
                                                                                     }}
-                                                                                    onKeyDown={(e) => {
-                                                                                        if (e.key === 'Enter' || e.key === ' ') {
-                                                                                            e.preventDefault();
-                                                                                            e.stopPropagation();
-                                                                                            scrollToEncounter(enc.id);
-                                                                                        }
-                                                                                    }}
                                                                                 >
                                                                                     {enc.defender ? (
-                                                                                        <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                                                                                        <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt:scale-110 transition-transform" />
                                                                                     ) : (
                                                                                         <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
                                                                                     )}
-                                                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                        <span className="text-[9px] font-black text-white">{enc.sequence}</span>
+                                                                                    <div className="absolute top-0 left-0 bg-black/80 px-1 rounded-br-md border-r border-b border-slate-800/50">
+                                                                                        <span className="text-[8px] font-black text-white leading-none">{enc.sequence}</span>
                                                                                     </div>
-                                                                                </div>
+                                                                                    <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt:opacity-100 transition-opacity" />
+                                                                                </motion.div>
                                                                             ))}
                                                                         </div>
-                                                                    </motion.div>
-                                                                )}
+                                                                    ) : (
+                                                                        <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
+                                                                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic">Unassigned</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </motion.div>
                                                         );
                                                     })}
@@ -776,8 +802,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                     </motion.div>
                                                 )}
                                             </div>
-                                        )}
-                                    </motion.div>
+                                        )}                                    </motion.div>
                                 )}
                             </AnimatePresence>
 
