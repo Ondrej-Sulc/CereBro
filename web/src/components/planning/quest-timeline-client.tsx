@@ -449,7 +449,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     !isUnavailable && isSelected && "border-sky-500/60 shadow-[0_0_20px_rgba(14,165,233,0.15)] bg-sky-950/20",
                     !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.1)] bg-emerald-950/10",
                     !isUnavailable && isMissing && "opacity-60 grayscale hover:grayscale-0 border-slate-800",
-                    !isUnavailable && !isSelected && !isInTeam && !isMissing && cn(`border-slate-800 hover:${classColors.border}/50 hover:bg-slate-900/80`)
+                    !isUnavailable && !isSelected && !isInTeam && !isMissing && cn("border-slate-800 hover:bg-slate-900/80", classColors.hoverBorder)
                 )}
                 onClick={(e) => {
                     e.stopPropagation();

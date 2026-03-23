@@ -237,32 +237,36 @@ export async function updateFeaturedPlayers(
     try {
         await requireBotAdmin("MANAGE_QUESTS");
 
-        await prisma.playerQuestPlan.updateMany({
-            where: { questPlanId },
-            data: { isFeatured: false }
-        });
-
-        for (const playerId of playerIds) {
-            await prisma.playerQuestPlan.upsert({
-                where: {
-                    playerId_questPlanId: {
+        await prisma.$transaction([
+            prisma.playerQuestPlan.updateMany({
+                where: { questPlanId },
+                data: { isFeatured: false }
+            }),
+            ...playerIds.map(playerId => 
+                prisma.playerQuestPlan.upsert({
+                    where: {
+                        playerId_questPlanId: {
+                            playerId,
+                            questPlanId
+                        }
+                    },
+                    update: {
+                        isFeatured: true
+                    },
+                    create: {
                         playerId,
-                        questPlanId
+                        questPlanId,
+                        isFeatured: true
                     }
-                },
-                update: {
-                    isFeatured: true
-                },
-                create: {
-                    playerId,
-                    questPlanId,
-                    isFeatured: true
-                }
-            });
-        }
+                })
+            )
+        ]);
 
         revalidatePath(`/admin/quests/${questPlanId}`);
         revalidatePath(`/planning/quests/${questPlanId}`);
+        revalidateTag('quest-plan-detail', 'default');
+        revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
+        
         return { success: true };
     } catch (e: any) {
         console.error(e);
@@ -923,6 +927,20 @@ export async function deleteQuestEncounter(questPlanId: string, encounterId: str
 export async function reorderQuestEncounters(questPlanId: string, encounterIds: string[]) {
     await requireBotAdmin("MANAGE_QUESTS");
 
+    // Verify ownership and existence
+    const existingEncounters = await prisma.questEncounter.findMany({
+        where: { id: { in: encounterIds } },
+        select: { id: true, questPlanId: true }
+    });
+
+    if (existingEncounters.length !== encounterIds.length) {
+        throw new Error("One or more encounters not found.");
+    }
+
+    if (existingEncounters.some(e => e.questPlanId !== questPlanId)) {
+        throw new Error("One or more encounters do not belong to this quest plan.");
+    }
+
     await prisma.$transaction(
         encounterIds.map((id, index) =>
             prisma.questEncounter.update({
@@ -934,6 +952,8 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail');
+    
     return { success: true };
 }
 

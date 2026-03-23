@@ -382,10 +382,9 @@ export function EncounterCard({
                                                                             <iframe
                                                                                 src={embedUrl}
                                                                                 title="YouTube video player"
-                                                                                frameBorder="0"
                                                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                                                                 allowFullScreen
-                                                                                className="absolute inset-0 w-full h-full"
+                                                                                className="absolute inset-0 w-full h-full border-0"
                                                                             ></iframe>
                                                                         );
                                                                     }
@@ -851,10 +850,10 @@ export function EncounterCard({
                                                                     return (
                                                                         <div className="space-y-4">
                                                                             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
-                                                                                {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
-                                                                                    const isSelected = selections[encounter.id] === r.id;
-                                                                                    const isRecommended = (encounter.recommendedChampions as unknown as Champion[]).some((rc: Champion) => rc.id === r.championId);
-                                                                                    const isInTeam = Object.values(selections).includes(r.id);
+                                                                                    {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
+                                                                                        const isSelected = selections[encounter.id] === r.id;
+                                                                                        const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
+                                                                                        const isInTeam = Object.values(selections).includes(r.id);
 
                                                                                     return (
                                                                                         <div

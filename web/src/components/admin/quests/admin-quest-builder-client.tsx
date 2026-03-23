@@ -188,11 +188,13 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [requiredTags, setRequiredTags] = useState<number[]>((initialQuest.requiredTags as Tag[])?.map(t => t.id) || []);
     const [creatorIds, setCreatorIds] = useState<string[]>(initialQuest.creators?.map(c => c.id) || []);
     const [featuredPlayers, setFeaturedPlayers] = useState<{id: string, name: string, avatar: string | null}[]>(
-        (initialQuest?.playerPlans || []).map((p: any) => ({
-            id: p.player?.id || "unknown",
-            name: p.player?.ingameName || "Unknown",
-            avatar: p.player?.avatar || null
-        }))
+        (initialQuest?.playerPlans || [])
+            .filter((p: any) => p.player?.id)
+            .map((p: any) => ({
+                id: p.player.id,
+                name: p.player.ingameName || "Unknown",
+                avatar: p.player.avatar || null
+            }))
     );
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
