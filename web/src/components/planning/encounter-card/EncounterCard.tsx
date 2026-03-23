@@ -459,7 +459,11 @@ function RosterSelector({
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                                 {searchQuery && (
-                                    <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded" onClick={() => setSearchQuery("")}>
+                                    <button 
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-800 rounded" 
+                                        onClick={() => setSearchQuery("")}
+                                        aria-label="Clear search"
+                                    >
                                         <X className="h-3 w-3 text-slate-500" />
                                     </button>
                                 )}
@@ -472,6 +476,7 @@ function RosterSelector({
                                             onClick={() => setSelectedClass(selectedClass === cls ? null : cls)}
                                             className={cn("p-1.5 rounded-md border transition-all shrink-0", selectedClass === cls ? "bg-sky-600 border-sky-400 shadow-[0_0_10px_rgba(2,132,199,0.3)]" : "bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-700")}
                                             title={cls}
+                                            aria-label={`Filter by ${cls} class`}
                                         >
                                             <div className="relative w-5 h-5">
                                                 <Image src={`/assets/icons/${formatClassForIcon(cls)}.png`} alt={cls} fill className="object-contain" />
@@ -483,6 +488,7 @@ function RosterSelector({
                                     variant="outline"
                                     onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                                     className={cn("h-10 px-3 border-slate-800 gap-2 shrink-0", showAdvancedFilters || activeFiltersCount > 0 ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900/50 text-slate-400")}
+                                    aria-label={showAdvancedFilters ? "Hide advanced filters" : "Show advanced filters"}
                                 >
                                     <Filter className="w-4 h-4" />
                                     {activeFiltersCount > 0 && <span className="bg-white text-indigo-700 text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">{activeFiltersCount}</span>}
@@ -529,25 +535,25 @@ function RosterSelector({
                                     {tagFilter.map(tag => (
                                         <Badge key={`f-tag-${tag}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
                                             Tag: {tag}
-                                            <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                            <button onClick={() => setTagFilter(tagFilter.filter(t => t !== tag))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1" aria-label={`Remove ${tag} filter`}><X className="w-3 h-3" /></button>
                                         </Badge>
                                     ))}
                                     {abilityCategoryFilter.map(cat => (
                                         <Badge key={`f-cat-${cat}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
                                             Cat: {cat}
-                                            <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                            <button onClick={() => setAbilityCategoryFilter(abilityCategoryFilter.filter(c => c !== cat))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1" aria-label={`Remove ${cat} category filter`}><X className="w-3 h-3" /></button>
                                         </Badge>
                                     ))}
                                     {abilityFilter.map(ab => (
                                         <Badge key={`f-ab-${ab}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
                                             Ability: {ab}
-                                            <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                            <button onClick={() => setAbilityFilter(abilityFilter.filter(a => a !== ab))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1" aria-label={`Remove ${ab} ability filter`}><X className="w-3 h-3" /></button>
                                         </Badge>
                                     ))}
                                     {immunityFilter.map(imm => (
                                         <Badge key={`f-imm-${imm}`} variant="outline" className="bg-indigo-950/20 border-indigo-800/40 text-indigo-300 h-7 text-[10px] uppercase font-bold px-2 flex items-center gap-1">
                                             Immunity: {imm}
-                                            <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1"><X className="w-3 h-3" /></button>
+                                            <button onClick={() => setImmunityFilter(immunityFilter.filter(i => i !== imm))} className="p-0.5 hover:bg-indigo-900/40 rounded ml-1" aria-label={`Remove ${imm} immunity filter`}><X className="w-3 h-3" /></button>
                                         </Badge>
                                     ))}
                                     {activeFiltersCount > 0 && (

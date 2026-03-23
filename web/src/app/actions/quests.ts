@@ -813,6 +813,12 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     revalidateTag('quest-plan-detail', 'default');
     revalidateTag(`quest-popular-counters-${questPlanId}`, 'default');
     revalidateTag('quest-popular-counters', 'default');
+
+    if (actingUser.allianceId) {
+        revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`);
+        revalidateTag('quest-alliance-picks');
+    }
+
     return { success: true };
 }
 
