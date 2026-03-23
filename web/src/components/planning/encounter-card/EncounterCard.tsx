@@ -796,7 +796,7 @@ function EncounterExpandedContent({
                             </div>
                         )}
                     </div>
-                    <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 space-y-4">
+                    <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 space-y-3">
                         {encounter.recommendedTags.length > 0 && (!encounterTabs[encounter.id] || encounterTabs[encounter.id] === "recommended") && (
                             <div className="flex flex-wrap gap-2">
                                 {encounter.recommendedTags.map((tag: string) => (
@@ -806,29 +806,51 @@ function EncounterExpandedContent({
                                 ))}
                             </div>
                         )}
-                        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
-                            {(() => {
-                                const activeTab = encounterTabs[encounter.id] || "recommended";
-                                if (activeTab === "recommended") {
-                                    const encounterPicks = popularCounters[encounter.id] || [];
-                                    const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
-                                    const recommendedIds = new Set(encounter.recommendedChampions.map(c => c.id));
-                                    const communityPicks = encounterPicks.filter(p => !recommendedIds.has(p.championId)).map(p => ({ ...p.champion, images: toChampionImages(p.champion.images), isCommunity: true }));
-                                    const allCandidates = [...encounter.recommendedChampions.map(c => ({ ...c, images: toChampionImages(c.images), isOfficial: true })), ...communityPicks];
-                                    const sortedChampions = allCandidates.sort((a, b) => (pickCountMap.get(b.id) || 0) - (pickCountMap.get(a.id) || 0));
-                                    if (sortedChampions.length === 0) return <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">No specific champions recommended for this encounter.</p>;
-                                    return sortedChampions.map((c) => {
-                                        const pickCount = pickCountMap.get(c.id) || 0;
-                                        const totalPlayers = quest._count?.playerPlans || 0;
-                                        const popularityLabel = totalPlayers > 0 && pickCount > 0 ? `${Math.round((pickCount / totalPlayers) * 100)}%` : undefined;
-                                        return <div key={c.id}>{renderChampionItem(c as Champion, encounter, popularityLabel, true)}</div>;
-                                    });
-                                }
-                                return null;
-                            })()}
-                        </div>
-                        {(encounterTabs[encounter.id] === "featured" && featuredPicks[encounter.id]?.length > 0) && <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{featuredPicks[encounter.id].map((p) => renderListPick(p, encounter))}</div></div>}
-                        {(encounterTabs[encounter.id] === "alliance" && alliancePicks[encounter.id]?.length > 0) && <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"><div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{alliancePicks[encounter.id].map((p) => renderListPick(p, encounter))}</div></div>}
+                        
+                        {(() => {
+                            const activeTab = encounterTabs[encounter.id] || "recommended";
+                            if (activeTab === "recommended") {
+                                const encounterPicks = popularCounters[encounter.id] || [];
+                                const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
+                                const recommendedIds = new Set(encounter.recommendedChampions.map(c => c.id));
+                                const communityPicks = encounterPicks.filter(p => !recommendedIds.has(p.championId)).map(p => ({ ...p.champion, images: toChampionImages(p.champion.images), isCommunity: true }));
+                                const allCandidates = [...encounter.recommendedChampions.map(c => ({ ...c, images: toChampionImages(c.images), isOfficial: true })), ...communityPicks];
+                                const sortedChampions = allCandidates.sort((a, b) => (pickCountMap.get(b.id) || 0) - (pickCountMap.get(a.id) || 0));
+                                
+                                return (
+                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
+                                        {sortedChampions.length === 0 ? (
+                                            <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">No specific champions recommended for this encounter.</p>
+                                        ) : (
+                                            sortedChampions.map((c) => {
+                                                const pickCount = pickCountMap.get(c.id) || 0;
+                                                const totalPlayers = quest._count?.playerPlans || 0;
+                                                const popularityLabel = totalPlayers > 0 && pickCount > 0 ? `${Math.round((pickCount / totalPlayers) * 100)}%` : undefined;
+                                                return <div key={c.id}>{renderChampionItem(c as Champion, encounter, popularityLabel, true)}</div>;
+                                            })
+                                        )}
+                                    </div>
+                                );
+                            }
+                            
+                            if (activeTab === "featured" && featuredPicks[encounter.id]?.length > 0) {
+                                return (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                        {featuredPicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
+                                    </div>
+                                );
+                            }
+
+                            if (activeTab === "alliance" && alliancePicks[encounter.id]?.length > 0) {
+                                return (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                        {alliancePicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
+                                    </div>
+                                );
+                            }
+
+                            return null;
+                        })()}
                     </div>
                 </div>
             </div>

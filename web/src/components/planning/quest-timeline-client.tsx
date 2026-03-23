@@ -614,8 +614,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             <div 
                 key={p.championId} 
                 className={cn(
-                    "flex flex-col rounded-2xl transition-all duration-300 border relative overflow-hidden group/pick-card",
-                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : "cursor-pointer bg-slate-900/40 backdrop-blur-md hover:scale-[1.02] shadow-xl",
+                    "flex flex-col rounded-xl transition-all duration-300 border relative overflow-hidden group/pick-card",
+                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : "cursor-pointer bg-slate-900/40 backdrop-blur-md hover:scale-[1.01] shadow-lg",
                     !isUnavailable && isSelected && "border-sky-500/60 ring-1 ring-sky-500/30 bg-sky-950/20 shadow-sky-500/10",
                     !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 bg-emerald-950/10 shadow-emerald-500/10",
                     !isUnavailable && isMissing && "opacity-70 grayscale-[0.5] hover:grayscale-0 border-slate-800/50",
@@ -627,9 +627,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 }}
             >
                 {/* Subtle Class Ambient Glow */}
-                <div className={cn("absolute -inset-1 opacity-[0.03] transition-opacity group-hover/pick-card:opacity-[0.07] pointer-events-none blur-3xl", classColors.bg)} />
+                <div className={cn("absolute -inset-1 opacity-[0.02] transition-opacity group-hover/pick-card:opacity-[0.05] pointer-events-none blur-3xl", classColors.bg)} />
                 
-                <div className="flex p-3 gap-4 items-start relative z-10">
+                <div className="flex p-2 gap-3 items-center relative z-10">
                     <div className="shrink-0 relative">
                         <ChampionAvatar
                             images={toChampionImages(p.champion.images)}
@@ -639,90 +639,85 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             isAwakened={userChamp?.isAwakened || false}
                             sigLevel={userChamp?.sigLevel || 0}
                             championClass={p.champion.class}
-                            size="lg"
+                            size="md"
                             showRank={true}
                             showStars={true}
-                            className="rounded-xl border-slate-800/50 shadow-lg"
+                            className="rounded-lg border-slate-800/50 shadow-md"
                         />
 
-                        {/* Status Checkmark */}
+                        {/* Status Indicators */}
                         {isSelected && (
-                            <div className="absolute -top-1.5 -left-1.5 p-1.5 bg-sky-500 text-slate-950 rounded-full shadow-lg z-20 border border-sky-400/50 animate-in zoom-in duration-300">
-                                <Check className="w-3.5 h-3.5 stroke-[4]" />
+                            <div className="absolute -top-1 -left-1 p-1 bg-sky-500 text-slate-950 rounded-full shadow-lg z-20 border border-sky-400/50 animate-in zoom-in duration-300">
+                                <Check className="w-2.5 h-2.5 stroke-[5]" />
                             </div>
                         )}
                         {isInTeam && !isSelected && !isUnavailable && (
-                            <div className="absolute -top-1.5 -left-1.5 p-1.5 bg-emerald-600 text-white rounded-full shadow-lg z-20 border border-emerald-400/50 animate-in zoom-in duration-300">
-                                <Users className="w-3.5 h-3.5 stroke-[2.5]" />
+                            <div className="absolute -top-1 -left-1 p-1 bg-emerald-600 text-white rounded-full shadow-lg z-20 border border-emerald-400/50 animate-in zoom-in duration-300">
+                                <Users className="w-2.5 h-2.5 stroke-[3]" />
                             </div>
                         )}
                     </div>
 
-                    <div className="flex-1 min-w-0 py-0.5 space-y-2">
+                    <div className="flex-1 min-w-0">
                         <div className="flex flex-col">
                             <h5 className={cn(
-                                "text-base font-black truncate tracking-tight transition-all",
+                                "text-[13px] font-black truncate tracking-tight transition-all",
                                 classColors.text,
-                                "group-hover/pick-card:brightness-125 hover:scale-[1.01] origin-left"
+                                "group-hover/pick-card:brightness-125"
                             )}>
                                 {p.champion.name}
                             </h5>
-                            <div className="flex items-center gap-2 mt-1">
+                            
+                            <div className="flex items-center gap-2">
                                 {isMissing && (
-                                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800/50">Missing</span>
+                                    <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest bg-slate-950/50 px-1 py-0 rounded border border-slate-800/50">Missing</span>
+                                )}
+
+                                {/* Integrated Player Badges */}
+                                {p.pickedBy && p.pickedBy.length > 0 && (
+                                    <div className="flex -space-x-1 ml-auto">
+                                        {p.pickedBy.map((user) => (
+                                            <Popover key={user.id}>
+                                                <PopoverTrigger asChild>
+                                                    <div 
+                                                        className="relative w-5 h-5 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer group/user hover:z-10"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        title={`Suggested by ${user.name}`}
+                                                    >
+                                                        {user.avatar ? (
+                                                            <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400">
+                                                                {user.name.charAt(0)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </PopoverTrigger>
+                                                <PopoverContent 
+                                                    className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
+                                                    align="end"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <PlayerTeamSummary 
+                                                        user={user} 
+                                                        picks={playerPicksMap[user.id]?.picks || []} 
+                                                        quest={quest} 
+                                                        scrollToEncounter={scrollToEncounter} 
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Attribution Bar */}
-                {p.pickedBy && p.pickedBy.length > 0 && (
-                    <div className="mt-auto px-3 py-2 bg-slate-950/40 border-t border-slate-800/50 flex flex-wrap gap-2 items-center relative z-10 transition-colors group-hover/pick-card:bg-slate-950/60">
-                        {p.pickedBy.map((user) => (
-                            <Popover key={user.id}>
-                                <PopoverTrigger asChild>
-                                    <div 
-                                        className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-full pl-0.5 pr-2 py-0.5 group/user hover:border-sky-500/50 transition-all shadow-sm cursor-pointer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        title={`Suggested by ${user.name} - Click to see their plan`}
-                                    >
-                                        <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700">
-                                            {user.avatar ? (
-                                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400">
-                                                    {user.name.charAt(0)}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-[9px] text-slate-300 font-bold truncate max-w-[90px]">
-                                            {user.name}
-                                        </span>
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent 
-                                    className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
-                                    align="end"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <PlayerTeamSummary 
-                                        user={user} 
-                                        picks={playerPicksMap[user.id]?.picks || []} 
-                                        quest={quest} 
-                                        scrollToEncounter={scrollToEncounter} 
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        ))}
-                    </div>
-                )}
-
                 {isUnavailable && (
                     <div className="absolute inset-0 z-40 bg-red-950/20 backdrop-blur-[1px] flex items-center justify-center pointer-events-none">
                         <div className="bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full flex items-center gap-2 shadow-xl">
                             <Ban className="w-3.5 h-3.5 text-red-500" strokeWidth={3} />
-                            <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">Unavailable</span>
                         </div>
                     </div>
                 )}
