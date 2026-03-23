@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { getShareablePlanId, savePlayerQuestCounter } from "@/app/actions/quests";
-import type { PickCounterWithChampion } from "@/app/actions/quests";
+import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -34,6 +35,112 @@ import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
+
+const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: { 
+    user: { name: string; avatar: string | null };
+    picks: { encounterId: string; champion: ChampionCounterData }[];
+    quest: QuestTimelineProps["quest"];
+    scrollToEncounter: (id: string) => void;
+}) => {
+    // Group picks by champion
+    const teamMap = useMemo(() => {
+        const map: Record<number, { champion: ChampionCounterData; assignedEncounters: any[] }> = {};
+        picks.forEach(p => {
+            if (!map[p.champion.id]) {
+                map[p.champion.id] = { champion: p.champion, assignedEncounters: [] };
+            }
+            const enc = quest.encounters.find((e: any) => e.id === p.encounterId);
+            if (enc) map[p.champion.id].assignedEncounters.push(enc);
+        });
+        const result = Object.values(map);
+        result.forEach(v => v.assignedEncounters.sort((a, b) => a.sequence - b.sequence));
+        return result;
+    }, [picks, quest.encounters]);
+
+    return (
+        <div className="flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center gap-4">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-sky-500/30 shadow-lg">
+                    {user.avatar ? (
+                        <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-400 font-bold text-lg">
+                            {user.name.charAt(0)}
+                        </div>
+                    )}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-base font-black text-white tracking-tight">{user.name}'s Plan</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{teamMap.length} Champions selected</span>
+                </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-slate-950/20">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {teamMap.map(({ champion, assignedEncounters }) => {
+                        const classColors = getChampionClassColors(champion.class as ChampionClass);
+                        return (
+                            <div 
+                                key={champion.id}
+                                className={cn(
+                                    "relative flex flex-col bg-slate-900/60 border border-slate-800/60 rounded-2xl overflow-hidden transition-all duration-300",
+                                    classColors.hoverBorder.replace('hover:', '')
+                                )}
+                            >
+                                <div className="p-3 flex items-center gap-3">
+                                    <div className="shrink-0">
+                                        <ChampionAvatar
+                                            images={toChampionImages(champion.images)}
+                                            name={champion.name}
+                                            stars={0}
+                                            rank={0}
+                                            championClass={champion.class as ChampionClass}
+                                            size="md"
+                                            showRank={false}
+                                            showStars={false}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className={cn("text-[11px] font-black uppercase truncate tracking-wider", classColors.text)}>
+                                            {champion.name}
+                                        </h4>
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="h-1 w-1 rounded-full bg-slate-700" />
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{assignedEncounters.length} Fights</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="px-3 pb-3">
+                                    <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner">
+                                        {assignedEncounters.map((enc: any) => (
+                                            <div 
+                                                key={enc.id}
+                                                className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden cursor-pointer hover:border-sky-500 transition-all hover:scale-105 active:scale-95 group/tgt-mini"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    scrollToEncounter(enc.id);
+                                                }}
+                                                title={`Fight against ${enc.defender?.name || "Unknown"}`}
+                                            >
+                                                {enc.defender ? (
+                                                    <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt-mini:scale-110 transition-transform" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                )}
+                                                <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt-mini:opacity-100 transition-opacity" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const isReadOnlyRosterEntry = (value: unknown): value is RosterWithChampion => {
     if (!value || typeof value !== "object") return false;
@@ -96,6 +203,35 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [shareSuccess, setShareSuccess] = useState(false);
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
+
+    // Group picks by player for the PlayerTeamPopover
+    const playerPicksMap = useMemo(() => {
+        const map: Record<string, { 
+            name: string;
+            avatar: string | null;
+            picks: { encounterId: string; champion: ChampionCounterData }[] 
+        }> = {};
+
+        const addPicks = (picksMap: Record<string, any[]>) => {
+            Object.entries(picksMap).forEach(([encId, counters]) => {
+                counters.forEach(c => {
+                    c.pickedBy?.forEach((user: any) => {
+                        if (!map[user.id]) {
+                            map[user.id] = { name: user.name, avatar: user.avatar, picks: [] };
+                        }
+                        // Only add if not already present for this encounter
+                        if (!map[user.id].picks.some(p => p.encounterId === encId)) {
+                            map[user.id].picks.push({ encounterId: encId, champion: c.champion });
+                        }
+                    });
+                });
+            });
+        };
+
+        addPicks(featuredPicks);
+        addPicks(alliancePicks);
+        return map;
+    }, [featuredPicks, alliancePicks]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -544,24 +680,40 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 {p.pickedBy && p.pickedBy.length > 0 && (
                     <div className="mt-auto px-3 py-2 bg-slate-950/40 border-t border-slate-800/50 flex flex-wrap gap-2 items-center relative z-10 transition-colors group-hover/pick-card:bg-slate-950/60">
                         {p.pickedBy.map((user) => (
-                            <div 
-                                key={user.id} 
-                                className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-full pl-0.5 pr-2 py-0.5 group/user hover:border-sky-500/50 transition-all shadow-sm"
-                                title={`Suggested by ${user.name}`}
-                            >
-                                <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700">
-                                    {user.avatar ? (
-                                        <Image src={user.avatar} alt={user.name} fill className="object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400">
-                                            {user.name.charAt(0)}
+                            <Popover key={user.id}>
+                                <PopoverTrigger asChild>
+                                    <div 
+                                        className="flex items-center gap-1.5 bg-slate-900/80 border border-slate-700/50 rounded-full pl-0.5 pr-2 py-0.5 group/user hover:border-sky-500/50 transition-all shadow-sm cursor-pointer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={`Suggested by ${user.name} - Click to see their plan`}
+                                    >
+                                        <div className="relative w-4 h-4 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700">
+                                            {user.avatar ? (
+                                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[7px] font-bold text-slate-400">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                                <span className="text-[9px] text-slate-300 font-bold truncate max-w-[90px]">
-                                    {user.name}
-                                </span>
-                            </div>
+                                        <span className="text-[9px] text-slate-300 font-bold truncate max-w-[90px]">
+                                            {user.name}
+                                        </span>
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent 
+                                    className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
+                                    align="end"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <PlayerTeamSummary 
+                                        user={user} 
+                                        picks={playerPicksMap[user.id]?.picks || []} 
+                                        quest={quest} 
+                                        scrollToEncounter={scrollToEncounter} 
+                                    />
+                                </PopoverContent>
+                            </Popover>
                         ))}
                     </div>
                 )}

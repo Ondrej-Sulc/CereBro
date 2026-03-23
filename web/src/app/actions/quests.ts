@@ -285,7 +285,7 @@ export type PopularCounter = {
     champion: ChampionCounterData;
 };
 export type PopularCountersMap = Record<string, PopularCounter[]>;
-type ChampionCounterData = {
+export type ChampionCounterData = {
     id: number;
     name: string;
     shortName: string;
