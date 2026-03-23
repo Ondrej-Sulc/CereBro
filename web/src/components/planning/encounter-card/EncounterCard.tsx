@@ -757,8 +757,8 @@ function EncounterExpandedContent({
                     )}
                 </div>
 
-                <div className="xl:col-span-5 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="xl:col-span-5 space-y-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
                         <div className="flex items-center gap-2">
                             <div className="h-6 w-1 bg-amber-500 rounded-full" />
                             <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
@@ -796,7 +796,7 @@ function EncounterExpandedContent({
                             </div>
                         )}
                     </div>
-                    <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 space-y-3">
+                    <div className="bg-slate-950/40 p-3 rounded-xl border border-slate-800 space-y-2.5">
                         {encounter.recommendedTags.length > 0 && (!encounterTabs[encounter.id] || encounterTabs[encounter.id] === "recommended") && (
                             <div className="flex flex-wrap gap-2">
                                 {encounter.recommendedTags.map((tag: string) => (
@@ -835,7 +835,7 @@ function EncounterExpandedContent({
                             
                             if (activeTab === "featured" && featuredPicks[encounter.id]?.length > 0) {
                                 return (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         {featuredPicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
                                     </div>
                                 );
@@ -843,7 +843,7 @@ function EncounterExpandedContent({
 
                             if (activeTab === "alliance" && alliancePicks[encounter.id]?.length > 0) {
                                 return (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         {alliancePicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
                                     </div>
                                 );
