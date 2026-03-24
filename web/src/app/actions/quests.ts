@@ -265,8 +265,8 @@ export async function updateFeaturedPlayers(
 
         revalidatePath(`/admin/quests/${questPlanId}`);
         revalidatePath(`/planning/quests/${questPlanId}`);
-        revalidateTag('quest-plan-detail');
-        revalidateTag(`quest-featured-picks-${questPlanId}`);
+        revalidateTag('quest-plan-detail', 'default');
+        revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
         
         return { success: true };
     } catch (e: any) {
@@ -815,8 +815,8 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     revalidateTag('quest-popular-counters', 'default');
 
     if (actingUser.allianceId) {
-        revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`);
-        revalidateTag('quest-alliance-picks');
+        revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`, 'default');
+        revalidateTag('quest-alliance-picks', 'default');
     }
 
     return { success: true };
@@ -974,7 +974,7 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail');
+    revalidateTag('quest-plan-detail', 'default');
     
     return { success: true };
 }

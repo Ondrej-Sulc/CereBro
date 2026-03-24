@@ -700,39 +700,40 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             >
                 {/* Champion Side (Main Card) */}
                 <div className="flex-1 min-w-0">
-                    <UpdatedChampionItem
-                        item={userChamp ? {
-                            stars: userChamp.stars,
-                            rank: userChamp.rank,
-                            isAwakened: userChamp.isAwakened,
-                            sigLevel: userChamp.sigLevel,
-                            powerRating: userChamp.powerRating,
-                            champion: {
-                                id: userChamp.champion.id,
-                                name: userChamp.champion.shortName || userChamp.champion.name,
-                                championClass: userChamp.champion.class as ChampionClass,
-                                images: toChampionImages(userChamp.champion.images)
-                            },
-                            isAscended: userChamp.isAscended,
-                            ascensionLevel: userChamp.ascensionLevel
-                        } : {
-                            stars: 0,
-                            rank: 0,
-                            champion: {
-                                id: p.championId,
-                                name: p.champion.name,
-                                championClass: p.champion.class as ChampionClass,
-                                images: toChampionImages(p.champion.images)
-                            }
-                        }}
-                        // We handle borders/selection on the outer container
-                        isSelected={false}
-                        isRecommended={false}
-                        isMissing={!userChamp}
-                        isInTeam={false}
-                        isUnavailable={false}
-                        className="border-0 shadow-none ring-0 rounded-none bg-transparent"
-                    />
+                    <div className="border-0 shadow-none ring-0 rounded-none bg-transparent">
+                        <UpdatedChampionItem
+                            item={userChamp ? {
+                                stars: userChamp.stars,
+                                rank: userChamp.rank,
+                                isAwakened: userChamp.isAwakened,
+                                sigLevel: userChamp.sigLevel,
+                                powerRating: userChamp.powerRating,
+                                champion: {
+                                    id: userChamp.champion.id,
+                                    name: userChamp.champion.shortName || userChamp.champion.name,
+                                    championClass: userChamp.champion.class as ChampionClass,
+                                    images: toChampionImages(userChamp.champion.images)
+                                },
+                                isAscended: userChamp.isAscended,
+                                ascensionLevel: userChamp.ascensionLevel
+                            } : {
+                                stars: 0,
+                                rank: 0,
+                                champion: {
+                                    id: p.championId,
+                                    name: p.champion.name,
+                                    championClass: p.champion.class as ChampionClass,
+                                    images: toChampionImages(p.champion.images)
+                                }
+                            }}
+                            // We handle borders/selection on the outer container
+                            isSelected={false}
+                            isRecommended={false}
+                            isMissing={!userChamp}
+                            isInTeam={false}
+                            isUnavailable={false}
+                        />
+                    </div>
                 </div>
 
                 {/* Player Sidecar (Sidebar for Badges) */}
