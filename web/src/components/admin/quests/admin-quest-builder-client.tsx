@@ -152,11 +152,16 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     };
 
     // Keep handler refs up-to-date each render to avoid stale closures in the keyboard effect
-    const handleAddOrUpdateEncounterRef = useRef(handleAddOrUpdateEncounter);
-    const handleSaveSettingsRef = useRef(handleSaveSettings);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleAddOrUpdateEncounterRef = useRef<() => Promise<void>>(null as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleSaveSettingsRef = useRef<() => Promise<void>>(null as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cancelEditingRef = useRef<() => void>(null as any);
     useEffect(() => {
         handleAddOrUpdateEncounterRef.current = handleAddOrUpdateEncounter;
         handleSaveSettingsRef.current = handleSaveSettings;
+        cancelEditingRef.current = cancelEditing;
     });
 
     // Keyboard Shortcuts
@@ -183,13 +188,13 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
             // Cancel editing (Esc)
             if (e.key === 'Escape' && editingEncounterId) {
-                cancelEditing();
+                cancelEditingRef.current();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [editingEncounterId, cancelEditing]);
+    }, [editingEncounterId]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
