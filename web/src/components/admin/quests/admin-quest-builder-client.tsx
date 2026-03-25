@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, Prisma } from "@prisma/client";
@@ -151,6 +151,14 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         }
     };
 
+    // Keep handler refs up-to-date each render to avoid stale closures in the keyboard effect
+    const handleAddOrUpdateEncounterRef = useRef(handleAddOrUpdateEncounter);
+    const handleSaveSettingsRef = useRef(handleSaveSettings);
+    useEffect(() => {
+        handleAddOrUpdateEncounterRef.current = handleAddOrUpdateEncounter;
+        handleSaveSettingsRef.current = handleSaveSettings;
+    });
+
     // Keyboard Shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -158,18 +166,18 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             if ((e.metaKey || e.ctrlKey) && e.key === 's') {
                 e.preventDefault();
                 if (editingEncounterId) {
-                    handleAddOrUpdateEncounter();
+                    handleAddOrUpdateEncounterRef.current();
                 } else {
-                    handleSaveSettings();
+                    handleSaveSettingsRef.current();
                 }
             }
 
             // New Encounter shortcut (N)
-            if (e.key === 'n' && !editingEncounterId && 
-                document.activeElement?.tagName !== 'INPUT' && 
+            if (e.key === 'n' && !editingEncounterId &&
+                document.activeElement?.tagName !== 'INPUT' &&
                 document.activeElement?.tagName !== 'TEXTAREA') {
                 e.preventDefault();
-                const defenderInput = document.querySelector('[placeholder="Search champions..."]') as HTMLInputElement;
+                const defenderInput = document.getElementById('defender-search-input') as HTMLInputElement;
                 defenderInput?.focus();
             }
 
@@ -181,7 +189,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [editingEncounterId, defenderId, tips, sequence]);
+    }, [editingEncounterId, cancelEditing]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
@@ -925,16 +933,24 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         </CardContent>
                     </Card>
 
+                    {/* Focus sentinel — lets keyboard users reach a known position before the fixed bar */}
+                    <div tabIndex={-1} aria-hidden="true" className="sr-only" />
+
                     {/* Sticky save bar */}
-                    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-4">
+                    <div
+                        role="toolbar"
+                        aria-label="Save settings toolbar"
+                        className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-4"
+                    >
                         <Button
                             variant="outline"
                             onClick={handleClearRecommended}
+                            aria-label="Clear all recommended champions"
                             className="border-red-900/50 text-red-400 hover:bg-red-950/30 hover:text-red-300"
                         >
                             <Eraser className="mr-2 h-4 w-4" /> Clear All Recommendations
                         </Button>
-                        <Button onClick={handleSaveSettings} disabled={isSavingSettings} className="bg-sky-600 hover:bg-sky-500 text-white min-w-[150px] shadow-md shadow-sky-900/20 transition-all">
+                        <Button onClick={handleSaveSettings} disabled={isSavingSettings} aria-label={isSavingSettings ? "Saving settings…" : "Save settings"} className="bg-sky-600 hover:bg-sky-500 text-white min-w-[150px] shadow-md shadow-sky-900/20 transition-all">
                             <Save className="mr-2 h-4 w-4" /> {isSavingSettings ? "Saving..." : "Save Settings"}
                         </Button>
                     </div>
@@ -1033,6 +1049,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 <div className="space-y-2">
                                     <Label className="text-sky-400 font-bold">Defender</Label>
                                     <ChampionCombobox
+                                        id="defender-search-input"
                                         champions={champions}
                                         value={defenderId}
                                         onSelect={(id) => setDefenderId(id)}

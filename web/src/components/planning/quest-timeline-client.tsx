@@ -483,20 +483,24 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         return initial;
     });
 
+    const getStickyOffset = useCallback(() => {
+        const stickyTeam = document.querySelector('[data-sticky-team]');
+        return stickyTeam
+            ? stickyTeam.getBoundingClientRect().bottom + 12
+            : (window.matchMedia('(min-width: 768px)').matches ? 130 : 70);
+    }, []);
+
     // Scroll an encounter card into view, accounting for the sticky team panel
     const scrollToCard = useCallback((id: string, delay = 0) => {
         const doScroll = () => {
             const element = document.getElementById(`encounter-${id}`);
             if (!element) return;
-            const stickyTeam = document.querySelector('[data-sticky-team]');
-            const offset = stickyTeam
-                ? stickyTeam.getBoundingClientRect().bottom + 12
-                : (window.matchMedia('(min-width: 768px)').matches ? 130 : 70);
+            const offset = getStickyOffset();
             const rect = element.getBoundingClientRect();
             window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'smooth' });
         };
         delay > 0 ? setTimeout(doScroll, delay) : requestAnimationFrame(doScroll);
-    }, []);
+    }, [getStickyOffset]);
 
     const toggleExpand = (id: string) => {
         const isOpening = expandedId !== id;
@@ -504,8 +508,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             setShowVideoId(null);
             const newElement = document.getElementById(`encounter-${id}`);
             if (newElement) {
-                const stickyTeam = document.querySelector('[data-sticky-team]');
-                const offset = stickyTeam ? stickyTeam.getBoundingClientRect().bottom + 12 : 70;
+                const offset = getStickyOffset();
                 const newRect = newElement.getBoundingClientRect();
                 let targetScroll = window.scrollY + newRect.top - offset;
 
@@ -518,8 +521,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     if (oldElement) {
                         const oldRect = oldElement.getBoundingClientRect();
                         if (oldRect.top < newRect.top) {
-                            const COLLAPSED_HEIGHT = 100; // encounter card header min-h
-                            const delta = Math.max(0, oldRect.height - COLLAPSED_HEIGHT);
+                            const headerEl = oldElement.querySelector<HTMLElement>('[role="button"]');
+                            const collapsedHeight = headerEl ? headerEl.getBoundingClientRect().height : 100;
+                            const delta = Math.max(0, oldRect.height - collapsedHeight);
                             targetScroll -= delta;
                         }
                     }
@@ -646,8 +650,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             // plays in-view rather than causing a layout-shift scroll jump
             const element = document.getElementById(`encounter-${encounterId}`);
             if (element) {
-                const stickyTeam = document.querySelector('[data-sticky-team]');
-                const offset = stickyTeam ? stickyTeam.getBoundingClientRect().bottom + 12 : 70;
+                const offset = getStickyOffset();
                 const rect = element.getBoundingClientRect();
                 window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'instant' });
             }

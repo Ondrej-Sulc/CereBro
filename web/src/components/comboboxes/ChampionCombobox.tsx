@@ -29,6 +29,7 @@ interface ChampionComboboxProps {
   onSelect: (value: string) => void;
   placeholder?: string;
   className?: string;
+  id?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   activeChampionIds?: Set<string>;
@@ -41,6 +42,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   onSelect,
   placeholder = "Select a champion...",
   className,
+  id,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   activeChampionIds,
@@ -139,6 +141,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           role="combobox"
           aria-expanded={open}

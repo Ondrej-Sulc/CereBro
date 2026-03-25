@@ -1082,22 +1082,31 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
 export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds: (number | null)[], startSequence: number) {
     await requireBotAdmin("MANAGE_QUESTS");
 
-    const encounters = [];
-    for (let i = 0; i < defenderIds.length; i++) {
-        const defenderId = defenderIds[i];
-        
-        // Use create instead of createMany to easily support the relation and schema defaults if needed,
-        // though createMany is also fine. Here we stick to create for simplicity and safety with hooks.
-        const encounter = await prisma.questEncounter.create({
-            data: {
-                questPlanId,
-                sequence: startSequence + i,
-                defenderId: defenderId || null,
-                recommendedTags: [],
-            }
+    const nonNullDefenderIds = defenderIds.filter((id): id is number => id !== null);
+    if (nonNullDefenderIds.length > 0) {
+        const foundChampions = await prisma.champion.findMany({
+            where: { id: { in: nonNullDefenderIds } },
+            select: { id: true }
         });
-        encounters.push(encounter);
+        const foundIds = new Set(foundChampions.map(c => c.id));
+        const missingId = nonNullDefenderIds.find(id => !foundIds.has(id));
+        if (missingId !== undefined) {
+            throw new Error(`Champion with ID ${missingId} not found.`);
+        }
     }
+
+    const encounters = await prisma.$transaction(
+        defenderIds.map((defenderId, i) =>
+            prisma.questEncounter.create({
+                data: {
+                    questPlanId,
+                    sequence: startSequence + i,
+                    defenderId: defenderId || null,
+                    recommendedTags: [],
+                }
+            })
+        )
+    );
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
