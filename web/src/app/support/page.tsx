@@ -1,14 +1,14 @@
 import SupportPageClient from "./SupportPageClient";
-import { FundingBar } from "./components/FundingBar";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getMonthlyTargetMinor, getCurrentMonthCoveredMinor } from "@/lib/support-config";
+import { listTopSupporters } from "@/lib/support-donations";
 
 export default async function SupportPage() {
   const session = await auth();
   const discordId = session?.user?.discordId ?? null;
 
-  const [stripeCustomerDonation, targetMinor, coveredMinor] = await Promise.all([
+  const [stripeCustomerDonation, targetMinor, coveredMinor, topSupporters] = await Promise.all([
     discordId
       ? prisma.supportDonation.findFirst({
           where: { discordId, stripeCustomerId: { not: null } },
@@ -18,17 +18,16 @@ export default async function SupportPage() {
       : null,
     getMonthlyTargetMinor(),
     getCurrentMonthCoveredMinor(),
+    listTopSupporters(3),
   ]);
 
   return (
-    <>
-      {targetMinor && (
-        <FundingBar coveredMinor={coveredMinor} targetMinor={targetMinor} />
-      )}
-      <SupportPageClient
-        isLoggedIn={!!session?.user}
-        stripeCustomerId={stripeCustomerDonation?.stripeCustomerId ?? null}
-      />
-    </>
+    <SupportPageClient
+      isLoggedIn={!!session?.user}
+      stripeCustomerId={stripeCustomerDonation?.stripeCustomerId ?? null}
+      coveredMinor={coveredMinor}
+      targetMinor={targetMinor}
+      topSupporters={topSupporters}
+    />
   );
 }

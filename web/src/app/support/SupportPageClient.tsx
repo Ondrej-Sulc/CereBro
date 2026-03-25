@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn, Settings } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { signInAction } from "@/app/actions/auth";
+import { FundingBar } from "./components/FundingBar";
 
 const CURRENCY = "EUR";
 const SUBSCRIPTION_TIERS = [5, 10, 25, 50] as const;
@@ -32,12 +33,24 @@ function formatCurrency(amount: number, maximumFractionDigits = 0): string {
   }).format(amount);
 }
 
+type TopSupporter = {
+  rank: number;
+  name: string;
+  totalMinor: number;
+};
+
 export default function SupportPageClient({
   isLoggedIn,
   stripeCustomerId,
+  coveredMinor,
+  targetMinor,
+  topSupporters,
 }: {
   isLoggedIn: boolean;
   stripeCustomerId: string | null;
+  coveredMinor: number;
+  targetMinor: number | null;
+  topSupporters: TopSupporter[];
 }) {
   const [mode, setMode] = useState<Mode>("subscription");
   const [selectedTier, setSelectedTier] = useState<number>(10);
@@ -52,6 +65,15 @@ export default function SupportPageClient({
     if (parsed === null || parsed <= 0) return null;
     return formatCurrency(parsed, 2);
   }, [amount]);
+
+  // Minor units of the currently selected amount for the funding bar preview
+  const previewMinor = useMemo(() => {
+    if (!targetMinor) return 0;
+    if (mode === "subscription") return selectedTier * 100;
+    const parsed = parseAmount(amount);
+    if (parsed === null || parsed < MIN_DONATION_AMOUNT) return 0;
+    return Math.round(parsed * 100);
+  }, [mode, selectedTier, amount, targetMinor]);
 
   useEffect(() => {
     let isMounted = true;
@@ -188,6 +210,7 @@ export default function SupportPageClient({
       <PageBackground />
       <main className="relative z-10">
         <div className="max-w-6xl mx-auto px-4 lg:px-6 mb-12 text-center lg:text-left">
+
           <p className="text-xs uppercase tracking-[0.2em] text-sky-400 font-bold mb-2">
             Community Powered
           </p>
@@ -198,6 +221,14 @@ export default function SupportPageClient({
             Help keep hosting online and fund active development. Choose a monthly plan or make a one-time donation via Stripe Checkout.
           </p>
         </div>
+
+        {targetMinor && (
+          <FundingBar
+            coveredMinor={coveredMinor}
+            targetMinor={targetMinor}
+            previewMinor={previewMinor}
+          />
+        )}
 
         <section className="max-w-6xl mx-auto px-4 lg:px-6 grid gap-8 lg:grid-cols-2">
           {/* Left: why support */}
@@ -231,6 +262,46 @@ export default function SupportPageClient({
                 </div>
               </div>
             </div>
+
+            {/* Leaderboard */}
+            {topSupporters.length > 0 && (
+              <div className="mt-8 border-t border-slate-800/70 pt-6">
+                <p className="text-xs uppercase tracking-[0.15em] text-slate-500 font-semibold mb-4">
+                  All-time Top Supporters
+                </p>
+                <div className="space-y-2">
+                  {topSupporters.map((s) => {
+                    const rankStyles = [
+                      { ring: "border-amber-400/40 bg-amber-400/10", label: "text-amber-300", bar: "from-amber-500 to-amber-300", track: "bg-amber-900/30" },
+                      { ring: "border-slate-400/30 bg-slate-400/8", label: "text-slate-300", bar: "from-slate-500 to-slate-300", track: "bg-slate-800/40" },
+                      { ring: "border-orange-500/30 bg-orange-500/8", label: "text-orange-300", bar: "from-orange-600 to-orange-400", track: "bg-orange-900/30" },
+                    ][s.rank - 1];
+
+                    const maxMinor = topSupporters[0].totalMinor;
+                    const fillPct = Math.round((s.totalMinor / maxMinor) * 100);
+
+                    return (
+                      <div
+                        key={s.rank}
+                        className={`flex items-center gap-3 rounded-xl border ${rankStyles.ring} px-4 py-2.5`}
+                      >
+                        <span className={`text-sm font-extrabold tabular-nums w-5 text-center shrink-0 ${rankStyles.label}`}>
+                          #{s.rank}
+                        </span>
+                        <span className="flex-1 text-sm font-medium text-white truncate min-w-0">{s.name}</span>
+                        {/* Relative mini-bar */}
+                        <div className={`w-20 h-2 rounded-sm ${rankStyles.track} overflow-hidden shrink-0`}>
+                          <div
+                            className={`h-full rounded-sm bg-gradient-to-r ${rankStyles.bar} transition-all duration-500`}
+                            style={{ width: `${fillPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: donation form */}
