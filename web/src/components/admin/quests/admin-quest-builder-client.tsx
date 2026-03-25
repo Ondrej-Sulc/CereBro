@@ -16,9 +16,10 @@ import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQues
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-    ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink, 
-    XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2, 
-    ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack
+    ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink,
+    XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2,
+    ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack,
+    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -586,27 +587,28 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="settings" className="mt-6 space-y-6 outline-none focus-visible:outline-none">
-            <Card className="bg-slate-950/80 border-sky-900/50 shadow-lg shadow-sky-900/10">
-                <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-2">Global Quest Settings</CardTitle>
-                    <CardDescription>Restrictions set here apply to the entire quest path.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        {/* General Section */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="h-4 w-1 bg-sky-500 rounded-full" />
-                                <h4 className="text-[10px] font-bold text-sky-500 uppercase tracking-widest">General Information</h4>
-                            </div>
+                <TabsContent value="settings" className="mt-6 space-y-4 outline-none focus-visible:outline-none pb-24">
+
+                    {/* General Information */}
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-sky-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                                    <Info className="w-4 h-4 text-sky-400" />
+                                </div>
+                                General Information
+                            </CardTitle>
+                            <CardDescription>Basic details and visibility for this quest plan.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label>Quest Title</Label>
+                                    <Label className="text-slate-300">Quest Title</Label>
                                     <Input value={title} onChange={e => setTitle(e.target.value)} className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
                                 </div>
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label>YouTube Video URL (Main Guide)</Label>
+                                    <Label className="text-slate-300">YouTube Video URL <span className="text-slate-500 font-normal">(Main Guide)</span></Label>
                                     <Input
                                         value={planVideoUrl}
                                         onChange={e => setPlanVideoUrl(e.target.value)}
@@ -615,46 +617,62 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Status</Label>
-                                    <select
-                                        value={status}
-                                        onChange={e => setStatus(e.target.value as QuestPlanStatus)}
-                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
-                                    >
-                                        <option value="DRAFT">Draft (Hidden)</option>
-                                        <option value="VISIBLE">Visible (All Players)</option>
-                                        <option value="ARCHIVED">Archived</option>
-                                    </select>
+                                    <Label className="text-slate-300">Status</Label>
+                                    <div className="flex rounded-lg border border-slate-800 bg-slate-900 p-1 gap-1">
+                                        {([
+                                            { value: "DRAFT", label: "Draft", icon: EyeOff, activeClass: "bg-slate-700 text-slate-200 shadow-sm" },
+                                            { value: "VISIBLE", label: "Visible", icon: Eye, activeClass: "bg-emerald-600 text-white shadow-sm shadow-emerald-900/40" },
+                                            { value: "ARCHIVED", label: "Archived", icon: Archive, activeClass: "bg-orange-700 text-white shadow-sm shadow-orange-900/40" },
+                                        ] as const).map(({ value: v, label, icon: Icon, activeClass }) => (
+                                            <button
+                                                key={v}
+                                                type="button"
+                                                onClick={() => setStatus(v as QuestPlanStatus)}
+                                                className={cn(
+                                                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-semibold transition-all",
+                                                    status === v ? activeClass : "text-slate-500 hover:text-slate-300"
+                                                )}
+                                            >
+                                                <Icon className="w-3.5 h-3.5" />{label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Category</Label>
+                                    <Label className="text-slate-300">Category</Label>
                                     <select
                                         value={categoryId}
                                         onChange={e => setCategoryId(e.target.value)}
-                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <option value="none">Uncategorized</option>
                                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
                             </div>
-                        </div>
+                        </CardContent>
+                    </Card>
 
-                        {/* Right Column Wrapper */}
-                        <div className="flex flex-col gap-8">
-                            {/* Requirements Section */}
-                            <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="h-4 w-1 bg-amber-500 rounded-full" />
-                                <h4 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Requirements & Limits</h4>
-                            </div>
+                    {/* Requirements & Limits */}
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-amber-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                    <ShieldAlert className="w-4 h-4 text-amber-400" />
+                                </div>
+                                Requirements &amp; Limits
+                            </CardTitle>
+                            <CardDescription>Roster and champion constraints applied globally across all encounters.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Team Limit</Label>
+                                    <Label className="text-slate-300">Team Limit</Label>
                                     <select
                                         value={teamLimit}
                                         onChange={e => setTeamLimit(e.target.value)}
-                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                        className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                                     >
                                         <option value="1">1 Champion</option>
                                         <option value="3">3 Champions</option>
@@ -663,143 +681,156 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Min Stars</Label>
-                                    <Input type="number" value={minStars} onChange={e => setMinStars(e.target.value)} placeholder="e.g. 5" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                    <Label className="text-slate-300">Min Stars</Label>
+                                    <Input type="number" value={minStars} onChange={e => setMinStars(e.target.value)} placeholder="e.g. 5" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Max Stars</Label>
-                                    <Input type="number" value={maxStars} onChange={e => setMaxStars(e.target.value)} placeholder="e.g. 7" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500" />
+                                    <Label className="text-slate-300">Max Stars</Label>
+                                    <Input type="number" value={maxStars} onChange={e => setMaxStars(e.target.value)} placeholder="e.g. 7" className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                             </div>
-                        </div>
+                        </CardContent>
+                    </Card>
 
-                        {/* Staff & Features Section */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="h-4 w-1 bg-indigo-500 rounded-full" />
-                                <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Authors & Featured</h4>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label>Creators</Label>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex flex-wrap gap-2">
-                                            {creatorIds.map(id => {
-                                                const existingCreator = initialQuest.creators?.find(c => c.id === id);
-                                                return (
-                                                    <Badge key={id} variant={existingCreator ? "secondary" : "outline"} className={cn("flex items-center gap-1.5 px-2 py-1 bg-slate-900", !existingCreator && "bg-slate-900/50 border-slate-700 border-dashed text-slate-400")}>
-                                                        {existingCreator?.discordId && (
-                                                            <div className="w-3 h-3 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                                                <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
-                                                            </div>
-                                                        )}
-                                                        <span>{existingCreator ? (existingCreator.name || `Creator ${id.slice(-4)}`) : "New Creator"}</span>
-                                                        <button onClick={() => setCreatorIds(creatorIds.filter(i => i !== id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
-                                                    </Badge>
-                                                );
-                                            })}
-                                        </div>
-                                        <AsyncBotUserCombobox
-                                            value=""
-                                            displayValue=""
-                                            onSelect={(id) => {
-                                                if (id && !creatorIds.includes(id)) {
-                                                    setCreatorIds([...creatorIds, id]);
-                                                }
-                                            }}
-                                            placeholder="Search to add creators..."
-                                        />
-                                    </div>
+                    {/* Authors & Featured */}
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-indigo-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                                    <Users className="w-4 h-4 text-indigo-400" />
                                 </div>
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label>Featured Players</Label>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex flex-wrap gap-2">
-                                            {featuredPlayers.map(p => (
-                                                <Badge key={p.id} variant="outline" className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 border-amber-500/30 text-slate-300">
-                                                    {p.avatar ? (
-                                                        <div className="w-4 h-4 rounded-full overflow-hidden bg-slate-800">
-                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                            <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-[8px] text-slate-500">
-                                                            {p.name.charAt(0).toUpperCase()}
+                                Authors &amp; Featured Players
+                            </CardTitle>
+                            <CardDescription>Credit creators and spotlight featured player builds.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-5">
+                            <div className="space-y-2">
+                                <Label className="text-slate-300">Creators</Label>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-wrap gap-2 min-h-[28px]">
+                                        {creatorIds.map(id => {
+                                            const existingCreator = initialQuest.creators?.find(c => c.id === id);
+                                            return (
+                                                <Badge key={id} variant={existingCreator ? "secondary" : "outline"} className={cn("flex items-center gap-1.5 px-2 py-1 bg-slate-900", !existingCreator && "bg-slate-900/50 border-slate-700 border-dashed text-slate-400")}>
+                                                    {existingCreator?.discordId && (
+                                                        <div className="w-3 h-3 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
                                                         </div>
                                                     )}
-                                                    <span>{p.name}</span>
-                                                    <button onClick={() => setFeaturedPlayers(featuredPlayers.filter(x => x.id !== p.id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
+                                                    <span>{existingCreator ? (existingCreator.name || `Creator ${id.slice(-4)}`) : "New Creator"}</span>
+                                                    <button onClick={() => setCreatorIds(creatorIds.filter(i => i !== id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
                                                 </Badge>
-                                            ))}
-                                        </div>
-                                        <AsyncPlayerSearchCombobox
-                                            value=""
-                                            onSelect={(id, name, avatar) => {
-                                                if (id && !featuredPlayers.some(p => p.id === id)) {
-                                                    setFeaturedPlayers([...featuredPlayers, { id, name, avatar }]);
-                                                }
-                                            }}
-                                            placeholder="Search to feature a player's plan..."
-                                        />
+                                            );
+                                        })}
                                     </div>
+                                    <AsyncBotUserCombobox
+                                        value=""
+                                        displayValue=""
+                                        onSelect={(id) => {
+                                            if (id && !creatorIds.includes(id)) {
+                                                setCreatorIds([...creatorIds, id]);
+                                            }
+                                        }}
+                                        placeholder="Search to add creators..."
+                                    />
                                 </div>
                             </div>
-                        </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 pt-6 border-t border-slate-800/50">
-                        <Label className="mb-3 block text-slate-400 uppercase tracking-widest text-[10px] font-bold">Quest Banner Asset</Label>
-                        <div className="flex flex-col md:flex-row gap-6 items-start">
-                            <div className="relative group w-full md:w-80 aspect-[21/9] rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-900 shadow-inner flex items-center justify-center">
-                                {bannerUrl ? (
-                                    <>
-                                        <Image
-                                            src={bannerUrl.replace(/#/g, '%23')}
-                                            alt="Quest Banner"
-                                            fill
-                                            className={cn(
-                                                bannerFit === "cover" ? "object-cover" : "object-contain",
-                                                bannerPosition === "top" ? "object-top" : bannerPosition === "bottom" ? "object-bottom" : "object-center"
-                                            )}
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                            <Button variant="secondary" size="sm" onClick={() => setBannerUrl(null)} className="bg-red-600 hover:bg-red-500 text-white border-none h-8">
-                                                <XCircle className="w-4 h-4 mr-2" /> Remove
-                                            </Button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="flex flex-col items-center gap-2 text-slate-600">
-                                        <ImageIcon className="w-8 h-8 opacity-20" />
-                                        <span className="text-xs font-medium">No banner assigned</span>
+                            <div className="h-px bg-slate-800/60" />
+                            <div className="space-y-2">
+                                <Label className="text-slate-300">Featured Players</Label>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-wrap gap-2 min-h-[28px]">
+                                        {featuredPlayers.map(p => (
+                                            <Badge key={p.id} variant="outline" className="flex items-center gap-1.5 px-2 py-1 bg-slate-900 border-amber-500/30 text-slate-300">
+                                                {p.avatar ? (
+                                                    <div className="w-4 h-4 rounded-full overflow-hidden bg-slate-800">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-4 h-4 rounded-full bg-slate-800 flex items-center justify-center text-[8px] text-slate-500">
+                                                        {p.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span>{p.name}</span>
+                                                <button onClick={() => setFeaturedPlayers(featuredPlayers.filter(x => x.id !== p.id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
+                                            </Badge>
+                                        ))}
                                     </div>
-                                )}
+                                    <AsyncPlayerSearchCombobox
+                                        value=""
+                                        onSelect={(id, name, avatar) => {
+                                            if (id && !featuredPlayers.some(p => p.id === id)) {
+                                                setFeaturedPlayers([...featuredPlayers, { id, name, avatar }]);
+                                            }
+                                        }}
+                                        placeholder="Search to feature a player's plan..."
+                                    />
+                                </div>
                             </div>
+                        </CardContent>
+                    </Card>
 
-                            <div className="flex-1 space-y-4">
-                                <div className="space-y-1">
-                                    <p className="text-xs text-slate-500 leading-relaxed max-w-md">
-                                        Upload a banner for this quest plan. Recommended ratio: 21:9.
-                                    </p>
-                                    <div className="flex flex-wrap gap-3 pt-1">
+                    {/* Banner */}
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-slate-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-700/60 border border-slate-700">
+                                    <ImageIcon className="w-4 h-4 text-slate-400" />
+                                </div>
+                                Quest Banner
+                            </CardTitle>
+                            <CardDescription>Displayed at the top of the quest plan page. Recommended ratio: 21:9.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-col md:flex-row gap-6 items-start">
+                                <div className="relative group w-full md:w-80 aspect-[21/9] rounded-xl overflow-hidden border-2 border-slate-800 bg-slate-900 shadow-inner flex items-center justify-center flex-shrink-0">
+                                    {bannerUrl ? (
+                                        <>
+                                            <Image
+                                                src={bannerUrl.replace(/#/g, '%23')}
+                                                alt="Quest Banner"
+                                                fill
+                                                className={cn(
+                                                    bannerFit === "cover" ? "object-cover" : "object-contain",
+                                                    bannerPosition === "top" ? "object-top" : bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                                                )}
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                <Button variant="secondary" size="sm" onClick={() => setBannerUrl(null)} className="bg-red-600 hover:bg-red-500 text-white border-none h-8">
+                                                    <XCircle className="w-4 h-4 mr-2" /> Remove
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-slate-600">
+                                            <ImageIcon className="w-8 h-8 opacity-20" />
+                                            <span className="text-xs font-medium">No banner assigned</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex-1 space-y-4">
+                                    <div className="flex flex-wrap gap-3">
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] text-slate-500 uppercase">Image Fit</Label>
+                                            <Label className="text-[10px] text-slate-500 uppercase tracking-widest">Image Fit</Label>
                                             <select
                                                 value={bannerFit}
                                                 onChange={e => setBannerFit(e.target.value)}
-                                                className="block w-28 h-8 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-300 focus:ring-1 focus:ring-sky-500"
+                                                className="block w-32 h-9 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:ring-1 focus:ring-sky-500"
                                             >
                                                 <option value="cover">Zoom (Cover)</option>
                                                 <option value="contain">Whole (Contain)</option>
                                             </select>
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] text-slate-500 uppercase">Position</Label>
+                                            <Label className="text-[10px] text-slate-500 uppercase tracking-widest">Position</Label>
                                             <select
                                                 value={bannerPosition}
                                                 onChange={e => setBannerPosition(e.target.value)}
-                                                className="block w-28 h-8 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-xs text-slate-300 focus:ring-1 focus:ring-sky-500"
+                                                className="block w-28 h-9 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:ring-1 focus:ring-sky-500"
                                             >
                                                 <option value="top">Top</option>
                                                 <option value="center">Center</option>
@@ -807,82 +838,95 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                             </select>
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="flex gap-2 pt-1">
-                                    <label className={cn(
-                                        "cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-all shadow-sm",
-                                        isUploading && "opacity-50 cursor-not-allowed"
-                                    )}>
-                                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                                        {isUploading ? "Upload" : "Upload Image"}
-                                        <input type="file" className="hidden" accept="image/*" onChange={handleBannerUpload} disabled={isUploading} />
-                                    </label>
-
-                                    <div className="relative flex-1 max-w-sm">
-                                        <Input
-                                            placeholder="Or paste external URL..."
-                                            value={bannerUrl || ""}
-                                            onChange={(e) => setBannerUrl(e.target.value.trim() === "" ? null : e.target.value)}
-                                            className="h-10 bg-slate-950 border-slate-800 text-xs pr-10"
-                                        />
-                                        {bannerUrl && (
-                                            <button onClick={() => setBannerUrl(null)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-                                                <XCircle className="w-3.5 h-3.5" />
-                                            </button>
-                                        )}
-                                    </div>                                                        </div>
-                            </div>
-                        </div>                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 mt-6 border-t border-slate-800/50">
-                        <div className="space-y-3">
-                            <Label>Required Classes (Any of the following)</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {AVAILABLE_CLASSES.map(cls => (
-                                    <Badge
-                                        key={cls}
-                                        variant={requiredClasses.includes(cls) ? "default" : "outline"}
-                                        className={requiredClasses.includes(cls) ? "bg-sky-600 cursor-pointer py-1.5 px-3" : "border-slate-700 text-slate-400 cursor-pointer py-1.5 px-3"}
-                                        onClick={() => {
-                                            if (requiredClasses.includes(cls)) {
-                                                setRequiredClasses(requiredClasses.filter(c => c !== cls));
-                                            } else {
-                                                setRequiredClasses([...requiredClasses, cls]);
-                                            }
-                                        }}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <Image
-                                                src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
-                                                alt={cls}
-                                                width={18}
-                                                height={18}
-                                                className="object-contain"
+                                    <div className="flex gap-2">
+                                        <label className={cn(
+                                            "cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-sm font-medium transition-all shadow-sm",
+                                            isUploading && "opacity-50 cursor-not-allowed"
+                                        )}>
+                                            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                            {isUploading ? "Uploading..." : "Upload Image"}
+                                            <input type="file" className="hidden" accept="image/*" onChange={handleBannerUpload} disabled={isUploading} />
+                                        </label>
+                                        <div className="relative flex-1 max-w-sm">
+                                            <Input
+                                                placeholder="Or paste external URL..."
+                                                value={bannerUrl || ""}
+                                                onChange={(e) => setBannerUrl(e.target.value.trim() === "" ? null : e.target.value)}
+                                                className="h-10 bg-slate-950 border-slate-800 text-xs pr-10"
                                             />
-                                            {cls}
+                                            {bannerUrl && (
+                                                <button onClick={() => setBannerUrl(null)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
                                         </div>
-                                    </Badge>
-                                ))}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </CardContent>
+                    </Card>
 
-                        <div className="space-y-3">
-                            <Label>Required Tags (Any of the following)</Label>
-                            <MultiTagCombobox
-                                tags={tags}
-                                values={requiredTags.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
-                                onSelect={(names) => setRequiredTags(names.map(name => {
-                                    const foundTag = tags.find(t => t.name === name);
-                                    return foundTag ? foundTag.id : undefined;
-                                }).filter((id): id is number => id !== undefined))}
-                                placeholder="Search tags..."
-                            />
-                            <p className="text-xs text-slate-500 mt-1">Select required tags for this quest path.</p>
-                        </div>
-                    </div>
+                    {/* Restrictions */}
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-purple-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                    <TagIcon className="w-4 h-4 text-purple-400" />
+                                </div>
+                                Restrictions
+                            </CardTitle>
+                            <CardDescription>Filter which champion classes and tags are allowed in this quest.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-5">
+                            <div className="space-y-3">
+                                <Label className="text-slate-300">Required Classes <span className="text-slate-500 font-normal">(any of the following)</span></Label>
+                                <div className="flex flex-wrap gap-2">
+                                    {AVAILABLE_CLASSES.map(cls => (
+                                        <Badge
+                                            key={cls}
+                                            variant={requiredClasses.includes(cls) ? "default" : "outline"}
+                                            className={requiredClasses.includes(cls) ? "bg-sky-600 cursor-pointer py-1.5 px-3" : "border-slate-700 text-slate-400 cursor-pointer py-1.5 px-3 hover:border-slate-600 hover:text-slate-300 transition-colors"}
+                                            onClick={() => {
+                                                if (requiredClasses.includes(cls)) {
+                                                    setRequiredClasses(requiredClasses.filter(c => c !== cls));
+                                                } else {
+                                                    setRequiredClasses([...requiredClasses, cls]);
+                                                }
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Image
+                                                    src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
+                                                    alt={cls}
+                                                    width={18}
+                                                    height={18}
+                                                    className="object-contain"
+                                                />
+                                                {cls}
+                                            </div>
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="h-px bg-slate-800/60" />
+                            <div className="space-y-3">
+                                <Label className="text-slate-300">Required Tags <span className="text-slate-500 font-normal">(any of the following)</span></Label>
+                                <MultiTagCombobox
+                                    tags={tags}
+                                    values={requiredTags.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
+                                    onSelect={(names) => setRequiredTags(names.map(name => {
+                                        const foundTag = tags.find(t => t.name === name);
+                                        return foundTag ? foundTag.id : undefined;
+                                    }).filter((id): id is number => id !== undefined))}
+                                    placeholder="Search tags..."
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    <div className="flex justify-between items-center pt-2">
+                    {/* Sticky save bar */}
+                    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-4">
                         <Button
                             variant="outline"
                             onClick={handleClearRecommended}
@@ -894,8 +938,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             <Save className="mr-2 h-4 w-4" /> {isSavingSettings ? "Saving..." : "Save Settings"}
                         </Button>
                     </div>
-                </CardContent>
-            </Card>
+
                 </TabsContent>
 
                 <TabsContent value="path" className="mt-6 space-y-6 overflow-visible outline-none focus-visible:outline-none">
