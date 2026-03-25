@@ -461,7 +461,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
                 window.scrollTo({ top: y, behavior: 'smooth' });
             }
-            if (options?.scrollTimeline) {
+            if (options?.scrollTimeline && window.matchMedia('(min-width: 1024px)').matches) {
                 document
                     .getElementById(`admin-timeline-encounter-${encounter.id}`)
                     ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

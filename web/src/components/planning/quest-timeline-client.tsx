@@ -483,35 +483,58 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         return initial;
     });
 
+    // Scroll an encounter card into view, accounting for the sticky team panel
+    const scrollToCard = useCallback((id: string, delay = 0) => {
+        const doScroll = () => {
+            const element = document.getElementById(`encounter-${id}`);
+            if (!element) return;
+            const stickyTeam = document.querySelector('[data-sticky-team]');
+            const offset = stickyTeam
+                ? stickyTeam.getBoundingClientRect().bottom + 12
+                : (window.matchMedia('(min-width: 768px)').matches ? 130 : 70);
+            const rect = element.getBoundingClientRect();
+            window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'smooth' });
+        };
+        delay > 0 ? setTimeout(doScroll, delay) : requestAnimationFrame(doScroll);
+    }, []);
+
     const toggleExpand = (id: string) => {
+        const isOpening = expandedId !== id;
+        if (isOpening) {
+            setShowVideoId(null);
+            const newElement = document.getElementById(`encounter-${id}`);
+            if (newElement) {
+                const stickyTeam = document.querySelector('[data-sticky-team]');
+                const offset = stickyTeam ? stickyTeam.getBoundingClientRect().bottom + 12 : 70;
+                const newRect = newElement.getBoundingClientRect();
+                let targetScroll = window.scrollY + newRect.top - offset;
+
+                // If the currently open card is above the new card in the list,
+                // its collapse will shift the new card upward by (expandedHeight - collapsedHeight).
+                // Pre-subtract that delta so the new card header lands at `offset` once
+                // the animation ends — regardless of whether the old card is on-screen or not.
+                if (expandedId) {
+                    const oldElement = document.getElementById(`encounter-${expandedId}`);
+                    if (oldElement) {
+                        const oldRect = oldElement.getBoundingClientRect();
+                        if (oldRect.top < newRect.top) {
+                            const COLLAPSED_HEIGHT = 100; // encounter card header min-h
+                            const delta = Math.max(0, oldRect.height - COLLAPSED_HEIGHT);
+                            targetScroll -= delta;
+                        }
+                    }
+                }
+
+                window.scrollTo({ top: Math.max(0, targetScroll), behavior: 'instant' });
+            }
+        }
         setExpandedId(prev => prev === id ? null : id);
-        // Reset video state when switching/closing
-        if (expandedId !== id) setShowVideoId(null);
     };
 
     const scrollToEncounter = (id: string) => {
-        // Expand the card first
         setExpandedId(id);
-        setIsTeamExpanded(false); // Optionally collapse team view to see the card better
-        
-        // Wait a small bit for the previous card to start collapsing and the new one to expand
-        // This prevents scrolling to the wrong position due to layout shifts
-        setTimeout(() => {
-            const element = document.getElementById(`encounter-${id}`);
-            if (element) {
-                // Find the header to account for its height (sticky)
-                const stickyHeader = document.querySelector('.sticky.top-\\[68px\\]');
-                const headerHeight = stickyHeader ? stickyHeader.getBoundingClientRect().height + 68 : 140; 
-                
-                const rect = element.getBoundingClientRect();
-                const offsetPosition = rect.top + window.scrollY - headerHeight;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                });
-            }
-        }, 100);
+        setIsTeamExpanded(false);
+        scrollToCard(id, 100);
     };
 
     const filteredGlobalRoster = useMemo(() => {
@@ -619,6 +642,15 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
         // Autoclose the card if a selection was made
         if (newValue !== null) {
+            // Snap to card header instantly BEFORE closing so the collapse animation
+            // plays in-view rather than causing a layout-shift scroll jump
+            const element = document.getElementById(`encounter-${encounterId}`);
+            if (element) {
+                const stickyTeam = document.querySelector('[data-sticky-team]');
+                const offset = stickyTeam ? stickyTeam.getBoundingClientRect().bottom + 12 : 70;
+                const rect = element.getBoundingClientRect();
+                window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'instant' });
+            }
             setExpandedId(null);
         }
 
@@ -984,7 +1016,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             {/* Invisible marker for scroll detection */}
             <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
-            <div className="sticky top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
+            <div data-sticky-team className="sticky top-0 md:top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
                 <motion.div 
                     layout
                     initial={false}
@@ -1072,16 +1104,19 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
                             <AnimatePresence initial={false}>
                                 {isTeamExpanded && (
-                                    <motion.div 
+                                    <motion.div
                                         key="team-expanded-content"
                                         layout
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
                                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                                        className="overflow-hidden px-4 pb-4 cursor-auto"
+                                        className="overflow-hidden cursor-auto"
                                         onClick={(e) => e.stopPropagation()}
                                     >
+                                        <div className="px-4 pb-4 pt-1 max-h-[calc(100svh-60px)] md:max-h-none overflow-y-auto custom-scrollbar"
+                                            style={{ WebkitOverflowScrolling: 'touch' }}
+                                        >
                                         {selectedTeam.length === 0 ? (
                                             <div className="py-8 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
                                                 <div className="p-3 rounded-full bg-slate-800/50 text-slate-500">
@@ -1293,7 +1328,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                     </motion.div>
                                                 )}
                                             </div>
-                                        )}                                    </motion.div>
+                                        )}
+                                        </div>
+                                    </motion.div>
                                 )}
                             </AnimatePresence>
 
