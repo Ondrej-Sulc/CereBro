@@ -970,89 +970,98 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     className="space-y-6 lg:col-span-5 lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:self-start pr-0 lg:pr-2 pb-4 lg:pb-6 custom-scrollbar"
                 >
                     <Card className={cn(
-                        "bg-slate-950/50 border-slate-800 transition-colors",
-                        editingEncounterId ? "border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.05)]" : ""
+                        "bg-slate-950/50 border-slate-800 transition-all duration-200 overflow-hidden",
+                        editingEncounterId ? "border-amber-500/40 shadow-[0_0_24px_rgba(245,158,11,0.07)]" : ""
                     )}>
-                        <CardHeader className="pb-4 space-y-3">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex flex-wrap items-center gap-2 min-w-0">
-                                    <div className="flex items-center gap-0.5 shrink-0 rounded-lg border border-slate-800 bg-slate-900/80 p-0.5">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-40"
-                                            disabled={pathNavDisabled}
-                                            onClick={goToPreviousPathEncounter}
-                                            title={
-                                                pathNavDisabled
-                                                    ? "No encounters on this path"
-                                                    : editingEncounterIndex === -1
-                                                        ? "Edit last encounter"
-                                                        : editingEncounterIndex === 0
-                                                            ? "Back to new encounter"
-                                                            : "Previous encounter"
-                                            }
-                                            aria-label={
-                                                editingEncounterIndex === 0
-                                                    ? "Back to new encounter"
-                                                    : "Previous encounter"
-                                            }
-                                        >
-                                            <ChevronLeft className="h-5 w-5" />
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-9 w-9 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-40"
-                                            disabled={pathNavDisabled}
-                                            onClick={goToNextPathEncounter}
-                                            title={
-                                                pathNavDisabled
-                                                    ? "No encounters on this path"
-                                                    : editingEncounterIndex === -1
-                                                        ? "Edit first encounter"
-                                                        : editingEncounterIndex === sortedPathEncounters.length - 1
-                                                            ? "Back to new encounter"
-                                                            : "Next encounter"
-                                            }
-                                            aria-label={
-                                                editingEncounterIndex === sortedPathEncounters.length - 1
-                                                    ? "Back to new encounter"
-                                                    : "Next encounter"
-                                            }
-                                        >
-                                            <ChevronRight className="h-5 w-5" />
-                                        </Button>
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <CardTitle className={cn("text-lg sm:text-xl", editingEncounterId ? "text-amber-400" : "")}>
-                                            {editingEncounterId ? "Edit Fight/Encounter" : "Add Fight/Encounter"}
-                                        </CardTitle>
-                                        {!pathNavDisabled && editingEncounterIndex >= 0 && (
-                                            <p className="text-[11px] text-slate-500 mt-1 font-medium tabular-nums">
-                                                Fight {editingEncounterIndex + 1} of {sortedPathEncounters.length}
-                                            </p>
-                                        )}
-                                        {!pathNavDisabled && editingEncounterIndex === -1 && (
-                                            <p className="text-[11px] text-slate-500 mt-1">
-                                                Use arrows to jump to an existing fight, or add a new one below.
-                                            </p>
-                                        )}
-                                    </div>
+                        {/* Colored top-edge bar — sky when adding, amber when editing */}
+                        <div className={cn("h-0.5 w-full transition-colors", editingEncounterId ? "bg-amber-500" : "bg-sky-500")} />
+
+                        <CardHeader className="pb-3 pt-4">
+                            <div className="flex items-center gap-3">
+                                {/* Nav arrows + counter pill */}
+                                <div className="flex items-center gap-0.5 shrink-0 rounded-lg border border-slate-800 bg-slate-900/80 p-0.5">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30"
+                                        disabled={pathNavDisabled}
+                                        onClick={goToPreviousPathEncounter}
+                                        title={
+                                            pathNavDisabled ? "No encounters on this path"
+                                                : editingEncounterIndex === -1 ? "Edit last encounter"
+                                                : editingEncounterIndex === 0 ? "Back to new encounter"
+                                                : "Previous encounter"
+                                        }
+                                        aria-label={editingEncounterIndex === 0 ? "Back to new encounter" : "Previous encounter"}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </Button>
+                                    {!pathNavDisabled && (
+                                        <span className="px-2 text-[11px] font-bold tabular-nums text-slate-400 select-none min-w-[48px] text-center">
+                                            {editingEncounterIndex >= 0
+                                                ? `${editingEncounterIndex + 1} / ${sortedPathEncounters.length}`
+                                                : `— / ${sortedPathEncounters.length}`}
+                                        </span>
+                                    )}
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30"
+                                        disabled={pathNavDisabled}
+                                        onClick={goToNextPathEncounter}
+                                        title={
+                                            pathNavDisabled ? "No encounters on this path"
+                                                : editingEncounterIndex === -1 ? "Edit first encounter"
+                                                : editingEncounterIndex === sortedPathEncounters.length - 1 ? "Back to new encounter"
+                                                : "Next encounter"
+                                        }
+                                        aria-label={editingEncounterIndex === sortedPathEncounters.length - 1 ? "Back to new encounter" : "Next encounter"}
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                                {editingEncounterId && (
-                                    <Badge variant="outline" className="text-amber-400 border-amber-500/50 bg-amber-950/20 shrink-0 self-start sm:self-center">
-                                        Editing
-                                    </Badge>
-                                )}
+
+                                {/* Title + subtitle */}
+                                <div className="min-w-0 flex-1">
+                                    <CardTitle className={cn("text-base leading-tight", editingEncounterId ? "text-amber-400" : "text-slate-100")}>
+                                        {editingEncounterId
+                                            ? (() => {
+                                                const enc = sortedPathEncounters[editingEncounterIndex];
+                                                const name = enc?.defender?.name;
+                                                return name ? `Editing: ${name}` : "Edit Encounter";
+                                              })()
+                                            : "New Encounter"}
+                                    </CardTitle>
+                                    <p className="text-[11px] text-slate-500 mt-0.5">
+                                        {editingEncounterId
+                                            ? `Fight #${effectiveSequence} · sequence ${effectiveSequence}`
+                                            : pathNavDisabled
+                                                ? "No encounters yet — add the first one below."
+                                                : "Use arrows to browse existing fights, or fill in below to add new."}
+                                    </p>
+                                </div>
+
+                                {/* State badge */}
+                                <Badge variant="outline" className={cn(
+                                    "shrink-0 text-[10px] font-bold uppercase tracking-wider border px-2 py-0.5",
+                                    editingEncounterId
+                                        ? "text-amber-400 border-amber-500/40 bg-amber-950/20"
+                                        : "text-sky-400 border-sky-500/30 bg-sky-950/20"
+                                )}>
+                                    {editingEncounterId ? "Editing" : "New"}
+                                </Badge>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 gap-4">
+
+                        <CardContent className="flex flex-col gap-3 p-0 pb-0">
+                            {/* ── Core fields ─────────────────────────────── */}
+                            <div className="px-6 py-4 space-y-4">
                                 <div className="space-y-2">
-                                    <Label className="text-sky-400 font-bold">Defender</Label>
+                                    <Label className="text-slate-300 font-semibold">
+                                        Defender <span className="text-red-500">*</span>
+                                    </Label>
                                     <ChampionCombobox
                                         id="defender-search-input"
                                         champions={champions}
@@ -1061,197 +1070,223 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         placeholder="Search champions..."
                                     />
                                 </div>
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label>Generic Video Guide URL</Label>
-                                    <Input
-                                        value={videoUrl}
-                                        onChange={e => setVideoUrl(e.target.value)}
-                                        placeholder="https://www.youtube.com/watch?v=..."
-                                        className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
-                                    />
-                                </div>
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label>Creator-Specific Video Guides</Label>
-                                    <div className="flex flex-col gap-3 p-3 bg-slate-900 border border-slate-800 rounded-lg">
-                                        {videos.map((v, i) => (
-                                            <div key={i} className="flex items-center gap-3 p-2 bg-slate-950 border border-slate-800 rounded-md group">
-                                                {v.playerAvatar ? (
-                                                    <img src={v.playerAvatar} alt={v.playerName || "Player"} className="w-8 h-8 rounded-full border border-slate-700" />
-                                                ) : (
-                                                    <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-500">
-                                                        {(v.playerName || "?").charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
-                                                <div className="flex-1 flex flex-col min-w-0">
-                                                    <span className="text-sm font-bold text-slate-200 truncate">{v.playerName || "Unknown Player"}</span>
-                                                    <span className="text-xs text-sky-500/70 truncate hover:text-sky-400 cursor-pointer" onClick={() => window.open(v.videoUrl, '_blank')}>{v.videoUrl}</span>
-                                                </div>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon" 
-                                                    onClick={() => setVideos(videos.filter((_, idx) => idx !== i))} 
-                                                    className="text-slate-500 hover:text-red-400 hover:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        ))}
 
-                                        <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
-                                            <Input
-                                                id="new-video-url"
-                                                placeholder="Video URL (https://youtube.com/...)"
-                                                className="bg-slate-950 border-slate-800 focus-visible:ring-sky-500"
-                                            />
-                                            <AsyncPlayerSearchCombobox
-                                                value=""
-                                                onSelect={(id, name, avatar) => {
-                                                    const urlInput = document.getElementById("new-video-url") as HTMLInputElement;
-                                                    if (id && urlInput?.value) {
-                                                        if (videos.some(v => v.videoUrl === urlInput.value && v.playerId === id)) {
-                                                            toast({ title: "Duplicate", description: "This video by this creator is already added.", variant: "destructive" });
-                                                            return;
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-slate-300 font-semibold">Quick Tips</Label>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-7 text-xs border-indigo-500/30 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/30"
+                                            onClick={handleFormatTips}
+                                            disabled={!tips || isFormattingTips}
+                                        >
+                                            {isFormattingTips ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1.5" />}
+                                            Auto-Format (AI)
+                                        </Button>
+                                    </div>
+                                    <Textarea
+                                        value={tips}
+                                        onChange={e => setTips(e.target.value)}
+                                        placeholder="e.g. Bait SP1. Needs PURIFY champion."
+                                        className="bg-slate-900 border-slate-800 min-h-[90px] focus-visible:ring-sky-500 resize-y text-sm"
+                                    />
+                                    <p className="text-[11px] text-slate-600">Markdown supported.</p>
+                                </div>
+                            </div>
+
+                            {/* ── Video guides panel ───────────────────────── */}
+                            <div className="px-4">
+                            <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden">
+                                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/60 bg-slate-900/60">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Video Guides</span>
+                                </div>
+                                <div className="p-3 space-y-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Generic URL</Label>
+                                        <Input
+                                            value={videoUrl}
+                                            onChange={e => setVideoUrl(e.target.value)}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            className="bg-slate-950 border-slate-800 focus-visible:ring-sky-500 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Creator-Specific</Label>
+                                        <div className="space-y-2">
+                                            {videos.map((v, i) => (
+                                                <div key={i} className="flex items-center gap-3 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg group">
+                                                    {v.playerAvatar ? (
+                                                        <img src={v.playerAvatar} alt={v.playerName || "Player"} className="w-7 h-7 rounded-full border border-slate-700 shrink-0" />
+                                                    ) : (
+                                                        <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
+                                                            {(v.playerName || "?").charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex-1 flex flex-col min-w-0">
+                                                        <span className="text-xs font-semibold text-slate-200 truncate">{v.playerName || "Unknown Player"}</span>
+                                                        <span className="text-[11px] text-sky-500/70 truncate hover:text-sky-400 cursor-pointer" onClick={() => window.open(v.videoUrl, '_blank')}>{v.videoUrl}</span>
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setVideos(videos.filter((_, idx) => idx !== i))}
+                                                        className="w-7 h-7 text-slate-600 hover:text-red-400 hover:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                            <div className="flex flex-col gap-2 pt-1">
+                                                <Input
+                                                    id="new-video-url"
+                                                    placeholder="Video URL (https://youtube.com/...)"
+                                                    className="bg-slate-950 border-slate-800 focus-visible:ring-sky-500 text-sm"
+                                                />
+                                                <AsyncPlayerSearchCombobox
+                                                    value=""
+                                                    onSelect={(id, name, avatar) => {
+                                                        const urlInput = document.getElementById("new-video-url") as HTMLInputElement;
+                                                        if (id && urlInput?.value) {
+                                                            if (videos.some(v => v.videoUrl === urlInput.value && v.playerId === id)) {
+                                                                toast({ title: "Duplicate", description: "This video by this creator is already added.", variant: "destructive" });
+                                                                return;
+                                                            }
+                                                            setVideos([...videos, { videoUrl: urlInput.value, playerId: id, playerName: name, playerAvatar: avatar }]);
+                                                            urlInput.value = "";
+                                                        } else if (!urlInput?.value) {
+                                                            toast({ title: "Error", description: "Please enter a video URL first.", variant: "destructive" });
                                                         }
-                                                        setVideos([...videos, { videoUrl: urlInput.value, playerId: id, playerName: name, playerAvatar: avatar }]);
-                                                        urlInput.value = "";
-                                                    } else if (!urlInput?.value) {
-                                                        toast({ title: "Error", description: "Please enter a video URL first.", variant: "destructive" });
-                                                    }
-                                                }}
-                                                placeholder="Select creator to add their video..."
-                                            />
+                                                    }}
+                                                    placeholder="Select creator to add their video..."
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label>Quick Tips (Markdown supported)</Label>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 text-xs border-indigo-500/30 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/30"
-                                        onClick={handleFormatTips}
-                                        disabled={!tips || isFormattingTips}
-                                    >
-                                        {isFormattingTips ? <Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> : <Wand2 className="w-3 h-3 mr-1.5" />}
-                                        Auto-Format (AI)
-                                    </Button>
-                                </div>
-                                <Textarea
-                                    value={tips}
-                                    onChange={e => setTips(e.target.value)}
-                                    placeholder="e.g. Bait SP1. Needs PURIFY champion."
-                                    className="bg-slate-900 border-slate-800 min-h-[100px] focus-visible:ring-sky-500 resize-y"
-                                />
                             </div>
 
-                            <div className="space-y-4 pt-4 border-t border-slate-800/50">
-                                <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                                    <Badge variant="secondary" className="bg-slate-800 text-slate-400">Optional</Badge>
-                                    Encounter Specifics
-                                </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Required Tags</Label>
-                                        <MultiTagCombobox
-                                            tags={tags}
-                                            values={encounterRequiredTagIds.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
-                                            onSelect={(names) => setEncounterRequiredTagIds(names.map(name => {
-                                                const foundTag = tags.find(t => t.name === name);
-                                                return foundTag ? foundTag.id : undefined;
-                                            }).filter((id): id is number => id !== undefined))}
-                                            placeholder="Required for this fight..."
+                            {/* ── Encounter specifics panel ────────────────── */}
+                            <div className="px-4 pb-2">
+                            <div className="rounded-xl border border-purple-900/30 bg-purple-950/10 overflow-hidden">
+                                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-purple-900/20 bg-purple-950/20">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                                    <span className="text-[11px] font-bold uppercase tracking-widest text-purple-400">Encounter Specifics</span>
+                                    <span className="ml-auto text-[10px] text-slate-500 font-medium">Optional</span>
+                                </div>
+                                <div className="p-3 space-y-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Required Tags</Label>
+                                            <MultiTagCombobox
+                                                tags={tags}
+                                                values={encounterRequiredTagIds.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
+                                                onSelect={(names) => setEncounterRequiredTagIds(names.map(name => {
+                                                    const foundTag = tags.find(t => t.name === name);
+                                                    return foundTag ? foundTag.id : undefined;
+                                                }).filter((id): id is number => id !== undefined))}
+                                                placeholder="Required for this fight..."
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Recommended Tags</Label>
+                                            <MultiTagCombobox
+                                                tags={tags}
+                                                values={recommendedTags}
+                                                onSelect={setRecommendedTags}
+                                                placeholder="Recommended for this fight..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Recommended Champions</Label>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
+                                                        <ClipboardPaste className="w-3 h-3 mr-1" /> Bulk Paste
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-80 p-3 bg-slate-950 border-slate-800" align="end">
+                                                    <div className="space-y-2">
+                                                        <h4 className="font-medium text-sm leading-none">Bulk Paste Champions</h4>
+                                                        <p className="text-xs text-slate-500">Paste a list of champion names, one per line.</p>
+                                                        <Textarea
+                                                            value={bulkChampionText}
+                                                            onChange={(e) => setBulkChampionText(e.target.value)}
+                                                            placeholder="e.g.&#10;Hercules&#10;Hulkling&#10;Kitty Pryde"
+                                                            className="h-32 text-xs bg-slate-900 border-slate-800"
+                                                        />
+                                                        <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white" onClick={handleBulkChampionParse}>Parse & Add</Button>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                        <MultiChampionCombobox
+                                            champions={champions}
+                                            values={recommendedChampionIds}
+                                            onSelect={setRecommendedChampionIds}
+                                            placeholder="Search champions..."
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Recommended Tags</Label>
-                                        <MultiTagCombobox
-                                            tags={tags}
-                                            values={recommendedTags}
-                                            onSelect={setRecommendedTags}
-                                            placeholder="Recommended for this fight..."
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Node Modifiers</Label>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
+                                                        <ClipboardPaste className="w-3 h-3 mr-1" /> Bulk Paste
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-80 p-3 bg-slate-950 border-slate-800" align="end">
+                                                    <div className="space-y-2">
+                                                        <h4 className="font-medium text-sm leading-none">Bulk Paste Node Modifiers</h4>
+                                                        <p className="text-xs text-slate-500">Paste a list of node modifiers, one per line.</p>
+                                                        <Textarea
+                                                            value={bulkNodeText}
+                                                            onChange={(e) => setBulkNodeText(e.target.value)}
+                                                            placeholder="e.g.&#10;Stun Immunity&#10;Bleed Vulnerability"
+                                                            className="h-32 text-xs bg-slate-900 border-slate-800"
+                                                        />
+                                                        <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white" onClick={handleBulkNodeParse}>Parse & Add</Button>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                        <MultiNodeModifierCombobox
+                                            modifiers={nodeModifiers}
+                                            values={nodeModifierIds}
+                                            onSelect={setNodeModifierIds}
+                                            placeholder="Search nodes..."
                                         />
                                     </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label>Recommended Champions</Label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
-                                                    <ClipboardPaste className="w-3 h-3 mr-1" /> Bulk Paste
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-80 p-3 bg-slate-950 border-slate-800" align="end">
-                                                <div className="space-y-2">
-                                                    <h4 className="font-medium text-sm leading-none">Bulk Paste Champions</h4>
-                                                    <p className="text-xs text-slate-500">Paste a list of champion names, one per line.</p>
-                                                    <Textarea
-                                                        value={bulkChampionText}
-                                                        onChange={(e) => setBulkChampionText(e.target.value)}
-                                                        placeholder="e.g.&#10;Hercules&#10;Hulkling&#10;Kitty Pryde"
-                                                        className="h-32 text-xs bg-slate-900 border-slate-800"
-                                                    />
-                                                    <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white" onClick={handleBulkChampionParse}>Parse & Add</Button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    <MultiChampionCombobox
-                                        champions={champions}
-                                        values={recommendedChampionIds}
-                                        onSelect={setRecommendedChampionIds}
-                                        placeholder="Search champions..."
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label>Node Modifiers</Label>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
-                                                    <ClipboardPaste className="w-3 h-3 mr-1" /> Bulk Paste
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-80 p-3 bg-slate-950 border-slate-800" align="end">
-                                                <div className="space-y-2">
-                                                    <h4 className="font-medium text-sm leading-none">Bulk Paste Node Modifiers</h4>
-                                                    <p className="text-xs text-slate-500">Paste a list of node modifiers, one per line.</p>
-                                                    <Textarea
-                                                        value={bulkNodeText}
-                                                        onChange={(e) => setBulkNodeText(e.target.value)}
-                                                        placeholder="e.g.&#10;Stun Immunity&#10;Bleed Vulnerability"
-                                                        className="h-32 text-xs bg-slate-900 border-slate-800"
-                                                    />
-                                                    <Button size="sm" className="w-full bg-sky-600 hover:bg-sky-500 text-white" onClick={handleBulkNodeParse}>Parse & Add</Button>
-                                                </div>
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                    <MultiNodeModifierCombobox
-                                        modifiers={nodeModifiers}
-                                        values={nodeModifierIds}
-                                        onSelect={setNodeModifierIds}
-                                        placeholder="Search nodes..."
-                                    />
                                 </div>
                             </div>
+                            </div>
 
-                            <div className="flex gap-3 pt-4 border-t border-slate-800/50 mt-4">
+                            {/* ── Action row ───────────────────────────────── */}
+                            <div className={cn(
+                                "px-4 py-3 border-t flex gap-3",
+                                editingEncounterId ? "border-amber-500/20 bg-amber-950/10" : "border-slate-800/60 bg-slate-900/30"
+                            )}>
                                 <Button
                                     onClick={handleAddOrUpdateEncounter}
                                     className={cn(
-                                        "flex-1 text-white shadow-md transition-all",
-                                        editingEncounterId ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/20" : "bg-sky-600 hover:bg-sky-500 shadow-sky-900/20"
+                                        "flex-1 font-semibold text-white shadow-md transition-all",
+                                        editingEncounterId
+                                            ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/30"
+                                            : "bg-sky-600 hover:bg-sky-500 shadow-sky-900/30"
                                     )}
                                     disabled={!effectiveSequence}
                                 >
-                                    {editingEncounterId ? <><Save className="mr-2 h-4 w-4" /> Save Changes</> : <><Plus className="mr-2 h-4 w-4" /> Add Encounter</>}
+                                    {editingEncounterId
+                                        ? <><Save className="mr-2 h-4 w-4" /> Save Changes</>
+                                        : <><Plus className="mr-2 h-4 w-4" /> Add Encounter</>}
                                 </Button>
                                 {editingEncounterId && (
-                                    <Button onClick={cancelEditing} variant="outline" className="border-slate-700 hover:bg-slate-800 hover:text-slate-300">
+                                    <Button onClick={cancelEditing} variant="outline" className="border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
                                         Cancel
                                     </Button>
                                 )}

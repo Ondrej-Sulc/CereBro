@@ -4,15 +4,15 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { QuestPlan, QuestCategory, Player, QuestPlanStatus, Tag, ChampionClass } from "@prisma/client";
-import { QuestWithRelations, QuestSummary } from "@/types/quests";
+import { QuestCategory, QuestPlanStatus } from "@prisma/client";
+import { QuestSummary } from "@/types/quests";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning, Tag as TagIcon, Trophy, Youtube, Loader2 } from "lucide-react";
+import { Trash2, Plus, Edit, FolderPlus, Map, Search, X, FolderTree, Copy, Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning, Tag as TagIcon, Trophy, Youtube, Loader2, EyeOff, Eye, Archive } from "lucide-react";
 import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan } from "@/app/actions/quests";
 import { cn } from "@/lib/utils";
 
@@ -28,13 +28,10 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
     const [title, setTitle] = useState("");
     const [categoryId, setCategoryId] = useState<string>("none");
 
-    // Category state
     const [categoryName, setCategoryName] = useState("");
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
-    // Search state
     const [searchQuery, setSearchQuery] = useState("");
-
     const [isCreating, setIsCreating] = useState(false);
 
     const handleAdd = async () => {
@@ -111,42 +108,48 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
         );
     }, [initialQuests, searchQuery]);
 
-    const getStatusBadge = (status: QuestPlanStatus) => {
+    const getStatusConfig = (status: QuestPlanStatus) => {
         switch (status) {
             case QuestPlanStatus.DRAFT:
-                return <Badge variant="outline" className="text-amber-400 border-amber-500/50 bg-amber-950/80 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50">Draft</Badge>;
+                return { label: "Draft", icon: EyeOff, className: "text-amber-400 border-amber-500/40 bg-amber-950/60", barClass: "bg-amber-500" };
             case QuestPlanStatus.VISIBLE:
-                return <Badge variant="outline" className="text-emerald-400 border-emerald-500/50 bg-emerald-950/80 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50">Visible</Badge>;
+                return { label: "Visible", icon: Eye, className: "text-emerald-400 border-emerald-500/40 bg-emerald-950/60", barClass: "bg-emerald-500" };
             case QuestPlanStatus.ARCHIVED:
-                return <Badge variant="outline" className="text-slate-300 border-slate-600 bg-slate-900 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50">Archived</Badge>;
+                return { label: "Archived", icon: Archive, className: "text-slate-400 border-slate-600/60 bg-slate-900/80", barClass: "bg-slate-600" };
         }
     };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Sidebar: Create Forms */}
-            <div className="lg:col-span-4 space-y-6">
-                <Card className="bg-slate-950/80 border-sky-900/50 shadow-lg shadow-sky-900/10">
-                    <CardHeader className="pb-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Map className="w-5 h-5 text-sky-400" />
-                            <CardTitle>New Quest</CardTitle>
-                        </div>
-                        <CardDescription>Initialize a new quest plan.</CardDescription>
+
+            {/* ── Sidebar ────────────────────────────────────────── */}
+            <div className="lg:col-span-4 space-y-4">
+
+                {/* New Quest card */}
+                <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                    <div className="h-0.5 w-full bg-sky-500" />
+                    <CardHeader className="pb-3 pt-4">
+                        <CardTitle className="flex items-center gap-2.5 text-base">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                                <Map className="w-4 h-4 text-sky-400" />
+                            </div>
+                            New Quest
+                        </CardTitle>
+                        <CardDescription>Initialize a new quest plan and start building.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label>Quest Title</Label>
+                            <Label className="text-slate-300">Quest Title</Label>
                             <Input
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
+                                onKeyDown={e => e.key === "Enter" && handleAdd()}
                                 placeholder="e.g. 8.1.3 Psycho-Man Path"
                                 className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
                             />
                         </div>
-
                         <div className="space-y-2">
-                            <Label>Category</Label>
+                            <Label className="text-slate-300">Category</Label>
                             <Select value={categoryId} onValueChange={setCategoryId}>
                                 <SelectTrigger className="w-full bg-slate-900 border-slate-800 focus:ring-sky-500">
                                     <SelectValue placeholder="Select Category" />
@@ -159,63 +162,82 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                 </SelectContent>
                             </Select>
                         </div>
-
                         <Button
                             onClick={handleAdd}
-                            className="w-full bg-sky-600 hover:bg-sky-500 text-white mt-2 transition-all shadow-md shadow-sky-900/20"
+                            className="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold transition-all shadow-md shadow-sky-900/30 hover:shadow-sky-900/50"
                             disabled={!title || isCreating}
                         >
-                            {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />} {isCreating ? "Creating..." : "Create & Build"}
+                            {isCreating
+                                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating…</>
+                                : <><Plus className="mr-2 h-4 w-4" /> Create &amp; Build</>}
                         </Button>
                     </CardContent>
                 </Card>
 
-                {/* Create Category Card */}
-                <Card className="bg-slate-950/50 border-slate-800">
-                    <CardHeader className="pb-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FolderTree className="w-5 h-5 text-indigo-400" />
-                            <CardTitle>New Category</CardTitle>
-                        </div>
-                        <CardDescription>Group quests together.</CardDescription>
+                {/* New Category card */}
+                <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                    <div className="h-0.5 w-full bg-indigo-500" />
+                    <CardHeader className="pb-3 pt-4">
+                        <CardTitle className="flex items-center gap-2.5 text-base">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                                <FolderTree className="w-4 h-4 text-indigo-400" />
+                            </div>
+                            New Category
+                        </CardTitle>
+                        <CardDescription>
+                            Group related quests together.
+                            {categories.length > 0 && (
+                                <span className="ml-1 text-indigo-400/70">{categories.length} existing.</span>
+                            )}
+                        </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label>Category Name</Label>
+                            <Label className="text-slate-300">Category Name</Label>
                             <Input
                                 value={categoryName}
                                 onChange={e => setCategoryName(e.target.value)}
+                                onKeyDown={e => e.key === "Enter" && handleAddCategory()}
                                 placeholder="e.g. Story Quests Vol. 8"
                                 className="bg-slate-900 border-slate-800 focus-visible:ring-indigo-500"
                             />
                         </div>
-
                         <Button
                             onClick={handleAddCategory}
-                            variant="secondary"
-                            className="w-full mt-2"
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-all shadow-md shadow-indigo-900/30"
                             disabled={!categoryName || isCreatingCategory}
                         >
-                            <FolderPlus className="mr-2 h-4 w-4" /> Add Category
+                            {isCreatingCategory
+                                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating…</>
+                                : <><FolderPlus className="mr-2 h-4 w-4" /> Add Category</>}
                         </Button>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Main Area: List */}
+            {/* ── Main quest list ────────────────────────────────── */}
             <div className="lg:col-span-8 flex flex-col gap-4">
-                {/* Header & Search */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                    <div>
-                        <h2 className="text-xl font-semibold text-slate-200">Existing Quests</h2>
-                        <p className="text-sm text-slate-400">{initialQuests.length} total quests available.</p>
-                    </div>
 
-                    <div className="relative w-full sm:w-72">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                {/* Header bar */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-4 py-3 rounded-xl border border-slate-800 bg-slate-950/60">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 shrink-0">
+                            <Map className="w-4 h-4 text-sky-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-base font-bold text-slate-200 leading-tight">Quest Plans</h2>
+                            <p className="text-[11px] text-slate-500">
+                                {filteredQuests.length !== initialQuests.length
+                                    ? `${filteredQuests.length} of ${initialQuests.length} shown`
+                                    : `${initialQuests.length} total`}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
                         <Input
-                            placeholder="Search quests..."
-                            className="pl-9 pr-9 bg-slate-900 border-slate-800"
+                            placeholder="Search quests or categories…"
+                            className="pl-8 pr-8 h-9 bg-slate-900 border-slate-800 text-sm"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -224,25 +246,39 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                                 onClick={() => setSearchQuery("")}
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-3.5 w-3.5" />
                             </button>
                         )}
                     </div>
                 </div>
 
-                {/* Grid List */}
+                {/* Empty state */}
                 {filteredQuests.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
-                        <Map className="h-12 w-12 text-slate-700 mb-4" />
-                        <p className="text-slate-400 font-medium">No quests found.</p>
-                        {searchQuery && <p className="text-sm text-slate-500 mt-1">Try adjusting your search query.</p>}
+                    <div className="flex flex-col items-center justify-center py-20 border border-dashed border-slate-800 rounded-xl bg-slate-950/20 text-center gap-3">
+                        <div className="w-14 h-14 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
+                            <Map className="h-7 w-7 text-slate-700" />
+                        </div>
+                        <div>
+                            <p className="text-slate-300 font-semibold">No quests found</p>
+                            {searchQuery
+                                ? <p className="text-sm text-slate-500 mt-1">No results for &ldquo;{searchQuery}&rdquo; — try a different search.</p>
+                                : <p className="text-sm text-slate-500 mt-1">Create your first quest using the form on the left.</p>}
+                        </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-max">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-max">
                         {filteredQuests.map(quest => {
                             const fightCount = quest.encounters?.length || 0;
+                            const statusConfig = getStatusConfig(quest.status);
+                            const StatusIcon = statusConfig.icon;
+
                             return (
                                 <Card key={quest.id} className="bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all flex flex-col group overflow-hidden relative">
+
+                                    {/* Status accent bar */}
+                                    <div className={cn("h-0.5 w-full transition-colors", statusConfig.barClass)} />
+
+                                    {/* Banner */}
                                     <div className="relative aspect-[21/9] w-full overflow-hidden bg-slate-900 border-b border-slate-800">
                                         {quest.bannerUrl ? (
                                             <Image
@@ -257,147 +293,160 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                                 )}
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950 opacity-40">
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
                                                 <ImageIcon className="w-8 h-8 text-slate-800" />
                                             </div>
                                         )}
-                                        {/* Subtle Overlay Gradient for the bottom info */}
-                                        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90" />
+                                        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-                                        <div className="absolute bottom-2.5 left-4 flex gap-2 z-10">
-                                            {getStatusBadge(quest.status)}
+                                        {/* Status badge */}
+                                        <div className="absolute bottom-2.5 left-3 z-10">
+                                            <Badge variant="outline" className={cn("flex items-center gap-1 font-black uppercase text-[9px] tracking-widest px-2 py-0.5 shadow-lg shadow-black/50", statusConfig.className)}>
+                                                <StatusIcon className="w-2.5 h-2.5" />
+                                                {statusConfig.label}
+                                            </Badge>
                                         </div>
 
-                                        <div className="absolute bottom-2.5 right-4 flex gap-3 z-10">
-                                            <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 shadow-xl" title={`${fightCount} Fights`}>
-                                                <Swords className="w-3.5 h-3.5 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                                                <span className="text-[11px] font-black uppercase tracking-tight">{fightCount} Fights</span>
+                                        {/* Fight count */}
+                                        <div className="absolute bottom-2.5 right-3 z-10">
+                                            <div className="flex items-center gap-1.5 text-white bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/10 shadow-xl">
+                                                <Swords className="w-3 h-3 text-red-400" />
+                                                <span className="text-[10px] font-black uppercase tracking-tight">{fightCount} {fightCount === 1 ? "Fight" : "Fights"}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <CardContent className="p-5 flex flex-col flex-1 gap-4">
-                                        <div className="space-y-1.5">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <Badge variant="secondary" className="bg-slate-900/80 border border-slate-800 text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 mb-1">
-                                                    {quest.category ? quest.category.name : "Uncategorized"}
-                                                </Badge>
-                                                {quest.videoUrl && (
-                                                    <Youtube className="w-4 h-4 text-red-600 shrink-0 mb-1" />
-                                                )}
-                                            </div>
-                                            <CardTitle className="text-lg font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-none">
-                                                {quest.title}
-                                            </CardTitle>
+                                    <CardContent className="p-4 flex flex-col flex-1 gap-3">
 
-                                            {/* Creators Bar */}
-                                            <div className="flex items-center justify-between gap-2 mt-2.5">
-                                                {quest.creators && quest.creators.length > 0 ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex -space-x-1.5">
-                                                            {quest.creators.slice(0, 3).map(c => (
-                                                                <div key={c.id} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden bg-slate-800" title={c.name}>
-                                                                    {c.image ? (
-                                                                        <Image src={c.image} alt={c.name} fill className="object-cover" />
-                                                                    ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center text-[7px] font-black text-white uppercase">
-                                                                            {c.name?.trim() ? c.name.trim().charAt(0) : '?'}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                                            By {quest.creators.length === 1 ? quest.creators[0].name : `${quest.creators.length} Creators`}
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                                        By {quest.creator?.ingameName || "Cerebro Admin"}
-                                                    </p>
-                                                )}
-
-                                                {quest._count && quest._count.playerPlans > 0 && (
-                                                    <div className="flex items-center gap-1 text-slate-500 bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-800/50 shadow-sm" title={`${quest._count.playerPlans} players using this plan`}>
-                                                        <Users className="w-2.5 h-2.5 text-sky-500/70" />
-                                                        <span className="text-[9px] font-black">{quest._count.playerPlans}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Metadata Grid */}
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {/* Star Req */}
-                                            {(quest.minStarLevel || quest.maxStarLevel) && (
-                                                <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-1.5 flex items-center gap-2">
-                                                    <Trophy className="w-3 h-3 text-amber-500" />
-                                                    <span className="text-[10px] font-black text-amber-500">
-                                                        {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
-                                                    </span>
+                                        {/* Category + video indicator */}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <Badge variant="secondary" className="flex items-center gap-1 bg-slate-900 border border-slate-800 text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 text-slate-400">
+                                                <FolderTree className="w-2.5 h-2.5 text-indigo-500/70" />
+                                                {quest.category ? quest.category.name : "Uncategorized"}
+                                            </Badge>
+                                            {quest.videoUrl && (
+                                                <div className="flex items-center gap-1 text-red-500/80 text-[9px] font-bold uppercase tracking-wider">
+                                                    <Youtube className="w-3 h-3" />
+                                                    Guide
                                                 </div>
                                             )}
+                                        </div>
 
-                                            {/* Classes */}
-                                            {quest.requiredClasses && quest.requiredClasses.length > 0 && (
-                                                <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-1.5 flex items-center gap-2">
-                                                    <ShieldAlert className="w-3 h-3 text-sky-500" />
-                                                    <div className="flex gap-0.5">
-                                                        {quest.requiredClasses.slice(0, 3).map(cls => (
-                                                            <div key={cls} className="relative w-2.5 h-2.5">
-                                                                <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                        {/* Title */}
+                                        <CardTitle className="text-base font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-snug">
+                                            {quest.title}
+                                        </CardTitle>
+
+                                        {/* Creators */}
+                                        <div className="flex items-center justify-between gap-2">
+                                            {quest.creators && quest.creators.length > 0 ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex -space-x-1.5">
+                                                        {quest.creators.slice(0, 3).map(c => (
+                                                            <div key={c.id} className="relative w-5 h-5 rounded-full border border-slate-900 overflow-hidden bg-slate-800" title={c.name}>
+                                                                {c.image ? (
+                                                                    <Image src={c.image} alt={c.name} fill className="object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-[7px] font-black text-white uppercase">
+                                                                        {c.name?.trim() ? c.name.trim().charAt(0) : "?"}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>
+                                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                        By {quest.creators.length === 1 ? quest.creators[0].name : `${quest.creators.length} Creators`}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                                    By {quest.creator?.ingameName || "Cerebro Admin"}
+                                                </p>
+                                            )}
+                                            {quest._count && quest._count.playerPlans > 0 && (
+                                                <div className="flex items-center gap-1 text-slate-500 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800/60" title={`${quest._count.playerPlans} players using this plan`}>
+                                                    <Users className="w-2.5 h-2.5 text-sky-500/60" />
+                                                    <span className="text-[9px] font-black">{quest._count.playerPlans}</span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* Tags */}
-                                        {quest.requiredTags && quest.requiredTags.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {quest.requiredTags.slice(0, 3).map(tag => (
-                                                    <Badge key={tag.id} variant="outline" className="bg-slate-900/30 text-slate-400 border-slate-800 text-[8px] uppercase font-black px-1.5 py-0 h-4">
-                                                        <TagIcon className="w-2 h-2 mr-1 text-slate-600" /> {tag.name}
-                                                    </Badge>
-                                                ))}
-                                                {quest.requiredTags.length > 3 && <span className="text-[8px] text-slate-600 font-bold self-center">+{quest.requiredTags.length - 3}</span>}
+                                        {/* Metadata chips */}
+                                        {((quest.minStarLevel || quest.maxStarLevel) || (quest.requiredClasses && quest.requiredClasses.length > 0)) && (
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {(quest.minStarLevel || quest.maxStarLevel) && (
+                                                    <div className="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800/60 rounded-md px-2 py-1">
+                                                        <Trophy className="w-3 h-3 text-amber-500" />
+                                                        <span className="text-[10px] font-black text-amber-400">
+                                                            {quest.minStarLevel && quest.maxStarLevel
+                                                                ? `${quest.minStarLevel}–${quest.maxStarLevel}★`
+                                                                : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {quest.requiredClasses && quest.requiredClasses.length > 0 && (
+                                                    <div className="flex items-center gap-1.5 bg-slate-900/60 border border-slate-800/60 rounded-md px-2 py-1">
+                                                        <ShieldAlert className="w-3 h-3 text-sky-500" />
+                                                        <div className="flex gap-0.5">
+                                                            {quest.requiredClasses.slice(0, 4).map(cls => (
+                                                                <div key={cls} className="relative w-3 h-3">
+                                                                    <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
+                                        {/* Required tags */}
+                                        {quest.requiredTags && quest.requiredTags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {quest.requiredTags.slice(0, 3).map(tag => (
+                                                    <Badge key={tag.id} variant="outline" className="bg-slate-900/30 text-slate-500 border-slate-800 text-[8px] uppercase font-black px-1.5 py-0 h-4">
+                                                        <TagIcon className="w-2 h-2 mr-1 text-slate-600" />{tag.name}
+                                                    </Badge>
+                                                ))}
+                                                {quest.requiredTags.length > 3 && (
+                                                    <span className="text-[8px] text-slate-600 font-bold self-center">+{quest.requiredTags.length - 3}</span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Empty plan warning */}
                                         {fightCount === 0 && (
-                                            <div className="flex items-center gap-1.5 text-amber-500/80 bg-amber-500/5 border border-amber-500/20 p-2 rounded-lg">
-                                                <FileWarning className="w-3.5 h-3.5" />
-                                                <span className="text-[10px] font-black uppercase tracking-wider">Empty Plan - Needs fights</span>
+                                            <div className="flex items-center gap-2 text-amber-400 bg-amber-500/8 border border-amber-500/25 px-3 py-2 rounded-lg">
+                                                <FileWarning className="w-3.5 h-3.5 shrink-0" />
+                                                <span className="text-[10px] font-black uppercase tracking-wider">Empty — no fights added yet</span>
                                             </div>
                                         )}
                                     </CardContent>
 
-                                    <CardFooter className="p-4 bg-slate-900/40 border-t border-slate-800/50 flex gap-2">
+                                    {/* Footer */}
+                                    <CardFooter className="p-3 bg-slate-900/50 border-t border-slate-800/60 flex gap-2">
                                         <Button
-                                            variant="secondary"
-                                            className="flex-1 bg-slate-800 hover:bg-slate-700 h-9 font-bold text-xs uppercase tracking-widest"
+                                            className="flex-1 bg-slate-800 hover:bg-sky-600 hover:text-white text-slate-300 h-9 font-bold text-xs uppercase tracking-widest transition-all border border-slate-700 hover:border-sky-500 shadow-sm"
                                             onClick={() => router.push(`/admin/quests/${quest.id}`)}
                                         >
-                                            <Edit className="h-4 w-4 mr-2 text-sky-400" /> Edit
+                                            <Edit className="h-3.5 w-3.5 mr-2" /> Edit Quest
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => handleDuplicate(quest.id)}
-                                            className="text-slate-400 hover:text-indigo-400 hover:bg-indigo-950/30 shrink-0 h-9 w-9"
+                                            className="text-slate-500 hover:text-indigo-400 hover:bg-indigo-950/30 shrink-0 h-9 w-9 border border-transparent hover:border-indigo-900/50 transition-all"
                                             title="Duplicate Quest"
                                         >
-                                            <Copy className="h-4 w-4" />
+                                            <Copy className="h-3.5 w-3.5" />
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => handleDelete(quest.id)}
-                                            className="text-slate-400 hover:text-red-400 hover:bg-red-950/30 shrink-0 h-9 w-9"
+                                            className="text-slate-500 hover:text-red-400 hover:bg-red-950/30 shrink-0 h-9 w-9 border border-transparent hover:border-red-900/50 transition-all"
                                             title="Delete Quest"
                                         >
-                                            <Trash2 className="h-4 w-4" />
+                                            <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
                                     </CardFooter>
                                 </Card>
