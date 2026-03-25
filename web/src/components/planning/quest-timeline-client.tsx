@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { getShareablePlanId, savePlayerQuestCounter } from "@/app/actions/quests";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestSynergy } from "@/app/actions/quests";
 import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
@@ -24,7 +26,8 @@ import {
     EncounterWithRelations,
     RosterWithChampion,
     QuestTimelineProps,
-    toChampionImages
+    toChampionImages,
+    SynergyWithChampion
 } from "./types";
 import {
     isChampionValidForEncounterOrQuest,
@@ -105,33 +108,48 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
                                             {champion.name}
                                         </h4>
                                         <div className="flex items-center gap-1.5">
-                                            <div className="h-1 w-1 rounded-full bg-slate-700" />
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{assignedEncounters.length} Fights</span>
+                                            {assignedEncounters.length > 0 ? (
+                                                <>
+                                                    <div className="h-1 w-1 rounded-full bg-slate-700" />
+                                                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}</span>
+                                                </>
+                                            ) : (
+                                                <span className="text-[9px] text-sky-500/80 font-bold uppercase tracking-widest flex items-center gap-1">
+                                                    <div className="w-1 h-1 rounded-full bg-sky-500" />
+                                                    Synergy
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <div className="px-3 pb-3">
-                                    <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner">
-                                        {assignedEncounters.map((enc: any) => (
-                                            <div 
-                                                key={enc.id}
-                                                className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden cursor-pointer hover:border-sky-500 transition-all hover:scale-105 active:scale-95 group/tgt-mini"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    scrollToEncounter(enc.id);
-                                                }}
-                                                title={`Fight against ${enc.defender?.name || "Unknown"}`}
-                                            >
-                                                {enc.defender ? (
-                                                    <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt-mini:scale-110 transition-transform" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
-                                                )}
-                                                <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt-mini:opacity-100 transition-opacity" />
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {assignedEncounters.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner">
+                                            {assignedEncounters.map((enc: any) => (
+                                                <div 
+                                                    key={enc.id}
+                                                    className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden cursor-pointer hover:border-sky-500 transition-all hover:scale-105 active:scale-95 group/tgt-mini"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        scrollToEncounter(enc.id);
+                                                    }}
+                                                    title={`Fight against ${enc.defender?.name || "Unknown"}`}
+                                                >
+                                                    {enc.defender ? (
+                                                        <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt-mini:scale-110 transition-transform" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt-mini:opacity-100 transition-opacity" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
+                                            <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest italic">Unassigned</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -259,7 +277,7 @@ const isChampionUnavailableForEncounter = ({
     return otherSelectionsCount >= validRosterCount;
 };
 
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], savedSynergies = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -272,6 +290,88 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [shareSuccess, setShareSuccess] = useState(false);
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
+    const [isSynergyPickerOpen, setIsSynergyPickerOpen] = useState(false);
+
+    // Track synergy champions locally
+    const [synergyIds, setSynergyIds] = useState<number[]>(() => savedSynergies.map(s => s.championId));
+
+    // Champion Removal State
+    const [championToRemove, setChampionToRemove] = useState<{
+        rosterId: string;
+        championId: number;
+        assignedEncounters: string[];
+        isSynergy: boolean;
+        championName: string;
+    } | null>(null);
+
+    // Shared helper for champion removal logic
+    const removeTeamMemberLogic = async (target: { rosterId: string; championId: number; assignedEncounters: string[]; isSynergy: boolean }) => {
+        const { championId, assignedEncounters, isSynergy } = target;
+
+        try {
+            // Wait for all remote operations to complete successfully FIRST
+            const promises: Promise<any>[] = [];
+            
+            if (isSynergy) {
+                promises.push(savePlayerQuestSynergy(quest.id, championId, true));
+            }
+
+            if (assignedEncounters.length > 0) {
+                assignedEncounters.forEach(encId => {
+                    promises.push(savePlayerQuestCounter(quest.id, encId, null));
+                });
+            }
+
+            await Promise.all(promises);
+
+            // If we reach here, all API calls succeeded. Now update local state.
+            if (isSynergy) {
+                setSynergyIds(prev => prev.filter(id => id !== championId));
+            }
+
+            if (assignedEncounters.length > 0) {
+                setSelections(prev => {
+                    const next = { ...prev };
+                    assignedEncounters.forEach(encId => {
+                        next[encId] = null;
+                    });
+                    return next;
+                });
+                toast({ title: "Assignments Cleared", description: "Champion has been unassigned from fights." });
+            } else if (isSynergy) {
+                toast({ title: "Synergy Removed", description: "Champion has been removed from synergy." });
+            }
+            
+        } catch (error) {
+            console.error("Failed to remove champion completely", error);
+            toast({ title: "Error", description: "Failed to remove champion completely. Some operations may have failed.", variant: "destructive" });
+        }
+    };
+
+    const executeRemoveTeamMember = async () => {
+        if (!championToRemove) return;
+        await removeTeamMemberLogic(championToRemove);
+        setChampionToRemove(null);
+    };
+
+    // Refactored helper for immediate execution
+    const confirmAndRemoveTeamMember = async (target: { rosterId: string, championId: number, assignedEncounters: string[], isSynergy: boolean }) => {
+        await removeTeamMemberLogic(target);
+    };
+
+    const initiateRemoveTeamMember = (rosterId: string, championId: number, championName: string) => {
+        const assignedEncounters = Object.entries(selections)
+            .filter(([encId, rId]) => rId === rosterId)
+            .map(([encId]) => encId);
+            
+        const isSynergy = synergyIds.includes(championId);
+
+        if (assignedEncounters.length > 1) {
+            setChampionToRemove({ rosterId, championId, assignedEncounters, isSynergy, championName });
+        } else {
+            confirmAndRemoveTeamMember({ rosterId, championId, assignedEncounters, isSynergy });
+        }
+    };
 
     // Group picks by player for the PlayerTeamPopover
     const playerPicksMap = useMemo(() => {
@@ -484,11 +584,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             const isAlreadyInTeam = Object.values(selections).includes(rosterId);
 
             if (quest.teamLimit !== null) {
-                // Check if the CHAMPION is already in the team
+                // Check if the CHAMPION is already in the team (either as counter or synergy)
                 const isChampInTeam = Object.values(selections).some(rid => {
                     if (!rid) return false;
                     return roster.find(r => r.id === rid)?.championId === championId;
-                });
+                }) || synergyIds.includes(championId);
 
                 // If they aren't in the team, and adding them would exceed the limit, block it
                 if (!isChampInTeam && selectedTeam.length >= quest.teamLimit) {
@@ -531,6 +631,43 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         }
     };
 
+    const handleSelectSynergy = async (championId: number) => {
+        const isRemoving = synergyIds.includes(championId);
+        
+        if (!isRemoving && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
+            // Check if they are already in the team as a counter
+            const isAlreadyInTeam = Object.values(selections).some(rid => {
+                if (!rid) return false;
+                return roster.find(r => r.id === rid)?.championId === championId;
+            });
+
+            if (!isAlreadyInTeam) {
+                toast({
+                    title: "Team Limit Reached",
+                    description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
+                    variant: "destructive"
+                });
+                return;
+            }
+        }
+
+        setSynergyIds(prev => isRemoving 
+            ? prev.filter(id => id !== championId)
+            : [...prev, championId]
+        );
+
+        try {
+            await savePlayerQuestSynergy(quest.id, championId, isRemoving);
+        } catch (error) {
+            console.error("Failed to save synergy selection", error);
+            setSynergyIds(prev => isRemoving 
+                ? [...prev, championId]
+                : prev.filter(id => id !== championId)
+            );
+            toast({ title: "Error", description: "Failed to save synergy.", variant: "destructive" });
+        }
+    };
+
     /** Resolve a roster item for a given roster ID — works for both interactive and readOnly modes */
     const resolveRosterItem = useCallback((rosterId: string, encounterId: string): RosterWithChampion | undefined => {
         if (readOnly) {
@@ -543,18 +680,56 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const selectedTeam = useMemo(() => {
         const teamMap = new Map<string, RosterWithChampion>();
         
+        // 1. Add champions selected for encounters
         Object.entries(selections).forEach(([encId, rosterId]) => {
             if (rosterId !== null) {
                 const r = resolveRosterItem(rosterId, encId);
                 if (r) {
-                    // Use rosterId as key to ensure each unique rarity is counted once
-                    teamMap.set(rosterId, r);
+                    teamMap.set(r.id, r);
+                }
+            }
+        });
+
+        // 2. Add synergy champions (if not already added as counters)
+        synergyIds.forEach(champId => {
+            const isAlreadyInTeam = Array.from(teamMap.values()).some(r => r.championId === champId);
+            
+            if (!isAlreadyInTeam) {
+                // Find "best" version in roster for synergy
+                let bestRosterEntry = roster
+                    .filter(r => r.championId === champId)
+                    .sort((a, b) => b.stars - a.stars || b.rank - a.rank)[0];
+                
+                if (!bestRosterEntry) {
+                    // Fallback to savedSynergies to create a placeholder if roster is missing
+                    const savedSyn = savedSynergies.find(s => s.championId === champId);
+                    if (savedSyn) {
+                        bestRosterEntry = {
+                            id: `synergy-${champId}`,
+                            playerId: "",
+                            championId: champId,
+                            stars: 0,
+                            rank: 0,
+                            sigLevel: 0,
+                            isAwakened: false,
+                            isAscended: false,
+                            ascensionLevel: 0,
+                            powerRating: 0,
+                            champion: savedSyn.champion as any,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        };
+                    }
+                }
+
+                if (bestRosterEntry) {
+                    teamMap.set(bestRosterEntry.id, bestRosterEntry);
                 }
             }
         });
         
         return Array.from(teamMap.values());
-    }, [selections, resolveRosterItem]);
+    }, [selections, synergyIds, resolveRosterItem, roster, savedSynergies]);
 
     const renderChampionItem = (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
         if (readOnly) {
@@ -904,7 +1079,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                         animate={{ height: "auto", opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
                                         transition={{ duration: 0.4, ease: "easeInOut" }}
-                                        className="overflow-hidden px-4 pb-4"
+                                        className="overflow-hidden px-4 pb-4 cursor-auto"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         {selectedTeam.length === 0 ? (
                                             <div className="py-8 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
@@ -938,6 +1114,20 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                     "border-slate-800/60"
                                                                 )}
                                                             >
+                                                                {/* Remove Button */}
+                                                                {!readOnly && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            initiateRemoveTeamMember(r.id, r.championId, r.champion.name);
+                                                                        }}
+                                                                        className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-slate-950/50 text-slate-400 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 border border-transparent transition-all opacity-0 group-hover/team-member:opacity-100"
+                                                                        title="Remove from team"
+                                                                    >
+                                                                        <X className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                )}
+
                                                                 {/* Accent background based on class */}
                                                                 <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-5 transition-opacity group-hover/team-member:opacity-10", classColors.bg)} />
 
@@ -956,14 +1146,21 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             showStars={true}
                                                                         />
                                                                     </div>
-                                                                    <div className="flex-1 min-w-0 py-1">
+                                                                    <div className="flex-1 min-w-0 py-1 pr-6">
                                                                         <h4 className={cn("text-xs font-black uppercase tracking-wider truncate mb-0.5", classColors.text)}>
                                                                             {r.champion.name}
                                                                         </h4>
                                                                         <div className="flex items-center gap-2">
-                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                                                                {assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}
-                                                                            </span>
+                                                                            {assignedEncounters.length > 0 ? (
+                                                                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                                                    {assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}
+                                                                                </span>
+                                                                            ) : (
+                                                                                <span className="text-[10px] text-sky-500/80 font-bold uppercase tracking-widest flex items-center gap-1">
+                                                                                    <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                                                                                    Synergy
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1004,6 +1201,85 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                             </motion.div>
                                                         );
                                                     })}
+
+                                                    {/* Add Synergy Combobox Placeholder Block */}
+                                                    {!readOnly && (
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <button className="flex flex-col items-center justify-center gap-3 bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-2xl p-6 hover:bg-slate-900/50 hover:border-sky-500/50 transition-all group/add-synergy min-h-[160px]">
+                                                                    <div className="p-3 rounded-full bg-slate-800/50 text-slate-400 group-hover/add-synergy:bg-sky-500/20 group-hover/add-synergy:text-sky-400 transition-colors shadow-inner">
+                                                                        <Users className="w-6 h-6" />
+                                                                    </div>
+                                                                    <div className="flex flex-col items-center">
+                                                                        <span className="text-xs font-black uppercase tracking-wider text-slate-300 group-hover/add-synergy:text-sky-400 transition-colors">Add Synergy</span>
+                                                                        <span className="text-[10px] text-slate-500 font-medium">Search roster...</span>
+                                                                    </div>
+                                                                </button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent 
+                                                                className="w-[calc(100vw-32px)] sm:w-[320px] p-0 bg-slate-950/95 border border-slate-700/80 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(14,165,233,0.15)] backdrop-blur-xl rounded-xl overflow-hidden z-[100]" 
+                                                                align="start"
+                                                                sideOffset={8}
+                                                            >
+                                                                <Command className="bg-transparent" filter={(value, search) => {
+                                                                    if (value.toLowerCase().includes(search.toLowerCase())) return 1;
+                                                                    return 0;
+                                                                }}>
+                                                                    <CommandInput placeholder="Search champions..." className="h-11" />
+                                                                    <CommandEmpty className="py-4 text-center text-sm text-slate-500">No champions found.</CommandEmpty>
+                                                                    <CommandList className="max-h-[300px] custom-scrollbar">
+                                                                        <CommandGroup>
+                                                                            {/* Only show unique champions from roster */}
+                                                                            {roster.filter((r, i, self) => self.findIndex(t => t.championId === r.championId) === i).map((r) => {
+                                                                                const isAssigned = Object.values(selections).some(rid => {
+                                                                                    if (!rid) return false;
+                                                                                    return roster.find(re => re.id === rid)?.championId === r.championId;
+                                                                                });
+                                                                                const isSynergy = synergyIds.includes(r.championId);
+                                                                                const isSelected = isAssigned || isSynergy;
+
+                                                                                return (
+                                                                                    <CommandItem
+                                                                                        key={r.championId}
+                                                                                        value={`${r.champion.name} ${r.champion.shortName || ''}`}
+                                                                                        className="flex items-center gap-3 px-3 py-2 cursor-pointer aria-selected:bg-slate-800/60"
+                                                                                        onSelect={() => {
+                                                                                            if (!isAssigned) handleSelectSynergy(r.championId);
+                                                                                        }}
+                                                                                        disabled={isAssigned}
+                                                                                    >
+                                                                                        <div className={cn(
+                                                                                            "relative w-8 h-8 rounded-lg overflow-hidden border border-slate-700 shrink-0",
+                                                                                            isAssigned && "opacity-40 grayscale"
+                                                                                        )}>
+                                                                                            <Image 
+                                                                                                src={getChampionImageUrlOrPlaceholder(r.champion.images, "64")} 
+                                                                                                alt={r.champion.name} 
+                                                                                                fill 
+                                                                                                className="object-cover"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <span className={cn(
+                                                                                            "text-sm font-bold truncate flex-1",
+                                                                                            isAssigned ? "text-slate-600" : "text-slate-200"
+                                                                                        )}>
+                                                                                            {r.champion.name}
+                                                                                        </span>
+                                                                                        {isSelected && !isAssigned && (
+                                                                                            <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
+                                                                                        )}
+                                                                                        {isAssigned && (
+                                                                                            <Target className="w-4 h-4 text-slate-600 shrink-0" />
+                                                                                        )}
+                                                                                    </CommandItem>
+                                                                                );
+                                                                            })}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    )}
                                                 </div>
 
                                                 {quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
@@ -1064,9 +1340,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 </motion.div>
             </div>
 
-            <div className="relative pl-6 md:pl-10 pb-20">
+            <div className="relative pl-3 md:pl-10 pb-20">
                 {/* Continuous Vertical Timeline Line */}
-                <div className="absolute top-14 bottom-[120px] left-6 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full">
+                <div className="absolute top-14 bottom-[120px] left-3 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full">
                     <div className="w-full h-full bg-gradient-to-b from-slate-800 via-sky-900/20 to-slate-800 rounded-full" />
                 </div>
 
@@ -1075,7 +1351,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 ) : (
                     <div className="space-y-6">
                         {/* Column Header */}
-                        <div className="flex items-center pl-8 md:pl-10 mb-8 py-3 bg-slate-950/40 border-y border-slate-800/50 -mx-4 px-2 md:px-4 rounded-xl">
+                        <div className="flex items-center pl-6 md:pl-10 mb-8 py-3 bg-slate-950/40 border-y border-slate-800/50 -mx-4 px-2 md:px-4 rounded-xl">
                             <div className="flex-1 flex items-center justify-start px-2 md:px-6 gap-2 md:gap-3">
                                 <div className="relative shrink-0">
                                     <div className="absolute -inset-1 bg-red-500/20 blur-sm rounded-full" />
@@ -1161,6 +1437,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     roster,
                                     filteredGlobalRoster,
                                     selectedTeam,
+                                    synergyIds,
                                     isRosterExpanded,
                                     setIsRosterExpanded,
                                     resolveRosterItem,
@@ -1173,6 +1450,27 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     </div>
                 )}
             </div>
+
+            <AlertDialog open={!!championToRemove} onOpenChange={(open) => !open && setChampionToRemove(null)}>
+                <AlertDialogContent className="bg-slate-950 border-slate-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-white">Remove {championToRemove?.championName}?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">
+                            This champion is currently assigned to <strong className="text-white">{championToRemove?.assignedEncounters.length}</strong> fights. 
+                            Removing them will clear all of these assignments. Are you sure?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white">Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={executeRemoveTeamMember}
+                            className="bg-red-600 text-white hover:bg-red-500"
+                        >
+                            Remove Assignments
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

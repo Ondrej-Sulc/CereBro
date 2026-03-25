@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getQuestPlanById, getEncounterPopularCounters, getEncounterFeaturedPicks, getEncounterAlliancePicks } from "@/app/actions/quests";
 import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
 import QuestTimelineClient from "@/components/planning/quest-timeline-client";
-import { QuestWithRelations, RosterWithChampion } from "@/components/planning/types";
+import { QuestWithRelations, RosterWithChampion, toChampionImages, SynergyWithChampion } from "@/components/planning/types";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -118,7 +118,21 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             }
         },
         include: {
-            encounters: true
+            encounters: true,
+            synergyChampions: {
+                include: {
+                    champion: {
+                        include: {
+                            tags: true,
+                            abilities: {
+                                include: {
+                                    ability: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
 
@@ -193,6 +207,24 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
 
     const creatorsWithUsers = (quest.creators || []) as QuestCreator[];
     const bannerUrl = quest.bannerUrl ? quest.bannerUrl.replace(/#/g, '%23') : null;
+
+    // Map synergy champions to the correct type
+    const savedSynergies: SynergyWithChampion[] = (playerPlan?.synergyChampions || []).map(s => ({
+        ...s,
+        champion: {
+            ...s.champion,
+            images: s.champion.images as unknown as ChampionImages,
+            tags: s.champion.tags,
+            abilities: s.champion.abilities.map(link => ({
+                ...link,
+                ability: {
+                    id: link.ability.id,
+                    name: link.ability.name,
+                    categories: [] // Categories not needed for display here
+                }
+            }))
+        }
+    }));
 
     return (
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
@@ -341,6 +373,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 quest={quest}
                 roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
+                savedSynergies={savedSynergies}
                 popularCounters={popularCounters}
                 featuredPicks={featuredPicks}
                 alliancePicks={alliancePicks}

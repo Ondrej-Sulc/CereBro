@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft } from "lucide-react";
 import QuestTimelineClient from "@/components/planning/quest-timeline-client";
+import { ChampionImages } from "@/types/champion";
+import { RosterWithChampion, SynergyWithChampion } from "./types";
 
 interface ReadOnlyPlanShellProps {
     plan: any; // Using any for the complex nested type from getPlayerQuestPlanForViewing
@@ -42,6 +44,42 @@ export function ReadOnlyPlanShell({
             </div>
         </>
     );
+
+    // Map roster entries to typed objects for the team summary
+    const roster: RosterWithChampion[] = (plan.rosterEntries || []).map((entry: any) => ({
+        ...entry,
+        champion: {
+            ...entry.champion,
+            images: entry.champion.images as unknown as ChampionImages,
+            tags: entry.champion.tags || [],
+            abilities: (entry.champion.abilities || []).map((link: any) => ({
+                ...link,
+                ability: {
+                    id: link.ability.id,
+                    name: link.ability.name,
+                    categories: []
+                }
+            }))
+        }
+    }));
+
+    // Map synergy champions for correct typing
+    const savedSynergies: SynergyWithChampion[] = (plan.synergyChampions || []).map((s: any) => ({
+        ...s,
+        champion: {
+            ...s.champion,
+            images: s.champion.images as unknown as ChampionImages,
+            tags: s.champion.tags || [],
+            abilities: (s.champion.abilities || []).map((link: any) => ({
+                ...link,
+                ability: {
+                    id: link.ability.id,
+                    name: link.ability.name,
+                    categories: []
+                }
+            }))
+        }
+    }));
 
     return (
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
@@ -104,9 +142,11 @@ export function ReadOnlyPlanShell({
             {/* Read-only Timeline */}
             <QuestTimelineClient
                 quest={quest}
+                roster={roster}
                 readOnly
                 initialSelections={selections}
                 rosterMap={plan.rosterMap}
+                savedSynergies={savedSynergies}
             />
         </div>
     );

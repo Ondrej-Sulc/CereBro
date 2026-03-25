@@ -26,8 +26,8 @@ model Ability {
 }
 
 model Champion {
-  id                           Int                      @id @default(autoincrement())
-  name                         String                   @unique
+  id                           Int                          @id @default(autoincrement())
+  name                         String                       @unique
   shortName                    String
   class                        ChampionClass
   releaseDate                  DateTime
@@ -35,26 +35,27 @@ model Champion {
   images                       Json
   discordEmoji                 String?
   fullAbilities                Json
-  isPlayable                   Boolean                  @default(true)
-  createdAt                    DateTime                 @default(now())
-  updatedAt                    DateTime                 @updatedAt
+  isPlayable                   Boolean                      @default(true)
+  createdAt                    DateTime                     @default(now())
+  updatedAt                    DateTime                     @updatedAt
   attacks                      Attack[]
   abilities                    ChampionAbilityLink[]
   synergyProviderFor           ChampionAbilitySynergy[]
   prestigeData                 ChampionPrestige[]
   duels                        Duel[]
   placedPrefights              FightPrefight[]
-  questSelectedAsCounter       PlayerQuestEncounter[]   @relation("PlayerSelectedCounter")
+  questSelectedAsCounter       PlayerQuestEncounter[]       @relation("PlayerSelectedCounter")
+  questSynergyPicks            PlayerQuestSynergyChampion[]
   questDefenderEncounters      QuestEncounter[]
   roster                       Roster[]
   seasonBans                   SeasonBan[]
   warBans                      WarBan[]
   defensePlacements            WarDefensePlacement[]
   extraAssignments             WarExtraChampion[]
-  asAttacker                   WarFight[]               @relation("AttackerRelation")
-  asDefender                   WarFight[]               @relation("DefenderRelation")
-  tags                         Tag[]                    @relation("ChampionToTag")
-  questRecommendedInEncounters QuestEncounter[]         @relation("EncounterRecommendedChampions")
+  asAttacker                   WarFight[]                   @relation("AttackerRelation")
+  asDefender                   WarFight[]                   @relation("DefenderRelation")
+  tags                         Tag[]                        @relation("ChampionToTag")
+  questRecommendedInEncounters QuestEncounter[]             @relation("EncounterRecommendedChampions")
 }
 
 model ChampionPrestige {
@@ -172,16 +173,16 @@ model AQState {
 }
 
 model BotUser {
-  id                String      @id @default(cuid())
-  discordId         String      @unique
+  id                String            @id @default(cuid())
+  discordId         String            @unique
   avatar            String?
-  isBotAdmin        Boolean     @default(false)
-  permissions       String[]    @default([])
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  isBotAdmin        Boolean           @default(false)
+  permissions       String[]          @default([])
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
   activeProfileId   String?
   profiles          Player[]
-  createdQuestPlans QuestPlan[] @relation("QuestPlanCreators")
+  createdQuestPlans QuestPlan[]       @relation("QuestPlanCreators")
   supportDonations  SupportDonation[]
 }
 
@@ -214,6 +215,7 @@ model Player {
   createdQuestPlans  QuestPlan[]                 @relation("QuestCreator")
   roster             Roster[]
   uploadTokens       UploadToken[]
+  encounterVideos    QuestEncounterVideo[]
   defensePlacements  WarDefensePlacement[]
   extraChampions     WarExtraChampion[]
   playedInFights     WarFight[]                  @relation("PlayerInFight")
@@ -226,26 +228,26 @@ model Player {
 }
 
 model SupportDonation {
-  id                     String   @id @default(cuid())
-  amountMinor            Int
-  currency               String
-  status                 String
-  stripeCheckoutSessionId String  @unique
-  stripePaymentIntentId  String?
-  stripeCustomerId       String?
-  supporterName          String?
-  supporterEmail         String?
-  retentionState         String   @default("ACTIVE")
-  anonymizedAt           DateTime?
-  deletedAt              DateTime?
-  consentRevoked         Boolean  @default(false)
-  discordId              String?
-  botUserId              String?
-  playerId               String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  player                 Player?  @relation(fields: [playerId], references: [id], onDelete: SetNull)
-  botUser                BotUser? @relation(fields: [botUserId], references: [id], onDelete: SetNull)
+  id                      String    @id @default(cuid())
+  amountMinor             Int
+  currency                String
+  status                  String
+  stripeCheckoutSessionId String    @unique
+  stripePaymentIntentId   String?
+  stripeCustomerId        String?
+  supporterName           String?
+  supporterEmail          String?
+  retentionState          String    @default("ACTIVE")
+  anonymizedAt            DateTime?
+  deletedAt               DateTime?
+  consentRevoked          Boolean   @default(false)
+  discordId               String?
+  botUserId               String?
+  playerId                String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  player                  Player?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  botUser                 BotUser?  @relation(fields: [botUserId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([playerId, createdAt])
@@ -360,20 +362,20 @@ model AQSkip {
 }
 
 model Roster {
-  id          String   @id @default(cuid())
-  stars       Int
-  rank        Int
-  isAwakened  Boolean
-  powerRating Int?
-  playerId    String
-  championId  Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isAscended  Boolean  @default(false)
-  ascensionLevel Int   @default(0)
-  sigLevel    Int      @default(0)
-  champion    Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
-  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  stars          Int
+  rank           Int
+  isAwakened     Boolean
+  powerRating    Int?
+  playerId       String
+  championId     Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isAscended     Boolean  @default(false)
+  ascensionLevel Int      @default(0)
+  sigLevel       Int      @default(0)
+  champion       Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, championId, stars])
   @@index([playerId])
@@ -729,11 +731,26 @@ model QuestEncounter {
   nodes                QuestEncounterNode[]
   recommendedChampions Champion[]             @relation("EncounterRecommendedChampions")
   requiredTags         Tag[]                  @relation("EncounterRequiredTags")
+  videos               QuestEncounterVideo[]
 
   @@unique([questPlanId, sequence])
   @@unique([id, questPlanId])
   @@index([questPlanId])
   @@index([defenderId])
+}
+
+model QuestEncounterVideo {
+  id               String         @id @default(cuid())
+  questEncounterId String
+  playerId         String?
+  videoUrl         String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  questEncounter   QuestEncounter @relation(fields: [questEncounterId], references: [id], onDelete: Cascade)
+  player           Player?        @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([questEncounterId])
+  @@index([playerId])
 }
 
 model QuestEncounterNode {
@@ -749,20 +766,33 @@ model QuestEncounterNode {
 }
 
 model PlayerQuestPlan {
-  id          String                 @id @default(cuid())
-  playerId    String
-  questPlanId String
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-  isFeatured  Boolean                @default(false)
-  encounters  PlayerQuestEncounter[]
-  player      Player                 @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  questPlan   QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  id               String                       @id @default(cuid())
+  playerId         String
+  questPlanId      String
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  isFeatured       Boolean                      @default(false)
+  encounters       PlayerQuestEncounter[]
+  synergyChampions PlayerQuestSynergyChampion[]
+  player           Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  questPlan        QuestPlan                    @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, questPlanId])
   @@unique([id, questPlanId])
   @@index([playerId])
   @@index([questPlanId])
+}
+
+model PlayerQuestSynergyChampion {
+  id                String          @id @default(cuid())
+  playerQuestPlanId String
+  championId        Int
+  playerQuestPlan   PlayerQuestPlan @relation(fields: [playerQuestPlanId], references: [id], onDelete: Cascade)
+  champion          Champion        @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([playerQuestPlanId, championId])
+  @@index([playerQuestPlanId])
+  @@index([championId])
 }
 
 model PlayerQuestEncounter {

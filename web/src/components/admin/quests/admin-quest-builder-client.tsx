@@ -73,6 +73,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [defenderId, setDefenderId] = useState<string>("");
     const [tips, setTips] = useState<string>("");
     const [videoUrl, setVideoUrl] = useState<string>("");
+    const [videos, setVideos] = useState<{ videoUrl: string, playerId: string | null, playerName: string | null, playerAvatar: string | null }[]>([]);
     const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
     const [encounterRequiredTagIds, setEncounterRequiredTagIds] = useState<number[]>([]);
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
@@ -300,6 +301,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     sequence: parseInt(effectiveSequence),
                     defenderId: defenderId ? parseInt(defenderId) : null,
                     videoUrl: videoUrl || null,
+                    videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
                     tips: tips || null,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
@@ -312,6 +314,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     sequence: parseInt(effectiveSequence),
                     defenderId: defenderId ? parseInt(defenderId) : undefined,
                     videoUrl: videoUrl || undefined,
+                    videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
                     tips: tips || undefined,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
@@ -335,6 +338,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setDefenderId(encounter.defenderId ? String(encounter.defenderId) : "");
         setTips(encounter.tips || "");
         setVideoUrl(encounter.videoUrl || "");
+        setVideos((encounter as any).videos?.map((v: any) => ({
+            videoUrl: v.videoUrl,
+            playerId: v.playerId,
+            playerName: v.player?.ingameName || null,
+            playerAvatar: v.player?.avatar || null
+        })) || []);
         setRecommendedTags(encounter.recommendedTags);
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
@@ -347,6 +356,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setDefenderId("");
         setTips("");
         setVideoUrl("");
+        setVideos([]);
         setRecommendedTags([]);
         setEncounterRequiredTagIds([]);
         setRecommendedChampionIds([]);
@@ -752,13 +762,66 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     />
                                 </div>
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label>YouTube Video URL (Fight Specific)</Label>
+                                    <Label>Generic Video Guide URL</Label>
                                     <Input
                                         value={videoUrl}
                                         onChange={e => setVideoUrl(e.target.value)}
                                         placeholder="https://www.youtube.com/watch?v=..."
                                         className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500"
                                     />
+                                </div>
+                                <div className="space-y-2 sm:col-span-2">
+                                    <Label>Creator-Specific Video Guides</Label>
+                                    <div className="flex flex-col gap-3 p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                                        {videos.map((v, i) => (
+                                            <div key={i} className="flex items-center gap-3 p-2 bg-slate-950 border border-slate-800 rounded-md group">
+                                                {v.playerAvatar ? (
+                                                    <img src={v.playerAvatar} alt={v.playerName || "Player"} className="w-8 h-8 rounded-full border border-slate-700" />
+                                                ) : (
+                                                    <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-500">
+                                                        {(v.playerName || "?").charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 flex flex-col min-w-0">
+                                                    <span className="text-sm font-bold text-slate-200 truncate">{v.playerName || "Unknown Player"}</span>
+                                                    <span className="text-xs text-sky-500/70 truncate hover:text-sky-400 cursor-pointer" onClick={() => window.open(v.videoUrl, '_blank')}>{v.videoUrl}</span>
+                                                </div>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    onClick={() => setVideos(videos.filter((_, idx) => idx !== i))} 
+                                                    className="text-slate-500 hover:text-red-400 hover:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+
+                                        <div className="flex flex-col gap-2 pt-2 border-t border-slate-800">
+                                            <Input
+                                                id="new-video-url"
+                                                placeholder="Video URL (https://youtube.com/...)"
+                                                className="bg-slate-950 border-slate-800 focus-visible:ring-sky-500"
+                                            />
+                                            <AsyncPlayerSearchCombobox
+                                                value=""
+                                                onSelect={(id, name, avatar) => {
+                                                    const urlInput = document.getElementById("new-video-url") as HTMLInputElement;
+                                                    if (id && urlInput?.value) {
+                                                        if (videos.some(v => v.videoUrl === urlInput.value && v.playerId === id)) {
+                                                            toast({ title: "Duplicate", description: "This video by this creator is already added.", variant: "destructive" });
+                                                            return;
+                                                        }
+                                                        setVideos([...videos, { videoUrl: urlInput.value, playerId: id, playerName: name, playerAvatar: avatar }]);
+                                                        urlInput.value = "";
+                                                    } else if (!urlInput?.value) {
+                                                        toast({ title: "Error", description: "Please enter a video URL first.", variant: "destructive" });
+                                                    }
+                                                }}
+                                                placeholder="Select creator to add their video..."
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

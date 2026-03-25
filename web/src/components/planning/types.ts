@@ -1,4 +1,4 @@
-import type { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma } from "@prisma/client";
+import type { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma, PlayerQuestSynergyChampion } from "@prisma/client";
 import { ChampionImages, Champion } from "@/types/champion";
 import type { getQuestPlanById } from "@/app/actions/quests";
 import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
@@ -6,6 +6,10 @@ import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/ques
 export type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 export type EncounterWithRelations = QuestWithRelations["encounters"][0];
 export type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
+
+export type SynergyWithChampion = PlayerQuestSynergyChampion & {
+    champion: Champion;
+};
 
 export type RosterWithChampion = Roster & {
     champion: Champion;
@@ -22,6 +26,7 @@ export interface QuestTimelineProps {
     quest: QuestWithRelations;
     roster?: RosterWithChampion[];
     savedEncounters?: PlayerQuestEncounter[];
+    savedSynergies?: SynergyWithChampion[];
     popularCounters?: PopularCountersMap;
     featuredPicks?: EnhancedCountersMap;
     alliancePicks?: EnhancedCountersMap;

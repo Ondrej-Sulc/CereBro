@@ -66,6 +66,7 @@ interface EncounterRosterState {
     roster: RosterWithChampion[];
     filteredGlobalRoster: RosterWithChampion[];
     selectedTeam: RosterWithChampion[];
+    synergyIds?: number[];
     isRosterExpanded: boolean;
     setIsRosterExpanded: (expanded: boolean) => void;
     resolveRosterItem: (id: string, encId: string) => RosterWithChampion | null | undefined;
@@ -88,6 +89,7 @@ interface EncounterHeaderProps {
     selectedRosterId: string | null | undefined;
     selectedRosterItem: RosterWithChampion | null;
     suggestedTeamChamps: RosterWithChampion[];
+    synergyChamps: RosterWithChampion[];
     readOnly: boolean;
     toggleExpand: (id: string) => void;
     handleSelectCounter: (encounterId: string, rosterId: string) => void;
@@ -148,6 +150,7 @@ function EncounterHeader({
     selectedRosterId,
     selectedRosterItem,
     suggestedTeamChamps,
+    synergyChamps,
     readOnly,
     toggleExpand,
     handleSelectCounter
@@ -203,19 +206,19 @@ function EncounterHeader({
                         <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
                             {encounter.defender?.name || "Unknown Defender"}
                         </CardTitle>
-                        {encounter.videoUrl && (
+                        {(encounter.videoUrl || ((encounter as any).videos && (encounter as any).videos.length > 0)) && (
                             <Youtube className="w-5 h-5 text-red-600 shrink-0" />
                         )}
                     </div>
                     {encounter.nodes.length > 0 && !isExpanded && (
                         <div className="flex gap-1 mt-2 flex-wrap">
                             {encounter.nodes.slice(0, 3).map((n: EncounterNodeWithRelations) => (
-                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-400 font-medium">
+                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 min-h-[16px] h-auto bg-slate-950/80 border-slate-800 text-slate-400 font-medium truncate max-w-[140px] sm:max-w-[200px]">
                                     {n.nodeModifier.name}
                                 </Badge>
                             ))}
                             {encounter.nodes.length > 3 && (
-                                <Badge variant="secondary" className="text-[10px] py-0 h-4 bg-slate-950/80 border-slate-800 text-slate-500 font-medium">
+                                <Badge variant="secondary" className="text-[10px] py-0 min-h-[16px] h-auto bg-slate-950/80 border-slate-800 text-slate-500 font-medium shrink-0">
                                     +{encounter.nodes.length - 3}
                                 </Badge>
                             )}
@@ -295,11 +298,19 @@ function EncounterHeader({
                                     <span className="text-[9px] font-black text-amber-500 uppercase tracking-tighter">YOUR TEAM</span>
                                 </div>
                                 <div className="flex -space-x-2">
-                                    {suggestedTeamChamps.map((r) => (
-                                        <div key={`sugg-${r.id}`} className="relative w-6 h-6 rounded-full border border-slate-900 overflow-hidden shadow-md group/sugg" title={`${r.champion.name} (In your team & recommended)`}>
-                                            <Image src={getChampionImageUrlOrPlaceholder(r.champion.images, "64")} alt={r.champion.name} fill className="object-cover group-hover/sugg:scale-110 transition-transform" />
-                                        </div>
-                                    ))}
+                                    {suggestedTeamChamps.map((r) => {
+                                        const isSynergy = synergyChamps.some(sc => sc.id === r.id);
+                                        return (
+                                            <div key={`sugg-${r.id}`} className="relative w-6 h-6 rounded-full border border-slate-900 overflow-hidden shadow-md group/sugg" title={`${r.champion.name} (In your team${isSynergy ? ' as synergy' : ''} & recommended)`}>
+                                                <Image src={getChampionImageUrlOrPlaceholder(r.champion.images, "64")} alt={r.champion.name} fill className="object-cover group-hover/sugg:scale-110 transition-transform" />
+                                                {isSynergy && (
+                                                    <div className="absolute inset-0 bg-sky-500/20 flex items-center justify-center">
+                                                        <div className="bg-sky-500 h-1.5 w-1.5 rounded-full" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -608,7 +619,7 @@ function RosterSelector({
                                     if (encounterRoster.length === 0) return <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl"><p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p></div>;
                                     return (
                                         <div className="space-y-4">
-                                            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-14 gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
+                                            <div className="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-y-4 gap-x-2 max-h-[450px] overflow-y-auto p-2 pt-4 border border-slate-800/50 bg-slate-950/30 rounded-xl custom-scrollbar">
                                                 {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
                                                     const isSelected = selections[encounter.id] === r.id;
                                                     const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
@@ -650,82 +661,95 @@ function EncounterExpandedContent({
 
     return (
         <>
-            {encounter.videoUrl && (
-                <div className="mb-4">
-                    {showVideoId === encounter.id ? (
-                        <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
-                            {(() => {
-                                const embedUrl = getYoutubeEmbedUrl(encounter.videoUrl);
-                                if (embedUrl) {
-                                    return (
-                                        <iframe
-                                            src={embedUrl}
-                                            title="YouTube video player"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            allowFullScreen
-                                            className="absolute inset-0 w-full h-full border-0"
-                                        ></iframe>
-                                    );
-                                }
-                                return <div className="p-8 text-center text-slate-500">Invalid video URL</div>;
-                            })()}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full h-8 w-8 z-50"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowVideoId(null);
-                                }}
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
+            <div className="flex flex-col gap-3 mb-5">
+                {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-red-950/10 px-4 py-2.5 rounded-lg border border-red-900/30">
+                        <div className="flex items-center gap-2 text-xs text-red-400 uppercase tracking-wide font-bold whitespace-nowrap shrink-0">
+                            <AlertCircle className="w-4 h-4" /> Restrictions
                         </div>
-                    ) : (
-                        <div
-                            className="group/video relative overflow-hidden rounded-xl border border-red-900/30 bg-gradient-to-r from-red-950/20 to-slate-900/40 p-4 cursor-pointer hover:border-red-600/50 transition-all active:scale-[0.99]"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowVideoId(encounter.id);
-                            }}
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="relative h-12 w-20 rounded bg-slate-950 flex items-center justify-center border border-slate-800 overflow-hidden shrink-0">
-                                    <Youtube className="w-6 h-6 text-red-600 group-hover/video:scale-110 transition-transform" />
-                                    <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover/video:opacity-100 transition-opacity" />
-                                </div>
-                                <div>
-                                    <h4 className="text-sm font-bold text-slate-200">Video Guide Available</h4>
-                                    <p className="text-xs text-slate-500">Click to watch the strategy for this encounter</p>
-                                </div>
-                                <div className="ml-auto">
-                                    <PlayCircle className="w-8 h-8 text-red-600/40 group-hover/video:text-red-600 transition-colors" />
-                                </div>
-                            </div>
+                        <div className="flex flex-wrap gap-1.5">
+                            {[
+                                quest.minStarLevel ? `Min ${quest.minStarLevel}★ (Quest)` : null,
+                                quest.maxStarLevel ? `Max ${quest.maxStarLevel}★ (Quest)` : null,
+                                quest.requiredClasses?.length ? `Class: ${quest.requiredClasses.join(", ")} (Quest)` : null,
+                                encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
+                                encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
+                                encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(", ")} (Encounter)` : null,
+                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t) => t.name).join(", ")}` : null,
+                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t) => t.name).join(", ")}` : null
+                            ].filter(Boolean).map((req, i) => (
+                                <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40 text-[10px] py-0 h-5">{req}</Badge>
+                            ))}
                         </div>
-                    )}
-                </div>
-            )}
-
-            {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
-                <div className="flex flex-col gap-2 mb-4 bg-red-950/10 p-4 rounded-lg border border-red-900/30">
-                    <div className="flex items-center gap-2 text-sm text-red-400 uppercase tracking-wide font-bold"><AlertCircle className="w-4 h-4" /> Quest & Encounter Restrictions Apply</div>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                        {[
-                            quest.minStarLevel ? `Min ${quest.minStarLevel}★ (Quest)` : null,
-                            quest.maxStarLevel ? `Max ${quest.maxStarLevel}★ (Quest)` : null,
-                            quest.requiredClasses?.length ? `Class: ${quest.requiredClasses.join(", ")} (Quest)` : null,
-                            encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
-                            encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
-                            encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(", ")} (Encounter)` : null,
-                            quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t) => t.name).join(", ")}` : null,
-                            encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t) => t.name).join(", ")}` : null
-                        ].filter(Boolean).map((req, i) => (
-                            <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40">{req}</Badge>
-                        ))}
                     </div>
-                </div>
-            ) : null}
+                ) : null}
+
+                {((encounter as any).videos?.length > 0 || encounter.videoUrl) && (
+                    <div className="flex flex-col gap-2">
+                        {showVideoId?.startsWith(encounter.id + "|") && (
+                            <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
+                                {(() => {
+                                    const videoUrl = showVideoId.split('|').slice(1).join('|');
+                                    const embedUrl = getYoutubeEmbedUrl(videoUrl);
+                                    if (embedUrl) {
+                                        return (
+                                            <iframe
+                                                src={embedUrl}
+                                                title="YouTube video player"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                allowFullScreen
+                                                className="absolute inset-0 w-full h-full border-0"
+                                            ></iframe>
+                                        );
+                                    }
+                                    return <div className="p-8 text-center text-slate-500">Invalid video URL</div>;
+                                })()}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full h-8 w-8 z-50"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowVideoId(null);
+                                    }}
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
+                        
+                        {(!showVideoId || !showVideoId.startsWith(encounter.id + "|")) && (
+                            <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
+                                <div className="flex items-center gap-1.5 px-2 py-1.5 bg-red-950/20 border border-red-900/30 rounded-md shrink-0">
+                                    <Youtube className="w-3.5 h-3.5 text-red-500" />
+                                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Video Guides</span>
+                                </div>
+                                
+                                {(() => {
+                                    const allVideos = [...((encounter as any).videos || [])];
+                                    if (encounter.videoUrl && !allVideos.some(v => v.videoUrl === encounter.videoUrl)) {
+                                        allVideos.push({ videoUrl: encounter.videoUrl, player: { ingameName: "Strategy Guide" } });
+                                    }
+                                    return allVideos.map((video, idx) => (
+                                        <button
+                                            key={idx}
+                                            className="group/video flex items-center gap-2 bg-slate-900/50 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 rounded-lg px-3 py-1.5 transition-all shrink-0"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowVideoId(`${encounter.id}|${video.videoUrl}`);
+                                            }}
+                                        >
+                                            <PlayCircle className="w-4 h-4 text-red-500/70 group-hover/video:text-red-500" />
+                                            {video.player?.avatar && <img src={video.player.avatar} alt={video.player.ingameName} className="w-4 h-4 rounded-full" />}
+                                            <span className="text-xs font-medium text-slate-300 group-hover/video:text-white">{video.player?.ingameName || "Strategy Guide"}</span>
+                                        </button>
+                                    ));
+                                })()}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pt-2">
                 <div className="xl:col-span-7 space-y-4">
@@ -766,8 +790,8 @@ function EncounterExpandedContent({
                 <div className="xl:col-span-5 space-y-2.5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
                         <div className="flex items-center gap-2">
-                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
-                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em]">Suggested Counters</h4>
+                            <div className="h-6 w-1 bg-amber-500 rounded-full shrink-0" />
+                            <h4 className="text-xs font-bold text-amber-500 uppercase tracking-[0.2em] whitespace-nowrap">Suggested Counters</h4>
                             <InfoPopover 
                                 content={
                                     <div className="space-y-3">
@@ -791,13 +815,13 @@ function EncounterExpandedContent({
                             />
                         </div>
                         {((featuredPicks[encounter.id] && featuredPicks[encounter.id].length > 0) || (alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0)) && (
-                            <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 self-start shadow-sm">
-                                <button onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: "recommended" }))} className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", (!encounterTabs[encounter.id] || encounterTabs[encounter.id] === "recommended") ? "bg-slate-800 text-amber-500 shadow-sm" : "text-slate-500 hover:text-slate-300")}>Recommended</button>
+                            <div className="flex flex-wrap bg-slate-900 border border-slate-800 rounded-lg p-0.5 sm:self-start shadow-sm w-full sm:w-auto mt-2 sm:mt-0">
+                                <button onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: "recommended" }))} className={cn("flex-1 px-2 sm:px-3 py-1.5 sm:py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", (!encounterTabs[encounter.id] || encounterTabs[encounter.id] === "recommended") ? "bg-slate-800 text-amber-500 shadow-sm" : "text-slate-500 hover:text-slate-300")}>Recommended</button>
                                 {featuredPicks[encounter.id] && featuredPicks[encounter.id].length > 0 && (
-                                    <button onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: "featured" }))} className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", encounterTabs[encounter.id] === "featured" ? "bg-slate-800 text-purple-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}>Featured</button>
+                                    <button onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: "featured" }))} className={cn("flex-1 px-2 sm:px-3 py-1.5 sm:py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", encounterTabs[encounter.id] === "featured" ? "bg-slate-800 text-purple-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}>Featured</button>
                                 )}
                                 {alliancePicks[encounter.id] && alliancePicks[encounter.id].length > 0 && (
-                                    <button onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: "alliance" }))} className={cn("px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", encounterTabs[encounter.id] === "alliance" ? "bg-slate-800 text-emerald-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}>Alliance</button>
+                                    <button onClick={() => setEncounterTabs(prev => ({ ...prev, [encounter.id]: "alliance" }))} className={cn("flex-1 px-2 sm:px-3 py-1.5 sm:py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors", encounterTabs[encounter.id] === "alliance" ? "bg-slate-800 text-emerald-400 shadow-sm" : "text-slate-500 hover:text-slate-300")}>Alliance</button>
                                 )}
                             </div>
                         )}
@@ -824,7 +848,7 @@ function EncounterExpandedContent({
                                 const sortedChampions = allCandidates.sort((a, b) => (pickCountMap.get(b.id) || 0) - (pickCountMap.get(a.id) || 0));
                                 
                                 return (
-                                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3">
+                                    <div className="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2 sm:gap-3">
                                         {sortedChampions.length === 0 ? (
                                             <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">No specific champions recommended for this encounter.</p>
                                         ) : (
@@ -841,7 +865,7 @@ function EncounterExpandedContent({
                             
                             if (activeTab === "featured" && featuredPicks[encounter.id]?.length > 0) {
                                 return (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         {featuredPicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
                                     </div>
                                 );
@@ -849,7 +873,7 @@ function EncounterExpandedContent({
 
                             if (activeTab === "alliance" && alliancePicks[encounter.id]?.length > 0) {
                                 return (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-3 2xl:grid-cols-4 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         {alliancePicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
                                     </div>
                                 );
@@ -904,14 +928,24 @@ export function EncounterCard({
 
     // Find which champions in the currently selected team are recommended for this fight.
     // Skip the work entirely in read-only mode since the suggestion UI is not shown.
-    const suggestedTeamChamps = !readOnly
+    const allSuggestedChamps = !readOnly
         ? selectedTeam.filter((teamMember) =>
             encounter.recommendedChampions.some((rc) => rc.id === teamMember.championId)
         )
         : [];
 
+    const suggestedTeamChamps = allSuggestedChamps.filter(r => {
+        // Only show if NOT already selected as counter for this specific fight
+        return !selectedRosterId || r.id !== selectedRosterId;
+    });
+
+    const synergyChamps = suggestedTeamChamps.filter(r => {
+        const isCounter = Object.values(selections).includes(r.id);
+        return !isCounter && rosterState.synergyIds?.includes(r.championId);
+    });
+
     return (
-        <div key={encounter.id} className="relative flex items-stretch group/encounter is-active pl-8 md:pl-10">
+        <div key={encounter.id} className="relative flex items-stretch group/encounter is-active pl-5 md:pl-10">
                                     {/* Timeline Node (Circle on the line) */}
                                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                                         <div className={cn(
@@ -934,7 +968,7 @@ export function EncounterCard({
 
                                     {/* Horizontal Connector Line (from circle to card) */}
                                     <div className={cn(
-                                        "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-8 md:w-10 z-10 transition-colors duration-300",
+                                        "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-5 md:w-10 z-10 transition-colors duration-300",
                                         hasSelection ? "bg-sky-500/50" : (isLast ? "bg-red-800/50" : "bg-slate-800 group-hover/encounter:bg-slate-700")
                                     )} />
 
@@ -955,6 +989,7 @@ export function EncounterCard({
                                             selectedRosterId={selectedRosterId}
                                             selectedRosterItem={selectedRosterItem}
                                             suggestedTeamChamps={suggestedTeamChamps}
+                                            synergyChamps={synergyChamps}
                                             readOnly={readOnly}
                                             toggleExpand={toggleExpand}
                                             handleSelectCounter={handleSelectCounter}

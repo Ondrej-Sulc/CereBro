@@ -170,6 +170,16 @@ export const getQuestPlanById = unstable_cache(
                         defender: true,
                         requiredTags: true,
                         recommendedChampions: true,
+                        videos: {
+                            include: {
+                                player: {
+                                    select: {
+                                        ingameName: true,
+                                        avatar: true,
+                                    }
+                                }
+                            }
+                        },
                         nodes: {
                             include: {
                                 nodeModifier: true
@@ -366,22 +376,35 @@ export type EnhancedCountersMap = Record<string, PickCounterWithChampion[]>;
 export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<EnhancedCountersMap> => {
     return unstable_cache(
         async () => {
-            const picks = await prisma.playerQuestEncounter.findMany({
+            const playerPlans = await prisma.playerQuestPlan.findMany({
                 where: {
                     questPlanId,
-                    selectedChampionId: { not: null },
-                    playerQuestPlan: { isFeatured: true }
+                    isFeatured: true,
+                    // Only plans that have at least one encounter selection or synergy selection
+                    OR: [
+                        { encounters: { some: { selectedChampionId: { not: null } } } },
+                        { synergyChampions: { some: {} } }
+                    ]
                 },
                 select: {
-                    questEncounterId: true,
-                    selectedChampionId: true,
-                    selectedChampion: {
-                        select: { id: true, name: true, shortName: true, class: true, images: true }
+                    player: {
+                        select: { id: true, ingameName: true, avatar: true }
                     },
-                    playerQuestPlan: {
+                    encounters: {
+                        where: { selectedChampionId: { not: null } },
                         select: {
-                            player: {
-                                select: { id: true, ingameName: true, avatar: true }
+                            questEncounterId: true,
+                            selectedChampionId: true,
+                            selectedChampion: {
+                                select: { id: true, name: true, shortName: true, class: true, images: true }
+                            }
+                        }
+                    },
+                    synergyChampions: {
+                        select: {
+                            championId: true,
+                            champion: {
+                                select: { id: true, name: true, shortName: true, class: true, images: true }
                             }
                         }
                     }
@@ -389,33 +412,70 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
             });
 
             const map: EnhancedCountersMap = {};
-            for (const pick of picks) {
-                if (!pick.selectedChampionId || !pick.selectedChampion) continue;
-                if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
 
+            for (const plan of playerPlans) {
                 const player = {
-                    id: pick.playerQuestPlan.player.id,
-                    name: pick.playerQuestPlan.player.ingameName,
-                    avatar: pick.playerQuestPlan.player.avatar
+                    id: plan.player.id,
+                    name: plan.player.ingameName,
+                    avatar: plan.player.avatar
                 };
 
-                const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
-                if (existing) {
-                    existing.count++;
-                    if (existing.pickedBy) {
-                        if (!existing.pickedBy.some(p => p.id === player.id)) {
-                            existing.pickedBy.push(player);
+                // Add standard encounter picks
+                for (const enc of plan.encounters) {
+                    if (!enc.selectedChampionId || !enc.selectedChampion) continue;
+                    if (!map[enc.questEncounterId]) map[enc.questEncounterId] = [];
+
+                    const existing = map[enc.questEncounterId].find(c => c.championId === enc.selectedChampionId);
+                    if (existing) {
+                        existing.count++;
+                        if (existing.pickedBy) {
+                            if (!existing.pickedBy.some(p => p.id === player.id)) {
+                                existing.pickedBy.push(player);
+                            }
+                        } else {
+                            existing.pickedBy = [player];
                         }
                     } else {
-                        existing.pickedBy = [player];
+                        map[enc.questEncounterId].push({
+                            championId: enc.selectedChampionId,
+                            count: 1,
+                            champion: enc.selectedChampion,
+                            pickedBy: [player]
+                        });
                     }
-                } else {
-                    map[pick.questEncounterId].push({
-                        championId: pick.selectedChampionId,
-                        count: 1,
-                        champion: pick.selectedChampion,
-                        pickedBy: [player]
-                    });
+                }
+
+                // We also need to inject synergy champions into the map somehow so the UI can pick them up.
+                // Since the `EnhancedCountersMap` is keyed by `questEncounterId`, synergy champions
+                // don't have a direct slot here. However, the UI uses `playerPicksMap` derived from
+                // `featuredPicks` to show the full team in the popover.
+                // To fix this, we can add a special key "SYNERGY" to the map to hold these picks,
+                // or we can pass the synergy picks directly to the UI component.
+                // Let's use a special key "SYNERGY" that the UI can parse if it needs them globally,
+                // BUT the `PlayerTeamSummary` just looks at `map[user.id].picks`. The current UI rebuilds
+                // the `playerPicksMap` by iterating over `Object.entries(featuredPicks)`.
+                // So adding a "SYNERGY" key will perfectly allow the UI to find them and add them to the player's team map!
+                for (const syn of plan.synergyChampions) {
+                    if (!map["SYNERGY"]) map["SYNERGY"] = [];
+                    
+                    const existingSyn = map["SYNERGY"].find(c => c.championId === syn.championId);
+                    if (existingSyn) {
+                        existingSyn.count++;
+                        if (existingSyn.pickedBy) {
+                            if (!existingSyn.pickedBy.some(p => p.id === player.id)) {
+                                existingSyn.pickedBy.push(player);
+                            }
+                        } else {
+                            existingSyn.pickedBy = [player];
+                        }
+                    } else {
+                        map["SYNERGY"].push({
+                            championId: syn.championId,
+                            count: 1,
+                            champion: syn.champion as any,
+                            pickedBy: [player]
+                        });
+                    }
                 }
             }
 
@@ -432,31 +492,37 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
 export const getEncounterAlliancePicks = async (questPlanId: string, allianceId: string, excludePlayerId?: string): Promise<EnhancedCountersMap> => {
     return unstable_cache(
         async () => {
-            const picks = await prisma.playerQuestEncounter.findMany({
+            const playerPlans = await prisma.playerQuestPlan.findMany({
                 where: {
                     questPlanId,
-                    selectedChampionId: { not: null },
-                    playerQuestPlan: { 
-                        player: { 
-                            allianceId,
-                            id: excludePlayerId ? { not: excludePlayerId } : undefined
-                        } 
-                    }
+                    player: { 
+                        allianceId,
+                        id: excludePlayerId ? { not: excludePlayerId } : undefined
+                    },
+                    OR: [
+                        { encounters: { some: { selectedChampionId: { not: null } } } },
+                        { synergyChampions: { some: {} } }
+                    ]
                 },
                 select: {
-                    questEncounterId: true,
-                    selectedChampionId: true,
-                    selectedChampion: {
-                        select: { id: true, name: true, shortName: true, class: true, images: true }
+                    player: {
+                        select: { id: true, ingameName: true, avatar: true }
                     },
-                    playerQuestPlan: {
+                    encounters: {
+                        where: { selectedChampionId: { not: null } },
                         select: {
-                            player: {
-                                select: {
-                                    id: true,
-                                    ingameName: true,
-                                    avatar: true
-                                }
+                            questEncounterId: true,
+                            selectedChampionId: true,
+                            selectedChampion: {
+                                select: { id: true, name: true, shortName: true, class: true, images: true }
+                            }
+                        }
+                    },
+                    synergyChampions: {
+                        select: {
+                            championId: true,
+                            champion: {
+                                select: { id: true, name: true, shortName: true, class: true, images: true }
                             }
                         }
                     }
@@ -464,27 +530,52 @@ export const getEncounterAlliancePicks = async (questPlanId: string, allianceId:
             });
 
             const map: EnhancedCountersMap = {};
-            for (const pick of picks) {
-                if (!pick.selectedChampionId || !pick.selectedChampion) continue;
-                if (!map[pick.questEncounterId]) map[pick.questEncounterId] = [];
-                
-                const existing = map[pick.questEncounterId].find(c => c.championId === pick.selectedChampionId);
-                const playerDetails = pick.playerQuestPlan.player;
+            for (const plan of playerPlans) {
+                const playerDetails = plan.player;
                 const pickedByData = { id: playerDetails.id, name: playerDetails.ingameName, avatar: playerDetails.avatar };
 
-                if (existing) {
-                    existing.count++;
-                    if (!existing.pickedBy) existing.pickedBy = [];
-                    if (!existing.pickedBy.some(p => p.id === pickedByData.id)) {
-                        existing.pickedBy.push(pickedByData);
+                // Standard encounter picks
+                for (const enc of plan.encounters) {
+                    if (!enc.selectedChampionId || !enc.selectedChampion) continue;
+                    if (!map[enc.questEncounterId]) map[enc.questEncounterId] = [];
+                    
+                    const existing = map[enc.questEncounterId].find(c => c.championId === enc.selectedChampionId);
+
+                    if (existing) {
+                        existing.count++;
+                        if (!existing.pickedBy) existing.pickedBy = [];
+                        if (!existing.pickedBy.some(p => p.id === pickedByData.id)) {
+                            existing.pickedBy.push(pickedByData);
+                        }
+                    } else {
+                        map[enc.questEncounterId].push({
+                            championId: enc.selectedChampionId,
+                            count: 1,
+                            champion: enc.selectedChampion,
+                            pickedBy: [pickedByData]
+                        });
                     }
-                } else {
-                    map[pick.questEncounterId].push({
-                        championId: pick.selectedChampionId,
-                        count: 1,
-                        champion: pick.selectedChampion,
-                        pickedBy: [pickedByData]
-                    });
+                }
+
+                // Synergy picks
+                for (const syn of plan.synergyChampions) {
+                    if (!map["SYNERGY"]) map["SYNERGY"] = [];
+                    
+                    const existingSyn = map["SYNERGY"].find(c => c.championId === syn.championId);
+                    if (existingSyn) {
+                        existingSyn.count++;
+                        if (!existingSyn.pickedBy) existingSyn.pickedBy = [];
+                        if (!existingSyn.pickedBy.some(p => p.id === pickedByData.id)) {
+                            existingSyn.pickedBy.push(pickedByData);
+                        }
+                    } else {
+                        map["SYNERGY"].push({
+                            championId: syn.championId,
+                            count: 1,
+                            champion: syn.champion as any,
+                            pickedBy: [pickedByData]
+                        });
+                    }
                 }
             }
 
@@ -822,12 +913,121 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     return { success: true };
 }
 
+/**
+ * Save or remove a synergy champion for a player's quest plan.
+ * Synergy champions are not assigned to any specific encounter but count towards the team limit.
+ */
+export async function savePlayerQuestSynergy(questPlanId: string, championId: number, isRemoving: boolean = false) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+
+    // Ensure the PlayerQuestPlan exists first
+    const playerPlan = await prisma.playerQuestPlan.upsert({
+        where: {
+            playerId_questPlanId: {
+                playerId: actingUser.id,
+                questPlanId: questPlanId
+            }
+        },
+        create: {
+            playerId: actingUser.id,
+            questPlanId: questPlanId
+        },
+        update: {}
+    });
+
+    if (isRemoving) {
+        await prisma.playerQuestSynergyChampion.delete({
+            where: {
+                playerQuestPlanId_championId: {
+                    playerQuestPlanId: playerPlan.id,
+                    championId: championId
+                }
+            }
+        });
+    } else {
+        // Validate champion ownership and get the best roster entry to check restrictions
+        const rosterEntries = await prisma.roster.findMany({
+            where: {
+                playerId: actingUser.id,
+                championId: championId
+            },
+            orderBy: [
+                { stars: 'desc' },
+                { rank: 'desc' }
+            ]
+        });
+        const hasChampion = rosterEntries[0];
+        if (!hasChampion) throw new Error("Champion not found in your roster.");
+
+        const quest = await prisma.questPlan.findUnique({
+            where: { id: questPlanId },
+            include: { requiredTags: true }
+        });
+        if (!quest) throw new Error("Quest plan not found.");
+
+        const champ = await prisma.champion.findUnique({
+            where: { id: championId },
+            include: { tags: true }
+        });
+        if (!champ) throw new Error("Champion not found.");
+
+        // Check quest invariants against the BEST version of this champion they own
+        if (quest.minStarLevel && hasChampion.stars < quest.minStarLevel) throw new Error(`Quest requires minimum ${quest.minStarLevel}★`);
+        if (quest.maxStarLevel && hasChampion.stars > quest.maxStarLevel) throw new Error(`Quest requires maximum ${quest.maxStarLevel}★`);
+        if (quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(champ.class)) throw new Error(`Quest requires class: ${quest.requiredClasses.join(", ")}`);
+        
+        if (quest.requiredTags.length > 0) {
+            const hasTag = quest.requiredTags.some(qt => champ.tags.some(ct => ct.id === qt.id));
+            if (!hasTag) throw new Error(`Quest requires specific tags.`);
+        }
+
+        if (quest.teamLimit !== null) {
+            const planDetails = await prisma.playerQuestPlan.findUnique({
+                where: { id: playerPlan.id },
+                include: {
+                    encounters: { where: { selectedChampionId: { not: null } } },
+                    synergyChampions: true
+                }
+            });
+            const encounterChamps = planDetails?.encounters.map(e => e.selectedChampionId).filter(id => id !== null) || [];
+            const synergyChamps = planDetails?.synergyChampions.map(s => s.championId) || [];
+            const uniqueChamps = new Set([...encounterChamps, ...synergyChamps]);
+            
+            if (!uniqueChamps.has(championId) && uniqueChamps.size >= quest.teamLimit) {
+                throw new Error(`Team limit of ${quest.teamLimit} reached.`);
+            }
+        }
+
+        await prisma.playerQuestSynergyChampion.upsert({
+            where: {
+                playerQuestPlanId_championId: {
+                    playerQuestPlanId: playerPlan.id,
+                    championId: championId
+                }
+            },
+            create: {
+                playerQuestPlanId: playerPlan.id,
+                championId: championId
+            },
+            update: {}
+        });
+    }
+
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
+
+    return { success: true };
+}
+
 // --- Quest Encounters ---
 
 export type QuestEncounterCreateInput = {
     questPlanId: string;
     sequence: number;
     videoUrl?: string | null;
+    videos?: { videoUrl: string; playerId?: string | null }[];
     tips?: string;
     defenderId?: number;
     recommendedTagNames?: string[];
@@ -864,6 +1064,12 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
                 create: data.nodeModifierIds.map(nodeId => ({
                     nodeModifier: { connect: { id: nodeId } }
                 }))
+            } : undefined,
+            videos: data.videos ? {
+                create: data.videos.map(v => ({
+                    videoUrl: v.videoUrl,
+                    playerId: v.playerId
+                }))
             } : undefined
         }
     });
@@ -878,6 +1084,7 @@ export type QuestEncounterUpdateInput = {
     questPlanId: string;
     sequence?: number;
     videoUrl?: string | null;
+    videos?: { videoUrl: string; playerId?: string | null }[];
     tips?: string | null;
     defenderId?: number | null;
     recommendedTagNames?: string[];
@@ -919,6 +1126,13 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
                 deleteMany: {},
                 create: data.nodeModifierIds.map(nodeId => ({
                     nodeModifier: { connect: { id: nodeId } }
+                }))
+            } : undefined,
+            videos: data.videos !== undefined ? {
+                deleteMany: {},
+                create: data.videos.map(v => ({
+                    videoUrl: v.videoUrl,
+                    playerId: v.playerId
                 }))
             } : undefined
         }
@@ -1021,6 +1235,11 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
                 include: {
                     selectedChampion: true
                 }
+            },
+            synergyChampions: {
+                include: {
+                    champion: true
+                }
             }
         }
     });
@@ -1031,15 +1250,20 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
     if (playerPlan.questPlan.status !== QuestPlanStatus.VISIBLE) return null;
 
     // Enrich encounter selections with roster data (star/rank/sig)
-    const selectedChampionIds = playerPlan.encounters
+    const encounterChampionIds = playerPlan.encounters
         .map(e => e.selectedChampionId)
         .filter((id): id is number => id !== null);
 
-    const rosterEntries = selectedChampionIds.length > 0
+    const synergyChampionIds = playerPlan.synergyChampions
+        .map(s => s.championId);
+
+    const allSelectedChampionIds = [...new Set([...encounterChampionIds, ...synergyChampionIds])];
+
+    const rosterEntries = allSelectedChampionIds.length > 0
         ? await prisma.roster.findMany({
             where: {
                 playerId: playerPlan.playerId,
-                championId: { in: selectedChampionIds }
+                championId: { in: allSelectedChampionIds }
             },
             include: {
                 champion: true
@@ -1085,6 +1309,7 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
 
     return {
         ...playerPlan,
+        rosterEntries,
         rosterMap: Object.fromEntries(
             Array.from(rosterMap.entries())
         ) as Record<string, any>
