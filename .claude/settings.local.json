@@ -8,7 +8,9 @@
       "Bash(xargs grep:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"const s = require\\(''stripe''\\); console.log\\(require\\(''./node_modules/stripe/package.json''\\).version\\)\")"
     ]
   }
 }
