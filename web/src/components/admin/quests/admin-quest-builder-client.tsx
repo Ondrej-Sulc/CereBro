@@ -15,11 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters } from "@/app/actions/quests";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
     ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink,
     XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2,
     ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack,
-    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive
+    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -162,6 +162,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         handleAddOrUpdateEncounterRef.current = handleAddOrUpdateEncounter;
         handleSaveSettingsRef.current = handleSaveSettings;
         cancelEditingRef.current = cancelEditing;
+        saveEncounterChangesRef.current = saveEncounterChanges;
     });
 
     // Keyboard Shortcuts
@@ -195,6 +196,30 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [editingEncounterId]);
+
+    // Autosave — fires 1.5s after any encounter field changes while in edit mode
+    useEffect(() => {
+        // When the encounter being edited changes, reset the ref and cancel pending saves
+        if (encIdForAutoSaveRef.current !== editingEncounterId) {
+            encIdForAutoSaveRef.current = editingEncounterId;
+            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+            setSaveStatus('idle');
+            return;
+        }
+        if (!editingEncounterId) return;
+
+        // A field changed while editing the same encounter — schedule autosave
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        setSaveStatus('unsaved');
+        autoSaveTimerRef.current = setTimeout(() => {
+            saveEncounterChangesRef.current?.();
+        }, 1500);
+
+        return () => {
+            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, sequence]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
@@ -316,6 +341,13 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
+    // Autosave state & refs for the encounter editor
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'unsaved'>('idle');
+    const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const encIdForAutoSaveRef = useRef<string | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const saveEncounterChangesRef = useRef<() => Promise<void>>(null as any);
+
     const AVAILABLE_CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "COSMIC", "TECH", "MYSTIC"];
 
     const handleSaveSettings = async () => {
@@ -406,25 +438,44 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         }
     };
 
+    // Saves the currently-editing encounter without canceling edit mode (used by autosave + manual save)
+    const saveEncounterChanges = async () => {
+        if (!editingEncounterId || !effectiveSequence) return;
+        setSaveStatus('saving');
+        try {
+            await updateQuestEncounter({
+                id: editingEncounterId,
+                questPlanId: initialQuest.id,
+                sequence: parseInt(effectiveSequence),
+                defenderId: defenderId ? parseInt(defenderId) : null,
+                videoUrl: videoUrl || null,
+                videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
+                tips: tips || null,
+                recommendedTagNames: recommendedTags,
+                recommendedChampionIds: recommendedChampionIds,
+                requiredTagIds: encounterRequiredTagIds,
+                nodeModifierIds: nodeModifierIds
+            });
+            router.refresh();
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2500);
+        } catch (error: unknown) {
+            console.error(error);
+            setSaveStatus('idle');
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to save encounter";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
     const handleAddOrUpdateEncounter = async () => {
         if (!effectiveSequence) return;
 
-        try {
-            if (editingEncounterId) {
-                await updateQuestEncounter({
-                    id: editingEncounterId,
-                    questPlanId: initialQuest.id,
-                    sequence: parseInt(effectiveSequence),
-                    defenderId: defenderId ? parseInt(defenderId) : null,
-                    videoUrl: videoUrl || null,
-                    videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
-                    tips: tips || null,
-                    recommendedTagNames: recommendedTags,
-                    recommendedChampionIds: recommendedChampionIds,
-                    requiredTagIds: encounterRequiredTagIds,
-                    nodeModifierIds: nodeModifierIds
-                });
-            } else {
+        if (editingEncounterId) {
+            // Flush any pending debounce and save immediately
+            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+            await saveEncounterChanges();
+        } else {
+            try {
                 await createQuestEncounter({
                     questPlanId: initialQuest.id,
                     sequence: parseInt(effectiveSequence),
@@ -437,14 +488,13 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     requiredTagIds: encounterRequiredTagIds,
                     nodeModifierIds: nodeModifierIds
                 });
+                cancelEditing();
+                router.refresh();
+            } catch (error: unknown) {
+                console.error(error);
+                const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to add encounter";
+                toast({ title: "Error", description: msg, variant: "destructive" });
             }
-
-            cancelEditing();
-            router.refresh();
-        } catch (error: unknown) {
-            console.error(error);
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : `Failed to ${editingEncounterId ? 'update' : 'add'} encounter`;
-            toast({ title: "Error", description: msg, variant: "destructive" });
         }
     };
 
@@ -483,8 +533,20 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         }, 100);
     };
 
-    const goToPreviousPathEncounter = () => {
+    // Flush pending debounced autosave before navigating away from the current encounter
+    const flushAutoSave = async () => {
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current);
+            autoSaveTimerRef.current = null;
+        }
+        if (editingEncounterId && saveStatus === 'unsaved') {
+            await saveEncounterChangesRef.current?.();
+        }
+    };
+
+    const goToPreviousPathEncounter = async () => {
         if (pathNavDisabled) return;
+        await flushAutoSave();
         if (editingEncounterIndex === -1) {
             startEditingEncounter(sortedPathEncounters[sortedPathEncounters.length - 1], { scrollTimeline: true });
             return;
@@ -496,8 +558,9 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         startEditingEncounter(sortedPathEncounters[editingEncounterIndex - 1], { scrollTimeline: true });
     };
 
-    const goToNextPathEncounter = () => {
+    const goToNextPathEncounter = async () => {
         if (pathNavDisabled) return;
+        await flushAutoSave();
         if (editingEncounterIndex === -1) {
             startEditingEncounter(sortedPathEncounters[0], { scrollTimeline: true });
             return;
@@ -1203,6 +1266,18 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Recommended Champions</Label>
+                                            <div className="flex items-center gap-1">
+                                                {recommendedChampionIds.length > 0 && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 px-2 text-[10px] text-slate-500 hover:text-red-400 hover:bg-red-950/20"
+                                                        onClick={() => setRecommendedChampionIds([])}
+                                                        title="Clear recommended champions for this encounter"
+                                                    >
+                                                        <Eraser className="w-3 h-3 mr-1" /> Clear
+                                                    </Button>
+                                                )}
                                             <Popover>
                                                 <PopoverTrigger asChild>
                                                     <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-400 hover:text-sky-400">
@@ -1223,6 +1298,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                     </div>
                                                 </PopoverContent>
                                             </Popover>
+                                            </div>
                                         </div>
                                         <MultiChampionCombobox
                                             champions={champions}
@@ -1268,26 +1344,51 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                             {/* ── Action row ───────────────────────────────── */}
                             <div className={cn(
-                                "px-4 py-3 border-t flex gap-3",
+                                "px-4 py-3 border-t flex items-center gap-3",
                                 editingEncounterId ? "border-amber-500/20 bg-amber-950/10" : "border-slate-800/60 bg-slate-900/30"
                             )}>
-                                <Button
-                                    onClick={handleAddOrUpdateEncounter}
-                                    className={cn(
-                                        "flex-1 font-semibold text-white shadow-md transition-all",
-                                        editingEncounterId
-                                            ? "bg-amber-600 hover:bg-amber-500 shadow-amber-900/30"
-                                            : "bg-sky-600 hover:bg-sky-500 shadow-sky-900/30"
-                                    )}
-                                    disabled={!effectiveSequence}
-                                >
-                                    {editingEncounterId
-                                        ? <><Save className="mr-2 h-4 w-4" /> Save Changes</>
-                                        : <><Plus className="mr-2 h-4 w-4" /> Add Encounter</>}
-                                </Button>
-                                {editingEncounterId && (
-                                    <Button onClick={cancelEditing} variant="outline" className="border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
-                                        Cancel
+                                {editingEncounterId ? (
+                                    <>
+                                        {/* Autosave status indicator */}
+                                        <div className="flex-1 flex items-center gap-2 min-w-0">
+                                            {saveStatus === 'saving' && (
+                                                <span className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                                                    <Loader2 className="w-3 h-3 animate-spin" /> Saving…
+                                                </span>
+                                            )}
+                                            {saveStatus === 'saved' && (
+                                                <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+                                                    <Check className="w-3 h-3" /> Saved
+                                                </span>
+                                            )}
+                                            {saveStatus === 'unsaved' && (
+                                                <span className="flex items-center gap-1.5 text-[11px] text-amber-400/70">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" /> Unsaved
+                                                </span>
+                                            )}
+                                            {saveStatus === 'idle' && (
+                                                <span className="text-[11px] text-slate-600">Auto-saves on change</span>
+                                            )}
+                                        </div>
+                                        <Button
+                                            onClick={handleAddOrUpdateEncounter}
+                                            size="sm"
+                                            className="bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-900/30 font-semibold"
+                                            disabled={saveStatus === 'saving' || !effectiveSequence}
+                                        >
+                                            <Save className="mr-1.5 h-3.5 w-3.5" /> Save Now
+                                        </Button>
+                                        <Button onClick={cancelEditing} variant="outline" size="sm" className="border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-slate-200">
+                                            Done
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button
+                                        onClick={handleAddOrUpdateEncounter}
+                                        className="flex-1 font-semibold text-white shadow-md transition-all bg-sky-600 hover:bg-sky-500 shadow-sky-900/30"
+                                        disabled={!effectiveSequence}
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" /> Add Encounter
                                     </Button>
                                 )}
                             </div>
