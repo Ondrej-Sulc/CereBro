@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /c/Code/cerebro/web/src/components/planning -type f -name *.tsx -o -name *.ts)",
+      "Bash(grep -r custom-scrollbar /c/Code/cerebro/web/src --include=*.css --include=*.tsx --include=*.ts)",
+      "Bash(grep -r \"@apply.*scrollbar\\\\|custom-scrollbar\" /c/Code/cerebro/web/src --include=*.css)",
+      "Bash(find /c/Code/cerebro/web -name *.css -type f)",
+      "Bash(xargs grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
