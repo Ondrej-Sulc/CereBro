@@ -927,10 +927,15 @@ export function EncounterCard({
     const isLast = index === quest.encounters.length - 1;
 
     // Find which champions in the currently selected team are recommended for this fight.
+    // This includes both official recommendations and consensus (popular) picks.
     // Skip the work entirely in read-only mode since the suggestion UI is not shown.
+    const encounterPicks = tabState.popularCounters[encounter.id] || [];
+    const popularChampionIds = new Set(encounterPicks.map(p => p.championId));
+
     const allSuggestedChamps = !readOnly
         ? selectedTeam.filter((teamMember) =>
-            encounter.recommendedChampions.some((rc) => rc.id === teamMember.championId)
+            encounter.recommendedChampions.some((rc) => rc.id === teamMember.championId) ||
+            popularChampionIds.has(teamMember.championId)
         )
         : [];
 

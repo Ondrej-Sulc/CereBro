@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, Prisma } from "@prisma/client";
@@ -11,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters } from "@/app/actions/quests";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters } from "@/app/actions/quests";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-    ArrowLeft, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ExternalLink, 
+    ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink, 
     XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2, 
-    ClipboardPaste, Plus, Trash2 
+    ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -79,6 +80,107 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
     const [nodeModifierIds, setNodeModifierIds] = useState<string[]>([]);
     const [isFormattingTips, setIsFormattingTips] = useState(false);
+
+    // Bulk Add Encounters
+    const [bulkEncountersText, setBulkEncountersText] = useState("");
+    const [isBulkAdding, setIsBulkAdding] = useState(false);
+
+    const bulkImportPreview = useMemo(() => {
+        const lines = bulkEncountersText.split("\n").map((l) => l.trim()).filter(Boolean);
+        let matched = 0;
+        for (const line of lines) {
+            const hit = champions.find(
+                (c) =>
+                    c.name.toLowerCase() === line.toLowerCase() ||
+                    (c.shortName && c.shortName.toLowerCase() === line.toLowerCase())
+            );
+            if (hit) matched++;
+        }
+        return { total: lines.length, matched, unmatched: lines.length - matched };
+    }, [bulkEncountersText, champions]);
+
+    const sortedPathEncounters = useMemo(
+        () => [...initialQuest.encounters].sort((a, b) => a.sequence - b.sequence),
+        [initialQuest.encounters]
+    );
+
+    const editingEncounterIndex = editingEncounterId
+        ? sortedPathEncounters.findIndex((e) => e.id === editingEncounterId)
+        : -1;
+
+    const pathNavDisabled = sortedPathEncounters.length === 0;
+
+    const handleBulkEncounterParse = async () => {
+        const lines = bulkEncountersText.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) return;
+
+        const defenderIds: (number | null)[] = lines.map(line => {
+            const match = champions.find(c =>
+                c.name.toLowerCase() === line.toLowerCase() ||
+                (c.shortName && c.shortName.toLowerCase() === line.toLowerCase())
+            );
+            return match ? match.id : null;
+        });
+
+        const startSeq = parseInt(defaultSequence, 10);
+        if (Number.isNaN(startSeq)) {
+            toast({ title: "Error", description: "Could not determine the next sequence number. Add or refresh encounters first.", variant: "destructive" });
+            return;
+        }
+
+        setIsBulkAdding(true);
+        try {
+            const res = await bulkCreateQuestEncounters(initialQuest.id, defenderIds, startSeq);
+            if (res.success) {
+                const unmatched = defenderIds.filter((id) => id === null).length;
+                toast({
+                    title: "Success",
+                    description:
+                        unmatched > 0
+                            ? `Added ${res.count} encounters (${unmatched} without a matched defender — edit those rows to assign champions).`
+                            : `Added ${res.count} encounters.`,
+                });
+                setBulkEncountersText("");
+                router.refresh();
+            }
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message || "Failed to bulk add", variant: "destructive" });
+        } finally {
+            setIsBulkAdding(false);
+        }
+    };
+
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Save shortcut (Cmd/Ctrl + S)
+            if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+                e.preventDefault();
+                if (editingEncounterId) {
+                    handleAddOrUpdateEncounter();
+                } else {
+                    handleSaveSettings();
+                }
+            }
+
+            // New Encounter shortcut (N)
+            if (e.key === 'n' && !editingEncounterId && 
+                document.activeElement?.tagName !== 'INPUT' && 
+                document.activeElement?.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                const defenderInput = document.querySelector('[placeholder="Search champions..."]') as HTMLInputElement;
+                defenderInput?.focus();
+            }
+
+            // Cancel editing (Esc)
+            if (e.key === 'Escape' && editingEncounterId) {
+                cancelEditing();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [editingEncounterId, defenderId, tips, sequence]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
@@ -332,7 +434,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         }
     };
 
-    const startEditingEncounter = (encounter: EncounterWithRelations) => {
+    const startEditingEncounter = (
+        encounter: EncounterWithRelations,
+        options?: { scrollTimeline?: boolean }
+    ) => {
         setEditingEncounterId(encounter.id);
         setSequence(String(encounter.sequence));
         setDefenderId(encounter.defenderId ? String(encounter.defenderId) : "");
@@ -348,6 +453,46 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
         setNodeModifierIds(encounter.nodes?.map(n => n.nodeModifierId) || []);
+        
+        setTimeout(() => {
+            const el = document.getElementById("encounter-editor");
+            if (el) {
+                const yOffset = -80;
+                const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+            if (options?.scrollTimeline) {
+                document
+                    .getElementById(`admin-timeline-encounter-${encounter.id}`)
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }, 100);
+    };
+
+    const goToPreviousPathEncounter = () => {
+        if (pathNavDisabled) return;
+        if (editingEncounterIndex === -1) {
+            startEditingEncounter(sortedPathEncounters[sortedPathEncounters.length - 1], { scrollTimeline: true });
+            return;
+        }
+        if (editingEncounterIndex === 0) {
+            cancelEditing();
+            return;
+        }
+        startEditingEncounter(sortedPathEncounters[editingEncounterIndex - 1], { scrollTimeline: true });
+    };
+
+    const goToNextPathEncounter = () => {
+        if (pathNavDisabled) return;
+        if (editingEncounterIndex === -1) {
+            startEditingEncounter(sortedPathEncounters[0], { scrollTimeline: true });
+            return;
+        }
+        if (editingEncounterIndex === sortedPathEncounters.length - 1) {
+            cancelEditing();
+            return;
+        }
+        startEditingEncounter(sortedPathEncounters[editingEncounterIndex + 1], { scrollTimeline: true });
     };
 
     const cancelEditing = () => {
@@ -423,6 +568,25 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 </Link>
             </div>
 
+            <Tabs defaultValue="path" className="w-full space-y-6 overflow-visible">
+                <TabsList className="grid w-full max-w-lg grid-cols-2 bg-slate-950/90 border border-slate-800 p-1 h-11">
+                    <TabsTrigger
+                        value="path"
+                        className="gap-2 data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
+                    >
+                        <LayoutList className="h-4 w-4 shrink-0 opacity-90" />
+                        {"Path & encounters"}
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="settings"
+                        className="gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-sky-200 data-[state=active]:shadow-md rounded-md"
+                    >
+                        <SlidersHorizontal className="h-4 w-4 shrink-0 opacity-90" />
+                        Quest settings
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="settings" className="mt-6 space-y-6 outline-none focus-visible:outline-none">
             <Card className="bg-slate-950/80 border-sky-900/50 shadow-lg shadow-sky-900/10">
                 <CardHeader className="pb-4">
                     <CardTitle className="flex items-center gap-2">Global Quest Settings</CardTitle>
@@ -732,21 +896,92 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     </div>
                 </CardContent>
             </Card>
+                </TabsContent>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Create Encounter Form */}
-                <div className="lg:col-span-5 space-y-6">
+                <TabsContent value="path" className="mt-6 space-y-6 overflow-visible outline-none focus-visible:outline-none">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start overflow-visible">
+                {/* Create Encounter Form — sticky on large screens so it stays visible while scrolling the timeline */}
+                <div
+                    id="encounter-editor"
+                    className="space-y-6 lg:col-span-5 lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:self-start pr-0 lg:pr-2 pb-4 lg:pb-6 custom-scrollbar"
+                >
                     <Card className={cn(
-                        "bg-slate-950/50 border-slate-800 sticky top-24 transition-colors",
+                        "bg-slate-950/50 border-slate-800 transition-colors",
                         editingEncounterId ? "border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.05)]" : ""
                     )}>
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className={editingEncounterId ? "text-amber-400" : ""}>
-                                    {editingEncounterId ? "Edit Fight/Encounter" : "Add Fight/Encounter"}
-                                </CardTitle>
+                        <CardHeader className="pb-4 space-y-3">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                    <div className="flex items-center gap-0.5 shrink-0 rounded-lg border border-slate-800 bg-slate-900/80 p-0.5">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-40"
+                                            disabled={pathNavDisabled}
+                                            onClick={goToPreviousPathEncounter}
+                                            title={
+                                                pathNavDisabled
+                                                    ? "No encounters on this path"
+                                                    : editingEncounterIndex === -1
+                                                        ? "Edit last encounter"
+                                                        : editingEncounterIndex === 0
+                                                            ? "Back to new encounter"
+                                                            : "Previous encounter"
+                                            }
+                                            aria-label={
+                                                editingEncounterIndex === 0
+                                                    ? "Back to new encounter"
+                                                    : "Previous encounter"
+                                            }
+                                        >
+                                            <ChevronLeft className="h-5 w-5" />
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-40"
+                                            disabled={pathNavDisabled}
+                                            onClick={goToNextPathEncounter}
+                                            title={
+                                                pathNavDisabled
+                                                    ? "No encounters on this path"
+                                                    : editingEncounterIndex === -1
+                                                        ? "Edit first encounter"
+                                                        : editingEncounterIndex === sortedPathEncounters.length - 1
+                                                            ? "Back to new encounter"
+                                                            : "Next encounter"
+                                            }
+                                            aria-label={
+                                                editingEncounterIndex === sortedPathEncounters.length - 1
+                                                    ? "Back to new encounter"
+                                                    : "Next encounter"
+                                            }
+                                        >
+                                            <ChevronRight className="h-5 w-5" />
+                                        </Button>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <CardTitle className={cn("text-lg sm:text-xl", editingEncounterId ? "text-amber-400" : "")}>
+                                            {editingEncounterId ? "Edit Fight/Encounter" : "Add Fight/Encounter"}
+                                        </CardTitle>
+                                        {!pathNavDisabled && editingEncounterIndex >= 0 && (
+                                            <p className="text-[11px] text-slate-500 mt-1 font-medium tabular-nums">
+                                                Fight {editingEncounterIndex + 1} of {sortedPathEncounters.length}
+                                            </p>
+                                        )}
+                                        {!pathNavDisabled && editingEncounterIndex === -1 && (
+                                            <p className="text-[11px] text-slate-500 mt-1">
+                                                Use arrows to jump to an existing fight, or add a new one below.
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
                                 {editingEncounterId && (
-                                    <Badge variant="outline" className="text-amber-400 border-amber-500/50 bg-amber-950/20">Editing</Badge>
+                                    <Badge variant="outline" className="text-amber-400 border-amber-500/50 bg-amber-950/20 shrink-0 self-start sm:self-center">
+                                        Editing
+                                    </Badge>
                                 )}
                             </div>
                         </CardHeader>
@@ -961,8 +1196,50 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 </div>
 
                 {/* Existing Encounters */}
-                <div className="lg:col-span-7 space-y-4">
-                    <h2 className="text-2xl font-semibold mb-4">Path Timeline</h2>
+                <div className="lg:col-span-7 space-y-4 min-w-0">
+                    <h2 className="text-2xl font-semibold mb-2">Path timeline</h2>
+                    <details className="group rounded-xl border border-slate-800 bg-slate-950/60 mb-4 open:border-sky-900/40">
+                        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-900/40 rounded-xl [&::-webkit-details-marker]:hidden">
+                            <span className="flex items-center gap-2 min-w-0">
+                                <FileStack className="h-4 w-4 shrink-0 text-sky-400" />
+                                <span className="truncate">Bulk import encounters</span>
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="px-4 pb-4 pt-0 space-y-3 border-t border-slate-800/60">
+                            <p className="text-xs text-slate-500 leading-relaxed">
+                                Paste defender names, one per line. New fights are appended in order starting at sequence {defaultSequence}.
+                                Lines that do not match a champion still create a placeholder row you can edit later.
+                            </p>
+                            <Textarea
+                                value={bulkEncountersText}
+                                onChange={(e) => setBulkEncountersText(e.target.value)}
+                                placeholder={"Hercules\nKitty Pryde\nOmega Red"}
+                                className="min-h-[140px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
+                            />
+                            {bulkImportPreview.total > 0 && (
+                                <p className="text-xs text-slate-400">
+                                    {bulkImportPreview.matched} matched, {bulkImportPreview.unmatched} unmatched — {bulkImportPreview.total} rows
+                                </p>
+                            )}
+                            <Button
+                                type="button"
+                                onClick={handleBulkEncounterParse}
+                                disabled={isBulkAdding || bulkImportPreview.total === 0}
+                                className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
+                            >
+                                {isBulkAdding ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileStack className="mr-2 h-4 w-4" /> Import {bulkImportPreview.total > 0 ? `${bulkImportPreview.total} encounters` : "encounters"}
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </details>
                     {initialQuest.encounters.length === 0 ? (
                         <p className="text-muted-foreground italic bg-slate-950/50 p-6 rounded-xl border border-dashed border-slate-800 text-center">No encounters added to this quest yet. Start by adding a fight on the left.</p>
                     ) : (
@@ -1008,8 +1285,9 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                                                 {/* Card Content */}
                                                 <Card
+                                                    id={`admin-timeline-encounter-${encounter.id}`}
                                                     className={cn(
-                                                        "w-full ml-8 md:ml-12 bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all cursor-pointer overflow-hidden relative group/card",
+                                                        "w-full ml-8 md:ml-12 bg-slate-950/80 border-slate-800 hover:border-slate-700 transition-all cursor-pointer overflow-hidden relative group/card scroll-mt-28",
                                                         editingEncounterId === encounter.id ? "ring-1 ring-sky-500/50 border-sky-500/50 shadow-[0_0_15px_rgba(2,132,199,0.1)]" : ""
                                                     )}
                                                     onClick={() => startEditingEncounter(encounter)}
@@ -1127,6 +1405,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     )}
                 </div>
             </div>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

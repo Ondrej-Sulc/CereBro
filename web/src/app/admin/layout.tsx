@@ -39,7 +39,8 @@ export default async function AdminLayout({
             </Sheet>
         </div>
 
-        <div className="bg-card rounded-lg border shadow-sm p-4 md:p-6 overflow-x-auto">
+        {/* min-w-0: flex child can shrink; avoid overflow-x-auto here — it creates a scrollport and breaks position:sticky inside admin pages (e.g. quest builder). */}
+        <div className="bg-card rounded-lg border shadow-sm p-4 md:p-6 min-w-0">
             {children}
         </div>
       </main>

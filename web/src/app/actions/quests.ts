@@ -311,8 +311,8 @@ export const getEncounterPopularCounters = async (questPlanId: string): Promise<
                 where: { questPlanId }
             });
 
-            // Threshold: At least 5 picks, or 2% of players (capped at 50 to avoid hiding consensus)
-            const threshold = Math.min(50, Math.max(5, Math.floor(totalPlayers * 0.02)));
+            // Threshold: At least 3 picks, or 2% of players (capped at 50 to avoid hiding consensus)
+            const threshold = Math.min(50, Math.max(3, Math.floor(totalPlayers * 0.02)));
 
             const results = await prisma.playerQuestEncounter.groupBy({
                 by: ['questEncounterId', 'selectedChampionId'],
@@ -1077,6 +1077,32 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
     revalidatePath(`/admin/quests/${data.questPlanId}`);
     revalidatePath(`/planning/quests/${data.questPlanId}`);
     return { success: true, encounterId: encounter.id };
+}
+
+export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds: (number | null)[], startSequence: number) {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const encounters = [];
+    for (let i = 0; i < defenderIds.length; i++) {
+        const defenderId = defenderIds[i];
+        
+        // Use create instead of createMany to easily support the relation and schema defaults if needed,
+        // though createMany is also fine. Here we stick to create for simplicity and safety with hooks.
+        const encounter = await prisma.questEncounter.create({
+            data: {
+                questPlanId,
+                sequence: startSequence + i,
+                defenderId: defenderId || null,
+                recommendedTags: [],
+            }
+        });
+        encounters.push(encounter);
+    }
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true, count: encounters.length };
 }
 
 export type QuestEncounterUpdateInput = {
