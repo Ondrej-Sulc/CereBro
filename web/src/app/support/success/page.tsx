@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, Heart } from "lucide-react";
+import { CheckCircle2, Heart, RefreshCw } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { DISCORD_INVITE } from "@/lib/links";
 import { prisma } from "@/lib/prisma";
 
-async function fetchDonationStatus(session_id?: string | string[]): Promise<string | null> {
+async function fetchDonationInfo(session_id?: string | string[]): Promise<{
+  status: string | null;
+  isSubscription: boolean;
+}> {
   const normalizedSessionId = Array.isArray(session_id) ? session_id[0] : session_id;
-  if (!normalizedSessionId) return null;
+  if (!normalizedSessionId) return { status: null, isSubscription: false };
 
   try {
     const donation = await prisma.supportDonation.findUnique({
       where: { stripeCheckoutSessionId: normalizedSessionId },
-      select: { status: true }
+      select: { status: true, stripeSubscriptionId: true },
     });
-    return donation?.status || null;
+    return {
+      status: donation?.status ?? null,
+      isSubscription: !!donation?.stripeSubscriptionId,
+    };
   } catch (error) {
     console.error("Donation status verification failed:", error);
-    return null;
+    return { status: null, isSubscription: false };
   }
 }
 
@@ -27,9 +33,9 @@ export async function generateMetadata({
   searchParams: Promise<{ session_id?: string | string[] }>;
 }): Promise<Metadata> {
   const { session_id } = await searchParams;
-  const status = await fetchDonationStatus(session_id);
-  
-  if (status === 'succeeded') {
+  const { status } = await fetchDonationInfo(session_id);
+
+  if (status === "succeeded") {
     return {
       title: "Support Successful - CereBro",
       description: "Thank you for supporting CereBro and helping fund hosting and active development.",
@@ -48,8 +54,8 @@ export default async function SupportSuccessPage({
   searchParams: Promise<{ session_id?: string | string[] }>;
 }) {
   const { session_id } = await searchParams;
-  const status = await fetchDonationStatus(session_id);
-  const isSuccess = status === 'succeeded';
+  const { status, isSubscription } = await fetchDonationInfo(session_id);
+  const isSuccess = status === "succeeded";
 
   if (!isSuccess) {
     return (
@@ -92,12 +98,34 @@ export default async function SupportSuccessPage({
             <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
               Thank you for supporting CereBro
             </h1>
-            <p className="text-slate-300 text-lg max-w-xl mx-auto mb-8">
-              Your donation helps keep hosting online and funds active development
-              for the entire community.
-            </p>
+
+            {isSubscription ? (
+              <>
+                <p className="text-slate-300 text-lg max-w-xl mx-auto mb-4">
+                  You&apos;re now a monthly supporter! Your subscription helps keep hosting online and funds
+                  active development for the entire community.
+                </p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-300 text-sm mb-8">
+                  <RefreshCw aria-hidden="true" className="w-4 h-4" />
+                  You&apos;ll be charged automatically each month. Cancel anytime from your profile.
+                </div>
+              </>
+            ) : (
+              <p className="text-slate-300 text-lg max-w-xl mx-auto mb-8">
+                Your donation helps keep hosting online and funds active development
+                for the entire community.
+              </p>
+            )}
 
             <div className="flex flex-wrap items-center justify-center gap-3">
+              {isSubscription && (
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3 transition-colors"
+                >
+                  Go to My Profile
+                </Link>
+              )}
               <Link
                 href="/"
                 className="inline-flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium px-6 py-3 transition-colors"
@@ -116,8 +144,8 @@ export default async function SupportSuccessPage({
               </Link>
             </div>
 
-            <div className="mt-8 inline-flex items-center gap-2 text-pink-300/90 text-sm">
-              <Heart aria-hidden="true" className="w-4 h-4 fill-pink-500/40" />
+            <div className="mt-8 inline-flex items-center gap-2 text-sky-300/90 text-sm">
+              <Heart aria-hidden="true" className="w-4 h-4 fill-sky-500/40" />
               Community powered, always.
             </div>
           </div>

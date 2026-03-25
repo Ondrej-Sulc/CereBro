@@ -5,8 +5,9 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_CURRENCY = "eur";
-const DEFAULT_MIN_AMOUNT = 0.5;
+const DEFAULT_MIN_AMOUNT = 5;
 const DEFAULT_MAX_AMOUNT = 1000;
+const SUBSCRIPTION_TIERS = [5, 10, 25, 50] as const;
 
 function parseNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -83,25 +84,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const amount = parseNumber((parsedBody as { amount?: unknown })?.amount);
-  if (amount === null || amount <= 0) {
-    return NextResponse.json(
-      { error: "Please enter a valid donation amount." },
-      { status: 400 },
-    );
-  }
-
-  if (amount < minAmount || amount > maxAmount) {
-    return NextResponse.json(
-      {
-        error: `Donation amount must be between ${minAmount} and ${maxAmount} ${currency.toUpperCase()}.`,
-      },
-      { status: 400 },
-    );
-  }
+  const body = parsedBody as { mode?: unknown; amount?: unknown; tierAmount?: unknown };
+  const mode = body.mode === "payment" ? "payment" : "subscription";
 
   const stripe = new Stripe(stripeSecretKey);
-  const amountMinor = toMinorUnits(amount, currency);
   let baseUrl: string;
   try {
     baseUrl = getBaseUrl();
@@ -112,9 +98,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 500 },
     );
   }
-  
-  const session = await auth();
 
+  const session = await auth();
   let playerId: string | null = null;
   let botUserId: string | null = null;
   const discordId: string | null = session?.user?.discordId || null;
@@ -134,9 +119,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         botUserId = player.botUserId;
       }
     } catch (error) {
-      // Avoid raw discordId in logs - use surrogate or redacted value
-      const safeDiscordId = discordId.length > 8 
-        ? `${discordId.slice(0, 4)}...${discordId.slice(-4)}` 
+      const safeDiscordId = discordId.length > 8
+        ? `${discordId.slice(0, 4)}...${discordId.slice(-4)}`
         : "present";
 
       logger.error(
@@ -146,7 +130,82 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   }
 
+  const sharedMetadata = {
+    source: "cerebro_support_page",
+    playerId: playerId ?? "",
+    botUserId: botUserId ?? "",
+    discordId: discordId ?? "",
+    supporterName: supporterName ?? "",
+  };
+
   try {
+    if (mode === "subscription") {
+      const tierAmount = parseNumber(body.tierAmount);
+      if (tierAmount === null || !(SUBSCRIPTION_TIERS as readonly number[]).includes(tierAmount)) {
+        return NextResponse.json(
+          { error: `Please select a valid subscription tier: ${SUBSCRIPTION_TIERS.join(", ")} ${currency.toUpperCase()}/month.` },
+          { status: 400 },
+        );
+      }
+
+      const amountMinor = toMinorUnits(tierAmount, currency);
+
+      const checkoutSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        success_url: `${baseUrl}/support/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/support/cancel`,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency,
+              unit_amount: amountMinor,
+              recurring: { interval: "month" },
+              product_data: {
+                name: "CereBro Monthly Supporter",
+                description: "Monthly support for hosting and active development.",
+              },
+            },
+          },
+        ],
+        customer_email: supporterEmail ?? undefined,
+        client_reference_id: playerId ?? undefined,
+        metadata: sharedMetadata,
+        subscription_data: {
+          metadata: sharedMetadata,
+        },
+      });
+
+      if (!checkoutSession.url) {
+        return NextResponse.json(
+          { error: "Failed to create checkout session." },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ url: checkoutSession.url });
+    }
+
+    // One-time payment
+    const amount = parseNumber(body.amount);
+    if (amount === null || amount <= 0) {
+      return NextResponse.json(
+        { error: "Please enter a valid donation amount." },
+        { status: 400 },
+      );
+    }
+
+    if (amount < minAmount || amount > maxAmount) {
+      return NextResponse.json(
+        {
+          error: `Donation amount must be between ${minAmount} and ${maxAmount} ${currency.toUpperCase()}.`,
+        },
+        { status: 400 },
+      );
+    }
+
+    const amountMinor = toMinorUnits(amount, currency);
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       submit_type: "donate",
@@ -167,13 +226,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       ],
       customer_email: supporterEmail ?? undefined,
       client_reference_id: playerId ?? undefined,
-      metadata: {
-        source: "cerebro_support_page",
-        playerId: playerId ?? "",
-        botUserId: botUserId ?? "",
-        discordId: discordId ?? "",
-        supporterName: supporterName ?? "",
-      },
+      metadata: sharedMetadata,
     });
 
     if (!checkoutSession.url) {
@@ -188,7 +241,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     logger.error(
       {
         error,
-        amountMinor,
+        mode,
         currency,
         baseUrl,
         hasSupporterEmail: !!supporterEmail,

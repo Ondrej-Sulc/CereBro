@@ -24,6 +24,7 @@ import {
   Youtube,
   Map,
   Server,
+  Heart,
   ChevronLeft,
   ChevronRight,
   LucideIcon
@@ -77,6 +78,7 @@ const groups: SidebarGroup[] = [
   {
     label: "System",
     items: [
+      { title: "Support", href: "/admin/support", icon: Heart, permission: "MANAGE_SYSTEM" },
       { title: "YouTube Token", href: "/admin/youtube", icon: Youtube, permission: "MANAGE_SYSTEM" },
       { title: "Debug Roster", href: "/admin/debug-roster", icon: Bug, permission: "MANAGE_SYSTEM" },
     ]

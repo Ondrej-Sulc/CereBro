@@ -18,6 +18,8 @@ import logger from "@/lib/logger";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { ProfileManager } from "./components/profile-manager";
+import { ManageSubscriptionButton } from "./components/manage-subscription-button";
+import { Heart } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "My Profile - CereBro",
@@ -43,7 +45,7 @@ export default async function ProfilePage() {
 
     logger.info({ userId: player.id }, "User accessing Profile page");
 
-    const [rosterResult, prestigeHistory, allProfiles] = await Promise.all([
+    const [rosterResult, prestigeHistory, allProfiles, supporterDonation] = await Promise.all([
         getRoster(player.id, null, null, null),
         prisma.prestigeLog.findMany({
             where: { playerId: player.id },
@@ -61,7 +63,15 @@ export default async function ProfilePage() {
                 }
             },
             orderBy: { ingameName: 'asc' }
-        })
+        }),
+        prisma.supportDonation.findFirst({
+            where: {
+                discordId: player.discordId,
+                stripeCustomerId: { not: null },
+            },
+            select: { stripeCustomerId: true, stripeSubscriptionId: true },
+            orderBy: { createdAt: "desc" },
+        }),
     ]);
 
     const roster = typeof rosterResult === "string" ? [] : rosterResult;
@@ -109,6 +119,35 @@ export default async function ProfilePage() {
             </div>
 
             <Separator className="bg-slate-800" />
+
+            {/* Supporter Section */}
+            {supporterDonation?.stripeCustomerId && (
+                <Card className="bg-slate-900/50 border-slate-800">
+                    <CardContent className="flex items-center justify-between gap-4 py-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/20">
+                                <Heart className="w-4 h-4 text-sky-400 fill-sky-500/40" />
+                            </div>
+                            <div>
+                                <p className="text-white font-medium text-sm">CereBro Supporter</p>
+                                <p className="text-slate-400 text-xs">
+                                    {supporterDonation.stripeSubscriptionId
+                                        ? "Active monthly subscription"
+                                        : "One-time supporter"}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {supporterDonation.stripeSubscriptionId && <ManageSubscriptionButton />}
+                            <Link href="/support">
+                                <Button variant="ghost" className="text-slate-400 hover:text-slate-200 text-sm">
+                                    Support again
+                                </Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Prestige Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

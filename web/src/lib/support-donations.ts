@@ -18,6 +18,7 @@ type UpsertDonationInput = {
   stripeCheckoutSessionId: string;
   stripePaymentIntentId: string | null;
   stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
   supporterName: string | null;
   supporterEmail: string | null;
   playerId: string | null;
@@ -38,6 +39,7 @@ export async function upsertSupportDonation(input: UpsertDonationInput) {
       status: input.status,
       stripePaymentIntentId: input.stripePaymentIntentId,
       stripeCustomerId: input.stripeCustomerId,
+      stripeSubscriptionId: input.stripeSubscriptionId,
       playerId: input.playerId,
       botUserId: input.botUserId,
       discordId: input.discordId,
