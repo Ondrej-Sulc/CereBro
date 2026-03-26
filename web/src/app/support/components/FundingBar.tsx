@@ -87,6 +87,8 @@ function BarTrack({
   previewToPct,
   showTip,
   variant = "sky",
+  showFullBackground = false,
+  isComplete = false,
 }: {
   height?: string;
   realFillPct: number;
@@ -94,6 +96,8 @@ function BarTrack({
   previewToPct: number;
   showTip: boolean;
   variant?: BarVariant;
+  showFullBackground?: boolean;
+  isComplete?: boolean;
 }) {
   const glowAnim = variant === "emerald" ? "funding-outer-glow-emerald" : "funding-outer-glow";
   const tipColor = variant === "emerald" ? "bg-emerald-100/80" : "bg-white/80";
@@ -104,6 +108,13 @@ function BarTrack({
       style={{ animation: `${glowAnim} 3s ease-in-out infinite` }}
     >
       <div className="absolute inset-0 bg-slate-950 rounded-[4px]" />
+
+      {showFullBackground && (
+        <div className="absolute inset-y-0 left-0 right-0 rounded-[4px] overflow-hidden opacity-30">
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-800 via-sky-500 to-sky-300" />
+          <div className="absolute inset-x-0 top-0 h-[35%] bg-gradient-to-b from-white/20 to-transparent rounded-t-[4px]" />
+        </div>
+      )}
 
       <BarFill fromPct={0} toPct={realFillPct} isPreview={false} variant={variant} />
 
@@ -128,6 +139,13 @@ function BarTrack({
       ))}
 
       <div className="absolute inset-0 rounded-[4px] border border-slate-600/40 pointer-events-none" />
+
+      {isComplete && (
+        <div
+          className="absolute inset-0 rounded-[4px] pointer-events-none z-20"
+          style={{ animation: "bar-complete-flash 0.5s ease-out forwards" }}
+        />
+      )}
     </div>
   );
 }
@@ -140,33 +158,61 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
   const fillPct = Math.round((overflow / targetMinor) * 100);
   const celebrated = barsCleared >= 1;
 
+  // animBar: which bar we're currently filling (0..barsCleared)
+  // shownHistory: how many completed bars are visible in the header
+  const [animBar, setAnimBar] = useState(0);
   const [displayPct, setDisplayPct] = useState(0);
+  const [shownHistory, setShownHistory] = useState(0);
+  const [justCompleted, setJustCompleted] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
 
+  const BAR_FILL_MS = 700;
+  const FLASH_MS = 500;
+
+  // Sequential bar-by-bar fill animation
   useEffect(() => {
-    if (fillPct === 0) return;
-    const duration = 1000;
+    const targetPct = animBar < barsCleared ? 100 : fillPct;
+    if (targetPct === 0) return;
+
+    const duration = animBar < barsCleared ? BAR_FILL_MS : 1000;
     const start = performance.now();
+    let rafId: number;
+
     function tick(now: number) {
       const progress = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayPct(Math.round(eased * fillPct));
-      if (progress < 1) requestAnimationFrame(tick);
+      setDisplayPct(Math.round(eased * targetPct));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else if (animBar < barsCleared) {
+        // Flash the completed bar, then advance to the next
+        setJustCompleted(true);
+        setTimeout(() => {
+          setJustCompleted(false);
+          setShownHistory((h) => h + 1);
+          setDisplayPct(0);
+          setAnimBar((a) => a + 1);
+        }, FLASH_MS);
+      }
     }
-    requestAnimationFrame(tick);
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animBar]);
+
+  // Preview appears only after all bar animations complete
+  useEffect(() => {
+    const totalDuration = barsCleared * (BAR_FILL_MS + FLASH_MS) + 1150;
+    const t = setTimeout(() => setPreviewReady(true), totalDuration);
+    return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => setPreviewReady(true), 1150);
-    return () => clearTimeout(t);
-  }, []);
-
-  const coveredEur = (overflow / 100).toFixed(0);
   const targetEur = (targetMinor / 100).toFixed(0);
 
-  const visibleHistory = Math.min(barsCleared, MAX_HISTORY_BARS);
-  const hiddenHistory = barsCleared - visibleHistory;
+  const visibleHistory = Math.min(shownHistory, MAX_HISTORY_BARS);
+  const hiddenHistory = shownHistory - visibleHistory;
 
   // Preview calculations
   const totalWithPreview = overflow + previewMinor;
@@ -233,6 +279,11 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.7; }
         }
+        @keyframes bar-complete-flash {
+          0%   { background: rgba(255,255,255,0); }
+          25%  { background: rgba(255,255,255,0.35); }
+          100% { background: rgba(255,255,255,0); }
+        }
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 lg:px-6 mb-10">
@@ -267,16 +318,16 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
             <div className="text-right shrink-0">
               <div className="flex items-baseline justify-end gap-1.5">
                 <p className={`text-3xl font-extrabold tabular-nums leading-none ${celebrated ? "text-emerald-300" : "text-white"}`}>
-                  {displayPct}%
+                  {animBar * 100 + displayPct}%
                 </p>
-                {previewAddedPct > 0 && (
+                {previewReady && previewAddedPct > 0 && (
                   <p className="text-lg font-bold tabular-nums leading-none text-amber-300/90">
                     +{previewAddedPct}%
                   </p>
                 )}
               </div>
               <p className="text-xs text-slate-500 tabular-nums mt-1">
-                €{coveredEur} / €{targetEur}
+                est. €{targetEur}/mo
               </p>
             </div>
           </div>
@@ -285,9 +336,13 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           <div className="relative h-3.5 mb-0.5">
             {MILESTONES.map((p) => {
               const reached = displayPct >= p;
-              const color = reached
+              const isOnFinalBar = animBar === barsCleared;
+              const color = reached && isOnFinalBar
                 ? celebrated ? "text-emerald-400" : "text-sky-400"
-                : "text-slate-700";
+                : reached && !isOnFinalBar
+                  ? "text-sky-400"
+                  : "text-slate-700";
+              const label = animBar >= 1 ? `${animBar * 100 + p}%` : `${p}%`;
               return (
                 <div
                   key={p}
@@ -295,7 +350,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
                   style={{ left: p === 100 ? "calc(100% - 1px)" : `${p}%`, transform: "translateX(-50%)" }}
                 >
                   <span className={`text-[9px] font-bold tabular-nums leading-none ${color}`}>
-                    {p}%
+                    {label}
                   </span>
                 </div>
               );
@@ -308,7 +363,9 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
             previewFromPct={hasMainPreview ? mainPreviewFromPct : 0}
             previewToPct={hasMainPreview ? (previewReady ? mainPreviewToPct : mainPreviewFromPct) : 0}
             showTip={!hasMainPreview || !previewReady}
-            variant={celebrated ? "emerald" : "sky"}
+            variant={animBar === barsCleared && celebrated ? "emerald" : "sky"}
+            showFullBackground={animBar === barsCleared && celebrated}
+            isComplete={justCompleted}
           />
 
           {/* Celebration banner */}
@@ -348,7 +405,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
             <p className={`text-xs ${celebrated ? "text-emerald-500" : "text-slate-500"}`}>
               {footerText}
             </p>
-            {previewMinor > 0 && (
+            {previewReady && previewMinor > 0 && (
               <p className="text-xs text-amber-400/80 font-medium">
                 {nextBarFillPct > 0
                   ? nextBarAlsoFills
