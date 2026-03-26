@@ -235,6 +235,7 @@ model SupportDonation {
   stripeCheckoutSessionId String    @unique
   stripePaymentIntentId   String?
   stripeCustomerId        String?
+  stripeSubscriptionId    String?
   supporterName           String?
   supporterEmail          String?
   retentionState          String    @default("ACTIVE")
@@ -253,6 +254,7 @@ model SupportDonation {
   @@index([playerId, createdAt])
   @@index([botUserId, createdAt])
   @@index([discordId, createdAt])
+  @@index([stripeSubscriptionId])
   @@index([retentionState, anonymizedAt, deletedAt])
 }
 

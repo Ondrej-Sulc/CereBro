@@ -26,7 +26,7 @@ export default function SupportCancelPage() {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/support"
-                className="inline-flex items-center justify-center rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-medium px-6 py-3 transition-colors"
+                className="inline-flex items-center justify-center rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-medium px-6 py-3 transition-colors"
               >
                 Try Again
               </Link>

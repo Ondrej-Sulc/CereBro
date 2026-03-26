@@ -18,6 +18,8 @@ import logger from "@/lib/logger";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { ProfileManager } from "./components/profile-manager";
+import { ManageSubscriptionButton } from "./components/manage-subscription-button";
+import { Heart, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "My Profile - CereBro",
@@ -43,7 +45,7 @@ export default async function ProfilePage() {
 
     logger.info({ userId: player.id }, "User accessing Profile page");
 
-    const [rosterResult, prestigeHistory, allProfiles] = await Promise.all([
+    const [rosterResult, prestigeHistory, allProfiles, supporterDonation] = await Promise.all([
         getRoster(player.id, null, null, null),
         prisma.prestigeLog.findMany({
             where: { playerId: player.id },
@@ -61,7 +63,15 @@ export default async function ProfilePage() {
                 }
             },
             orderBy: { ingameName: 'asc' }
-        })
+        }),
+        prisma.supportDonation.findFirst({
+            where: {
+                discordId: player.discordId,
+                stripeCustomerId: { not: null },
+            },
+            select: { stripeCustomerId: true, stripeSubscriptionId: true },
+            orderBy: { createdAt: "desc" },
+        }),
     ]);
 
     const roster = typeof rosterResult === "string" ? [] : rosterResult;
@@ -109,6 +119,82 @@ export default async function ProfilePage() {
             </div>
 
             <Separator className="bg-slate-800" />
+
+            {/* Supporter Section */}
+            {supporterDonation?.stripeCustomerId && (
+                <>
+                    <style>{`
+                        @keyframes supporter-glow {
+                            0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,0.25), 0 0 18px rgba(251,191,36,0.06); }
+                            50%       { box-shadow: 0 0 0 1px rgba(251,191,36,0.5),  0 0 28px rgba(251,191,36,0.14); }
+                        }
+                        @keyframes supporter-scan {
+                            0%   { transform: translateX(-100%) skewX(-20deg); }
+                            100% { transform: translateX(1400%) skewX(-20deg); }
+                        }
+                        @keyframes supporter-pulse-dot {
+                            0%, 100% { opacity: 1; transform: scale(1); }
+                            50%       { opacity: 0.5; transform: scale(0.8); }
+                        }
+                    `}</style>
+                    <div
+                        className="relative rounded-xl overflow-hidden"
+                        style={{ animation: "supporter-glow 3s ease-in-out infinite" }}
+                    >
+                        {/* Background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/40 via-slate-900/80 to-slate-900/90" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-sky-500/5" />
+                        {/* Shimmer sweep */}
+                        <div
+                            className="absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-amber-200/8 to-transparent pointer-events-none"
+                            style={{ animation: "supporter-scan 4s linear infinite" }}
+                        />
+                        {/* Border */}
+                        <div className="absolute inset-0 rounded-xl border border-amber-500/30 pointer-events-none" />
+
+                        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4">
+                            <div className="flex items-center gap-4">
+                                {/* Icon cluster */}
+                                <div className="relative shrink-0">
+                                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25">
+                                        <Heart className="w-5 h-5 text-amber-400 fill-amber-500/50" />
+                                    </div>
+                                    <Sparkles className="absolute -top-1.5 -right-1.5 w-3 h-3 text-amber-300/80" />
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <p className="text-amber-200 font-bold text-sm tracking-wide">CereBro Supporter</p>
+                                        {supporterDonation.stripeSubscriptionId && (
+                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+                                                <span
+                                                    className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                                                    style={{ animation: "supporter-pulse-dot 2s ease-in-out infinite" }}
+                                                />
+                                                Active
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-slate-400 text-xs mt-0.5">
+                                        {supporterDonation.stripeSubscriptionId
+                                            ? "Thank you for your monthly support — it keeps CereBro running!"
+                                            : "Thank you for your one-time contribution!"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                                {supporterDonation.stripeSubscriptionId && <ManageSubscriptionButton />}
+                                <Link href="/support">
+                                    <Button variant="ghost" className="text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/10 text-sm">
+                                        Support again
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Prestige Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

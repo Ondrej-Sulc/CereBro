@@ -18,6 +18,7 @@ type UpsertDonationInput = {
   stripeCheckoutSessionId: string;
   stripePaymentIntentId: string | null;
   stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
   supporterName: string | null;
   supporterEmail: string | null;
   playerId: string | null;
@@ -38,6 +39,7 @@ export async function upsertSupportDonation(input: UpsertDonationInput) {
       status: input.status,
       stripePaymentIntentId: input.stripePaymentIntentId,
       stripeCustomerId: input.stripeCustomerId,
+      stripeSubscriptionId: input.stripeSubscriptionId,
       playerId: input.playerId,
       botUserId: input.botUserId,
       discordId: input.discordId,
@@ -207,6 +209,59 @@ export async function anonymizeSupportDonationById(
 
     throw error;
   }
+}
+
+export async function listTopSupporters(limit = 3) {
+  const donations = await prisma.supportDonation.findMany({
+    where: {
+      status: "succeeded",
+      anonymizedAt: null,
+      deletedAt: null,
+      consentRevoked: false,
+    },
+    select: {
+      amountMinor: true,
+      supporterName: true,
+      playerId: true,
+      discordId: true,
+      createdAt: true,
+      player: {
+        select: { ingameName: true },
+      },
+    },
+  });
+
+  // Group by canonical identity: playerId > discordId > supporterName
+  const totals = new Map<string, { name: string; totalMinor: number; lastAt: Date }>();
+
+  for (const d of donations) {
+    const key = d.playerId ?? d.discordId ?? d.supporterName ?? null;
+    if (!key) continue;
+
+    const name = (d.player?.ingameName || d.supporterName)?.trim();
+    if (!name) continue;
+
+    const existing = totals.get(key);
+    if (existing) {
+      existing.totalMinor += d.amountMinor;
+      // Keep the most recent name (player ingameName may have changed)
+      if (d.createdAt > existing.lastAt) {
+        existing.name = name;
+        existing.lastAt = d.createdAt;
+      }
+    } else {
+      totals.set(key, { name, totalMinor: d.amountMinor, lastAt: d.createdAt });
+    }
+  }
+
+  return Array.from(totals.values())
+    .sort((a, b) => b.totalMinor - a.totalMinor)
+    .slice(0, limit)
+    .map((item, index) => ({
+      rank: index + 1,
+      name: item.name,
+      totalMinor: item.totalMinor,
+    }));
 }
 
 export async function listPublicSupporters() {
