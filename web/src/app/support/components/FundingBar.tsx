@@ -337,12 +337,12 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           )}
 
           {/* Footer */}
-          <div className="mt-2.5 flex items-center justify-between gap-4">
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <p className={`text-xs ${celebrated ? "text-emerald-500" : "text-slate-500"}`}>
               {footerText}
             </p>
             {previewMinor > 0 && (
-              <p className="text-xs text-amber-400/80 font-medium shrink-0">
+              <p className="text-xs text-amber-400/80 font-medium">
                 {nextBarFillPct > 0
                   ? nextBarAlsoFills
                     ? "covers this and more!"
