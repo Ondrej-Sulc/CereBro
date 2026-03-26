@@ -2,14 +2,21 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn, Settings } from "lucide-react";
+import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn, Settings, Crown, Trophy, Award } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { signInAction } from "@/app/actions/auth";
 import { FundingBar } from "./components/FundingBar";
 
 const CURRENCY = "EUR";
 const SUBSCRIPTION_TIERS = [5, 10, 25, 50] as const;
-const SUGGESTED_AMOUNTS = [5, 10, 25, 50];
+const SUGGESTED_AMOUNTS = [5, 10, 25, 50, 100];
+
+const TIER_TAGLINES: Record<number, string> = {
+  5: "keeps the lights on",
+  10: "funds a feature",
+  25: "hero tier",
+  50: "legendary",
+};
 const MIN_DONATION_AMOUNT = 5;
 const MAX_DONATION_AMOUNT = 1000;
 
@@ -73,6 +80,15 @@ export default function SupportPageClient({
     const parsed = parseAmount(amount);
     if (parsed === null || parsed < MIN_DONATION_AMOUNT) return 0;
     return Math.round(parsed * 100);
+  }, [mode, selectedTier, amount, targetMinor]);
+
+  // Percentage of monthly costs the selected amount covers
+  const impactPct = useMemo(() => {
+    if (!targetMinor) return null;
+    if (mode === "subscription") return Math.round((selectedTier * 100 / targetMinor) * 100);
+    const parsed = parseAmount(amount);
+    if (!parsed || parsed < MIN_DONATION_AMOUNT) return null;
+    return Math.round((parsed * 100 / targetMinor) * 100);
   }, [mode, selectedTier, amount, targetMinor]);
 
   useEffect(() => {
@@ -272,9 +288,9 @@ export default function SupportPageClient({
                 <div className="space-y-2">
                   {topSupporters.map((s) => {
                     const rankStyles = [
-                      { ring: "border-amber-400/40 bg-amber-400/10", label: "text-amber-300", bar: "from-amber-500 to-amber-300", track: "bg-amber-900/30" },
-                      { ring: "border-slate-400/30 bg-slate-400/8", label: "text-slate-300", bar: "from-slate-500 to-slate-300", track: "bg-slate-800/40" },
-                      { ring: "border-orange-500/30 bg-orange-500/8", label: "text-orange-300", bar: "from-orange-600 to-orange-400", track: "bg-orange-900/30" },
+                      { ring: "border-amber-400/40 bg-amber-400/10", label: "text-amber-300", bar: "from-amber-500 to-amber-300", track: "bg-amber-900/30", Icon: Crown },
+                      { ring: "border-slate-400/30 bg-slate-400/8", label: "text-slate-300", bar: "from-slate-500 to-slate-300", track: "bg-slate-800/40", Icon: Trophy },
+                      { ring: "border-orange-500/30 bg-orange-500/8", label: "text-orange-300", bar: "from-orange-600 to-orange-400", track: "bg-orange-900/30", Icon: Award },
                     ][s.rank - 1];
 
                     const maxMinor = topSupporters[0].totalMinor;
@@ -285,9 +301,7 @@ export default function SupportPageClient({
                         key={s.rank}
                         className={`flex items-center gap-3 rounded-xl border ${rankStyles.ring} px-4 py-2.5`}
                       >
-                        <span className={`text-sm font-extrabold tabular-nums w-5 text-center shrink-0 ${rankStyles.label}`}>
-                          #{s.rank}
-                        </span>
+                        <rankStyles.Icon className={`w-4 h-4 shrink-0 ${rankStyles.label}`} />
                         <span className="flex-1 text-sm font-medium text-white truncate min-w-0">{s.name}</span>
                         {/* Relative mini-bar */}
                         <div className={`w-20 h-2 rounded-sm ${rankStyles.track} overflow-hidden shrink-0`}>
@@ -369,7 +383,7 @@ export default function SupportPageClient({
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === "subscription" ? (
                 <>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {SUBSCRIPTION_TIERS.map((tier) => {
                       const isActive = selectedTier === tier;
                       return (
@@ -379,13 +393,16 @@ export default function SupportPageClient({
                           aria-pressed={isActive}
                           aria-label={`${formatCurrency(tier)} per month`}
                           onClick={() => { setSelectedTier(tier); setError(null); }}
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                          className={`rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${
                             isActive
                               ? "bg-sky-500 text-white"
                               : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
                           }`}
                         >
-                          {formatCurrency(tier)}/mo
+                          <span className="text-sm font-semibold">{formatCurrency(tier)}/mo</span>
+                          <span className={`text-[11px] leading-tight ${isActive ? "text-sky-100/80" : "text-slate-500"}`}>
+                            {TIER_TAGLINES[tier]}
+                          </span>
                         </button>
                       );
                     })}
@@ -404,6 +421,7 @@ export default function SupportPageClient({
                   <div className="flex flex-wrap gap-2">
                     {SUGGESTED_AMOUNTS.map((suggestedAmount) => {
                       const isActive = parseAmount(amount) === suggestedAmount;
+                      const isCrazy = suggestedAmount === 100;
                       return (
                         <button
                           key={suggestedAmount}
@@ -411,10 +429,14 @@ export default function SupportPageClient({
                           aria-pressed={isActive}
                           aria-label={`Donate ${formatCurrency(suggestedAmount)}`}
                           onClick={() => { setAmount(String(suggestedAmount)); setError(null); }}
-                          className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                            isActive
-                              ? "bg-sky-500 text-white"
-                              : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                            isCrazy
+                              ? isActive
+                                ? "bg-rose-500 text-white ring-1 ring-rose-400/50"
+                                : "bg-slate-800 text-rose-300 border border-rose-500/30 hover:bg-rose-900/40 hover:text-rose-200"
+                              : isActive
+                                ? "bg-sky-500 text-white"
+                                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
                           }`}
                         >
                           {formatCurrency(suggestedAmount)}
@@ -438,12 +460,25 @@ export default function SupportPageClient({
                   {formattedOneTimePreview ? (
                     <p className="text-sm text-slate-400">
                       You are about to donate{" "}
-                      <span className="text-white font-medium">{formattedOneTimePreview}</span>.
+                      <span className="text-white font-medium">{formattedOneTimePreview}</span>
+                      {parseAmount(amount) === 100 && (
+                        <span className="text-rose-400"> — are you crazy?!</span>
+                      )}
                     </p>
                   ) : (
                     <p className="text-sm text-amber-400">Please enter a valid amount.</p>
                   )}
                 </>
+              )}
+
+              {impactPct !== null && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-500/8 border border-sky-500/15 text-xs text-sky-300 w-fit">
+                  <Sparkles className="w-3 h-3 shrink-0" />
+                  <span>
+                    Covers ~<span className="font-bold">{impactPct}%</span> of monthly costs
+                    {mode === "subscription" ? " every month" : ""}
+                  </span>
+                </div>
               )}
 
               {error ? <p className="text-sm text-red-400">{error}</p> : null}
@@ -482,7 +517,7 @@ export default function SupportPageClient({
             {supporters.length > 0 ? (
               <div className="mt-7 border-t border-slate-800/70 pt-5">
                 <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">
-                  Recent Supporters
+                  {supporters.length} supporter{supporters.length !== 1 ? "s" : ""} this month
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {supporters.map((supporter, idx) => (
