@@ -27,7 +27,7 @@ function BarFill({
   variant?: BarVariant;
 }) {
   const width = Math.max(0, toPct - fromPct);
-  if (width <= 0) return null;
+  if (!isPreview && width <= 0) return null;
 
   if (!isPreview) {
     const gradient =
@@ -37,7 +37,7 @@ function BarFill({
 
     return (
       <div
-        className="absolute inset-y-0 left-0 rounded-[4px] overflow-hidden transition-[width] duration-1000 ease-out"
+        className="absolute inset-y-0 left-0 rounded-[4px] overflow-hidden"
         style={{ width: `${toPct}%` }}
       >
         <div className={`absolute inset-0 bg-gradient-to-r ${gradient}`} />
@@ -141,9 +141,11 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
   const celebrated = barsCleared >= 1;
 
   const [displayPct, setDisplayPct] = useState(0);
+  const [previewReady, setPreviewReady] = useState(false);
+
   useEffect(() => {
     if (fillPct === 0) return;
-    const duration = 700;
+    const duration = 1000;
     const start = performance.now();
     function tick(now: number) {
       const progress = Math.min((now - start) / duration, 1);
@@ -153,6 +155,11 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
     }
     requestAnimationFrame(tick);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setPreviewReady(true), 1150);
+    return () => clearTimeout(t);
   }, []);
 
   const coveredEur = (overflow / 100).toFixed(0);
@@ -277,7 +284,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           {/* Milestone labels */}
           <div className="relative h-3.5 mb-0.5">
             {MILESTONES.map((p) => {
-              const reached = fillPct >= p;
+              const reached = displayPct >= p;
               const color = reached
                 ? celebrated ? "text-emerald-400" : "text-sky-400"
                 : "text-slate-700";
@@ -297,10 +304,10 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
 
           {/* Main bar */}
           <BarTrack
-            realFillPct={fillPct}
+            realFillPct={displayPct}
             previewFromPct={hasMainPreview ? mainPreviewFromPct : 0}
-            previewToPct={hasMainPreview ? mainPreviewToPct : 0}
-            showTip={!hasMainPreview}
+            previewToPct={hasMainPreview ? (previewReady ? mainPreviewToPct : mainPreviewFromPct) : 0}
+            showTip={!hasMainPreview || !previewReady}
             variant={celebrated ? "emerald" : "sky"}
           />
 
