@@ -84,6 +84,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  if (parsedBody === null || typeof parsedBody !== "object") {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
   const body = parsedBody as { mode?: unknown; amount?: unknown; tierAmount?: unknown };
   const mode = body.mode === "payment" ? "payment" : "subscription";
 

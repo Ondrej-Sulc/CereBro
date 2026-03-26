@@ -26,7 +26,7 @@ export default async function AdminSupportPage() {
     getCurrentMonthCoveredMinor(),
     prisma.supportDonation.findMany({
       where: { status: "succeeded", createdAt: { gte: monthStart } },
-      select: { amountMinor: true, currency: true, supporterName: true, createdAt: true, stripeSubscriptionId: true },
+      select: { id: true, amountMinor: true, currency: true, supporterName: true, createdAt: true, stripeSubscriptionId: true },
       orderBy: { createdAt: "desc" },
     }),
     prisma.supportDonation.groupBy({
@@ -155,8 +155,8 @@ export default async function AdminSupportPage() {
             <p className="text-sm text-muted-foreground italic">No donations yet this month.</p>
           ) : (
             <div className="space-y-2">
-              {monthlyDonations.map((d, i) => (
-                <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
+              {monthlyDonations.map((d) => (
+                <div key={d.id} className="flex items-center justify-between text-sm py-1.5 border-b border-border/40 last:border-0">
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground text-xs">
                       {d.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}

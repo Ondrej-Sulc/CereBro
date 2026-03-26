@@ -22,8 +22,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const session = await auth();
-  if (!session?.user?.discordId) {
+  if (!session?.user) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+  if (!session.user.discordId) {
+    return NextResponse.json({ error: "Discord account not linked." }, { status: 403 });
   }
 
   const discordId = session.user.discordId;
