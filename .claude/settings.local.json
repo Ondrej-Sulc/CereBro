@@ -10,8 +10,8 @@
       "Bash(git commit:*)",
       "Bash(npx tsc:*)",
       "Bash(npx prisma:*)",
-      "Bash(node -e \"const s = require\\(''stripe''\\); console.log\\(require\\(''./node_modules/stripe/package.json''\\).version\\)\")",
-      "Bash(find C:CodePersonalCereBro -type f -name *support*)",
+      "Bash(node -e \"const s = require('stripe'); console.log(require('./node_modules/stripe/package.json').version)\")",
+      "Bash(find /c/Code/Personal/CereBro -type f -name \"*support*\")",
       "Bash(echo \"EXIT: $?\")"
     ]
   }

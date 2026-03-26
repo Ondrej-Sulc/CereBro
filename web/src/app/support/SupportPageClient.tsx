@@ -302,6 +302,8 @@ export default function SupportPageClient({
                       { ring: "border-orange-500/30 bg-orange-500/8", label: "text-orange-300", bar: "from-orange-600 to-orange-400", track: "bg-orange-900/30", Icon: Award },
                     ][s.rank - 1];
 
+                    if (!rankStyles) return null;
+
                     const maxMinor = topSupporters[0].totalMinor;
                     const fillPct = Math.round((s.totalMinor / maxMinor) * 100);
 

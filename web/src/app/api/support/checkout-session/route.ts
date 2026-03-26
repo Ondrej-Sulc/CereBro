@@ -50,7 +50,7 @@ function toMinorUnits(amount: number, currency: string): number {
 }
 
 function getBaseUrl(): string {
-  const baseUrl = process.env.BOT_BASE_URL || process.env.NEXT_PUBLIC_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BOT_BASE_URL;
   if (!baseUrl) {
     throw new Error("Missing BOT_BASE_URL or NEXT_PUBLIC_BASE_URL environment variable.");
   }

@@ -95,7 +95,7 @@ export default async function AdminSupportPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" /> Active subscriptions
+              <Users className="w-3.5 h-3.5" /> Historical subscriptions
             </CardDescription>
           </CardHeader>
           <CardContent>

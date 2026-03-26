@@ -9,7 +9,8 @@ function formatEur(minor: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "EUR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(minor / 100);
 }
 
