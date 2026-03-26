@@ -12,7 +12,13 @@ export default async function SupportPage() {
     discordId
       ? prisma.supportDonation.findFirst({
           where: { discordId, stripeCustomerId: { not: null } },
-          select: { stripeCustomerId: true },
+          select: {
+            stripeCustomerId: true,
+            stripeSubscriptionId: true,
+            amountMinor: true,
+            supporterName: true,
+            player: { select: { ingameName: true } },
+          },
           orderBy: { createdAt: "desc" },
         })
       : null,
@@ -21,6 +27,18 @@ export default async function SupportPage() {
     listTopSupporters(3),
   ]);
 
+  const currentUserName =
+    stripeCustomerDonation?.player?.ingameName ??
+    stripeCustomerDonation?.supporterName ??
+    null;
+  const subscriptionTierMinor = stripeCustomerDonation?.stripeSubscriptionId
+    ? stripeCustomerDonation.amountMinor
+    : null;
+  const supporterRank =
+    currentUserName
+      ? (topSupporters.find((s) => s.name === currentUserName)?.rank ?? null)
+      : null;
+
   return (
     <SupportPageClient
       isLoggedIn={!!session?.user}
@@ -28,6 +46,9 @@ export default async function SupportPage() {
       coveredMinor={coveredMinor}
       targetMinor={targetMinor}
       topSupporters={topSupporters}
+      subscriptionTierMinor={subscriptionTierMinor}
+      supporterRank={supporterRank}
+      currentUserName={currentUserName}
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn, Settings, Crown, Trophy, Award } from "lucide-react";
+import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn, Settings, Crown, Trophy, Award, ChevronDown } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { signInAction } from "@/app/actions/auth";
 import { FundingBar } from "./components/FundingBar";
@@ -52,12 +52,18 @@ export default function SupportPageClient({
   coveredMinor,
   targetMinor,
   topSupporters,
+  subscriptionTierMinor,
+  supporterRank,
+  currentUserName,
 }: {
   isLoggedIn: boolean;
   stripeCustomerId: string | null;
   coveredMinor: number;
   targetMinor: number | null;
   topSupporters: TopSupporter[];
+  subscriptionTierMinor: number | null;
+  supporterRank: number | null;
+  currentUserName: string | null;
 }) {
   const [mode, setMode] = useState<Mode>("subscription");
   const [selectedTier, setSelectedTier] = useState<number>(10);
@@ -66,6 +72,9 @@ export default function SupportPageClient({
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [supporters, setSupporters] = useState<Supporter[]>([]);
+  const [showGiveMore, setShowGiveMore] = useState(false);
+
+  const isSubscriber = isLoggedIn && !!stripeCustomerId && subscriptionTierMinor !== null;
 
   const formattedOneTimePreview = useMemo(() => {
     const parsed = parseAmount(amount);
@@ -318,220 +327,423 @@ export default function SupportPageClient({
             )}
           </div>
 
-          {/* Right: donation form */}
-          <div className="rounded-3xl border border-sky-500/30 bg-slate-900/60 p-8 backdrop-blur-sm">
-            {/* Mode toggle */}
-            <div className="flex rounded-xl bg-slate-950/60 border border-slate-800 p-1 mb-6">
-              <button
-                type="button"
-                onClick={() => handleModeSwitch("subscription")}
-                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-                  mode === "subscription"
-                    ? "bg-sky-500 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+          {/* Right: subscriber thank-you card OR donation form */}
+          {isSubscriber ? (
+            <>
+              <style>{`
+                @keyframes supporter-card-glow {
+                  0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,0.2), 0 0 20px rgba(251,191,36,0.05); }
+                  50%       { box-shadow: 0 0 0 1px rgba(251,191,36,0.45), 0 0 32px rgba(251,191,36,0.12); }
+                }
+                @keyframes supporter-card-scan {
+                  0%   { transform: translateX(-100%) skewX(-20deg); }
+                  100% { transform: translateX(1400%) skewX(-20deg); }
+                }
+                @keyframes active-dot {
+                  0%, 100% { opacity: 1; transform: scale(1); }
+                  50%       { opacity: 0.5; transform: scale(0.8); }
+                }
+              `}</style>
+              <div
+                className="rounded-3xl border border-amber-500/25 bg-slate-900/60 p-8 backdrop-blur-sm relative overflow-hidden"
+                style={{ animation: "supporter-card-glow 3s ease-in-out infinite" }}
               >
-                Monthly
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeSwitch("payment")}
-                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
-                  mode === "payment"
-                    ? "bg-slate-700 text-white shadow"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                One-time
-              </button>
-            </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-950/30 via-slate-900/80 to-slate-900/90 rounded-3xl" />
+                <div
+                  className="absolute inset-y-0 w-32 bg-gradient-to-r from-transparent via-amber-200/5 to-transparent pointer-events-none"
+                  style={{ animation: "supporter-card-scan 5s linear infinite" }}
+                />
 
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-semibold uppercase tracking-wider mb-5">
-              <Heart className="w-3 h-3 fill-sky-500/40" />
-              {mode === "subscription" ? "Monthly Subscription" : "One-time Donation"}
-            </div>
-
-            <h2 className="text-2xl font-bold text-white mb-2">
-              {mode === "subscription" ? "Choose your plan" : "Choose your amount"}
-            </h2>
-
-            {!isLoggedIn && (
-              <div className="mb-6 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-200 text-sm">
-                <div className="flex items-start gap-3">
-                  <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <Info className="w-4 h-4 text-amber-400" />
+                <div className="relative space-y-5">
+                  {/* Badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-semibold uppercase tracking-wider">
+                      <Heart className="w-3 h-3 fill-amber-500/40" />
+                      CereBro Supporter
+                    </div>
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                        style={{ animation: "active-dot 2s ease-in-out infinite" }}
+                      />
+                      Active
+                    </span>
                   </div>
+
+                  {/* Heading */}
                   <div>
-                    <p className="font-bold text-amber-300 mb-1">Not signed in</p>
-                    <p className="text-amber-200/80 leading-relaxed mb-3">
-                      To receive the <strong>Supporter role</strong> on our Discord server, please sign in before donating. You can still donate without signing in.
+                    <h2 className="text-2xl font-bold text-amber-200">Thank you!</h2>
+                    <p className="text-slate-400 mt-1 text-sm leading-relaxed">
+                      Your support keeps CereBro running and actively developed.
                     </p>
-                    <form action={signInAction}>
+                  </div>
+
+                  {/* Tier */}
+                  {subscriptionTierMinor !== null && (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/8 border border-amber-500/15">
+                      <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                      <div>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-wider">Monthly contribution</p>
+                        <p className="text-amber-200 font-bold text-lg leading-tight">
+                          {formatCurrency(subscriptionTierMinor / 100)}/month
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Leaderboard rank */}
+                  {supporterRank !== null && (() => {
+                    const rankInfo = [
+                      { Icon: Crown, color: "text-amber-300", bg: "bg-amber-500/8 border-amber-500/20", label: "all-time #1 supporter" },
+                      { Icon: Trophy, color: "text-slate-300", bg: "bg-slate-500/8 border-slate-500/20", label: "all-time #2 supporter" },
+                      { Icon: Award, color: "text-orange-300", bg: "bg-orange-500/8 border-orange-500/20", label: "all-time #3 supporter" },
+                    ][supporterRank - 1];
+                    if (!rankInfo) return null;
+                    return (
+                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${rankInfo.bg}`}>
+                        <rankInfo.Icon className={`w-4 h-4 shrink-0 ${rankInfo.color}`} />
+                        <p className={`text-sm font-semibold ${rankInfo.color}`}>
+                          You&apos;re the {rankInfo.label}!
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Manage subscription */}
+                  <button
+                    type="button"
+                    onClick={handleManageSubscription}
+                    disabled={isOpeningPortal}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/8 hover:bg-amber-500/15 text-amber-300 font-semibold py-3 transition-colors disabled:opacity-50"
+                  >
+                    <Settings className="w-4 h-4" />
+                    {isOpeningPortal ? "Opening portal..." : "Manage Subscription"}
+                  </button>
+
+                  {/* Give more toggle */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowGiveMore((v) => !v);
+                      setMode("payment");
+                      setError(null);
+                    }}
+                    className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showGiveMore ? "rotate-180" : ""}`} />
+                    {showGiveMore ? "Hide" : "Want to give more? Make a one-time donation"}
+                  </button>
+
+                  {showGiveMore && (
+                    <form onSubmit={handleSubmit} className="space-y-4 pt-2 border-t border-slate-800">
+                      <p className="text-sm font-medium text-slate-300">Amount ({CURRENCY})</p>
+                      <div className="flex flex-wrap gap-2">
+                        {SUGGESTED_AMOUNTS.map((suggestedAmount) => {
+                          const isActive = parseAmount(amount) === suggestedAmount;
+                          const isCrazy = suggestedAmount === 100;
+                          return (
+                            <button
+                              key={suggestedAmount}
+                              type="button"
+                              aria-pressed={isActive}
+                              onClick={() => { setAmount(String(suggestedAmount)); setError(null); }}
+                              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                                isCrazy
+                                  ? isActive ? "bg-rose-500 text-white ring-1 ring-rose-400/50" : "bg-slate-800 text-rose-300 border border-rose-500/30 hover:bg-rose-900/40 hover:text-rose-200"
+                                  : isActive ? "bg-sky-500 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                              }`}
+                            >
+                              {formatCurrency(suggestedAmount)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 px-4 focus-within:ring-2 focus-within:ring-sky-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-950 transition-shadow">
+                        <span className="text-slate-400 mr-2">{CURRENCY}</span>
+                        <input
+                          id="donation-amount-extra"
+                          name="amount"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          placeholder="10"
+                          className="w-full bg-transparent py-3 text-white border-0 focus:outline-none"
+                        />
+                      </div>
+                      {formattedOneTimePreview ? (
+                        <p className="text-sm text-slate-400">
+                          You are about to donate{" "}
+                          <span className="text-white font-medium">{formattedOneTimePreview}</span>
+                          {parseAmount(amount) === 100 && <span className="text-rose-400"> — are you crazy?!</span>}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-amber-400">Please enter a valid amount.</p>
+                      )}
+                      {impactPct !== null && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-500/8 border border-sky-500/15 text-xs text-sky-300 w-fit">
+                          <Sparkles className="w-3 h-3 shrink-0" />
+                          <span>Covers ~<span className="font-bold">{impactPct}%</span> of monthly costs</span>
+                        </div>
+                      )}
+                      {error && <p className="text-sm text-red-400">{error}</p>}
                       <button
                         type="submit"
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors"
+                        disabled={isSubmitting || !formattedOneTimePreview}
+                        className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 disabled:bg-sky-500/60 disabled:cursor-not-allowed text-white font-semibold py-3 transition-colors"
                       >
-                        <LogIn className="w-3.5 h-3.5" />
-                        Sign in with Discord
+                        {isSubmitting ? "Redirecting to Stripe..." : `Donate Once${formattedOneTimePreview ? ` — ${formattedOneTimePreview}` : ""}`}
                       </button>
+                      <p className="text-xs text-slate-500">
+                        You will be redirected to Stripe Checkout.
+                      </p>
                     </form>
-                  </div>
+                  )}
+
+                  {/* Supporters list */}
+                  {supporters.length > 0 && (
+                    <div className="border-t border-slate-800/70 pt-5">
+                      <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">
+                        {supporters.length} supporter{supporters.length !== 1 ? "s" : ""} this month
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {supporters.map((supporter, idx) => (
+                          <span
+                            key={`${supporter.id}-${idx}`}
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
+                              currentUserName && supporter.name === currentUserName
+                                ? "bg-amber-500/20 border border-amber-500/40 text-amber-200"
+                                : "bg-slate-800/80 border border-slate-700 text-slate-200"
+                            }`}
+                          >
+                            {supporter.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === "subscription" ? (
-                <>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {SUBSCRIPTION_TIERS.map((tier) => {
-                      const isActive = selectedTier === tier;
-                      return (
-                        <button
-                          key={tier}
-                          type="button"
-                          aria-pressed={isActive}
-                          aria-label={`${formatCurrency(tier)} per month`}
-                          onClick={() => { setSelectedTier(tier); setError(null); }}
-                          className={`rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${
-                            isActive
-                              ? "bg-sky-500 text-white"
-                              : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                          }`}
-                        >
-                          <span className="text-sm font-semibold">{formatCurrency(tier)}/mo</span>
-                          <span className={`text-[11px] leading-tight ${isActive ? "text-sky-100/80" : "text-slate-500"}`}>
-                            {TIER_TAGLINES[tier]}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-sm text-slate-400">
-                    You will be billed{" "}
-                    <span className="text-white font-medium">{formatCurrency(selectedTier)}/month</span>.
-                    Cancel anytime from your account.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <label htmlFor="donation-amount" className="block text-sm text-slate-300 font-medium">
-                    Amount ({CURRENCY})
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {SUGGESTED_AMOUNTS.map((suggestedAmount) => {
-                      const isActive = parseAmount(amount) === suggestedAmount;
-                      const isCrazy = suggestedAmount === 100;
-                      return (
-                        <button
-                          key={suggestedAmount}
-                          type="button"
-                          aria-pressed={isActive}
-                          aria-label={`Donate ${formatCurrency(suggestedAmount)}`}
-                          onClick={() => { setAmount(String(suggestedAmount)); setError(null); }}
-                          className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                            isCrazy
-                              ? isActive
-                                ? "bg-rose-500 text-white ring-1 ring-rose-400/50"
-                                : "bg-slate-800 text-rose-300 border border-rose-500/30 hover:bg-rose-900/40 hover:text-rose-200"
-                              : isActive
-                                ? "bg-sky-500 text-white"
-                                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
-                          }`}
-                        >
-                          {formatCurrency(suggestedAmount)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 px-4 focus-within:ring-2 focus-within:ring-sky-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-950 transition-shadow">
-                    <span className="text-slate-400 mr-2">{CURRENCY}</span>
-                    <input
-                      id="donation-amount"
-                      name="amount"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="10"
-                      className="w-full bg-transparent py-3 text-white border-0 focus:outline-none"
-                    />
-                  </div>
-                  {formattedOneTimePreview ? (
-                    <p className="text-sm text-slate-400">
-                      You are about to donate{" "}
-                      <span className="text-white font-medium">{formattedOneTimePreview}</span>
-                      {parseAmount(amount) === 100 && (
-                        <span className="text-rose-400"> — are you crazy?!</span>
-                      )}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-amber-400">Please enter a valid amount.</p>
-                  )}
-                </>
-              )}
-
-              {impactPct !== null && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-500/8 border border-sky-500/15 text-xs text-sky-300 w-fit">
-                  <Sparkles className="w-3 h-3 shrink-0" />
-                  <span>
-                    Covers ~<span className="font-bold">{impactPct}%</span> of monthly costs
-                    {mode === "subscription" ? " every month" : ""}
-                  </span>
-                </div>
-              )}
-
-              {error ? <p className="text-sm text-red-400">{error}</p> : null}
-
-              <button
-                type="submit"
-                disabled={isSubmitting || (mode === "payment" && !formattedOneTimePreview)}
-                className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 disabled:bg-sky-500/60 disabled:cursor-not-allowed text-white font-semibold py-3 transition-colors"
-              >
-                {submitLabel}
-              </button>
-            </form>
-
-            <p className="text-xs text-slate-500 mt-5">
-              By continuing, you will be redirected to Stripe Checkout. Need context first?{" "}
-              <Link href="/about" className="text-slate-300 hover:text-white underline underline-offset-4">
-                Read about CereBro
-              </Link>
-              .
-            </p>
-
-            {isLoggedIn && stripeCustomerId && (
-              <div className="mt-4">
+            </>
+          ) : (
+            <div className="rounded-3xl border border-sky-500/30 bg-slate-900/60 p-8 backdrop-blur-sm">
+              {/* Mode toggle */}
+              <div className="flex rounded-xl bg-slate-950/60 border border-slate-800 p-1 mb-6">
                 <button
                   type="button"
-                  onClick={handleManageSubscription}
-                  disabled={isOpeningPortal}
-                  className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50"
+                  onClick={() => handleModeSwitch("subscription")}
+                  className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+                    mode === "subscription"
+                      ? "bg-sky-500 text-white shadow"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
                 >
-                  <Settings className="w-3.5 h-3.5" />
-                  {isOpeningPortal ? "Opening portal..." : "Manage your subscription"}
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeSwitch("payment")}
+                  className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+                    mode === "payment"
+                      ? "bg-slate-700 text-white shadow"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  One-time
                 </button>
               </div>
-            )}
 
-            {supporters.length > 0 ? (
-              <div className="mt-7 border-t border-slate-800/70 pt-5">
-                <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">
-                  {supporters.length} supporter{supporters.length !== 1 ? "s" : ""} this month
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {supporters.map((supporter, idx) => (
-                    <span
-                      key={`${supporter.id}-${idx}`}
-                      className="rounded-full bg-slate-800/80 border border-slate-700 px-3 py-1 text-xs text-slate-200"
-                    >
-                      {supporter.name}
-                    </span>
-                  ))}
-                </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-semibold uppercase tracking-wider mb-5">
+                <Heart className="w-3 h-3 fill-sky-500/40" />
+                {mode === "subscription" ? "Monthly Subscription" : "One-time Donation"}
               </div>
-            ) : null}
-          </div>
+
+              <h2 className="text-2xl font-bold text-white mb-2">
+                {mode === "subscription" ? "Choose your plan" : "Choose your amount"}
+              </h2>
+
+              {!isLoggedIn && (
+                <div className="mb-6 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-200 text-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <Info className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-amber-300 mb-1">Not signed in</p>
+                      <p className="text-amber-200/80 leading-relaxed mb-3">
+                        To receive the <strong>Supporter role</strong> on our Discord server, please sign in before donating. You can still donate without signing in.
+                      </p>
+                      <form action={signInAction}>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-300 text-xs font-semibold transition-colors"
+                        >
+                          <LogIn className="w-3.5 h-3.5" />
+                          Sign in with Discord
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {mode === "subscription" ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {SUBSCRIPTION_TIERS.map((tier) => {
+                        const isActive = selectedTier === tier;
+                        return (
+                          <button
+                            key={tier}
+                            type="button"
+                            aria-pressed={isActive}
+                            aria-label={`${formatCurrency(tier)} per month`}
+                            onClick={() => { setSelectedTier(tier); setError(null); }}
+                            className={`rounded-xl px-3 py-2.5 flex flex-col items-center gap-0.5 transition-colors ${
+                              isActive
+                                ? "bg-sky-500 text-white"
+                                : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                            }`}
+                          >
+                            <span className="text-sm font-semibold">{formatCurrency(tier)}/mo</span>
+                            <span className={`text-[11px] leading-tight ${isActive ? "text-sky-100/80" : "text-slate-500"}`}>
+                              {TIER_TAGLINES[tier]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-sm text-slate-400">
+                      You will be billed{" "}
+                      <span className="text-white font-medium">{formatCurrency(selectedTier)}/month</span>.
+                      Cancel anytime from your account.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="donation-amount" className="block text-sm text-slate-300 font-medium">
+                      Amount ({CURRENCY})
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {SUGGESTED_AMOUNTS.map((suggestedAmount) => {
+                        const isActive = parseAmount(amount) === suggestedAmount;
+                        const isCrazy = suggestedAmount === 100;
+                        return (
+                          <button
+                            key={suggestedAmount}
+                            type="button"
+                            aria-pressed={isActive}
+                            aria-label={`Donate ${formatCurrency(suggestedAmount)}`}
+                            onClick={() => { setAmount(String(suggestedAmount)); setError(null); }}
+                            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                              isCrazy
+                                ? isActive
+                                  ? "bg-rose-500 text-white ring-1 ring-rose-400/50"
+                                  : "bg-slate-800 text-rose-300 border border-rose-500/30 hover:bg-rose-900/40 hover:text-rose-200"
+                                : isActive
+                                  ? "bg-sky-500 text-white"
+                                  : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+                            }`}
+                          >
+                            {formatCurrency(suggestedAmount)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center rounded-xl border border-slate-700 bg-slate-950/60 px-4 focus-within:ring-2 focus-within:ring-sky-400 focus-within:ring-offset-2 focus-within:ring-offset-slate-950 transition-shadow">
+                      <span className="text-slate-400 mr-2">{CURRENCY}</span>
+                      <input
+                        id="donation-amount"
+                        name="amount"
+                        inputMode="decimal"
+                        autoComplete="off"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="10"
+                        className="w-full bg-transparent py-3 text-white border-0 focus:outline-none"
+                      />
+                    </div>
+                    {formattedOneTimePreview ? (
+                      <p className="text-sm text-slate-400">
+                        You are about to donate{" "}
+                        <span className="text-white font-medium">{formattedOneTimePreview}</span>
+                        {parseAmount(amount) === 100 && (
+                          <span className="text-rose-400"> — are you crazy?!</span>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-amber-400">Please enter a valid amount.</p>
+                    )}
+                  </>
+                )}
+
+                {impactPct !== null && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-500/8 border border-sky-500/15 text-xs text-sky-300 w-fit">
+                    <Sparkles className="w-3 h-3 shrink-0" />
+                    <span>
+                      Covers ~<span className="font-bold">{impactPct}%</span> of monthly costs
+                      {mode === "subscription" ? " every month" : ""}
+                    </span>
+                  </div>
+                )}
+
+                {error ? <p className="text-sm text-red-400">{error}</p> : null}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || (mode === "payment" && !formattedOneTimePreview)}
+                  className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 disabled:bg-sky-500/60 disabled:cursor-not-allowed text-white font-semibold py-3 transition-colors"
+                >
+                  {submitLabel}
+                </button>
+              </form>
+
+              <p className="text-xs text-slate-500 mt-5">
+                By continuing, you will be redirected to Stripe Checkout. Need context first?{" "}
+                <Link href="/about" className="text-slate-300 hover:text-white underline underline-offset-4">
+                  Read about CereBro
+                </Link>
+                .
+              </p>
+
+              {isLoggedIn && stripeCustomerId && (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={handleManageSubscription}
+                    disabled={isOpeningPortal}
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    {isOpeningPortal ? "Opening portal..." : "Manage your subscription"}
+                  </button>
+                </div>
+              )}
+
+              {supporters.length > 0 ? (
+                <div className="mt-7 border-t border-slate-800/70 pt-5">
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">
+                    {supporters.length} supporter{supporters.length !== 1 ? "s" : ""} this month
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {supporters.map((supporter, idx) => (
+                      <span
+                        key={`${supporter.id}-${idx}`}
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          currentUserName && supporter.name === currentUserName
+                            ? "bg-amber-500/20 border border-amber-500/40 text-amber-200"
+                            : "bg-slate-800/80 border border-slate-700 text-slate-200"
+                        }`}
+                      >
+                        {supporter.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
         </section>
       </main>
     </div>
