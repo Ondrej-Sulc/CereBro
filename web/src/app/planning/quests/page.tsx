@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import QuestListClient from "@/components/planning/quest-list-client";
-import { QuestWithRelations } from "@/types/quests";
 import { QuestPlanStatus } from "@prisma/client";
 import { getQuestPlans, getQuestCategories } from "@/app/actions/quests";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -23,7 +22,22 @@ export default async function QuestsPage() {
 
     // Use cached action with player ID for progress tracking
     const quests = await getQuestPlans(undefined, QuestPlanStatus.VISIBLE, player?.id);
-    const categories = await getQuestCategories();
+    const allCategories = await getQuestCategories();
+
+    // Only expose categories that contain at least one visible quest (directly or in a descendant)
+    const directCategoryIds = new Set(quests.map(q => q.categoryId).filter(Boolean) as string[]);
+    const childrenMap = new Map<string, string[]>();
+    for (const cat of allCategories) {
+        if (cat.parentId) {
+            if (!childrenMap.has(cat.parentId)) childrenMap.set(cat.parentId, []);
+            childrenMap.get(cat.parentId)!.push(cat.id);
+        }
+    }
+    const hasVisibleQuest = (catId: string): boolean => {
+        if (directCategoryIds.has(catId)) return true;
+        return (childrenMap.get(catId) ?? []).some(hasVisibleQuest);
+    };
+    const categories = allCategories.filter(cat => hasVisibleQuest(cat.id));
 
     return (
         <div className="p-6 max-w-7xl mx-auto">

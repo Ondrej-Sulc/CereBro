@@ -290,6 +290,7 @@ model Alliance {
   battlegroup1Color      String                      @default("#ef4444")
   battlegroup2Color      String                      @default("#22c55e")
   battlegroup3Color      String                      @default("#3b82f6")
+  playerColorPalette     String                      @default("HIGH_CONTRAST")
   linkCode               String?                     @unique
   linkCodeExpires        DateTime?
   deathChannelId         String?
@@ -681,15 +682,16 @@ model BotJob {
 }
 
 model QuestCategory {
-  id        String          @id @default(cuid())
-  name      String          @unique
-  order     Int             @default(0)
-  parentId  String?
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  parent    QuestCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children  QuestCategory[] @relation("CategoryHierarchy")
-  quests    QuestPlan[]
+  id           String          @id @default(cuid())
+  name         String          @unique
+  order        Int             @default(0)
+  parentId     String?
+  thumbnailUrl String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  parent       QuestCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     QuestCategory[] @relation("CategoryHierarchy")
+  quests       QuestPlan[]
 }
 
 model QuestPlan {

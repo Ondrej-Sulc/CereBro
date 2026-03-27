@@ -12,7 +12,11 @@
       "Bash(npx prisma:*)",
       "Bash(node -e \"const s = require('stripe'); console.log(require('./node_modules/stripe/package.json').version)\")",
       "Bash(find /c/Code/Personal/CereBro -type f -name \"*support*\")",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(find /c/Code/Cerebro/web -name '*quest*' -o -name '*plan*' -o -name '*category*')",
+      "Bash(find /c/Code/Cerebro/web/src -type f -name '*quest*' -o -name '*plan*')",
+      "Bash(ls /c/Code/Cerebro:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }

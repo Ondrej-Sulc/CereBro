@@ -14,9 +14,6 @@ export const getQuestCategories = unstable_cache(
     async () => {
         return prisma.questCategory.findMany({
             orderBy: { order: 'asc' },
-            include: {
-                children: true,
-            }
         });
     },
     ['quest-categories'],
@@ -34,9 +31,85 @@ export async function createQuestCategory(name: string, order: number = 0, paren
         }
     });
 
+    revalidateTag('quest-categories', 'default');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
+}
+
+export async function updateQuestCategory(
+    id: string,
+    data: { name?: string; order?: number; thumbnailUrl?: string | null; parentId?: string | null }
+) {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    await prisma.questCategory.update({
+        where: { id },
+        data: {
+            name: data.name,
+            order: data.order,
+            thumbnailUrl: data.thumbnailUrl,
+            parentId: data.parentId,
+        }
+    });
+
+    revalidateTag('quest-categories', 'default');
+    revalidatePath('/admin/quests');
+    revalidatePath('/planning/quests');
+    return { success: true };
+}
+
+export async function uploadQuestCategoryThumbnail(categoryId: string, formData: FormData) {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const category = await prisma.questCategory.findUnique({ where: { id: categoryId } });
+    if (!category) {
+        throw new Error("Category not found.");
+    }
+
+    const file = formData.get('file');
+    if (!file || !(file instanceof File)) {
+        throw new Error("Invalid or missing file upload");
+    }
+
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error("Invalid file type. Only PNG, JPEG, and WebP are allowed.");
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+        throw new Error("File is too large. Maximum size is 5MB.");
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const sanitizedName = file.name
+        .normalize('NFC')
+        .replace(/[^\w\-]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '')
+        .slice(0, 80) || 'thumbnail';
+    const fileName = `quest-category-thumbnails/${categoryId}-${Date.now()}-${sanitizedName}`;
+    const publicUrl = await uploadToGcs(buffer, fileName, file.type);
+
+    try {
+        await prisma.questCategory.update({
+            where: { id: categoryId },
+            data: { thumbnailUrl: publicUrl }
+        });
+    } catch (error) {
+        await deleteFromGcs(fileName);
+        console.error("Failed to update quest category with thumbnail URL, deleted GCS object.", error);
+        throw error;
+    }
+
+    revalidateTag('quest-categories', 'default');
+    revalidatePath('/admin/quests');
+    revalidatePath('/planning/quests');
+
+    return { success: true, url: publicUrl };
 }
 
 // --- Quest Plans ---
