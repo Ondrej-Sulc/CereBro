@@ -15,7 +15,7 @@ import { QuestPlanStatus } from "@prisma/client";
 import { cn } from "@/lib/utils";
 import { ChampionImages } from "@/types/champion";
 import { cache } from "react";
-import { isUserBotAdmin } from "@/lib/auth-helpers";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 function PlayerCount({ count, className, iconOnly = false }: { count: number; className?: string; iconOnly?: boolean }) {
     if (count <= 0) return null;
@@ -46,9 +46,10 @@ export async function generateMetadata({
     };
   }
 
-  const isBotAdmin = await isUserBotAdmin();
+  const metaUser = await getUserPlayerWithAlliance();
+  const canManageQuests = !!(metaUser?.isBotAdmin || metaUser?.permissions?.includes("MANAGE_QUESTS"));
 
-  if (quest.status !== QuestPlanStatus.VISIBLE && !isBotAdmin) {
+  if (quest.status !== QuestPlanStatus.VISIBLE && !canManageQuests) {
     return {
       title: "Quest Plan Details - CereBro",
       description:
@@ -103,9 +104,10 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     const quest = await getQuestPlan(id);
     if (!quest) return <p>Quest not found</p>;
 
-    // Visibility check
-    const isAdmin = await isUserBotAdmin();
-    if (quest.status !== QuestPlanStatus.VISIBLE && !isAdmin) {
+    // Visibility check — mirrors ensureAdmin("MANAGE_QUESTS"): isBotAdmin OR MANAGE_QUESTS permission
+    const userPlayer = await getUserPlayerWithAlliance();
+    const canManageQuests = !!(userPlayer?.isBotAdmin || userPlayer?.permissions?.includes("MANAGE_QUESTS"));
+    if (quest.status !== QuestPlanStatus.VISIBLE && !canManageQuests) {
         return <div className="p-8 text-center text-slate-400 italic">This quest plan is currently hidden or archived.</div>;
     }
 
@@ -327,7 +329,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                                 )}
                             </div>
                         </div>
-                        {isAdmin && botUser?.isBotAdmin && (
+                        {canManageQuests && (
                             <Link href={`/admin/quests/${quest.id}`}>
                                 <Button variant="outline" className="shrink-0 border-sky-800 text-sky-400 hover:bg-sky-950/50 hover:text-sky-300">
                                     <Edit3 className="w-4 h-4 mr-2" /> Edit Plan
@@ -359,7 +361,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 </div>
             )}
 
-            {quest.bannerUrl && isAdmin && botUser?.isBotAdmin && (
+            {quest.bannerUrl && canManageQuests && (
                 <div className="fixed bottom-8 right-8 z-50">
                     <Link href={`/admin/quests/${quest.id}`}>
                         <Button className="bg-sky-600 hover:bg-sky-500 text-white shadow-xl shadow-sky-900/40 rounded-full h-12 px-6">
