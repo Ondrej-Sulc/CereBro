@@ -31,7 +31,7 @@ export async function createQuestCategory(name: string, order: number = 0, paren
         }
     });
 
-    revalidateTag('quest-categories', 'default');
+    revalidateTag('quest-categories');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
@@ -43,6 +43,24 @@ export async function updateQuestCategory(
 ) {
     await requireBotAdmin("MANAGE_QUESTS");
 
+    if (data.parentId != null) {
+        if (data.parentId === id) {
+            throw new Error("A category cannot be its own parent.");
+        }
+        let currentParentId: string | null = data.parentId;
+        while (currentParentId !== null) {
+            const ancestor = await prisma.questCategory.findUnique({
+                where: { id: currentParentId },
+                select: { parentId: true }
+            });
+            if (!ancestor) break;
+            if (ancestor.parentId === id) {
+                throw new Error("Setting this parent would create a circular reference.");
+            }
+            currentParentId = ancestor.parentId;
+        }
+    }
+
     await prisma.questCategory.update({
         where: { id },
         data: {
@@ -53,7 +71,7 @@ export async function updateQuestCategory(
         }
     });
 
-    revalidateTag('quest-categories', 'default');
+    revalidateTag('quest-categories');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
@@ -100,12 +118,31 @@ export async function uploadQuestCategoryThumbnail(categoryId: string, formData:
             data: { thumbnailUrl: publicUrl }
         });
     } catch (error) {
-        await deleteFromGcs(fileName);
         console.error("Failed to update quest category with thumbnail URL, deleted GCS object.", error);
+        try {
+            await deleteFromGcs(fileName);
+        } catch (delErr) {
+            console.error("Failed to delete GCS object during cleanup", delErr);
+        }
         throw error;
     }
 
-    revalidateTag('quest-categories', 'default');
+    // Delete the old thumbnail from GCS now that the DB is updated
+    if (category.thumbnailUrl && category.thumbnailUrl !== publicUrl) {
+        try {
+            const gcsBase = 'https://storage.googleapis.com/';
+            const withoutBase = category.thumbnailUrl.slice(gcsBase.length);
+            const slashIdx = withoutBase.indexOf('/');
+            if (slashIdx !== -1) {
+                const oldPath = withoutBase.slice(slashIdx + 1).split('/').map(decodeURIComponent).join('/');
+                await deleteFromGcs(oldPath);
+            }
+        } catch (delErr) {
+            console.error("Failed to delete old category thumbnail from GCS", delErr);
+        }
+    }
+
+    revalidateTag('quest-categories');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
 
@@ -140,6 +177,14 @@ export async function getQuestPlans(categoryId?: string, status?: QuestPlanStatu
                     requiredTags: true,
                     encounters: {
                         select: { id: true } // Just need count for summary
+                    },
+                    playerPlans: {
+                        where: { isFeatured: true },
+                        select: {
+                            player: {
+                                select: { id: true, ingameName: true, avatar: true, botUserId: true }
+                            }
+                        }
                     },
                     _count: {
                         select: {
@@ -180,9 +225,13 @@ export async function getQuestPlans(categoryId?: string, status?: QuestPlanStatu
                     };
                 }));
 
+                const creatorBotUserIds = new Set(quest.creators.map(c => c.id));
                 return {
                     ...quest,
-                    creators: creatorsWithUsers
+                    creators: creatorsWithUsers,
+                    featuredPlayers: quest.playerPlans
+                        .filter(pp => !pp.player.botUserId || !creatorBotUserIds.has(pp.player.botUserId))
+                        .map(({ player: { botUserId: _, ...p } }) => p)
                 };
             }));
         },
@@ -348,7 +397,7 @@ export async function updateFeaturedPlayers(
 
         revalidatePath(`/admin/quests/${questPlanId}`);
         revalidatePath(`/planning/quests/${questPlanId}`);
-        revalidateTag('quest-plan-detail', 'default');
+        revalidateTag('quest-plan-detail');
         revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
         
         return { success: true };
@@ -973,14 +1022,14 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     });
 
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plans', 'default');
-    revalidateTag('quest-plan-detail', 'default');
+    revalidateTag('quest-plans');
+    revalidateTag('quest-plan-detail');
     revalidateTag(`quest-popular-counters-${questPlanId}`, 'default');
-    revalidateTag('quest-popular-counters', 'default');
+    revalidateTag('quest-popular-counters');
 
     if (actingUser.allianceId) {
         revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`, 'default');
-        revalidateTag('quest-alliance-picks', 'default');
+        revalidateTag('quest-alliance-picks');
     }
 
     return { success: true };
@@ -1088,8 +1137,8 @@ export async function savePlayerQuestSynergy(questPlanId: string, championId: nu
     }
 
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plans', 'default');
-    revalidateTag('quest-plan-detail', 'default');
+    revalidateTag('quest-plans');
+    revalidateTag('quest-plan-detail');
 
     return { success: true };
 }
@@ -1183,7 +1232,7 @@ export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail', 'default');
+    revalidateTag('quest-plan-detail');
     return { success: true, count: encounters.length };
 }
 
@@ -1310,7 +1359,7 @@ export async function bulkImportNodeModifiersFromJson(questPlanId: string, jsonD
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail', 'default');
+    revalidateTag('quest-plan-detail');
     return { success: true, results };
 }
 
@@ -1427,7 +1476,7 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail', 'default');
+    revalidateTag('quest-plan-detail');
     
     return { success: true };
 }

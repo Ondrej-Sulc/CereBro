@@ -141,7 +141,7 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                     </p>
                 </div>
 
-                <div className="flex items-center rounded-md border border-slate-700 bg-slate-900/50 p-0.5">
+                <div role="group" aria-label="Sort by" className="flex items-center rounded-md border border-slate-700 bg-slate-900/50 p-0.5">
                     <button
                         onClick={() => setSortBy('name')}
                         aria-pressed={sortBy === 'name'}

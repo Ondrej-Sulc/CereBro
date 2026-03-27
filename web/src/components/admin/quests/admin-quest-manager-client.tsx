@@ -97,6 +97,7 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                 router.push(`/admin/quests/${res.planId}`);
             }
         } catch (error: unknown) {
+            console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to create quest";
             toast({ title: "Error", description: msg, variant: "destructive" });
         } finally {
@@ -111,6 +112,7 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
             router.refresh();
             toast({ title: "Success", description: "Quest deleted." });
         } catch (error: unknown) {
+            console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to delete quest";
             toast({ title: "Error", description: msg, variant: "destructive" });
         }
@@ -422,10 +424,10 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
     const totalShown = filteredQuests ? filteredQuests.length : initialQuests.length;
 
     // Dropdown options for category selectors (indented by depth)
-    const categoryOptions = flatCategories.map(cat => ({
+    const categoryOptions = useMemo(() => flatCategories.map(cat => ({
         value: cat.id,
         label: `${"  ".repeat(cat.depth)}${cat.depth > 0 ? "└ " : ""}${cat.name}`,
-    }));
+    })), [flatCategories]);
 
     const editParentOptions = useMemo(() => {
         if (!editingCategory) return categoryOptions;

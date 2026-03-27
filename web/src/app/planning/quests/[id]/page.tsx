@@ -282,7 +282,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                                 )}
                                 {(quest.minStarLevel || quest.maxStarLevel) && (
                                     <Badge className="bg-amber-600 text-white border-none text-xs font-bold uppercase tracking-widest px-3 py-1 shadow-lg">
-                                        {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                                        {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}–${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
                                     </Badge>
                                 )}
                             </div>
@@ -341,7 +341,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                     <div className="flex flex-wrap gap-3">
                         {(quest.minStarLevel || quest.maxStarLevel) && (
                             <Badge variant="outline" className="bg-amber-950/20 border-amber-800/50 text-amber-500 font-bold px-3 py-1">
-                                {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}-${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
+                                {quest.minStarLevel && quest.maxStarLevel ? `${quest.minStarLevel}–${quest.maxStarLevel}★` : quest.minStarLevel ? `${quest.minStarLevel}★+` : `Up to ${quest.maxStarLevel}★`}
                             </Badge>
                         )}
                         {quest.requiredClasses?.map((cls) => (

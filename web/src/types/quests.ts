@@ -29,12 +29,19 @@ export type QuestWithRelations = QuestPlan & {
     };
 };
 
+export type FeaturedPlayerInfo = {
+    id: string;
+    ingameName: string;
+    avatar: string | null;
+};
+
 export type QuestSummary = QuestPlan & {
     category: (QuestCategory & { children?: QuestCategory[] }) | null;
     creator?: Player | null;
     creators: CreatorInfo[];
     requiredTags: Tag[];
     encounters: { id: string }[];
+    featuredPlayers: FeaturedPlayerInfo[];
     personalProgress?: number;
     _count?: {
         playerPlans: number;

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     Map as MapIcon, ArrowRight, ChevronRight, Image as ImageIcon,
-    Youtube, Swords, Users, ShieldAlert, Tag as TagIcon, Trophy, Folder
+    Youtube, Swords, Users, Tag as TagIcon, Star, Folder, Repeat2, CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -56,9 +56,10 @@ function computeSubtreeCounts(
 }
 
 function formatStarRestriction(min?: number | null, max?: number | null): string {
-    if (min != null && max != null) return `${min}-${max}★`;
+    if (min != null && max != null) return `${min}–${max}★`;
     if (min != null) return `${min}★+`;
-    return `Up to ${max}★`;
+    if (max != null) return `Up to ${max}★`;
+    return "";
 }
 
 interface Props {
@@ -283,9 +284,16 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
 }
 
 const QuestCard = memo(function QuestCard({ quest }: { quest: QuestSummary }) {
+    const isCompleted = quest.personalProgress != null && quest.personalProgress >= quest.encounters.length && quest.encounters.length > 0;
+
     return (
         <Link href={`/planning/quests/${quest.id}`} className="block h-full">
-            <Card className="bg-slate-950 border-slate-800 hover:border-sky-700/50 hover:shadow-[0_0_30px_rgba(2,132,199,0.1)] transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:from-sky-500/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity">
+            <Card className={cn(
+                "bg-slate-950 transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity",
+                isCompleted
+                    ? "border-emerald-800/50 hover:border-emerald-700/50 hover:shadow-[0_0_30px_rgba(52,211,153,0.08)] before:from-emerald-500/5"
+                    : "border-slate-800 hover:border-sky-700/50 hover:shadow-[0_0_30px_rgba(2,132,199,0.1)] before:from-sky-500/5"
+            )}>
                 {/* Banner */}
                 <div className="relative aspect-[21/9] w-full overflow-hidden bg-slate-900 border-b border-slate-800">
                     {quest.bannerUrl ? (
@@ -306,7 +314,27 @@ const QuestCard = memo(function QuestCard({ quest }: { quest: QuestSummary }) {
                         </div>
                     )}
                     <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90" />
+
+                    {/* Completion badge */}
+                    {isCompleted && (
+                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-500/60 shadow-xl">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tight">Completed</span>
+                        </div>
+                    )}
+
                     <div className="absolute bottom-2.5 right-4 flex items-center gap-2 z-10">
+                        {quest.teamLimit !== null ? (
+                            <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl">
+                                <Users className="w-3.5 h-3.5 text-sky-400" />
+                                <span className="text-xs font-black uppercase tracking-tight">Team of {quest.teamLimit}</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl">
+                                <Repeat2 className="w-3.5 h-3.5 text-sky-400" />
+                                <span className="text-xs font-black uppercase tracking-tight">Swap</span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-xl">
                             <Swords className="w-4 h-4 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
                             <span className="text-xs font-black uppercase tracking-tight">{quest.encounters.length} Fights</span>
@@ -368,50 +396,82 @@ const QuestCard = memo(function QuestCard({ quest }: { quest: QuestSummary }) {
                         </div>
                     </div>
 
-                    {/* Metadata */}
-                    <div className="grid grid-cols-2 gap-3">
-                        {(quest.minStarLevel || quest.maxStarLevel) && (
-                            <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-2.5 flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-md bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                                    <Trophy className="w-4 h-4 text-amber-500" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter leading-none mb-1">Restriction</span>
-                                    <span className="text-xs font-black text-amber-500 leading-none">
-                                        {formatStarRestriction(quest.minStarLevel, quest.maxStarLevel)}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                        {quest.requiredClasses && quest.requiredClasses.length > 0 && (
-                            <div className="bg-slate-900/50 border border-slate-800/50 rounded-lg p-2.5 flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-md bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
-                                    <ShieldAlert className="w-4 h-4 text-sky-500" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter leading-none mb-1">Classes</span>
-                                    <div className="flex gap-1">
-                                        {quest.requiredClasses.slice(0, 3).map(cls => (
-                                            <div key={cls} className="relative w-3.5 h-3.5">
-                                                <Image src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} fill className="object-contain" />
+                    {/* Featured players */}
+                    {quest.featuredPlayers && quest.featuredPlayers.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest shrink-0">Featured</span>
+                            <div className="flex -space-x-1.5">
+                                {quest.featuredPlayers.slice(0, 6).map(p => (
+                                    <Tooltip key={p.id} delayDuration={0}>
+                                        <TooltipTrigger asChild>
+                                            <div className="relative w-6 h-6 rounded-full border-2 border-slate-950 overflow-hidden bg-slate-800 cursor-help hover:z-20 hover:scale-110 transition-all">
+                                                {p.avatar ? (
+                                                    <Image src={p.avatar} alt={p.ingameName} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[8px] font-black text-white uppercase">
+                                                        {p.ingameName.charAt(0)}
+                                                    </div>
+                                                )}
                                             </div>
-                                        ))}
-                                        {quest.requiredClasses.length > 3 && <span className="text-[8px] text-slate-500 font-bold self-center">+{quest.requiredClasses.length - 3}</span>}
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="text-xs font-bold">
+                                            {p.ingameName}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                ))}
+                                {quest.featuredPlayers.length > 6 && (
+                                    <div className="relative w-6 h-6 rounded-full border-2 border-slate-950 bg-slate-800 flex items-center justify-center">
+                                        <span className="text-[8px] font-black text-slate-400">+{quest.featuredPlayers.length - 6}</span>
                                     </div>
-                                </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
-                    {/* Tags */}
-                    {quest.requiredTags && quest.requiredTags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                            {quest.requiredTags.slice(0, 4).map(tag => (
-                                <Badge key={tag.id} variant="outline" className="bg-slate-900/30 text-slate-400 border-slate-800 text-[9px] uppercase font-black px-2 py-0.5 h-5">
-                                    <TagIcon className="w-2.5 h-2.5 mr-1 text-slate-600" /> {tag.name}
-                                </Badge>
-                            ))}
-                            {quest.requiredTags.length > 4 && <span className="text-[10px] text-slate-600 font-bold self-center">+{quest.requiredTags.length - 4}</span>}
+                    {/* Restrictions */}
+                    {(quest.minStarLevel || quest.maxStarLevel || (quest.requiredClasses && quest.requiredClasses.length > 0) || quest.requiredTags.length > 0) && (
+                        <div className="space-y-1.5">
+                            <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Restrictions</span>
+                            <div className="flex flex-wrap gap-1.5 items-center">
+                                {(quest.minStarLevel || quest.maxStarLevel) && (
+                                    <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full px-2.5 py-1">
+                                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                        <span className="text-[11px] font-black text-amber-400 leading-none">
+                                            {formatStarRestriction(quest.minStarLevel, quest.maxStarLevel)}
+                                        </span>
+                                    </div>
+                                )}
+                                {quest.requiredClasses && quest.requiredClasses.length > 0 && (
+                                    <div className="flex items-center gap-1.5 bg-sky-500/10 border border-sky-500/20 rounded-full px-2.5 py-1">
+                                        {quest.requiredClasses.map(cls => (
+                                            <Tooltip key={cls} delayDuration={0}>
+                                                <TooltipTrigger asChild>
+                                                    <div className="relative w-5 h-5 cursor-help shrink-0">
+                                                        <Image
+                                                            src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
+                                                            alt={cls}
+                                                            fill
+                                                            className="object-contain"
+                                                        />
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top" className="text-xs capitalize">
+                                                    {cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        ))}
+                                    </div>
+                                )}
+                                {quest.requiredTags.slice(0, 3).map(tag => (
+                                    <div key={tag.id} className="flex items-center gap-1 bg-slate-900 border border-slate-700/50 rounded-full px-2.5 py-1">
+                                        <TagIcon className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                                        <span className="text-[10px] font-black text-slate-400 uppercase leading-none">{tag.name}</span>
+                                    </div>
+                                ))}
+                                {quest.requiredTags.length > 3 && (
+                                    <span className="text-[10px] text-slate-600 font-bold">+{quest.requiredTags.length - 3}</span>
+                                )}
+                            </div>
                         </div>
                     )}
 

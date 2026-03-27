@@ -10,6 +10,7 @@ import { getChampionImageUrl } from '../../utils/championHelper';
 import { config } from '../../config';
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
+    if (size <= 0) throw new RangeError(`chunkArray: size must be greater than 0, got ${size}`);
     const chunks: T[][] = [];
     for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
     return chunks;
