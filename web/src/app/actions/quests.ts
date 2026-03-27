@@ -1114,6 +1114,133 @@ export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds
     return { success: true, count: encounters.length };
 }
 
+const IGNORED_NODE_TITLES = new Set(["champion boost", "health", "warning"]);
+
+export type BulkNodeImportResult = {
+    champion: string;
+    encounterId: string;
+    encounterCreated: boolean;
+    nodesLinked: number;
+    nodesCreated: number;
+    nodesSkipped: number;
+};
+
+export async function bulkImportNodeModifiersFromJson(questPlanId: string, jsonData: string) {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    let parsed: { champion: string; nodes: { title: string; description: string }[] }[];
+    try {
+        parsed = JSON.parse(jsonData);
+    } catch {
+        throw new Error("Invalid JSON format.");
+    }
+
+    if (!Array.isArray(parsed)) throw new Error("JSON must be an array.");
+
+    // Fetch existing encounters for this quest (with defenders)
+    const existingEncounters = await prisma.questEncounter.findMany({
+        where: { questPlanId },
+        include: { defender: { select: { id: true, name: true } } },
+        orderBy: { sequence: 'asc' },
+    });
+
+    const maxSequence = existingEncounters.length > 0
+        ? Math.max(...existingEncounters.map(e => e.sequence))
+        : 0;
+    let nextSequence = maxSequence + 1;
+
+    const results: BulkNodeImportResult[] = [];
+
+    for (const entry of parsed) {
+        const championNameLower = entry.champion.toLowerCase().trim();
+
+        // Match existing encounter by defender full name only (shortName is not unique across champions)
+        let encounter = existingEncounters.find(e =>
+            e.defender?.name.toLowerCase() === championNameLower
+        ) ?? null;
+
+        let encounterCreated = false;
+        if (!encounter) {
+            // Try to find the champion in DB by full name only
+            const champion = await prisma.champion.findFirst({
+                where: {
+                    name: { equals: entry.champion.trim(), mode: 'insensitive' },
+                },
+                select: { id: true }
+            });
+
+            encounter = await prisma.questEncounter.create({
+                data: {
+                    questPlanId,
+                    sequence: nextSequence++,
+                    defenderId: champion?.id ?? null,
+                    recommendedTags: [],
+                },
+                include: { defender: { select: { id: true, name: true } } },
+            });
+            existingEncounters.push(encounter);
+            encounterCreated = true;
+        }
+
+        let nodesLinked = 0;
+        let nodesCreated = 0;
+        let nodesSkipped = 0;
+
+        for (const node of entry.nodes ?? []) {
+            const titleLower = node.title.toLowerCase().trim();
+            if (IGNORED_NODE_TITLES.has(titleLower)) {
+                nodesSkipped++;
+                continue;
+            }
+
+            // Find existing node modifier by name (case-insensitive)
+            let modifier = await prisma.nodeModifier.findFirst({
+                where: { name: { equals: node.title.trim(), mode: 'insensitive' } },
+                select: { id: true },
+            });
+
+            if (!modifier) {
+                modifier = await prisma.nodeModifier.create({
+                    data: { name: node.title.trim(), description: node.description.trim() },
+                    select: { id: true },
+                });
+                nodesCreated++;
+            } else {
+                nodesLinked++;
+            }
+
+            // Upsert the link (no-op if already exists)
+            await prisma.questEncounterNode.upsert({
+                where: {
+                    questEncounterId_nodeModifierId: {
+                        questEncounterId: encounter.id,
+                        nodeModifierId: modifier.id,
+                    }
+                },
+                create: {
+                    questEncounterId: encounter.id,
+                    nodeModifierId: modifier.id,
+                },
+                update: {},
+            });
+        }
+
+        results.push({
+            champion: entry.champion,
+            encounterId: encounter.id,
+            encounterCreated,
+            nodesLinked,
+            nodesCreated,
+            nodesSkipped,
+        });
+    }
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true, results };
+}
+
 export type QuestEncounterUpdateInput = {
     id: string;
     questPlanId: string;

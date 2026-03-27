@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters } from "@/app/actions/quests";
+import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, BulkNodeImportResult } from "@/app/actions/quests";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -86,6 +86,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [bulkEncountersText, setBulkEncountersText] = useState("");
     const [isBulkAdding, setIsBulkAdding] = useState(false);
 
+    // Bulk Import Node Modifiers
+    const [bulkNodeImportTab, setBulkNodeImportTab] = useState<"encounters" | "nodes">("encounters");
+    const [bulkNodeJsonText, setBulkNodeJsonText] = useState("");
+    const [isBulkNodeImporting, setIsBulkNodeImporting] = useState(false);
+    const [bulkNodeImportResults, setBulkNodeImportResults] = useState<BulkNodeImportResult[] | null>(null);
+
     const bulkImportPreview = useMemo(() => {
         const lines = bulkEncountersText.split("\n").map((l) => l.trim()).filter(Boolean);
         let matched = 0;
@@ -148,6 +154,30 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             toast({ title: "Error", description: error.message || "Failed to bulk add", variant: "destructive" });
         } finally {
             setIsBulkAdding(false);
+        }
+    };
+
+    const handleBulkNodeImport = async () => {
+        if (!bulkNodeJsonText.trim()) return;
+        setIsBulkNodeImporting(true);
+        setBulkNodeImportResults(null);
+        try {
+            const res = await bulkImportNodeModifiersFromJson(initialQuest.id, bulkNodeJsonText.trim());
+            if (res.success) {
+                setBulkNodeImportResults(res.results);
+                const totalEncountersCreated = res.results.filter(r => r.encounterCreated).length;
+                const totalNodesCreated = res.results.reduce((s, r) => s + r.nodesCreated, 0);
+                const totalNodesLinked = res.results.reduce((s, r) => s + r.nodesLinked, 0);
+                toast({
+                    title: "Import complete",
+                    description: `${res.results.length} champions processed. ${totalEncountersCreated} new encounters created. ${totalNodesLinked} nodes linked, ${totalNodesCreated} nodes created.`,
+                });
+                router.refresh();
+            }
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message || "Failed to import node modifiers", variant: "destructive" });
+        } finally {
+            setIsBulkNodeImporting(false);
         }
     };
 
@@ -1403,42 +1433,128 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-900/40 rounded-xl [&::-webkit-details-marker]:hidden">
                             <span className="flex items-center gap-2 min-w-0">
                                 <FileStack className="h-4 w-4 shrink-0 text-sky-400" />
-                                <span className="truncate">Bulk import encounters</span>
+                                <span className="truncate">Bulk import</span>
                             </span>
                             <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
                         </summary>
-                        <div className="px-4 pb-4 pt-0 space-y-3 border-t border-slate-800/60">
-                            <p className="text-xs text-slate-500 leading-relaxed">
-                                Paste defender names, one per line. New fights are appended in order starting at sequence {defaultSequence}.
-                                Lines that do not match a champion still create a placeholder row you can edit later.
-                            </p>
-                            <Textarea
-                                value={bulkEncountersText}
-                                onChange={(e) => setBulkEncountersText(e.target.value)}
-                                placeholder={"Hercules\nKitty Pryde\nOmega Red"}
-                                className="min-h-[140px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
-                            />
-                            {bulkImportPreview.total > 0 && (
-                                <p className="text-xs text-slate-400">
-                                    {bulkImportPreview.matched} matched, {bulkImportPreview.unmatched} unmatched — {bulkImportPreview.total} rows
-                                </p>
+                        <div className="border-t border-slate-800/60">
+                            <div className="flex border-b border-slate-800/60">
+                                <button
+                                    type="button"
+                                    onClick={() => setBulkNodeImportTab("encounters")}
+                                    className={cn(
+                                        "px-4 py-2 text-xs font-medium transition-colors",
+                                        bulkNodeImportTab === "encounters"
+                                            ? "text-sky-400 border-b-2 border-sky-400 -mb-px"
+                                            : "text-slate-400 hover:text-slate-200"
+                                    )}
+                                >
+                                    Encounters
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setBulkNodeImportTab("nodes"); setBulkNodeImportResults(null); }}
+                                    className={cn(
+                                        "px-4 py-2 text-xs font-medium transition-colors",
+                                        bulkNodeImportTab === "nodes"
+                                            ? "text-sky-400 border-b-2 border-sky-400 -mb-px"
+                                            : "text-slate-400 hover:text-slate-200"
+                                    )}
+                                >
+                                    Node Modifiers
+                                </button>
+                            </div>
+
+                            {bulkNodeImportTab === "encounters" && (
+                                <div className="px-4 pb-4 pt-3 space-y-3">
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        Paste defender names, one per line. New fights are appended in order starting at sequence {defaultSequence}.
+                                        Lines that do not match a champion still create a placeholder row you can edit later.
+                                    </p>
+                                    <Textarea
+                                        value={bulkEncountersText}
+                                        onChange={(e) => setBulkEncountersText(e.target.value)}
+                                        placeholder={"Hercules\nKitty Pryde\nOmega Red"}
+                                        className="min-h-[140px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
+                                    />
+                                    {bulkImportPreview.total > 0 && (
+                                        <p className="text-xs text-slate-400">
+                                            {bulkImportPreview.matched} matched, {bulkImportPreview.unmatched} unmatched — {bulkImportPreview.total} rows
+                                        </p>
+                                    )}
+                                    <Button
+                                        type="button"
+                                        onClick={handleBulkEncounterParse}
+                                        disabled={isBulkAdding || bulkImportPreview.total === 0}
+                                        className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
+                                    >
+                                        {isBulkAdding ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileStack className="mr-2 h-4 w-4" /> Import {bulkImportPreview.total > 0 ? `${bulkImportPreview.total} encounters` : "encounters"}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             )}
-                            <Button
-                                type="button"
-                                onClick={handleBulkEncounterParse}
-                                disabled={isBulkAdding || bulkImportPreview.total === 0}
-                                className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
-                            >
-                                {isBulkAdding ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
-                                    </>
-                                ) : (
-                                    <>
-                                        <FileStack className="mr-2 h-4 w-4" /> Import {bulkImportPreview.total > 0 ? `${bulkImportPreview.total} encounters` : "encounters"}
-                                    </>
-                                )}
-                            </Button>
+
+                            {bulkNodeImportTab === "nodes" && (
+                                <div className="px-4 pb-4 pt-3 space-y-3">
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        Paste the JSON array of champion nodes. Existing encounters are matched by champion name; unmatched champions get new encounters.
+                                        "Champion Boost", "Health", and "WARNING" nodes are ignored. Node modifiers are created if not already in the database.
+                                    </p>
+                                    <Textarea
+                                        value={bulkNodeJsonText}
+                                        onChange={(e) => { setBulkNodeJsonText(e.target.value); setBulkNodeImportResults(null); }}
+                                        placeholder={'[{"champion": "VISION", "nodes": [{"title": "Tunnel Vision", "description": "..."}]}]'}
+                                        className="min-h-[160px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleBulkNodeImport}
+                                        disabled={isBulkNodeImporting || !bulkNodeJsonText.trim()}
+                                        className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
+                                    >
+                                        {isBulkNodeImporting ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileStack className="mr-2 h-4 w-4" /> Import node modifiers
+                                            </>
+                                        )}
+                                    </Button>
+
+                                    {bulkNodeImportResults && (
+                                        <div className="mt-3 rounded-lg border border-slate-800 bg-slate-900/60 overflow-hidden">
+                                            <div className="px-3 py-2 border-b border-slate-800 text-xs font-medium text-slate-300">
+                                                Import results — {bulkNodeImportResults.length} champions
+                                            </div>
+                                            <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60">
+                                                {bulkNodeImportResults.map((r, i) => (
+                                                    <div key={i} className="px-3 py-2 flex items-start gap-2 text-xs">
+                                                        <span className={cn("mt-0.5 h-1.5 w-1.5 rounded-full shrink-0", r.encounterCreated ? "bg-amber-400" : "bg-sky-400")} />
+                                                        <div className="min-w-0 flex-1">
+                                                            <span className="font-medium text-slate-200">{r.champion}</span>
+                                                            {r.encounterCreated && <span className="ml-1.5 text-amber-400/80">(new encounter)</span>}
+                                                            <span className="ml-2 text-slate-500">
+                                                                {r.nodesLinked} linked
+                                                                {r.nodesCreated > 0 && <>, <span className="text-emerald-400">{r.nodesCreated} created</span></>}
+                                                                {r.nodesSkipped > 0 && <>, {r.nodesSkipped} skipped</>}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </details>
                     {initialQuest.encounters.length === 0 ? (
