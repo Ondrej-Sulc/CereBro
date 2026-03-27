@@ -155,7 +155,9 @@ export async function distributeDefensePlan(
             if (channel && channel.isTextBased()) {
                 return channel as TextChannel;
             }
-        } catch(e) {}
+        } catch (e) {
+            logger.warn({ channelId, err: e }, 'defensePlanDistributor: failed to fetch channel');
+        }
         return null;
     }
 
@@ -188,10 +190,10 @@ export async function distributeDefensePlan(
     });
 
     // 3. Assign Colors
+    const palette = MapImageService.getPlayerPalette(alliance.playerColorPalette);
     const globalColorMap = new Map<string, string>(); // PlayerID -> Color
     sortedPlayers.forEach((p, index) => {
-        const color = MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length];
-        globalColorMap.set(p.id, color);
+        globalColorMap.set(p.id, palette[index % palette.length]);
     });
 
     // --- Overview Map Distribution ---
@@ -313,7 +315,8 @@ export async function distributeDefensePlan(
 
     // --- Individual Player Distribution ---
     // 1. Group Placements by Player
-    const playerPlacements = new Map<string, any[]>();
+    type DefensePlacement = typeof plan.placements[number];
+    const playerPlacements = new Map<string, DefensePlacement[]>();
     plan.placements.forEach(p => {
         if (!p.player) return;
         const name = p.player.ingameName.toLowerCase();
@@ -384,7 +387,7 @@ export async function distributeDefensePlan(
         }
 
         // Highlight Player's Nodes
-        placements.forEach((p: any) => {
+        placements.forEach((p) => {
             const existing = assignments.get(p.node.nodeNumber) || { isTarget: false };
             assignments.set(p.node.nodeNumber, { ...existing, isTarget: true });
         });

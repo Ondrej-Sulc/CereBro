@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { PALETTE } from '@/lib/player-colors';
+import { PALETTES, PlayerPaletteStyle, DEFAULT_PALETTE_STYLE } from '@/lib/player-colors';
 
 interface PlayerColorContextType {
   getPlayerColor: (playerId: string | undefined | null) => string;
@@ -10,37 +10,33 @@ export const PlayerColorContext = createContext<PlayerColorContextType | undefin
 interface PlayerColorProviderProps {
   children: React.ReactNode;
   players: { id: string; battlegroup: number | null; ingameName: string }[];
+  paletteStyle?: PlayerPaletteStyle;
 }
 
-export function PlayerColorProvider({ children, players }: PlayerColorProviderProps) {
+export function PlayerColorProvider({ children, players, paletteStyle = DEFAULT_PALETTE_STYLE }: PlayerColorProviderProps) {
   const colorMap = useMemo(() => {
     const map = new Map<string, string>();
-    
+    const resolved = PALETTES[paletteStyle] ?? PALETTES[DEFAULT_PALETTE_STYLE];
+    const palette = resolved.length > 0 ? resolved : PALETTES[DEFAULT_PALETTE_STYLE];
+
     // Sort players globally: By Battlegroup (1, 2, 3, null), then by Name
     const sortedPlayers = [...players].sort((a, b) => {
-        // Handle Battlegroup Sorting
-        const bgA = a.battlegroup || 999; // Treat null as high number to put at end
+        const bgA = a.battlegroup || 999;
         const bgB = b.battlegroup || 999;
-        
-        if (bgA !== bgB) {
-            return bgA - bgB;
-        }
-
-        // Handle Name Sorting
+        if (bgA !== bgB) return bgA - bgB;
         return a.ingameName.localeCompare(b.ingameName);
     });
 
-    // Assign colors sequentially
     sortedPlayers.forEach((player, index) => {
-        map.set(player.id, PALETTE[index % PALETTE.length]);
+        map.set(player.id, palette[index % palette.length]);
     });
 
     return map;
-  }, [players]);
+  }, [players, paletteStyle]);
 
   const getPlayerColor = (playerId: string | undefined | null) => {
     if (!playerId) return '#94a3b8'; // Slate 400
-    return colorMap.get(playerId) || '#94a3b8'; // Fallback
+    return colorMap.get(playerId) || '#94a3b8';
   };
 
   return (

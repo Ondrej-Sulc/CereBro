@@ -9,6 +9,12 @@ import logger from '../loggerService';
 import { getChampionImageUrl } from '../../utils/championHelper';
 import { config } from '../../config';
 
+function chunkArray<T>(arr: T[], size: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+    return chunks;
+}
+
 export interface DistributeResult {
     sent: string[];
     notFound: string[];
@@ -151,10 +157,11 @@ export async function distributeWarPlan(
     });
 
     // 3. Assign Colors
+    const rawPalette = MapImageService.getPlayerPalette(alliance.playerColorPalette);
+    const palette = rawPalette.length > 0 ? rawPalette : MapImageService.getPlayerPalette('HIGH_CONTRAST');
     const globalColorMap = new Map<string, string>(); // PlayerID -> Color
     sortedPlayers.forEach((p, index) => {
-        const color = MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length];
-        globalColorMap.set(p.id, color);
+        globalColorMap.set(p.id, palette[index % palette.length]);
     });
 
     // 1. Prepare Global Node & Image Data
@@ -232,32 +239,29 @@ export async function distributeWarPlan(
 
     if (fightKeys.size > 0) {
         const criterias = Array.from(keyMap.values());
-        // Prisma doesn't support tuple IN natively in findMany without raw where, 
-        // but given the size, we can construct an OR array.
-        // To avoid massive OR clauses, we can fetch by Node+Defender and then filter in memory if needed, 
-        // or just use OR if size is reasonable.
-        // Let's assume < 200 items in OR is fine.
-
-        // Chunking the query if necessary, but for now simple OR.
-        const historicalFights = await prisma.warFight.findMany({
-            where: {
-                OR: criterias,
-                videoId: { not: null },
-                war: { status: 'FINISHED' }
-            },
-            select: {
-                nodeId: true,
-                defenderId: true,
-                attackerId: true,
-                death: true,
-                video: { select: { id: true, url: true } },
-                player: { select: { id: true, ingameName: true } }
-            },
-            orderBy: [
-                { death: 'asc' },
-                { createdAt: 'desc' }
-            ]
-        });
+        const chunks = chunkArray(criterias, 200);
+        const chunkResults = await Promise.all(chunks.map(batch =>
+            prisma.warFight.findMany({
+                where: {
+                    OR: batch,
+                    videoId: { not: null },
+                    war: { status: 'FINISHED' }
+                },
+                select: {
+                    nodeId: true,
+                    defenderId: true,
+                    attackerId: true,
+                    death: true,
+                    video: { select: { id: true, url: true } },
+                    player: { select: { id: true, ingameName: true } }
+                },
+                orderBy: [
+                    { death: 'asc' },
+                    { createdAt: 'desc' }
+                ]
+            })
+        ));
+        const historicalFights = chunkResults.flat();
 
         for (const hf of historicalFights) {
             if (!hf.video?.url || !hf.defenderId || !hf.attackerId || !hf.player) continue;
@@ -400,7 +404,9 @@ export async function distributeWarPlan(
                 channelCache.set(channelId, channel as TextChannel);
                 return channel as TextChannel;
             }
-        } catch (e) { }
+        } catch (e) {
+            logger.warn({ channelId, err: e }, 'warPlanDistributor: failed to fetch channel');
+        }
 
         channelCache.set(channelId, null);
         return null;

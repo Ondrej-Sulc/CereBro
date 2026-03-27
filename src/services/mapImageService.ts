@@ -1,5 +1,6 @@
 import sharp from 'sharp';
 import { WarNodePosition, LAYOUT, LAYOUT_BIG } from '../data/war-planning/nodes-data';
+import { PALETTES, PlayerPaletteStyle } from '../data/war-planning/player-colors';
 import { WarMapType, ChampionClass } from '@prisma/client';
 import logger from './loggerService';
 
@@ -49,20 +50,9 @@ export class MapImageService {
         [ChampionClass.SUPERIOR]: '#d946ef',// fuchsia-500
     };
 
-    // 10 Distinct colors for players (matches web/src/lib/player-colors.ts PALETTE)
-    public static readonly PLAYER_COLORS = [
-        '#4ade80', // Green 400
-        '#60a5fa', // Blue 400
-        '#c084fc', // Purple 400
-        '#e879f9', // Fuchsia 400
-        '#f472b6', // Pink 400
-        '#f87171', // Red 400
-        '#facc15', // Yellow 400
-        '#fb923c', // Orange 400
-        '#22d3ee', // Cyan 400
-
-        '#a3e635', // Lime 400
-    ];
+    public static getPlayerPalette(paletteStyle?: string): string[] {
+        return PALETTES[paletteStyle as PlayerPaletteStyle] ?? PALETTES.DEFAULT;
+    }
 
     private static globalImageCache = new Map<string, string>();
 

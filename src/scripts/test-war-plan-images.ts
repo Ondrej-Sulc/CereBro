@@ -122,10 +122,10 @@ async function main() {
         return a.name.localeCompare(b.name);
     });
 
+    const palette = MapImageService.getPlayerPalette();
     const globalColorMap = new Map<string, string>();
     sortedPlayers.forEach((p, index) => {
-        const color = MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length];
-        globalColorMap.set(p.id, color);
+        globalColorMap.set(p.id, palette[index % palette.length]);
     });
 
     // --- Prepare Data ---

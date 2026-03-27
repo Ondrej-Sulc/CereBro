@@ -1,13 +1,14 @@
 'use client';
 
 import { Player } from "@prisma/client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updatePlayerRole, updateAllianceColors, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings } from "../actions/alliance";
+import { updatePlayerRole, updateAllianceColors, updateAlliancePalette, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings } from "../actions/alliance";
+import { PALETTES, PALETTE_LABELS, PALETTE_DESCRIPTIONS, DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
 import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -59,13 +60,14 @@ interface AllianceWithRequests {
     battlegroup1Color: string;
     battlegroup2Color: string;
     battlegroup3Color: string;
+    playerColorPalette: string;
     membershipRequests: MembershipRequest[];
     linkCode: string | null;
     linkCodeExpires: Date | null;
     removeMissingMembers: boolean;
 }
 
-type PlayerWithRoster = Player & { roster: unknown[] };
+type PlayerWithRoster = Player & { _count: { roster: number } };
 
 interface ClientPageProps {
     members: PlayerWithRoster[];
@@ -85,7 +87,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         bg2: alliance.battlegroup2Color || "#22c55e",
         bg3: alliance.battlegroup3Color || "#3b82f6",
     });
-    const [isSavingColors, setIsSavingColors] = useState(false);
+    const [isSavingTheme, setIsSavingTheme] = useState(false);
+    const isValidPalette = (v: string): v is PlayerPaletteStyle => (Object.keys(PALETTES) as string[]).includes(v);
+    const [selectedPalette, setSelectedPalette] = useState<PlayerPaletteStyle>(
+        isValidPalette(alliance.playerColorPalette) ? alliance.playerColorPalette : DEFAULT_PALETTE_STYLE
+    );
+    const [sortBy, setSortBy] = useState<'name' | 'prestige'>('name');
 
     // Alliance Settings
     const [removeMissingMembers, setRemoveMissingMembers] = useState(alliance.removeMissingMembers);
@@ -211,16 +218,26 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         }
     };
 
-    const handleSaveColors = async () => {
-        setIsSavingColors(true);
+    const handleSaveTheme = async () => {
+        setIsSavingTheme(true);
         try {
-            await updateAllianceColors(colors);
-            toast({ title: "Colors Updated", description: "Alliance theme colors saved." });
-        } catch (e: unknown) {
-             const error = e as Error;
-             toast({ title: "Error", description: error.message || "Failed to save colors.", variant: "destructive" });
+            const [colorsResult, paletteResult] = await Promise.allSettled([
+                updateAllianceColors(colors),
+                updateAlliancePalette(selectedPalette),
+            ]);
+            const colorsFailed = colorsResult.status === 'rejected';
+            const paletteFailed = paletteResult.status === 'rejected';
+            if (!colorsFailed && !paletteFailed) {
+                toast({ title: "Theme Saved", description: "Alliance theme changes saved." });
+            } else if (colorsFailed && paletteFailed) {
+                const msg = colorsResult.reason instanceof Error ? colorsResult.reason.message : "Failed to save theme.";
+                toast({ title: "Error", description: msg, variant: "destructive" });
+            } else {
+                const failedPart = colorsFailed ? "battlegroup colors" : "player palette";
+                toast({ title: "Partially Saved", description: `Theme saved but failed to update ${failedPart}.`, variant: "destructive" });
+            }
         } finally {
-            setIsSavingColors(false);
+            setIsSavingTheme(false);
         }
     };
 
@@ -239,28 +256,69 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         }
     };
 
-    const groups = {
-        unassigned: members.filter(m => !m.battlegroup),
-        bg1: members.filter(m => m.battlegroup === 1),
-        bg2: members.filter(m => m.battlegroup === 2),
-        bg3: members.filter(m => m.battlegroup === 3),
+    const sortPlayers = (players: PlayerWithRoster[]) => {
+        if (sortBy === 'prestige') {
+            return [...players].sort((a, b) => (b.championPrestige ?? 0) - (a.championPrestige ?? 0));
+        }
+        return [...players].sort((a, b) => a.ingameName.localeCompare(b.ingameName, undefined, { sensitivity: 'base' }));
     };
 
-    const renderColumn = (title: string, players: PlayerWithRoster[], bgId: string, icon: React.ReactNode, accentColor?: string) => (
+    const groups = {
+        unassigned: sortPlayers(members.filter(m => !m.battlegroup)),
+        bg1: sortPlayers(members.filter(m => m.battlegroup === 1)),
+        bg2: sortPlayers(members.filter(m => m.battlegroup === 2)),
+        bg3: sortPlayers(members.filter(m => m.battlegroup === 3)),
+    };
+
+    const bgStats = useMemo(() => {
+        const compute = (players: PlayerWithRoster[]) => {
+            const withPrestige = players.filter(p => p.championPrestige != null);
+            const avg = withPrestige.length > 0
+                ? Math.round(withPrestige.reduce((sum, p) => sum + (p.championPrestige ?? 0), 0) / withPrestige.length)
+                : null;
+            return { count: players.length, avgPrestige: avg };
+        };
+        return {
+            unassigned: compute(members.filter(m => !m.battlegroup)),
+            bg1: compute(members.filter(m => m.battlegroup === 1)),
+            bg2: compute(members.filter(m => m.battlegroup === 2)),
+            bg3: compute(members.filter(m => m.battlegroup === 3)),
+        };
+    }, [members]);
+
+    const playerColorMap = useMemo(() => {
+        const palette = PALETTES[selectedPalette] ?? PALETTES.DEFAULT;
+        const sorted = [...members].sort((a, b) => {
+            const bgA = a.battlegroup || 999;
+            const bgB = b.battlegroup || 999;
+            if (bgA !== bgB) return bgA - bgB;
+            return a.ingameName.localeCompare(b.ingameName);
+        });
+        const map = new Map<string, string>();
+        sorted.forEach((p, i) => map.set(p.id, palette[i % palette.length]));
+        return map;
+    }, [members, selectedPalette]);
+
+    const renderColumn = (title: string, players: PlayerWithRoster[], icon: React.ReactNode, accentColor?: string, stats?: { count: number; avgPrestige: number | null }) => (
         <div className="flex-1 min-w-[300px] flex flex-col gap-3">
-            <div 
+            <div
                 className="flex items-center gap-2 pb-1.5 border-b transition-colors"
-                style={{ borderColor: accentColor ? `${accentColor}40` : '#1e293b' }} // 40 = 25% opacity
+                style={{ borderColor: accentColor ? `${accentColor}40` : '#1e293b' }}
             >
                 <div style={{ color: accentColor || '#94a3b8' }}>
                     {icon}
                 </div>
                 <h3 className="font-bold text-base" style={{ color: accentColor || '#e2e8f0' }}>{title}</h3>
-                <Badge variant="secondary" className="ml-auto text-[10px] h-4">{players.length}</Badge>
+                <div className="ml-auto flex items-center gap-2">
+                    {stats?.avgPrestige != null && (
+                        <span className="text-[10px] text-slate-500">avg {stats.avgPrestige.toLocaleString('en-US')}</span>
+                    )}
+                    <Badge variant="secondary" className="text-[10px] h-4">{stats?.count ?? players.length}</Badge>
+                </div>
             </div>
             <div className="flex flex-col gap-2">
                 {players.map(player => (
-                    <Card key={player.id} className={cn("bg-slate-900/50 border-slate-800 transition-all group/card", loadingId === player.id && "opacity-50")}>
+                    <Card key={player.id} className={cn("bg-slate-900/50 border-slate-800 transition-all group/card overflow-hidden", loadingId === player.id && "opacity-50")} style={{ borderLeftColor: playerColorMap.get(player.id), borderLeftWidth: '3px' }}>
                         <CardContent className="p-2.5 flex items-center gap-3">
                             <Avatar className="h-9 w-9 border border-slate-700">
                                 <AvatarImage src={player.avatar || undefined} />
@@ -272,7 +330,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                     <Link href={`/player/${player.id}`} className="font-semibold text-sm truncate hover:text-sky-400 transition-colors" onClick={(e) => e.stopPropagation()}>{player.ingameName}</Link>
                                     {player.isOfficer && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
                                 </div>
-                                <p className="text-[10px] text-slate-400">Prestige: {player.championPrestige?.toLocaleString('en-US') || "N/A"}</p>
+                                <p className="text-[10px] text-slate-400">
+                                    Prestige: {player.championPrestige?.toLocaleString('en-US') || "N/A"}
+                                    <span className="text-slate-600"> · </span>
+                                    {(player._count?.roster ?? 0).toLocaleString('en-US')} champs
+                                </p>
                             </div>
 
                             {isOfficer ? (
@@ -429,9 +491,48 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                     ))}
                                                 </div>
 
+                                                <div className="space-y-3 pt-4 border-t border-slate-800">
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-300">Player Colors</p>
+                                                        <p className="text-xs text-slate-500 mt-0.5">Color palette used to distinguish players on war maps.</p>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        {(Object.keys(PALETTES) as PlayerPaletteStyle[]).map((style) => {
+                                                            const isSelected = selectedPalette === style;
+                                                            return (
+                                                                <button
+                                                                    key={style}
+                                                                    onClick={() => setSelectedPalette(style)}
+                                                                    className={cn(
+                                                                        "flex flex-col gap-2 p-3 rounded-lg border text-left transition-all",
+                                                                        isSelected
+                                                                            ? "border-sky-500 bg-sky-950/30"
+                                                                            : "border-slate-800 bg-slate-900/50 hover:border-slate-600"
+                                                                    )}
+                                                                >
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-sm font-semibold text-slate-200">{PALETTE_LABELS[style]}</span>
+                                                                        {isSelected && <Check className="w-4 h-4 text-sky-400 shrink-0" />}
+                                                                    </div>
+                                                                    <div className="flex gap-1">
+                                                                        {PALETTES[style].map((color, i) => (
+                                                                            <div
+                                                                                key={i}
+                                                                                className="w-4 h-4 rounded-full border border-white/10"
+                                                                                style={{ backgroundColor: color }}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="text-[11px] text-slate-500">{PALETTE_DESCRIPTIONS[style]}</p>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
                                                 <DialogFooter>
-                                                    <Button onClick={handleSaveColors} className="w-full sm:w-auto" disabled={isSavingColors}>
-                                                        {isSavingColors ? "Saving..." : "Save Theme Changes"}
+                                                    <Button onClick={handleSaveTheme} className="w-full sm:w-auto" disabled={isSavingTheme}>
+                                                        {isSavingTheme ? "Saving..." : "Save Theme Changes"}
                                                     </Button>
                                                 </DialogFooter>
                                             </TabsContent>
@@ -703,6 +804,23 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         </Dialog>
                     )}
 
+                    <div role="group" className="flex items-center rounded-md border border-slate-700 bg-slate-900/50 p-0.5">
+                        <button
+                            onClick={() => setSortBy('name')}
+                            aria-pressed={sortBy === 'name'}
+                            className={cn("px-2.5 py-1 text-xs rounded transition-colors", sortBy === 'name' ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-200")}
+                        >
+                            Name
+                        </button>
+                        <button
+                            onClick={() => setSortBy('prestige')}
+                            aria-pressed={sortBy === 'prestige'}
+                            className={cn("px-2.5 py-1 text-xs rounded transition-colors", sortBy === 'prestige' ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-200")}
+                        >
+                            Prestige
+                        </button>
+                    </div>
+
                     <Button variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-950/20 gap-2" onClick={handleLeave}>
                         <LogOut className="w-4 h-4" />
                         <span className="hidden sm:inline">Leave Alliance</span>
@@ -711,10 +829,10 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                {renderColumn("Unassigned", groups.unassigned, "unassigned", <Users className="w-5 h-5"/>)}
-                {renderColumn("Battlegroup 1", groups.bg1, "1", <Shield className="w-5 h-5"/>, alliance.battlegroup1Color)}
-                {renderColumn("Battlegroup 2", groups.bg2, "2", <Shield className="w-5 h-5"/>, alliance.battlegroup2Color)}
-                {renderColumn("Battlegroup 3", groups.bg3, "3", <Shield className="w-5 h-5"/>, alliance.battlegroup3Color)}
+                {renderColumn("Unassigned", groups.unassigned, <Users className="w-5 h-5"/>, undefined, bgStats.unassigned)}
+                {renderColumn("Battlegroup 1", groups.bg1, <Shield className="w-5 h-5"/>, alliance.battlegroup1Color, bgStats.bg1)}
+                {renderColumn("Battlegroup 2", groups.bg2, <Shield className="w-5 h-5"/>, alliance.battlegroup2Color, bgStats.bg2)}
+                {renderColumn("Battlegroup 3", groups.bg3, <Shield className="w-5 h-5"/>, alliance.battlegroup3Color, bgStats.bg3)}
             </div>
         </div>
     );

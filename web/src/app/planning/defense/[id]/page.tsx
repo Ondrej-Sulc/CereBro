@@ -138,6 +138,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         isOfficer={isOfficer}
         bgColors={bgColors}
         userBattlegroup={player.battlegroup}
+        paletteStyle={plan.alliance.playerColorPalette as import("@/lib/player-colors").PlayerPaletteStyle}
       />
     </>
   );

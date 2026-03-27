@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil, Share2, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
+import { PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
 import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan, distributeDefensePlanToDiscord } from "@/app/planning/defense-actions";
 import { getGuildChannels } from "@/app/planning/actions";
@@ -50,6 +51,7 @@ interface DefenseDetailsClientProps {
   isOfficer?: boolean;
   bgColors?: Record<number, string>;
   userBattlegroup?: number | null;
+  paletteStyle?: PlayerPaletteStyle;
 }
 
 interface WarNodeWithAllocations {
@@ -484,7 +486,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   };
 
   return (
-    <PlayerColorProvider players={props.players}>
+    <PlayerColorProvider players={props.players} paletteStyle={props.paletteStyle}>
       <div className={cn(
           "flex w-full overflow-hidden bg-transparent transition-all duration-300",
           isFullscreen ? "fixed inset-0 z-[100] h-screen bg-slate-950" : "h-[calc(100dvh-65px)]", // Keep solid bg in fullscreen

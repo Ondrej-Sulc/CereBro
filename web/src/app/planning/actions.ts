@@ -886,7 +886,8 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
     const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => a.name.localeCompare(b.name));
     const globalColorMap = new Map<string, string>();
     sortedPlayers.forEach((p, index) => {
-        globalColorMap.set(p.id, MapImageService.PLAYER_COLORS[index % MapImageService.PLAYER_COLORS.length]);
+        const palette = MapImageService.getPlayerPalette();
+        globalColorMap.set(p.id, palette[index % palette.length]);
         if (p.avatar) uniqueImageUrls.add(p.avatar);
     });
 

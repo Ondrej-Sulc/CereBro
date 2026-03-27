@@ -16,6 +16,7 @@ import { PlayerBriefingModal } from "./details/player-briefing-modal";
 import { useToast } from "@/hooks/use-toast";
 import { distributePlan } from "@/app/planning/actions";
 import { PlayerColorProvider } from "./player-color-context";
+import { PlayerPaletteStyle } from "@/lib/player-colors";
 
 interface WarDetailsClientProps {
   war: War;
@@ -32,6 +33,7 @@ interface WarDetailsClientProps {
   bgColors?: Record<number, string>;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
   userBattlegroup?: number | null;
+  paletteStyle?: PlayerPaletteStyle;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
@@ -164,7 +166,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   const selectedPlayer = props.players.find(p => p.id === selectedPlayerId) || null;
 
   return (
-    <PlayerColorProvider players={props.players}>
+    <PlayerColorProvider players={props.players} paletteStyle={props.paletteStyle}>
       <div className={cn(
           "flex w-full overflow-hidden bg-slate-950 transition-all duration-300",
           isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-65px)]",

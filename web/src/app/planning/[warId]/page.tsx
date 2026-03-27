@@ -7,6 +7,7 @@ import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
+import { DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import logger from "@/lib/logger";
 import { cache } from "react";
 
@@ -169,6 +170,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       bgColors={bgColors}
       activeDefensePlan={activeDefensePlan?.activeDefensePlan}
       userBattlegroup={player.battlegroup}
+      paletteStyle={(war.alliance.playerColorPalette as PlayerPaletteStyle) ?? DEFAULT_PALETTE_STYLE}
     />
   );
 }

@@ -24,16 +24,25 @@ export default async function AlliancePage() {
         where: { allianceId: player.allianceId },
         orderBy: { ingameName: 'asc' },
         include: {
-            roster: {
-                orderBy: { rank: 'desc' }, // Assuming calculated prestige or similar logic exists, or just grab top stars
-                take: 1
+            _count: {
+                select: { roster: true }
             }
         }
     });
 
     const alliance = await prisma.alliance.findUnique({
         where: { id: player.allianceId },
-        include: {
+        select: {
+            id: true,
+            name: true,
+            guildId: true,
+            battlegroup1Color: true,
+            battlegroup2Color: true,
+            battlegroup3Color: true,
+            playerColorPalette: true,
+            linkCode: true,
+            linkCodeExpires: true,
+            removeMissingMembers: true,
             membershipRequests: {
                 include: {
                     player: true
