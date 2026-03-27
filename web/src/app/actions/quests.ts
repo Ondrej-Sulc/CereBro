@@ -1339,14 +1339,18 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
         throw new Error("One or more encounters do not belong to this quest plan.");
     }
 
-    await prisma.$transaction(
-        encounterIds.map((id, index) =>
-            prisma.questEncounter.update({
-                where: { id },
-                data: { sequence: index + 1 }
-            })
-        )
-    );
+    // Two-phase update to avoid unique constraint violations on (questPlanId, sequence).
+    // Phase 1: shift all to a large temporary offset so no final value collides with a current one.
+    // Phase 2: write the real target sequences.
+    const offset = encounterIds.length + 1000;
+    await prisma.$transaction([
+        ...encounterIds.map((id, index) =>
+            prisma.questEncounter.update({ where: { id }, data: { sequence: offset + index } })
+        ),
+        ...encounterIds.map((id, index) =>
+            prisma.questEncounter.update({ where: { id }, data: { sequence: index + 1 } })
+        ),
+    ]);
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
