@@ -375,6 +375,10 @@ export async function distributeDefensePlan(
 
         const bg = placements[0].battlegroup;
         const playerObj = placements[0].player;
+        if (!playerObj) {
+            result.errors.push(`Skipped ${playerName}: no linked player record`);
+            continue;
+        }
         const thread = await getThread(bg, playerName);
         
         // --- Generate Personalized Map ---

@@ -31,7 +31,7 @@ export async function createQuestCategory(name: string, order: number = 0, paren
         }
     });
 
-    revalidateTag('quest-categories');
+    revalidateTag('quest-categories', 'default');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
@@ -49,7 +49,7 @@ export async function updateQuestCategory(
         }
         let currentParentId: string | null = data.parentId;
         while (currentParentId !== null) {
-            const ancestor = await prisma.questCategory.findUnique({
+            const ancestor: { parentId: string | null } | null = await prisma.questCategory.findUnique({
                 where: { id: currentParentId },
                 select: { parentId: true }
             });
@@ -71,7 +71,7 @@ export async function updateQuestCategory(
         }
     });
 
-    revalidateTag('quest-categories');
+    revalidateTag('quest-categories', 'default');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
@@ -142,7 +142,7 @@ export async function uploadQuestCategoryThumbnail(categoryId: string, formData:
         }
     }
 
-    revalidateTag('quest-categories');
+    revalidateTag('quest-categories', 'default');
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
 
@@ -397,7 +397,7 @@ export async function updateFeaturedPlayers(
 
         revalidatePath(`/admin/quests/${questPlanId}`);
         revalidatePath(`/planning/quests/${questPlanId}`);
-        revalidateTag('quest-plan-detail');
+        revalidateTag('quest-plan-detail', 'default');
         revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
         
         return { success: true };
@@ -1022,14 +1022,14 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     });
 
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plans');
-    revalidateTag('quest-plan-detail');
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
     revalidateTag(`quest-popular-counters-${questPlanId}`, 'default');
-    revalidateTag('quest-popular-counters');
+    revalidateTag('quest-popular-counters', 'default');
 
     if (actingUser.allianceId) {
         revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`, 'default');
-        revalidateTag('quest-alliance-picks');
+        revalidateTag('quest-alliance-picks', 'default');
     }
 
     return { success: true };
@@ -1137,8 +1137,8 @@ export async function savePlayerQuestSynergy(questPlanId: string, championId: nu
     }
 
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plans');
-    revalidateTag('quest-plan-detail');
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
 
     return { success: true };
 }
@@ -1232,7 +1232,7 @@ export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail');
+    revalidateTag('quest-plan-detail', 'default');
     return { success: true, count: encounters.length };
 }
 
@@ -1359,7 +1359,7 @@ export async function bulkImportNodeModifiersFromJson(questPlanId: string, jsonD
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail');
+    revalidateTag('quest-plan-detail', 'default');
     return { success: true, results };
 }
 
@@ -1476,7 +1476,7 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
 
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
-    revalidateTag('quest-plan-detail');
+    revalidateTag('quest-plan-detail', 'default');
     
     return { success: true };
 }
