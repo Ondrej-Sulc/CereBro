@@ -117,6 +117,8 @@ interface EncounterExpandedContentProps {
     tabState: EncounterTabState;
     filterState: EncounterFilterState;
     rosterState: EncounterRosterState;
+    isNodesCollapsed: boolean;
+    setIsNodesCollapsed: (collapsed: boolean) => void;
     renderChampionItem: (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommended?: boolean) => React.ReactNode;
     renderListPick: (p: PickCounterWithChampion, encounter: EncounterWithRelations) => React.ReactNode;
 }
@@ -134,6 +136,8 @@ export interface EncounterCardProps {
     tabState: EncounterTabState;
     filterState: EncounterFilterState;
     rosterState: EncounterRosterState;
+    isNodesCollapsed: boolean;
+    setIsNodesCollapsed: (collapsed: boolean) => void;
     renderChampionItem: (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommended?: boolean) => React.ReactNode;
     renderListPick: (p: PickCounterWithChampion, encounter: EncounterWithRelations) => React.ReactNode;
 }
@@ -611,6 +615,9 @@ function RosterSelector({
                                     encounterRoster = encounterRoster.sort((a, b) => {
                                         if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
                                         if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
+                                        if (b.stars !== a.stars) return b.stars - a.stars;
+                                        if (b.rank !== a.rank) return b.rank - a.rank;
+                                        if (b.isAscended !== a.isAscended) return b.isAscended ? 1 : -1;
                                         const nameCompare = a.champion.name.localeCompare(b.champion.name);
                                         if (nameCompare !== 0) return nameCompare;
                                         return a.id.localeCompare(b.id);
@@ -654,6 +661,8 @@ function EncounterExpandedContent({
     tabState,
     filterState,
     rosterState,
+    isNodesCollapsed,
+    setIsNodesCollapsed,
     renderChampionItem,
     renderListPick
 }: EncounterExpandedContentProps) {
@@ -755,23 +764,42 @@ function EncounterExpandedContent({
                 <div className="xl:col-span-7 space-y-4">
                     {encounter.nodes.length > 0 && (
                         <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <div className="h-6 w-1 bg-sky-500 rounded-full" />
-                                <h4 className="text-xs font-bold text-sky-400 uppercase tracking-[0.2em]">Encounter Nodes</h4>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                    <div key={n.id} className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 group/node transition-all hover:border-sky-800/50 hover:bg-slate-900/50">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <div className="p-1 rounded bg-sky-500/10 text-sky-500 shrink-0">
-                                                <Info className="w-3.5 h-3.5" />
+                            <button
+                                type="button"
+                                onClick={() => setIsNodesCollapsed(!isNodesCollapsed)}
+                                className="flex items-center gap-2 w-full text-left group/nodes-toggle rounded-md px-2 py-1 -mx-2 -my-1 hover:bg-sky-950/30 transition-colors"
+                            >
+                                <div className="h-6 w-1 bg-sky-500 rounded-full shrink-0 group-hover/nodes-toggle:bg-sky-400 transition-colors" />
+                                <h4 className="text-xs font-bold text-sky-400 uppercase tracking-[0.2em] flex-1 group-hover/nodes-toggle:text-sky-300 transition-colors">Encounter Nodes</h4>
+                                {isNodesCollapsed ? (
+                                    <ChevronDown className="w-3.5 h-3.5 text-sky-600 group-hover/nodes-toggle:text-sky-300 transition-colors shrink-0" />
+                                ) : (
+                                    <ChevronUp className="w-3.5 h-3.5 text-sky-600 group-hover/nodes-toggle:text-sky-300 transition-colors shrink-0" />
+                                )}
+                            </button>
+                            {isNodesCollapsed ? (
+                                <div className="flex flex-wrap gap-1.5">
+                                    {encounter.nodes.map((n: EncounterNodeWithRelations) => (
+                                        <Badge key={n.id} variant="secondary" className="text-[11px] py-0.5 bg-sky-950/40 border-sky-900/50 text-sky-300 font-medium">
+                                            {n.nodeModifier.name}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {encounter.nodes.map((n: EncounterNodeWithRelations) => (
+                                        <div key={n.id} className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 group/node transition-all hover:border-sky-800/50 hover:bg-slate-900/50">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="p-1 rounded bg-sky-500/10 text-sky-500 shrink-0">
+                                                    <Info className="w-3.5 h-3.5" />
+                                                </div>
+                                                <span className="font-bold text-sm text-slate-100">{n.nodeModifier.name}</span>
                                             </div>
-                                            <span className="font-bold text-sm text-slate-100">{n.nodeModifier.name}</span>
+                                            <span className="text-xs text-slate-400 leading-normal block pl-8 pr-2">{n.nodeModifier.description}</span>
                                         </div>
-                                        <span className="text-xs text-slate-400 leading-normal block pl-8 pr-2">{n.nodeModifier.description}</span>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                     {encounter.tips && (
@@ -911,6 +939,8 @@ export function EncounterCard({
     tabState,
     filterState,
     rosterState,
+    isNodesCollapsed,
+    setIsNodesCollapsed,
     renderChampionItem,
     renderListPick,
 }: EncounterCardProps) {
@@ -1014,6 +1044,8 @@ export function EncounterCard({
                                                         tabState={tabState}
                                                         filterState={filterState}
                                                         rosterState={rosterState}
+                                                        isNodesCollapsed={isNodesCollapsed}
+                                                        setIsNodesCollapsed={setIsNodesCollapsed}
                                                         renderChampionItem={renderChampionItem}
                                                         renderListPick={renderListPick}
                                                     />

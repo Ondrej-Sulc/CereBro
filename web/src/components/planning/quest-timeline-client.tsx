@@ -290,6 +290,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [shareSuccess, setShareSuccess] = useState(false);
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
+    const [isNodesCollapsed, setIsNodesCollapsed] = useState(false);
     const [isSynergyPickerOpen, setIsSynergyPickerOpen] = useState(false);
 
     // Track synergy champions locally
@@ -1483,6 +1484,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     resolveRosterItem,
                                     handleSelectCounter
                                 }}
+                                isNodesCollapsed={isNodesCollapsed}
+                                setIsNodesCollapsed={setIsNodesCollapsed}
                                 renderChampionItem={renderChampionItem}
                                 renderListPick={renderListPick}
                             />
