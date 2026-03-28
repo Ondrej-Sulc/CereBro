@@ -17,7 +17,8 @@
       "Bash(find /c/Code/Cerebro/web/src -type f -name '*quest*' -o -name '*plan*')",
       "Bash(ls /c/Code/Cerebro:*)",
       "Bash(gh pr:*)",
-      "Bash(pnpm exec:*)"
+      "Bash(pnpm exec:*)",
+      "Bash(find /c/Code/cerebro/web/src -type f -name *quest*)"
     ]
   }
 }
