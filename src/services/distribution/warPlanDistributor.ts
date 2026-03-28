@@ -139,27 +139,22 @@ export async function distributeWarPlan(
     bannedChampions.forEach(b => uniqueImageUrls.add(b.url));
 
     // --- Global Color Assignment (Moved Up) ---
-    // 1. Collect all unique players involved in the war
-    const allPlayers = new Map<string, { id: string, name: string, bg: number }>();
-    war.fights.forEach(f => {
-        if (f.player) {
-            allPlayers.set(f.player.id, {
-                id: f.player.id,
-                name: f.player.ingameName,
-                bg: f.battlegroup
-            });
-        }
+    // 1. Fetch all alliance members — same source as the UI's PlayerColorProvider
+    const allianceMembers = await prisma.player.findMany({
+        where: { allianceId },
+        select: { id: true, ingameName: true, battlegroup: true },
     });
 
-    // 2. Sort them: BG (asc), then Name (asc)
-    const sortedPlayers = Array.from(allPlayers.values()).sort((a, b) => {
-        if (a.bg !== b.bg) return a.bg - b.bg;
-        return a.name.localeCompare(b.name);
+    // 2. Sort them: BG (asc, null → last), then Name (asc) — mirrors PlayerColorContext
+    const sortedPlayers = [...allianceMembers].sort((a, b) => {
+        const bgA = a.battlegroup ?? 999;
+        const bgB = b.battlegroup ?? 999;
+        if (bgA !== bgB) return bgA - bgB;
+        return a.ingameName.localeCompare(b.ingameName);
     });
 
     // 3. Assign Colors
-    const rawPalette = MapImageService.getPlayerPalette(alliance.playerColorPalette);
-    const palette = rawPalette.length > 0 ? rawPalette : MapImageService.getPlayerPalette('HIGH_CONTRAST');
+    const palette = MapImageService.getPlayerPalette(alliance.playerColorPalette ?? undefined);
     const globalColorMap = new Map<string, string>(); // PlayerID -> Color
     sortedPlayers.forEach((p, index) => {
         globalColorMap.set(p.id, palette[index % palette.length]);

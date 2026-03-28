@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { WarNodePosition, LAYOUT, LAYOUT_BIG } from '../data/war-planning/nodes-data';
-import { PALETTES, PlayerPaletteStyle } from '../data/war-planning/player-colors';
+import { PALETTES, PlayerPaletteStyle, DEFAULT_PALETTE_STYLE } from '../data/war-planning/player-colors';
 import { WarMapType, ChampionClass } from '@prisma/client';
 import logger from './loggerService';
 
@@ -51,7 +51,7 @@ export class MapImageService {
     };
 
     public static getPlayerPalette(paletteStyle?: string): string[] {
-        return PALETTES[paletteStyle as PlayerPaletteStyle] ?? PALETTES.DEFAULT;
+        return PALETTES[paletteStyle as PlayerPaletteStyle] ?? PALETTES[DEFAULT_PALETTE_STYLE];
     }
 
     private static globalImageCache = new Map<string, string>();
