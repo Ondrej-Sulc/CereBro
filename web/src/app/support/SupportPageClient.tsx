@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Heart, ShieldCheck, Server, Sparkles, Info, LogIn, Settings, Crown, Trophy, Award, ChevronDown } from "lucide-react";
+import { Heart, Server, Sparkles, Info, LogIn, Settings, Crown, Trophy, Award, ChevronDown, Lock, ArrowRight } from "lucide-react";
 import PageBackground from "@/components/PageBackground";
 import { signInAction } from "@/app/actions/auth";
 import { FundingBar } from "./components/FundingBar";
@@ -280,13 +280,17 @@ export default function SupportPageClient({
                 </div>
               </div>
               <div className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-4">
-                <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5" />
+                <Crown className="w-5 h-5 text-amber-400 mt-0.5" />
                 <div>
-                  <p className="text-white font-medium">Secure checkout</p>
-                  <p className="text-sm text-slate-400">Payments are handled on Stripe-hosted pages.</p>
+                  <p className="text-white font-medium">Supporter role on Discord</p>
+                  <p className="text-sm text-slate-400">Get a special role on the CereBro server as a thank-you.</p>
                 </div>
               </div>
             </div>
+
+            <p className="text-xs text-slate-500 mt-4">
+              More perks for supporters are in the works — stay tuned.
+            </p>
 
             {/* Leaderboard */}
             {topSupporters.length > 0 && (
@@ -333,6 +337,10 @@ export default function SupportPageClient({
           {isSubscriber ? (
             <>
               <style>{`
+                @keyframes btn-shimmer {
+                  0%   { transform: translateX(-100%) skewX(-20deg); }
+                  100% { transform: translateX(1400%) skewX(-20deg); }
+                }
                 @keyframes supporter-card-glow {
                   0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,0.2), 0 0 20px rgba(251,191,36,0.05); }
                   50%       { box-shadow: 0 0 0 1px rgba(251,191,36,0.45), 0 0 32px rgba(251,191,36,0.12); }
@@ -695,18 +703,42 @@ export default function SupportPageClient({
                 <button
                   type="submit"
                   disabled={isSubmitting || (mode === "payment" && !formattedOneTimePreview)}
-                  className="w-full rounded-xl bg-sky-500 hover:bg-sky-600 disabled:bg-sky-500/60 disabled:cursor-not-allowed text-white font-semibold py-3 transition-colors"
+                  className={[
+                    "relative w-full overflow-hidden rounded-xl py-3.5 px-5",
+                    "flex items-center justify-center gap-2.5",
+                    "font-semibold text-white text-sm [text-shadow:0_1px_3px_rgba(0,0,0,0.4)]",
+                    "transition-all duration-200",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                    mode === "subscription"
+                      ? "bg-gradient-to-r from-sky-700 via-sky-600 to-cyan-700 hover:from-sky-600 hover:via-sky-500 hover:to-cyan-600 shadow-[0_0_18px_rgba(14,165,233,0.35)] hover:shadow-[0_0_24px_rgba(14,165,233,0.5)]"
+                      : "bg-gradient-to-r from-amber-700 via-amber-600 to-orange-600 hover:from-amber-600 hover:via-amber-500 hover:to-orange-500 shadow-[0_0_18px_rgba(245,158,11,0.3)] hover:shadow-[0_0_24px_rgba(245,158,11,0.45)]",
+                  ].join(" ")}
                 >
-                  {submitLabel}
+                  {/* shimmer sweep */}
+                  <span
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                    style={{ animation: "btn-shimmer 2.4s linear infinite" }}
+                  />
+                  {isSubmitting
+                    ? <span className="flex items-center gap-2"><Lock className="w-4 h-4 opacity-70" /> Redirecting to Stripe…</span>
+                    : <>
+                        {mode === "subscription" ? <Heart className="w-4 h-4 shrink-0" /> : <Sparkles className="w-4 h-4 shrink-0" />}
+                        <span>{submitLabel}</span>
+                        <ArrowRight className="w-4 h-4 shrink-0 ml-auto opacity-60" />
+                      </>
+                  }
                 </button>
               </form>
 
-              <p className="text-xs text-slate-500 mt-5">
-                By continuing, you will be redirected to Stripe Checkout. Need context first?{" "}
-                <Link href="/about" className="text-slate-300 hover:text-white underline underline-offset-4">
-                  Read about CereBro
-                </Link>
-                .
+              <p className="text-xs text-slate-500 mt-4 flex items-center gap-1.5">
+                <Lock className="w-3 h-3 shrink-0" />
+                <span>
+                  Redirects to Stripe Checkout. Need context first?{" "}
+                  <Link href="/about" className="text-slate-300 hover:text-white underline underline-offset-4">
+                    Read about CereBro
+                  </Link>
+                  .
+                </span>
               </p>
 
               {isLoggedIn && stripeCustomerId && (

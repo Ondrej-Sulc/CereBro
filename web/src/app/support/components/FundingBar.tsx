@@ -12,9 +12,112 @@ type Props = {
   previewMinor?: number;
 };
 
-type BarVariant = "sky" | "emerald";
+type BarVariant = "sky" | "emerald" | "violet" | "amber" | "rose";
 
-// Shared bar fill layer — reused for both the main and overflow bar
+const BAR_VARIANTS: BarVariant[] = ["sky", "emerald", "violet", "amber", "rose"];
+
+function getBarVariant(index: number): BarVariant {
+  return BAR_VARIANTS[((index % BAR_VARIANTS.length) + BAR_VARIANTS.length) % BAR_VARIANTS.length];
+}
+
+const VARIANT_CONFIG: Record<BarVariant, {
+  gradient: string;
+  glowAnim: string;
+  tipAnim: string;
+  tipBg: string;
+  labelColor: string;
+  textColor: string;
+  cardBorder: string;
+  bannerBg: string;
+  bannerBorder: string;
+  bannerTextColor: string;
+  footerTextColor: string;
+  historyGradient: string;
+  historyBorderColor: string;
+  hiddenTextColor: string;
+}> = {
+  sky: {
+    gradient: "from-sky-800 via-sky-500 to-sky-300",
+    glowAnim: "funding-outer-glow-sky",
+    tipAnim: "funding-tip-pulse-sky",
+    tipBg: "bg-white/80",
+    labelColor: "text-sky-400",
+    textColor: "text-sky-300",
+    cardBorder: "border-sky-500/25",
+    bannerBg: "bg-sky-500/8",
+    bannerBorder: "border-sky-500/20",
+    bannerTextColor: "text-sky-300",
+    footerTextColor: "text-sky-500",
+    historyGradient: "from-sky-700 via-sky-500 to-sky-400",
+    historyBorderColor: "border-sky-400/20",
+    hiddenTextColor: "text-sky-500/60",
+  },
+  emerald: {
+    gradient: "from-emerald-800 via-emerald-500 to-emerald-300",
+    glowAnim: "funding-outer-glow-emerald",
+    tipAnim: "funding-tip-pulse-emerald",
+    tipBg: "bg-emerald-100/80",
+    labelColor: "text-emerald-400",
+    textColor: "text-emerald-300",
+    cardBorder: "border-emerald-500/25",
+    bannerBg: "bg-emerald-500/8",
+    bannerBorder: "border-emerald-500/20",
+    bannerTextColor: "text-emerald-300",
+    footerTextColor: "text-emerald-500",
+    historyGradient: "from-emerald-700 via-emerald-500 to-emerald-400",
+    historyBorderColor: "border-emerald-400/20",
+    hiddenTextColor: "text-emerald-500/60",
+  },
+  violet: {
+    gradient: "from-violet-800 via-violet-500 to-violet-300",
+    glowAnim: "funding-outer-glow-violet",
+    tipAnim: "funding-tip-pulse-violet",
+    tipBg: "bg-violet-100/80",
+    labelColor: "text-violet-400",
+    textColor: "text-violet-300",
+    cardBorder: "border-violet-500/25",
+    bannerBg: "bg-violet-500/8",
+    bannerBorder: "border-violet-500/20",
+    bannerTextColor: "text-violet-300",
+    footerTextColor: "text-violet-500",
+    historyGradient: "from-violet-700 via-violet-500 to-violet-400",
+    historyBorderColor: "border-violet-400/20",
+    hiddenTextColor: "text-violet-500/60",
+  },
+  amber: {
+    gradient: "from-amber-800 via-amber-500 to-amber-300",
+    glowAnim: "funding-outer-glow-amber",
+    tipAnim: "funding-tip-pulse-amber",
+    tipBg: "bg-amber-100/80",
+    labelColor: "text-amber-400",
+    textColor: "text-amber-300",
+    cardBorder: "border-amber-500/25",
+    bannerBg: "bg-amber-500/8",
+    bannerBorder: "border-amber-500/20",
+    bannerTextColor: "text-amber-300",
+    footerTextColor: "text-amber-500",
+    historyGradient: "from-amber-700 via-amber-500 to-amber-400",
+    historyBorderColor: "border-amber-400/20",
+    hiddenTextColor: "text-amber-500/60",
+  },
+  rose: {
+    gradient: "from-rose-800 via-rose-500 to-rose-300",
+    glowAnim: "funding-outer-glow-rose",
+    tipAnim: "funding-tip-pulse-rose",
+    tipBg: "bg-rose-100/80",
+    labelColor: "text-rose-400",
+    textColor: "text-rose-300",
+    cardBorder: "border-rose-500/25",
+    bannerBg: "bg-rose-500/8",
+    bannerBorder: "border-rose-500/20",
+    bannerTextColor: "text-rose-300",
+    footerTextColor: "text-rose-500",
+    historyGradient: "from-rose-700 via-rose-500 to-rose-400",
+    historyBorderColor: "border-rose-400/20",
+    hiddenTextColor: "text-rose-500/60",
+  },
+};
+
 function BarFill({
   fromPct,
   toPct,
@@ -30,11 +133,7 @@ function BarFill({
   if (!isPreview && width <= 0) return null;
 
   if (!isPreview) {
-    const gradient =
-      variant === "emerald"
-        ? "from-emerald-800 via-emerald-500 to-emerald-300"
-        : "from-sky-800 via-sky-500 to-sky-300";
-
+    const { gradient } = VARIANT_CONFIG[variant];
     return (
       <div
         className="absolute inset-y-0 left-0 rounded-[4px] overflow-hidden"
@@ -70,7 +169,6 @@ function BarFill({
         style={{ backgroundImage: "repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(255,255,255,0.4) 6px, rgba(255,255,255,0.4) 7px)" }}
       />
       <div className="absolute inset-x-0 top-0 h-[35%] bg-gradient-to-b from-white/15 to-transparent" />
-      {/* Dashed right edge */}
       <div className="absolute right-0 inset-y-0 w-[2px] flex flex-col">
         {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className={`flex-1 ${i % 2 === 0 ? "bg-amber-200/80" : "bg-transparent"}`} />
@@ -87,7 +185,7 @@ function BarTrack({
   previewToPct,
   showTip,
   variant = "sky",
-  showFullBackground = false,
+  bgVariant,
   isComplete = false,
 }: {
   height?: string;
@@ -96,23 +194,27 @@ function BarTrack({
   previewToPct: number;
   showTip: boolean;
   variant?: BarVariant;
-  showFullBackground?: boolean;
+  bgVariant?: BarVariant;
   isComplete?: boolean;
 }) {
-  const glowAnim = variant === "emerald" ? "funding-outer-glow-emerald" : "funding-outer-glow";
-  const tipColor = variant === "emerald" ? "bg-emerald-100/80" : "bg-white/80";
+  const cfg = VARIANT_CONFIG[variant];
 
   return (
     <div
       className={`relative ${height} w-full rounded-[4px] overflow-hidden`}
-      style={{ animation: `${glowAnim} 3s ease-in-out infinite` }}
+      style={{ animation: `${cfg.glowAnim} 3s ease-in-out infinite` }}
     >
       <div className="absolute inset-0 bg-slate-950 rounded-[4px]" />
 
-      {showFullBackground && (
-        <div className="absolute inset-y-0 left-0 right-0 rounded-[4px] overflow-hidden opacity-30">
-          <div className="absolute inset-0 bg-gradient-to-r from-sky-800 via-sky-500 to-sky-300" />
+      {bgVariant && (
+        <div className="absolute inset-y-0 left-0 right-0 rounded-[4px] overflow-hidden opacity-35">
+          <div className={`absolute inset-0 bg-gradient-to-r ${VARIANT_CONFIG[bgVariant].gradient}`} />
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{ backgroundImage: "repeating-linear-gradient(-45deg, transparent, transparent 6px, rgba(255,255,255,0.4) 6px, rgba(255,255,255,0.4) 7px)" }}
+          />
           <div className="absolute inset-x-0 top-0 h-[35%] bg-gradient-to-b from-white/20 to-transparent rounded-t-[4px]" />
+          <div className="absolute inset-x-0 bottom-0 h-[25%] bg-gradient-to-t from-black/30 to-transparent" />
         </div>
       )}
 
@@ -120,8 +222,8 @@ function BarTrack({
 
       {showTip && realFillPct > 0 && previewFromPct === 0 && (
         <div
-          className={`absolute inset-y-0 w-[3px] ${tipColor} rounded-r-[4px]`}
-          style={{ left: `calc(${realFillPct}% - 3px)`, animation: "funding-tip-pulse 1.6s ease-in-out infinite" }}
+          className={`absolute inset-y-0 w-[3px] ${cfg.tipBg} rounded-r-[4px]`}
+          style={{ left: `calc(${realFillPct}% - 3px)`, animation: `${cfg.tipAnim} 1.6s ease-in-out infinite` }}
         />
       )}
 
@@ -143,7 +245,7 @@ function BarTrack({
       {isComplete && (
         <div
           className="absolute inset-0 rounded-[4px] pointer-events-none z-20"
-          style={{ animation: "bar-complete-flash 0.5s ease-out forwards" }}
+          style={{ animation: "bar-complete-flash 0.18s ease-out forwards" }}
         />
       )}
     </div>
@@ -158,16 +260,14 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
   const fillPct = Math.round((overflow / targetMinor) * 100);
   const celebrated = barsCleared >= 1;
 
-  // animBar: which bar we're currently filling (0..barsCleared)
-  // shownHistory: how many completed bars are visible in the header
   const [animBar, setAnimBar] = useState(0);
   const [displayPct, setDisplayPct] = useState(0);
   const [shownHistory, setShownHistory] = useState(0);
   const [justCompleted, setJustCompleted] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
 
-  const BAR_FILL_MS = 700;
-  const FLASH_MS = 500;
+  const BAR_FILL_MS = 600;
+  const FLASH_MS = 180;
 
   // Sequential bar-by-bar fill animation
   useEffect(() => {
@@ -185,7 +285,6 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
       if (progress < 1) {
         rafId = requestAnimationFrame(tick);
       } else if (animBar < barsCleared) {
-        // Flash the completed bar, then advance to the next
         setJustCompleted(true);
         setTimeout(() => {
           setJustCompleted(false);
@@ -209,6 +308,15 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // When the bar is exactly full (no overflow), animBar has advanced to barsCleared
+  // but displayPct reset to 0. Render as if we're still on bar (animBar-1) at 100%.
+  const isExactFull = celebrated && fillPct === 0 && animBar === barsCleared;
+  const renderAnimBar = isExactFull ? animBar - 1 : animBar;
+  const renderDisplayPct = isExactFull ? 100 : displayPct;
+
+  const currentVariant = getBarVariant(renderAnimBar);
+  const cfg = VARIANT_CONFIG[currentVariant];
+
   const targetEur = (targetMinor / 100).toFixed(0);
 
   const visibleHistory = Math.min(shownHistory, MAX_HISTORY_BARS);
@@ -228,7 +336,6 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
   const mainPreviewFromPct = previewMinor > 0 ? fillPct : 0;
   const hasMainPreview = previewMinor > 0 && mainPreviewToPct > fillPct;
 
-  // +% readout in the header
   const previewAddedPct = hasMainPreview ? mainPreviewToPct - fillPct : 0;
 
   // Next milestone footer
@@ -238,9 +345,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
     : null;
 
   const footerText = (() => {
-    if (celebrated) {
-      return "Costs fully covered this month — thank you!";
-    }
+    if (celebrated) return "Costs fully covered this month — thank you!";
     if (eurToNextMilestone !== null && nextMilestone !== null) {
       return nextMilestone === 100
         ? `€${eurToNextMilestone} to fully cover this month's costs`
@@ -249,7 +354,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
     return `€${((targetMinor - overflow) / 100).toFixed(0)} to go`;
   })();
 
-  const cardBorder = celebrated ? "border-emerald-500/25" : "border-slate-800/60";
+  const cardBorder = celebrated ? cfg.cardBorder : "border-slate-800/60";
 
   return (
     <>
@@ -258,11 +363,27 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           0%   { transform: translateX(-100%) skewX(-20deg); }
           100% { transform: translateX(1200%) skewX(-20deg); }
         }
-        @keyframes funding-tip-pulse {
+        @keyframes funding-tip-pulse-sky {
           0%, 100% { opacity: 1; box-shadow: 0 0 8px 3px rgba(186,230,253,0.9), 0 0 20px 6px rgba(56,189,248,0.5); }
           50%       { opacity: 0.55; box-shadow: 0 0 4px 1px rgba(186,230,253,0.5), 0 0 10px 2px rgba(56,189,248,0.2); }
         }
-        @keyframes funding-outer-glow {
+        @keyframes funding-tip-pulse-emerald {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px 3px rgba(167,243,208,0.9), 0 0 20px 6px rgba(52,211,153,0.5); }
+          50%       { opacity: 0.55; box-shadow: 0 0 4px 1px rgba(167,243,208,0.5), 0 0 10px 2px rgba(52,211,153,0.2); }
+        }
+        @keyframes funding-tip-pulse-violet {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px 3px rgba(221,214,254,0.9), 0 0 20px 6px rgba(139,92,246,0.5); }
+          50%       { opacity: 0.55; box-shadow: 0 0 4px 1px rgba(221,214,254,0.5), 0 0 10px 2px rgba(139,92,246,0.2); }
+        }
+        @keyframes funding-tip-pulse-amber {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px 3px rgba(253,230,138,0.9), 0 0 20px 6px rgba(245,158,11,0.5); }
+          50%       { opacity: 0.55; box-shadow: 0 0 4px 1px rgba(253,230,138,0.5), 0 0 10px 2px rgba(245,158,11,0.2); }
+        }
+        @keyframes funding-tip-pulse-rose {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px 3px rgba(254,205,211,0.9), 0 0 20px 6px rgba(244,63,94,0.5); }
+          50%       { opacity: 0.55; box-shadow: 0 0 4px 1px rgba(254,205,211,0.5), 0 0 10px 2px rgba(244,63,94,0.2); }
+        }
+        @keyframes funding-outer-glow-sky {
           0%, 100% { box-shadow: 0 0 0 1px rgba(56,189,248,0.15), inset 0 2px 6px rgba(0,0,0,0.7); }
           50%       { box-shadow: 0 0 0 1px rgba(56,189,248,0.35), inset 0 2px 6px rgba(0,0,0,0.7); }
         }
@@ -270,14 +391,22 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           0%, 100% { box-shadow: 0 0 0 1px rgba(52,211,153,0.2), inset 0 2px 6px rgba(0,0,0,0.7); }
           50%       { box-shadow: 0 0 0 1px rgba(52,211,153,0.5), 0 0 14px rgba(52,211,153,0.12), inset 0 2px 6px rgba(0,0,0,0.7); }
         }
+        @keyframes funding-outer-glow-violet {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(139,92,246,0.2), inset 0 2px 6px rgba(0,0,0,0.7); }
+          50%       { box-shadow: 0 0 0 1px rgba(139,92,246,0.5), 0 0 14px rgba(139,92,246,0.12), inset 0 2px 6px rgba(0,0,0,0.7); }
+        }
+        @keyframes funding-outer-glow-amber {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.2), inset 0 2px 6px rgba(0,0,0,0.7); }
+          50%       { box-shadow: 0 0 0 1px rgba(245,158,11,0.5), 0 0 14px rgba(245,158,11,0.12), inset 0 2px 6px rgba(0,0,0,0.7); }
+        }
+        @keyframes funding-outer-glow-rose {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(244,63,94,0.2), inset 0 2px 6px rgba(0,0,0,0.7); }
+          50%       { box-shadow: 0 0 0 1px rgba(244,63,94,0.5), 0 0 14px rgba(244,63,94,0.12), inset 0 2px 6px rgba(0,0,0,0.7); }
+        }
         @keyframes preview-shimmer {
           0%   { opacity: 0.4; }
           50%  { opacity: 0.75; }
           100% { opacity: 0.4; }
-        }
-        @keyframes celebrate-pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.7; }
         }
         @keyframes bar-complete-flash {
           0%   { background: rgba(255,255,255,0); }
@@ -298,18 +427,23 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
                 </p>
               </div>
 
-              {/* Cleared history — stacked thin completed bars */}
+              {/* Cleared history — stacked thin completed bars, each in its own variant color */}
               {barsCleared > 0 && (
                 <div className="flex flex-col gap-1 pt-1">
-                  {Array.from({ length: visibleHistory }).map((_, i) => (
-                    <div key={i} className="relative h-2 w-full rounded-sm overflow-hidden opacity-50">
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-700 via-emerald-500 to-emerald-400" />
-                      <div className="absolute inset-x-0 top-0 h-[40%] bg-gradient-to-b from-white/20 to-transparent" />
-                      <div className="absolute inset-0 border border-emerald-400/20 rounded-sm" />
-                    </div>
-                  ))}
+                  {Array.from({ length: visibleHistory }).map((_, i) => {
+                    const hcfg = VARIANT_CONFIG[getBarVariant(i)];
+                    return (
+                      <div key={i} className="relative h-2 w-full rounded-sm overflow-hidden opacity-50">
+                        <div className={`absolute inset-0 bg-gradient-to-r ${hcfg.historyGradient}`} />
+                        <div className="absolute inset-x-0 top-0 h-[40%] bg-gradient-to-b from-white/20 to-transparent" />
+                        <div className={`absolute inset-0 border ${hcfg.historyBorderColor} rounded-sm`} />
+                      </div>
+                    );
+                  })}
                   {hiddenHistory > 0 && (
-                    <span className="text-[10px] text-emerald-500/60 font-semibold">+{hiddenHistory} more</span>
+                    <span className={`text-[10px] font-semibold ${VARIANT_CONFIG[getBarVariant(visibleHistory)].hiddenTextColor}`}>
+                      +{hiddenHistory} more
+                    </span>
                   )}
                 </div>
               )}
@@ -317,8 +451,8 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
 
             <div className="text-right shrink-0">
               <div className="flex items-baseline justify-end gap-1.5">
-                <p className={`text-3xl font-extrabold tabular-nums leading-none ${celebrated ? "text-emerald-300" : "text-white"}`}>
-                  {animBar * 100 + displayPct}%
+                <p className={`text-3xl font-extrabold tabular-nums leading-none ${celebrated ? cfg.textColor : "text-white"}`}>
+                  {renderAnimBar * 100 + renderDisplayPct}%
                 </p>
                 {previewReady && previewAddedPct > 0 && (
                   <p className="text-lg font-bold tabular-nums leading-none text-amber-300/90">
@@ -327,7 +461,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
                 )}
               </div>
               <p className="text-xs text-slate-500 tabular-nums mt-1">
-                est. €{targetEur}/mo
+                of est. €{targetEur}/mo
               </p>
             </div>
           </div>
@@ -335,14 +469,9 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
           {/* Milestone labels */}
           <div className="relative h-3.5 mb-0.5">
             {MILESTONES.map((p) => {
-              const reached = displayPct >= p;
-              const isOnFinalBar = animBar === barsCleared;
-              const color = reached && isOnFinalBar
-                ? celebrated ? "text-emerald-400" : "text-sky-400"
-                : reached && !isOnFinalBar
-                  ? "text-sky-400"
-                  : "text-slate-700";
-              const label = animBar >= 1 ? `${animBar * 100 + p}%` : `${p}%`;
+              const reached = renderDisplayPct >= p;
+              const color = reached ? cfg.labelColor : "text-slate-700";
+              const label = renderAnimBar >= 1 ? `${renderAnimBar * 100 + p}%` : `${p}%`;
               return (
                 <div
                   key={p}
@@ -359,20 +488,20 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
 
           {/* Main bar */}
           <BarTrack
-            realFillPct={displayPct}
+            realFillPct={renderDisplayPct}
             previewFromPct={hasMainPreview ? mainPreviewFromPct : 0}
             previewToPct={hasMainPreview ? (previewReady ? mainPreviewToPct : mainPreviewFromPct) : 0}
             showTip={!hasMainPreview || !previewReady}
-            variant={animBar === barsCleared && celebrated ? "emerald" : "sky"}
-            showFullBackground={animBar === barsCleared && celebrated}
+            variant={currentVariant}
+            bgVariant={renderAnimBar > 0 ? getBarVariant(renderAnimBar - 1) : undefined}
             isComplete={justCompleted}
           />
 
           {/* Celebration banner */}
           {celebrated && (
-            <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/8 border border-emerald-500/20">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <p className="text-xs text-emerald-300 font-semibold">
+            <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg ${cfg.bannerBg} border ${cfg.bannerBorder}`}>
+              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${cfg.bannerTextColor}`} />
+              <p className={`text-xs font-semibold ${cfg.bannerTextColor}`}>
                 {barsCleared === 1 ? "Goal reached this month!" : `Goal cleared ${barsCleared}× — you're incredible!`}
               </p>
             </div>
@@ -402,7 +531,7 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
 
           {/* Footer */}
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <p className={`text-xs ${celebrated ? "text-emerald-500" : "text-slate-500"}`}>
+            <p className={`text-xs ${celebrated ? cfg.footerTextColor : "text-slate-500"}`}>
               {footerText}
             </p>
             {previewReady && previewMinor > 0 && (
