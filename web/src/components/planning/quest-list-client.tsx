@@ -175,14 +175,18 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
 
                 {/* Sub-folders grid */}
                 {visibleFolders.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
                         {visibleFolders.map(cat => {
                             const count = subtreeCountMap.get(cat.id) ?? 0;
                             return (
                                 <button
                                     key={cat.id}
                                     onClick={() => navigateTo(cat.id)}
-                                    className="group relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 hover:border-sky-700/50 hover:shadow-[0_0_30px_rgba(2,132,199,0.1)] transition-all text-left"
+                                    className="group relative rounded-2xl overflow-hidden bg-slate-950 text-left transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500
+                                        border border-slate-800
+                                        hover:border-sky-500/60
+                                        hover:shadow-[0_0_0_1px_rgba(14,165,233,0.3),0_0_40px_rgba(14,165,233,0.15)]
+                                        hover:-translate-y-0.5"
                                 >
                                     <div className="relative aspect-[16/9] w-full bg-slate-900 overflow-hidden">
                                         {cat.thumbnailUrl ? (
@@ -190,30 +194,29 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
                                                 src={cat.thumbnailUrl}
                                                 alt={cat.name}
                                                 fill
-                                                sizes="(max-width: 768px) 50vw, 25vw"
+                                                sizes="(max-width: 768px) 50vw, 33vw"
                                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                                                <Folder className="w-10 h-10 text-slate-700 group-hover:text-indigo-600 transition-colors" />
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950">
+                                                <Folder className="w-14 h-14 text-slate-700 group-hover:text-sky-700 transition-colors duration-300" />
                                             </div>
                                         )}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                        {/* Quest count badge — bottom right */}
+                                        <div className="absolute bottom-3 right-3 bg-black/65 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+                                            <MapIcon className="w-3.5 h-3.5 text-sky-400" />
+                                            <span className="text-xs font-black text-slate-200 uppercase tracking-wider">
+                                                {count} {count === 1 ? "Quest" : "Quests"}
+                                            </span>
+                                        </div>
+                                        {/* Sub-category badge — bottom left */}
                                         {cat.children.length > 0 && (
-                                            <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full border border-white/10">
-                                                <span className="text-[9px] font-black text-slate-300 uppercase tracking-wide">
-                                                    {cat.children.length} {cat.children.length === 1 ? "sub-category" : "sub-categories"}
+                                            <div className="absolute bottom-3 left-3 bg-black/65 backdrop-blur-sm px-2.5 py-1 rounded-full border border-white/10">
+                                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider">
+                                                    {cat.children.length} {cat.children.length === 1 ? "Sub-category" : "Sub-categories"}
                                                 </span>
                                             </div>
                                         )}
-                                    </div>
-                                    <div className="p-3 md:p-4">
-                                        <p className="font-black uppercase tracking-tight text-slate-100 group-hover:text-sky-400 transition-colors line-clamp-1 text-sm md:text-base">
-                                            {cat.name}
-                                        </p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5 font-bold uppercase tracking-wider">
-                                            {count} {count === 1 ? "Quest" : "Quests"}
-                                        </p>
                                     </div>
                                 </button>
                             );
@@ -223,17 +226,22 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
                         {isRoot && uncategorizedCount > 0 && (
                             <button
                                 onClick={() => navigateTo(UNCATEGORIZED)}
-                                className="group relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950 hover:border-slate-600 transition-all text-left"
+                                className="group relative rounded-2xl overflow-hidden bg-slate-950 text-left transition-all duration-300
+                                    border border-slate-800
+                                    hover:border-slate-600
+                                    hover:shadow-[0_0_30px_rgba(100,116,139,0.1)]
+                                    hover:-translate-y-0.5"
                             >
                                 <div className="relative aspect-[16/9] w-full bg-slate-900 overflow-hidden flex items-center justify-center">
-                                    <Folder className="w-10 h-10 text-slate-700 group-hover:text-slate-500 transition-colors" />
-                                </div>
-                                <div className="p-3 md:p-4">
-                                    <p className="font-black uppercase tracking-tight text-slate-400 group-hover:text-slate-300 transition-colors line-clamp-1 text-sm md:text-base">
+                                    <Folder className="w-14 h-14 text-slate-700 group-hover:text-slate-500 transition-colors duration-300" />
+                                    <div className="absolute bottom-3 right-3 bg-black/65 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
+                                        <MapIcon className="w-3.5 h-3.5 text-slate-400" />
+                                        <span className="text-xs font-black text-slate-300 uppercase tracking-wider">
+                                            {uncategorizedCount} {uncategorizedCount === 1 ? "Quest" : "Quests"}
+                                        </span>
+                                    </div>
+                                    <p className="absolute bottom-3 left-3 font-black uppercase tracking-tight text-slate-400 group-hover:text-slate-300 transition-colors duration-200 text-sm">
                                         Uncategorized
-                                    </p>
-                                    <p className="text-[11px] text-slate-600 mt-0.5 font-bold uppercase tracking-wider">
-                                        {uncategorizedCount} {uncategorizedCount === 1 ? "Quest" : "Quests"}
                                     </p>
                                 </div>
                             </button>
@@ -289,7 +297,7 @@ const QuestCard = memo(function QuestCard({ quest }: { quest: QuestSummary }) {
     return (
         <Link href={`/planning/quests/${quest.id}`} className="block h-full">
             <Card className={cn(
-                "bg-slate-950 transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity",
+                "bg-gradient-to-b from-slate-900 to-[#05090f] transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity",
                 isCompleted
                     ? "border-emerald-800/50 hover:border-emerald-700/50 hover:shadow-[0_0_30px_rgba(52,211,153,0.08)] before:from-emerald-500/5"
                     : "border-slate-800 hover:border-sky-700/50 hover:shadow-[0_0_30px_rgba(2,132,199,0.1)] before:from-sky-500/5"
