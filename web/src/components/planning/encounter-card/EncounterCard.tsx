@@ -173,8 +173,15 @@ function EncounterHeader({
             }}
             aria-expanded={isExpanded}
         >
-            {/* Left Side: Defender (Red/Orange Theme) */}
-            <div className="relative flex-1 flex items-center p-4 md:p-5 md:pr-14 lg:pr-16 gap-4 z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-red-950/20 before:to-transparent before:-z-10 min-w-0">
+            {/* Left Side: Defender */}
+            <div className={cn(
+                "relative flex-1 flex items-center p-4 md:p-5 md:pr-14 lg:pr-16 gap-4 z-10 before:absolute before:inset-0 before:bg-gradient-to-r before:to-transparent before:-z-10 min-w-0",
+                encounter.difficulty === "HARD"
+                    ? "before:from-red-950/30"
+                    : encounter.difficulty === "EASY"
+                        ? "before:from-emerald-950/30"
+                        : "before:from-amber-950/30"
+            )}>
                 {/* Defender Avatar */}
                 <div className="relative shrink-0 group-hover/encounter:scale-105 transition-transform duration-300">
                     <div className={`h-16 w-16 md:h-20 md:w-20 rounded-lg bg-slate-900 border-2 overflow-hidden relative z-10 ${colors ? colors.border : "border-slate-800 shadow-[0_0_15px_rgba(30,41,59,0.5)]"}`}>
@@ -356,7 +363,7 @@ function EncounterDetails({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="border-t border-slate-800 bg-slate-900/20 overflow-hidden"
+            className="border-t border-slate-800/60 bg-gradient-to-b from-slate-950 to-[#03060c] overflow-hidden"
         >
             <div className="p-4 space-y-6">
                 {children}
@@ -985,11 +992,17 @@ export function EncounterCard({
                                     <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                                         <div className={cn(
                                             "flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-2 transition-all duration-300 font-black",
-                                            hasSelection
-                                                ? "bg-slate-950 border-sky-500/60 text-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.15)]"
-                                                : isLast
-                                                    ? "bg-slate-950 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                                                    : "bg-slate-900 border-slate-800 text-slate-500 group-hover/encounter:border-slate-600"
+                                            isLast
+                                                ? "bg-slate-950 border-red-500/50 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+                                                : encounter.difficulty === "HARD"
+                                                    ? "bg-slate-950 border-red-500/60 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+                                                    : encounter.difficulty === "EASY"
+                                                        ? "bg-slate-950 border-emerald-500/60 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.1)]"
+                                                        : encounter.difficulty === "NORMAL"
+                                                            ? "bg-slate-950 border-orange-500/60 text-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.15)]"
+                                                            : hasSelection
+                                                                ? "bg-slate-950 border-sky-500/60 text-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.15)]"
+                                                                : "bg-slate-900 border-slate-800 text-slate-500 group-hover/encounter:border-slate-600"
                                         )}>
                                             {hasSelection ? (
                                                 <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 animate-in zoom-in duration-300" />
@@ -1004,7 +1017,7 @@ export function EncounterCard({
                                     {/* Horizontal Connector Line (from circle to card) */}
                                     <div className={cn(
                                         "absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-5 md:w-10 z-10 transition-colors duration-300",
-                                        hasSelection ? "bg-sky-500/50" : (isLast ? "bg-red-800/50" : "bg-slate-800 group-hover/encounter:bg-slate-700")
+                                        hasSelection ? "bg-sky-500/50" : isLast ? "bg-red-800/50" : encounter.difficulty === "HARD" ? "bg-red-500/30" : encounter.difficulty === "EASY" ? "bg-emerald-500/30" : encounter.difficulty === "NORMAL" ? "bg-orange-500/30" : "bg-slate-800 group-hover/encounter:bg-slate-700"
                                     )} />
 
                                     {/* Card Content */}
@@ -1012,8 +1025,16 @@ export function EncounterCard({
                                         id={`encounter-${encounter.id}`}
                                         className={cn(
                                             "flex-1 bg-slate-950/90 backdrop-blur-md border transition-all cursor-pointer overflow-hidden z-10 relative",
-                                            hasSelection ? "border-sky-800/80 shadow-[0_0_20px_rgba(2,132,199,0.15)]" : (isLast ? "border-red-900/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]" : "border-slate-800 hover:border-slate-700 hover:bg-slate-900/90"),
-                                            isExpanded && "ring-1 ring-slate-700 shadow-xl"
+                                            isLast
+                                                ? "border-red-900/40 shadow-[0_0_20px_rgba(220,38,38,0.1)]"
+                                                : encounter.difficulty === "HARD"
+                                                    ? "border-red-900/50 shadow-[0_0_20px_rgba(239,68,68,0.08)] hover:border-red-800/60"
+                                                    : encounter.difficulty === "EASY"
+                                                        ? "border-emerald-900/50 shadow-[0_0_20px_rgba(52,211,153,0.06)] hover:border-emerald-800/60"
+                                                        : encounter.difficulty === "NORMAL"
+                                                            ? "border-amber-900/40 shadow-[0_0_20px_rgba(245,158,11,0.06)] hover:border-amber-800/50"
+                                                            : "border-slate-800 hover:border-slate-700 hover:bg-slate-900/90",
+                                            isExpanded && "shadow-xl"
                                         )}
                                     >
                                         <EncounterHeader

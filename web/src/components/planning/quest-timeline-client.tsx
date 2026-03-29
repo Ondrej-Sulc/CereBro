@@ -126,15 +126,30 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
                                 <div className="px-3 pb-3">
                                     {assignedEncounters.length > 0 ? (
                                         <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner">
-                                            {assignedEncounters.map((enc: any) => (
-                                                <div 
+                                            {assignedEncounters.map((enc: any) => {
+                                                const diffBorder = enc.difficulty === "HARD"
+                                                    ? "border-red-700/60"
+                                                    : enc.difficulty === "EASY"
+                                                        ? "border-emerald-700/50"
+                                                        : enc.difficulty === "NORMAL"
+                                                            ? "border-amber-700/50"
+                                                            : "border-slate-700";
+                                                const diffBg = enc.difficulty === "HARD"
+                                                    ? "bg-red-950/60"
+                                                    : enc.difficulty === "EASY"
+                                                        ? "bg-emerald-950/60"
+                                                        : enc.difficulty === "NORMAL"
+                                                            ? "bg-amber-950/60"
+                                                            : "bg-slate-800";
+                                                return (
+                                                <div
                                                     key={enc.id}
-                                                    className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden cursor-pointer hover:border-sky-500 transition-all hover:scale-105 active:scale-95 group/tgt-mini"
+                                                    className={cn("relative w-8 h-8 rounded-lg border overflow-hidden cursor-pointer hover:border-sky-500 transition-all hover:scale-105 active:scale-95 group/tgt-mini", diffBorder, diffBg)}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         scrollToEncounter(enc.id);
                                                     }}
-                                                    title={`Fight against ${enc.defender?.name || "Unknown"}`}
+                                                    title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
                                                 >
                                                     {enc.defender ? (
                                                         <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt-mini:scale-110 transition-transform" />
@@ -143,7 +158,8 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
                                                     )}
                                                     <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt-mini:opacity-100 transition-opacity" />
                                                 </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
@@ -432,6 +448,20 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             setIsSharing(false);
         }
     };
+
+    // Difficulty Filter State
+    const [difficultyFilter, setDifficultyFilter] = useState<("EASY" | "NORMAL" | "HARD")[]>([]);
+
+    const toggleDifficultyFilter = (d: "EASY" | "NORMAL" | "HARD") => {
+        setDifficultyFilter(prev =>
+            prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d]
+        );
+    };
+
+    const filteredEncounters = useMemo(() => {
+        if (difficultyFilter.length === 0) return quest.encounters;
+        return quest.encounters.filter(e => difficultyFilter.includes(e.difficulty as "EASY" | "NORMAL" | "HARD"));
+    }, [quest.encounters, difficultyFilter]);
 
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -1207,16 +1237,34 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                 <div className="mt-auto px-3 pb-3 relative z-10">
                                                                     {assignedEncounters.length > 0 ? (
                                                                         <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner group-hover/team-member:border-slate-700/50 transition-colors">
-                                                                            {assignedEncounters.map((enc: EncounterWithRelations) => (
-                                                                                <motion.div 
+                                                                            {assignedEncounters.map((enc: EncounterWithRelations) => {
+                                                                                const diffBorder = enc.difficulty === "HARD"
+                                                                                    ? "border-red-700/60"
+                                                                                    : enc.difficulty === "EASY"
+                                                                                        ? "border-emerald-700/50"
+                                                                                        : enc.difficulty === "NORMAL"
+                                                                                            ? "border-amber-700/50"
+                                                                                            : "border-slate-700";
+                                                                                const diffBg = enc.difficulty === "HARD"
+                                                                                    ? "bg-red-950/60"
+                                                                                    : enc.difficulty === "EASY"
+                                                                                        ? "bg-emerald-950/60"
+                                                                                        : enc.difficulty === "NORMAL"
+                                                                                            ? "bg-amber-950/60"
+                                                                                            : "bg-slate-800";
+                                                                                return (
+                                                                                <motion.div
                                                                                     whileHover={{ scale: 1.05 }}
                                                                                     whileTap={{ scale: 0.95 }}
-                                                                                    key={`tgt-${enc.id}`} 
+                                                                                    key={`tgt-${enc.id}`}
                                                                                     role="button"
                                                                                     tabIndex={0}
-                                                                                    aria-label={`Fight: ${enc.defender?.name || "Unknown"}`}
-                                                                                    title={`Fight: ${enc.defender?.name || "Unknown"}`} 
-                                                                                    className="relative w-8 h-8 rounded-lg border border-slate-700 overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                                                                                    aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
+                                                                                    title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
+                                                                                    className={cn(
+                                                                                        "relative w-8 h-8 rounded-lg border overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+                                                                                        diffBorder, diffBg
+                                                                                    )}
                                                                                     onClick={(e) => {
                                                                                         e.stopPropagation();
                                                                                         scrollToEncounter(enc.id);
@@ -1229,7 +1277,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                     )}
                                                                                     <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt:opacity-100 transition-opacity" />
                                                                                 </motion.div>
-                                                                            ))}
+                                                                                );
+                                                                            })}
                                                                         </div>
                                                                     ) : (
                                                                         <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
@@ -1405,7 +1454,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     <div className="h-0.5 w-8 md:w-12 bg-gradient-to-r from-red-500/50 to-transparent rounded-full mt-0.5" />
                                 </div>
                             </div>
-                            
+
                             <div className="w-12 md:w-24 shrink-0 flex items-center justify-center">
                                 <div className="relative flex items-center justify-center w-6 h-6 md:w-8 md:h-8">
                                      <div className="absolute inset-0 border border-slate-800 rotate-45 rounded-sm" />
@@ -1427,11 +1476,58 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             </div>
                         </div>
 
-                        {quest.encounters.map((encounter: EncounterWithRelations, index: number) => (
+                        {/* Difficulty Filter Bar */}
+                        <div className="flex items-center gap-2 pl-6 md:pl-10 -mt-2 mb-2">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 shrink-0">Difficulty</span>
+                            <div className="flex items-center gap-1.5">
+                                {(["HARD", "NORMAL", "EASY"] as const).map(d => {
+                                    const isActive = difficultyFilter.includes(d);
+                                    const label = d === "HARD" ? "Hard" : d === "NORMAL" ? "Normal" : "Easy";
+                                    const activeClass = d === "HARD"
+                                        ? "bg-red-950/60 border-red-500/50 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]"
+                                        : d === "NORMAL"
+                                            ? "bg-amber-950/60 border-amber-500/50 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]"
+                                            : "bg-emerald-950/60 border-emerald-500/50 text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.12)]";
+                                    const inactiveClass = "bg-slate-900/60 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-400";
+                                    return (
+                                        <button
+                                            key={d}
+                                            onClick={() => toggleDifficultyFilter(d)}
+                                            className={cn(
+                                                "px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-200",
+                                                isActive ? activeClass : inactiveClass
+                                            )}
+                                        >
+                                            {label}
+                                        </button>
+                                    );
+                                })}
+                                {difficultyFilter.length > 0 && (
+                                    <button
+                                        onClick={() => setDifficultyFilter([])}
+                                        className="flex items-center gap-0.5 px-2 py-0.5 rounded-full border border-slate-800 bg-slate-900/60 text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 hover:text-slate-300 hover:border-slate-700 transition-all duration-200"
+                                    >
+                                        <X className="w-2.5 h-2.5" />
+                                        All
+                                    </button>
+                                )}
+                            </div>
+                            {difficultyFilter.length > 0 && (
+                                <span className="text-[9px] text-slate-600 ml-1">
+                                    {filteredEncounters.length}/{quest.encounters.length} fights
+                                </span>
+                            )}
+                        </div>
+
+                        {filteredEncounters.length === 0 ? (
+                            <p className="text-center text-slate-500 italic mt-8 pl-6 md:pl-10 text-sm">No {difficultyFilter.map(d => d.toLowerCase()).join(" or ")} fights in this quest.</p>
+                        ) : filteredEncounters.map((encounter: EncounterWithRelations) => {
+                            const originalIndex = quest.encounters.findIndex(e => e.id === encounter.id);
+                            return (
                             <EncounterCard
                                 key={encounter.id}
                                 encounter={encounter}
-                                index={index}
+                                index={originalIndex}
                                 quest={quest}
                                 expandedId={expandedId}
                                 toggleExpand={toggleExpand}
@@ -1489,7 +1585,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                 renderChampionItem={renderChampionItem}
                                 renderListPick={renderListPick}
                             />
-                        ))}
+                        ); })}
                     </div>
                 )}
             </div>

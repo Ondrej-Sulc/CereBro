@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, Prisma } from "@prisma/client";
+import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, EncounterDifficulty, Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -80,6 +80,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [encounterRequiredTagIds, setEncounterRequiredTagIds] = useState<number[]>([]);
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
     const [nodeModifierIds, setNodeModifierIds] = useState<string[]>([]);
+    const [difficulty, setDifficulty] = useState<EncounterDifficulty>("NORMAL");
     const [isFormattingTips, setIsFormattingTips] = useState(false);
 
     // Bulk Add Encounters
@@ -249,7 +250,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, sequence]);
+    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, sequence, difficulty]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
@@ -469,7 +470,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     };
 
     // Saves the currently-editing encounter without canceling edit mode (used by autosave + manual save)
-    const saveEncounterChanges = async () => {
+    const saveEncounterChanges = async (difficultyOverride?: EncounterDifficulty) => {
         if (!editingEncounterId || !effectiveSequence) return;
         setSaveStatus('saving');
         try {
@@ -477,6 +478,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 id: editingEncounterId,
                 questPlanId: initialQuest.id,
                 sequence: parseInt(effectiveSequence),
+                difficulty: difficultyOverride ?? difficulty,
                 defenderId: defenderId ? parseInt(defenderId) : null,
                 videoUrl: videoUrl || null,
                 videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
@@ -509,6 +511,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 await createQuestEncounter({
                     questPlanId: initialQuest.id,
                     sequence: parseInt(effectiveSequence),
+                    difficulty,
                     defenderId: defenderId ? parseInt(defenderId) : undefined,
                     videoUrl: videoUrl || undefined,
                     videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
@@ -547,7 +550,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
         setNodeModifierIds(encounter.nodes?.map(n => n.nodeModifierId) || []);
-        
+        setDifficulty(encounter.difficulty as EncounterDifficulty || "NORMAL");
+
         setTimeout(() => {
             const el = document.getElementById("encounter-editor");
             if (el) {
@@ -613,6 +617,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setEncounterRequiredTagIds([]);
         setRecommendedChampionIds([]);
         setNodeModifierIds([]);
+        setDifficulty("NORMAL");
     };
 
     const handleDeleteEncounter = async (encounterId: string) => {
@@ -1162,6 +1167,37 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         onSelect={(id) => setDefenderId(id)}
                                         placeholder="Search champions..."
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300 font-semibold">Difficulty</Label>
+                                    <div className="flex gap-2">
+                                        {(["EASY", "NORMAL", "HARD"] as EncounterDifficulty[]).map((d) => (
+                                            <button
+                                                key={d}
+                                                type="button"
+                                                onClick={() => {
+                                                    setDifficulty(d);
+                                                    if (editingEncounterId) {
+                                                        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+                                                        saveEncounterChanges(d);
+                                                    }
+                                                }}
+                                                className={cn(
+                                                    "flex-1 rounded-md border py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors",
+                                                    difficulty === d
+                                                        ? d === "HARD"
+                                                            ? "border-red-500/60 bg-red-950/30 text-red-400"
+                                                            : d === "EASY"
+                                                                ? "border-emerald-500/60 bg-emerald-950/30 text-emerald-400"
+                                                                : "border-orange-500/60 bg-orange-950/30 text-orange-400"
+                                                        : "border-slate-700 bg-slate-900 text-slate-500 hover:border-slate-600 hover:text-slate-400"
+                                                )}
+                                            >
+                                                {d === "EASY" ? "Easy" : d === "NORMAL" ? "Normal" : "Hard"}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">

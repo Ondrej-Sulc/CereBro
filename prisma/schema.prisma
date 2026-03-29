@@ -721,6 +721,7 @@ model QuestPlan {
 model QuestEncounter {
   id                   String                 @id @default(cuid())
   sequence             Int
+  difficulty           EncounterDifficulty    @default(NORMAL)
   tips                 String?
   minStarLevel         Int?
   maxStarLevel         Int?
@@ -900,6 +901,12 @@ enum QuestPlanStatus {
   DRAFT
   VISIBLE
   ARCHIVED
+}
+
+enum EncounterDifficulty {
+  EASY
+  NORMAL
+  HARD
 }
 
 enum ScheduleFrequency {

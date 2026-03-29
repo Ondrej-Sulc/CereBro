@@ -1148,6 +1148,7 @@ export async function savePlayerQuestSynergy(questPlanId: string, championId: nu
 export type QuestEncounterCreateInput = {
     questPlanId: string;
     sequence: number;
+    difficulty?: import("@prisma/client").EncounterDifficulty;
     videoUrl?: string | null;
     videos?: { videoUrl: string; playerId?: string | null }[];
     tips?: string;
@@ -1171,6 +1172,7 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
     const encounter = await prisma.questEncounter.create({
         data: {
             sequence: data.sequence,
+            difficulty: data.difficulty,
             videoUrl: data.videoUrl,
             tips: data.tips,
             questPlanId: data.questPlanId,
@@ -1367,6 +1369,7 @@ export type QuestEncounterUpdateInput = {
     id: string;
     questPlanId: string;
     sequence?: number;
+    difficulty?: import("@prisma/client").EncounterDifficulty;
     videoUrl?: string | null;
     videos?: { videoUrl: string; playerId?: string | null }[];
     tips?: string | null;
@@ -1396,6 +1399,7 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
         where: { id: data.id },
         data: {
             sequence: data.sequence,
+            difficulty: data.difficulty,
             videoUrl: data.videoUrl,
             tips: data.tips,
             defenderId: data.defenderId,
