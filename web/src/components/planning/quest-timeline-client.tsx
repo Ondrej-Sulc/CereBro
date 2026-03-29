@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestSynergy } from "@/app/actions/quests";
+import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestSynergy, clearAllQuestCounters } from "@/app/actions/quests";
 import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
@@ -306,6 +306,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [shareSuccess, setShareSuccess] = useState(false);
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
+    const [isClearPlanOpen, setIsClearPlanOpen] = useState(false);
     const [isNodesCollapsed, setIsNodesCollapsed] = useState(false);
     const [isSynergyPickerOpen, setIsSynergyPickerOpen] = useState(false);
 
@@ -369,6 +370,16 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         if (!championToRemove) return;
         await removeTeamMemberLogic(championToRemove);
         setChampionToRemove(null);
+    };
+
+    const executeClearPlan = async () => {
+        try {
+            await clearAllQuestCounters(quest.id);
+            setSelections({});
+            toast({ title: "Plan Cleared", description: "All counter selections have been removed." });
+        } catch {
+            toast({ title: "Error", description: "Failed to clear the plan.", variant: "destructive" });
+        }
     };
 
     // Refactored helper for immediate execution
@@ -1432,8 +1443,73 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
             <div className="relative pl-3 md:pl-10 pb-20">
                 {/* Continuous Vertical Timeline Line */}
-                <div className="absolute top-14 bottom-[120px] left-3 md:left-10 w-1 bg-slate-800 -translate-x-1/2 z-0 shadow-inner rounded-full">
-                    <div className="w-full h-full bg-gradient-to-b from-slate-800 via-sky-900/20 to-slate-800 rounded-full" />
+                <style>{`
+                    @keyframes tlFlow1 {
+                        0%   { transform: translateY(-100%); opacity: 0; }
+                        8%   { opacity: 1; }
+                        88%  { opacity: 0.7; }
+                        100% { transform: translateY(300%); opacity: 0; }
+                    }
+                    @keyframes tlFlow2 {
+                        0%   { transform: translateY(-100%); opacity: 0; }
+                        8%   { opacity: 0.5; }
+                        88%  { opacity: 0.3; }
+                        100% { transform: translateY(400%); opacity: 0; }
+                    }
+                    @keyframes tlPulse {
+                        0%, 100% { opacity: 0.15; }
+                        50%      { opacity: 0.35; }
+                    }
+                    @keyframes tlRing1 {
+                        0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0.8; }
+                        100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+                    }
+                    @keyframes tlRing2 {
+                        0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0.5; }
+                        100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+                    }
+                    @keyframes tlRing3 {
+                        0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0.3; }
+                        100% { transform: translate(-50%, -50%) scale(3.4); opacity: 0; }
+                    }
+                    @keyframes tlCorePulse {
+                        0%, 100% { box-shadow: 0 0 4px 1px rgba(56,189,248,0.6), 0 0 10px 2px rgba(56,189,248,0.2); }
+                        50%      { box-shadow: 0 0 8px 2px rgba(56,189,248,0.9), 0 0 20px 4px rgba(56,189,248,0.35); }
+                    }
+                    @keyframes tlTick {
+                        0%, 100% { opacity: 0.25; }
+                        50%      { opacity: 0.7; }
+                    }
+                `}</style>
+
+                <div className="absolute top-0 bottom-[120px] left-3 md:left-10 -translate-x-1/2 z-0" style={{ width: '3px' }}>
+                    {/* Base track */}
+                    <div className="absolute inset-0 rounded-full bg-slate-800/70" />
+                    {/* Fade-in mask at the top so the line visually starts at the origin node */}
+                    <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-slate-950 to-transparent z-10 pointer-events-none" />
+                    {/* Breathing ambient glow */}
+                    <div
+                        className="absolute -inset-x-1 inset-y-0 rounded-full bg-sky-500/10 blur-[3px]"
+                        style={{ animation: 'tlPulse 3s ease-in-out infinite' }}
+                    />
+                    {/* Primary energy bolt */}
+                    <div className="absolute inset-0 overflow-hidden rounded-full">
+                        <div
+                            className="absolute inset-x-0 top-0 rounded-full bg-gradient-to-b from-transparent via-sky-400 to-transparent"
+                            style={{ height: '32%', animation: 'tlFlow1 2.6s ease-in-out infinite' }}
+                        />
+                        <div
+                            className="absolute inset-x-0 top-0 rounded-full bg-gradient-to-b from-transparent via-indigo-400/70 to-transparent"
+                            style={{ height: '22%', animation: 'tlFlow2 2.6s ease-in-out infinite 1.3s' }}
+                        />
+                    </div>
+                    {/* Wide soft glow that travels with the primary bolt */}
+                    <div className="absolute overflow-hidden rounded-full" style={{ inset: '0 -4px' }}>
+                        <div
+                            className="absolute inset-x-0 top-0 rounded-full bg-gradient-to-b from-transparent via-sky-500/20 to-transparent blur-[4px]"
+                            style={{ height: '32%', animation: 'tlFlow1 2.6s ease-in-out infinite' }}
+                        />
+                    </div>
                 </div>
 
                 {quest.encounters.length === 0 ? (
@@ -1441,7 +1517,42 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 ) : (
                     <div className="space-y-6">
                         {/* Column Header */}
-                        <div className="flex items-center pl-6 md:pl-10 mb-8 py-3 bg-slate-950/40 border-y border-slate-800/50 -mx-4 px-2 md:px-4 rounded-xl">
+                        <div className="relative mb-8">
+                            {/* Origin node — same absolute positioning as encounter nodes */}
+                            <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                                {[0, 0.8, 1.6].map((delay, i) => (
+                                    <div
+                                        key={i}
+                                        className="absolute rounded-full border border-sky-400/50"
+                                        style={{
+                                            width: '18px', height: '18px',
+                                            top: '50%', left: '50%',
+                                            animation: `tlRing${i + 1} 2.4s ease-out infinite`,
+                                            animationDelay: `${delay}s`,
+                                        }}
+                                    />
+                                ))}
+                                {[-35, 0, 35].map((deg, i) => (
+                                    <div
+                                        key={`tick-${i}`}
+                                        className="absolute bg-sky-400/50 rounded-full"
+                                        style={{
+                                            width: '1.5px', height: '7px',
+                                            bottom: '50%', left: 'calc(50% - 0.75px)',
+                                            transformOrigin: 'bottom center',
+                                            transform: `rotate(${deg}deg) translateY(12px)`,
+                                            animation: `tlTick 2.4s ease-in-out infinite`,
+                                            animationDelay: `${i * 0.15}s`,
+                                        }}
+                                    />
+                                ))}
+                                <div
+                                    className="relative w-2.5 h-2.5 rounded-full bg-sky-400 z-10"
+                                    style={{ animation: 'tlCorePulse 2.4s ease-in-out infinite' }}
+                                />
+                            </div>
+                            {/* Header box — ml-5 md:ml-10 matches encounter card pl-5 md:pl-10 exactly */}
+                            <div className="ml-5 md:ml-10 flex items-center py-3 bg-slate-950/40 border border-slate-800/50 rounded-xl px-2 md:px-4">
                             <div className="flex-1 flex items-center justify-start px-2 md:px-6 gap-2 md:gap-3">
                                 <div className="relative shrink-0">
                                     <div className="absolute -inset-1 bg-red-500/20 blur-sm rounded-full" />
@@ -1474,12 +1585,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     <Swords className="relative w-3.5 h-3.5 md:w-4 md:h-4 text-sky-500" />
                                 </div>
                             </div>
-                        </div>
+                            </div> {/* end header box */}
+                        </div> {/* end column header */}
 
                         {/* Difficulty Filter Bar */}
-                        <div className="flex items-center gap-2 pl-6 md:pl-10 -mt-2 mb-2">
+                        <div className="flex items-center flex-wrap justify-between gap-x-2 gap-y-1.5 pl-6 md:pl-10 -mt-2 mb-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-wrap">
                             <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 shrink-0">Difficulty</span>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                                 {(["HARD", "NORMAL", "EASY"] as const).map(d => {
                                     const isActive = difficultyFilter.includes(d);
                                     const label = d === "HARD" ? "Hard" : d === "NORMAL" ? "Normal" : "Easy";
@@ -1516,6 +1629,17 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                 <span className="text-[9px] text-slate-600 ml-1">
                                     {filteredEncounters.length}/{quest.encounters.length} fights
                                 </span>
+                            )}
+                            </div>
+                            {!readOnly && (
+                                <button
+                                    onClick={() => setIsClearPlanOpen(true)}
+                                    title="Clear all counter selections"
+                                    className="flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-slate-800 bg-slate-900/60 text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 hover:border-red-800/60 hover:bg-red-950/30 hover:text-red-400 transition-all duration-200 shrink-0"
+                                >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                    <span className="hidden sm:inline">Clear Plan</span>
+                                </button>
                             )}
                         </div>
 
@@ -1589,6 +1713,26 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     </div>
                 )}
             </div>
+
+            <AlertDialog open={isClearPlanOpen} onOpenChange={setIsClearPlanOpen}>
+                <AlertDialogContent className="bg-slate-950 border-slate-800">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-white">Clear entire plan?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">
+                            This will remove all counter selections for every fight in this quest. This cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800 hover:text-white">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={executeClearPlan}
+                            className="bg-red-600 text-white hover:bg-red-500"
+                        >
+                            Clear Plan
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog open={!!championToRemove} onOpenChange={(open) => !open && setChampionToRemove(null)}>
                 <AlertDialogContent className="bg-slate-950 border-slate-800">

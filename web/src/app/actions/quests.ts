@@ -1036,6 +1036,37 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
 }
 
 /**
+ * Clear all counter selections for a player's quest plan.
+ */
+export async function clearAllQuestCounters(questPlanId: string) {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+
+    const playerPlan = await prisma.playerQuestPlan.findUnique({
+        where: { playerId_questPlanId: { playerId: actingUser.id, questPlanId } }
+    });
+
+    if (playerPlan) {
+        await prisma.playerQuestEncounter.deleteMany({
+            where: { playerQuestPlanId: playerPlan.id }
+        });
+    }
+
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
+    revalidateTag(`quest-popular-counters-${questPlanId}`, 'default');
+    revalidateTag('quest-popular-counters', 'default');
+
+    if (actingUser.allianceId) {
+        revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`, 'default');
+        revalidateTag('quest-alliance-picks', 'default');
+    }
+
+    return { success: true };
+}
+
+/**
  * Save or remove a synergy champion for a player's quest plan.
  * Synergy champions are not assigned to any specific encounter but count towards the team limit.
  */
