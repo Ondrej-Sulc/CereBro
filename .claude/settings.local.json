@@ -18,7 +18,11 @@
       "Bash(ls /c/Code/Cerebro:*)",
       "Bash(gh pr:*)",
       "Bash(pnpm exec:*)",
-      "Bash(find /c/Code/cerebro/web/src -type f -name *quest*)"
+      "Bash(find /c/Code/cerebro/web/src -type f -name *quest*)",
+      "Bash(xargs awk:*)",
+      "Bash(find /c/Code/CereBro/web/src -name *page* -path *planning*quest* -type f)",
+      "Bash(pnpm prisma:generate)",
+      "Bash(pnpm prisma:migrate)"
     ]
   }
 }
