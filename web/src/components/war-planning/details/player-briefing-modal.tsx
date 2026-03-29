@@ -12,20 +12,21 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { 
-    Swords, 
-    Zap, 
-    Download, 
-    Film, 
-    Play, 
-    Info, 
+import {
+    Swords,
+    Zap,
+    Download,
+    Film,
+    Play,
+    Info,
     History,
     ChevronRight,
     Star,
     TriangleAlert,
     X,
     Plus,
-    Loader2
+    Loader2,
+    Copy
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ import { ExtraChampion } from "../hooks/use-war-planning";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getActiveModifiers } from "@/lib/node-modifier-utils";
 import { getFightVideos, getWarMapPng } from "@/app/planning/actions";
+import { exportPlayerText, exportPlayerMarkdown } from "@/lib/war-plan-export";
 import { useToast } from "@/hooks/use-toast";
 import { usePlayerColor } from "../player-color-context";
 import { Champion } from "@/types/champion";
@@ -229,6 +231,28 @@ export const PlayerBriefingModal = ({
         }
     };
 
+    const handleCopyPlan = async () => {
+        if (!player) return;
+        const text = exportPlayerText(player, playerFights, prefightTasks, assignedChampions, war);
+        try {
+            await navigator.clipboard.writeText(text);
+            toast({ title: "Plan Copied", description: `${player.ingameName}'s briefing copied to clipboard.` });
+        } catch {
+            toast({ title: "Copy Failed", description: "Could not write to clipboard.", variant: "destructive" });
+        }
+    };
+
+    const handleCopyMarkdown = async () => {
+        if (!player) return;
+        const text = exportPlayerMarkdown(player, playerFights, prefightTasks, assignedChampions, war);
+        try {
+            await navigator.clipboard.writeText(text);
+            toast({ title: "Markdown Copied", description: `${player.ingameName}'s briefing copied as Markdown.` });
+        } catch {
+            toast({ title: "Copy Failed", description: "Could not write to clipboard.", variant: "destructive" });
+        }
+    };
+
     const totalFights = useMemo(() => {
         const nodes = new Set<number>();
         playerFights.forEach(f => nodes.add(f.node.nodeNumber));
@@ -272,10 +296,28 @@ export const PlayerBriefingModal = ({
                                 </DialogDescription>
                             </div>
                         </div>
-                        <div className="shrink-0">
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
+                        <div className="shrink-0 flex items-center gap-1.5">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
+                                onClick={handleCopyPlan}
+                            >
+                                <Copy className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-400" />
+                                <span className="hidden sm:inline">Copy Text</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
+                                onClick={handleCopyMarkdown}
+                            >
+                                <Copy className="h-3 w-3 sm:h-4 sm:w-4 text-sky-400" />
+                                <span className="hidden sm:inline">Copy Markdown</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
                                 className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
                                 onClick={handleDownloadMyMap}
                                 disabled={isDownloading}

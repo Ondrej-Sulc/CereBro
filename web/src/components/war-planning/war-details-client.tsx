@@ -15,6 +15,7 @@ import { CloseWarDialog } from "./close-war-dialog";
 import { PlayerBriefingModal } from "./details/player-briefing-modal";
 import { useToast } from "@/hooks/use-toast";
 import { distributePlan } from "@/app/planning/actions";
+import { exportBattlegroupText, exportBattlegroupMarkdown } from "@/lib/war-plan-export";
 import { PlayerColorProvider } from "./player-color-context";
 import { PlayerPaletteStyle } from "@/lib/player-colors";
 
@@ -99,6 +100,26 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         setRightPanelState(prev => prev === 'roster' ? 'closed' : 'roster');
     }
   }, [isDesktop, setRightPanelState]);
+
+  const handleCopyBgText = useCallback(async () => {
+    const text = exportBattlegroupText(currentFights, props.war, currentBattlegroup);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: `BG${currentBattlegroup} Plan Copied`, description: "Text plan copied to clipboard." });
+    } catch {
+      toast({ title: "Copy Failed", description: "Could not write to clipboard.", variant: "destructive" });
+    }
+  }, [currentFights, props.war, currentBattlegroup, toast]);
+
+  const handleCopyBgMarkdown = useCallback(async () => {
+    const text = exportBattlegroupMarkdown(currentFights, props.war, currentBattlegroup);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: `BG${currentBattlegroup} Plan Copied`, description: "Markdown plan copied to clipboard." });
+    } catch {
+      toast({ title: "Copy Failed", description: "Could not write to clipboard.", variant: "destructive" });
+    }
+  }, [currentFights, props.war, currentBattlegroup, toast]);
 
   const handleDistribute = useCallback(async (battlegroup?: number, targetChannelId?: string) => {
     try {
@@ -250,6 +271,8 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               isReadOnly={isReadOnly}
               bgColors={props.bgColors}
               warProgress={warProgress}
+              onCopyBgText={handleCopyBgText}
+              onCopyBgMarkdown={handleCopyBgMarkdown}
             />
             
             <WarTabs 
