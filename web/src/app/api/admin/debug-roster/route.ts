@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
 
     } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
-        logger.error({ error: err }, "Error in debug roster route");
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        logger.error({ err, message: err.message, stack: err.stack }, "Error in debug roster route");
+        return NextResponse.json({ error: "Internal Server Error", detail: err.message }, { status: 500 });
     }
 }
