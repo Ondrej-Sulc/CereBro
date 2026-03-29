@@ -314,11 +314,6 @@ function EncounterHeader({
                                         return (
                                             <div key={`sugg-${r.id}`} className="relative w-6 h-6 rounded-full border border-slate-900 overflow-hidden shadow-md group/sugg" title={`${r.champion.name} (In your team${isSynergy ? ' as synergy' : ''} & recommended)`}>
                                                 <Image src={getChampionImageUrlOrPlaceholder(r.champion.images, "64")} alt={r.champion.name} fill className="object-cover group-hover/sugg:scale-110 transition-transform" />
-                                                {isSynergy && (
-                                                    <div className="absolute inset-0 bg-sky-500/20 flex items-center justify-center">
-                                                        <div className="bg-sky-500 h-1.5 w-1.5 rounded-full" />
-                                                    </div>
-                                                )}
                                             </div>
                                         );
                                     })}
