@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { getFromCache } from "@/lib/cache";
 import { getChampionImageUrl } from "@/lib/championHelper";
-import { getNodeCategory } from "@cerebro/core/data/war-planning/path-logic";
+import { getNodeCategory, getNodeTypeMultiplier } from "@cerebro/core/data/war-planning/path-logic";
 import { ChampionImages } from "@/types/champion";
 import { PlayerStats, ChampionStat, NodeStat } from "./types";
 import { DetailedPlacementStat } from "./deep-dive-types";
+import { getGlobalDifficulties, calculateFightScore, calculateSoloBonus, normalizeRatings, DifficultyRatings } from "@/lib/war-rating";
 
 export async function getAvailableSeasons(allianceId: string) {
   return await getFromCache(`distinct-seasons-${allianceId}`, 3600, async () => {
@@ -32,6 +33,7 @@ export interface SeasonData {
     globalFights: number;
     globalDeaths: number;
     globalSoloRate: number;
+    averageRating: number;
 }
 
 export async function getSeasonData(allianceId: string, selectedSeason: number): Promise<SeasonData> {
@@ -69,6 +71,14 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
         )
     ]);
   
+    // Fetch difficulty ratings for all war tiers in this season
+    const warTiers = [...new Set(wars.map(w => w.warTier))];
+    const difficultyByTier = new Map<number, DifficultyRatings>();
+    await Promise.all(warTiers.map(async (tier) => {
+      const difficulties = await getGlobalDifficulties(tier);
+      difficultyByTier.set(tier, difficulties);
+    }));
+
     // Process Data
     const bgStats: Record<number, Record<string, PlayerStats>> = {
       1: {},
@@ -144,7 +154,12 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
             bossFights: 0,
             bossDeaths: 0,
             battlegroup: bg,
-            warStats: []
+            warStats: [],
+            rating: 0,
+            ratingPerFight: 0,
+            normalizedRating: 0,
+            grade: 'C',
+            ratingBreakdown: { baseFightScore: 0, soloBonus: 0, totalRating: 0, ratingPerFight: 0 },
           };
         }
         bgStats[bg][pid].fights += 1;
@@ -187,6 +202,16 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
         const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name));
         const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name));
 
+        // Rating calculations for this fight
+        const difficulties = difficultyByTier.get(war.warTier);
+        const nodeNum = fight.node?.nodeNumber ?? 0;
+        const nodeDifficulty = difficulties?.nodes.get(nodeNum) ?? 1.0;
+        const defenderDifficulty = fight.defenderId ? (difficulties?.defenders.get(fight.defenderId) ?? 1.0) : 1.0;
+        const nodeTypeMultiplier = nodeNum > 0 ? getNodeTypeMultiplier(nodeNum) : 1.0;
+        const fightScore = calculateFightScore(fight.death, nodeDifficulty, defenderDifficulty, nodeTypeMultiplier);
+
+        bgStats[bg][pid].ratingBreakdown.baseFightScore += fightScore;
+
         playerWarStat.fights += 1;
         playerWarStat.deaths += fight.death;
         playerWarStat.fightDetails.push({
@@ -201,7 +226,11 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
             deaths: fight.death,
             videoId: fight.video?.id || null,
             isAttackerTactic,
-            isDefenderTactic
+            isDefenderTactic,
+            fightScore,
+            nodeDifficulty,
+            defenderDifficulty,
+            nodeTypeMultiplier,
         });
 
         bgTotals[bg].fights += 1;
@@ -267,7 +296,7 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
     // Sort Insights
     const topDefenders = Array.from(defenderStats.values())
         .sort((a, b) => b.deaths - a.deaths || b.fights - a.fights);
-    
+
     const topAttackers = Array.from(attackerStats.values())
         .sort((a, b) => b.count - a.count || a.deaths - b.deaths);
 
@@ -278,6 +307,44 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
     const globalFights = bgTotals[1].fights + bgTotals[2].fights + bgTotals[3].fights;
     const globalDeaths = bgTotals[1].deaths + bgTotals[2].deaths + bgTotals[3].deaths;
     const globalSoloRate = globalFights > 0 ? ((globalFights - globalDeaths) / globalFights) * 100 : 0;
+
+    // Calculate solo bonus and total ratings
+    const avgSoloRate = globalFights > 0 ? (globalFights - globalDeaths) / globalFights : 0;
+    const perFightMap = new Map<string, number>();
+    const totalMap = new Map<string, number>();
+
+    for (const player of allPlayers) {
+      if (player.fights === 0) continue;
+
+      const playerSoloRate = (player.fights - player.deaths) / player.fights;
+      const soloBonus = calculateSoloBonus(playerSoloRate, avgSoloRate, player.fights);
+
+      player.ratingBreakdown.soloBonus = soloBonus;
+      player.ratingBreakdown.totalRating = player.ratingBreakdown.baseFightScore + soloBonus;
+      player.ratingBreakdown.ratingPerFight = player.ratingBreakdown.totalRating / player.fights;
+
+      player.rating = player.ratingBreakdown.totalRating;
+      player.ratingPerFight = player.ratingBreakdown.ratingPerFight;
+
+      perFightMap.set(player.playerId, player.ratingPerFight);
+      totalMap.set(player.playerId, player.rating);
+    }
+
+    // Normalize ratings: 70% per-fight quality + 30% total volume
+    const normalized = normalizeRatings(perFightMap, totalMap);
+    for (const player of allPlayers) {
+      const norm = normalized.get(player.playerId);
+      if (norm) {
+        player.normalizedRating = norm.normalizedRating;
+        player.grade = norm.grade;
+      }
+    }
+
+    // Compute average rating across all players
+    const playersWithFights = allPlayers.filter(p => p.fights > 0);
+    const averageRating = playersWithFights.length > 0
+        ? playersWithFights.reduce((sum, p) => sum + p.ratingPerFight, 0) / playersWithFights.length
+        : 0;
 
     return {
         bgStats,
@@ -292,6 +359,7 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
         allPlayers,
         globalFights,
         globalDeaths,
-        globalSoloRate
+        globalSoloRate,
+        averageRating,
     };
 }

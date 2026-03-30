@@ -71,6 +71,18 @@ export function CombatHistoryDialog({ player, onClose }: CombatHistoryDialogProp
                 </div>
                 
                 <div className="flex items-center gap-4">
+                    <div className={cn(
+                        "text-center border rounded-lg px-4 py-2 min-w-[80px]",
+                        player.grade === 'S' ? "bg-yellow-950/30 border-yellow-500/40" : player.grade === 'A' ? "bg-emerald-950/30 border-emerald-500/40" : player.grade === 'B' ? "bg-sky-950/30 border-sky-500/40" : "bg-slate-950/50 border-slate-800/60"
+                    )}>
+                        <div className="text-xs font-black text-slate-500 uppercase mb-0.5">Rating</div>
+                        <div className={cn(
+                            "text-lg font-black italic font-mono",
+                            player.grade === 'S' ? "text-yellow-400" : player.grade === 'A' ? "text-emerald-400" : player.grade === 'B' ? "text-sky-400" : player.grade === 'C' ? "text-slate-300" : "text-red-400"
+                        )}>
+                            {player.grade} {player.normalizedRating.toFixed(0)}
+                        </div>
+                    </div>
                     <div className="text-center bg-slate-950/50 border border-slate-800/60 rounded-lg px-4 py-2 min-w-[100px]">
                         <div className="text-xs font-black text-slate-500 uppercase mb-0.5">Survival</div>
                         <div className="text-lg font-black italic text-emerald-400 font-mono">
@@ -198,7 +210,13 @@ export function CombatHistoryDialog({ player, onClose }: CombatHistoryDialogProp
                                             </div>
                                             
                                             <div className="flex items-center gap-4">
-                                                <div className="flex items-center">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={cn(
+                                                        "text-xs font-mono font-black min-w-[40px] text-right",
+                                                        fight.fightScore > 0 ? "text-emerald-500" : fight.fightScore < 0 ? "text-red-400" : "text-slate-500"
+                                                    )} title={`Node: ${fight.nodeDifficulty.toFixed(2)} × Def: ${fight.defenderDifficulty.toFixed(2)} × Type: ${fight.nodeTypeMultiplier.toFixed(2)}`}>
+                                                        {fight.fightScore >= 0 ? '+' : ''}{fight.fightScore.toFixed(2)}
+                                                    </span>
                                                     {fight.deaths > 0 ? (
                                                         <div className="flex items-center gap-1.5 text-red-400 text-sm font-black uppercase italic tracking-tighter">
                                                             <Skull className="w-3.5 h-3.5" />
@@ -236,6 +254,17 @@ export function CombatHistoryDialog({ player, onClose }: CombatHistoryDialogProp
             </div>
           </div>
           
+          <div className="px-6 py-3 border-t border-slate-800/60 bg-slate-900/30 relative z-10 shrink-0">
+            <div className="flex items-center justify-between text-xs font-mono">
+                <div className="flex items-center gap-4">
+                    <span className="text-slate-500 font-black uppercase tracking-wider">Breakdown</span>
+                    <span className="text-slate-400">Fights: <span className="text-slate-300 font-black">{player.ratingBreakdown.baseFightScore.toFixed(2)}</span></span>
+                    <span className="text-slate-400">Solo Bonus: <span className={cn("font-black", player.ratingBreakdown.soloBonus >= 0 ? "text-emerald-400" : "text-red-400")}>{player.ratingBreakdown.soloBonus >= 0 ? '+' : ''}{player.ratingBreakdown.soloBonus.toFixed(2)}</span></span>
+                </div>
+                <span className="text-slate-400">Per Fight: <span className="text-white font-black">{player.ratingBreakdown.ratingPerFight.toFixed(2)}</span></span>
+            </div>
+          </div>
+
           <div className="p-4 border-t border-slate-800/60 bg-slate-950 relative z-50 shrink-0 flex justify-end">
             <DialogClose asChild>
                 <button 

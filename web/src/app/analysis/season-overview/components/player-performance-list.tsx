@@ -20,8 +20,8 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
   // Let's assume 'allPlayers' is the source of truth for sorting order.
   
   const sortedGlobalPlayers = [...allPlayers].sort((a, b) => {
-      // Primary: Deaths (Ascending)
-      if (a.deaths !== b.deaths) return a.deaths - b.deaths;
+      // Primary: Rating (Descending)
+      if (a.normalizedRating !== b.normalizedRating) return b.normalizedRating - a.normalizedRating;
       // Secondary: Fights (Descending)
       return b.fights - a.fights;
   });
@@ -36,11 +36,11 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
     
     if (globalIndex === 0) return 1;
     const prev = sortedList[globalIndex - 1];
-    if (player.deaths === prev.deaths && player.fights === prev.fights) {
+    if (player.normalizedRating === prev.normalizedRating && player.fights === prev.fights) {
       let i = globalIndex - 1;
       while (
         i >= 0 &&
-        sortedList[i].deaths === player.deaths &&
+        sortedList[i].normalizedRating === player.normalizedRating &&
         sortedList[i].fights === player.fights
       ) {
         i--;
@@ -62,7 +62,7 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
 
                 return (
                     <div 
-                        key={player.playerId}
+                        key={`${player.playerId}-${player.battlegroup}`}
                         onClick={() => onSelectPlayer(player)}
                         className="bg-slate-900/40 border border-slate-800/60 rounded-lg p-3 flex flex-col gap-3 active:bg-slate-800/60 transition-colors"
                         style={{ borderLeft: `4px solid ${isTop3 ? '#f59e0b' : 'transparent'}` }}
@@ -91,6 +91,16 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
                                     <Progress value={soloRate} className="h-1 flex-1 bg-slate-800" indicatorClassName={soloRate >= 95 ? "bg-emerald-500" : soloRate >= 80 ? "bg-amber-500" : "bg-red-500"} />
                                     <span className={cn("text-xs font-black font-mono", soloRate >= 95 ? "text-emerald-500" : "text-slate-500")}>{soloRate.toFixed(0)}%</span>
                                 </div>
+                            </div>
+                            <div className={cn(
+                                "shrink-0 flex items-center gap-1.5 bg-slate-950/50 border rounded-md px-2 py-1",
+                                player.grade === 'S' ? "border-yellow-500/40" : player.grade === 'A' ? "border-emerald-500/40" : player.grade === 'B' ? "border-sky-500/40" : "border-slate-700/40"
+                            )}>
+                                <span className={cn(
+                                    "text-xs font-black",
+                                    player.grade === 'S' ? "text-yellow-400" : player.grade === 'A' ? "text-emerald-400" : player.grade === 'B' ? "text-sky-400" : player.grade === 'C' ? "text-slate-400" : "text-red-400"
+                                )}>{player.grade}</span>
+                                <span className="text-xs font-mono font-black text-slate-500">{player.normalizedRating.toFixed(0)}</span>
                             </div>
                         </div>
 
@@ -128,6 +138,7 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
               <tr>
                 <th className="px-4 py-3 w-12 text-center">#</th>
                 <th className="px-4 py-3 w-64">Player</th>
+                <th className="px-4 py-3 w-24 text-center">Rating</th>
                 <th className="px-4 py-3 w-48 text-center">Efficiency</th>
                 <th className="px-4 py-3 text-center" title="Path Fights">Path</th>
                 <th className="px-4 py-3 text-center" title="Mini-Boss Fights">MB</th>
@@ -153,7 +164,7 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
 
                 return (
                   <tr
-                    key={player.playerId}
+                    key={`${player.playerId}-${player.battlegroup}`}
                     className="group/row hover:bg-slate-800/30 transition-all duration-300 cursor-pointer border-l-4 border-l-transparent"
                     style={{ borderLeftColor: isTop3 ? '#f59e0b' : 'transparent' }}
                     onClick={() => onSelectPlayer(player)}
@@ -201,6 +212,15 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
                         </div>
                       </div>
                     </td>
+                    <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                            <span className={cn(
+                                "text-sm font-black",
+                                player.grade === 'S' ? "text-yellow-400" : player.grade === 'A' ? "text-emerald-400" : player.grade === 'B' ? "text-sky-400" : player.grade === 'C' ? "text-slate-400" : "text-red-400"
+                            )}>{player.grade}</span>
+                            <span className="text-sm font-mono font-black text-slate-500">{player.normalizedRating.toFixed(0)}</span>
+                        </div>
+                    </td>
                     <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                             <Progress value={soloRate} className="h-2 flex-1 bg-slate-800" indicatorClassName={soloRate >= 95 ? "bg-emerald-500" : soloRate >= 80 ? "bg-amber-500" : "bg-red-500"} />
@@ -232,7 +252,7 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
               })}
               {players.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
+                  <td colSpan={8} className="px-4 py-12 text-center">
                     <BarChart3 className="w-10 h-10 text-slate-800 mx-auto mb-2 opacity-20" />
                     <p className="text-xs text-slate-600 font-black uppercase tracking-[0.2em]">No intelligence data</p>
                   </td>

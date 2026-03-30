@@ -22,7 +22,8 @@
       "Bash(xargs awk:*)",
       "Bash(find /c/Code/CereBro/web/src -name *page* -path *planning*quest* -type f)",
       "Bash(pnpm prisma:generate)",
-      "Bash(pnpm prisma:migrate)"
+      "Bash(pnpm prisma:migrate)",
+      "Bash(find . -name '*war*action*.ts' -o -name '*fight*query*.ts')"
     ]
   }
 }

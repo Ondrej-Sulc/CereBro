@@ -131,7 +131,8 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
       mapTypes,
       allPlayers,
       globalDeaths,
-      globalSoloRate
+      globalSoloRate,
+      averageRating,
   } = await getSeasonData(allianceId, selectedSeason);
     
     return (
@@ -202,6 +203,10 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
                         )}>
                             {globalSoloRate.toFixed(1)}%
                         </span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Avg Rating</span>
+                        <span className="text-xl font-mono font-black text-slate-300">{averageRating.toFixed(2)}</span>
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Total Deaths</span>

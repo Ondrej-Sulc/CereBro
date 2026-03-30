@@ -49,6 +49,22 @@ export function getNodeCategory(nodeNumber: number): NodeCategory {
 }
 
 /**
+ * Returns a prestige multiplier for rating calculations based on node type.
+ * Rewards players for taking on higher-stakes fights.
+ *
+ * - Path (1-36): 1.0
+ * - Island (37-45): 1.15
+ * - Pre-boss (46-49): 1.3
+ * - Boss (50): 1.5
+ */
+export function getNodeTypeMultiplier(nodeNumber: number): number {
+  if (nodeNumber === 50) return 1.5;
+  if (nodeNumber >= 46 && nodeNumber <= 49) return 1.3;
+  if (nodeNumber >= 37 && nodeNumber <= 45) return 1.15;
+  return 1.0;
+}
+
+/**
  * Returns a human-readable label for a node's logical assignment.
  * e.g., "S1 P5", "Mini-Boss", "Boss"
  */

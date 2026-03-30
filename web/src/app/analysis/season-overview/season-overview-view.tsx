@@ -25,8 +25,8 @@ export function SeasonOverviewView({
 
   const sortedPlayers = useMemo(() => {
     return [...allPlayers].sort((a, b) => {
-        // Primary: Deaths (Ascending)
-        if (a.deaths !== b.deaths) return a.deaths - b.deaths;
+        // Primary: Rating (Descending)
+        if (a.normalizedRating !== b.normalizedRating) return b.normalizedRating - a.normalizedRating;
         // Secondary: Fights (Descending)
         return b.fights - a.fights;
     });

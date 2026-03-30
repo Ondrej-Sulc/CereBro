@@ -30,6 +30,10 @@ export interface WarFightDetail {
   videoId: string | null;
   isAttackerTactic: boolean;
   isDefenderTactic: boolean;
+  fightScore: number;
+  nodeDifficulty: number;
+  defenderDifficulty: number;
+  nodeTypeMultiplier: number;
 }
 
 export interface PlayerWarStat {
@@ -39,6 +43,13 @@ export interface PlayerWarStat {
   fights: number;
   deaths: number;
   fightDetails: WarFightDetail[];
+}
+
+export interface RatingBreakdown {
+  baseFightScore: number;
+  soloBonus: number;
+  totalRating: number;
+  ratingPerFight: number;
 }
 
 export interface PlayerStats {
@@ -55,4 +66,9 @@ export interface PlayerStats {
   bossDeaths: number;
   battlegroup: number;
   warStats: PlayerWarStat[];
+  rating: number;
+  ratingPerFight: number;
+  normalizedRating: number;
+  grade: string;
+  ratingBreakdown: RatingBreakdown;
 }
