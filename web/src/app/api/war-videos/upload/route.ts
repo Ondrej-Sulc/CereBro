@@ -5,7 +5,7 @@ import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { parseFormData } from '@/lib/parseFormData';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
-import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification } from '@/lib/api/submission-helpers';
+import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification, FightMismatchError } from '@/lib/api/submission-helpers';
 import { withRouteContext } from '@/lib/with-request-context';
 
 export const POST = withRouteContext(async (req: NextRequest) => {
@@ -137,6 +137,13 @@ export const POST = withRouteContext(async (req: NextRequest) => {
     }, 'Upload error detail');
 
     if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
+
+    if (error instanceof FightMismatchError) {
+      return NextResponse.json({
+        error: 'Fight details do not match this war',
+        details: error.message,
+      }, { status: 409 });
+    }
 
     // Check for specific YouTube API quota error
     const errors = err.errors || err.response?.data?.error?.errors;

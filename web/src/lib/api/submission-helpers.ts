@@ -2,6 +2,20 @@ import { PrismaClient, WarMapType, Player, UploadToken, Alliance } from '@prisma
 import logger from "@/lib/logger";
 import crypto from 'crypto';
 
+export class FightMismatchError extends Error {
+    constructor(
+        public readonly mismatches: { nodeId: number; submittedAttackerId: number; existingAttackerId: number | null; submittedDefenderId: number; existingDefenderId: number | null }[],
+        public readonly warDetails: { season: number; warNumber: number; battlegroup: number }
+    ) {
+        const nodeList = mismatches.map(m => `node ${m.nodeId}`).join(', ');
+        super(
+            `The fight details you submitted don't match the existing data for Season ${warDetails.season}, War ${warDetails.warNumber}, BG${warDetails.battlegroup} ` +
+            `on ${nodeList}. You may have entered the wrong war number. No data was changed.`
+        );
+        this.name = 'FightMismatchError';
+    }
+}
+
 export type ValidationResult = 
   | { success: true; player: Player & { alliance: Alliance | null }; uploadToken: UploadToken }
   | { success: false; error: string; status: number };
@@ -195,71 +209,97 @@ export async function processNewFights(
         });
     }
 
-    // 2. Create Fights
-    const createdFights = await Promise.all(fights.map(async (fight: FightInput) => {
-        const fightData = {
-            warId: war.id,
-            playerId: finalPlayerId, // Use resolved player ID
-            nodeId: parseInt(fight.nodeId),
-            attackerId: parseInt(fight.attackerId),
-            defenderId: parseInt(fight.defenderId),
-            death: fight.death,
-            battlegroup: targetBattlegroup,
-            prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
-              create: fight.prefightChampionIds
-                  .map((id: string) => parseInt(id))
-                  .filter((id: number) => !isNaN(id))
-                  .map((id: number) => ({ championId: id, playerId: finalPlayerId }))
-            } : undefined,
-        };
-        
-        logger.debug({ nodeId: fightData.nodeId, attackerId: fightData.attackerId }, "Processing fight entry");
+    // 2. Resolve fight IDs — match submitted fights against existing records
+    if (warNumber !== null) {
+        // Regular war: fights already exist from war planning, just verify and link
+        const nodeIds = fights.map(f => parseInt(f.nodeId));
+        const existingFights = await prisma.warFight.findMany({
+            where: {
+                warId: war.id,
+                battlegroup: targetBattlegroup,
+                nodeId: { in: nodeIds },
+            },
+            select: { id: true, nodeId: true, attackerId: true, defenderId: true },
+        });
 
-        if (warNumber === null) {
-            // Offseason: Always create
-            return prisma.warFight.create({ data: fightData });
-        } else {
-            // Regular War: Enforce uniqueness
-            const existingFight = await prisma.warFight.findFirst({
-                where: {
-                    warId: war.id,
-                    battlegroup: targetBattlegroup,
-                    nodeId: parseInt(fight.nodeId),
-                },
-                include: { prefightChampions: true }
-            });
+        const existingByNode = new Map(existingFights.map(f => [f.nodeId, f]));
 
-            if (existingFight) {
-                logger.info({ fightId: existingFight.id }, "Updating existing fight");
-                
-                const existingPrefightsMap = new Map<number, string | null>();
-                existingFight.prefightChampions.forEach(pf => existingPrefightsMap.set(pf.championId, pf.playerId));
-                
-                const newPrefightIds = (fight.prefightChampionIds || [])
-                    .map((id: string) => parseInt(id))
-                    .filter((id: number) => !isNaN(id));
+        // Check every submitted fight matches the existing record for that node
+        const mismatches = fights.flatMap(fight => {
+            const nodeId = parseInt(fight.nodeId);
+            const existing = existingByNode.get(nodeId);
+            if (!existing) return []; // fight not in DB yet — will be created below
+            const attackerMatch = existing.attackerId === parseInt(fight.attackerId);
+            const defenderMatch = existing.defenderId === parseInt(fight.defenderId);
+            if (!attackerMatch || !defenderMatch) {
+                return [{
+                    nodeId,
+                    submittedAttackerId: parseInt(fight.attackerId),
+                    existingAttackerId: existing.attackerId,
+                    submittedDefenderId: parseInt(fight.defenderId),
+                    existingDefenderId: existing.defenderId,
+                }];
+            }
+            return [];
+        });
 
-                return prisma.warFight.update({
-                    where: { id: existingFight.id },
+        if (mismatches.length > 0) {
+            logger.warn({ warId: war.id, mismatches }, "Upload rejected: submitted fight details don't match existing war data");
+            throw new FightMismatchError(mismatches, { season, warNumber: warNumber!, battlegroup: targetBattlegroup });
+        }
+
+        // All verified — return existing IDs (and create any that don't exist yet)
+        const fightIds: string[] = [];
+        await Promise.all(fights.map(async fight => {
+            const nodeId = parseInt(fight.nodeId);
+            const existing = existingByNode.get(nodeId);
+            if (existing) {
+                fightIds.push(existing.id);
+            } else {
+                logger.info({ nodeId }, "Fight not found in DB, creating");
+                const created = await prisma.warFight.create({
                     data: {
-                        playerId: finalPlayerId, // Use resolved player ID
+                        warId: war.id,
+                        playerId: finalPlayerId,
+                        nodeId,
                         attackerId: parseInt(fight.attackerId),
                         defenderId: parseInt(fight.defenderId),
                         death: fight.death,
-                        prefightChampions: {
-                            deleteMany: {},
-                            create: newPrefightIds.map(id => ({
-                                championId: id,
-                                playerId: existingPrefightsMap.has(id) ? existingPrefightsMap.get(id) : finalPlayerId
-                            }))
-                        }
-                    }
+                        battlegroup: targetBattlegroup,
+                        prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
+                            create: fight.prefightChampionIds
+                                .map((id: string) => parseInt(id))
+                                .filter((id: number) => !isNaN(id))
+                                .map((id: number) => ({ championId: id, playerId: finalPlayerId }))
+                        } : undefined,
+                    },
                 });
-            } else {
-                logger.info("Creating new fight");
-                return prisma.warFight.create({ data: fightData });
+                fightIds.push(created.id);
             }
-        }
+        }));
+        return fightIds;
+    }
+
+    // 3. Offseason / no war number: always create fights
+    const createdFights = await Promise.all(fights.map(async (fight: FightInput) => {
+        logger.debug({ nodeId: fight.nodeId, attackerId: fight.attackerId }, "Creating offseason fight entry");
+        return prisma.warFight.create({
+            data: {
+                warId: war.id,
+                playerId: finalPlayerId,
+                nodeId: parseInt(fight.nodeId),
+                attackerId: parseInt(fight.attackerId),
+                defenderId: parseInt(fight.defenderId),
+                death: fight.death,
+                battlegroup: targetBattlegroup,
+                prefightChampions: fight.prefightChampionIds && fight.prefightChampionIds.length > 0 ? {
+                    create: fight.prefightChampionIds
+                        .map((id: string) => parseInt(id))
+                        .filter((id: number) => !isNaN(id))
+                        .map((id: number) => ({ championId: id, playerId: finalPlayerId }))
+                } : undefined,
+            },
+        });
     }));
 
     return createdFights.map(f => f.id);
