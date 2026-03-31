@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getCachedChampions } from '@/lib/data/champions';
-import loggerService from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
+import { withRouteContext } from '@/lib/with-request-context';
 
-export async function GET() {
+export const GET = withRouteContext(async () => {
   try {
     const champions = await getCachedChampions();
     return NextResponse.json(champions, { status: 200 });
   } catch (error) {
-    loggerService.error({ err: error }, 'Error fetching champions');
-    return NextResponse.json({ error: 'Failed to fetch champions' }, { status: 500 });
+    logger.error({ err: error }, 'Error fetching champions');
+    return NextResponse.json({ error: 'Failed to fetch champions' }, { status: 500 });       
   }
-}
+});

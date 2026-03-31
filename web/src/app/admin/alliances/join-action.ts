@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { ensureAdmin } from "../actions"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { withActionContext } from "@/lib/with-request-context"
 
-export async function joinAllianceAsAdmin(allianceId: string) {
+export const joinAllianceAsAdmin = withActionContext('joinAllianceAsAdmin', async (allianceId: string) => {
     if (!allianceId || typeof allianceId !== "string") {
         throw new Error("Invalid alliance ID")
     }
@@ -36,4 +37,4 @@ export async function joinAllianceAsAdmin(allianceId: string) {
     revalidatePath("/")
     revalidatePath("/alliance")
     redirect("/alliance/roster")
-}
+});

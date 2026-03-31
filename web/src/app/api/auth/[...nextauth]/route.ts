@@ -1,5 +1,6 @@
 import { handlers } from "@/auth";
 import logger, { isAbortedResponse } from "@/lib/logger";
+import { withRouteContext } from "@/lib/with-request-context";
 
 const { GET: _GET, POST: _POST } = handlers;
 
@@ -39,6 +40,6 @@ const wrapHandler = <Req extends Request, Args extends any[], R>(
   }
 };
 
-export const GET = wrapHandler(_GET);
-export const POST = wrapHandler(_POST);
+export const GET = withRouteContext(wrapHandler(_GET));
+export const POST = withRouteContext(wrapHandler(_POST));
 

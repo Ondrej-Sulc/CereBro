@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { BotJobType } from "@prisma/client";
 import { config } from "@cerebro/core/config";
 import { getFromCache } from "@/lib/cache";
+import { withActionContext } from "@/lib/with-request-context";
 
 export interface DiscordGuild {
     id: string;
@@ -69,7 +70,7 @@ function chunkArray<T>(array: T[], size: number): T[][] {
     return chunks;
 }
 
-export async function getDiscordGuilds() {
+export const getDiscordGuilds = withActionContext('getDiscordGuilds', async () => {
     await requireBotAdmin("MANAGE_SYSTEM");
 
     if (!config.BOT_TOKEN) {
@@ -166,9 +167,9 @@ export async function getDiscordGuilds() {
 
         return detailedGuilds.sort((a, b) => (a.approximate_member_count || 0) - (b.approximate_member_count || 0));
     });
-}
+});
 
-export async function leaveDiscordGuild(guildId: string, skipRevalidate = false) {
+export const leaveDiscordGuild = withActionContext('leaveDiscordGuild', async (guildId: string, skipRevalidate = false) => {
     await requireBotAdmin("MANAGE_SYSTEM");
 
     // Protection for GLOBAL alliance
@@ -193,9 +194,9 @@ export async function leaveDiscordGuild(guildId: string, skipRevalidate = false)
         revalidatePath('/admin/discord');
     }
     return { success: true };
-}
+});
 
-export async function cleanupSmallGuilds() {
+export const cleanupSmallGuilds = withActionContext('cleanupSmallGuilds', async () => {
     const guilds = await getDiscordGuilds();
     const smallGuilds = guilds.filter(g => g.approximate_member_count !== undefined && g.approximate_member_count <= 1);
 
@@ -211,4 +212,4 @@ export async function cleanupSmallGuilds() {
 
     revalidatePath('/admin/discord');
     return { success: true, count };
-}
+});

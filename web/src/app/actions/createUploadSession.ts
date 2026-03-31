@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import crypto from 'crypto';
 import { add } from 'date-fns';
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function createUploadSession(fightId: string) {
+export const createUploadSession = withActionContext('createUploadSession', async (fightId: string) => {
   const session = await auth();
   if (!session?.user) throw new Error("Unauthorized");
 
@@ -46,4 +47,4 @@ export async function createUploadSession(fightId: string) {
   });
 
   return `/war-videos/upload?session_token=${token}`;
-}
+});

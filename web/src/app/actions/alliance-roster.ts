@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
+import { withActionContext } from "@/lib/with-request-context";
 
 export type AllianceRosterEntry = {
     playerId: string;
@@ -33,10 +34,10 @@ export type AllianceRosterEntry = {
     }[];
 };
 
-export async function getAllianceRoster(
+export const getAllianceRoster = withActionContext('getAllianceRoster', async (
     allianceId: string, 
     season?: number
-) {
+) => {
     // 1. Fetch all members of the alliance
     const members = await prisma.player.findMany({
         where: { allianceId },
@@ -158,9 +159,9 @@ export async function getAllianceRoster(
     });
 
     return result;
-}
+});
 
-export async function getAllianceTagsAndTactics(allianceId: string) {
+export const getAllianceTagsAndTactics = withActionContext('getAllianceTagsAndTactics', async (allianceId: string) => {
      const latestWar = await prisma.war.findFirst({
         where: { allianceId },
         orderBy: { createdAt: 'desc' }
@@ -206,4 +207,4 @@ export async function getAllianceTagsAndTactics(allianceId: string) {
     });
 
     return { tactics, tags, abilityCategories, abilities, immunities, season };
-}
+});

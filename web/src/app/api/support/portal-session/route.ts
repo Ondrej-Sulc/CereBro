@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { withRouteContext } from "@/lib/with-request-context";
 
 function getBaseUrl(): string {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BOT_BASE_URL;
@@ -12,7 +13,7 @@ function getBaseUrl(): string {
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withRouteContext(async (request: NextRequest): Promise<NextResponse> => {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) {
     return NextResponse.json(
@@ -90,4 +91,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 500 },
     );
   }
-}
+});

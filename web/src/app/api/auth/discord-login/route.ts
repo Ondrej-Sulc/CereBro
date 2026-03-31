@@ -1,26 +1,18 @@
-import { signIn } from "@/auth";
-import { NextRequest } from "next/server";
-import logger, { isAbortedResponse } from "@/lib/logger";
+import { NextRequest, NextResponse } from 'next/server';
+import { withRouteContext } from '@/lib/with-request-context';
 
-export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const redirectTo = searchParams.get("redirectTo") || "/";
+export const GET = withRouteContext(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
-  try {
-    await signIn("discord", { redirectTo });
-  } catch (error: any) {
-    // Check for internal Next.js redirect errors which should be allowed to bubble up
-    if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message?.includes('next_redirect')) {       
-      throw error;
-    }
+  // Discord OAuth2 authorize URL
+  const params = new URLSearchParams({
+    client_id: process.env.AUTH_DISCORD_ID!,
+    redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/discord`,
+    response_type: 'code',
+    scope: 'identify email guilds',
+    state: callbackUrl,
+  });
 
-    // Check for ResponseAborted which is also common during redirects in some Next.js versions
-    if (isAbortedResponse(error)) {
-      logger.trace({ redirectTo }, "Login redirect aborted (expected behavior)");
-      return new Response(null, { status: 204 }); // Return an empty response, Next.js handles the response closure
-    }
-
-    logger.error({ error: { message: error.message, stack: error.stack, name: error.name }, redirectTo }, "Error in discord-login handler");
-    throw error;
-  }
-}
+  return NextResponse.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
+});

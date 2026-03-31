@@ -1,34 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(req: NextRequest) {
+export const GET = withRouteContext(async (req: NextRequest) => {
   const searchParams = req.nextUrl.searchParams;
-  const q = searchParams.get("q");
+  const query = searchParams.get("q");
 
-  if (!q || q.length < 2) {
-    return NextResponse.json({ players: [] });
+  if (!query || query.length < 2) {
+    return NextResponse.json([]);
   }
 
   try {
     const players = await prisma.player.findMany({
       where: {
         ingameName: {
-          contains: q,
+          contains: query,
           mode: "insensitive",
         },
       },
       select: {
         id: true,
         ingameName: true,
-        avatar: true,
+        alliance: {
+          select: {
+            name: true,
+          },
+        },
       },
-      take: 20,
+      take: 10,
     });
 
-    return NextResponse.json({ players });
+    return NextResponse.json(players);
   } catch (error) {
-    logger.error({ error }, "Error searching players");
-    return NextResponse.json({ error: "Failed to search players" }, { status: 500 });
+    logger.error({ error, query }, "Error searching players");
+    return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
-}
+});

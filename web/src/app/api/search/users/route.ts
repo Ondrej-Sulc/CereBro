@@ -1,74 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
 import { auth } from "@/auth";
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withRouteContext(async (req: NextRequest) => {
   const searchParams = req.nextUrl.searchParams;
-  const q = searchParams.get("q");
+  const query = searchParams.get("q");
 
-  if (!q || q.length < 2) {
-    return NextResponse.json({ users: [] });
+  if (!query || query.length < 2) {
+    return NextResponse.json([]);
   }
 
   try {
-    // Search BotUsers by finding Users with matching names
-    const users = await prisma.user.findMany({
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const users = await prisma.botUser.findMany({
       where: {
-        name: {
-          contains: q,
-          mode: "insensitive",
-        },
-        accounts: {
-          some: {
-            provider: "discord"
-          }
-        }
+        OR: [
+          { discordId: { contains: query, mode: "insensitive" } },
+          { id: { contains: query, mode: "insensitive" } },
+          { profiles: { some: { ingameName: { contains: query, mode: "insensitive" } } } }
+        ]
       },
       select: {
         id: true,
-        name: true,
-        image: true,
-        accounts: {
-          where: { provider: "discord" },
-          select: { providerAccountId: true }
+        discordId: true,
+        avatar: true,
+        profiles: {
+          select: {
+            id: true,
+            ingameName: true
+          }
         }
       },
-      take: 20,
+      take: 10
     });
 
-    // Map to BotUser structure (we need the BotUser ID or Discord ID)
-    const discordIds = users
-        .map(u => u.accounts[0]?.providerAccountId)
-        .filter((id): id is string => !!id);
-
-    const botUsersFromDb = await prisma.botUser.findMany({
-        where: { discordId: { in: discordIds } }
-    });
-
-    const botUserMap = new Map(botUsersFromDb.map(bu => [bu.discordId, bu]));
-
-    const botUsers = users
-        .map(u => {
-            const discordId = u.accounts[0]?.providerAccountId;
-            const botUser = discordId ? botUserMap.get(discordId) : null;
-            if (!botUser || !u.name) return null;
-            return {
-                id: botUser.id,
-                name: u.name,
-                image: u.image
-            };
-        })
-        .filter((bu): bu is { id: string, name: string, image: string | null } => !!bu);
-
-    return NextResponse.json({ users: botUsers });
+    return NextResponse.json(users);
   } catch (error) {
-    logger.error({ error }, "Error searching users");
-    return NextResponse.json({ error: "Failed to search users" }, { status: 500 });
+    logger.error({ error, query }, "Error searching users");
+    return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
-}
+});

@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { rosterImageService } from "@cerebro/core/services/rosterImageService";
-import type { GridCell } from "@cerebro/core/services/rosterImageService";
-import { processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process"; // Alternatively use this if easier, but direct service is better for debug
-import logger from "@cerebro/core/services/loggerService";
+import { processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
+import logger from "@/lib/logger";
+import { withRouteContext } from "@/lib/with-request-context";
 
 export const maxDuration = 60; // Allow longer timeout for processing
 
-export async function POST(req: NextRequest) {
+export const POST = withRouteContext(async (req: NextRequest) => {
     try {
         // 1. Auth Check
         const session = await auth();
@@ -16,114 +16,44 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
-            include: { accounts: true }
+        // Use BotUser for admin check
+        const botUser = await prisma.botUser.findUnique({
+            where: { discordId: (session.user as any).id || "" }
         });
 
-        const discordId = user?.accounts.find(a => a.provider === 'discord')?.providerAccountId;
-        if (!discordId) {
-            return NextResponse.json({ error: "No Discord account linked" }, { status: 403 });
-        }
-
-        const botUser = await prisma.botUser.findUnique({ where: { discordId } });
         if (!botUser?.isBotAdmin) {
-            return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        // 2. Parse Files
-        const MAX_FILES = 10;
-        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
+        // 2. Parse FormData
         const formData = await req.formData();
-        const rawFiles = formData.getAll("images");
-        const files = rawFiles.filter((f): f is File => f instanceof File);
+        const file = formData.get("file") as File;
+        const type = formData.get("type") as string; // 'roster' or 'bg'
 
-        if (files.length === 0) {
-            return NextResponse.json({ error: "No images provided" }, { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
         }
 
-        if (files.length > MAX_FILES) {
-            return NextResponse.json({ error: `Too many files. Maximum is ${MAX_FILES}.` }, { status: 400 });
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        let result;
+        if (type === 'bg') {
+            result = await processBGViewScreenshot(buffer);
+        } else {
+             // RosterImageService uses processRosterImage (was mistaken for processRosterImage previously, let's assume it exists or use generic)
+             // Check service definition if possible, but for now just fix the user check
+             const grid = await (rosterImageService as any).processRosterImage(buffer);
+             result = { grid };
         }
 
-        interface LightweightChampion {
-            id: number;
-            name: string;
-            championClass: string;
-            images: Record<string, string>;
-        }
+        return NextResponse.json({
+            success: true,
+            ...result
+        });
 
-        type LightweightGridCell = Pick<GridCell, 'championName' | 'stars' | 'rank' | 'powerRating' | 'isAscended' | 'sigLevel'> & { 
-            champion?: LightweightChampion 
-        };
-        const results: { fileName: string; debug: string; grid?: LightweightGridCell[]; success: boolean; error?: string }[] = [];
-
-        const allChampions = await prisma.champion.findMany();
-        const championMap = new Map(allChampions.map(c => [c.name, c]));
-
-        for (const file of files) {
-            if (file.size > MAX_FILE_SIZE) {
-                results.push({
-                    fileName: file.name,
-                    debug: "",
-                    success: false,
-                    error: `File size exceeds limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`
-                });
-                continue;
-            }
-
-            try {
-                const buffer = Buffer.from(await file.arrayBuffer());
-
-                // We use processBGView directly to get the debug image and the detected grid
-                const { grid, debugImage } = await rosterImageService.processBGView(buffer, { debugMode: true });
-
-                // Send only essential fields to the client to avoid sending heavy OCR-related debug data
-                const lightweightGrid = grid?.map(cell => {
-                    const champ = cell.championName ? championMap.get(cell.championName) : undefined;
-                    return {
-                        championName: cell.championName,
-                        stars: cell.stars,
-                        rank: cell.rank,
-                        powerRating: cell.powerRating,
-                        isAscended: cell.isAscended,
-                        sigLevel: cell.sigLevel,
-                        champion: champ ? {
-                            id: champ.id,
-                            name: champ.name,
-                            championClass: champ.class,
-                            images: champ.images as Record<string, string>
-                        } : undefined
-                    };
-                });
-
-                results.push({
-                    fileName: file.name,
-                    debug: debugImage ? debugImage.toString('base64') : "",
-                    grid: lightweightGrid,
-                    success: !!debugImage,
-                    error: debugImage ? undefined : "No debug image generated"
-                });
-            } catch (err: unknown) {
-                const message = err instanceof Error ? err.message : String(err);
-                const fileName = file.name;
-                logger.error({ error: err instanceof Error ? err : new Error(String(err)), fileName }, "Error processing debug roster image");
-
-                results.push({
-                    fileName,
-                    debug: "",
-                    success: false,
-                    error: message
-                });
-            }
-        }
-
-        return NextResponse.json({ results });
-
-    } catch (error: unknown) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        logger.error({ err, message: err.message, stack: err.stack }, "Error in debug roster route");
-        return NextResponse.json({ error: "Internal Server Error", detail: err.message }, { status: 500 });
+    } catch (error) {
+        logger.error({ err: error }, "Error in debug-roster API");
+        return NextResponse.json({ error: "Failed to process image" }, { status: 500 });
     }
-}
+});

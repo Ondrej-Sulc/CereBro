@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import { getFromCache } from '@/lib/cache';
 import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
+import { withRouteContext } from "@/lib/with-request-context";
 
 // Cache node data for 1 hour as it's structurally static
 const NODES_CACHE_TTL = 3600;
 
-export async function GET(request: Request) {
+export const GET = withRouteContext(async (request) => {
   const { searchParams } = new URL(request.url);
   const warId = searchParams.get('warId');
   const planId = searchParams.get('planId');
@@ -73,8 +74,8 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(nodes);
-  } catch (error) {
-    logger.error({ error }, "Error fetching war nodes");
+    } catch (error) {
+    logger.error({ error }, "Error fetching nodes");
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
-  }
-}
+    }
+    });

@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma"
 import { ensureAdmin } from "../actions"
 import { revalidatePath } from "next/cache"
+import { withActionContext } from "@/lib/with-request-context"
 
-export async function cleanupEmptyAlliances() {
+export const cleanupEmptyAlliances = withActionContext('cleanupEmptyAlliances', async () => {
   await ensureAdmin("MANAGE_ALLIANCES")
   
   // Find alliances with no members, excluding the protected GLOBAL alliance
@@ -33,4 +34,4 @@ export async function cleanupEmptyAlliances() {
   revalidatePath("/admin/insights")
   
   return { count: deleted.count }
-}
+});

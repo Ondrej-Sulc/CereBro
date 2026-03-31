@@ -7,8 +7,9 @@ import { ensureAdmin } from "../actions"
 
 import { AdminChampionData } from "./champion-card"
 import { ChampionImages } from "@/types/champion"
+import { withActionContext } from "@/lib/with-request-context"
 
-export async function getChampions(): Promise<AdminChampionData[]> {
+export const getChampions = withActionContext('getChampions', async (): Promise<AdminChampionData[]> => {
   await ensureAdmin("MANAGE_CHAMPIONS")
   const champions = await prisma.champion.findMany({
     select: {
@@ -64,16 +65,16 @@ export async function getChampions(): Promise<AdminChampionData[]> {
           }))
       }))
   }))
-}
+});
 
-export async function getAbilities() {
+export const getAbilities = withActionContext('getAbilities', async () => {
   await ensureAdmin("MANAGE_CHAMPIONS")
   return await prisma.ability.findMany({
     orderBy: { name: 'asc' }
   })
-}
+});
 
-export async function updateChampionDetails(
+export const updateChampionDetails = withActionContext('updateChampionDetails', async (
     id: number,
     data: {
         name: string
@@ -82,7 +83,7 @@ export async function updateChampionDetails(
         releaseDate: Date
         obtainable: string[]
     }
-) {
+) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
 
     if (!Object.values(ChampionClass).includes(data.class as ChampionClass)) {
@@ -101,9 +102,9 @@ export async function updateChampionDetails(
         }
     })
     revalidatePath('/admin/champions')
-}
+});
 
-export async function updateChampionFullAbilities(id: number, fullAbilities: any) {
+export const updateChampionFullAbilities = withActionContext('updateChampionFullAbilities', async (id: number, fullAbilities: any) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
 
     if (fullAbilities) {
@@ -144,15 +145,15 @@ export async function updateChampionFullAbilities(id: number, fullAbilities: any
         data: { fullAbilities }
     })
     revalidatePath('/admin/champions')
-}
+});
 
-export async function updateChampionAbility(
-    linkId: number | undefined, 
-    championId: number, 
-    abilityId: number, 
-    type: AbilityLinkType, 
+export const updateChampionAbility = withActionContext('updateChampionAbility', async (
+    linkId: number | undefined,
+    championId: number,
+    abilityId: number,
+    type: AbilityLinkType,
     source?: string
-) {
+) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
     if (linkId !== undefined) {
         await prisma.championAbilityLink.update({
@@ -185,17 +186,17 @@ export async function updateChampionAbility(
         }
     }
     revalidatePath('/admin/champions')
-}
+});
 
-export async function removeChampionAbility(linkId: number) {
+export const removeChampionAbility = withActionContext('removeChampionAbility', async (linkId: number) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
     await prisma.championAbilityLink.delete({
         where: { id: linkId }
     })
     revalidatePath('/admin/champions')
-}
+});
 
-export async function addSynergy(linkId: number, championId: number) {
+export const addSynergy = withActionContext('addSynergy', async (linkId: number, championId: number) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
     
     // Use upsert to avoid unique constraint error if it already exists
@@ -213,9 +214,9 @@ export async function addSynergy(linkId: number, championId: number) {
         update: {} // Do nothing if already exists
     })
     revalidatePath('/admin/champions')
-}
+});
 
-export async function removeSynergy(linkId: number, championId: number) {
+export const removeSynergy = withActionContext('removeSynergy', async (linkId: number, championId: number) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
     await prisma.championAbilitySynergy.deleteMany({
         where: {
@@ -224,13 +225,13 @@ export async function removeSynergy(linkId: number, championId: number) {
         }
     })
     revalidatePath('/admin/champions')
-}
+});
 
-export async function saveChampionAttacks(
-    championId: number, 
-    attackType: AttackType, 
+export const saveChampionAttacks = withActionContext('saveChampionAttacks', async (
+    championId: number,
+    attackType: AttackType,
     hits: { properties: string[] }[]
-) {
+) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
 
     // Input Validation Limits
@@ -293,4 +294,4 @@ export async function saveChampionAttacks(
     });
     
     revalidatePath('/admin/champions');
-}
+});

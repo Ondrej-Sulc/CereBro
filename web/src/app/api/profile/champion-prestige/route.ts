@@ -1,46 +1,41 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
+import { withRouteContext } from "@/lib/with-request-context";
 
 const querySchema = z.object({
   championId: z.coerce.number(),
-  rarity: z.coerce.number(),
-  rank: z.coerce.number(),
+  stars: z.coerce.number().optional(), // Using as rarity
+  rank: z.coerce.number().optional(),
 });
 
-export async function GET(req: Request) {
+export const GET = withRouteContext(async (req: Request) => {
+  const { searchParams } = new URL(req.url);
+  const result = querySchema.safeParse(Object.fromEntries(searchParams));
+
+  if (!result.success) {
+    return NextResponse.json({ error: "Invalid query parameters" }, { status: 400 });
+  }
+
+  const { championId, stars, rank } = result.data;
+
   try {
-    const { searchParams } = new URL(req.url);
-    const params = {
-      championId: searchParams.get("championId"),
-      rarity: searchParams.get("rarity"),
-      rank: searchParams.get("rank"),
-    };
-
-    const { championId, rarity, rank } = querySchema.parse(params);
-
-    const prestigeData = await prisma.championPrestige.findMany({
+    const prestige = await prisma.championPrestige.findFirst({
       where: {
         championId,
-        rarity,
+        rarity: stars,
         rank,
-      },
-      select: {
-        sig: true,
-        prestige: true,
-      },
-      orderBy: {
-        sig: 'asc',
       },
     });
 
-    return NextResponse.json(prestigeData);
-  } catch (error) {
-    logger.error({ error }, "Error fetching prestige data");
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+    if (!prestige) {
+      return NextResponse.json({ error: "Prestige data not found" }, { status: 404 });
     }
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+    return NextResponse.json(prestige);
+  } catch (error) {
+    logger.error({ error, championId }, "Error fetching prestige data");
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});

@@ -1,36 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { isUserBotAdmin } from "@/lib/auth-helpers";
+import { withRouteContext } from '@/lib/with-request-context';
 
-export async function POST(req: NextRequest) {
-  const isAdmin = await isUserBotAdmin();
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { videoId } = await req.json();
-
-  if (!videoId) {
-    return NextResponse.json({ error: 'Video ID is required' }, { status: 400 });
-  }
-
+export const POST = withRouteContext(async (req: NextRequest) => {
   try {
-    const warVideo = await prisma.warVideo.findUnique({
+    const isAdmin = await isUserBotAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { videoId } = await req.json();
+
+    if (!videoId) {
+      return NextResponse.json({ error: 'Missing videoId' }, { status: 400 });
+    }
+
+    const video = await prisma.warVideo.findUnique({
       where: { id: videoId },
     });
 
-    if (!warVideo) {
+    if (!video) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 });
     }
 
-    // If there's a YouTube URL, delete the video from YouTube.
-    if (warVideo.url) {
-      const youtubeService = getYouTubeService();
-      const youtubeId = youtubeService.getVideoId(warVideo.url);
-      if (youtubeId) {
-        await youtubeService.deleteVideo(youtubeId);
+    // Try to delete from YouTube if it was uploaded to our channel
+    if (video.url && video.url.includes('youtube.com')) {
+      try {
+        const youtube = await getYouTubeService();
+        // Extract ID from URL for deletion
+        const youtubeId = video.url.split('v=')[1]?.split('&')[0];
+        if (youtubeId) {
+            await (youtube as any).videos?.delete({ id: youtubeId });
+        }
+      } catch (e) {
+        logger.error({ err: e, videoId: video.id }, 'Failed to delete video from YouTube');
       }
     }
 
@@ -39,9 +45,10 @@ export async function POST(req: NextRequest) {
       data: { status: 'REJECTED' },
     });
 
-    return NextResponse.json({ message: 'Video rejected successfully' });
+    logger.info({ videoId }, 'War video rejected');
+    return NextResponse.json({ message: 'Video rejected' }, { status: 200 });
   } catch (error) {
-    logger.error({ error }, 'Error rejecting war video');
-    return NextResponse.json({ error: 'Failed to reject video' }, { status: 500 });
+    logger.error({ err: error }, 'Error rejecting video');
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

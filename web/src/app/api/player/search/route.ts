@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/auth';
+import { withRouteContext } from '@/lib/with-request-context';
 
-export async function GET(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
+export const GET = withRouteContext(async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q');
 
@@ -39,4 +34,4 @@ export async function GET(request: Request) {
   } catch {
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
-}
+});

@@ -1,5 +1,5 @@
 import { PrismaClient, WarMapType, Player, UploadToken, Alliance } from '@prisma/client';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import crypto from 'crypto';
 
 export type ValidationResult = 

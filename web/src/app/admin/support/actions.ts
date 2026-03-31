@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { setMonthlyTargetEur } from "@/lib/support-config";
 import { ensureAdmin } from "../actions";
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function updateMonthlyCostAction(formData: FormData): Promise<void> {
+export const updateMonthlyCostAction = withActionContext('updateMonthlyCostAction', async (formData: FormData): Promise<void> => {
   await ensureAdmin("MANAGE_SYSTEM");
 
   const raw = formData.get("monthly_cost_eur");
@@ -17,4 +18,4 @@ export async function updateMonthlyCostAction(formData: FormData): Promise<void>
   await setMonthlyTargetEur(value);
   revalidatePath("/admin/support");
   revalidatePath("/support");
-}
+});

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import { getCachedChampions } from '@/lib/data/champions';
 import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(request: Request) {
+export const GET = withRouteContext(async (request) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -104,4 +105,5 @@ export async function GET(request: Request) {
     logger.error({ error }, "Error fetching war fights");
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
-}
+});
+

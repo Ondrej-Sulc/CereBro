@@ -1,8 +1,9 @@
 "use server";
 
 import { OpenRouterService, OpenRouterMessage } from "@cerebro/core/services/openRouterService";
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function autoFormatTipsAction(rawTips: string): Promise<{ success: boolean; formattedTips?: string; error?: string }> {
+export const autoFormatTipsAction = withActionContext('autoFormatTipsAction', async (rawTips: string): Promise<{ success: boolean; formattedTips?: string; error?: string }> => {
     if (!rawTips || rawTips.trim().length === 0) {
         return { success: false, error: "Tips are empty." };
     }
@@ -54,4 +55,4 @@ ${rawTips}`
         console.error("Error auto-formatting tips:", error);
         return { success: false, error: error instanceof Error ? error.message : "Failed to contact AI service." };
     }
-}
+});

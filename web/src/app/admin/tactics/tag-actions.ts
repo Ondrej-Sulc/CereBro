@@ -2,8 +2,9 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function searchWarTags(query: string) {
+export const searchWarTags = withActionContext('searchWarTags', async (query: string) => {
   const session = await auth();
   if (!session?.user?.id) return [];
 
@@ -15,4 +16,4 @@ export async function searchWarTags(query: string) {
     take: 20,
     orderBy: { name: 'asc' }
   });
-}
+});

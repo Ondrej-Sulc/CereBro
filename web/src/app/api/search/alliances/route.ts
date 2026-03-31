@@ -1,33 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(req: NextRequest) {
+export const GET = withRouteContext(async (req: NextRequest) => {
   const searchParams = req.nextUrl.searchParams;
-  const q = searchParams.get("q");
+  const query = searchParams.get("q");
 
-  if (!q || q.length < 2) {
-    return NextResponse.json({ alliances: [] });
+  if (!query || query.length < 2) {
+    return NextResponse.json([]);
   }
 
   try {
     const alliances = await prisma.alliance.findMany({
       where: {
         name: {
-          contains: q,
+          contains: query,
           mode: "insensitive",
         },
       },
       select: {
         id: true,
         name: true,
+        _count: {
+          select: {
+            members: true,
+          },
+        },
       },
-      take: 20,
+      take: 10,
     });
 
-    return NextResponse.json({ alliances });
+    return NextResponse.json(alliances);
   } catch (error) {
-    logger.error({ error }, "Error searching alliances");
-    return NextResponse.json({ error: "Failed to search alliances" }, { status: 500 });
+    logger.error({ error, query }, "Error searching alliances");
+    return NextResponse.json({ error: "Search failed" }, { status: 500 });
   }
-}
+});

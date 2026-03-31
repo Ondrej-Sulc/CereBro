@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getFromCache } from '@/lib/cache';
-import loggerService from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
+import { withRouteContext } from '@/lib/with-request-context';
 
-export async function GET() {
+export const GET = withRouteContext(async () => {
   try {
     const nodes = await getFromCache('nodes', 3600, () => {
       return prisma.warNode.findMany({
@@ -19,7 +20,7 @@ export async function GET() {
     });
     return NextResponse.json(nodes, { status: 200 });
   } catch (error) {
-    loggerService.error({ err: error }, 'Error fetching war nodes');
-    return NextResponse.json({ error: 'Failed to fetch war nodes' }, { status: 500 });
+    logger.error({ err: error }, 'Error fetching war nodes');
+    return NextResponse.json({ error: 'Failed to fetch war nodes' }, { status: 500 });       
   }
-}
+});

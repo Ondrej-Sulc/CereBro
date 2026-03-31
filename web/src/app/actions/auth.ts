@@ -1,11 +1,12 @@
 "use server"
 
 import { signIn, signOut } from "@/auth"
+import { withActionContext } from "@/lib/with-request-context"
 
-export async function signOutAction() {
+export const signOutAction = withActionContext('signOutAction', async () => {
   await signOut({ redirectTo: "/" })
-}
+});
 
-export async function signInAction() {
+export const signInAction = withActionContext('signInAction', async () => {
   await signIn("discord")
-}
+});

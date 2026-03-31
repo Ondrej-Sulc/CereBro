@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { clearCache } from "@/lib/cache";
 import { BotJobType } from "@prisma/client";
 import logger from "@/lib/logger";
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function updatePlayerRole(targetPlayerId: string, data: { battlegroup?: number | null, isOfficer?: boolean }) {
+export const updatePlayerRole = withActionContext('updatePlayerRole', async (targetPlayerId: string, data: { battlegroup?: number | null, isOfficer?: boolean }) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) {
         throw new Error("Unauthorized");
@@ -46,7 +47,7 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
     // Create Bot Job for Discord Sync
     await prisma.botJob.create({
         data: {
-            type: BotJobType.UPDATE_MEMBER_ROLES, 
+            type: BotJobType.UPDATE_MEMBER_ROLES,
             payload: { playerId: targetPlayerId },
             status: 'PENDING'
         }
@@ -56,9 +57,9 @@ export async function updatePlayerRole(targetPlayerId: string, data: { battlegro
     revalidatePath('/alliance');
     revalidatePath('/planning', 'layout');
     return { success: true };
-}
+});
 
-export async function updateAllianceColors(colors: { bg1: string, bg2: string, bg3: string }) {
+export const updateAllianceColors = withActionContext('updateAllianceColors', async (colors: { bg1: string, bg2: string, bg3: string }) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) {
         throw new Error("Unauthorized");
@@ -79,9 +80,9 @@ export async function updateAllianceColors(colors: { bg1: string, bg2: string, b
 
     revalidatePath('/alliance');
     return { success: true };
-}
+});
 
-export async function updateAlliancePalette(paletteStyle: string) {
+export const updateAlliancePalette = withActionContext('updateAlliancePalette', async (paletteStyle: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) {
         throw new Error("Unauthorized");
@@ -99,9 +100,9 @@ export async function updateAlliancePalette(paletteStyle: string) {
     revalidatePath('/alliance');
     revalidatePath('/planning', 'layout');
     return { success: true };
-}
+});
 
-export async function updateAllianceSettings(settings: { removeMissingMembers: boolean }) {
+export const updateAllianceSettings = withActionContext('updateAllianceSettings', async (settings: { removeMissingMembers: boolean }) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) {
         throw new Error("Unauthorized");
@@ -120,9 +121,9 @@ export async function updateAllianceSettings(settings: { removeMissingMembers: b
 
     revalidatePath('/alliance');
     return { success: true };
-}
+});
 
-export async function createAlliance(name: string) {
+export const createAlliance = withActionContext('createAlliance', async (name: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
     if (actingUser.allianceId) {
@@ -149,15 +150,15 @@ export async function createAlliance(name: string) {
     revalidatePath('/');
     revalidatePath('/alliance');
     return { success: true, allianceId: alliance.id };
-}
+});
 
-export async function leaveAlliance() {
+export const leaveAlliance = withActionContext('leaveAlliance', async () => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Not in an alliance");
 
     await prisma.player.update({
         where: { id: actingUser.id },
-        data: { 
+        data: {
             allianceId: null,
             battlegroup: null,
             isOfficer: false
@@ -169,9 +170,9 @@ export async function leaveAlliance() {
     revalidatePath('/alliance');
     revalidatePath('/planning', 'layout');
     return { success: true };
-}
+});
 
-export async function removeMember(playerId: string) {
+export const removeMember = withActionContext('removeMember', async (playerId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
     if (!actingUser.isOfficer && !actingUser.isBotAdmin) throw new Error("Insufficient permissions");
@@ -181,7 +182,7 @@ export async function removeMember(playerId: string) {
 
     await prisma.player.update({
         where: { id: playerId },
-        data: { 
+        data: {
             allianceId: null,
             battlegroup: null,
             isOfficer: false
@@ -192,9 +193,9 @@ export async function removeMember(playerId: string) {
     revalidatePath('/alliance');
     revalidatePath('/planning', 'layout');
     return { success: true };
-}
+});
 
-export async function requestToJoinAlliance(allianceId: string) {
+export const requestToJoinAlliance = withActionContext('requestToJoinAlliance', async (allianceId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
     if (actingUser.allianceId) {
@@ -226,9 +227,9 @@ export async function requestToJoinAlliance(allianceId: string) {
     });
 
     return { success: true };
-}
+});
 
-export async function invitePlayerToAlliance(playerId: string) {
+export const invitePlayerToAlliance = withActionContext('invitePlayerToAlliance', async (playerId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
     if (!actingUser.isOfficer && !actingUser.isBotAdmin) throw new Error("Insufficient permissions");
@@ -268,9 +269,9 @@ export async function invitePlayerToAlliance(playerId: string) {
     });
 
     return { success: true };
-}
+});
 
-export async function respondToMembershipRequest(requestId: string, status: 'ACCEPTED' | 'REJECTED') {
+export const respondToMembershipRequest = withActionContext('respondToMembershipRequest', async (requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -351,9 +352,9 @@ export async function respondToMembershipRequest(requestId: string, status: 'ACC
     revalidatePath('/');
     revalidatePath('/planning', 'layout');
     return { success: true };
-}
+});
 
-export async function generateAllianceLinkCode() {
+export const generateAllianceLinkCode = withActionContext('generateAllianceLinkCode', async () => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
     if (!actingUser.isOfficer && !actingUser.isBotAdmin) throw new Error("Insufficient permissions");
@@ -372,4 +373,4 @@ export async function generateAllianceLinkCode() {
 
     revalidatePath('/alliance');
     return { code, expires };
-}
+});

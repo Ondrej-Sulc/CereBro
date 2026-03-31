@@ -1,14 +1,15 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { processRosterScreenshot, processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { withRouteContext } from "@/lib/with-request-context";
 
 export const maxDuration = 60; // Allow 60 seconds for processing
 
-export async function POST(req: NextRequest) {
+export const POST = withRouteContext(async (req: NextRequest) => {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -128,4 +129,4 @@ export async function POST(req: NextRequest) {
     logger.error({ error: err }, "API Error");
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});

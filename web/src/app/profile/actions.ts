@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import logger from "@/lib/logger";
+import { withActionContext } from "@/lib/with-request-context";
 
 async function getAuthenticatedUser() {
   const session = await auth();
@@ -28,7 +29,7 @@ const createProfileSchema = z.object({
   name: z.string().min(1).max(32),
 });
 
-export async function createProfile(name: string) {
+export const createProfile = withActionContext('createProfile', async (name: string) => {
   const user = await getAuthenticatedUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -68,9 +69,9 @@ export async function createProfile(name: string) {
 
   revalidatePath("/profile");
   return { success: true, profile: newProfile };
-}
+});
 
-export async function renameProfile(profileId: string, newName: string) {
+export const renameProfile = withActionContext('renameProfile', async (profileId: string, newName: string) => {
   const user = await getAuthenticatedUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -98,9 +99,9 @@ export async function renameProfile(profileId: string, newName: string) {
 
   revalidatePath("/profile");
   return { success: true };
-}
+});
 
-export async function deleteProfile(profileId: string) {
+export const deleteProfile = withActionContext('deleteProfile', async (profileId: string) => {
   const user = await getAuthenticatedUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -118,7 +119,7 @@ export async function deleteProfile(profileId: string) {
   }
 
   logger.info({ userId: user.id, profileId, profileName: profile.ingameName }, "Deleting profile");
-  
+
   await prisma.$transaction(async (tx) => {
     await tx.player.delete({
       where: { id: profileId }
@@ -128,7 +129,7 @@ export async function deleteProfile(profileId: string) {
     if (user.activeProfileId === profileId) {
       const remaining = user.profiles.filter(p => p.id !== profileId);
       const nextActive = remaining[0];
-      
+
       if (nextActive) {
         await tx.botUser.update({
           where: { id: user.id },
@@ -150,9 +151,9 @@ export async function deleteProfile(profileId: string) {
 
   revalidatePath("/profile");
   return { success: true };
-}
+});
 
-export async function switchProfile(profileId: string) {
+export const switchProfile = withActionContext('switchProfile', async (profileId: string) => {
   const user = await getAuthenticatedUser();
   if (!user) throw new Error("Unauthorized");
 
@@ -164,7 +165,7 @@ export async function switchProfile(profileId: string) {
   }
 
   logger.info({ userId: user.id, profileId, profileName: profile.ingameName }, "Switching profile");
-  
+
   await prisma.$transaction([
     prisma.botUser.update({
       where: { id: user.id },
@@ -183,4 +184,4 @@ export async function switchProfile(profileId: string) {
 
   revalidatePath("/profile", "layout");
   return { success: true };
-}
+});

@@ -7,6 +7,7 @@ import logger from "@/lib/logger";
 import { ChampionClass, QuestPlanStatus } from "@prisma/client";
 import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
 import { QuestWithRelations, QuestSummary } from "@/types/quests";
+import { withActionContext } from "@/lib/with-request-context";
 
 // --- Quest Categories ---
 
@@ -20,7 +21,7 @@ export const getQuestCategories = unstable_cache(
     { tags: ['quest-categories'] }
 );
 
-export async function createQuestCategory(name: string, order: number = 0, parentId?: string) {
+export const createQuestCategory = withActionContext('createQuestCategory', async (name: string, order: number = 0, parentId?: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     await prisma.questCategory.create({
@@ -35,12 +36,12 @@ export async function createQuestCategory(name: string, order: number = 0, paren
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
-}
+});
 
-export async function updateQuestCategory(
+export const updateQuestCategory = withActionContext('updateQuestCategory', async (
     id: string,
     data: { name?: string; order?: number; thumbnailUrl?: string | null; parentId?: string | null }
-) {
+) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     if (data.parentId != null) {
@@ -75,9 +76,9 @@ export async function updateQuestCategory(
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
-}
+});
 
-export async function uploadQuestCategoryThumbnail(categoryId: string, formData: FormData) {
+export const uploadQuestCategoryThumbnail = withActionContext('uploadQuestCategoryThumbnail', async (categoryId: string, formData: FormData) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     const category = await prisma.questCategory.findUnique({ where: { id: categoryId } });
@@ -147,11 +148,11 @@ export async function uploadQuestCategoryThumbnail(categoryId: string, formData:
     revalidatePath('/planning/quests');
 
     return { success: true, url: publicUrl };
-}
+});
 
 // --- Quest Plans ---
 
-export async function getQuestPlans(categoryId?: string, status?: QuestPlanStatus, currentPlayerId?: string): Promise<QuestSummary[]> {
+export const getQuestPlans = withActionContext('getQuestPlans', async (categoryId?: string, status?: QuestPlanStatus, currentPlayerId?: string): Promise<QuestSummary[]> => {
     const plans = await unstable_cache(
         async () => {
             const plans = await prisma.questPlan.findMany({
@@ -266,7 +267,7 @@ export async function getQuestPlans(categoryId?: string, status?: QuestPlanStatu
         ...quest,
         personalProgress: playerProgressMap.get(quest.id) || 0
     }));
-}
+});
 
 export const getQuestPlanById = unstable_cache(
     async (id: string): Promise<QuestWithRelations | null> => {
@@ -362,10 +363,10 @@ export const getQuestPlanById = unstable_cache(
     { tags: ['quest-plan-detail'] }
 );
 
-export async function updateFeaturedPlayers(
+export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', async (
     questPlanId: string,
     playerIds: string[]
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string }> => {
     try {
         await requireBotAdmin("MANAGE_QUESTS");
         const uniquePlayerIds = [...new Set(playerIds)];
@@ -405,7 +406,7 @@ export async function updateFeaturedPlayers(
         console.error(e);
         return { success: false, error: e.message || "Failed to update featured players" };
     }
-}
+});
 
 /**
  * Aggregate champion pick counts per encounter for a quest plan.
@@ -728,7 +729,7 @@ export type QuestPlanCreateInput = {
     creatorIds?: string[];
 };
 
-export async function createQuestPlan(data: QuestPlanCreateInput) {
+export const createQuestPlan = withActionContext('createQuestPlan', async (data: QuestPlanCreateInput) => {
     const actingUser = await requireBotAdmin("MANAGE_QUESTS");
 
     const plan = await prisma.questPlan.create({
@@ -757,7 +758,7 @@ export async function createQuestPlan(data: QuestPlanCreateInput) {
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true, planId: plan.id };
-}
+});
 
 export type QuestPlanUpdateInput = {
     id: string;
@@ -776,7 +777,7 @@ export type QuestPlanUpdateInput = {
     creatorIds?: string[];
 };
 
-export async function updateQuestPlan(data: QuestPlanUpdateInput) {
+export const updateQuestPlan = withActionContext('updateQuestPlan', async (data: QuestPlanUpdateInput) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     await prisma.questPlan.update({
@@ -807,9 +808,9 @@ export async function updateQuestPlan(data: QuestPlanUpdateInput) {
     revalidatePath('/planning/quests');
     revalidatePath(`/planning/quests/${data.id}`);
     return { success: true };
-}
+});
 
-export async function deleteQuestPlan(id: string) {
+export const deleteQuestPlan = withActionContext('deleteQuestPlan', async (id: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     await prisma.questPlan.delete({
@@ -819,9 +820,9 @@ export async function deleteQuestPlan(id: string) {
     revalidatePath('/admin/quests');
     revalidatePath('/planning/quests');
     return { success: true };
-}
+});
 
-export async function uploadQuestBanner(questPlanId: string, formData: FormData) {
+export const uploadQuestBanner = withActionContext('uploadQuestBanner', async (questPlanId: string, formData: FormData) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     const file = formData.get('file');
@@ -864,9 +865,9 @@ export async function uploadQuestBanner(questPlanId: string, formData: FormData)
     revalidatePath(`/planning/quests/${questPlanId}`);
 
     return { success: true, url: publicUrl };
-}
+});
 
-export async function duplicateQuestPlan(id: string) {
+export const duplicateQuestPlan = withActionContext('duplicateQuestPlan', async (id: string) => {
     const actingUser = await requireBotAdmin("MANAGE_QUESTS");
 
     const sourcePlan = await prisma.questPlan.findUnique({
@@ -930,9 +931,9 @@ export async function duplicateQuestPlan(id: string) {
 
     revalidatePath('/admin/quests');
     return { success: true, planId: newPlan.id };
-}
+});
 
-export async function clearRecommendedChampionsInQuest(id: string) {
+export const clearRecommendedChampionsInQuest = withActionContext('clearRecommendedChampionsInQuest', async (id: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     const encounters = await prisma.questEncounter.findMany({
@@ -958,11 +959,11 @@ export async function clearRecommendedChampionsInQuest(id: string) {
     revalidatePath(`/admin/quests/${id}`);
     revalidatePath(`/planning/quests/${id}`);
     return { success: true };
-}
+});
 
 // --- User Progress / Selections ---
 
-export async function savePlayerQuestCounter(questPlanId: string, questEncounterId: string, selectedChampionId: number | null) {
+export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter', async (questPlanId: string, questEncounterId: string, selectedChampionId: number | null) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -1033,12 +1034,12 @@ export async function savePlayerQuestCounter(questPlanId: string, questEncounter
     }
 
     return { success: true };
-}
+});
 
 /**
  * Clear all counter selections for a player's quest plan.
  */
-export async function clearAllQuestCounters(questPlanId: string) {
+export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', async (questPlanId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -1064,13 +1065,13 @@ export async function clearAllQuestCounters(questPlanId: string) {
     }
 
     return { success: true };
-}
+});
 
 /**
  * Save or remove a synergy champion for a player's quest plan.
  * Synergy champions are not assigned to any specific encounter but count towards the team limit.
  */
-export async function savePlayerQuestSynergy(questPlanId: string, championId: number, isRemoving: boolean = false) {
+export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy', async (questPlanId: string, championId: number, isRemoving: boolean = false) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -1172,7 +1173,7 @@ export async function savePlayerQuestSynergy(questPlanId: string, championId: nu
     revalidateTag('quest-plan-detail', 'default');
 
     return { success: true };
-}
+});
 
 // --- Quest Encounters ---
 
@@ -1190,7 +1191,7 @@ export type QuestEncounterCreateInput = {
     nodeModifierIds?: string[];
 };
 
-export async function createQuestEncounter(data: QuestEncounterCreateInput) {
+export const createQuestEncounter = withActionContext('createQuestEncounter', async (data: QuestEncounterCreateInput) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     if (data.defenderId) {
@@ -1232,9 +1233,9 @@ export async function createQuestEncounter(data: QuestEncounterCreateInput) {
     revalidatePath(`/admin/quests/${data.questPlanId}`);
     revalidatePath(`/planning/quests/${data.questPlanId}`);
     return { success: true, encounterId: encounter.id };
-}
+});
 
-export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds: (number | null)[], startSequence: number) {
+export const bulkCreateQuestEncounters = withActionContext('bulkCreateQuestEncounters', async (questPlanId: string, defenderIds: (number | null)[], startSequence: number) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     const nonNullDefenderIds = defenderIds.filter((id): id is number => id !== null);
@@ -1267,7 +1268,7 @@ export async function bulkCreateQuestEncounters(questPlanId: string, defenderIds
     revalidatePath(`/planning/quests/${questPlanId}`);
     revalidateTag('quest-plan-detail', 'default');
     return { success: true, count: encounters.length };
-}
+});
 
 const IGNORED_NODE_TITLES = new Set(["champion boost", "health", "warning"]);
 
@@ -1280,7 +1281,7 @@ export type BulkNodeImportResult = {
     nodesSkipped: number;
 };
 
-export async function bulkImportNodeModifiersFromJson(questPlanId: string, jsonData: string) {
+export const bulkImportNodeModifiersFromJson = withActionContext('bulkImportNodeModifiersFromJson', async (questPlanId: string, jsonData: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     let parsed: { champion: string; nodes: { title: string; description: string }[] }[];
@@ -1394,7 +1395,7 @@ export async function bulkImportNodeModifiersFromJson(questPlanId: string, jsonD
     revalidatePath(`/planning/quests/${questPlanId}`);
     revalidateTag('quest-plan-detail', 'default');
     return { success: true, results };
-}
+});
 
 export type QuestEncounterUpdateInput = {
     id: string;
@@ -1411,7 +1412,7 @@ export type QuestEncounterUpdateInput = {
     nodeModifierIds?: string[];
 };
 
-export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
+export const updateQuestEncounter = withActionContext('updateQuestEncounter', async (data: QuestEncounterUpdateInput) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     if (data.defenderId) {
@@ -1460,9 +1461,9 @@ export async function updateQuestEncounter(data: QuestEncounterUpdateInput) {
     revalidatePath(`/admin/quests/${data.questPlanId}`);
     revalidatePath(`/planning/quests/${data.questPlanId}`);
     return { success: true };
-}
+});
 
-export async function deleteQuestEncounter(questPlanId: string, encounterId: string) {
+export const deleteQuestEncounter = withActionContext('deleteQuestEncounter', async (questPlanId: string, encounterId: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     const existingEncounter = await prisma.questEncounter.findUnique({ where: { id: encounterId } });
@@ -1477,9 +1478,9 @@ export async function deleteQuestEncounter(questPlanId: string, encounterId: str
     revalidatePath(`/admin/quests/${questPlanId}`);
     revalidatePath(`/planning/quests/${questPlanId}`);
     return { success: true };
-}
+});
 
-export async function reorderQuestEncounters(questPlanId: string, encounterIds: string[]) {
+export const reorderQuestEncounters = withActionContext('reorderQuestEncounters', async (questPlanId: string, encounterIds: string[]) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
     // Verify ownership and existence
@@ -1514,7 +1515,7 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
     revalidateTag('quest-plan-detail', 'default');
     
     return { success: true };
-}
+});
 
 // --- Sharing & Public Viewing ---
 
@@ -1522,7 +1523,7 @@ export async function reorderQuestEncounters(questPlanId: string, encounterIds: 
  * Fetch a player's quest plan for read-only viewing. No auth required.
  * Used by share links and player profile quest views.
  */
-export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
+export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPlanForViewing', async (playerQuestPlanId: string) => {
     const playerPlan = await prisma.playerQuestPlan.findUnique({
         where: { id: playerQuestPlanId },
         include: {
@@ -1637,13 +1638,13 @@ export async function getPlayerQuestPlanForViewing(playerQuestPlanId: string) {
             Array.from(rosterMap.entries())
         ) as Record<string, any>
     };
-}
+});
 
 /**
  * Fetch all quest plans with at least one selection for a given player.
  * No auth required — for the public player profile page.
  */
-export async function getPlayerQuestPlansForProfile(playerId: string) {
+export const getPlayerQuestPlansForProfile = withActionContext('getPlayerQuestPlansForProfile', async (playerId: string) => {
     const plans = await prisma.playerQuestPlan.findMany({
         where: {
             playerId,
@@ -1681,13 +1682,13 @@ export async function getPlayerQuestPlansForProfile(playerId: string) {
     });
 
     return plans;
-}
+});
 
 /**
  * Get or create the PlayerQuestPlan ID for the current user on a specific quest.
  * Used by the "Share" button to generate a shareable URL.
  */
-export async function getShareablePlanId(questPlanId: string) {
+export const getShareablePlanId = withActionContext('getShareablePlanId', async (questPlanId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -1716,4 +1717,4 @@ export async function getShareablePlanId(questPlanId: string) {
     });
 
     return playerPlan.id;
-}
+});

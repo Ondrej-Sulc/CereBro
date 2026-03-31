@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireBotAdmin } from "@/lib/auth-helpers";
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function addTactic(season: number, minTier: number | undefined, maxTier: number | undefined, attackTag: string, defenseTag: string, name: string) {
+export const addTactic = withActionContext('addTactic', async (season: number, minTier: number | undefined, maxTier: number | undefined, attackTag: string, defenseTag: string, name: string) => {
     // Input Validation
     if (season <= 0 || !Number.isInteger(season)) {
         throw new Error("Season must be a positive integer.");
@@ -74,9 +75,9 @@ export async function addTactic(season: number, minTier: number | undefined, max
     });
 
     revalidatePath('/admin/tactics');
-}
+});
 
-export async function deleteTactic(id: string) {
+export const deleteTactic = withActionContext('deleteTactic', async (id: string) => {
     await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warTactic.delete({
@@ -84,4 +85,4 @@ export async function deleteTactic(id: string) {
     });
 
     revalidatePath('/admin/tactics');
-}
+});

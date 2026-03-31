@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { Prisma } from "@prisma/client";
+import { withRouteContext } from "@/lib/with-request-context";
 
 const addSchema = z.object({
   championId: z.number().int().min(1),
@@ -66,7 +67,7 @@ async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchem
     });
 }
 
-export async function POST(req: Request) {
+export const POST = withRouteContext(async (req: Request) => {
   try {
     const player = await getUserPlayerWithAlliance();
     if (!player) {
@@ -99,4 +100,4 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});

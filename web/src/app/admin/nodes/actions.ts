@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { WarMapType } from "@prisma/client";
 import { requireBotAdmin } from "@/lib/auth-helpers";
+import { withActionContext } from "@/lib/with-request-context";
 
-export async function searchModifiers(query: string) {
+export const searchModifiers = withActionContext('searchModifiers', async (query: string) => {
     const session = await auth();
     if (!session?.user?.id) return [];
 
@@ -21,16 +22,16 @@ export async function searchModifiers(query: string) {
         },
         take: 20
     });
-}
+});
 
-export async function addAllocation(
-    warNodeId: number, 
-    nodeModifierId: string, 
-    minTier: number = 0, 
-    maxTier: number = 0, 
+export const addAllocation = withActionContext('addAllocation', async (
+    warNodeId: number,
+    nodeModifierId: string,
+    minTier: number = 0,
+    maxTier: number = 0,
     season: number = 0,
     mapType: WarMapType = WarMapType.STANDARD
-) {
+) => {
     await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warNodeAllocation.create({
@@ -45,9 +46,9 @@ export async function addAllocation(
     });
 
     revalidatePath("/admin/nodes");
-}
+});
 
-export async function updateAllocation(
+export const updateAllocation = withActionContext('updateAllocation', async (
     allocationId: string,
     data: {
         nodeModifierId?: string;
@@ -56,7 +57,7 @@ export async function updateAllocation(
         season?: number;
         mapType?: WarMapType;
     }
-) {
+) => {
     await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warNodeAllocation.update({
@@ -65,16 +66,16 @@ export async function updateAllocation(
     });
 
     revalidatePath("/admin/nodes");
-}
+});
 
-export async function copyAllocations(
+export const copyAllocations = withActionContext('copyAllocations', async (
     warNodeId: number,
     sourceMinTier: number | null,
     sourceMaxTier: number | null,
     targetMinTier: number | null,
     targetMaxTier: number | null,
     mapType: WarMapType
-) {
+) => {
     await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     const sourceAllocations = await prisma.warNodeAllocation.findMany({
@@ -107,15 +108,15 @@ export async function copyAllocations(
 
     revalidatePath("/admin/nodes");
     return { count: result.count, totalFound: sourceAllocations.length };
-}
+});
 
-export async function massCopyAllocations(
+export const massCopyAllocations = withActionContext('massCopyAllocations', async (
     sourceMinTier: number | null,
     sourceMaxTier: number | null,
     targetMinTier: number | null,
     targetMaxTier: number | null,
     mapType: WarMapType
-) {
+) => {
     await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     const sourceAllocations = await prisma.warNodeAllocation.findMany({
@@ -147,9 +148,9 @@ export async function massCopyAllocations(
 
     revalidatePath("/admin/nodes");
     return { count: result.count, totalFound: sourceAllocations.length };
-}
+});
 
-export async function removeAllocation(allocationId: string) {
+export const removeAllocation = withActionContext('removeAllocation', async (allocationId: string) => {
     await requireBotAdmin("MANAGE_WAR_CONFIG");
 
     await prisma.warNodeAllocation.delete({
@@ -157,4 +158,4 @@ export async function removeAllocation(allocationId: string) {
     });
 
     revalidatePath("/admin/nodes");
-}
+});

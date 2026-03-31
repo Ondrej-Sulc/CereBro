@@ -15,6 +15,7 @@ import { MapImageService, NodeAssignment, LegendItem } from "@cerebro/core/servi
 import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { withActionContext } from "@/lib/with-request-context";
 
 export interface ExtraChampion {
   id: string;
@@ -39,7 +40,7 @@ const createWarSchema = z.object({
   mapType: z.nativeEnum(WarMapType).optional(),
 });
 
-export async function getGuildChannels(allianceId: string): Promise<DiscordChannel[]> {
+export const getGuildChannels = withActionContext('getGuildChannels', async (allianceId: string): Promise<DiscordChannel[]> => {
     const player = await getUserPlayerWithAlliance();
     if (!player || (!player.isOfficer && !player.isBotAdmin)) {
          throw new Error("Unauthorized");
@@ -75,9 +76,9 @@ export async function getGuildChannels(allianceId: string): Promise<DiscordChann
     return channels
         .filter(c => c.type === 0 || c.type === 5)
         .sort((a, b) => a.name.localeCompare(b.name));
-}
+});
 
-export async function getActiveTactic(season: number, tier: number) {
+export const getActiveTactic = withActionContext('getActiveTactic', async (season: number, tier: number) => {
     const session = await auth();
     if (!session?.user?.id) return null;
 
@@ -94,11 +95,11 @@ export async function getActiveTactic(season: number, tier: number) {
     });
 
     return tactic;
-}
+});
 
 export type WarProgress = Record<number, { total: number; planned: number; missingNodes: number[] }>;
 
-export async function getWarProgress(warId: string): Promise<WarProgress | null> {
+export const getWarProgress = withActionContext('getWarProgress', async (warId: string): Promise<WarProgress | null> => {
   const player = await getUserPlayerWithAlliance();
   if (!player) return null;
 
@@ -145,9 +146,9 @@ export async function getWarProgress(warId: string): Promise<WarProgress | null>
   });
 
   return progress;
-}
+});
 
-export async function createWar(formData: FormData) {
+export const createWar = withActionContext('createWar', async (formData: FormData) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
@@ -204,11 +205,11 @@ export async function createWar(formData: FormData) {
   });
 
   redirect(`/planning/${war.id}`);
-}
+});
 
-export async function updateWarFight(updatedFight: Partial<WarFight> & {
+export const updateWarFight = withActionContext('updateWarFight', async (updatedFight: Partial<WarFight> & {
   prefightUpdates?: { championId: number; playerId?: string | null }[]
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string }> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -361,9 +362,9 @@ export async function updateWarFight(updatedFight: Partial<WarFight> & {
   }
 
   return { success: true };
-}
+});
 
-export async function getPlayerRoster(playerId: string) {
+export const getPlayerRoster = withActionContext('getPlayerRoster', async (playerId: string) => {
   const requester = await getUserPlayerWithAlliance();
   
   if (!requester) return [];
@@ -394,9 +395,9 @@ export async function getPlayerRoster(playerId: string) {
       { champion: { name: 'asc' } }
     ]
   });
-}
+});
 
-export async function getOwnersOfChampion(championId: number, allianceId: string, battlegroup?: number) {
+export const getOwnersOfChampion = withActionContext('getOwnersOfChampion', async (championId: number, allianceId: string, battlegroup?: number) => {
   const requester = await getUserPlayerWithAlliance();
 
   if (!requester) return [];
@@ -423,9 +424,9 @@ export async function getOwnersOfChampion(championId: number, allianceId: string
       { player: { ingameName: 'asc' } }
     ]
   });
-}
+});
 
-export async function updateWarStatus(warId: string, status: WarStatus, data?: { result?: WarResult; enemyDeaths?: number }) {
+export const updateWarStatus = withActionContext('updateWarStatus', async (warId: string, status: WarStatus, data?: { result?: WarResult; enemyDeaths?: number }) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -467,9 +468,9 @@ export async function updateWarStatus(warId: string, status: WarStatus, data?: {
 
   revalidatePath("/planning");
   revalidatePath(`/planning/${warId}`);
-}
+});
 
-export async function deleteWar(warId: string) {
+export const deleteWar = withActionContext('deleteWar', async (warId: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -490,9 +491,9 @@ export async function deleteWar(warId: string) {
   await prisma.war.delete({ where: { id: warId } });
 
   revalidatePath("/planning");
-}
+});
 
-export async function addExtraChampion(warId: string, battlegroup: number, playerId: string, championId: number) {
+export const addExtraChampion = withActionContext('addExtraChampion', async (warId: string, battlegroup: number, playerId: string, championId: number) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -524,9 +525,9 @@ export async function addExtraChampion(warId: string, battlegroup: number, playe
   });
 
   return newExtra;
-}
+});
 
-export async function removeExtraChampion(id: string) {
+export const removeExtraChampion = withActionContext('removeExtraChampion', async (id: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -551,9 +552,9 @@ export async function removeExtraChampion(id: string) {
   }
 
   await prisma.warExtraChampion.delete({ where: { id } });
-}
+});
 
-export async function addWarBan(warId: string, championId: number) {
+export const addWarBan = withActionContext('addWarBan', async (warId: string, championId: number) => {
     const player = await getUserPlayerWithAlliance();
 
     if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -583,9 +584,9 @@ export async function addWarBan(warId: string, championId: number) {
     });
     
     return newBan;
-}
+});
 
-export async function removeWarBan(id: string) {
+export const removeWarBan = withActionContext('removeWarBan', async (id: string) => {
     const player = await getUserPlayerWithAlliance();
 
     if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -608,9 +609,9 @@ export async function removeWarBan(id: string) {
     }
 
     await prisma.warBan.delete({ where: { id } });
-}
+});
 
-export async function getExtraChampions(warId: string, battlegroup: number): Promise<ExtraChampion[]> {
+export const getExtraChampions = withActionContext('getExtraChampions', async (warId: string, battlegroup: number): Promise<ExtraChampion[]> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) return [];
@@ -638,9 +639,9 @@ export async function getExtraChampions(warId: string, battlegroup: number): Pro
       images: e.champion.images as unknown as ChampionImages
     }
   }));
-}
+});
 
-export async function distributePlan(warId: string, battlegroup?: number, targetChannelId?: string) {
+export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -702,9 +703,9 @@ export async function distributePlan(warId: string, battlegroup?: number, target
   });
 
   return { success: true };
-}
+});
 
-export async function updateWarDetails(warId: string, data: Partial<War>) {
+export const updateWarDetails = withActionContext('updateWarDetails', async (warId: string, data: Partial<War>) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -748,9 +749,9 @@ export async function updateWarDetails(warId: string, data: Partial<War>) {
 
   revalidatePath("/planning");
   revalidatePath(`/planning/${warId}`);
-}
+});
 
-export async function getFightVideos(nodeId: number, defenderId: number, attackerId: number) {
+export const getFightVideos = withActionContext('getFightVideos', async (nodeId: number, defenderId: number, attackerId: number) => {
     const session = await auth();
     if (!session?.user?.id) return [];
 
@@ -781,9 +782,9 @@ export async function getFightVideos(nodeId: number, defenderId: number, attacke
         death: hf.death,
         playerName: hf.player?.ingameName
     }));
-}
+});
 
-export async function getWarMapPng(warId: string, battlegroup: number, playerId?: string): Promise<string> {
+export const getWarMapPng = withActionContext('getWarMapPng', async (warId: string, battlegroup: number, playerId?: string): Promise<string> => {
     const player = await getUserPlayerWithAlliance();
     if (!player || (!player.allianceId && !player.isBotAdmin)) {
         throw new Error("Unauthorized");
@@ -1014,4 +1015,4 @@ export async function getWarMapPng(warId: string, battlegroup: number, playerId?
     );
 
     return mapBuffer.toString('base64');
-}
+});

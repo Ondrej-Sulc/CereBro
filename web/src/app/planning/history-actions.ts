@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ChampionImages } from "@/types/champion";
 import { Prisma, WarMapType } from "@prisma/client";
+import { withActionContext } from "@/lib/with-request-context";
 
 export type HistoricalFightStat = {
   attackerId: number;
@@ -41,7 +42,7 @@ interface RawStatRow {
 
 // ... existing imports
 
-export async function getBatchHistoricalCounters(
+export const getBatchHistoricalCounters = withActionContext('getBatchHistoricalCounters', async (
   requests: { nodeNumber: number, defenderId: number }[],
   options: {
       minSeason?: number;
@@ -51,7 +52,7 @@ export async function getBatchHistoricalCounters(
       allianceId?: string;
       mapType?: WarMapType;
   } = {}
-): Promise<Record<number, HistoricalFightStat[]>> {
+): Promise<Record<number, HistoricalFightStat[]>> => {
   const session = await auth();
   if (!session?.user?.id || requests.length === 0) return {};
 
@@ -175,9 +176,9 @@ export async function getBatchHistoricalCounters(
   }
 
   return resultsByNode;
-}
+});
 
-export async function getHistoricalCounters(
+export const getHistoricalCounters = withActionContext('getHistoricalCounters', async (
   nodeNumber: number,
   defenderId: number,
   options: {
@@ -188,7 +189,7 @@ export async function getHistoricalCounters(
       allianceId?: string;
       mapType?: WarMapType;
   } = {}
-): Promise<HistoricalFightStat[]> {
+): Promise<HistoricalFightStat[]> => {
   const session = await auth();
   if (!session?.user?.id) return [];
 
@@ -285,4 +286,5 @@ export async function getHistoricalCounters(
       if (b.solos !== a.solos) return b.solos - a.solos;
       return a.deaths - b.deaths;
   });
-}
+});
+

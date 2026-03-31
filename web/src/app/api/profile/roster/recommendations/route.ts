@@ -5,8 +5,9 @@ import { calculateRosterRecommendations } from "@/lib/roster-recommendation-serv
 import { ChampionClass } from "@prisma/client";
 import { ProfileRosterEntry } from "@/app/profile/roster/types";
 import logger from "@/lib/logger";
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(req: NextRequest) {
+export const GET = withRouteContext(async (req: NextRequest) => {
   const player = await getUserPlayerWithAlliance();
   if (!player) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -74,4 +75,4 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(result);
-}
+});

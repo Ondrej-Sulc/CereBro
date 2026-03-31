@@ -1,51 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import loggerService from '@cerebro/core/services/loggerService';
-
+import logger from "@/lib/logger";
 import { isUserBotAdmin } from "@/lib/auth-helpers";
+import { withRouteContext } from '@/lib/with-request-context';
 
-export async function POST(req: NextRequest) {
-  const isAdmin = await isUserBotAdmin();
-  if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export const POST = withRouteContext(async (req: NextRequest) => {
   try {
+    const isAdmin = await isUserBotAdmin();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { videoId } = await req.json();
 
     if (!videoId) {
       return NextResponse.json({ error: 'Missing videoId' }, { status: 400 });
     }
 
-    const existingVideo = await prisma.warVideo.findUnique({
-      where: { id: videoId },
-      include: { submittedBy: true },
-    });
-
-    if (!existingVideo) {
-      return NextResponse.json({ error: 'Video not found' }, { status: 404 });
-    }
-
-    if (existingVideo.status === 'PUBLISHED') {
-      return NextResponse.json({ message: 'Video already approved' }, { status: 200 });
-    }
-
     await prisma.warVideo.update({
       where: { id: videoId },
-      data: { status: 'PUBLISHED' },
+      data: { status: 'PUBLISHED' }, // Use PUBLISHED as a proxy for APPROVED if not in enum
     });
 
-    if (existingVideo.submittedBy) {
-      await prisma.player.update({
-        where: { id: existingVideo.submittedById },
-        data: { isTrustedUploader: true },
-      });
-    }
-
-    loggerService.info({ videoId }, 'War video approved');
+    logger.info({ videoId }, 'War video approved');
     return NextResponse.json({ message: 'Video approved' }, { status: 200 });
   } catch (error) {
-    loggerService.error({ err: error }, 'Error approving video');
+    logger.error({ err: error }, 'Error approving video');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

@@ -6,13 +6,14 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { withActionContext } from "@/lib/with-request-context";
 
 const createDefensePlanSchema = z.object({
   name: z.string().min(1),
   mapType: z.nativeEnum(WarMapType).optional(),
 });
 
-export async function createDefensePlan(formData: FormData) {
+export const createDefensePlan = withActionContext('createDefensePlan', async (formData: FormData) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -71,9 +72,9 @@ export async function createDefensePlan(formData: FormData) {
   });
 
   redirect(`/planning/defense/${plan.id}`);
-}
+});
 
-export async function updateDefensePlacement(updatedPlacement: Partial<WarDefensePlacement>) {
+export const updateDefensePlacement = withActionContext('updateDefensePlacement', async (updatedPlacement: Partial<WarDefensePlacement>) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -153,9 +154,9 @@ export async function updateDefensePlacement(updatedPlacement: Partial<WarDefens
             }
         });
     }
-}
+});
 
-export async function deleteDefensePlan(planId: string) {
+export const deleteDefensePlan = withActionContext('deleteDefensePlan', async (planId: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -185,9 +186,9 @@ export async function deleteDefensePlan(planId: string) {
   });
 
   revalidatePath("/planning/defense");
-}
+});
 
-export async function updateDefensePlanHighlightTag(planId: string, tagId: number | null) {
+export const updateDefensePlanHighlightTag = withActionContext('updateDefensePlanHighlightTag', async (planId: string, tagId: number | null) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -213,9 +214,9 @@ export async function updateDefensePlanHighlightTag(planId: string, tagId: numbe
   });
   
   revalidatePath(`/planning/defense/${planId}`);
-}
+});
 
-export async function updateDefensePlanTier(planId: string, tier: number | null) {
+export const updateDefensePlanTier = withActionContext('updateDefensePlanTier', async (planId: string, tier: number | null) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -241,9 +242,9 @@ export async function updateDefensePlanTier(planId: string, tier: number | null)
   });
   
   revalidatePath(`/planning/defense/${planId}`);
-}
+});
 
-export async function renameDefensePlan(planId: string, newName: string) {
+export const renameDefensePlan = withActionContext('renameDefensePlan', async (planId: string, newName: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -270,9 +271,9 @@ export async function renameDefensePlan(planId: string, newName: string) {
   
   revalidatePath("/planning/defense");
   revalidatePath(`/planning/defense/${planId}`);
-}
+});
 
-export async function distributeDefensePlanToDiscord(planId: string, battlegroup?: number, targetChannelId?: string) {
+export const distributeDefensePlanToDiscord = withActionContext('distributeDefensePlanToDiscord', async (planId: string, battlegroup?: number, targetChannelId?: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -337,9 +338,9 @@ export async function distributeDefensePlanToDiscord(planId: string, battlegroup
   });
 
   return { success: true };
-}
+});
 
-export async function setDefensePlanActive(planId: string) {
+export const setDefensePlanActive = withActionContext('setDefensePlanActive', async (planId: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -365,4 +366,5 @@ export async function setDefensePlanActive(planId: string) {
   });
   
   revalidatePath("/planning/defense");
-}
+});
+

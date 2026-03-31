@@ -5,8 +5,9 @@ import { ensureAdmin } from "../actions"
 import { revalidatePath } from "next/cache"
 import logger from "@/lib/logger"
 import { AVAILABLE_PERMISSIONS, Permission } from "@/lib/permissions"
+import { withActionContext } from "@/lib/with-request-context"
 
-export async function updateBotUserPermissions(botUserId: string, data: { permissions: string[], isBotAdmin: boolean }) {
+export const updateBotUserPermissions = withActionContext('updateBotUserPermissions', async (botUserId: string, data: { permissions: string[], isBotAdmin: boolean }) => {
   const user = await ensureAdmin("MANAGE_USERS");
 
   // Only actual BotAdmins can grant or revoke BotAdmin status
@@ -38,4 +39,4 @@ export async function updateBotUserPermissions(botUserId: string, data: { permis
     logger.error({ error, botUserId }, "Failed to update user permissions")
     return { success: false, error: "Failed to update permissions" }
   }
-}
+});

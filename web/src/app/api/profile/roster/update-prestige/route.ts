@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
 import { z } from "zod";
+import { withRouteContext } from "@/lib/with-request-context";
 
 const updateSchema = z.object({
   championPrestige: z.number().int().positive(),
 });
 
-export async function POST(req: Request) {
+export const POST = withRouteContext(async (req: Request) => {
   try {
     const player = await getUserPlayerWithAlliance();
     if (!player) {
@@ -58,4 +59,4 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});

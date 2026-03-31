@@ -1,10 +1,22 @@
 import pino from 'pino';
+import { getRequestContext } from './request-context';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   base: {
     env: process.env.NODE_ENV,
     component: 'web-server',
+  },
+  mixin() {
+    const ctx = getRequestContext();
+    if (!ctx) return {};
+    return {
+      correlationId: ctx.correlationId,
+      ...(ctx.userId && { userId: ctx.userId }),
+      ...(ctx.discordId && { discordId: ctx.discordId }),
+      ...(ctx.path && { path: ctx.path }),
+      ...(ctx.action && { action: ctx.action }),
+    };
   },
 });
 
@@ -46,19 +58,30 @@ if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
     originalWarn.apply(console, args);
   };
 
+  // Lazy import to avoid circular dependency (logger -> discord-alert -> logger)
+  const getDiscordAlert = () =>
+    import('./discord-alert').then((m) => m.sendErrorToDiscord);
+
   // Capture unhandled rejections and uncaught exceptions on the server
   process.on('unhandledRejection', (reason, promise) => {
     if (isAbortedResponse(reason)) {
       logger.trace({ reason }, 'Unhandled Rejection (Aborted Response)');
     } else {
       logger.error({ reason, promise }, 'Unhandled Rejection');
+      getDiscordAlert().then((send) =>
+        send({
+          error: reason instanceof Error ? reason : new Error(String(reason)),
+          message: 'Unhandled Promise Rejection',
+        })
+      );
     }
   });
 
   process.on('uncaughtException', (error) => {
     logger.fatal({ error: { message: error.message, stack: error.stack, name: error.name } }, 'Uncaught Exception');
-    // We should allow the process to exit as it's in an unstable state, 
-    // but Next.js usually handles this.
+    getDiscordAlert().then((send) =>
+      send({ error, message: 'Uncaught Exception' })
+    );
   });
 }
 

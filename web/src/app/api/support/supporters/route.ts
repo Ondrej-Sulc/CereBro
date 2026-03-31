@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import logger from "@/lib/logger";
 import { listPublicSupporters } from "@/lib/support-donations";
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(): Promise<NextResponse> {
+export const GET = withRouteContext(async (): Promise<NextResponse> => {
   try {
     const supporters = await listPublicSupporters();
     return NextResponse.json(
@@ -20,4 +21,4 @@ export async function GET(): Promise<NextResponse> {
       { status: 500 },
     );
   }
-}
+});

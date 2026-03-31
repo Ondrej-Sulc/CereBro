@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
+import { withRouteContext } from "@/lib/with-request-context";
 
 const DEFAULT_CURRENCY = "eur";
 const DEFAULT_MIN_AMOUNT = 5;
@@ -57,7 +58,7 @@ function getBaseUrl(): string {
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withRouteContext(async (request: NextRequest): Promise<NextResponse> => {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) {
     return NextResponse.json(
@@ -267,4 +268,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 500 },
     );
   }
-}
+});

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
+import { withRouteContext } from "@/lib/with-request-context";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+export const GET = withRouteContext(async (request) => {
   const { searchParams } = new URL(request.url);
   const planId = searchParams.get('planId');
   const battlegroupParam = searchParams.get('battlegroup');
@@ -95,4 +96,4 @@ export async function GET(request: Request) {
     logger.error({ error }, "Error fetching placements");
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
-}
+});

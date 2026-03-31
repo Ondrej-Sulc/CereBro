@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 
 interface ParsedFormData {
   fields: Record<string, string>;

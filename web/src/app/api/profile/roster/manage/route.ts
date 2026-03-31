@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
-import logger from "@cerebro/core/services/loggerService";
+import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
+import { withRouteContext } from "@/lib/with-request-context";
 
 const updateSchema = z.object({
   id: z.string(),
@@ -19,7 +20,7 @@ const deleteSchema = z.object({
   id: z.string(),
 });
 
-export async function PUT(req: Request) {
+export const PUT = withRouteContext(async (req: Request) => {
   try {
     const player = await getUserPlayerWithAlliance();
     if (!player) {
@@ -82,9 +83,9 @@ export async function PUT(req: Request) {
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: Request) {
+export const DELETE = withRouteContext(async (req: Request) => {
   try {
     const player = await getUserPlayerWithAlliance();
     if (!player) {
@@ -120,4 +121,4 @@ export async function DELETE(req: Request) {
     }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-}
+});

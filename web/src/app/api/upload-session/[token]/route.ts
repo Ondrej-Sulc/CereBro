@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import { add } from 'date-fns';
 import crypto from 'crypto';
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function GET(
-  request: NextRequest,
+export const GET = withRouteContext(async (
+  request,
   context: { params: Promise<{ token: string }> }
-): Promise<NextResponse> {
+) => {
   const resolvedParams = await context.params;
   const { token } = resolvedParams;
 
@@ -122,4 +123,5 @@ export async function GET(
     logger.error({ error: err }, 'Error fetching upload session');
     return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 });
   }
-}
+});
+

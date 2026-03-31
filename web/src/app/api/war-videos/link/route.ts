@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import logger from '@cerebro/core/services/loggerService';
+import logger from "@/lib/logger";
 import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification } from '@/lib/api/submission-helpers';
+import { withRouteContext } from "@/lib/with-request-context";
 
-export async function POST(req: NextRequest) {
+export const POST = withRouteContext(async (req) => {
   try {
     const body = await req.json();
     const { 
@@ -98,4 +99,4 @@ export async function POST(req: NextRequest) {
     logger.error({ error: err }, 'Link error');
     return NextResponse.json({ error: err.message || 'Link failed' }, { status: 500 });
   }
-}
+});

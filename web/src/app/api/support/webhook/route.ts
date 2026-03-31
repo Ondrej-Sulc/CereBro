@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import logger from "@/lib/logger";
 import { upsertSupportDonation } from "@/lib/support-donations";
 import { prisma } from "@/lib/prisma";
+import { withRouteContext } from "@/lib/with-request-context";
 
 function getPaymentIntentId(paymentIntent: string | Stripe.PaymentIntent | null): string | null {
   if (!paymentIntent) return null;
@@ -42,7 +43,7 @@ const CHECKOUT_SESSION_EVENTS = new Set([
   "checkout.session.async_payment_failed",
 ]);
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withRouteContext(async (request: NextRequest): Promise<NextResponse> => {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     logger.error({ error, checkoutSessionId, eventType: event.type }, "Failed to persist support donation webhook");
     return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
-}
+});
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<NextResponse> {
   // Skip the initial invoice — it is already captured by checkout.session.completed
