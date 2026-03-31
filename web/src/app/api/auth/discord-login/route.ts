@@ -12,9 +12,9 @@ export const GET = withRouteContext(async (request: NextRequest) => {
   const rawCallback = searchParams.get('callbackUrl') ?? searchParams.get('redirectTo') ?? '/';
   const callbackUrl = isValidCallbackUrl(rawCallback) ? rawCallback : '/';
 
-  const clientId = process.env.AUTH_DISCORD_ID;
+  const clientId = process.env.DISCORD_CLIENT_ID;
   if (!clientId) {
-    logger.error('AUTH_DISCORD_ID is not set — cannot initiate Discord login');
+    logger.error('DISCORD_CLIENT_ID is not set — cannot initiate Discord login');
     return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
   }
 
