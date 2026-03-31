@@ -99,9 +99,7 @@ export function withRouteContext<
         const response = await handler(...args);
 
         // Attach correlation ID to response headers for client-side tracing
-        if (response instanceof NextResponse) {
-          response.headers.set("x-correlation-id", ctx.correlationId);
-        }
+        response.headers.set("x-correlation-id", ctx.correlationId);
 
         return response;
       } catch (error) {

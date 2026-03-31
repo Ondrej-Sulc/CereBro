@@ -40,8 +40,6 @@ interface RawStatRow {
     sampleFightId: string | null;
 }
 
-// ... existing imports
-
 export const getBatchHistoricalCounters = withActionContext('getBatchHistoricalCounters', async (
   requests: { nodeNumber: number, defenderId: number }[],
   options: {

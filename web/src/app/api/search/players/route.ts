@@ -8,7 +8,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
   const query = searchParams.get("q");
 
   if (!query || query.length < 2) {
-    return NextResponse.json([]);
+    return NextResponse.json({ players: [] });
   }
 
   try {
@@ -31,9 +31,9 @@ export const GET = withRouteContext(async (req: NextRequest) => {
       take: 10,
     });
 
-    return NextResponse.json(players);
+    return NextResponse.json({ players });
   } catch (error) {
     logger.error({ error, query }, "Error searching players");
-    return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    return NextResponse.json({ players: [], error: "Search failed" }, { status: 500 });
   }
 });

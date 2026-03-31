@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@/lib/logger';
 import { isUserBotAdmin } from '@/lib/auth-helpers';
 import { withRouteContext } from '@/lib/with-request-context';
 
@@ -9,7 +10,7 @@ export const GET = withRouteContext(async (
 ) => {
   const isAdmin = await isUserBotAdmin();
   if (!isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const { id } = await params;
@@ -37,7 +38,8 @@ export const GET = withRouteContext(async (
     });
 
     return NextResponse.json(members);
-  } catch {
+  } catch (error) {
+    logger.error({ err: error, allianceId: id }, 'Failed to fetch alliance members');
     return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
   }
 });

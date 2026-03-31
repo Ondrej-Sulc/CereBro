@@ -12,6 +12,17 @@ function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max - 3) + "..." : str;
 }
 
+function safeStringify(value: unknown, space?: number): string {
+  const seen = new WeakSet();
+  return JSON.stringify(value, (_key, val) => {
+    if (typeof val === "object" && val !== null) {
+      if (seen.has(val)) return "[Circular]";
+      seen.add(val);
+    }
+    return val;
+  }, space);
+}
+
 export function sendErrorToDiscord(opts: ErrorAlertOptions): void {
   if (!DISCORD_ERROR_WEBHOOK_URL) return;
 
@@ -49,7 +60,7 @@ export function sendErrorToDiscord(opts: ErrorAlertOptions): void {
   if (opts.extra) {
     fields.push({
       name: "Extra",
-      value: truncate(JSON.stringify(opts.extra, null, 2), 1024),
+      value: truncate(safeStringify(opts.extra, 2), 1024),
       inline: false,
     });
   }
@@ -69,7 +80,8 @@ export function sendErrorToDiscord(opts: ErrorAlertOptions): void {
       username: "CereBro Web Alerts",
       embeds: [embed],
     }),
-  }).catch(() => {
-    // Intentionally swallowed — we cannot import logger here (circular dep)
+  }).catch((e) => {
+    // Use console.error to avoid circular dep with logger
+    console.error("Discord alert failed:", e);
   });
 }

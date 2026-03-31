@@ -27,6 +27,7 @@ export const GET = withRouteContext(async (req: Request) => {
         rarity: stars,
         rank,
       },
+      orderBy: { rank: 'desc' },
     });
 
     if (!prestige) {

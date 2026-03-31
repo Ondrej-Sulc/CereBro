@@ -23,6 +23,9 @@ export const GET = withRouteContext(async (request: Request) => {
           id: true,
           name: true,
         },
+        orderBy: {
+          name: 'asc',
+        },
       }),
     ]);
 

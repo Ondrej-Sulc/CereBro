@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/logger';
 import { withRouteContext } from '@/lib/with-request-context';
+
+function isValidCallbackUrl(url: string): boolean {
+  // Must be a relative path starting with / but not // (protocol-relative)
+  return url.startsWith('/') && !url.startsWith('//');
+}
 
 export const GET = withRouteContext(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const rawCallback = searchParams.get('callbackUrl') ?? searchParams.get('redirectTo') ?? '/';
+  const callbackUrl = isValidCallbackUrl(rawCallback) ? rawCallback : '/';
 
-  // Discord OAuth2 authorize URL
+  const clientId = process.env.AUTH_DISCORD_ID;
+  if (!clientId) {
+    logger.error('AUTH_DISCORD_ID is not set — cannot initiate Discord login');
+    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+  }
+
   const params = new URLSearchParams({
-    client_id: process.env.AUTH_DISCORD_ID!,
+    client_id: clientId,
     redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/discord`,
     response_type: 'code',
     scope: 'identify email guilds',

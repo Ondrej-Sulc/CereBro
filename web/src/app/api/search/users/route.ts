@@ -5,19 +5,19 @@ import { auth } from "@/auth";
 import { withRouteContext } from "@/lib/with-request-context";
 
 export const GET = withRouteContext(async (req: NextRequest) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const searchParams = req.nextUrl.searchParams;
   const query = searchParams.get("q");
 
   if (!query || query.length < 2) {
-    return NextResponse.json([]);
+    return NextResponse.json({ users: [] });
   }
 
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const users = await prisma.botUser.findMany({
       where: {
         OR: [
@@ -28,7 +28,6 @@ export const GET = withRouteContext(async (req: NextRequest) => {
       },
       select: {
         id: true,
-        discordId: true,
         avatar: true,
         profiles: {
           select: {
@@ -40,9 +39,9 @@ export const GET = withRouteContext(async (req: NextRequest) => {
       take: 10
     });
 
-    return NextResponse.json(users);
+    return NextResponse.json({ users });
   } catch (error) {
     logger.error({ error, query }, "Error searching users");
-    return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    return NextResponse.json({ users: [], error: "Search failed" }, { status: 500 });
   }
 });

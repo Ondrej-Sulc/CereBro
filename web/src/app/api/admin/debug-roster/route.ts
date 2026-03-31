@@ -17,9 +17,11 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         }
 
         // Use BotUser for admin check
-        const botUser = await prisma.botUser.findUnique({
-            where: { discordId: (session.user as any).id || "" }
-        });
+        const botUser = session.user.discordId
+            ? await prisma.botUser.findUnique({
+                where: { discordId: session.user.discordId }
+              })
+            : null;
 
         if (!botUser?.isBotAdmin) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -41,9 +43,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         if (type === 'bg') {
             result = await processBGViewScreenshot(buffer);
         } else {
-             // RosterImageService uses processRosterImage (was mistaken for processRosterImage previously, let's assume it exists or use generic)
-             // Check service definition if possible, but for now just fix the user check
-             const grid = await (rosterImageService as any).processRosterImage(buffer);
+             const { grid } = await rosterImageService.processBGView(buffer);
              result = { grid };
         }
 

@@ -5,11 +5,18 @@ import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { isUserBotAdmin } from "@/lib/auth-helpers";
 import { withRouteContext } from '@/lib/with-request-context';
 
+function extractYouTubeId(url: string): string | null {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?.*v=|embed\/|v\/|shorts\/)|youtu\.be\/)([\w-]{11})/
+  );
+  return match?.[1] ?? null;
+}
+
 export const POST = withRouteContext(async (req: NextRequest) => {
   try {
     const isAdmin = await isUserBotAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { videoId } = await req.json();
@@ -27,16 +34,15 @@ export const POST = withRouteContext(async (req: NextRequest) => {
     }
 
     // Try to delete from YouTube if it was uploaded to our channel
-    if (video.url && video.url.includes('youtube.com')) {
-      try {
-        const youtube = await getYouTubeService();
-        // Extract ID from URL for deletion
-        const youtubeId = video.url.split('v=')[1]?.split('&')[0];
-        if (youtubeId) {
-            await (youtube as any).videos?.delete({ id: youtubeId });
+    if (video.url) {
+      const youtubeId = extractYouTubeId(video.url);
+      if (youtubeId) {
+        try {
+          const youtube = getYouTubeService();
+          await youtube.deleteVideo(youtubeId);
+        } catch (e) {
+          logger.error({ err: e, videoId: video.id }, 'Failed to delete video from YouTube');
         }
-      } catch (e) {
-        logger.error({ err: e, videoId: video.id }, 'Failed to delete video from YouTube');
       }
     }
 

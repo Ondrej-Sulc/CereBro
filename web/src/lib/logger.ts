@@ -68,20 +68,27 @@ if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
       logger.trace({ reason }, 'Unhandled Rejection (Aborted Response)');
     } else {
       logger.error({ reason, promise }, 'Unhandled Rejection');
-      getDiscordAlert().then((send) =>
-        send({
-          error: reason instanceof Error ? reason : new Error(String(reason)),
-          message: 'Unhandled Promise Rejection',
-        })
-      );
+      getDiscordAlert()
+        .then((send) =>
+          send({
+            error: reason instanceof Error ? reason : new Error(String(reason)),
+            message: 'Unhandled Promise Rejection',
+          })
+        )
+        .catch(() => { /* swallow — must not trigger another unhandledRejection */ });
     }
   });
 
   process.on('uncaughtException', (error) => {
     logger.fatal({ error: { message: error.message, stack: error.stack, name: error.name } }, 'Uncaught Exception');
-    getDiscordAlert().then((send) =>
-      send({ error, message: 'Uncaught Exception' })
-    );
+    // Best-effort alert before the process may exit — delay shutdown briefly
+    getDiscordAlert()
+      .then((send) => send({ error, message: 'Uncaught Exception' }))
+      .catch(() => { /* swallow — process is already crashing */ })
+      .finally(() => {
+        // Give the fetch a moment to flush before Node exits
+        setTimeout(() => process.exit(1), 500);
+      });
   });
 }
 

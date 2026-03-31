@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import { withRouteContext } from "@/lib/with-request-context";
 
 export const GET = withRouteContext(async (
-  request,
+  request: NextRequest,
   context: { params: Promise<{ token: string }> }
 ) => {
   const resolvedParams = await context.params;

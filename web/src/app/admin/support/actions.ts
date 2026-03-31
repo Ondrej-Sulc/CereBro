@@ -5,14 +5,14 @@ import { setMonthlyTargetEur } from "@/lib/support-config";
 import { ensureAdmin } from "../actions";
 import { withActionContext } from "@/lib/with-request-context";
 
-export const updateMonthlyCostAction = withActionContext('updateMonthlyCostAction', async (formData: FormData): Promise<void> => {
+export const updateMonthlyCostAction = withActionContext('updateMonthlyCostAction', async (formData: FormData) => {
   await ensureAdmin("MANAGE_SYSTEM");
 
   const raw = formData.get("monthly_cost_eur");
   const value = Number(raw);
 
   if (!Number.isFinite(value) || value <= 0 || value > 10000) {
-    return;
+    throw new Error("Invalid value: must be a finite number >0 and <=10000");
   }
 
   await setMonthlyTargetEur(value);

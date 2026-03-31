@@ -8,7 +8,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
   const query = searchParams.get("q");
 
   if (!query || query.length < 2) {
-    return NextResponse.json([]);
+    return NextResponse.json({ alliances: [] });
   }
 
   try {
@@ -31,9 +31,9 @@ export const GET = withRouteContext(async (req: NextRequest) => {
       take: 10,
     });
 
-    return NextResponse.json(alliances);
+    return NextResponse.json({ alliances });
   } catch (error) {
     logger.error({ error, query }, "Error searching alliances");
-    return NextResponse.json({ error: "Search failed" }, { status: 500 });
+    return NextResponse.json({ alliances: [], error: "Search failed" }, { status: 500 });
   }
 });

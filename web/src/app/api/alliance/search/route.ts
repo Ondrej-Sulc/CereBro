@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import logger from '@/lib/logger';
 import { withRouteContext } from '@/lib/with-request-context';
 
 export const GET = withRouteContext(async (request: Request) => {
@@ -29,7 +30,8 @@ export const GET = withRouteContext(async (request: Request) => {
     });
 
     return NextResponse.json(alliances);
-  } catch {
+  } catch (error) {
+    logger.error({ err: error, query: q }, 'Error searching alliances');
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
   }
 });

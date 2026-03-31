@@ -180,6 +180,19 @@ export const removeMember = withActionContext('removeMember', async (playerId: s
     const targetPlayer = await prisma.player.findUnique({ where: { id: playerId } });
     if (!targetPlayer || targetPlayer.allianceId !== actingUser.allianceId) throw new Error("Player not in alliance");
 
+    if (targetPlayer.id === actingUser.id && !actingUser.isBotAdmin) {
+        throw new Error("Cannot remove yourself");
+    }
+
+    if (targetPlayer.isOfficer) {
+        const officerCount = await prisma.player.count({
+            where: { allianceId: actingUser.allianceId, isOfficer: true }
+        });
+        if (officerCount <= 1) {
+            throw new Error("Cannot remove the last officer");
+        }
+    }
+
     await prisma.player.update({
         where: { id: playerId },
         data: {

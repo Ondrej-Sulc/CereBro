@@ -104,14 +104,15 @@ export const POST = withRouteContext(async (req: NextRequest) => {
             }, "Successfully processed roster screenshot");
         }
       } catch (err: unknown) {
-        const error = err as Error;
-        logger.error({ 
-            error: error.message, 
-            stack: error.stack,
+        const message = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error ? err.stack : undefined;
+        logger.error({
+            error: message,
+            stack,
             playerId: player.id,
-            fileName: file.name 
+            fileName: file.name
         }, "Error processing roster screenshot file");
-        errors.push(`File ${file.name}: ${error.message || "Unknown error"}`);
+        errors.push(`File ${file.name}: ${message || "Unknown error"}`);
       }
     }
 

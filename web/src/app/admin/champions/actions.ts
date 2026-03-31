@@ -1,13 +1,20 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { ChampionAbilityLink, AbilityLinkType, AttackType, ChampionClass } from "@prisma/client"
+import { ChampionAbilityLink, AbilityLinkType, AttackType, ChampionClass, Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { ensureAdmin } from "../actions"
 
 import { AdminChampionData } from "./champion-card"
 import { ChampionImages } from "@/types/champion"
 import { withActionContext } from "@/lib/with-request-context"
+
+/**
+ * Full abilities JSON payload.
+ * Expected shape: { signature?: { name: string, ... }, abilities_breakdown?: { title?: string, description?: string }[], ... }
+ * Runtime validation in updateChampionFullAbilities enforces the structure.
+ */
+type FullAbilitiesInput = Record<string, unknown>;
 
 export const getChampions = withActionContext('getChampions', async (): Promise<AdminChampionData[]> => {
   await ensureAdmin("MANAGE_CHAMPIONS")
@@ -104,7 +111,7 @@ export const updateChampionDetails = withActionContext('updateChampionDetails', 
     revalidatePath('/admin/champions')
 });
 
-export const updateChampionFullAbilities = withActionContext('updateChampionFullAbilities', async (id: number, fullAbilities: any) => {
+export const updateChampionFullAbilities = withActionContext('updateChampionFullAbilities', async (id: number, fullAbilities: FullAbilitiesInput | undefined) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
 
     if (fullAbilities) {
@@ -117,7 +124,7 @@ export const updateChampionFullAbilities = withActionContext('updateChampionFull
         if (typeof fullAbilities !== 'object' || Array.isArray(fullAbilities)) {
             throw new Error("Root of fullAbilities must be an object.");
         }
-        if (fullAbilities.signature && (typeof fullAbilities.signature !== 'object' || Array.isArray(fullAbilities.signature) || typeof fullAbilities.signature.name !== 'string')) {
+        if (fullAbilities.signature && (typeof fullAbilities.signature !== 'object' || Array.isArray(fullAbilities.signature) || typeof (fullAbilities.signature as Record<string, unknown>).name !== 'string')) {
             throw new Error("Invalid signature format: must be an object with a 'name' string.");
         }
         if (fullAbilities.abilities_breakdown) {
@@ -142,7 +149,7 @@ export const updateChampionFullAbilities = withActionContext('updateChampionFull
 
     await prisma.champion.update({
         where: { id },
-        data: { fullAbilities }
+        data: { fullAbilities: fullAbilities as Prisma.InputJsonValue }
     })
     revalidatePath('/admin/champions')
 });

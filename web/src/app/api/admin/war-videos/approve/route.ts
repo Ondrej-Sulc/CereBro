@@ -8,7 +8,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
   try {
     const isAdmin = await isUserBotAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const { videoId } = await req.json();
@@ -17,9 +17,18 @@ export const POST = withRouteContext(async (req: NextRequest) => {
       return NextResponse.json({ error: 'Missing videoId' }, { status: 400 });
     }
 
+    const video = await prisma.warVideo.findUnique({ where: { id: videoId } });
+    if (!video) {
+      return NextResponse.json({ error: 'Video not found' }, { status: 404 });
+    }
+
+    if (video.status === 'PUBLISHED') {
+      return NextResponse.json({ message: 'Video already approved' }, { status: 200 });
+    }
+
     await prisma.warVideo.update({
       where: { id: videoId },
-      data: { status: 'PUBLISHED' }, // Use PUBLISHED as a proxy for APPROVED if not in enum
+      data: { status: 'PUBLISHED' },
     });
 
     logger.info({ videoId }, 'War video approved');

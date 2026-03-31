@@ -11,7 +11,6 @@ export const GET = withRouteContext(async () => {
         select: {
           id: true,
           ingameName: true,
-          discordId: true,
           allianceId: true,
         },
         orderBy: {
