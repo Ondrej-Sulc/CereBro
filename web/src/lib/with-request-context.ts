@@ -3,6 +3,16 @@ import { requestContextStorage, type RequestContext } from "./request-context";
 import { auth } from "@/auth";
 import { sendErrorToDiscord } from "./discord-alert";
 
+/** Next.js redirect() and notFound() throw errors with special digest prefixes. */
+function isNextInternalError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const digest = (error as Record<string, unknown>).digest;
+  return (
+    typeof digest === "string" &&
+    (digest.startsWith("NEXT_REDIRECT") || digest.startsWith("NEXT_NOT_FOUND"))
+  );
+}
+
 async function enrichWithSession(ctx: RequestContext): Promise<void> {
   try {
     const session = await auth();
@@ -41,10 +51,12 @@ export function withActionContext<TArgs extends unknown[], TReturn>(
       try {
         return await fn(...args);
       } catch (error) {
-        sendErrorToDiscord({
-          error,
-          message: `Server Action: ${actionName}`,
-        });
+        if (!isNextInternalError(error)) {
+          sendErrorToDiscord({
+            error,
+            message: `Server Action: ${actionName}`,
+          });
+        }
         throw error;
       }
     });
@@ -93,10 +105,12 @@ export function withRouteContext<
 
         return response;
       } catch (error) {
-        sendErrorToDiscord({
-          error,
-          message: `API Route: ${ctx.path}`,
-        });
+        if (!isNextInternalError(error)) {
+          sendErrorToDiscord({
+            error,
+            message: `API Route: ${ctx.path}`,
+          });
+        }
         throw error;
       }
     });
