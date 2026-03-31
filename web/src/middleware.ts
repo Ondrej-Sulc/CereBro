@@ -23,6 +23,6 @@ export const config = {
      * - public (public files)
      * - manifest.webmanifest (PWA manifest)
      */
-    '/((?!api/war-videos/upload|_next/static|_next/image|favicon.ico|public|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/war-videos/upload|api/profile/roster/update|_next/static|_next/image|favicon.ico|public|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
