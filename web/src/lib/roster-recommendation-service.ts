@@ -70,7 +70,7 @@ export async function calculateRosterRecommendations(
                 const lowerVal = sigs.get(lowerSig)!;
                 const upperVal = sigs.get(upperSig)!;
                 const fraction = (sig - lowerSig) / (upperSig - lowerSig);
-                basePrestige = Math.round(lowerVal + (upperVal - lowerVal) * fraction);
+                basePrestige = Math.round((lowerVal + (upperVal - lowerVal) * fraction) / 10) * 10;
             } else if (lowerSig !== undefined) {
                 basePrestige = sigs.get(lowerSig)!;
             } else if (upperSig !== undefined) {
@@ -79,7 +79,7 @@ export async function calculateRosterRecommendations(
         }
 
         if (basePrestige > 0 && rarity === 7 && ascensionLevel > 0) {
-            basePrestige = Math.round(basePrestige * Math.pow(1.08, ascensionLevel));
+            basePrestige = Math.round((basePrestige * Math.pow(1.08, ascensionLevel)) / 10) * 10;
         }
 
         return basePrestige;
