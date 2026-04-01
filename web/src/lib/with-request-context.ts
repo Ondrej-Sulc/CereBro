@@ -98,8 +98,14 @@ export function withRouteContext<
       try {
         const response = await handler(...args);
 
-        // Attach correlation ID to response headers for client-side tracing
-        response.headers.set("x-correlation-id", ctx.correlationId);
+        // Attach correlation ID to response headers for client-side tracing.
+        // Redirect responses (e.g. from Auth.js error handling) have immutable
+        // headers — skip silently rather than throwing.
+        try {
+          response.headers.set("x-correlation-id", ctx.correlationId);
+        } catch {
+          // immutable headers — no-op
+        }
 
         return response;
       } catch (error) {
