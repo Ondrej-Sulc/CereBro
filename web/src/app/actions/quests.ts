@@ -1091,12 +1091,10 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
     });
 
     if (isRemoving) {
-        await prisma.playerQuestSynergyChampion.delete({
+        await prisma.playerQuestSynergyChampion.deleteMany({
             where: {
-                playerQuestPlanId_championId: {
-                    playerQuestPlanId: playerPlan.id,
-                    championId: championId
-                }
+                playerQuestPlanId: playerPlan.id,
+                championId: championId,
             }
         });
     } else {
