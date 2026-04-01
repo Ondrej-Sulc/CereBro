@@ -14,12 +14,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   logger: {
     error(error) {
-      // Log full details including the cause from Discord
-      logger.error({ error, cause: (error as any).cause }, "Auth.js error");
+      const authError = error as any;
+      // InvalidCheck (PKCE/state mismatch) is expected: abandoned flows, multiple tabs, browser cookie restrictions.
+      // Log at warn to avoid noise; everything else is a real error.
+      if (authError?.type === "InvalidCheck") {
+        logger.warn({ errorType: authError.type, cause: authError.cause }, "Auth.js InvalidCheck — user likely abandoned or retried login flow");
+      } else {
+        logger.error({ error, cause: authError.cause }, "Auth.js error");
+      }
     },
     warn(code) {
       logger.warn({ code }, "Auth.js warning");
     },
+  },
+  pages: {
+    error: "/auth/error",
   },
   providers: [
     Discord({
