@@ -12,23 +12,21 @@ if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
+  logger: {
+    error(error) {
+      // Log full details including the cause from Discord
+      logger.error({ error, cause: (error as any).cause }, "Auth.js error");
+    },
+    warn(code) {
+      logger.warn({ code }, "Auth.js warning");
+    },
+  },
   providers: [
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
     }),
   ],
-  cookies: {
-    pkceCodeVerifier: {
-      name: "next-auth.pkce.code_verifier",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
   callbacks: {
     async signIn({ user, account, profile }) {
       try {

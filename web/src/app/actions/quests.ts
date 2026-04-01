@@ -1133,7 +1133,10 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
         
         if (quest.requiredTags.length > 0) {
             const hasTag = quest.requiredTags.some(qt => champ.tags.some(ct => ct.id === qt.id));
-            if (!hasTag) throw new Error(`Quest requires specific tags.`);
+            if (!hasTag) {
+                const tagNames = quest.requiredTags.map(t => t.name).join(", ");
+                throw new Error(`Quest requires champions with one of: ${tagNames}`);
+            }
         }
 
         if (quest.teamLimit !== null) {

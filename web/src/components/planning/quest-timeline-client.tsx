@@ -1328,8 +1328,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                     <CommandEmpty className="py-4 text-center text-sm text-slate-500">No champions found.</CommandEmpty>
                                                                     <CommandList className="max-h-[300px] custom-scrollbar">
                                                                         <CommandGroup>
-                                                                            {/* Only show unique champions from roster */}
-                                                                            {roster.filter((r, i, self) => self.findIndex(t => t.championId === r.championId) === i).map((r) => {
+                                                                            {/* Only show unique champions from roster that meet quest requirements */}
+                                                                            {roster.filter((r, i, self) => self.findIndex(t => t.championId === r.championId) === i).filter(r => isChampionValidForEncounterOrQuest(r, quest, undefined)).map((r) => {
                                                                                 const isAssigned = Object.values(selections).some(rid => {
                                                                                     if (!rid) return false;
                                                                                     return roster.find(re => re.id === rid)?.championId === r.championId;
