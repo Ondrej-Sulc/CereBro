@@ -873,21 +873,59 @@ function EncounterExpandedContent({
                                 const encounterPicks = popularCounters[encounter.id] || [];
                                 const pickCountMap = new Map(encounterPicks.map(p => [p.championId, p.count]));
                                 const recommendedIds = new Set(encounter.recommendedChampions.map(c => c.id));
-                                const communityPicks = encounterPicks.filter(p => !recommendedIds.has(p.championId)).map(p => ({ ...p.champion, images: toChampionImages(p.champion.images), isCommunity: true }));
-                                const allCandidates = [...encounter.recommendedChampions.map(c => ({ ...c, images: toChampionImages(c.images), isOfficial: true })), ...communityPicks];
-                                const sortedChampions = allCandidates.sort((a, b) => (pickCountMap.get(b.id) || 0) - (pickCountMap.get(a.id) || 0));
-                                
-                                return (
+                                const totalPlayers = quest._count?.playerPlans || 0;
+
+                                const officialChampions = encounter.recommendedChampions
+                                    .map(c => ({ ...c, images: toChampionImages(c.images) }))
+                                    .sort((a, b) => (pickCountMap.get(b.id) || 0) - (pickCountMap.get(a.id) || 0));
+
+                                const communityChampions = encounterPicks
+                                    .filter(p => !recommendedIds.has(p.championId))
+                                    .sort((a, b) => b.count - a.count)
+                                    .map(p => ({ ...p.champion, images: toChampionImages(p.champion.images) }));
+
+                                const hasOfficial = officialChampions.length > 0;
+                                const hasCommunity = communityChampions.length > 0;
+
+                                if (!hasOfficial && !hasCommunity) {
+                                    return (
+                                        <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg">No specific champions recommended for this encounter.</p>
+                                    );
+                                }
+
+                                const renderGrid = (champions: typeof officialChampions) => (
                                     <div className="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2 sm:gap-3">
-                                        {sortedChampions.length === 0 ? (
-                                            <p className="text-xs text-slate-500 italic py-4 text-center border border-dashed border-slate-800 rounded-lg col-span-full">No specific champions recommended for this encounter.</p>
-                                        ) : (
-                                            sortedChampions.map((c) => {
-                                                const pickCount = pickCountMap.get(c.id) || 0;
-                                                const totalPlayers = quest._count?.playerPlans || 0;
-                                                const popularityLabel = totalPlayers > 0 && pickCount > 0 ? `${Math.round((pickCount / totalPlayers) * 100)}%` : undefined;
-                                                return <div key={c.id}>{renderChampionItem(c as Champion, encounter, popularityLabel, true)}</div>;
-                                            })
+                                        {champions.map((c) => {
+                                            const pickCount = pickCountMap.get(c.id) || 0;
+                                            const popularityLabel = totalPlayers > 0 && pickCount > 0 ? `${Math.round((pickCount / totalPlayers) * 100)}%` : undefined;
+                                            return <div key={c.id}>{renderChampionItem(c as Champion, encounter, popularityLabel, true)}</div>;
+                                        })}
+                                    </div>
+                                );
+
+                                return (
+                                    <div className="flex flex-col gap-4">
+                                        {hasOfficial && (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-amber-400 shrink-0">
+                                                        <path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">Recommended by creator</span>
+                                                </div>
+                                                {renderGrid(officialChampions)}
+                                            </div>
+                                        )}
+                                        {hasCommunity && (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-sky-400 shrink-0">
+                                                        <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655zM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654zM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.947 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81z" />
+                                                    </svg>
+                                                    <span className="text-[11px] font-semibold uppercase tracking-wider text-sky-400">Popular picks</span>
+                                                </div>
+                                                {renderGrid(communityChampions)}
+                                            </div>
                                         )}
                                     </div>
                                 );
