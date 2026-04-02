@@ -13,12 +13,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-    EncounterWithRelations, 
-    QuestWithRelations, 
-    EncounterNodeWithRelations, 
+    EncounterWithRelations,
+    QuestWithRelations,
+    EncounterNodeWithRelations,
     RosterWithChampion,
     toChampionImages
 } from "../types";
+import type { ChampionImages } from "@/types/champion";
 import type { ChampionClass, Tag } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
@@ -893,7 +894,7 @@ function EncounterExpandedContent({
                                     );
                                 }
 
-                                const renderGrid = (champions: typeof officialChampions) => (
+                                const renderGrid = (champions: { id: number; images: ChampionImages }[]) => (
                                     <div className="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2 sm:gap-3">
                                         {champions.map((c) => {
                                             const pickCount = pickCountMap.get(c.id) || 0;
