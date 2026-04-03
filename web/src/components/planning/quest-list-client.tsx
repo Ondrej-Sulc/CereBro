@@ -175,7 +175,7 @@ export default function QuestListClient({ initialQuests, categories }: Props) {
 
                 {/* Sub-folders grid */}
                 {visibleFolders.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
                         {visibleFolders.map(cat => {
                             const count = subtreeCountMap.get(cat.id) ?? 0;
                             return (
