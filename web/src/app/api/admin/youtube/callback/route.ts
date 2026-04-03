@@ -67,15 +67,29 @@ export const GET = withRouteContext(async (req: Request) => {
       };
     }
 
-    await prisma.systemConfig.upsert({
-      where: { key: 'YOUTUBE_TOKENS' },
-      update: { value: JSON.stringify(mergedTokens) },
-      create: { key: 'YOUTUBE_TOKENS', value: JSON.stringify(mergedTokens) },
-    });
+    if (!mergedTokens.refresh_token) {
+      logger.warn('YouTube OAuth callback: no refresh_token available — cannot update stored token');
+      return NextResponse.redirect(`${baseUrl}/admin/youtube?error=no_refresh_token`);
+    }
+
+    const refreshToken = mergedTokens.refresh_token;
+
+    await prisma.$transaction([
+      prisma.systemConfig.upsert({
+        where: { key: 'YOUTUBE_TOKENS' },
+        update: { value: JSON.stringify(mergedTokens) },
+        create: { key: 'YOUTUBE_TOKENS', value: JSON.stringify(mergedTokens) },
+      }),
+      prisma.systemConfig.upsert({
+        where: { key: 'YOUTUBE_REFRESH_TOKEN' },
+        update: { value: refreshToken },
+        create: { key: 'YOUTUBE_REFRESH_TOKEN', value: refreshToken },
+      }),
+    ]);
 
     logger.info('YouTube tokens updated via callback');
 
-    return NextResponse.redirect(`${baseUrl}/admin/support`);
+    return NextResponse.redirect(`${baseUrl}/admin/youtube?success=true`);
   } catch (error) {
     logger.error({ err: error }, 'Error in YouTube callback');
     return NextResponse.json({ error: 'Failed to process callback' }, { status: 500 });
