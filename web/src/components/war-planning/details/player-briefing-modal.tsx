@@ -59,7 +59,7 @@ interface PlayerBriefingModalProps {
     onRemoveExtra?: (extraId: string) => void;
 }
 
-const FightVideos = ({ fight }: { fight: FightWithNode }) => {
+const FightVideos = ({ fight, warTier }: { fight: FightWithNode; warTier: number }) => {
     const [videos, setVideos] = useState<{ url?: string | null; videoId?: string; death?: number; playerName?: string }[]>([]);
 
     useEffect(() => {
@@ -67,14 +67,14 @@ const FightVideos = ({ fight }: { fight: FightWithNode }) => {
 
         async function fetchVideos() {
             try {
-                const res = await getFightVideos(fight.nodeId, fight.defenderId!, fight.attackerId!);
+                const res = await getFightVideos(fight.nodeId, fight.defenderId!, fight.attackerId!, warTier);
                 setVideos(res);
             } catch (e) {
                 console.error("Failed to fetch videos", e);
             }
         }
         fetchVideos();
-    }, [fight.nodeId, fight.defenderId, fight.attackerId]);
+    }, [fight.nodeId, fight.defenderId, fight.attackerId, warTier]);
 
     if (videos.length === 0) return null;
 
@@ -618,7 +618,7 @@ export const PlayerBriefingModal = ({
 
                                                     {/* Videos Component */}
                                                     <div className="relative z-10">
-                                                        <FightVideos fight={fight} />
+                                                        <FightVideos fight={fight} warTier={war.warTier} />
                                                     </div>
                                                 </div>
                                             );

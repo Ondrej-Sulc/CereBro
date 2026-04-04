@@ -751,7 +751,7 @@ export const updateWarDetails = withActionContext('updateWarDetails', async (war
   revalidatePath(`/planning/${warId}`);
 });
 
-export const getFightVideos = withActionContext('getFightVideos', async (nodeId: number, defenderId: number, attackerId: number) => {
+export const getFightVideos = withActionContext('getFightVideos', async (nodeId: number, defenderId: number, attackerId: number, warTier: number) => {
     const session = await auth();
     if (!session?.user?.id) return [];
 
@@ -761,7 +761,7 @@ export const getFightVideos = withActionContext('getFightVideos', async (nodeId:
             defenderId,
             attackerId,
             videoId: { not: null },
-            war: { status: WarStatus.FINISHED }
+            war: { status: WarStatus.FINISHED, warTier }
         },
         select: {
             id: true,
