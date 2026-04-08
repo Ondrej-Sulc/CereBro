@@ -24,7 +24,8 @@
       "Bash(pnpm prisma:generate)",
       "Bash(pnpm prisma:migrate)",
       "Bash(find . -name '*war*action*.ts' -o -name '*fight*query*.ts')",
-      "WebSearch"
+      "WebSearch",
+      "Bash(ls:*)"
     ]
   }
 }
