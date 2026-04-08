@@ -21,6 +21,8 @@ type PublicPlayer = {
 interface AlliancePublicData {
     id: string;
     name: string;
+    tag: string | null;
+    description: string | null;
     battlegroup1Color: string;
     battlegroup2Color: string;
     battlegroup3Color: string;
@@ -126,7 +128,10 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
         <div className="container mx-auto py-6 px-4">
             <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {alliance.tag && (
+                            <span className="font-mono text-slate-400 text-lg font-bold">[{alliance.tag}]</span>
+                        )}
                         <h1 className="text-2xl font-bold tracking-tight">{alliance.name}</h1>
                         {isOwnAlliance && (
                             <Link href="/alliance">
@@ -136,7 +141,10 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                             </Link>
                         )}
                     </div>
-                    <p className="text-sm text-slate-400">
+                    {alliance.description && (
+                        <p className="text-sm text-slate-400 mt-1 max-w-lg">{alliance.description}</p>
+                    )}
+                    <p className="text-sm text-slate-500 mt-0.5">
                         {alliance.players.length} members
                     </p>
                 </div>

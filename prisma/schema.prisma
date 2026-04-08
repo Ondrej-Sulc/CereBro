@@ -291,6 +291,9 @@ model Alliance {
   battlegroup2Color      String                      @default("#22c55e")
   battlegroup3Color      String                      @default("#3b82f6")
   playerColorPalette     String                      @default("HIGH_CONTRAST")
+  tag                    String?                     @unique
+  description            String?
+  inviteOnly             Boolean                     @default(false)
   linkCode               String?                     @unique
   linkCodeExpires        DateTime?
   deathChannelId         String?

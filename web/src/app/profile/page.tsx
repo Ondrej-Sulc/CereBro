@@ -18,6 +18,7 @@ import logger from "@/lib/logger";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { ProfileManager } from "./components/profile-manager";
+import { RelicPrestigeEditor } from "./components/relic-prestige-editor";
 import { ManageSubscriptionButton } from "./components/manage-subscription-button";
 import { Heart, Sparkles } from "lucide-react";
 
@@ -216,14 +217,7 @@ export default async function ProfilePage() {
                             <div className="text-2xl font-bold">{player.championPrestige?.toLocaleString() || "N/A"}</div>
                         </CardContent>
                     </Card>
-                    <Card className="bg-slate-900/50 border-slate-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-400">Relic Prestige</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{player.relicPrestige?.toLocaleString() || "N/A"}</div>
-                        </CardContent>
-                    </Card>
+                    <RelicPrestigeEditor profileId={player.id} initialValue={player.relicPrestige} />
                 </div>
 
                 {/* History Chart */}

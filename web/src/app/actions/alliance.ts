@@ -59,6 +59,44 @@ export const updatePlayerRole = withActionContext('updatePlayerRole', async (tar
     return { success: true };
 });
 
+export const updateAllianceGeneral = withActionContext('updateAllianceGeneral', async (data: {
+    name: string;
+    tag: string | null;
+    description: string | null;
+    inviteOnly: boolean;
+}) => {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
+    if (!actingUser.isOfficer && !actingUser.isBotAdmin) throw new Error("Insufficient permissions");
+
+    const name = data.name.trim();
+    if (!name || name.length > 50) throw new Error("Alliance name must be between 1 and 50 characters");
+
+    const tag = data.tag ? data.tag.trim().toUpperCase() : null;
+    if (tag && (tag.length < 2 || tag.length > 5 || !/^[A-Z0-9]+$/.test(tag))) {
+        throw new Error("Tag must be 2–5 alphanumeric characters");
+    }
+
+    const description = data.description ? data.description.trim() : null;
+    if (description && description.length > 200) throw new Error("Description must be 200 characters or fewer");
+
+    try {
+        await prisma.alliance.update({
+            where: { id: actingUser.allianceId },
+            data: { name, tag, description, inviteOnly: data.inviteOnly }
+        });
+    } catch (e: unknown) {
+        if (e instanceof Error && e.message.includes('Unique constraint') && e.message.includes('tag')) {
+            throw new Error("That tag is already taken by another alliance");
+        }
+        throw e;
+    }
+
+    revalidatePath('/alliance');
+    revalidatePath(`/alliance/${actingUser.allianceId}`);
+    return { success: true };
+});
+
 export const updateAllianceColors = withActionContext('updateAllianceColors', async (colors: { bg1: string, bg2: string, bg3: string }) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) {

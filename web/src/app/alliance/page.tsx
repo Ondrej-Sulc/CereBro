@@ -35,6 +35,9 @@ export default async function AlliancePage() {
         select: {
             id: true,
             name: true,
+            tag: true,
+            description: true,
+            inviteOnly: true,
             guildId: true,
             battlegroup1Color: true,
             battlegroup2Color: true,

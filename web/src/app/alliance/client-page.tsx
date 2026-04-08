@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updatePlayerRole, updateAllianceColors, updateAlliancePalette, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings } from "../actions/alliance";
+import { updatePlayerRole, updateAllianceColors, updateAlliancePalette, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings, updateAllianceGeneral } from "../actions/alliance";
 import { PALETTES, PALETTE_LABELS, PALETTE_DESCRIPTIONS, DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
 import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle } from "lucide-react";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ColorPicker } from "@/components/alliance/ColorPicker";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -56,6 +57,9 @@ interface PlayerSearchResult {
 interface AllianceWithRequests {
     id: string;
     name: string;
+    tag: string | null;
+    description: string | null;
+    inviteOnly: boolean;
     guildId: string | null;
     battlegroup1Color: string;
     battlegroup2Color: string;
@@ -94,7 +98,40 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     );
     const [sortBy, setSortBy] = useState<'name' | 'prestige'>('name');
 
-    // Alliance Settings
+    // General Settings
+    const [generalName, setGeneralName] = useState(alliance.name);
+    const [generalTag, setGeneralTag] = useState(alliance.tag ?? '');
+    const [generalDescription, setGeneralDescription] = useState(alliance.description ?? '');
+    const [generalInviteOnly, setGeneralInviteOnly] = useState(alliance.inviteOnly);
+    const [isSavingGeneral, setIsSavingGeneral] = useState(false);
+
+    const handleSaveGeneral = async () => {
+        if (!generalName.trim()) {
+            toast({ title: "Validation Error", description: "Alliance name cannot be empty.", variant: "destructive" });
+            return;
+        }
+        if (generalTag && (generalTag.length < 2 || generalTag.length > 5)) {
+            toast({ title: "Validation Error", description: "Alliance tag must be between 2 and 5 characters.", variant: "destructive" });
+            return;
+        }
+        setIsSavingGeneral(true);
+        try {
+            await updateAllianceGeneral({
+                name: generalName,
+                tag: generalTag || null,
+                description: generalDescription || null,
+                inviteOnly: generalInviteOnly,
+            });
+            toast({ title: "Saved", description: "Alliance settings updated." });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to save settings";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setIsSavingGeneral(false);
+        }
+    };
+
+    // Discord Sync Settings
     const [removeMissingMembers, setRemoveMissingMembers] = useState(alliance.removeMissingMembers);
     const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
 
@@ -431,19 +468,93 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                             <Settings className="h-4 w-4" />
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
+                                    <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 max-h-[90dvh] overflow-y-auto w-[calc(100%-2rem)] sm:w-full">
                                         <DialogHeader>
                                             <DialogTitle>Alliance Settings</DialogTitle>
                                             <DialogDescription className="text-slate-400">
                                                 Manage your alliance configuration.
                                             </DialogDescription>
                                         </DialogHeader>
-                                        
-                                        <Tabs defaultValue="theme" className="w-full">
-                                            <TabsList className="bg-slate-950 border-slate-800 mb-4">
-                                                <TabsTrigger value="theme">Theme</TabsTrigger>
-                                                <TabsTrigger value="discord">Discord Integration</TabsTrigger>
+
+                                        <Tabs defaultValue="general" className="w-full">
+                                            <TabsList className="bg-slate-950 border-slate-800 mb-4 w-full">
+                                                <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
+                                                <TabsTrigger value="theme" className="flex-1">Theme</TabsTrigger>
+                                                <TabsTrigger value="discord" className="flex-1">Discord</TabsTrigger>
                                             </TabsList>
+
+                                            <TabsContent value="general" className="space-y-5">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="allianceName" className="text-slate-300 font-bold">Alliance Name</Label>
+                                                    <Input
+                                                        id="allianceName"
+                                                        value={generalName}
+                                                        onChange={(e) => setGeneralName(e.target.value)}
+                                                        maxLength={50}
+                                                        className="bg-slate-950 border-slate-700"
+                                                        placeholder="Alliance name"
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="allianceTag" className="text-slate-300 font-bold">Tag <span className="text-slate-500 font-normal text-xs">(optional, 2–5 characters)</span></Label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            id="allianceTag"
+                                                            value={generalTag}
+                                                            onChange={(e) => setGeneralTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5))}
+                                                            className="bg-slate-950 border-slate-700 font-mono uppercase"
+                                                            placeholder="e.g. MCOC"
+                                                        />
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
+                                                            {generalTag.length}/5
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-500">Shown as <span className="font-mono text-slate-300">[{generalTag || 'TAG'}]</span> next to your alliance name on the public page.</p>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="allianceDescription" className="text-slate-300 font-bold">Description <span className="text-slate-500 font-normal text-xs">(optional)</span></Label>
+                                                    <div className="relative">
+                                                        <Textarea
+                                                            id="allianceDescription"
+                                                            value={generalDescription}
+                                                            onChange={(e) => setGeneralDescription(e.target.value.slice(0, 200))}
+                                                            className="bg-slate-950 border-slate-700 resize-none"
+                                                            placeholder="Tell others about your alliance…"
+                                                            rows={3}
+                                                        />
+                                                        <span className="absolute right-3 bottom-2 text-[10px] text-slate-500">
+                                                            {generalDescription.length}/200
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 space-y-3">
+                                                    <div className="flex items-start gap-3">
+                                                        <Checkbox
+                                                            id="inviteOnly"
+                                                            checked={generalInviteOnly}
+                                                            onCheckedChange={(checked) => setGeneralInviteOnly(checked === true)}
+                                                            className="mt-1"
+                                                        />
+                                                        <div className="grid gap-1.5 leading-none">
+                                                            <label htmlFor="inviteOnly" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                                Invite Only
+                                                            </label>
+                                                            <p className="text-xs text-slate-500">
+                                                                When enabled, players cannot request to join — officers must send invites directly.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <DialogFooter>
+                                                    <Button onClick={handleSaveGeneral} className="w-full sm:w-auto" disabled={isSavingGeneral}>
+                                                        {isSavingGeneral ? "Saving…" : "Save"}
+                                                    </Button>
+                                                </DialogFooter>
+                                            </TabsContent>
 
                                             <TabsContent value="theme" className="space-y-6">
                                                 <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 space-y-4">

@@ -32,6 +32,9 @@ export default async function AlliancePublicPage({ params }: Props) {
             select: {
                 id: true,
                 name: true,
+                tag: true,
+                description: true,
+                inviteOnly: true,
                 battlegroup1Color: true,
                 battlegroup2Color: true,
                 battlegroup3Color: true,

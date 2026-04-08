@@ -185,3 +185,44 @@ export const switchProfile = withActionContext('switchProfile', async (profileId
   revalidatePath("/profile", "layout");
   return { success: true };
 });
+
+export const updateRelicPrestige = withActionContext('updateRelicPrestige', async (profileId: string, value: number) => {
+  const user = await getAuthenticatedUser();
+  if (!user) throw new Error("Unauthorized");
+
+  // Verify ownership
+  const profile = user.profiles.find(p => p.id === profileId);
+  if (!profile) {
+    logger.warn({ userId: user.id, profileId }, "Profile not found for relic prestige update");
+    return { error: "Profile not found" };
+  }
+
+  if (value < 0 || value > 20000) {
+    return { error: "Invalid prestige value (must be between 0 and 20000)" };
+  }
+
+  logger.info({ userId: user.id, profileId, oldRelicPrestige: profile.relicPrestige, newRelicPrestige: value }, "Updating relic prestige");
+  
+  const newSummonerPrestige = (profile.championPrestige || 0) + value;
+
+  await prisma.$transaction([
+    prisma.player.update({
+      where: { id: profileId },
+      data: {
+        relicPrestige: value,
+        summonerPrestige: newSummonerPrestige
+      }
+    }),
+    prisma.prestigeLog.create({
+      data: {
+        playerId: profileId,
+        summonerPrestige: newSummonerPrestige,
+        championPrestige: profile.championPrestige || 0,
+        relicPrestige: value,
+      }
+    }),
+  ]);
+
+  revalidatePath("/profile");
+  return { success: true };
+});
