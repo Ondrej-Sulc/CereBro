@@ -3,22 +3,20 @@ import loggerService from '../../../services/loggerService';
 
 export async function handleAllianceManageList(interaction: ChatInputCommandInteraction) {
   const { prisma } = await import('../../../services/prismaService.js');
+  const { getAlliance } = await import('../../../utils/allianceHelper.js');
   if (!interaction.guildId) {
     await interaction.editReply('This command can only be used in a server.');
     return;
   }
 
   try {
-    const alliance = await prisma.alliance.findFirst({
-      where: { guildId: interaction.guildId },
-      include: {
-        members: {
-          orderBy: {
-            ingameName: 'asc',
-          },
-        },
-      },
-    });
+    const baseAlliance = await getAlliance(interaction);
+    const alliance = baseAlliance
+      ? await prisma.alliance.findUnique({
+          where: { id: baseAlliance.id },
+          include: { members: { orderBy: { ingameName: 'asc' } } },
+        })
+      : null;
 
     if (!alliance) {
       await interaction.editReply('This server is not registered as an alliance.');

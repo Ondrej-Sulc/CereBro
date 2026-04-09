@@ -10,6 +10,7 @@ import { generateAQHeader } from "./header";
 import { buildAQContainer } from "./view";
 import { prisma } from "../../services/prismaService";
 import logger from "../../services/loggerService";
+import { getActivePlayer } from "../../utils/playerHelper";
 
 interface AQCoreStartParams {
   day: number;
@@ -19,12 +20,13 @@ interface AQCoreStartParams {
   guild: Guild;
   channelName: string;
   battlegroupName: string;
+  userId?: string;
 }
 
 export async function handleStart(
   params: AQCoreStartParams
 ): Promise<CommandResult> {
-  const { day, battlegroup, pingRoleId, channel, guild, channelName, battlegroupName } = params;
+  const { day, battlegroup, pingRoleId, channel, guild, channelName, battlegroupName, userId } = params;
 
   if (!("send" in channel)) {
     return {
@@ -32,8 +34,14 @@ export async function handleStart(
     };
   }
 
+  const activePlayer = userId ? await getActivePlayer(userId) : null;
+  const allianceWhere =
+    activePlayer?.allianceId && activePlayer.alliance?.guildId === guild.id
+      ? { id: activePlayer.allianceId }
+      : { guildId: guild.id };
+
   const alliance = await prisma.alliance.findFirst({
-    where: { guildId: guild.id },
+    where: allianceWhere,
   });
   if (!alliance) {
     return {

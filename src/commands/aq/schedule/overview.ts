@@ -20,17 +20,21 @@ export async function buildOverviewContainer(
   const { guildId, user } = interaction;
   const container = new ContainerBuilder();
 
-  const [alliance, player] = await Promise.all([
-    prisma.alliance.findFirst({
-      where: { guildId },
-      include: {
-        aqSchedules: true,
-        aqSkip: true,
-        aqReminderSettings: true,
-      },
-    }),
-    getActivePlayer(user.id),
-  ]);
+  const player = await getActivePlayer(user.id);
+
+  const allianceWhere =
+    player?.allianceId && player.alliance?.guildId === guildId
+      ? { id: player.allianceId }
+      : { guildId };
+
+  const alliance = await prisma.alliance.findFirst({
+    where: allianceWhere,
+    include: {
+      aqSchedules: true,
+      aqSkip: true,
+      aqReminderSettings: true,
+    },
+  });
 
   if (!alliance) {
     container.addTextDisplayComponents(

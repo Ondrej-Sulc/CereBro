@@ -175,6 +175,7 @@ export const command: Command = {
         guild,
         channelName: targetChannel.name,
         battlegroupName: `Battlegroup ${battlegroup}`,
+        userId: interaction.user.id,
       });
       await interaction.editReply(result);
     } else if (sub === "end") {

@@ -16,6 +16,7 @@ import { config } from "./config";
 import { loadCommands, commands } from "./utils/commandHandler";
 import { Command, CommandAccess } from "./types/command";
 import { getPlayer } from "./utils/playerHelper";
+import { getAlliance } from "./utils/allianceHelper";
 import { getButtonHandler } from "./utils/buttonHandlerRegistry";
 import { startScheduler } from "./services/schedulerService";
 import { startAQScheduler } from "./services/aqSchedulerService";
@@ -433,10 +434,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
         return;
       }
-      const alliance = await prisma.alliance.findFirst({
-        where: { guildId: interaction.guildId },
-        select: { enabledFeatureCommands: true },
-      });
+      const alliance = await getAlliance(interaction as any);
       if (!alliance || !alliance.enabledFeatureCommands.includes(interaction.commandName)) {
         await safeReply(
           interaction,

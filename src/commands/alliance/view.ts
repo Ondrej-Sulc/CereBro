@@ -1,5 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { prisma } from '../../services/prismaService';
+import { getAlliance } from '../../utils/allianceHelper';
 import loggerService from '../../services/loggerService';
 import { Player } from '@prisma/client';
 
@@ -21,16 +22,13 @@ export async function handleAllianceView(interaction: ChatInputCommandInteractio
   }
 
   try {
-    const alliance = await prisma.alliance.findFirst({
-      where: { guildId: interaction.guildId },
-      include: {
-        members: {
-          orderBy: {
-            ingameName: 'asc',
-          },
-        },
-      },
-    });
+    const baseAlliance = await getAlliance(interaction);
+    const alliance = baseAlliance
+      ? await prisma.alliance.findUnique({
+          where: { id: baseAlliance.id },
+          include: { members: { orderBy: { ingameName: 'asc' } } },
+        })
+      : null;
 
     if (!alliance) {
       await interaction.editReply('This server is not registered as an alliance.');
