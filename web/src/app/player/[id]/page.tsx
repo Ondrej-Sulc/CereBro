@@ -463,6 +463,17 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                                 const war = video.fights[0]?.war;
                                 const fighters = video.fights.map(f => f.attacker).filter(Boolean);
                                 const defenders = video.fights.map(f => f.defender).filter(Boolean);
+                                
+                                const uniqueFighters = Array.from(new Map(fighters.map(f => [f!.id, f])).values());
+                                const uniqueDefenders = Array.from(new Map(defenders.map(f => [f!.id, f])).values());
+                                
+                                const maxVisible = 4;
+                                const visibleFighters = uniqueFighters.slice(0, maxVisible);
+                                const extraFighters = uniqueFighters.length - maxVisible;
+                                
+                                const visibleDefenders = uniqueDefenders.slice(0, maxVisible);
+                                const extraDefenders = uniqueDefenders.length - maxVisible;
+
                                 const youtubeId = getYoutubeVideoId(video.url);
                                 return (
                                     <Link key={video.id} href={`/war-videos/${video.id}`} className="block h-full">
@@ -514,11 +525,11 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                                                     </h3>
                                                 )}
 
-                                                {(fighters.length > 0 || defenders.length > 0) && (
+                                                {(uniqueFighters.length > 0 || uniqueDefenders.length > 0) && (
                                                     <div className="flex items-center justify-between gap-2 bg-slate-950/50 rounded-lg p-1.5 border border-slate-800/50 shadow-inner">
-                                                        {fighters.length > 0 && (
-                                                            <div className="flex gap-1.5 items-center">
-                                                                {fighters.map((fighter, i) => (
+                                                        {uniqueFighters.length > 0 && (
+                                                            <div className="flex gap-1.5 items-center flex-wrap">
+                                                                {visibleFighters.map((fighter, i) => (
                                                                     <div key={`a-${i}`} className="relative shrink-0">
                                                                         <Avatar className="h-7 w-7 border border-slate-700 bg-slate-900 shadow-md hover:scale-110 transition-transform z-10 hover:z-20">
                                                                             {fighter!.images && <AvatarImage src={getChampionImageUrlOrPlaceholder(fighter!.images as unknown as ChampionImages, "64")} />}
@@ -526,16 +537,21 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                                                                         </Avatar>
                                                                     </div>
                                                                 ))}
+                                                                {extraFighters > 0 && (
+                                                                    <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-md z-10 shrink-0">
+                                                                        <span className="text-[9px] font-black text-slate-300">+{extraFighters}</span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                         
-                                                        {fighters.length > 0 && defenders.length > 0 && (
-                                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest px-1">VS</span>
+                                                        {uniqueFighters.length > 0 && uniqueDefenders.length > 0 && (
+                                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest px-1 shrink-0">VS</span>
                                                         )}
 
-                                                        {defenders.length > 0 && (
-                                                            <div className="flex gap-1.5 items-center">
-                                                                {defenders.map((defender, i) => (
+                                                        {uniqueDefenders.length > 0 && (
+                                                            <div className="flex gap-1.5 items-center flex-wrap justify-end">
+                                                                {visibleDefenders.map((defender, i) => (
                                                                     <div key={`d-${i}`} className="relative shrink-0">
                                                                         <Avatar className="h-7 w-7 border border-slate-700 bg-slate-900 shadow-md hover:scale-110 transition-transform z-10 hover:z-20">
                                                                             {defender!.images && <AvatarImage src={getChampionImageUrlOrPlaceholder(defender!.images as unknown as ChampionImages, "64")} />}
@@ -543,6 +559,11 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                                                                         </Avatar>
                                                                     </div>
                                                                 ))}
+                                                                {extraDefenders > 0 && (
+                                                                    <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-md z-10 shrink-0">
+                                                                        <span className="text-[9px] font-black text-slate-300">+{extraDefenders}</span>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
