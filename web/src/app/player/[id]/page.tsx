@@ -5,7 +5,7 @@ import { getPlayerQuestPlansForProfile } from "@/app/actions/quests";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ScrollText, Play, Skull, Trophy, Video } from "lucide-react";
+import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -167,71 +167,88 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                 </div>
             </div>
 
-            {/* Stats Overview Strip */}
-            <div className="flex flex-col sm:flex-row border border-slate-800/60 rounded-xl overflow-hidden bg-slate-900/30 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/60">
-                {/* Roster Stats */}
-                <div className="flex items-center gap-5 px-5 py-3.5 flex-1 min-w-0">
-                    <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest shrink-0">Roster</span>
-                    <div className="flex gap-5 flex-wrap">
-                        <div>
-                            <div className="text-[10px] text-slate-500 font-black uppercase">Total</div>
-                            <div className="text-base font-black font-mono text-slate-200">{rosterTotal.toLocaleString()}</div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {/* Prestige */}
+                {player.championPrestige && (
+                    <div className="col-span-2 sm:col-span-1 bg-amber-950/20 border border-amber-900/30 rounded-xl p-4 flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5 text-amber-500/70">
+                            <TrendingUp className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Prestige</span>
                         </div>
+                        <div className="text-3xl font-black font-mono text-amber-100 leading-none">{player.championPrestige.toLocaleString('en-US')}</div>
+                        <div className="text-[10px] text-amber-700 font-semibold">Top 30 avg</div>
+                    </div>
+                )}
+
+                {/* Roster */}
+                <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex flex-col gap-2">
+                    <div className="flex items-center gap-1.5 text-purple-400/70">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Roster</span>
+                    </div>
+                    <div className="text-3xl font-black font-mono text-purple-100 leading-none">{rosterTotal.toLocaleString()}</div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-auto">
                         {stars7Count > 0 && (
-                            <div>
-                                <div className="text-[10px] text-slate-500 font-black uppercase">7★</div>
-                                <div className="text-base font-black font-mono text-purple-400">{stars7Count}</div>
-                            </div>
+                            <span className="text-[10px] font-bold text-purple-400">{stars7Count} × 7★</span>
                         )}
-                        <div>
-                            <div className="text-[10px] text-slate-500 font-black uppercase">6★+</div>
-                            <div className="text-base font-black font-mono text-yellow-500">{stars6PlusCount}</div>
-                        </div>
+                        <span className="text-[10px] font-bold text-yellow-500/80">{stars6PlusCount} × 6★+</span>
                         {rosterAscendedCount > 0 && (
-                            <div>
-                                <div className="text-[10px] text-slate-500 font-black uppercase">Ascended</div>
-                                <div className="text-base font-black font-mono text-purple-300">{rosterAscendedCount}</div>
-                            </div>
+                            <span className="text-[10px] font-bold text-purple-300/70">{rosterAscendedCount} ascended</span>
                         )}
                     </div>
                 </div>
-                {/* War Stats */}
-                {totalFights > 0 && (
-                    <div className="flex items-center gap-5 px-5 py-3.5 flex-1 min-w-0">
-                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest shrink-0">Wars</span>
-                        <div className="flex gap-5 flex-wrap">
-                            <div>
-                                <div className="text-[10px] text-slate-500 font-black uppercase">Wars</div>
-                                <div className="text-base font-black font-mono text-slate-200">{totalWars}</div>
-                            </div>
-                            <div>
-                                <div className="text-[10px] text-slate-500 font-black uppercase">Fights</div>
-                                <div className="text-base font-black font-mono text-slate-200">{totalFights}</div>
-                            </div>
-                            <div>
-                                <div className="text-[10px] text-slate-500 font-black uppercase">Solo Rate</div>
-                                <div className={cn(
-                                    "text-base font-black font-mono",
-                                    soloRate >= 80 ? "text-emerald-400" : soloRate >= 60 ? "text-amber-400" : "text-red-400"
-                                )}>{soloRate}%</div>
-                            </div>
-                            {totalDeaths > 0 && (
-                                <div>
-                                    <div className="text-[10px] text-slate-500 font-black uppercase">Deaths</div>
-                                    <div className="text-base font-black font-mono text-red-400">{totalDeaths}</div>
-                                </div>
-                            )}
+
+                {/* Wars */}
+                {totalWars > 0 && (
+                    <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5 text-amber-400/70">
+                            <Shield className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Wars</span>
                         </div>
+                        <div className="text-3xl font-black font-mono text-slate-200 leading-none">{totalWars}</div>
+                        <div className="text-[10px] text-slate-500 font-semibold">{totalFights} total fights</div>
                     </div>
                 )}
-                {/* Video Stats */}
-                {videoTotal > 0 && (
-                    <div className="flex items-center gap-5 px-5 py-3.5">
-                        <span className="text-[10px] font-black text-red-400 uppercase tracking-widest shrink-0">Videos</span>
-                        <div>
-                            <div className="text-[10px] text-slate-500 font-black uppercase">Submitted</div>
-                            <div className="text-base font-black font-mono text-slate-200">{videoTotal}</div>
+
+                {/* Solo Rate */}
+                {totalFights > 0 && (
+                    <div className={cn(
+                        "border rounded-xl p-4 flex flex-col gap-2",
+                        soloRate >= 80 ? "bg-emerald-950/20 border-emerald-900/30" :
+                        soloRate >= 60 ? "bg-amber-950/20 border-amber-900/30" :
+                                         "bg-red-950/20 border-red-900/30"
+                    )}>
+                        <div className={cn(
+                            "flex items-center gap-1.5",
+                            soloRate >= 80 ? "text-emerald-500/70" :
+                            soloRate >= 60 ? "text-amber-500/70" : "text-red-500/70"
+                        )}>
+                            <Swords className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Solo Rate</span>
                         </div>
+                        <div className={cn(
+                            "text-3xl font-black font-mono leading-none",
+                            soloRate >= 80 ? "text-emerald-400" :
+                            soloRate >= 60 ? "text-amber-400" : "text-red-400"
+                        )}>{soloRate}%</div>
+                        {totalDeaths > 0 && (
+                            <div className="flex items-center gap-1 text-[10px] text-red-400/80 font-semibold">
+                                <Skull className="w-3 h-3" /> {totalDeaths} death{totalDeaths > 1 ? 's' : ''}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Videos */}
+                {videoTotal > 0 && (
+                    <div className="bg-red-950/10 border border-red-900/20 rounded-xl p-4 flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5 text-red-400/70">
+                            <Video className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Videos</span>
+                        </div>
+                        <div className="text-3xl font-black font-mono text-red-100 leading-none">{videoTotal}</div>
+                        <div className="text-[10px] text-red-900/80 font-semibold">submitted</div>
                     </div>
                 )}
             </div>
