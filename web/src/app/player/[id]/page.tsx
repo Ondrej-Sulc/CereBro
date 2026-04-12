@@ -5,7 +5,7 @@ import { getPlayerQuestPlansForProfile } from "@/app/actions/quests";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers } from "lucide-react";
+import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -139,28 +139,57 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
     const stars7Count = rosterByStars.find(g => g.stars === 7)?._count.id ?? 0;
     const stars6PlusCount = rosterByStars.filter(g => g.stars >= 6).reduce((s, g) => s + g._count.id, 0);
 
+    const lastFightDate = recentFights[0]?.createdAt ?? null;
+    const lastVideoDate = recentVideos[0]?.createdAt ?? null;
+    const lastActiveDate = lastFightDate && lastVideoDate
+        ? new Date(Math.max(lastFightDate.getTime(), lastVideoDate.getTime()))
+        : lastFightDate ?? lastVideoDate;
+
+    const formatRelativeDate = (date: Date): string => {
+        const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+        if (days === 0) return "Active today";
+        if (days === 1) return "Active yesterday";
+        if (days < 30) return `Active ${days}d ago`;
+        const months = Math.floor(days / 30);
+        if (months < 12) return `Active ${months}mo ago`;
+        return `Active ${Math.floor(months / 12)}y ago`;
+    };
+
     return (
-        <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-12">
+        <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8">
             {/* Profile Header */}
-            <div>
-                <div className="flex items-center gap-4 mb-2">
-                    <Avatar className="h-16 w-16 md:h-20 md:w-20 border-2 border-slate-700 shadow-xl">
+            <div className="relative bg-slate-900/50 border border-slate-800/60 rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/40 via-purple-500/20 to-transparent" />
+                <div className="relative p-5 md:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                    <Avatar className="h-20 w-20 md:h-24 md:w-24 border-2 border-slate-700 ring-4 ring-slate-900 shadow-2xl shrink-0">
                         <AvatarImage src={player.avatar || undefined} />
-                        <AvatarFallback className="text-xl bg-slate-800 font-bold">{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback className="text-2xl bg-slate-800 font-black">{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-black text-white">{player.ingameName}</h1>
-                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-none">{player.ingameName}</h1>
+                        <div className="flex flex-wrap items-center gap-2.5 mt-3">
                             {player.alliance && (
-                                <Link href={`/alliance/${player.alliance.id}`} className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-sky-400 transition-colors">
-                                    <MapPin className="w-4 h-4" />
-                                    <span className="font-semibold">{player.alliance.name}</span>
+                                <Link href={`/alliance/${player.alliance.id}`} className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-sky-400 transition-colors font-semibold">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    {player.alliance.name}
                                 </Link>
                             )}
-                            {player.championPrestige && (
-                                <Badge variant="outline" className="text-xs py-0.5 border-slate-700 text-slate-300 bg-slate-900/50">
-                                    Prestige: {player.championPrestige.toLocaleString('en-US')}
+                            {player.isOfficer && (
+                                <Badge className="bg-amber-950/50 border border-amber-700/50 text-amber-400 text-[10px] font-black uppercase tracking-wide px-2">
+                                    Officer
                                 </Badge>
+                            )}
+                            {player.battlegroup && (
+                                <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] font-black uppercase">
+                                    BG {player.battlegroup}
+                                </Badge>
+                            )}
+                            {lastActiveDate && (
+                                <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                                    <Clock className="w-3 h-3" />
+                                    {formatRelativeDate(lastActiveDate)}
+                                </span>
                             )}
                         </div>
                     </div>
@@ -280,7 +309,128 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recent War Fights — most active content, shown first */}
+            {recentFights.length > 0 && (() => {
+                const warGroups: { war: typeof recentFights[0]['war']; fights: typeof recentFights }[] = [];
+                const warIndexMap: Record<string, number> = {};
+                for (const fight of recentFights) {
+                    if (warIndexMap[fight.war.id] === undefined) {
+                        warIndexMap[fight.war.id] = warGroups.length;
+                        warGroups.push({ war: fight.war, fights: [] });
+                    }
+                    warGroups[warIndexMap[fight.war.id]].fights.push(fight);
+                }
+                return (
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
+                            <h2 className="text-sm font-black text-amber-400 uppercase tracking-[0.2em]">Recent War Fights</h2>
+                            <Link href={`/war-videos?player=${encodeURIComponent(player.ingameName)}`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View All in Archive</Link>
+                        </div>
+                        <div className="space-y-3">
+                            {warGroups.map(({ war, fights: warFights }) => {
+                                const warDeaths = warFights.reduce((s, f) => s + f.death, 0);
+                                return (
+                                    <Card key={war.id} className="bg-slate-950/40 border-slate-800/60 overflow-hidden">
+                                        <div className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/40 flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-10 h-10 rounded bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-amber-500 shrink-0">
+                                                    {war.warNumber || '-'}
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">S{war.season} · T{war.warTier}</span>
+                                                    <span className="text-sm font-black uppercase italic text-slate-200 tracking-tight truncate">{war.alliance.name}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 shrink-0">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[10px] font-black text-slate-500 uppercase leading-none mb-0.5">Fights</span>
+                                                    <span className="text-sm font-mono font-black text-slate-300">{warFights.length}</span>
+                                                </div>
+                                                {warDeaths > 0 ? (
+                                                    <div className="flex items-center gap-1.5 text-red-400 text-xs font-black uppercase italic">
+                                                        <Skull className="w-3.5 h-3.5" />
+                                                        {warDeaths} Death{warDeaths > 1 ? 's' : ''}
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black uppercase italic">
+                                                        <Trophy className="w-3.5 h-3.5" />
+                                                        Solo
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="divide-y divide-slate-800/30">
+                                            {warFights.map(fight => {
+                                                const isDeath = fight.death > 0;
+                                                const attackerImages = fight.attacker?.images as unknown as ChampionImages | undefined;
+                                                const defenderImages = fight.defender?.images as unknown as ChampionImages | undefined;
+                                                const attackerColors = getChampionClassColors(fight.attacker?.class as ChampionClass);
+                                                const defenderColors = getChampionClassColors(fight.defender?.class as ChampionClass);
+                                                return (
+                                                    <div key={fight.id} className="flex items-center justify-between gap-3 py-2.5 px-4 hover:bg-slate-800/20 transition-colors">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-slate-500 shrink-0">
+                                                                {fight.node.nodeNumber}
+                                                            </div>
+                                                            <div className="flex items-center bg-slate-900/80 rounded-full pl-1.5 pr-4 py-1.5 border border-slate-800 shadow-inner min-w-0">
+                                                                <div className="relative shrink-0">
+                                                                    <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", attackerColors.bg)} />
+                                                                    <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", attackerColors.border)}>
+                                                                        {attackerImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(attackerImages, "64")} />}
+                                                                        <AvatarFallback className="text-xs font-black">{fight.attacker?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                                                                    </Avatar>
+                                                                </div>
+                                                                <span className="text-[9px] font-black text-slate-600 uppercase mx-3 shrink-0">VS</span>
+                                                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                                                    <div className="relative shrink-0">
+                                                                        <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", defenderColors.bg)} />
+                                                                        <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", defenderColors.border)}>
+                                                                            {defenderImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(defenderImages, "64")} />}
+                                                                            <AvatarFallback className="text-xs font-black">{fight.defender?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                                                                        </Avatar>
+                                                                    </div>
+                                                                    <span className={cn("text-sm font-black uppercase italic tracking-tighter whitespace-nowrap pr-2", defenderColors.text)}>
+                                                                        {fight.defender?.name || '?'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2.5 shrink-0">
+                                                            {isDeath ? (
+                                                                <div className="flex items-center gap-1 text-red-400 text-xs font-black uppercase italic">
+                                                                    <Skull className="w-3 h-3" /> Death
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-1 text-emerald-400 text-xs font-black uppercase italic">
+                                                                    <Trophy className="w-3 h-3" /> Solo
+                                                                </div>
+                                                            )}
+                                                            {fight.video && (
+                                                                <Link
+                                                                    href={`/war-videos/${fight.video.id}`}
+                                                                    className="p-1.5 bg-sky-600/20 border border-sky-600/50 rounded-full hover:bg-sky-600 text-sky-300 hover:text-white transition-all shadow-md"
+                                                                    title="Watch Video"
+                                                                >
+                                                                    <Video className="w-3.5 h-3.5" />
+                                                                </Link>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* Videos + Quest Plans */}
+            {(recentVideos.length > 0 || questPlans.length > 0) && (
+            <div className={cn("grid grid-cols-1 gap-8", recentVideos.length > 0 && questPlans.length > 0 ? "lg:grid-cols-2" : "")}>
                 {/* Recent War Videos */}
                 {recentVideos.length > 0 && (
                     <div>
@@ -401,135 +551,8 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                     )}
                 </div>
             </div>
+            )}
 
-            {/* Recent Fights Section */}
-            {recentFights.length > 0 && (() => {
-                // Group fights by war, preserving newest-first order
-                const warGroups: { war: typeof recentFights[0]['war']; fights: typeof recentFights }[] = [];
-                const warIndexMap: Record<string, number> = {};
-                for (const fight of recentFights) {
-                    if (warIndexMap[fight.war.id] === undefined) {
-                        warIndexMap[fight.war.id] = warGroups.length;
-                        warGroups.push({ war: fight.war, fights: [] });
-                    }
-                    warGroups[warIndexMap[fight.war.id]].fights.push(fight);
-                }
-                return (
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
-                            <h2 className="text-sm font-black text-amber-400 uppercase tracking-[0.2em]">Recent War Fights</h2>
-                            <Link href={`/war-videos?player=${encodeURIComponent(player.ingameName)}`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View All in Archive</Link>
-                        </div>
-                        <div className="space-y-3">
-                            {warGroups.map(({ war, fights: warFights }) => {
-                                const totalDeaths = warFights.reduce((s, f) => s + f.death, 0);
-                                return (
-                                    <Card key={war.id} className="bg-slate-950/40 border-slate-800/60 overflow-hidden">
-                                        {/* War header */}
-                                        <div className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/40 flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-10 h-10 rounded bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-amber-500 shrink-0">
-                                                    {war.warNumber || '-'}
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">S{war.season} · T{war.warTier}</span>
-                                                    <span className="text-sm font-black uppercase italic text-slate-200 tracking-tight truncate">{war.alliance.name}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4 shrink-0">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase leading-none mb-0.5">Fights</span>
-                                                    <span className="text-sm font-mono font-black text-slate-300">{warFights.length}</span>
-                                                </div>
-                                                {totalDeaths > 0 ? (
-                                                    <div className="flex items-center gap-1.5 text-red-400 text-xs font-black uppercase italic">
-                                                        <Skull className="w-3.5 h-3.5" />
-                                                        {totalDeaths} Death{totalDeaths > 1 ? 's' : ''}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black uppercase italic">
-                                                        <Trophy className="w-3.5 h-3.5" />
-                                                        Solo
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        {/* Fight rows */}
-                                        <div className="divide-y divide-slate-800/30">
-                                            {warFights.map(fight => {
-                                                const isDeath = fight.death > 0;
-                                                const attackerImages = fight.attacker?.images as unknown as ChampionImages | undefined;
-                                                const defenderImages = fight.defender?.images as unknown as ChampionImages | undefined;
-                                                const attackerColors = getChampionClassColors(fight.attacker?.class as ChampionClass);
-                                                const defenderColors = getChampionClassColors(fight.defender?.class as ChampionClass);
-                                                return (
-                                                    <div key={fight.id} className="flex items-center justify-between gap-3 py-2.5 px-4 hover:bg-slate-800/20 transition-colors">
-                                                        <div className="flex items-center gap-3 min-w-0">
-                                                        {/* Node */}
-                                                        <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-slate-500 shrink-0">
-                                                            {fight.node.nodeNumber}
-                                                        </div>
-
-                                                        {/* Champion pill */}
-                                                        <div className="flex items-center bg-slate-900/80 rounded-full pl-1.5 pr-4 py-1.5 border border-slate-800 shadow-inner min-w-0">
-                                                            {/* Attacker */}
-                                                            <div className="relative shrink-0">
-                                                                <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", attackerColors.bg)} />
-                                                                <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", attackerColors.border)}>
-                                                                    {attackerImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(attackerImages, "64")} />}
-                                                                    <AvatarFallback className="text-xs font-black">{fight.attacker?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
-                                                                </Avatar>
-                                                            </div>
-                                                            <span className="text-[9px] font-black text-slate-600 uppercase mx-3 shrink-0">VS</span>
-                                                            {/* Defender */}
-                                                            <div className="flex items-center gap-2.5 overflow-hidden">
-                                                                <div className="relative shrink-0">
-                                                                    <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", defenderColors.bg)} />
-                                                                    <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", defenderColors.border)}>
-                                                                        {defenderImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(defenderImages, "64")} />}
-                                                                        <AvatarFallback className="text-xs font-black">{fight.defender?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
-                                                                    </Avatar>
-                                                                </div>
-                                                                <span className={cn("text-sm font-black uppercase italic tracking-tighter whitespace-nowrap pr-2", defenderColors.text)}>
-                                                                    {fight.defender?.name || '?'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        </div>{/* end left group */}
-
-                                                        {/* Result + video */}
-                                                        <div className="flex items-center gap-2.5 shrink-0">
-                                                            {isDeath ? (
-                                                                <div className="flex items-center gap-1 text-red-400 text-xs font-black uppercase italic">
-                                                                    <Skull className="w-3 h-3" /> Death
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center gap-1 text-emerald-400 text-xs font-black uppercase italic">
-                                                                    <Trophy className="w-3 h-3" /> Solo
-                                                                </div>
-                                                            )}
-                                                            {fight.video && (
-                                                                <Link
-                                                                    href={`/war-videos/${fight.video.id}`}
-                                                                    className="p-1.5 bg-sky-600/20 border border-sky-600/50 rounded-full hover:bg-sky-600 text-sky-300 hover:text-white transition-all shadow-md"
-                                                                    title="Watch Video"
-                                                                >
-                                                                    <Video className="w-3.5 h-3.5" />
-                                                                </Link>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            })()}
         </div>
     );
 }
