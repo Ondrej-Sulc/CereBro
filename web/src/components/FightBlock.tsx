@@ -73,6 +73,7 @@ export function FightBlock({
 
   return (
     <div
+      id={`fight-block-${fight.id}`}
       className={cn(
         "group relative overflow-hidden rounded-xl border bg-slate-900/40 backdrop-blur-sm transition-all duration-300",
         fight.death > 0
@@ -81,9 +82,15 @@ export function FightBlock({
       )}
     >
       {/* Header Row: Node & Actions */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-white/5 bg-slate-950/30">
+      <div className={cn(
+        "flex items-center justify-between px-3 py-2 border-b bg-slate-950/30",
+        errors?.[`nodeId-${fight.id}`] ? "border-red-500/40 bg-red-950/10" : "border-white/5"
+      )}>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-wider",
+            errors?.[`nodeId-${fight.id}`] ? "text-red-400" : "text-slate-500"
+          )}>
             Node
           </span>
           <NodeCombobox
@@ -93,9 +100,12 @@ export function FightBlock({
             placeholder="#"
             className={cn(
               "h-5 w-[50px] bg-transparent border-0 p-0 text-sm font-black text-sky-400 focus:ring-0 placeholder:text-slate-700 text-left",
-              errors?.[`nodeId-${fight.id}`] && "text-red-400 placeholder:text-red-900"
+              errors?.[`nodeId-${fight.id}`] && "text-red-400 placeholder:text-red-700"
             )}
           />
+          {errors?.[`nodeId-${fight.id}`] && (
+            <span className="text-[10px] font-semibold text-red-400">Required</span>
+          )}
         </div>
         
         {canRemove && (
@@ -134,6 +144,9 @@ export function FightBlock({
                 fight.attackerId && "font-bold shadow-inner"
               )}
             />
+            {errors?.[`attackerId-${fight.id}`] && (
+              <p className="text-[10px] font-semibold text-red-400 pl-1">{errors[`attackerId-${fight.id}`]}</p>
+            )}
           </div>
 
           {/* VS Badge */}
@@ -161,6 +174,9 @@ export function FightBlock({
                 fight.defenderId && "font-bold shadow-inner"
               )}
             />
+            {errors?.[`defenderId-${fight.id}`] && (
+              <p className="text-[10px] font-semibold text-red-400 text-right pr-1">{errors[`defenderId-${fight.id}`]}</p>
+            )}
           </div>
         </div>
 

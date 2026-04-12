@@ -319,7 +319,7 @@ export function useWarVideoForm({
     });
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   }, [uploadMode, sourceMode, videoFile, videoUrl, season, isOffseason, warNumber, warTier, battlegroup, contextMode, fights]);
 
   const uploadVideo = useCallback(
@@ -397,7 +397,21 @@ export function useWarVideoForm({
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      if (!validateForm() || isSubmitting) return;
+      if (isSubmitting) return;
+      const formErrors = validateForm();
+      if (Object.keys(formErrors).length > 0) {
+        // Scroll to first errored fight block, or fall back to first error element on the page
+        setTimeout(() => {
+          const fightErrorKey = Object.keys(formErrors).find((k) =>
+            /^(nodeId|attackerId|defenderId|videoFile|videoUrl)-/.test(k)
+          );
+          if (fightErrorKey) {
+            const fightId = fightErrorKey.replace(/^(nodeId|attackerId|defenderId|videoFile|videoUrl)-/, "");
+            document.getElementById(`fight-block-${fightId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 50);
+        return;
+      }
       setIsSubmitting(true);
       setUploadProgress(0);
       
