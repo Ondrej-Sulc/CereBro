@@ -29,6 +29,7 @@ import {
     Copy
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning/types";
 import { War, WarMapType, ChampionClass } from "@prisma/client";
@@ -281,7 +282,11 @@ export const PlayerBriefingModal = ({
                                 </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                                <DialogTitle className="text-sm sm:text-2xl font-bold text-slate-100 drop-shadow-sm truncate leading-none">{player.ingameName}</DialogTitle>
+                                <DialogTitle className="text-sm sm:text-2xl font-bold text-slate-100 drop-shadow-sm truncate leading-none">
+                                    <Link href={`/player/${player.id}`} onClick={() => onOpenChange(false)} className="hover:text-sky-400 hover:underline underline-offset-4 transition-colors">
+                                        {player.ingameName}
+                                    </Link>
+                                </DialogTitle>
                                 <DialogDescription className="text-slate-400 flex items-center gap-x-1 sm:gap-x-2 text-[9px] sm:text-sm mt-1">
                                     <span className="truncate">Briefing • BG {player.battlegroup}</span>
                                     {totalFights > 0 && (
