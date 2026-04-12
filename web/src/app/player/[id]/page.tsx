@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { cache } from "react";
+import { getYoutubeVideoId } from "@/lib/youtube";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
@@ -89,6 +90,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                     include: {
                         war: { include: { alliance: true } },
                         attacker: true,
+                        defender: true,
                     }
                 }
             },
@@ -461,45 +463,103 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                             {recentVideos.map(video => {
                                 const war = video.fights[0]?.war;
                                 const fighters = video.fights.map(f => f.attacker).filter(Boolean);
+                                const defenders = video.fights.map(f => f.defender).filter(Boolean);
+                                const youtubeId = getYoutubeVideoId(video.url);
                                 return (
-                                    <Link key={video.id} href={`/war-videos/${video.id}`}>
-                                        <Card className="bg-slate-900/50 border-slate-800 hover:border-red-900/50 transition-all hover:shadow-lg hover:shadow-red-900/10 cursor-pointer overflow-hidden h-full flex flex-col">
-                                            <div className="p-3 flex-1 bg-slate-950/60 flex flex-col gap-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="w-7 h-7 rounded-full bg-red-600/20 border border-red-600/40 flex items-center justify-center shrink-0">
-                                                        <Play className="w-3.5 h-3.5 text-red-400 ml-0.5" fill="currentColor" />
+                                    <Link key={video.id} href={`/war-videos/${video.id}`} className="block h-full">
+                                        <Card className="bg-gradient-to-b from-slate-900 to-[#05090f] transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity border-slate-800 hover:border-red-700/50 hover:shadow-[0_0_30px_rgba(220,38,38,0.1)] before:from-red-500/5">
+                                            {/* Video Thumbnail Area */}
+                                            <div className="relative h-32 w-full overflow-hidden bg-slate-950 border-b border-slate-800 shrink-0">
+                                                {youtubeId ? (
+                                                    <img 
+                                                        src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
+                                                        alt="Thumbnail"
+                                                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105"
+                                                    />
+                                                ) : (
+                                                    <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                                                        <Video className="w-16 h-16 text-red-500" />
                                                     </div>
-                                                    {war && (
-                                                        <Badge variant="outline" className="border-red-900/50 text-red-400 bg-red-950/20 text-[10px]">
-                                                            S{war.season} W{war.warNumber || '-'} T{war.warTier}
-                                                        </Badge>
-                                                    )}
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                                                
+                                                {/* Play Button Overlay */}
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="w-12 h-12 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-500 flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.5)] group-hover:scale-110 transition-transform duration-300">
+                                                        <Play className="w-5 h-5 text-white ml-1" fill="currentColor" />
+                                                    </div>
                                                 </div>
-                                                {fighters.length > 0 && (
-                                                    <div className="flex gap-1.5">
-                                                        {fighters.map((fighter, i) => (
-                                                            <ChampionAvatar
-                                                                key={i}
-                                                                name={fighter!.name}
-                                                                images={fighter!.images as unknown as ChampionImages}
-                                                                championClass={fighter!.class}
-                                                                size="sm"
-                                                                showStars={false}
-                                                                showRank={false}
-                                                            />
-                                                        ))}
+
+                                                {/* War Badge Top Left */}
+                                                {war && (
+                                                    <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-red-500/30 shadow-xl">
+                                                        <Shield className="w-3 h-3 text-red-400" />
+                                                        <span className="text-[9px] font-black text-red-100 uppercase tracking-widest">
+                                                            S{war.season} • {war.warNumber ? `W${war.warNumber}` : 'O'} • T{war.warTier}
+                                                        </span>
                                                     </div>
                                                 )}
+                                                
+                                                {/* Fights Badge Bottom Right */}
+                                                <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
+                                                    <Swords className="w-3 h-3 text-slate-300" />
+                                                    <span className="text-[10px] font-black text-slate-200 uppercase tracking-tight">{video.fights.length} {video.fights.length === 1 ? 'Fight' : 'Fights'}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Content */}
+                                            <CardContent className="p-4 flex flex-col flex-1 gap-3">
                                                 {war && (
-                                                    <p className="text-xs text-slate-400 font-medium truncate leading-none">{war.alliance.name}</p>
+                                                    <h3 className="text-sm font-black group-hover:text-red-400 transition-colors line-clamp-1 uppercase tracking-tight leading-tight text-slate-200 mb-1">
+                                                        {war.alliance.name}
+                                                    </h3>
                                                 )}
-                                            </div>
-                                            <div className="px-3 py-2 bg-slate-900 border-t border-slate-800 text-xs text-slate-400 flex justify-between items-center">
-                                                <span>{new Date(video.createdAt).toLocaleDateString()}</span>
-                                                <span className="text-sky-400 font-medium flex items-center gap-1">
-                                                    <Play className="w-3 h-3" /> Watch
-                                                </span>
-                                            </div>
+
+                                                {(fighters.length > 0 || defenders.length > 0) && (
+                                                    <div className="flex items-center justify-between gap-2 bg-slate-950/50 rounded-lg p-1.5 border border-slate-800/50 shadow-inner">
+                                                        {fighters.length > 0 && (
+                                                            <div className="flex gap-1.5 items-center">
+                                                                {fighters.map((fighter, i) => (
+                                                                    <div key={`a-${i}`} className="relative shrink-0">
+                                                                        <Avatar className="h-7 w-7 border border-slate-700 bg-slate-900 shadow-md hover:scale-110 transition-transform z-10 hover:z-20">
+                                                                            {fighter!.images && <AvatarImage src={getChampionImageUrlOrPlaceholder(fighter!.images as unknown as ChampionImages, "64")} />}
+                                                                            <AvatarFallback className="text-[9px] font-black">{fighter!.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                                        </Avatar>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {fighters.length > 0 && defenders.length > 0 && (
+                                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest px-1">VS</span>
+                                                        )}
+
+                                                        {defenders.length > 0 && (
+                                                            <div className="flex gap-1.5 items-center">
+                                                                {defenders.map((defender, i) => (
+                                                                    <div key={`d-${i}`} className="relative shrink-0">
+                                                                        <Avatar className="h-7 w-7 border border-slate-700 bg-slate-900 shadow-md hover:scale-110 transition-transform z-10 hover:z-20">
+                                                                            {defender!.images && <AvatarImage src={getChampionImageUrlOrPlaceholder(defender!.images as unknown as ChampionImages, "64")} />}
+                                                                            <AvatarFallback className="text-[9px] font-black">{defender!.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                                                        </Avatar>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Footer */}
+                                                <div className="mt-auto pt-3 border-t border-slate-900/50 flex items-center justify-between">
+                                                    <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-red-500 transition-colors">
+                                                        <Clock className="w-3 h-3" />
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider">{new Date(video.createdAt).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div className="h-7 w-7 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center group-hover:bg-red-600 group-hover:border-red-500 group-hover:scale-110 transition-all shadow-inner group-hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                                                        <ArrowRight className="h-3 w-3 text-slate-400 group-hover:text-white" />
+                                                    </div>
+                                                </div>
+                                            </CardContent>
                                         </Card>
                                     </Link>
                                 );
