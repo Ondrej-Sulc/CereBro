@@ -59,7 +59,9 @@ export function CombatHistoryDialog({ player, onClose }: CombatHistoryDialogProp
                     </div>
                     <div className="flex flex-col">
                         <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter text-white">
-                            {player.playerName}
+                            <Link href={`/player/${player.playerId}`} onClick={onClose} className="hover:text-sky-400 hover:underline underline-offset-4 transition-colors">
+                                {player.playerName}
+                            </Link>
                         </DialogTitle>
                         <DialogDescription className="text-sm text-slate-500 font-black uppercase tracking-[0.2em] flex items-center gap-2">
                             <span className="text-amber-500">Combat History</span>
