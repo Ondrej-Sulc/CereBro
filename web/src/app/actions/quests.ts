@@ -1518,6 +1518,54 @@ export const reorderQuestEncounters = withActionContext('reorderQuestEncounters'
     return { success: true };
 });
 
+// --- Bulk Video Assignment ---
+
+export type BulkEncounterVideoInput = {
+    questPlanId: string;
+    items: { encounterId: string; videoUrl: string; playerId: string | null }[];
+};
+
+export const bulkAddEncounterVideos = withActionContext('bulkAddEncounterVideos', async (data: BulkEncounterVideoInput) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    if (data.items.length === 0) return { success: true, created: 0, skipped: 0 };
+
+    const encounterIds = [...new Set(data.items.map(i => i.encounterId))];
+    const encounters = await prisma.questEncounter.findMany({
+        where: { id: { in: encounterIds } },
+        select: { id: true, questPlanId: true }
+    });
+
+    if (encounters.length !== encounterIds.length) {
+        throw new Error("One or more encounters not found.");
+    }
+    if (encounters.some(e => e.questPlanId !== data.questPlanId)) {
+        throw new Error("One or more encounters do not belong to this quest plan.");
+    }
+
+    // Skip exact duplicates: same encounter + same URL already exists
+    const existing = await prisma.questEncounterVideo.findMany({
+        where: { questEncounterId: { in: encounterIds } },
+        select: { questEncounterId: true, videoUrl: true }
+    });
+    const existingSet = new Set(existing.map(v => `${v.questEncounterId}::${v.videoUrl}`));
+    const toCreate = data.items.filter(item => !existingSet.has(`${item.encounterId}::${item.videoUrl}`));
+
+    if (toCreate.length > 0) {
+        await prisma.questEncounterVideo.createMany({
+            data: toCreate.map(item => ({
+                questEncounterId: item.encounterId,
+                videoUrl: item.videoUrl,
+                playerId: item.playerId ?? null,
+            }))
+        });
+    }
+
+    revalidatePath(`/admin/quests/${data.questPlanId}`);
+    revalidatePath(`/planning/quests/${data.questPlanId}`);
+    return { success: true, created: toCreate.length, skipped: data.items.length - toCreate.length };
+});
+
 // --- Sharing & Public Viewing ---
 
 /**

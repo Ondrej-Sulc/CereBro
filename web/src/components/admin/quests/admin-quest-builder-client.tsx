@@ -12,14 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, BulkNodeImportResult } from "@/app/actions/quests";
+import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, BulkNodeImportResult, bulkAddEncounterVideos } from "@/app/actions/quests";
+import { parseTimestamps, extractYouTubeVideoId } from "@/lib/parseTimestamps";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink,
     XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2,
     ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack,
-    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check
+    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -45,6 +46,14 @@ export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
 type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
 type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
 type CreatorRelation = QuestWithRelations["creators"][0];
+
+function formatSeconds(s: number): string {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    return `${m}:${String(sec).padStart(2, '0')}`;
+}
 
 interface Props {
     initialQuest: QuestWithRelations;
@@ -93,6 +102,14 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [isBulkNodeImporting, setIsBulkNodeImporting] = useState(false);
     const [bulkNodeImportResults, setBulkNodeImportResults] = useState<BulkNodeImportResult[] | null>(null);
 
+    // Bulk Video Assignment
+    const [bulkVideoBaseUrl, setBulkVideoBaseUrl] = useState('');
+    const [bulkVideoText, setBulkVideoText] = useState('');
+    const [bulkVideoCreator, setBulkVideoCreator] = useState<{ id: string; name: string; avatar: string | null } | null>(null);
+    const [bulkVideoAssignments, setBulkVideoAssignments] = useState<(string | null)[]>([]);
+    const [bulkVideoRemovedRows, setBulkVideoRemovedRows] = useState<Set<number>>(new Set());
+    const [isBulkVideoApplying, setIsBulkVideoApplying] = useState(false);
+
     const bulkImportPreview = useMemo(() => {
         const lines = bulkEncountersText.split("\n").map((l) => l.trim()).filter(Boolean);
         let matched = 0;
@@ -117,6 +134,25 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         : -1;
 
     const pathNavDisabled = sortedPathEncounters.length === 0;
+
+    const parsedBulkTimestamps = useMemo(
+        () => parseTimestamps(bulkVideoText, bulkVideoBaseUrl),
+        [bulkVideoText, bulkVideoBaseUrl]
+    );
+
+    // Auto-assign rows when parsed timestamps change
+    useEffect(() => {
+        if (!parsedBulkTimestamps) {
+            setBulkVideoAssignments([]);
+            setBulkVideoRemovedRows(new Set());
+            return;
+        }
+        const autoMatch = parsedBulkTimestamps.length === sortedPathEncounters.length;
+        setBulkVideoAssignments(
+            parsedBulkTimestamps.map((_, i) => autoMatch ? (sortedPathEncounters[i]?.id ?? null) : null)
+        );
+        setBulkVideoRemovedRows(new Set());
+    }, [parsedBulkTimestamps]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleBulkEncounterParse = async () => {
         const lines = bulkEncountersText.split('\n').map(l => l.trim()).filter(Boolean);
@@ -342,6 +378,42 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             description: `Matched ${matchedCount} nodes from ${lines.length} lines.`,
             variant: matchedCount > 0 ? "default" : "destructive"
         });
+    };
+
+    const handleBulkVideoApply = async () => {
+        if (!parsedBulkTimestamps || !bulkVideoCreator) return;
+
+        const items = parsedBulkTimestamps
+            .map((ts, i) => ({ ts, i }))
+            .filter(({ i }) => !bulkVideoRemovedRows.has(i))
+            .map(({ ts, i }) => ({
+                encounterId: bulkVideoAssignments[i] ?? null,
+                videoUrl: ts.videoUrl,
+                playerId: bulkVideoCreator.id,
+            }))
+            .filter((item): item is { encounterId: string; videoUrl: string; playerId: string } =>
+                item.encounterId !== null
+            );
+
+        if (items.length === 0) return;
+
+        setIsBulkVideoApplying(true);
+        try {
+            const result = await bulkAddEncounterVideos({ questPlanId: initialQuest.id, items });
+            toast({
+                title: "Videos added",
+                description: `Added ${result.created} video${result.created !== 1 ? 's' : ''}${result.skipped > 0 ? `, skipped ${result.skipped} duplicate${result.skipped !== 1 ? 's' : ''}` : ''}.`,
+            });
+            setBulkVideoBaseUrl('');
+            setBulkVideoText('');
+            setBulkVideoCreator(null);
+            router.refresh();
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Failed to add videos";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        } finally {
+            setIsBulkVideoApplying(false);
+        }
     };
 
     const effectiveSequence = sequence;
@@ -1033,6 +1105,197 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     placeholder="Search tags..."
                                 />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Bulk Video Assignment */}
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-red-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20">
+                                    <Video className="w-4 h-4 text-red-400" />
+                                </div>
+                                Bulk Video Assignment
+                            </CardTitle>
+                            <CardDescription>Paste a YouTube video URL and description chapters to assign timestamped videos to all encounters at once.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Base Video URL</Label>
+                                    <div className="relative">
+                                        <Input
+                                            value={bulkVideoBaseUrl}
+                                            onChange={e => setBulkVideoBaseUrl(e.target.value)}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            className={cn(
+                                                "bg-slate-900 border-slate-800 focus-visible:ring-sky-500 pr-8",
+                                                bulkVideoBaseUrl && !extractYouTubeVideoId(bulkVideoBaseUrl) && "border-red-700/50"
+                                            )}
+                                        />
+                                        {bulkVideoBaseUrl && (
+                                            extractYouTubeVideoId(bulkVideoBaseUrl)
+                                                ? <Check className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none" />
+                                                : <XCircle className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500 pointer-events-none" />
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Creator</Label>
+                                    {bulkVideoCreator ? (
+                                        <div className="flex items-center gap-2 px-2.5 py-2 bg-slate-900 rounded-lg border border-slate-800 text-sm">
+                                            {bulkVideoCreator.avatar ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={bulkVideoCreator.avatar} className="w-5 h-5 rounded-full shrink-0" alt={bulkVideoCreator.name} />
+                                            ) : (
+                                                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-400 shrink-0">
+                                                    {bulkVideoCreator.name.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <span className="text-slate-300 flex-1 truncate text-sm">{bulkVideoCreator.name}</span>
+                                            <button onClick={() => setBulkVideoCreator(null)} className="text-slate-600 hover:text-red-400 shrink-0">
+                                                <XCircle className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <AsyncPlayerSearchCombobox
+                                            value=""
+                                            onSelect={(id, name, avatar) => { if (id) setBulkVideoCreator({ id, name, avatar }); }}
+                                            placeholder="Select creator..."
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-300">Chapter / Timestamp List</Label>
+                                <Textarea
+                                    value={bulkVideoText}
+                                    onChange={e => setBulkVideoText(e.target.value)}
+                                    placeholder={"0:00 Intro\n0:45 Fight 1 - Crossbones\n2:10 Fight 2 - Void\n..."}
+                                    className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500 min-h-[120px] text-sm font-mono resize-y"
+                                />
+                                {parsedBulkTimestamps && (
+                                    <p className="text-[11px] text-slate-500">
+                                        {parsedBulkTimestamps.length} timestamp{parsedBulkTimestamps.length !== 1 ? 's' : ''} parsed
+                                        {parsedBulkTimestamps.length === sortedPathEncounters.length
+                                            ? <span className="ml-1.5 text-emerald-500">· count matches encounters — auto-assigned in order</span>
+                                            : <span className="ml-1.5 text-slate-600">· {sortedPathEncounters.length} encounters total</span>
+                                        }
+                                    </p>
+                                )}
+                            </div>
+
+                            {parsedBulkTimestamps && parsedBulkTimestamps.length > 0 && (
+                                <>
+                                    <div className="rounded-lg border border-slate-800 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b border-slate-800 bg-slate-900/60 text-[11px] text-slate-500 uppercase tracking-widest">
+                                                        <th className="text-left px-3 py-2 font-medium">Time</th>
+                                                        <th className="text-left px-3 py-2 font-medium">Label</th>
+                                                        <th className="text-left px-3 py-2 font-medium">Encounter</th>
+                                                        <th className="px-2 py-2 w-8" />
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {parsedBulkTimestamps.map((ts, i) => {
+                                                        if (bulkVideoRemovedRows.has(i)) return null;
+                                                        const assignedId = bulkVideoAssignments[i] ?? null;
+                                                        const isAutoMatch = parsedBulkTimestamps.length === sortedPathEncounters.length;
+                                                        const assignedEncounter = sortedPathEncounters.find(e => e.id === assignedId);
+                                                        const defenderName = assignedEncounter?.defenderId
+                                                            ? champions.find(c => c.id === assignedEncounter.defenderId)?.name
+                                                            : null;
+
+                                                        return (
+                                                            <tr key={i} className="border-b border-slate-800/50 last:border-0 hover:bg-slate-900/30">
+                                                                <td className="px-3 py-2 font-mono text-sky-400 text-xs whitespace-nowrap">
+                                                                    {formatSeconds(ts.seconds)}
+                                                                </td>
+                                                                <td className="px-3 py-2 text-slate-300 max-w-[180px] truncate text-xs">
+                                                                    {ts.label || <span className="text-slate-600 italic">no label</span>}
+                                                                </td>
+                                                                <td className="px-3 py-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {isAutoMatch && (
+                                                                            <Badge className="bg-emerald-900/40 text-emerald-400 border-emerald-800/60 text-[10px] px-1.5 py-0 shrink-0">Auto</Badge>
+                                                                        )}
+                                                                        <select
+                                                                            value={assignedId || ""}
+                                                                            onChange={e => {
+                                                                                const next = [...bulkVideoAssignments];
+                                                                                next[i] = e.target.value || null;
+                                                                                setBulkVideoAssignments(next);
+                                                                            }}
+                                                                            className="h-7 rounded border border-slate-700 bg-slate-900 px-2 text-xs text-slate-300 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                                                        >
+                                                                            <option value="">— unassigned —</option>
+                                                                            {sortedPathEncounters.map(enc => {
+                                                                                const dName = enc.defenderId
+                                                                                    ? champions.find(c => c.id === enc.defenderId)?.name
+                                                                                    : null;
+                                                                                return (
+                                                                                    <option key={enc.id} value={enc.id}>
+                                                                                        #{enc.sequence}{dName ? ` · ${dName}` : ''}
+                                                                                    </option>
+                                                                                );
+                                                                            })}
+                                                                        </select>
+                                                                        {assignedId && defenderName && !isAutoMatch && (
+                                                                            <span className="text-slate-600 text-xs truncate hidden sm:block">{defenderName}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-2 py-2">
+                                                                    <button
+                                                                        onClick={() => setBulkVideoRemovedRows(prev => new Set([...prev, i]))}
+                                                                        className="text-slate-700 hover:text-red-400 transition-colors"
+                                                                        title="Remove this row"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {(() => {
+                                        const visibleRows = parsedBulkTimestamps.filter((_, i) => !bulkVideoRemovedRows.has(i));
+                                        const unassignedCount = parsedBulkTimestamps
+                                            .map((_, i) => i)
+                                            .filter(i => !bulkVideoRemovedRows.has(i) && !bulkVideoAssignments[i])
+                                            .length;
+                                        const canApply = visibleRows.length > 0 && unassignedCount === 0 && !!bulkVideoCreator && !!extractYouTubeVideoId(bulkVideoBaseUrl);
+
+                                        return (
+                                            <div className="flex items-center justify-between gap-4 pt-1">
+                                                <p className="text-xs text-slate-500">
+                                                    {visibleRows.length} row{visibleRows.length !== 1 ? 's' : ''} to apply
+                                                    {unassignedCount > 0 && <span className="text-amber-500 ml-1.5">· {unassignedCount} unassigned</span>}
+                                                    {!bulkVideoCreator && <span className="text-amber-500 ml-1.5">· no creator selected</span>}
+                                                </p>
+                                                <Button
+                                                    onClick={handleBulkVideoApply}
+                                                    disabled={!canApply || isBulkVideoApplying}
+                                                    className="bg-red-700 hover:bg-red-600 text-white disabled:opacity-50"
+                                                >
+                                                    {isBulkVideoApplying
+                                                        ? <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                                                        : <ClipboardPaste className="mr-2 w-4 h-4" />
+                                                    }
+                                                    Apply All
+                                                </Button>
+                                            </div>
+                                        );
+                                    })()}
+                                </>
+                            )}
                         </CardContent>
                     </Card>
 
