@@ -86,7 +86,6 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
             },
             include: {
                 fights: {
-                    take: 3,
                     include: {
                         war: { include: { alliance: true } },
                         attacker: true,
