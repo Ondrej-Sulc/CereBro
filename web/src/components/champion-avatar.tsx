@@ -22,6 +22,7 @@ interface ChampionAvatarProps {
     showRank?: boolean;
     isSelected?: boolean;
     isRecommended?: boolean;
+    ascensionLevel?: number;
 }
 
 export const ChampionAvatar = memo(({
@@ -39,6 +40,7 @@ export const ChampionAvatar = memo(({
     showRank = true,
     isSelected = false,
     isRecommended = false,
+    ascensionLevel,
 }: ChampionAvatarProps) => {
     const sizeClasses = {
         sm: "h-8 w-8",
@@ -77,7 +79,7 @@ export const ChampionAvatar = memo(({
             {isAscended && (
                 <div className="absolute top-0.5 right-0.5 z-20">
                     <Badge className="px-1 py-0 h-4 text-[9px] font-black border-none bg-black/80 text-purple-300">
-                        ✦
+                        {ascensionLevel ? `A${ascensionLevel}` : "✦"}
                     </Badge>
                 </div>
             )}

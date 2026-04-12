@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HeroVisual } from "@/components/HeroVisual";
-import { LiveSetup } from "@/components/LiveSetup";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { unstable_cache } from "next/cache";
 import {
   LayoutDashboard,
@@ -15,22 +13,26 @@ import {
   Gamepad2,
   Users,
   Shield,
-  Server,
   ChevronRight,
   Heart,
-  Compass
+  Compass,
+  LogIn,
 } from "lucide-react";
+import { signInAction } from "@/app/actions/auth";
 import { Faq } from "@/components/Faq";
+import { HeroVisual } from "@/components/HeroVisual";
+import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDeck";
+import { LiveSetup } from "@/components/LiveSetup";
+import PageBackground from "@/components/PageBackground";
+import { ScrollReveal } from "@/components/ScrollReveal";
+import { DISCORD_INVITE } from "@/lib/links";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Quest Planning, War Strategy & Discord Bot - CereBro",
   description:
     "CereBro is the complete toolkit for MCOC players and alliances, combining advanced quest planning, war strategy tools, roster utilities, a Discord bot, and a video library.",
 };
-import PageBackground from "@/components/PageBackground";
-import { InteractiveScreenshotDeck } from "@/components/InteractiveScreenshotDeck";
-import { ScrollReveal } from "@/components/ScrollReveal";
-import { DISCORD_INVITE } from "@/lib/links";
 
 const getHomeHeroStats = unstable_cache(
   async () => {
@@ -53,7 +55,11 @@ const getHomeHeroStats = unstable_cache(
 );
 
 export default async function Home() {
-  const { players, alliances, rosters, warVideos } = await getHomeHeroStats();
+  const [{ players, alliances, rosters, warVideos }, session] = await Promise.all([
+    getHomeHeroStats(),
+    auth(),
+  ]);
+  const isSignedIn = !!session?.user;
 
   const heroStats = [
     { label: "Registered Players", value: players, icon: Users },
@@ -83,35 +89,50 @@ export default async function Home() {
               </p>
 
               <div className="flex flex-col items-start gap-4 max-w-xl">
-                <Link
-                  href={DISCORD_INVITE}
-                  target="_blank"
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 transition-all hover:-translate-y-0.5"
-                >
-                  <Users className="w-5 h-5" />
-                  Join Community Discord
-                </Link>
+                {!isSignedIn && (
+                  <Link
+                    href={DISCORD_INVITE}
+                    target="_blank"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg shadow-sky-500/30 hover:shadow-sky-500/50 transition-all hover:-translate-y-0.5"
+                  >
+                    <Users className="w-5 h-5" />
+                    Join Community Discord
+                  </Link>
+                )}
                 <div className="flex flex-col items-start gap-4">
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    {!isSignedIn && (
+                      <form action={signInAction} className="w-full sm:flex-1">
+                        <button
+                          type="submit"
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg border border-sky-500/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 transition-all whitespace-nowrap"
+                        >
+                          <LogIn className="w-4 h-4 shrink-0" />
+                          Sign In with Discord
+                        </button>
+                      </form>
+                    )}
                     <Link
                       href="https://discord.com/oauth2/authorize?client_id=1184180809771520091"
                       target="_blank"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg border border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-all"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg border border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 transition-all whitespace-nowrap"
                     >
-                      <Gamepad2 className="w-5 h-5" />
+                      <Gamepad2 className="w-4 h-4 shrink-0" />
                       Add to Your Server
                     </Link>
                     <Link
                       href="/support"
-                      className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium rounded-lg border border-pink-500/50 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 transition-all"
+                      className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg border border-pink-500/50 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 transition-all whitespace-nowrap"
                     >
-                      <Heart className="w-5 h-5" />
+                      <Heart className="w-4 h-4 shrink-0" />
                       Support CereBro
                     </Link>
                   </div>
-                  <p className="text-sm text-slate-400 max-w-md">
-                    New here? Join the community first for help and updates. Add CereBro to your own Discord server when you&apos;re ready to set it up for your alliance.
-                  </p>
+                  {!isSignedIn && (
+                    <p className="text-sm text-slate-400 max-w-md">
+                      New here? Join the community first for help and updates. Add CereBro to your own Discord server when you&apos;re ready to set it up for your alliance.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -174,9 +195,12 @@ export default async function Home() {
                     <Compass className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Advanced Quest Planner</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed">
+                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
                     Build the perfect team with the Quest Planner. See the path ahead, identify the most popular counters from community data, and optimize your run.
                   </p>
+                  <Link href="/planning/quests" className="inline-flex items-center gap-2 text-pink-400 hover:text-pink-300 font-medium transition-colors">
+                    Open Quest Planner <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </ScrollReveal>
                 <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                   <div className="w-full max-w-[600px]">
@@ -197,9 +221,12 @@ export default async function Home() {
                     <Map className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Interactive War Map</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed">
+                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
                     Plan your Attacks and Defense with player&apos;s rosters right at your fingertips. Assign nodes, see the whole board, and execute your strategy. It&apos;s the easiest way to plan Alliance Wars.
                   </p>
+                  <Link href="/planning" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
+                    Open War Planner <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </ScrollReveal>
                 <ScrollReveal direction="right" className="order-2 lg:order-1 flex justify-center">
                   <div className="w-full max-w-[600px]">
@@ -220,9 +247,12 @@ export default async function Home() {
                     <Video className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Video Library</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed">
+                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
                     Upload your fights and tag them. Search the archive later to find the best counters for any defender.
                   </p>
+                  <Link href="/war-videos" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
+                    Browse Video Archive <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </ScrollReveal>
                 <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                   <div className="w-full max-w-[600px]">
@@ -243,9 +273,12 @@ export default async function Home() {
                     <Award className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Smart Roster & Prestige</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed">
+                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
                     Visualize your roster with advanced filtering. Simulate prestige rank-ups and optimize your signature stone usage with our intelligent budget calculator.
                   </p>
+                  <Link href="/profile/roster" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
+                    View Your Roster <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </ScrollReveal>
                 <ScrollReveal direction="right" className="order-2 lg:order-1 flex justify-center">
                   <div className="w-full max-w-[600px]">
@@ -266,9 +299,12 @@ export default async function Home() {
                     <Users className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-4">Alliance Roster Overview</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed">
+                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
                     Officers get a bird&apos;s-eye view of the entire alliance. Filter champions by Battlegroup, Class, or Rank to find the perfect defenders or counters for war.
                   </p>
+                  <Link href="/alliance/roster" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
+                    View Alliance Roster <ChevronRight className="w-4 h-4" />
+                  </Link>
                 </ScrollReveal>
                 <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
                   <div className="w-full max-w-[600px]">

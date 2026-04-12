@@ -5,7 +5,7 @@ import { getPlayerQuestPlansForProfile } from "@/app/actions/quests";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers, Clock } from "lucide-react";
+import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -63,14 +63,14 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
-            include: { champion: true },
+            include: { champion: { include: { prestigeData: true } } },
             orderBy: [
                 { stars: 'desc' },
                 { rank: 'desc' },
                 { sigLevel: 'desc' },
                 { powerRating: 'desc' }
             ],
-            take: 12
+            take: 10
         }),
         prisma.warVideo.findMany({
             where: {
@@ -288,23 +288,44 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                     <div className="flex items-center gap-2 mb-4">
                         <div className="h-6 w-1 bg-purple-500 rounded-full" />
                         <h2 className="text-sm font-black text-purple-400 uppercase tracking-[0.2em]">Top Champions</h2>
-                        <Link href={`/player/${id}/roster`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View Full Roster</Link>
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Top {roster.length}</span>
+                        <Link
+                            href={`/player/${id}/roster`}
+                            className="ml-auto flex items-center gap-1.5 text-xs bg-purple-950/40 border border-purple-800/40 hover:border-purple-600/60 hover:bg-purple-950/60 text-purple-300 hover:text-purple-200 px-3 py-1.5 rounded-lg transition-all font-black uppercase tracking-wide"
+                        >
+                            Full Roster
+                            <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                        {roster.map(r => (
-                            <ChampionAvatar
-                                key={r.id}
-                                name={r.champion.name}
-                                images={r.champion.images as unknown as ChampionImages}
-                                championClass={r.champion.class}
-                                stars={r.stars}
-                                rank={r.rank}
-                                isAwakened={r.isAwakened}
-                                isAscended={r.isAscended}
-                                sigLevel={r.sigLevel}
-                                size="lg"
-                            />
-                        ))}
+                    <div className="grid grid-cols-5 lg:grid-cols-10 gap-2">
+                        {roster.map(r => {
+                            const prestige = r.champion.prestigeData
+                                .filter(p => p.rarity === r.stars && p.rank === r.rank && p.sig <= r.sigLevel)
+                                .sort((a, b) => b.sig - a.sig)[0]?.prestige;
+                            return (
+                                <div key={r.id} className="flex flex-col items-center gap-1.5">
+                                    <ChampionAvatar
+                                        name={r.champion.name}
+                                        images={r.champion.images as unknown as ChampionImages}
+                                        championClass={r.champion.class}
+                                        stars={r.stars}
+                                        rank={r.rank}
+                                        isAwakened={r.isAwakened}
+                                        isAscended={r.isAscended}
+                                        ascensionLevel={r.ascensionLevel || undefined}
+                                        sigLevel={r.sigLevel}
+                                        size="lg"
+                                        className="w-full h-auto aspect-square"
+                                    />
+                                    <div className="text-center w-full px-0.5">
+                                        <p className="text-[9px] text-slate-400 font-semibold truncate leading-tight">{r.champion.name}</p>
+                                        {prestige && (
+                                            <p className="text-[10px] font-black font-mono text-amber-400 leading-tight">{prestige.toLocaleString()}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -491,6 +512,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                 )}
 
                 {/* Quest Plans Section */}
+                {questPlans.length > 0 && (
                 <div>
                     <div className="flex items-center gap-2 mb-4">
                         <div className="h-6 w-1 bg-sky-500 rounded-full" />
@@ -498,58 +520,52 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                         <Badge variant="secondary" className="text-[10px] h-4 ml-1">{questPlans.length}</Badge>
                     </div>
 
-                    {questPlans.length === 0 ? (
-                        <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl bg-slate-900/20">
-                            <ScrollText className="w-8 h-8 text-slate-700 mx-auto mb-3" />
-                            <p className="text-slate-500 text-sm">No quest plans yet.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {questPlans.slice(0, 4).map(plan => (
-                                <Link key={plan.id} href={`/player/${id}/quests/${plan.questPlan.id}`}>
-                                    <Card className="bg-slate-900/50 border-slate-800 hover:border-sky-800/50 transition-all hover:shadow-lg hover:shadow-sky-500/5 cursor-pointer group overflow-hidden h-full flex flex-col">
-                                        {plan.questPlan.bannerUrl ? (
-                                            <div className="relative h-24 overflow-hidden shrink-0">
-                                                <Image
-                                                    src={plan.questPlan.bannerUrl.replace(/#/g, '%23')}
-                                                    alt={plan.questPlan.title}
-                                                    fill
-                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                                    style={{
-                                                        objectFit: (plan.questPlan.bannerFit as "cover" | "contain") || "cover",
-                                                        objectPosition: plan.questPlan.bannerPosition || "center"
-                                                    }}
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-                                            </div>
-                                        ) : (
-                                            <div className="h-24 bg-slate-950/50 shrink-0 flex items-center justify-center">
-                                                <ScrollText className="w-8 h-8 text-slate-800" />
-                                            </div>
-                                        )}
-                                        <CardContent className="p-3 flex-1 flex flex-col justify-between">
-                                            <div>
-                                                {plan.questPlan.category && (
-                                                    <Badge variant="outline" className="text-[9px] uppercase font-bold border-slate-700 text-slate-400 mb-1.5">
-                                                        {plan.questPlan.category.name}
-                                                    </Badge>
-                                                )}
-                                                <h3 className="font-bold text-sm text-slate-200 group-hover:text-sky-400 transition-colors line-clamp-2">
-                                                    {plan.questPlan.title}
-                                                </h3>
-                                            </div>
-                                            <div className="mt-3">
-                                                <Badge variant="secondary" className="text-[10px] h-5 bg-sky-950/30 border-sky-900/50 text-sky-400">
-                                                    {plan.encounters.length} / {plan.questPlan.encounters.length} picked
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {questPlans.slice(0, 4).map(plan => (
+                            <Link key={plan.id} href={`/player/${id}/quests/${plan.questPlan.id}`}>
+                                <Card className="bg-slate-900/50 border-slate-800 hover:border-sky-800/50 transition-all hover:shadow-lg hover:shadow-sky-500/5 cursor-pointer group overflow-hidden h-full flex flex-col">
+                                    {plan.questPlan.bannerUrl ? (
+                                        <div className="relative h-24 overflow-hidden shrink-0">
+                                            <Image
+                                                src={plan.questPlan.bannerUrl.replace(/#/g, '%23')}
+                                                alt={plan.questPlan.title}
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                style={{
+                                                    objectFit: (plan.questPlan.bannerFit as "cover" | "contain") || "cover",
+                                                    objectPosition: plan.questPlan.bannerPosition || "center"
+                                                }}
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                                        </div>
+                                    ) : (
+                                        <div className="h-24 bg-slate-950/50 shrink-0 flex items-center justify-center">
+                                            <ScrollText className="w-8 h-8 text-slate-800" />
+                                        </div>
+                                    )}
+                                    <CardContent className="p-3 flex-1 flex flex-col justify-between">
+                                        <div>
+                                            {plan.questPlan.category && (
+                                                <Badge variant="outline" className="text-[9px] uppercase font-bold border-slate-700 text-slate-400 mb-1.5">
+                                                    {plan.questPlan.category.name}
                                                 </Badge>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
+                                            )}
+                                            <h3 className="font-bold text-sm text-slate-200 group-hover:text-sky-400 transition-colors line-clamp-2">
+                                                {plan.questPlan.title}
+                                            </h3>
+                                        </div>
+                                        <div className="mt-3">
+                                            <Badge variant="secondary" className="text-[10px] h-5 bg-sky-950/30 border-sky-900/50 text-sky-400">
+                                                {plan.encounters.length} / {plan.questPlan.encounters.length} picked
+                                            </Badge>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
+                )}
             </div>
             )}
 
