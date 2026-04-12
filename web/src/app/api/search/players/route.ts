@@ -22,6 +22,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
       select: {
         id: true,
         ingameName: true,
+        avatar: true,
         alliance: {
           select: {
             name: true,
