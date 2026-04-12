@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChampionClass, Tag, AbilityCategory, Ability } from "@prisma/client";
 import { CircleOff, Trophy, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as TagIcon } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
@@ -214,7 +215,7 @@ export function AllianceRosterMatrix({
                         <AvatarFallback className="text-[10px]">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0">
-                        <span className="font-bold truncate text-[11px] leading-tight text-slate-200">{player.name}</span>
+                        <Link href={`/player/${player.id}`} className="font-bold truncate text-[11px] leading-tight text-slate-200 hover:text-sky-400 transition-colors">{player.name}</Link>
                         <span className="text-[9px] text-slate-500 font-medium">Matches: {champions.length}</span>
                     </div>
                 </div>
