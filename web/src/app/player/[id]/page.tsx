@@ -5,11 +5,12 @@ import { getPlayerQuestPlansForProfile } from "@/app/actions/quests";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ScrollText, Play, History, Swords, Shield, Skull } from "lucide-react";
+import { MapPin, ScrollText, Play, Skull, Trophy, Video } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChampionAvatar } from "@/components/champion-avatar";
 import { ChampionImages } from "@/types/champion";
+import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
@@ -58,7 +59,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
 
     const currentUser = await getUserPlayerWithAlliance();
 
-    const [questPlans, roster, recentVideos, recentFights] = await Promise.all([
+    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
@@ -84,8 +85,11 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
             },
             include: {
                 fights: {
-                    take: 1,
-                    include: { war: { include: { alliance: true } } }
+                    take: 3,
+                    include: {
+                        war: { include: { alliance: true } },
+                        attacker: true,
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' },
@@ -109,9 +113,31 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                 video: true
             },
             orderBy: { createdAt: 'desc' },
-            take: 6
-        })
+            take: 15
+        }),
+        prisma.roster.count({ where: { playerId: id } }),
+        prisma.roster.groupBy({
+            by: ['stars'],
+            where: { playerId: id },
+            _count: { id: true },
+            orderBy: { stars: 'desc' }
+        }),
+        prisma.roster.count({ where: { playerId: id, isAscended: true } }),
+        prisma.warVideo.count({ where: { submittedById: id, status: 'PUBLISHED' } }),
+        prisma.warFight.aggregate({
+            where: { playerId: id },
+            _count: { id: true },
+            _sum: { death: true }
+        }),
+        prisma.warFight.groupBy({ by: ['warId'], where: { playerId: id } })
     ]);
+
+    const totalFights = fightAggregate._count.id;
+    const totalDeaths = fightAggregate._sum.death ?? 0;
+    const totalWars = uniqueWarIds.length;
+    const soloRate = totalFights > 0 ? Math.round(((totalFights - totalDeaths) / totalFights) * 100) : 0;
+    const stars7Count = rosterByStars.find(g => g.stars === 7)?._count.id ?? 0;
+    const stars6PlusCount = rosterByStars.filter(g => g.stars >= 6).reduce((s, g) => s + g._count.id, 0);
 
     return (
         <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-12">
@@ -141,6 +167,75 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                 </div>
             </div>
 
+            {/* Stats Overview Strip */}
+            <div className="flex flex-col sm:flex-row border border-slate-800/60 rounded-xl overflow-hidden bg-slate-900/30 divide-y sm:divide-y-0 sm:divide-x divide-slate-800/60">
+                {/* Roster Stats */}
+                <div className="flex items-center gap-5 px-5 py-3.5 flex-1 min-w-0">
+                    <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest shrink-0">Roster</span>
+                    <div className="flex gap-5 flex-wrap">
+                        <div>
+                            <div className="text-[10px] text-slate-500 font-black uppercase">Total</div>
+                            <div className="text-base font-black font-mono text-slate-200">{rosterTotal.toLocaleString()}</div>
+                        </div>
+                        {stars7Count > 0 && (
+                            <div>
+                                <div className="text-[10px] text-slate-500 font-black uppercase">7★</div>
+                                <div className="text-base font-black font-mono text-purple-400">{stars7Count}</div>
+                            </div>
+                        )}
+                        <div>
+                            <div className="text-[10px] text-slate-500 font-black uppercase">6★+</div>
+                            <div className="text-base font-black font-mono text-yellow-500">{stars6PlusCount}</div>
+                        </div>
+                        {rosterAscendedCount > 0 && (
+                            <div>
+                                <div className="text-[10px] text-slate-500 font-black uppercase">Ascended</div>
+                                <div className="text-base font-black font-mono text-purple-300">{rosterAscendedCount}</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                {/* War Stats */}
+                {totalFights > 0 && (
+                    <div className="flex items-center gap-5 px-5 py-3.5 flex-1 min-w-0">
+                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest shrink-0">Wars</span>
+                        <div className="flex gap-5 flex-wrap">
+                            <div>
+                                <div className="text-[10px] text-slate-500 font-black uppercase">Wars</div>
+                                <div className="text-base font-black font-mono text-slate-200">{totalWars}</div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-slate-500 font-black uppercase">Fights</div>
+                                <div className="text-base font-black font-mono text-slate-200">{totalFights}</div>
+                            </div>
+                            <div>
+                                <div className="text-[10px] text-slate-500 font-black uppercase">Solo Rate</div>
+                                <div className={cn(
+                                    "text-base font-black font-mono",
+                                    soloRate >= 80 ? "text-emerald-400" : soloRate >= 60 ? "text-amber-400" : "text-red-400"
+                                )}>{soloRate}%</div>
+                            </div>
+                            {totalDeaths > 0 && (
+                                <div>
+                                    <div className="text-[10px] text-slate-500 font-black uppercase">Deaths</div>
+                                    <div className="text-base font-black font-mono text-red-400">{totalDeaths}</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+                {/* Video Stats */}
+                {videoTotal > 0 && (
+                    <div className="flex items-center gap-5 px-5 py-3.5">
+                        <span className="text-[10px] font-black text-red-400 uppercase tracking-widest shrink-0">Videos</span>
+                        <div>
+                            <div className="text-[10px] text-slate-500 font-black uppercase">Submitted</div>
+                            <div className="text-base font-black font-mono text-slate-200">{videoTotal}</div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* Top Roster Section */}
             {roster.length > 0 && (
                 <div>
@@ -151,21 +246,18 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                     </div>
                     <div className="flex flex-wrap gap-3">
                         {roster.map(r => (
-                            <div key={r.id} className="relative group">
-                                <ChampionAvatar
-                                    name={r.champion.name}
-                                    images={r.champion.images as unknown as ChampionImages}
-                                    championClass={r.champion.class}
-                                    stars={r.stars}
-                                    rank={r.rank}
-                                    isAwakened={r.isAwakened}
-                                    sigLevel={r.sigLevel}
-                                    size="lg"
-                                />
-                                {r.isAscended && (
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full border border-slate-950 shadow-sm" title="Ascended" />
-                                )}
-                            </div>
+                            <ChampionAvatar
+                                key={r.id}
+                                name={r.champion.name}
+                                images={r.champion.images as unknown as ChampionImages}
+                                championClass={r.champion.class}
+                                stars={r.stars}
+                                rank={r.rank}
+                                isAwakened={r.isAwakened}
+                                isAscended={r.isAscended}
+                                sigLevel={r.sigLevel}
+                                size="lg"
+                            />
                         ))}
                     </div>
                 </div>
@@ -183,27 +275,45 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {recentVideos.map(video => {
                                 const war = video.fights[0]?.war;
+                                const fighters = video.fights.map(f => f.attacker).filter(Boolean);
                                 return (
                                     <Link key={video.id} href={`/war-videos/${video.id}`}>
                                         <Card className="bg-slate-900/50 border-slate-800 hover:border-red-900/50 transition-all hover:shadow-lg hover:shadow-red-900/10 cursor-pointer overflow-hidden h-full flex flex-col">
-                                            <div className="p-4 flex-1 flex flex-col justify-center items-center relative min-h-[100px] bg-slate-950/50 group">
-                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                    <Play className="w-10 h-10 text-red-500/80" fill="currentColor" />
-                                                </div>
-                                                {war ? (
-                                                    <div className="text-center space-y-1">
+                                            <div className="p-3 flex-1 bg-slate-950/60 flex flex-col gap-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="w-7 h-7 rounded-full bg-red-600/20 border border-red-600/40 flex items-center justify-center shrink-0">
+                                                        <Play className="w-3.5 h-3.5 text-red-400 ml-0.5" fill="currentColor" />
+                                                    </div>
+                                                    {war && (
                                                         <Badge variant="outline" className="border-red-900/50 text-red-400 bg-red-950/20 text-[10px]">
                                                             S{war.season} W{war.warNumber || '-'} T{war.warTier}
                                                         </Badge>
-                                                        <p className="text-xs text-slate-400 font-mono mt-2">{war.alliance.name}</p>
+                                                    )}
+                                                </div>
+                                                {fighters.length > 0 && (
+                                                    <div className="flex gap-1.5">
+                                                        {fighters.map((fighter, i) => (
+                                                            <ChampionAvatar
+                                                                key={i}
+                                                                name={fighter!.name}
+                                                                images={fighter!.images as unknown as ChampionImages}
+                                                                championClass={fighter!.class}
+                                                                size="sm"
+                                                                showStars={false}
+                                                                showRank={false}
+                                                            />
+                                                        ))}
                                                     </div>
-                                                ) : (
-                                                    <Play className="w-8 h-8 text-slate-700" />
+                                                )}
+                                                {war && (
+                                                    <p className="text-xs text-slate-400 font-medium truncate leading-none">{war.alliance.name}</p>
                                                 )}
                                             </div>
-                                            <div className="p-3 bg-slate-900 border-t border-slate-800 text-xs text-slate-400 flex justify-between">
+                                            <div className="px-3 py-2 bg-slate-900 border-t border-slate-800 text-xs text-slate-400 flex justify-between items-center">
                                                 <span>{new Date(video.createdAt).toLocaleDateString()}</span>
-                                                <span className="font-medium text-slate-300">Watch</span>
+                                                <span className="text-sky-400 font-medium flex items-center gap-1">
+                                                    <Play className="w-3 h-3" /> Watch
+                                                </span>
                                             </div>
                                         </Card>
                                     </Link>
@@ -276,94 +386,133 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
             </div>
 
             {/* Recent Fights Section */}
-            {recentFights.length > 0 && (
-                <div>
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="h-6 w-1 bg-amber-500 rounded-full" />
-                        <h2 className="text-sm font-black text-amber-400 uppercase tracking-[0.2em]">Recent War Fights</h2>
-                        <Link href={`/war-videos?player=${encodeURIComponent(player.ingameName)}`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View All in Archive</Link>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {recentFights.map(fight => {
-                            const isDeath = fight.death > 0;
-                            return (
-                                <Card key={fight.id} className={cn(
-                                    "bg-slate-900/50 border overflow-hidden",
-                                    isDeath ? "border-red-900/30" : "border-slate-800"
-                                )}>
-                                    <div className={cn(
-                                        "px-3 py-1.5 border-b text-[10px] font-mono flex justify-between items-center",
-                                        isDeath ? "border-red-900/30 bg-red-950/20" : "border-slate-800/60 bg-slate-950/50"
-                                    )}>
-                                        <span className="text-slate-400">S{fight.war.season} W{fight.war.warNumber || '-'} T{fight.war.warTier}</span>
-                                        <span className="text-slate-500">{new Date(fight.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="p-3 flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                                            {fight.attacker ? (
-                                                <div className="relative shrink-0">
-                                                    <ChampionAvatar 
-                                                        name={fight.attacker.name} 
-                                                        images={fight.attacker.images as unknown as ChampionImages}
-                                                        championClass={fight.attacker.class}
-                                                        size="sm"
-                                                        showStars={false}
-                                                        showRank={false}
-                                                    />
+            {recentFights.length > 0 && (() => {
+                // Group fights by war, preserving newest-first order
+                const warGroups: { war: typeof recentFights[0]['war']; fights: typeof recentFights }[] = [];
+                const warIndexMap: Record<string, number> = {};
+                for (const fight of recentFights) {
+                    if (warIndexMap[fight.war.id] === undefined) {
+                        warIndexMap[fight.war.id] = warGroups.length;
+                        warGroups.push({ war: fight.war, fights: [] });
+                    }
+                    warGroups[warIndexMap[fight.war.id]].fights.push(fight);
+                }
+                return (
+                    <div>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
+                            <h2 className="text-sm font-black text-amber-400 uppercase tracking-[0.2em]">Recent War Fights</h2>
+                            <Link href={`/war-videos?player=${encodeURIComponent(player.ingameName)}`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View All in Archive</Link>
+                        </div>
+                        <div className="space-y-3">
+                            {warGroups.map(({ war, fights: warFights }) => {
+                                const totalDeaths = warFights.reduce((s, f) => s + f.death, 0);
+                                return (
+                                    <Card key={war.id} className="bg-slate-950/40 border-slate-800/60 overflow-hidden">
+                                        {/* War header */}
+                                        <div className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/40 flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-10 h-10 rounded bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-amber-500 shrink-0">
+                                                    {war.warNumber || '-'}
                                                 </div>
-                                            ) : <div className="w-8 h-8 rounded bg-slate-800 shrink-0" />}
-                                            <div className="flex flex-col min-w-0">
-                                                <span className={cn("text-xs font-bold truncate", fight.attacker ? getChampionClassColors(fight.attacker.class as ChampionClass).text : "text-slate-400")}>
-                                                    {fight.attacker?.name || '?'}
-                                                </span>
-                                                {isDeath && (
-                                                    <span className="text-[9px] text-red-400 flex items-center gap-0.5">
-                                                        <Skull className="w-2.5 h-2.5" /> Death
-                                                    </span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">S{war.season} · T{war.warTier}</span>
+                                                    <span className="text-sm font-black uppercase italic text-slate-200 tracking-tight truncate">{war.alliance.name}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4 shrink-0">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[10px] font-black text-slate-500 uppercase leading-none mb-0.5">Fights</span>
+                                                    <span className="text-sm font-mono font-black text-slate-300">{warFights.length}</span>
+                                                </div>
+                                                {totalDeaths > 0 ? (
+                                                    <div className="flex items-center gap-1.5 text-red-400 text-xs font-black uppercase italic">
+                                                        <Skull className="w-3.5 h-3.5" />
+                                                        {totalDeaths} Death{totalDeaths > 1 ? 's' : ''}
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black uppercase italic">
+                                                        <Trophy className="w-3.5 h-3.5" />
+                                                        Solo
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
+                                        {/* Fight rows */}
+                                        <div className="divide-y divide-slate-800/30">
+                                            {warFights.map(fight => {
+                                                const isDeath = fight.death > 0;
+                                                const attackerImages = fight.attacker?.images as unknown as ChampionImages | undefined;
+                                                const defenderImages = fight.defender?.images as unknown as ChampionImages | undefined;
+                                                const attackerColors = getChampionClassColors(fight.attacker?.class as ChampionClass);
+                                                const defenderColors = getChampionClassColors(fight.defender?.class as ChampionClass);
+                                                return (
+                                                    <div key={fight.id} className="flex items-center justify-between gap-3 py-2.5 px-4 hover:bg-slate-800/20 transition-colors">
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                        {/* Node */}
+                                                        <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-slate-500 shrink-0">
+                                                            {fight.node.nodeNumber}
+                                                        </div>
 
-                                        <div className="flex flex-col items-center shrink-0">
-                                            <span className="text-[9px] text-slate-500 mb-0.5">Node</span>
-                                            <Badge variant="secondary" className="h-5 px-1.5 bg-amber-900/10 text-amber-500 border-amber-500/20 font-mono text-xs">
-                                                {fight.node.nodeNumber}
-                                            </Badge>
-                                        </div>
+                                                        {/* Champion pill */}
+                                                        <div className="flex items-center bg-slate-900/80 rounded-full pl-1.5 pr-4 py-1.5 border border-slate-800 shadow-inner min-w-0">
+                                                            {/* Attacker */}
+                                                            <div className="relative shrink-0">
+                                                                <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", attackerColors.bg)} />
+                                                                <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", attackerColors.border)}>
+                                                                    {attackerImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(attackerImages, "64")} />}
+                                                                    <AvatarFallback className="text-xs font-black">{fight.attacker?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                                                                </Avatar>
+                                                            </div>
+                                                            <span className="text-[9px] font-black text-slate-600 uppercase mx-3 shrink-0">VS</span>
+                                                            {/* Defender */}
+                                                            <div className="flex items-center gap-2.5 overflow-hidden">
+                                                                <div className="relative shrink-0">
+                                                                    <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", defenderColors.bg)} />
+                                                                    <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", defenderColors.border)}>
+                                                                        {defenderImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(defenderImages, "64")} />}
+                                                                        <AvatarFallback className="text-xs font-black">{fight.defender?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                                                                    </Avatar>
+                                                                </div>
+                                                                <span className={cn("text-sm font-black uppercase italic tracking-tighter whitespace-nowrap pr-2", defenderColors.text)}>
+                                                                    {fight.defender?.name || '?'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        </div>{/* end left group */}
 
-                                        <div className="flex items-center justify-end gap-2 min-w-0 flex-1 text-right">
-                                            <div className="flex flex-col min-w-0">
-                                                <span className={cn("text-xs font-bold truncate", fight.defender ? getChampionClassColors(fight.defender.class as ChampionClass).text : "text-slate-400")}>
-                                                    {fight.defender?.name || '?'}
-                                                </span>
-                                            </div>
-                                            {fight.defender ? (
-                                                <div className="relative shrink-0">
-                                                    <ChampionAvatar 
-                                                        name={fight.defender.name} 
-                                                        images={fight.defender.images as unknown as ChampionImages}
-                                                        championClass={fight.defender.class}
-                                                        size="sm"
-                                                        showStars={false}
-                                                        showRank={false}
-                                                    />
-                                                </div>
-                                            ) : <div className="w-8 h-8 rounded bg-slate-800 shrink-0" />}
+                                                        {/* Result + video */}
+                                                        <div className="flex items-center gap-2.5 shrink-0">
+                                                            {isDeath ? (
+                                                                <div className="flex items-center gap-1 text-red-400 text-xs font-black uppercase italic">
+                                                                    <Skull className="w-3 h-3" /> Death
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-1 text-emerald-400 text-xs font-black uppercase italic">
+                                                                    <Trophy className="w-3 h-3" /> Solo
+                                                                </div>
+                                                            )}
+                                                            {fight.video && (
+                                                                <Link
+                                                                    href={`/war-videos/${fight.video.id}`}
+                                                                    className="p-1.5 bg-sky-600/20 border border-sky-600/50 rounded-full hover:bg-sky-600 text-sky-300 hover:text-white transition-all shadow-md"
+                                                                    title="Watch Video"
+                                                                >
+                                                                    <Video className="w-3.5 h-3.5" />
+                                                                </Link>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    </div>
-                                    {fight.video && (
-                                        <div className="px-3 py-2 bg-slate-950/40 border-t border-slate-800/60 flex justify-end">
-                                            <Link href={`/war-videos/${fight.video.id}`} className="text-[10px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium transition-colors">
-                                                <Play className="w-3 h-3" /> Watch Video
-                                            </Link>
-                                        </div>
-                                    )}
-                                </Card>
-                            );
-                        })}
+                                    </Card>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </div>
     );
 }

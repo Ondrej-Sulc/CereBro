@@ -14,6 +14,7 @@ interface ChampionAvatarProps {
     stars?: number;
     rank?: number;
     isAwakened?: boolean;
+    isAscended?: boolean;
     sigLevel?: number;
     size?: "sm" | "md" | "lg" | "xl";
     className?: string;
@@ -30,6 +31,7 @@ export const ChampionAvatar = memo(({
     stars,
     rank,
     isAwakened,
+    isAscended,
     sigLevel,
     size = "md",
     className,
@@ -67,6 +69,15 @@ export const ChampionAvatar = memo(({
                         stars === 7 ? "text-purple-400" : stars === 6 ? "text-sky-400" : "text-yellow-500"
                     )}>
                         {stars}★
+                    </Badge>
+                </div>
+            )}
+
+            {/* Ascended Badge */}
+            {isAscended && (
+                <div className="absolute top-0.5 right-0.5 z-20">
+                    <Badge className="px-1 py-0 h-4 text-[9px] font-black border-none bg-black/80 text-purple-300">
+                        ✦
                     </Badge>
                 </div>
             )}
