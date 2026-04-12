@@ -8,12 +8,25 @@ import logger from "@/lib/logger";
 import { withRouteContext } from "@/lib/with-request-context";
 
 export const GET = withRouteContext(async (req: NextRequest) => {
-  const player = await getUserPlayerWithAlliance();
-  if (!player) {
+  const currentUser = await getUserPlayerWithAlliance();
+  if (!currentUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
+  const targetPlayerId = searchParams.get("playerId") || currentUser.id;
+
+  // Security check: if viewing someone else, must be in same alliance or be bot admin
+  if (targetPlayerId !== currentUser.id && !currentUser.isBotAdmin) {
+    const targetPlayer = await prisma.player.findUnique({
+      where: { id: targetPlayerId },
+      select: { allianceId: true }
+    });
+
+    if (!targetPlayer || targetPlayer.allianceId !== currentUser.allianceId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   // Parse filters and options
   const targetRank = parseInt(searchParams.get("targetRank") || "0");
@@ -32,7 +45,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
 
   // Fetch roster
   const roster = await prisma.roster.findMany({
-    where: { playerId: player.id },
+    where: { playerId: targetPlayerId },
     include: {
       champion: {
         include: {
@@ -73,6 +86,17 @@ export const GET = withRouteContext(async (req: NextRequest) => {
     sigAwakenedOnly,
     limit
   });
+
+  // If viewing someone else and not an officer/admin, strip sensitive insights
+  const isOfficerOrAdmin = currentUser.isBotAdmin || (currentUser.isOfficer && currentUser.allianceId !== null);
+  if (targetPlayerId !== currentUser.id && !isOfficerOrAdmin) {
+    return NextResponse.json({
+        top30Average: result.top30Average,
+        prestigeMap: result.prestigeMap,
+        recommendations: [],
+        sigRecommendations: []
+    });
+  }
 
   return NextResponse.json(result);
 });

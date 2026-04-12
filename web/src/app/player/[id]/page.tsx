@@ -5,7 +5,7 @@ import { getPlayerQuestPlansForProfile } from "@/app/actions/quests";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers, Clock, ChevronRight } from "lucide-react";
+import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers, Clock, ChevronRight, CheckCircle2, Users, Repeat2, Map as MapIcon, ArrowRight, Image as ImageIcon, Star } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChampionAvatar } from "@/components/champion-avatar";
@@ -222,9 +222,6 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                             <span className="text-[10px] font-bold text-purple-400">{stars7Count} × 7★</span>
                         )}
                         <span className="text-[10px] font-bold text-yellow-500/80">{stars6PlusCount} × 6★+</span>
-                        {rosterAscendedCount > 0 && (
-                            <span className="text-[10px] font-bold text-purple-300/70">{rosterAscendedCount} ascended</span>
-                        )}
                     </div>
                 </div>
 
@@ -520,49 +517,136 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                         <Badge variant="secondary" className="text-[10px] h-4 ml-1">{questPlans.length}</Badge>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {questPlans.slice(0, 4).map(plan => (
-                            <Link key={plan.id} href={`/player/${id}/quests/${plan.questPlan.id}`}>
-                                <Card className="bg-slate-900/50 border-slate-800 hover:border-sky-800/50 transition-all hover:shadow-lg hover:shadow-sky-500/5 cursor-pointer group overflow-hidden h-full flex flex-col">
-                                    {plan.questPlan.bannerUrl ? (
-                                        <div className="relative h-24 overflow-hidden shrink-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {questPlans.slice(0, 4).map(plan => {
+                            const isCompleted = plan.encounters.length >= plan.questPlan.encounters.length && plan.questPlan.encounters.length > 0;
+                            return (
+                            <Link key={plan.id} href={`/player/${id}/quests/${plan.questPlan.id}`} className="block h-full">
+                                <Card className={cn(
+                                    "bg-gradient-to-b from-slate-900 to-[#05090f] transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity",
+                                    isCompleted
+                                        ? "border-emerald-800/50 hover:border-emerald-700/50 hover:shadow-[0_0_30px_rgba(52,211,153,0.08)] before:from-emerald-500/5"
+                                        : "border-slate-800 hover:border-sky-700/50 hover:shadow-[0_0_30px_rgba(2,132,199,0.1)] before:from-sky-500/5"
+                                )}>
+                                    {/* Banner */}
+                                    <div className="relative h-32 w-full overflow-hidden bg-slate-900 border-b border-slate-800 shrink-0">
+                                        {plan.questPlan.bannerUrl ? (
                                             <Image
                                                 src={plan.questPlan.bannerUrl.replace(/#/g, '%23')}
                                                 alt={plan.questPlan.title}
                                                 fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                                style={{
-                                                    objectFit: (plan.questPlan.bannerFit as "cover" | "contain") || "cover",
-                                                    objectPosition: plan.questPlan.bannerPosition || "center"
-                                                }}
+                                                sizes="(max-width: 768px) 100vw, 33vw"
+                                                className={cn(
+                                                    "transition-transform duration-700 group-hover:scale-105",
+                                                    plan.questPlan.bannerFit === "contain" ? "object-contain" : "object-cover",
+                                                    plan.questPlan.bannerPosition === "top" ? "object-top" : plan.questPlan.bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                                                )}
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
+                                                <ImageIcon className="w-12 h-12 text-slate-800 opacity-30" />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90" />
+
+                                        {/* Completion badge */}
+                                        {isCompleted && (
+                                            <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-500/60 shadow-xl">
+                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tight">Completed</span>
+                                            </div>
+                                        )}
+
+                                        <div className="absolute bottom-2.5 right-3 flex items-center gap-2 z-10">
+                                            {plan.questPlan.teamLimit !== null ? (
+                                                <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
+                                                    <Users className="w-3 h-3 text-sky-400" />
+                                                    <span className="text-[10px] font-black uppercase tracking-tight">Team of {plan.questPlan.teamLimit}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
+                                                    <Repeat2 className="w-3 h-3 text-sky-400" />
+                                                    <span className="text-[10px] font-black uppercase tracking-tight">Swap</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
+                                                <Swords className="w-3 h-3 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+                                                <span className="text-[10px] font-black uppercase tracking-tight">{plan.questPlan.encounters.length} Fights</span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <div className="h-24 bg-slate-950/50 shrink-0 flex items-center justify-center">
-                                            <ScrollText className="w-8 h-8 text-slate-800" />
-                                        </div>
-                                    )}
-                                    <CardContent className="p-3 flex-1 flex flex-col justify-between">
-                                        <div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <CardContent className="p-4 flex flex-col flex-1 gap-3">
+                                        <div className="space-y-1.5">
                                             {plan.questPlan.category && (
-                                                <Badge variant="outline" className="text-[9px] uppercase font-bold border-slate-700 text-slate-400 mb-1.5">
+                                                <Badge variant="outline" className="text-[9px] uppercase font-bold border-slate-700 text-slate-400">
                                                     {plan.questPlan.category.name}
                                                 </Badge>
                                             )}
-                                            <h3 className="font-bold text-sm text-slate-200 group-hover:text-sky-400 transition-colors line-clamp-2">
+                                            <h3 className="text-base font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-tight">
                                                 {plan.questPlan.title}
                                             </h3>
                                         </div>
-                                        <div className="mt-3">
-                                            <Badge variant="secondary" className="text-[10px] h-5 bg-sky-950/30 border-sky-900/50 text-sky-400">
-                                                {plan.encounters.length} / {plan.questPlan.encounters.length} picked
-                                            </Badge>
+
+                                        {/* Restrictions */}
+                                        {(plan.questPlan.minStarLevel || plan.questPlan.maxStarLevel || (plan.questPlan.requiredClasses && plan.questPlan.requiredClasses.length > 0)) && (
+                                            <div className="space-y-1">
+                                                <div className="flex flex-wrap gap-1 items-center">
+                                                    {(plan.questPlan.minStarLevel || plan.questPlan.maxStarLevel) && (
+                                                        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 rounded-full px-2 py-0.5">
+                                                            <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                                                            <span className="text-[9px] font-black text-amber-400 leading-none">
+                                                                {plan.questPlan.minStarLevel && plan.questPlan.maxStarLevel ? `${plan.questPlan.minStarLevel}–${plan.questPlan.maxStarLevel}★` : plan.questPlan.minStarLevel ? `${plan.questPlan.minStarLevel}★+` : `Up to ${plan.questPlan.maxStarLevel}★`}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {plan.questPlan.requiredClasses && plan.questPlan.requiredClasses.length > 0 && (
+                                                        <div className="flex items-center gap-1 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">
+                                                            {plan.questPlan.requiredClasses.map(cls => (
+                                                                <div key={cls} className="relative w-3 h-3 shrink-0">
+                                                                    <Image
+                                                                        src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
+                                                                        alt={cls}
+                                                                        fill
+                                                                        className="object-contain"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Footer */}
+                                        <div className="mt-auto pt-3 border-t border-slate-900/50 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-sky-500 group-hover:translate-x-1 transition-all">
+                                                    <MapIcon className="w-3 h-3" />
+                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">Open Plan</span>
+                                                </div>
+                                                {plan.encounters.length > 0 && (
+                                                    isCompleted ? (
+                                                        <Badge className="text-[9px] h-4 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 font-black uppercase tracking-wider px-1.5">
+                                                            ✓ Completed
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge variant="secondary" className="text-[9px] h-4 bg-sky-950/30 border border-sky-900/50 text-sky-400 font-bold px-1.5">
+                                                            {plan.encounters.length} / {plan.questPlan.encounters.length} picked
+                                                        </Badge>
+                                                    )
+                                                )}
+                                            </div>
+                                            <div className="h-7 w-7 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center group-hover:bg-sky-600 group-hover:border-sky-500 group-hover:scale-110 transition-all shadow-inner group-hover:shadow-[0_0_15px_rgba(2,132,199,0.5)]">
+                                                <ArrowRight className="h-3 w-3 text-slate-400 group-hover:text-white" />
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
                             </Link>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
                 )}

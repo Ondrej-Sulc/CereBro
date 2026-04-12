@@ -93,7 +93,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
 
             <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
                 {!item.isUnowned && prestige && (
-                    <div className="hidden sm:flex justify-end mb-0.5">
+                    <div className="flex justify-end mb-0.5">
                         <span className="text-[9px] font-mono font-bold text-slate-300 bg-black/60 px-1 rounded border border-white/5">
                             {prestige.toLocaleString('en-US')}
                         </span>

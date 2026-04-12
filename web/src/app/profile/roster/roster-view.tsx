@@ -207,7 +207,8 @@ export function RosterView({
       setIsLoadingRecommendations(true);
       setPendingSection('all');
       try {
-        const res = await fetch(`/api/profile/roster/recommendations?${currentParams}`, { signal: controller.signal });
+        const url = `/api/profile/roster/recommendations?${currentParams}${targetPlayerId ? `&playerId=${targetPlayerId}` : ''}`;
+        const res = await fetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error("Failed to load recommendations");
 
         const data = await res.json() as ApiRosterResponse;

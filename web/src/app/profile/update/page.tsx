@@ -47,6 +47,10 @@ export default async function RosterUpdatePage() {
                         Upload screenshots of your champion roster to automatically update your profile. 
                         Ensure screenshots are clear and contain the champion grid.
                     </p>
+                    <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2 text-amber-400 text-sm">
+                        <span className="font-bold uppercase text-xs bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded">Note</span>
+                        <span>Game language must be set to <strong>English</strong>. Other languages are not supported for screenshot processing.</span>
+                    </div>
                     
                     {isBotAdmin && (
                         <div className="pt-2">

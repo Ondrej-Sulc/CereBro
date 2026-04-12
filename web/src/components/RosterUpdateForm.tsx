@@ -396,7 +396,12 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
 
                         {/* Dropzone & Preview Area */}
                         <div className="space-y-4">
-                            <Label>Screenshots</Label>
+                            <div className="flex items-center justify-between">
+                                <Label>Screenshots</Label>
+                                <span className="text-[10px] uppercase tracking-wider text-amber-500/80 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                    English Language Only
+                                </span>
+                            </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {/* Upload Button/Dropzone */}
