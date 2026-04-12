@@ -147,6 +147,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                     <div className="flex items-center gap-2 mb-4">
                         <div className="h-6 w-1 bg-purple-500 rounded-full" />
                         <h2 className="text-sm font-black text-purple-400 uppercase tracking-[0.2em]">Top Champions</h2>
+                        <Link href={`/player/${id}/roster`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View Full Roster</Link>
                     </div>
                     <div className="flex flex-wrap gap-3">
                         {roster.map(r => (

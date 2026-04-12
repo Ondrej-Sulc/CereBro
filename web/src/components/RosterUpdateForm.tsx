@@ -60,7 +60,13 @@ GridList.displayName = "GridList";
 
 
 
-export function RosterUpdateForm() {
+interface RosterUpdateFormProps {
+    targetPlayerId?: string;
+    /** When true, strips the outer Card/max-w wrapper for embedding inside another container */
+    compact?: boolean;
+}
+
+export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpdateFormProps = {}) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<UpdateResult | null>(null);
@@ -213,6 +219,9 @@ export function RosterUpdateForm() {
         
         formData.append("isAscended", String(finalIsAscended));
         formData.append("ascensionLevel", String(finalAscensionLevel));
+        if (targetPlayerId) {
+            formData.append("targetPlayerId", targetPlayerId);
+        }
 
         interface RosterUpdateResponse {
             count: number;
@@ -278,16 +287,7 @@ export function RosterUpdateForm() {
         }
     };
 
-    return (
-        <div className="max-w-4xl mx-auto space-y-8">
-            <Card className="border-slate-800 bg-slate-900/50">
-                <CardHeader>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                        <ImagePlus className="w-6 h-6 text-sky-400" />
-                        Upload Roster Screenshots
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
+    const formContent = (
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         <Tabs
@@ -473,8 +473,21 @@ export function RosterUpdateForm() {
                             </Button>
                         </div>
                     </form>
-                </CardContent>
-            </Card>
+    );
+
+    return (
+        <div className={compact ? "space-y-6" : "max-w-4xl mx-auto space-y-8"}>
+            {compact ? formContent : (
+                <Card className="border-slate-800 bg-slate-900/50">
+                    <CardHeader>
+                        <CardTitle className="text-2xl flex items-center gap-2">
+                            <ImagePlus className="w-6 h-6 text-sky-400" />
+                            Upload Roster Screenshots
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>{formContent}</CardContent>
+                </Card>
+            )}
 
             {/* Processing Animation / Results */}
             <AnimatePresence>

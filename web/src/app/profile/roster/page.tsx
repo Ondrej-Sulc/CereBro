@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance, getUserProfiles } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
@@ -118,6 +119,11 @@ export default async function RosterPage(props: {
     }
   );
 
+  const reqHeaders = await headers();
+  const host = reqHeaders.get("host") ?? "localhost:3000";
+  const protocol = reqHeaders.get("x-forwarded-proto") ?? "http";
+  const shareUrl = `${protocol}://${host}/player/${player.id}/roster`;
+
   return (
     <div className="container mx-auto p-4 sm:p-8">
       <RosterView
@@ -126,6 +132,7 @@ export default async function RosterPage(props: {
         allChampions={allChampions}
         player={player}
         profiles={profiles}
+        shareUrl={shareUrl}
         top30Average={top30Average || player.championPrestige || 0}
         prestigeMap={prestigeMap}
         recommendations={recommendations}

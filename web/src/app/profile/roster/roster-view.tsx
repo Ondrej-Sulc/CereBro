@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
 import Link from "next/link";
-import { Upload, TrendingUp, ChevronDown } from "lucide-react";
+import { Upload, TrendingUp, ChevronDown, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,12 @@ interface RosterViewProps {
   initialImmunities: { id: string | number, name: string }[];
   initialLimit: number;
   initialShowInsights?: boolean;
+  /** When false, hides all edit/add controls. Default: true */
+  canEdit?: boolean;
+  /** When set, API mutations target this player instead of the session player */
+  targetPlayerId?: string;
+  /** When set, shows a Share button that copies this URL to the clipboard */
+  shareUrl?: string;
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
@@ -89,7 +95,10 @@ export function RosterView({
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter, initialSigAwakenedOnly,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit,
-  initialShowInsights = false
+  initialShowInsights = false,
+  canEdit = true,
+  targetPlayerId,
+  shareUrl,
 }: RosterViewProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -264,7 +273,7 @@ export function RosterView({
     try {
       const response = await fetch("/api/profile/roster/add", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended, ascensionLevel: newChampion.ascensionLevel }),
+        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended, ascensionLevel: newChampion.ascensionLevel, ...(targetPlayerId ? { targetPlayerId } : {}) }),
       });
       if (!response.ok) throw new Error("Failed to add champion");
       const addedItem = await response.json();
@@ -444,11 +453,11 @@ export function RosterView({
     const item = filteredRoster[index];
     return (
       <ChampionCard
-        item={item} prestige={prestigeMap[item.id]} onClick={setEditingItem} mode={viewMode}
+        item={item} prestige={prestigeMap[item.id]} onClick={canEdit ? setEditingItem : () => {}} mode={canEdit ? viewMode : 'view'}
         filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
       />
     );
-  }, [filteredRoster, prestigeMap, viewMode, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
+  }, [filteredRoster, prestigeMap, viewMode, canEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
 
   return (
     <div className="space-y-6">
@@ -458,7 +467,7 @@ export function RosterView({
             <h1 className="text-3xl font-bold text-white tracking-tight">
               {player.ingameName}'s Roster
             </h1>
-            {profiles.length > 1 && (
+            {!targetPlayerId && profiles.length > 1 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8 gap-1 bg-slate-900 border-slate-700">
@@ -488,7 +497,7 @@ export function RosterView({
             )}
           </div>
           <p className="text-slate-400 mt-1">
-            Manage your champions, update stats, and track your progress.
+            {targetPlayerId ? "View and manage this player's champions." : "Manage your champions, update stats, and track your progress."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
@@ -499,28 +508,46 @@ export function RosterView({
             </div>
           )}
 
-          <Button
-            variant="outline"
-            onClick={() => {
-              const newValue = !showInsights;
-              setShowInsights(newValue);
-              updateUrlParams({ insights: newValue ? 'true' : null });
-            }}
-            className={cn(
-              "h-10 px-4 gap-2 border-slate-700 transition-all",
-              showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
-            )}
-          >
-            <TrendingUp className="w-4 h-4" />
-            <span>Prestige Insights</span>
-          </Button>
+          {shareUrl && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                toast({ title: "Copied!", description: "Roster link copied to clipboard." });
+              }}
+              className="h-10 px-4 gap-2 border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share</span>
+            </Button>
+          )}
 
-          <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
-            <Link href="/profile/update">
-              <Upload className="w-4 h-4" />
-              Update Roster
-            </Link>
-          </Button>
+          {!targetPlayerId && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                const newValue = !showInsights;
+                setShowInsights(newValue);
+                updateUrlParams({ insights: newValue ? 'true' : null });
+              }}
+              className={cn(
+                "h-10 px-4 gap-2 border-slate-700 transition-all",
+                showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
+              )}
+            >
+              <TrendingUp className="w-4 h-4" />
+              <span>Prestige Insights</span>
+            </Button>
+          )}
+
+          {!targetPlayerId && (
+            <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
+              <Link href="/profile/update">
+                <Upload className="w-4 h-4" />
+                Update Roster
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -549,6 +576,7 @@ export function RosterView({
         abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
         immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
         initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
+        canEdit={canEdit}
       />
 
       {filteredRoster.length === 0 ? (
@@ -559,8 +587,8 @@ export function RosterView({
         <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
       )}
 
-      <EditChampionModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />
-      <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />
+      {canEdit && <EditChampionModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
+      {canEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>
   );

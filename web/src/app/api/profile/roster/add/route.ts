@@ -16,6 +16,7 @@ const addSchema = z.object({
   isAwakened: z.boolean().optional().default(false),
   isAscended: z.boolean().optional().default(false),
   ascensionLevel: z.number().int().min(0).max(2).optional().default(0),
+  targetPlayerId: z.string().optional(),
 });
 
 async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchema>) {
@@ -77,9 +78,41 @@ export const POST = withRouteContext(async (req: Request) => {
     const body = await req.json();
     const data = addSchema.parse(body);
 
+    let effectivePlayerId = player.id;
+    if (data.targetPlayerId && data.targetPlayerId !== player.id) {
+      const targetPlayer = await prisma.player.findUnique({
+        where: { id: data.targetPlayerId },
+        select: { id: true, allianceId: true, ingameName: true },
+      });
+      if (!targetPlayer) {
+        return NextResponse.json({ error: "Target player not found" }, { status: 404 });
+      }
+      const isOfficerSameAlliance =
+        player.isOfficer &&
+        player.allianceId !== null &&
+        player.allianceId === targetPlayer.allianceId;
+      if (!player.isBotAdmin && !isOfficerSameAlliance) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+      logger.info(
+        {
+          actor: player.id,
+          actorName: player.ingameName,
+          target: targetPlayer.id,
+          targetName: targetPlayer.ingameName,
+          action: "add",
+          championId: data.championId,
+          stars: data.stars,
+          rank: data.rank,
+        },
+        "Officer/admin roster add"
+      );
+      effectivePlayerId = data.targetPlayerId;
+    }
+
     let newRoster;
     try {
-        newRoster = await addChampionUpsert(player.id, data);
+        newRoster = await addChampionUpsert(effectivePlayerId, data);
     } catch (upsertError) {
         // Handle race condition where record might have been created between existence check and create in upsert
         if (upsertError instanceof Prisma.PrismaClientKnownRequestError && upsertError.code === 'P2002') {
@@ -91,6 +124,9 @@ export const POST = withRouteContext(async (req: Request) => {
     }
 
     revalidatePath("/profile/roster");
+    if (effectivePlayerId !== player.id) {
+      revalidatePath(`/player/${effectivePlayerId}/roster`);
+    }
     if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
     return NextResponse.json(newRoster);
   } catch (error) {

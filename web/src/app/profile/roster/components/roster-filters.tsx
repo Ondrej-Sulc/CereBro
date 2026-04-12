@@ -51,6 +51,7 @@ interface RosterFiltersProps {
     initialAbilityCategories: { id: string | number, name: string }[];
     initialAbilities: { id: string | number, name: string }[];
     initialImmunities: { id: string | number, name: string }[];
+    canEdit?: boolean;
 }
 
 export function RosterFilters({
@@ -61,7 +62,8 @@ export function RosterFilters({
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
-    initialTags, initialAbilityCategories, initialAbilities, initialImmunities
+    initialTags, initialAbilityCategories, initialAbilities, initialImmunities,
+    canEdit = true,
 }: RosterFiltersProps) {
     const activeFilters = useMemo(() => {
         const filters: { label: string, type: string, onRemove: () => void }[] = [];
@@ -123,22 +125,24 @@ export function RosterFilters({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
-                        <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-0.5 shrink-0">
-                            <Button
-                                variant="ghost" size="sm"
-                                onClick={() => onViewModeChange('view')}
-                                className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium", viewMode === 'view' ? "bg-sky-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
-                            >
-                                <Eye className="w-3.5 h-3.5 mr-1" /> View
-                            </Button>
-                            <Button
-                                variant="ghost" size="sm"
-                                onClick={() => onViewModeChange('edit')}
-                                className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium", viewMode === 'edit' ? "bg-amber-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
-                            >
-                                <PenLine className="w-3.5 h-3.5 mr-1" /> Edit
-                            </Button>
-                        </div>
+                        {canEdit && (
+                            <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-0.5 shrink-0">
+                                <Button
+                                    variant="ghost" size="sm"
+                                    onClick={() => onViewModeChange('view')}
+                                    className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium", viewMode === 'view' ? "bg-sky-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
+                                >
+                                    <Eye className="w-3.5 h-3.5 mr-1" /> View
+                                </Button>
+                                <Button
+                                    variant="ghost" size="sm"
+                                    onClick={() => onViewModeChange('edit')}
+                                    className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium", viewMode === 'edit' ? "bg-amber-600 text-white shadow-sm" : "text-slate-400 hover:text-slate-200")}
+                                >
+                                    <PenLine className="w-3.5 h-3.5 mr-1" /> Edit
+                                </Button>
+                            </div>
+                        )}
 
                         <Button
                             variant="ghost" size="sm"
@@ -159,9 +163,11 @@ export function RosterFilters({
                             </SelectContent>
                         </Select>
 
-                        <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3 flex-1 sm:flex-initial" onClick={onAddClick}>
-                            <Plus className="w-3.5 h-3.5 mr-1" /> <span className="sm:inline">Add</span>
-                        </Button>
+                        {canEdit && (
+                            <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3 flex-1 sm:flex-initial" onClick={onAddClick}>
+                                <Plus className="w-3.5 h-3.5 mr-1" /> <span className="sm:inline">Add</span>
+                            </Button>
+                        )}
                     </div>
                 </div>
 

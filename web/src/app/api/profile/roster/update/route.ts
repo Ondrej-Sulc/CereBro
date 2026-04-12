@@ -37,6 +37,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
     const isAscended = formData.get("isAscended") === "true";
     const ascensionLevel = parseInt(formData.get("ascensionLevel") as string) || 0;
     const files = formData.getAll("images") as File[];
+    const targetPlayerIdRaw = formData.get("targetPlayerId") as string | null;
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: "No images provided" }, { status: 400 });
@@ -46,12 +47,44 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         return NextResponse.json({ error: "Invalid stars or rank for Grid View" }, { status: 400 });
     }
 
-    logger.info({ 
-        playerId: player.id, 
+    // Resolve effective player — officer/admin may upload on behalf of another player
+    let effectivePlayerId = player.id;
+    if (targetPlayerIdRaw && targetPlayerIdRaw !== player.id) {
+      const targetPlayer = await prisma.player.findUnique({
+        where: { id: targetPlayerIdRaw },
+        select: { id: true, allianceId: true, ingameName: true },
+      });
+      if (!targetPlayer) {
+        return NextResponse.json({ error: "Target player not found" }, { status: 404 });
+      }
+      const isOfficerSameAlliance =
+        player.isOfficer &&
+        player.allianceId !== null &&
+        player.allianceId === targetPlayer.allianceId;
+      if (!player.isBotAdmin && !isOfficerSameAlliance) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+      logger.info(
+        {
+          actor: player.id,
+          actorName: player.ingameName,
+          target: targetPlayer.id,
+          targetName: targetPlayer.ingameName,
+          action: "upload",
+          mode,
+          fileCount: files.length,
+        },
+        "Officer/admin roster screenshot upload"
+      );
+      effectivePlayerId = targetPlayerIdRaw;
+    }
+
+    logger.info({
+        playerId: effectivePlayerId,
         mode,
-        stars, 
-        rank, 
-        isAscended, 
+        stars,
+        rank,
+        isAscended,
         ascensionLevel,
         fileCount: files.length,
         fileNames: files.map(f => f.name)
@@ -68,16 +101,16 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         const fileStartTime = Date.now();
         const buffer = Buffer.from(await file.arrayBuffer());
         
-        logger.info({ playerId: player.id, fileName: file.name, fileSize: buffer.length }, "Processing roster screenshot");
+        logger.info({ playerId: effectivePlayerId, fileName: file.name, fileSize: buffer.length }, "Processing roster screenshot");
 
         // Call the core processing logic
         let result;
-        
+
         if (mode === 'stats-view') {
              result = await processBGViewScreenshot(
                 buffer,
                 false, // debugMode
-                player.id
+                effectivePlayerId
              );
         } else {
              result = await processRosterScreenshot(
@@ -87,7 +120,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
                 isAscended,
                 ascensionLevel,
                 false, // debugMode
-                player.id
+                effectivePlayerId
              );
         }
 
@@ -96,11 +129,11 @@ export const POST = withRouteContext(async (req: NextRequest) => {
             const added = updateResult.champions.flat();
             totalCount += added.length;
             allAdded.push(...added);
-            logger.info({ 
-                playerId: player.id, 
-                fileName: file.name, 
+            logger.info({
+                playerId: effectivePlayerId,
+                fileName: file.name,
                 addedCount: added.length,
-                duration: Date.now() - fileStartTime 
+                duration: Date.now() - fileStartTime
             }, "Successfully processed roster screenshot");
         }
       } catch (err: unknown) {
@@ -109,7 +142,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         logger.error({
             error: message,
             stack,
-            playerId: player.id,
+            playerId: effectivePlayerId,
             fileName: file.name
         }, "Error processing roster screenshot file");
         errors.push(`File ${file.name}: ${message || "Unknown error"}`);
@@ -117,11 +150,11 @@ export const POST = withRouteContext(async (req: NextRequest) => {
     }
 
     const duration = Date.now() - startTime;
-    logger.info({ 
-        playerId: player.id, 
-        totalAdded: totalCount, 
+    logger.info({
+        playerId: effectivePlayerId,
+        totalAdded: totalCount,
         errorCount: errors.length,
-        duration 
+        duration
     }, "Completed roster update request");
 
     return NextResponse.json({ count: totalCount, added: allAdded, errors });

@@ -32,14 +32,34 @@ export const PUT = withRouteContext(async (req: Request) => {
 
     const rosterEntry = await prisma.roster.findUnique({
       where: { id },
+      include: { player: { select: { allianceId: true, ingameName: true } } },
     });
 
     if (!rosterEntry) {
       return NextResponse.json({ error: "Roster entry not found" }, { status: 404 });
     }
 
-    if (rosterEntry.playerId !== player.id) {
+    const isOwner = rosterEntry.playerId === player.id;
+    const isOfficerSameAlliance =
+      player.isOfficer &&
+      player.allianceId !== null &&
+      player.allianceId === rosterEntry.player.allianceId;
+    if (!isOwner && !player.isBotAdmin && !isOfficerSameAlliance) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    if (!isOwner) {
+      logger.info(
+        {
+          actor: player.id,
+          actorName: player.ingameName,
+          target: rosterEntry.playerId,
+          targetName: rosterEntry.player.ingameName,
+          action: "edit",
+          rosterId: id,
+        },
+        "Officer/admin roster edit"
+      );
     }
 
     const updatedRoster = await prisma.roster.update({
@@ -74,7 +94,11 @@ export const PUT = withRouteContext(async (req: Request) => {
     });
 
     revalidatePath("/profile/roster");
+    revalidatePath(`/player/${rosterEntry.playerId}/roster`);
     if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
+    if (rosterEntry.player.allianceId && rosterEntry.player.allianceId !== player.allianceId) {
+      clearCache(`alliance-members-${rosterEntry.player.allianceId}`);
+    }
     return NextResponse.json(updatedRoster);
   } catch (error) {
     logger.error({ error }, "Error updating roster");
@@ -97,22 +121,49 @@ export const DELETE = withRouteContext(async (req: Request) => {
 
     const rosterEntry = await prisma.roster.findUnique({
       where: { id },
+      include: { player: { select: { allianceId: true, ingameName: true } } },
     });
 
     if (!rosterEntry) {
       return NextResponse.json({ error: "Roster entry not found" }, { status: 404 });
     }
 
-    if (rosterEntry.playerId !== player.id) {
+    const isOwner = rosterEntry.playerId === player.id;
+    const isOfficerSameAlliance =
+      player.isOfficer &&
+      player.allianceId !== null &&
+      player.allianceId === rosterEntry.player.allianceId;
+    if (!isOwner && !player.isBotAdmin && !isOfficerSameAlliance) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
+
+    if (!isOwner) {
+      logger.info(
+        {
+          actor: player.id,
+          actorName: player.ingameName,
+          target: rosterEntry.playerId,
+          targetName: rosterEntry.player.ingameName,
+          action: "delete",
+          rosterId: id,
+        },
+        "Officer/admin roster delete"
+      );
+    }
+
+    const targetPlayerId = rosterEntry.playerId;
+    const targetAllianceId = rosterEntry.player.allianceId;
 
     await prisma.roster.delete({
       where: { id },
     });
 
     revalidatePath("/profile/roster");
+    revalidatePath(`/player/${targetPlayerId}/roster`);
     if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
+    if (targetAllianceId && targetAllianceId !== player.allianceId) {
+      clearCache(`alliance-members-${targetAllianceId}`);
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error({ error }, "Error deleting roster");
