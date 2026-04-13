@@ -281,20 +281,22 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
             </div>
 
             {/* Top Roster Section */}
-            {roster.length > 0 && (
-                <div>
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="h-6 w-1 bg-purple-500 rounded-full" />
-                        <h2 className="text-sm font-black text-purple-400 uppercase tracking-[0.2em]">Top Champions</h2>
+            <div>
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="h-6 w-1 bg-purple-500 rounded-full" />
+                    <h2 className="text-sm font-black text-purple-400 uppercase tracking-[0.2em]">Top Champions</h2>
+                    {roster.length > 0 && (
                         <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Top {roster.length}</span>
-                        <Link
-                            href={`/player/${id}/roster`}
-                            className="ml-auto flex items-center gap-1.5 text-xs bg-purple-950/40 border border-purple-800/40 hover:border-purple-600/60 hover:bg-purple-950/60 text-purple-300 hover:text-purple-200 px-3 py-1.5 rounded-lg transition-all font-black uppercase tracking-wide"
-                        >
-                            Full Roster
-                            <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
+                    )}
+                    <Link
+                        href={`/player/${id}/roster`}
+                        className="ml-auto flex items-center gap-1.5 text-xs bg-purple-950/40 border border-purple-800/40 hover:border-purple-600/60 hover:bg-purple-950/60 text-purple-300 hover:text-purple-200 px-3 py-1.5 rounded-lg transition-all font-black uppercase tracking-wide"
+                    >
+                        Full Roster
+                        <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                </div>
+                {roster.length > 0 ? (
                     <div className="grid grid-cols-5 lg:grid-cols-10 gap-2">
                         {roster.map(r => {
                             const prestige = r.champion.prestigeData
@@ -325,8 +327,13 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                             );
                         })}
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="flex flex-col items-center justify-center p-8 bg-purple-950/10 border border-purple-900/20 rounded-2xl">
+                        <Layers className="w-8 h-8 text-purple-500/30 mb-2" />
+                        <p className="text-sm font-black text-slate-500 uppercase tracking-widest">No Roster Available</p>
+                    </div>
+                )}
+            </div>
 
             {/* Recent War Fights — most active content, shown first */}
             {recentFights.length > 0 && (() => {
