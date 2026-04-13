@@ -6,6 +6,8 @@ import { processRosterScreenshot, processBGViewScreenshot } from "@cerebro/core/
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { withRouteContext } from "@/lib/with-request-context";
+import { revalidatePath } from "next/cache";
+import { clearCache } from "@/lib/cache";
 
 export const maxDuration = 60; // Allow 60 seconds for processing
 
@@ -156,6 +158,13 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         errorCount: errors.length,
         duration
     }, "Completed roster update request");
+
+    // Invalidate caches
+    revalidatePath("/profile/roster");
+    if (effectivePlayerId !== player.id) {
+        revalidatePath(`/player/${effectivePlayerId}/roster`);
+    }
+    if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
 
     return NextResponse.json({ count: totalCount, added: allAdded, errors });
 
