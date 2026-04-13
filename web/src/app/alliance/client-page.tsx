@@ -780,6 +780,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 max-w-2xl p-0 overflow-hidden">
+                                <DialogTitle className="sr-only">Recruit Members</DialogTitle>
                                 <Tabs defaultValue="recruit" className="w-full">
                                     <div className="px-6 pt-6 pb-2 border-b border-slate-800">
                                         <TabsList className="bg-slate-950 border-slate-800">
