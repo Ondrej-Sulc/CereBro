@@ -502,9 +502,9 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                         <Input
                                                             id="allianceTag"
                                                             value={generalTag}
-                                                            onChange={(e) => setGeneralTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5))}
-                                                            className="bg-slate-950 border-slate-700 font-mono uppercase"
-                                                            placeholder="e.g. MCOC"
+                                                            onChange={(e) => setGeneralTag(e.target.value.replace(/\s/g, '').slice(0, 5))}
+                                                            className="bg-slate-950 border-slate-700 font-mono"
+                                                            placeholder="e.g. MCOC or •A1•"
                                                         />
                                                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">
                                                             {generalTag.length}/5

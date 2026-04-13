@@ -72,9 +72,9 @@ export const updateAllianceGeneral = withActionContext('updateAllianceGeneral', 
     const name = data.name.trim();
     if (!name || name.length > 50) throw new Error("Alliance name must be between 1 and 50 characters");
 
-    const tag = data.tag ? data.tag.trim().toUpperCase() : null;
-    if (tag && (tag.length < 2 || tag.length > 5 || !/^[A-Z0-9]+$/.test(tag))) {
-        throw new Error("Tag must be 2–5 alphanumeric characters");
+    const tag = data.tag ? data.tag.trim() : null;
+    if (tag && (tag.length < 2 || tag.length > 5 || /\s/.test(tag))) {
+        throw new Error("Tag must be 2–5 characters with no spaces");
     }
 
     const description = data.description ? data.description.trim() : null;
