@@ -558,7 +558,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
                                         Updated {result.success} Champions
                                     </CardTitle>
                                     <Button asChild variant="outline" size="sm" className="bg-green-950/20 border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white transition-all">
-                                        <Link href="/profile/roster">
+                                        <Link href={targetPlayerId ? `/player/${targetPlayerId}/roster` : "/profile/roster"}>
                                             View Full Roster
                                         </Link>
                                     </Button>
