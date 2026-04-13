@@ -267,6 +267,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
             if (data.count > 0) {
                 setFiles([]);
                 setPreviews([]);
+                router.refresh();
             }
 
         } catch (err: unknown) {
