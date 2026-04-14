@@ -59,7 +59,7 @@ export function MembersTable({ allianceId }: MembersTableProps) {
         params: { page: pageNum, limit }
       });
       if (currentRequestId === requestIdRef.current) {
-        setMembers(data.members);
+        setMembers(data.members ?? []);
         setTotalPages(data.totalPages);
         setTotalCount(data.totalCount);
         setPage(data.currentPage);

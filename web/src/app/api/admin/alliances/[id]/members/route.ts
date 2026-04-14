@@ -14,30 +14,39 @@ export const GET = withRouteContext(async (
   }
 
   const { id } = await params;
+  const { searchParams } = new URL(req.url);
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10));
+  const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') ?? '10', 10)));
 
   try {
-    const members = await prisma.player.findMany({
-      where: {
-        allianceId: id
-      },
-      select: {
-        id: true,
-        ingameName: true,
-        discordId: true,
-        isOfficer: true,
-        botUser: {
-          select: {
-            id: true,
-            avatar: true
-          }
-        }
-      },
-      orderBy: {
-        ingameName: 'asc'
-      }
-    });
+    const [totalCount, members] = await prisma.$transaction([
+      prisma.player.count({ where: { allianceId: id } }),
+      prisma.player.findMany({
+        where: { allianceId: id },
+        select: {
+          id: true,
+          avatar: true,
+          ingameName: true,
+          summonerPrestige: true,
+          championPrestige: true,
+          isOfficer: true,
+          battlegroup: true,
+          timezone: true,
+          createdAt: true,
+          _count: { select: { roster: true } },
+        },
+        orderBy: { ingameName: 'asc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
 
-    return NextResponse.json(members);
+    return NextResponse.json({
+      members,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+    });
   } catch (error) {
     logger.error({ err: error, allianceId: id }, 'Failed to fetch alliance members');
     return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
