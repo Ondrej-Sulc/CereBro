@@ -8,6 +8,18 @@ import { ensureAdmin } from "../actions"
 import { AdminChampionData } from "./champion-card"
 import { ChampionImages } from "@/types/champion"
 import { withActionContext } from "@/lib/with-request-context"
+import { OpenRouterService } from "@cerebro/core/services/openRouterService"
+import { abilityDraftPrompt } from "@cerebro/core/prompts/abilityDraft"
+
+type AbilityDraftItem = { name: string; source: string }
+export type AbilityDraft = { abilities?: AbilityDraftItem[]; immunities?: AbilityDraftItem[] }
+
+export type ModelOption = { id: string; name: string }
+
+const DRAFT_MODEL_PROVIDERS = ['google/', 'anthropic/', 'openai/', 'meta-llama/', 'x-ai/', 'mistralai/']
+
+// Module-level cache: valid for 10 minutes in long-running server process
+let _modelCache: { data: ModelOption[]; expiresAt: number } | null = null
 
 /**
  * Full abilities JSON payload.
@@ -301,4 +313,120 @@ export const saveChampionAttacks = withActionContext('saveChampionAttacks', asyn
     });
     
     revalidatePath('/admin/champions');
+});
+
+export const fetchDraftModels = withActionContext('fetchDraftModels', async (): Promise<ModelOption[]> => {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+
+    if (_modelCache && Date.now() < _modelCache.expiresAt) {
+        return _modelCache.data
+    }
+
+    const apiKey = process.env.OPEN_ROUTER_API_KEY
+    if (!apiKey) throw new Error("OpenRouter API Key not configured.")
+
+    const res = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        next: { revalidate: 600 },
+    })
+    if (!res.ok) throw new Error(`Failed to fetch models from OpenRouter: ${res.status}`)
+
+    const { data } = await res.json() as { data: Array<{ id: string; name: string }> }
+
+    const filtered = data
+        .filter(m => DRAFT_MODEL_PROVIDERS.some(p => m.id.startsWith(p)))
+        .filter(m => !m.id.includes(':'))   // drop :free / :nitro / :extended variants
+        .map(m => ({ id: m.id, name: m.name }))
+        .sort((a, b) => a.id.localeCompare(b.id))
+
+    _modelCache = { data: filtered, expiresAt: Date.now() + 10 * 60 * 1000 }
+    return filtered
+});
+
+export const draftChampionAbilities = withActionContext('draftChampionAbilities', async (
+    championId: number,
+    model: string = "google/gemini-2.5-pro"
+): Promise<{ draft: AbilityDraft; initialUserPrompt: string }> => {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+
+    const champion = await prisma.champion.findUnique({ where: { id: championId } })
+    if (!champion || !champion.fullAbilities) {
+        throw new Error("Champion not found or has no Descriptions (fullAbilities) set.")
+    }
+
+    const apiKey = process.env.OPEN_ROUTER_API_KEY
+    if (!apiKey) throw new Error("OpenRouter API Key not configured on the server.")
+
+    const openRouter = new OpenRouterService(apiKey)
+    const userPrompt = `Champion Name: ${champion.name}\n"full_abilities" JSON:\n\`\`\`json\n${JSON.stringify(champion.fullAbilities, null, 2)}\n\`\`\`\n\n**Generate ONLY the JSON object for this new champion, strictly following all rules and examples provided.**`
+
+    const response = await openRouter.chat({
+        model,
+        messages: [
+            { role: "system", content: abilityDraftPrompt },
+            { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+    })
+
+    const draft = JSON.parse(response.choices[0].message.content) as AbilityDraft
+    return { draft, initialUserPrompt: userPrompt }
+});
+
+export const redraftChampionAbilities = withActionContext('redraftChampionAbilities', async (
+    initialUserPrompt: string,
+    originalDraft: AbilityDraft,
+    suggestions: string,
+    model: string = "google/gemini-2.5-pro"
+): Promise<AbilityDraft> => {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+
+    const apiKey = process.env.OPEN_ROUTER_API_KEY
+    if (!apiKey) throw new Error("OpenRouter API Key not configured on the server.")
+
+    const openRouter = new OpenRouterService(apiKey)
+    const response = await openRouter.chat({
+        model,
+        messages: [
+            { role: "system", content: abilityDraftPrompt },
+            { role: "user", content: initialUserPrompt },
+            { role: "assistant", content: JSON.stringify(originalDraft, null, 2) },
+            { role: "user", content: `User Suggestions: "${suggestions}"\n\nPlease apply these suggestions and return the complete, updated JSON object. Remember to strictly follow all the rules. Generate ONLY the updated JSON object.` },
+        ],
+        response_format: { type: "json_object" },
+    })
+
+    return JSON.parse(response.choices[0].message.content) as AbilityDraft
+});
+
+export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', async (
+    championId: number,
+    draft: AbilityDraft
+) => {
+    await ensureAdmin("MANAGE_CHAMPIONS")
+
+    const abilities = (draft.abilities ?? []).map(a => ({ ...a, type: 'ABILITY' as const }))
+    const immunities = (draft.immunities ?? []).map(i => ({ ...i, type: 'IMMUNITY' as const }))
+
+    for (const link of [...abilities, ...immunities]) {
+        const ability = await prisma.ability.upsert({
+            where: { name: link.name },
+            update: { name: link.name },
+            create: { name: link.name, description: "" },
+        })
+
+        const normalizedSource = link.source || null
+
+        const existing = await prisma.championAbilityLink.findFirst({
+            where: { championId, abilityId: ability.id, type: link.type, source: normalizedSource }
+        })
+
+        if (!existing) {
+            await prisma.championAbilityLink.create({
+                data: { championId, abilityId: ability.id, type: link.type, source: normalizedSource }
+            })
+        }
+    }
+
+    revalidatePath('/admin/champions')
 });

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { ChampionAbilityLink, AbilityLinkType, Ability, AttackType } from "@prisma/client"
-import { updateChampionAbility, removeChampionAbility, updateChampionDetails, addSynergy, removeSynergy, saveChampionAttacks, updateChampionFullAbilities } from "./actions"
+import { updateChampionAbility, removeChampionAbility, updateChampionDetails, addSynergy, removeSynergy, saveChampionAttacks, updateChampionFullAbilities, draftChampionAbilities, redraftChampionAbilities, confirmAbilityDraft, fetchDraftModels, AbilityDraft, ModelOption } from "./actions"
 import { AdminChampionData } from "./champion-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,7 +41,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Check, ChevronsUpDown, Trash2, Plus, CalendarIcon, Save, X, Edit2, Sword, Shield, Zap } from "lucide-react"
+import { Check, ChevronsUpDown, Trash2, Plus, CalendarIcon, Save, X, Edit2, Sword, Shield, Zap, Sparkles, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -95,6 +95,18 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAddingInstance, setIsAddingInstance] = useState(false)
 
+  // AI Draft States
+  type DraftStep = 'idle' | 'loading' | 'review' | 'applying' | 'confirming'
+  const [draftStep, setDraftStep] = useState<DraftStep>('idle')
+  const [draft, setDraft] = useState<AbilityDraft | null>(null)
+  const [draftInitialPrompt, setDraftInitialPrompt] = useState<string>("")
+  const [draftSuggestions, setDraftSuggestions] = useState<string>("")
+  const [showSuggestForm, setShowSuggestForm] = useState(false)
+  const [draftModel, setDraftModel] = useState("google/gemini-2.5-pro")
+  const [models, setModels] = useState<ModelOption[]>([])
+  const [modelsLoading, setModelsLoading] = useState(false)
+  const [modelPickerOpen, setModelPickerOpen] = useState(false)
+
   // Sync props to state when champion ID changes or dialog is opened
   if (open && champion && champion.id !== currentId) {
     setCurrentId(champion.id)
@@ -116,6 +128,11 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     setIsEditingJson(false)
     setJsonError(null)
     setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
+    setDraftStep('idle')
+    setDraft(null)
+    setDraftInitialPrompt("")
+    setDraftSuggestions("")
+    setShowSuggestForm(false)
   }
 
   // Clear currentId when closed so it resets if reopened for same champ
@@ -124,6 +141,16 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
       setCurrentId(null)
     }
   }, [open])
+
+  // Lazy-load models when abilities tab first becomes active
+  useEffect(() => {
+    if (activeTab !== 'abilities' || models.length > 0 || modelsLoading) return
+    setModelsLoading(true)
+    fetchDraftModels()
+      .then(setModels)
+      .catch(() => { /* silently ignore — static fallback still usable */ })
+      .finally(() => setModelsLoading(false))
+  }, [activeTab, models.length, modelsLoading])
 
   // Group abilities and sort alphabetically
   const groupedAbilities = useMemo(() => {
@@ -275,6 +302,52 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
       } catch (error) {
           toast({ title: "Failed to remove synergy", variant: "destructive" })
       }
+  }
+
+  const handleDraftAbilities = async () => {
+    if (!champion.fullAbilities) {
+      toast({ title: "No Descriptions JSON found", description: "Add fullAbilities JSON in the Descriptions tab first.", variant: "destructive" })
+      return
+    }
+    setDraftStep('loading')
+    try {
+      const result = await draftChampionAbilities(champion.id, draftModel)
+      setDraft(result.draft)
+      setDraftInitialPrompt(result.initialUserPrompt)
+      setDraftStep('review')
+    } catch (error) {
+      toast({ title: "AI draft failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" })
+      setDraftStep('idle')
+    }
+  }
+
+  const handleApplySuggestions = async () => {
+    if (!draft || !draftSuggestions.trim()) return
+    setDraftStep('applying')
+    try {
+      const newDraft = await redraftChampionAbilities(draftInitialPrompt, draft, draftSuggestions, draftModel)
+      setDraft(newDraft)
+      setDraftSuggestions("")
+      setShowSuggestForm(false)
+      setDraftStep('review')
+    } catch (error) {
+      toast({ title: "Re-draft failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" })
+      setDraftStep('review')
+    }
+  }
+
+  const handleConfirmDraft = async () => {
+    if (!draft) return
+    setDraftStep('confirming')
+    try {
+      await confirmAbilityDraft(champion.id, draft)
+      toast({ title: "Abilities saved", description: "AI draft has been applied to this champion." })
+      setDraft(null)
+      setDraftStep('idle')
+    } catch (error) {
+      toast({ title: "Failed to save draft", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" })
+      setDraftStep('review')
+    }
   }
 
   const images = champion.images
@@ -463,7 +536,61 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                             <div className="flex items-end gap-3 relative z-10">
                                 <div className="flex-1 space-y-2">
-                                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Add New Ability / Immunity</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Add New Ability / Immunity</Label>
+                                        {draftStep === 'idle' && (
+                                            <div className="flex items-center gap-2">
+                                                <Popover open={modelPickerOpen} onOpenChange={setModelPickerOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            role="combobox"
+                                                            className="h-7 text-[11px] bg-transparent border-slate-700/60 hover:border-slate-600 text-slate-400 hover:text-slate-300 rounded-full px-2.5 gap-1.5 max-w-[180px]"
+                                                        >
+                                                            {modelsLoading
+                                                                ? <><Loader2 className="w-3 h-3 animate-spin shrink-0" /><span className="truncate">Loading…</span></>
+                                                                : <><span className="truncate">{models.find(m => m.id === draftModel)?.name ?? draftModel}</span><ChevronsUpDown className="w-3 h-3 shrink-0 opacity-50" /></>
+                                                            }
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-[280px] p-0 bg-slate-900 border-slate-800" align="end">
+                                                        <Command className="bg-transparent">
+                                                            <CommandInput placeholder="Search models…" className="border-b border-slate-800 text-xs" />
+                                                            <CommandList className="max-h-64">
+                                                                <CommandEmpty className="p-4 text-center text-xs text-slate-500">No models found.</CommandEmpty>
+                                                                <CommandGroup>
+                                                                    {models.map(m => (
+                                                                        <CommandItem
+                                                                            key={m.id}
+                                                                            value={`${m.name} ${m.id}`}
+                                                                            onSelect={() => { setDraftModel(m.id); setModelPickerOpen(false) }}
+                                                                            className="flex flex-col items-start gap-0.5 hover:bg-slate-800/50 cursor-pointer py-2"
+                                                                        >
+                                                                            <div className="flex items-center gap-2 w-full">
+                                                                                <Check className={cn("w-3 h-3 shrink-0 text-primary", draftModel === m.id ? "opacity-100" : "opacity-0")} />
+                                                                                <span className="text-xs font-medium truncate">{m.name}</span>
+                                                                            </div>
+                                                                            <span className="text-[10px] text-slate-500 font-mono pl-5">{m.id}</span>
+                                                                        </CommandItem>
+                                                                    ))}
+                                                                </CommandGroup>
+                                                            </CommandList>
+                                                        </Command>
+                                                    </PopoverContent>
+                                                </Popover>
+                                                <Button variant="outline" size="sm" onClick={handleDraftAbilities} className="h-7 text-[11px] font-semibold border-violet-500/30 hover:border-violet-500/60 text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 rounded-full px-3 gap-1.5">
+                                                    <Sparkles className="w-3 h-3" /> Draft with AI
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {draftStep === 'loading' && (
+                                            <div className="flex items-center gap-1.5 text-xs text-violet-400/70">
+                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                <span>AI analyzing...</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="flex gap-2">
                                         <Popover open={abilityComboboxOpen} onOpenChange={setAbilityComboboxOpen}>
                                             <PopoverTrigger asChild>
@@ -527,6 +654,86 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                 </div>
                             </div>
                         </div>
+
+                        {/* AI Draft Panel */}
+                        {(draftStep === 'review' || draftStep === 'applying' || draftStep === 'confirming') && draft && (
+                            <div className="mb-8 shrink-0 rounded-xl border border-violet-500/30 bg-violet-500/5 overflow-hidden">
+                                <div className="px-4 py-3 border-b border-violet-500/20 bg-violet-500/10 flex items-center gap-2">
+                                    <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+                                    <span className="text-xs font-bold uppercase tracking-widest text-violet-400">AI Draft</span>
+                                    <span className="text-xs text-slate-500 ml-1">
+                                        {(draft.abilities?.length ?? 0) + (draft.immunities?.length ?? 0)} entries
+                                    </span>
+                                    <span className="text-xs text-slate-600 font-mono ml-auto">{draftModel}</span>
+                                </div>
+
+                                <div className="p-4 space-y-4 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                                    {(draft.abilities?.length ?? 0) > 0 && (
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80 mb-2">Abilities ({draft.abilities!.length})</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {draft.abilities!.map((item, i) => (
+                                                    <div key={i} className="flex items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
+                                                        <span className="font-semibold text-amber-400">{item.name}</span>
+                                                        {item.source && <span className="text-slate-400">— {item.source}</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {(draft.immunities?.length ?? 0) > 0 && (
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500/80 mb-2">Immunities ({draft.immunities!.length})</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {draft.immunities!.map((item, i) => (
+                                                    <div key={i} className="flex items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
+                                                        <span className="font-semibold text-sky-400">{item.name}</span>
+                                                        {item.source && <span className="text-slate-400">— {item.source}</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {showSuggestForm && (
+                                        <div className="space-y-2 pt-2 border-t border-slate-700/40">
+                                            <Label className="text-xs text-slate-400">What would you like to change?</Label>
+                                            <Textarea
+                                                value={draftSuggestions}
+                                                onChange={e => setDraftSuggestions(e.target.value)}
+                                                placeholder="e.g. Add Fury from SP1, remove the Shock entry, source for Bleed should be SP2..."
+                                                className="bg-slate-950/50 border-slate-700 resize-none text-sm h-20 focus-visible:ring-violet-500/50"
+                                            />
+                                            <div className="flex gap-2">
+                                                <Button size="sm" onClick={handleApplySuggestions} disabled={draftStep === 'applying' || !draftSuggestions.trim()}>
+                                                    {draftStep === 'applying' && <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />}
+                                                    Apply
+                                                </Button>
+                                                <Button size="sm" variant="ghost" onClick={() => { setShowSuggestForm(false); setDraftSuggestions("") }} disabled={draftStep === 'applying'}>
+                                                    Cancel
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="px-4 py-3 border-t border-violet-500/20 flex items-center gap-2">
+                                    <Button size="sm" onClick={handleConfirmDraft} disabled={draftStep !== 'review'} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+                                        {draftStep === 'confirming' && <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />}
+                                        Confirm
+                                    </Button>
+                                    {!showSuggestForm && (
+                                        <Button size="sm" variant="outline" onClick={() => setShowSuggestForm(true)} disabled={draftStep !== 'review'} className="border-violet-500/30 hover:border-violet-500/60 text-violet-400 hover:text-violet-300 hover:bg-violet-500/10">
+                                            Suggest Edits
+                                        </Button>
+                                    )}
+                                    <Button size="sm" variant="ghost" onClick={() => { setDraftStep('idle'); setDraft(null); setDraftSuggestions(""); setShowSuggestForm(false) }} disabled={draftStep === 'confirming'} className="ml-auto text-slate-500 hover:text-slate-300">
+                                        Discard
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Grouped Abilities List */}
                         <ScrollArea className="flex-1 pr-4 -mr-4">
