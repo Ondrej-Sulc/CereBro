@@ -117,7 +117,7 @@ export async function calculateRosterRecommendations(
     });
 
     const allRecommendations = candidates.map(c => {
-        const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank + 1, c.sigLevel || 0);
+        const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank + 1, c.sigLevel || 0, c.ascensionLevel || 0);
         if (nextPrestige === 0) return null;
 
         const currentPrestige = rosterPrestigeMap[c.id] || 0;
@@ -138,6 +138,7 @@ export async function calculateRosterRecommendations(
             championClass: c.champion.class,
             championImage: c.champion.images as unknown as ChampionImages,
             stars: c.stars,
+            ascensionLevel: c.ascensionLevel || 0,
             fromRank: c.rank,
             toRank: c.rank + 1,
             prestigeGain: nextPrestige - currentPrestige,
@@ -180,7 +181,7 @@ export async function calculateRosterRecommendations(
 
                 if (charState.currentSig >= 200) continue;
 
-                const nextPrestige = getInterpolatedPrestige(cand.championId, cand.stars, cand.rank, charState.currentSig + 1);
+                const nextPrestige = getInterpolatedPrestige(cand.championId, cand.stars, cand.rank, charState.currentSig + 1, cand.ascensionLevel || 0);
                 if (nextPrestige <= charState.currentPrestige) continue;
 
                 let moveGain = 0;
@@ -215,7 +216,7 @@ export async function calculateRosterRecommendations(
         sigRecommendations = Object.entries(addedSigs).map(([id, added]) => {
             const original = rosterWithPrestige.find(r => r.id === id)!;
             const finalSig = (original.sigLevel || 0) + added;
-            const finalPrestige = getInterpolatedPrestige(original.championId, original.stars, original.rank, finalSig);
+            const finalPrestige = getInterpolatedPrestige(original.championId, original.stars, original.rank, finalSig, original.ascensionLevel || 0);
 
             const isolationList = rosterWithPrestige.map(r => r.id === id ? finalPrestige : r.prestige).sort((a, b) => b - a);
             const isoSum = isolationList.slice(0, 30).reduce((s, p) => s + p, 0);
@@ -229,6 +230,7 @@ export async function calculateRosterRecommendations(
                 championClass: original.champion.class,
                 championImage: original.champion.images as unknown as ChampionImages,
                 stars: original.stars,
+                ascensionLevel: original.ascensionLevel || 0,
                 rank: original.rank,
                 fromSig: original.sigLevel || 0,
                 toSig: finalSig,
@@ -241,7 +243,7 @@ export async function calculateRosterRecommendations(
     } else {
         // DEFAULT: MAX SIG POTENTIAL
         sigRecommendations = sigCandidates.map(c => {
-            const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank, 200);
+            const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank, 200, c.ascensionLevel || 0);
             if (nextPrestige === 0) return null;
 
             const currentPrestige = rosterPrestigeMap[c.id] || 0;
@@ -265,6 +267,7 @@ export async function calculateRosterRecommendations(
                 championClass: c.champion.class,
                 championImage: c.champion.images as unknown as ChampionImages,
                 stars: c.stars,
+                ascensionLevel: c.ascensionLevel || 0,
                 rank: c.rank,
                 fromSig: c.sigLevel || 0,
                 toSig: 200,

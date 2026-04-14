@@ -58,7 +58,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                 ) : (
                     <>
                         <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none">
-                            {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}
+                            {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}{item.stars === 7 && item.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{item.ascensionLevel}</span>}
                         </Badge>
                         {item.isAwakened && (
                             <Badge variant="outline" className="bg-sky-950/80 border-sky-500/30 text-sky-400 text-[9px] px-1 py-0 h-4 font-bold leading-none">

@@ -588,7 +588,7 @@ export function RosterView({
         <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
       )}
 
-      {canEdit && <EditChampionModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
+      {canEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
       {canEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>

@@ -162,7 +162,7 @@ export function RosterInsights({
                                             </div>
                                             <div className="flex flex-col min-w-0 flex-1">
                                                 <div className="flex items-center justify-between mb-0.5">
-                                                    <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★</span>
+                                                    <span className="text-[10px] font-bold leading-none text-white">{rec.stars}<span className="text-yellow-500">★</span>{rec.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{rec.ascensionLevel}</span>}</span>
                                                     <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
                                                         <span>R{rec.fromRank}</span><ChevronRight className="w-2.5 h-2.5" /><span className={cn(colors.text, "brightness-150")}>R{rec.toRank}</span>
                                                     </div>
@@ -269,7 +269,7 @@ export function RosterInsights({
                                             </div>
                                             <div className="flex flex-col min-w-0 flex-1">
                                                 <div className="flex items-center justify-between mb-0.5">
-                                                    <span className="text-yellow-500 text-[10px] font-bold leading-none">{rec.stars}★ R{rec.rank}</span>
+                                                    <span className="text-[10px] font-bold leading-none text-white">{rec.stars}<span className="text-yellow-500">★</span> R{rec.rank}{rec.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{rec.ascensionLevel}</span>}</span>
                                                     <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
                                                         <span>S{rec.fromSig}</span><ChevronRight className="w-2.5 h-2.5" /><span className={cn(colors.text, "brightness-150")}>S{rec.toSig}</span>
                                                     </div>

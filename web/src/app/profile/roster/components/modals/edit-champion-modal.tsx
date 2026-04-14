@@ -1,124 +1,315 @@
 "use client";
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useCallback, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import Image from "next/image";
-import { getChampionImageUrl, getMaxRank, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { getChampionImageUrl, getMaxRank } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
-import { ProfileRosterEntry } from "../../types";
+import { ProfileRosterEntry, PrestigePoint } from "../../types";
 
 interface EditChampionModalProps {
     item: ProfileRosterEntry | null;
+    prestige?: number;
     onClose: () => void;
     onUpdate: (data: Partial<ProfileRosterEntry> & { id: string }) => void;
     onDelete: (id: string) => void;
     onItemChange: (item: ProfileRosterEntry) => void;
 }
 
-export function EditChampionModal({ item, onClose, onUpdate, onDelete, onItemChange }: EditChampionModalProps) {
+function computePrestige(curve: PrestigePoint[], sig: number, stars: number, ascensionLevel: number): number {
+    if (!curve.length) return 0;
+    const point = curve.find(p => p.sig === sig);
+    let base = point?.prestige ?? 0;
+    if (!base) {
+        const lower = [...curve].filter(p => p.sig <= sig).pop();
+        const upper = curve.find(p => p.sig > sig);
+        if (lower && upper) {
+            const t = (sig - lower.sig) / (upper.sig - lower.sig);
+            base = Math.round((lower.prestige + t * (upper.prestige - lower.prestige)) / 10) * 10;
+        } else {
+            base = lower?.prestige ?? upper?.prestige ?? 0;
+        }
+    }
+    if (base > 0 && stars === 7 && ascensionLevel > 0) {
+        base = Math.round((base * Math.pow(1.08, ascensionLevel)) / 10) * 10;
+    }
+    return base;
+}
+
+export function EditChampionModal({ item, prestige: initialPrestige, onClose, onUpdate, onDelete, onItemChange }: EditChampionModalProps) {
+    const [prestigeCurves, setPrestigeCurves] = useState<Map<number, PrestigePoint[]>>(new Map());
+    const [livePrestige, setLivePrestige] = useState<number | undefined>(undefined);
+    const abortRef = useRef<AbortController | null>(null);
+    const prevItemId = useRef<string | null>(null);
+
+    const fetchCurve = useCallback(async (championId: number, stars: number, rank: number) => {
+        if (abortRef.current) abortRef.current.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+        try {
+            const res = await fetch(
+                `/api/profile/champion-prestige?championId=${championId}&rarity=${stars}&rank=${rank}`,
+                { signal: controller.signal }
+            );
+            if (!res.ok) return;
+            const data: PrestigePoint[] = await res.json();
+            setPrestigeCurves(prev => new Map(prev).set(rank, data));
+        } catch { /* aborted or network error */ }
+    }, []);
+
+    useEffect(() => {
+        if (!item) {
+            prevItemId.current = null;
+            setPrestigeCurves(new Map());
+            setLivePrestige(undefined);
+            return;
+        }
+        if (prevItemId.current !== item.id) {
+            prevItemId.current = item.id;
+            setPrestigeCurves(new Map());
+        }
+        fetchCurve(item.championId, item.stars, item.rank);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [item?.id, item?.rank]);
+
+    useEffect(() => {
+        if (!item) return;
+        const curve = prestigeCurves.get(item.rank);
+        if (!curve) { setLivePrestige(undefined); return; }
+        const computed = computePrestige(curve, item.sigLevel || 0, item.stars, item.ascensionLevel || 0);
+        setLivePrestige(computed || undefined);
+    }, [item, prestigeCurves]);
+
+    const displayPrestige = livePrestige ?? initialPrestige;
+
+    if (!item) return null;
+
+    const classColors = getChampionClassColors(item.champion.class);
+    const maxRank = getMaxRank(item.stars);
+    const maxSig = item.stars >= 5 ? 200 : 99;
+    const sigQuickValues = item.stars >= 5 ? [0, 50, 100, 150, 200] : [0, 25, 50, 75, 99];
+    const heroUrl = getChampionImageUrl(item.champion.images, 'full', 'hero');
+
+    const setSig = (val: number) => {
+        const clamped = Math.max(0, Math.min(maxSig, val));
+        onItemChange({ ...item, sigLevel: clamped, isAwakened: clamped > 0 ? true : item.isAwakened });
+    };
+
     return (
         <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
-            {item && (
-                <DialogContent className="bg-slate-900 border-slate-800 text-slate-200">
-                    <DialogHeader className="flex flex-row items-center gap-4 border-b border-slate-800 pb-4">
-                        <div className={cn("relative w-16 h-16 rounded-lg overflow-hidden border-2 shadow-md shrink-0", getChampionClassColors(item.champion.class).border)}>
-                            <Image src={getChampionImageUrlOrPlaceholder(item.champion.images, 'full')} alt={item.champion.name} fill sizes="64px" className="object-cover" />
-                        </div>
-                        <div className="flex flex-col gap-1 text-left">
-                            <DialogTitle className={cn("text-xl flex items-center gap-2", getChampionClassColors(item.champion.class).text)}>
+            <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 p-0 overflow-hidden sm:max-w-[480px] gap-0">
+                <DialogTitle className="sr-only">{item.champion.name}</DialogTitle>
+                <DialogDescription className="sr-only">Edit champion details</DialogDescription>
+
+                {/* Hero header — squarish hero image anchored right, info on the left */}
+                <div className="relative h-44 w-full overflow-hidden bg-slate-950">
+                    {/* Class colour accent */}
+                    <div className="absolute inset-x-0 top-0 h-0.5 z-10" style={{ backgroundColor: classColors.color }} />
+                    {/* Hero image: square crop anchored to right edge */}
+                    <div className="absolute right-0 top-0 h-full aspect-square">
+                        <Image
+                            src={heroUrl}
+                            alt={item.champion.name}
+                            fill
+                            sizes="176px"
+                            className="object-cover object-center"
+                            priority
+                        />
+                        {/* Fade image into background from left */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/50 to-transparent" />
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 px-4 pb-3 flex items-end justify-between gap-3">
+                        <div className="min-w-0">
+                            <p className={cn("text-xl font-black leading-tight truncate drop-shadow-lg", classColors.text)}>
                                 {item.champion.name}
-                                <Badge variant="secondary" className="text-xs bg-slate-800 text-slate-300 border-slate-700">{item.stars}★ R{item.rank}</Badge>
-                            </DialogTitle>
-                            <DialogDescription>Update details for this champion in your roster.</DialogDescription>
-                        </div>
-                    </DialogHeader>
-                    
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="rank" className="text-right">Rank</Label>
-                            <Select value={String(item.rank)} onValueChange={(v) => onItemChange({...item, rank: parseInt(v)})}>
-                                <SelectTrigger className="w-[180px] bg-slate-950 border-slate-700">
-                                    <SelectValue placeholder="Rank" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Array.from({length: getMaxRank(item.stars)}, (_, i) => i + 1).map(r => (
-                                        <SelectItem key={r} value={String(r)}>Rank {r}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="sig" className="text-right">Sig Level</Label>
-                            <Input 
-                                id="sig" type="number" disabled={!item.isAwakened}
-                                className="w-[180px] bg-slate-950 border-slate-700 disabled:opacity-50"
-                                min={0} max={item.stars >= 5 ? 200 : 99} value={item.sigLevel || 0}
-                                onChange={(e) => {
-                                    const maxSig = item.stars >= 5 ? 200 : 99;
-                                    let val = parseInt(e.target.value);
-                                    if (isNaN(val)) val = 0;
-                                    if (val > maxSig) val = maxSig;
-                                    if (val < 0) val = 0;
-                                    onItemChange({...item, sigLevel: val});
-                                }}
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label className="text-right">Options</Label>
-                            <div className="col-span-3 flex gap-4">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        id="awakened" checked={item.isAwakened}
-                                        onCheckedChange={(c) => onItemChange({...item, isAwakened: !!c, sigLevel: !!c ? (item.sigLevel || 1) : 0})}
-                                        className="border-slate-600 data-[state=checked]:bg-sky-600"
-                                    />
-                                    <Label htmlFor="awakened">Awakened</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    {item.stars === 7 ? (
-                                        <div className="flex items-center gap-2">
-                                            <Label htmlFor="ascensionLevel" className="whitespace-nowrap">Ascension</Label>
-                                            <Select value={String(item.ascensionLevel || 0)} onValueChange={(v) => {
-                                                const level = parseInt(v);
-                                                onItemChange({...item, ascensionLevel: level, isAscended: level > 0});
-                                            }}>
-                                                <SelectTrigger id="ascensionLevel" className="w-[80px] h-8 bg-slate-950 border-slate-700">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {[0, 1, 2, 3, 4, 5].map(level => (
-                                                        <SelectItem key={level} value={String(level)}>{level === 0 ? 'None' : `Level ${level}`}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <Checkbox id="ascended" checked={item.isAscended} onCheckedChange={(c) => onItemChange({...item, isAscended: !!c})} className="border-slate-600 data-[state=checked]:bg-sky-600" />
-                                            <Label htmlFor="ascended">Ascended</Label>
-                                        </>
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-xs font-bold text-white/90 drop-shadow">
+                                    {item.stars}<span className="text-yellow-400 mx-0.5">★</span>R{item.rank}
+                                    {item.stars === 7 && (item.ascensionLevel || 0) > 0 && (
+                                        <span className="text-amber-400 ml-1">A{item.ascensionLevel}</span>
                                     )}
-                                </div>
+                                </span>
+                                <span
+                                    className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-black/50 border border-white/10"
+                                    style={{ color: classColors.color }}
+                                >
+                                    {item.champion.class}
+                                </span>
+                            </div>
+                        </div>
+                        {displayPrestige !== undefined && displayPrestige > 0 && (
+                            <div className="text-right shrink-0">
+                                <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider leading-none mb-0.5">Prestige</p>
+                                <p className="text-2xl font-black text-white tabular-nums leading-none drop-shadow">
+                                    {displayPrestige.toLocaleString()}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Controls */}
+                <div className="px-4 pt-3 pb-4 space-y-3">
+
+                    {/* Rank */}
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Rank</p>
+                        <div className="flex gap-1">
+                            {Array.from({ length: maxRank }, (_, i) => i + 1).map(r => (
+                                <button
+                                    key={r}
+                                    onClick={() => onItemChange({ ...item, rank: r })}
+                                    className={cn(
+                                        "flex-1 py-2 rounded-lg text-xs font-bold transition-all border",
+                                        item.rank === r
+                                            ? cn(classColors.bg, classColors.text, "border-white/20")
+                                            : "bg-slate-800/60 border-transparent text-slate-500 hover:bg-slate-700/60 hover:text-slate-200"
+                                    )}
+                                >
+                                    R{r}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-slate-800/80" />
+
+                    {/* Signature */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Signature</p>
+                            <button
+                                onClick={() => onItemChange({
+                                    ...item,
+                                    isAwakened: !item.isAwakened,
+                                    sigLevel: !item.isAwakened ? Math.max(1, item.sigLevel || 1) : 0,
+                                })}
+                                className={cn(
+                                    "text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition-all",
+                                    item.isAwakened
+                                        ? "bg-sky-500/15 border-sky-500/40 text-sky-400"
+                                        : "bg-slate-800 border-slate-700 text-slate-500 hover:text-slate-300"
+                                )}
+                            >
+                                {item.isAwakened ? "Awakened" : "Not Awakened"}
+                            </button>
+                        </div>
+                        <div className={cn("space-y-1.5 transition-opacity duration-200", !item.isAwakened && "opacity-40 pointer-events-none")}>
+                            {/* Stepper row: −20  −1  [input]  +1  +20 */}
+                            <div className="flex items-center gap-1">
+                                {([-20, -1] as const).map(delta => (
+                                    <button
+                                        key={delta}
+                                        onClick={() => setSig((item.sigLevel || 0) + delta)}
+                                        className="px-2.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-black border border-slate-700/50 transition-colors select-none leading-none"
+                                    >
+                                        {delta}
+                                    </button>
+                                ))}
+                                <input
+                                    type="number"
+                                    value={item.sigLevel || 0}
+                                    min={0}
+                                    max={maxSig}
+                                    onChange={(e) => {
+                                        let val = parseInt(e.target.value);
+                                        if (isNaN(val)) val = 0;
+                                        setSig(val);
+                                    }}
+                                    className="flex-1 text-center text-sm font-black bg-slate-800/80 border border-slate-700 rounded-lg py-2 text-white tabular-nums focus:outline-none focus:border-slate-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                {([+1, +20] as const).map(delta => (
+                                    <button
+                                        key={delta}
+                                        onClick={() => setSig((item.sigLevel || 0) + delta)}
+                                        className="px-2.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 text-[11px] font-black border border-slate-700/50 transition-colors select-none leading-none"
+                                    >
+                                        +{delta}
+                                    </button>
+                                ))}
+                            </div>
+                            {/* Quick-jump strip — visually distinct from the stepper */}
+                            <div className="flex rounded-lg overflow-hidden border border-slate-700/50 bg-slate-800/40">
+                                {sigQuickValues.map((v, i) => (
+                                    <button
+                                        key={v}
+                                        onClick={() => setSig(v)}
+                                        className={cn(
+                                            "flex-1 py-1.5 text-[10px] font-bold transition-all",
+                                            i > 0 && "border-l border-slate-700/50",
+                                            (item.sigLevel || 0) === v
+                                                ? "bg-slate-600 text-white"
+                                                : "text-slate-500 hover:text-slate-300 hover:bg-slate-700/40"
+                                        )}
+                                    >
+                                        {v}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter className="flex justify-between sm:justify-between w-full">
-                        <Button variant="destructive" size="icon" onClick={() => onDelete(item.id)}><Trash2 className="w-4 h-4" /></Button>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={onClose}>Cancel</Button>
-                            <Button onClick={() => onUpdate({ id: item.id, rank: item.rank, isAwakened: item.isAwakened, isAscended: item.isAscended, ascensionLevel: item.ascensionLevel, sigLevel: item.sigLevel })} className="bg-sky-600 hover:bg-sky-700">Save Changes</Button>
-                        </div>
-                    </DialogFooter>
-                </DialogContent>
-            )}
+                    <div className="border-t border-slate-800/80" />
+
+                    {/* Ascension */}
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Ascension</p>
+                        {item.stars === 7 ? (
+                            <div className="flex gap-1">
+                                {[0, 1, 2, 3, 4, 5].map(level => (
+                                    <button
+                                        key={level}
+                                        onClick={() => onItemChange({ ...item, ascensionLevel: level, isAscended: level > 0 })}
+                                        className={cn(
+                                            "flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all",
+                                            (item.ascensionLevel || 0) === level
+                                                ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                                                : "bg-slate-800/60 border-transparent text-slate-500 hover:bg-slate-700/60 hover:text-slate-200"
+                                        )}
+                                    >
+                                        {level === 0 ? "—" : `A${level}`}
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => onItemChange({ ...item, isAscended: !item.isAscended })}
+                                className={cn(
+                                    "w-full py-2 rounded-lg text-xs font-bold border transition-all",
+                                    item.isAscended
+                                        ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
+                                        : "bg-slate-800/60 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+                                )}
+                            >
+                                {item.isAscended ? "✦ Ascended" : "Not Ascended"}
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between px-4 pb-4 pt-0">
+                    <Button variant="destructive" size="icon" onClick={() => onDelete(item.id)}>
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" className="border-slate-700 hover:bg-slate-800 text-slate-300" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => onUpdate({ id: item.id, rank: item.rank, isAwakened: item.isAwakened, isAscended: item.isAscended, ascensionLevel: item.ascensionLevel, sigLevel: item.sigLevel })}
+                            className="bg-sky-600 hover:bg-sky-700"
+                        >
+                            Save
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
         </Dialog>
     );
 }

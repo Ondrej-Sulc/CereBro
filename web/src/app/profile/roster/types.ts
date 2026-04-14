@@ -29,6 +29,7 @@ export interface Recommendation {
     championClass: ChampionClass;
     championImage: ChampionImages;
     stars: number;
+    ascensionLevel: number;
     fromRank: number;
     toRank: number;
     prestigeGain: number;
@@ -41,6 +42,7 @@ export interface SigRecommendation {
     championClass: ChampionClass;
     championImage: ChampionImages;
     stars: number;
+    ascensionLevel: number;
     rank: number;
     fromSig: number;
     toSig: number;
