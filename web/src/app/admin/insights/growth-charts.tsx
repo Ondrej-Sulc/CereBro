@@ -19,6 +19,13 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface GrowthData {
   date: string
@@ -101,7 +108,25 @@ const chartConfig: ChartConfig = {
   }
 }
 
+const PRESTIGE_STEP_OPTIONS = [500, 1000, 2000, 5000] as const
+type PrestigeStep = typeof PRESTIGE_STEP_OPTIONS[number]
+
+function rebucketPrestige(data: PrestigeDistributionItem[], step: number): PrestigeDistributionItem[] {
+  const buckets = new Map<number, number>()
+  for (const item of data) {
+    const bucket = Math.floor(item.prestige / step) * step
+    buckets.set(bucket, (buckets.get(bucket) ?? 0) + item.count)
+  }
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([prestige, count]) => ({ prestige, count }))
+}
+
 export function GrowthCharts({ growthData, rosterDistribution, prestigeDistribution }: GrowthChartsProps) {
+  const [prestigeStep, setPrestigeStep] = React.useState<PrestigeStep>(1000)
+
+  const bucketedPrestige = rebucketPrestige(prestigeDistribution, prestigeStep)
+
   // Process roster data for stacked bar chart
   const processedRoster = [1, 2, 3, 4, 5, 6].map(rank => {
       const star6 = rosterDistribution.find(d => d.stars === 6 && d.rank === rank)?.count || 0
@@ -273,13 +298,32 @@ export function GrowthCharts({ growthData, rosterDistribution, prestigeDistribut
 
       {/* Prestige Distribution Curve */}
       <Card className="flex flex-col md:col-span-2">
-        <CardHeader className="items-center pb-0">
-          <CardTitle>Prestige Distribution Curve</CardTitle>
-          <CardDescription>Player population across prestige spectrum (250 step)</CardDescription>
+        <CardHeader className="pb-0">
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <CardTitle>Prestige Distribution Curve</CardTitle>
+              <CardDescription>Player population across prestige spectrum</CardDescription>
+            </div>
+            <Select
+              value={String(prestigeStep)}
+              onValueChange={(v) => setPrestigeStep(Number(v) as PrestigeStep)}
+            >
+              <SelectTrigger className="w-[120px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRESTIGE_STEP_OPTIONS.map((step) => (
+                  <SelectItem key={step} value={String(step)} className="text-xs">
+                    {step.toLocaleString()} step
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
           <ChartContainer config={chartConfig} className="mx-auto aspect-[4/1] w-full">
-             <AreaChart data={prestigeDistribution}>
+             <AreaChart data={bucketedPrestige}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
                     dataKey="prestige"
