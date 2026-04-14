@@ -176,7 +176,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                                            if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
                                            return b.sigLevel - a.sigLevel;
                                        })[0];
-                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended ? '+' : ''}${r.isAwakened && r.sigLevel > 0 ? ` S${r.sigLevel}` : ''})`;
+                                       rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended && r.ascensionLevel > 0 ? ` A${r.ascensionLevel}` : ''}${r.isAwakened && r.sigLevel > 0 ? ` S${r.sigLevel}` : ''})`;
                                    }
                                }
 

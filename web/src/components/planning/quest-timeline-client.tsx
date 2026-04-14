@@ -884,7 +884,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                 championClass: userChamp.champion.class,
                                     images: toChampionImages(userChamp.champion.images)
                             },
-                            isAscended: userChamp.isAscended
+                            isAscended: userChamp.isAscended,
+                            ascensionLevel: userChamp.ascensionLevel
                         } : {
                             stars: 0,
                             rank: 0,
@@ -1220,6 +1221,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             rank={r.rank}
                                                                             isAwakened={r.isAwakened}
                                                                             sigLevel={r.sigLevel}
+                                                                            isAscended={r.isAscended}
+                                                                            ascensionLevel={r.ascensionLevel}
                                                                             championClass={r.champion.class}
                                                                             size="lg"
                                                                             showRank={true}

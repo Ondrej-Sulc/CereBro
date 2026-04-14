@@ -288,7 +288,7 @@ function EncounterHeader({
                                         </div>
                                         <div className="flex items-center md:justify-end gap-1.5 mt-1.5 flex-wrap">
                                             <Badge variant="outline" className="text-[9px] font-black text-slate-300 bg-slate-900 border-slate-700 px-1.5 py-0 h-4 shrink-0">
-                                                {selectedRosterItem.stars}★ R{selectedRosterItem.rank}
+                                                {selectedRosterItem.stars}★ R{selectedRosterItem.rank}{selectedRosterItem.ascensionLevel && selectedRosterItem.ascensionLevel > 0 ? <span className="text-amber-400 ml-0.5">A{selectedRosterItem.ascensionLevel}</span> : null}
                                             </Badge>
                                             {selectedRosterItem.isAwakened && (
                                                 <Badge variant="outline" className="text-[9px] font-black text-sky-400 bg-sky-950/50 border-sky-800 px-1.5 py-0 h-4 shrink-0">
@@ -636,7 +636,7 @@ function RosterSelector({
                                                     const isInTeam = Object.values(selections).includes(r.id);
                                                     return (
                                                         <div key={r.id} onClick={() => handleSelectCounter(encounter.id, r.id)} title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`} className="cursor-pointer">
-                                                            <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} />
+                                                            <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended, ascensionLevel: r.ascensionLevel }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} />
                                                         </div>
                                                     );
                                                 })}

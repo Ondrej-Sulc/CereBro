@@ -259,7 +259,7 @@ export function AllianceRosterMatrix({
                                             )}
                                         </div>
                                         <span className="text-[8px] font-bold text-slate-300 leading-none whitespace-nowrap">
-                                            <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank} {champ.isAwakened && champ.sigLevel > 0 ? `S${champ.sigLevel}` : ''}
+                                            <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank}{champ.stars === 7 && champ.ascensionLevel > 0 && <span className="text-amber-400"> A{champ.ascensionLevel}</span>} {champ.isAwakened && champ.sigLevel > 0 ? `S${champ.sigLevel}` : ''}
                                         </span>
                                     </div>
                                 </PopoverTrigger>

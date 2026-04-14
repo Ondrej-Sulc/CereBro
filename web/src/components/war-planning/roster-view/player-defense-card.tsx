@@ -284,7 +284,7 @@ export const PlayerDefenseCard = ({
                                                 {rosterEntry.isAwakened && rosterEntry.sigLevel > 0 && (
                                                     <span className="text-sky-400 font-bold text-[9px]">S{rosterEntry.sigLevel}</span>
                                                 )}
-                                                {rosterEntry.isAscended && <span className="text-pink-400 font-bold text-[9px]">ASC</span>}
+                                                {rosterEntry.isAscended && <span className="text-amber-400 font-bold text-[9px]">{rosterEntry.ascensionLevel > 0 ? `A${rosterEntry.ascensionLevel}` : 'ASC'}</span>}
                                             </div>
                                         )}
                                     </div>

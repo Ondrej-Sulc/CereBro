@@ -243,7 +243,7 @@ export const DefensePlayerListPanel = ({
                                                             {roster.isAwakened && roster.sigLevel > 0 && (
                                                                 <span className="text-sky-400 font-bold">S{roster.sigLevel}</span>
                                                             )}
-                                                            {roster.isAscended && <span className="text-pink-400 font-bold">ASC</span>}
+                                                            {roster.isAscended && <span className="text-amber-400 font-bold">{roster.ascensionLevel > 0 ? `A${roster.ascensionLevel}` : 'ASC'}</span>}
                                                         </div>
                                                     )}
                                                 </div>

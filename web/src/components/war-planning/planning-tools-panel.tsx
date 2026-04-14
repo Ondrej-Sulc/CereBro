@@ -348,7 +348,7 @@ export default function PlanningToolsPanel({
                             {item.isAwakened && item.sigLevel > 0 && (
                                 <span className="text-sky-400 font-bold">S{item.sigLevel}</span>
                             )}
-                            {item.isAscended && <span className="text-pink-400 font-bold">Ascended</span>}
+                            {item.isAscended && <span className="text-amber-400 font-bold">{item.ascensionLevel > 0 ? `A${item.ascensionLevel}` : 'ASC'}</span>}
                           </div>
                         </div>
                         {isAssigned && (
@@ -420,7 +420,7 @@ export default function PlanningToolsPanel({
                         {item.isAwakened && item.sigLevel > 0 && (
                             <span className="text-sky-400 font-bold">S{item.sigLevel}</span>
                         )}
-                        {item.isAscended && <span className="text-pink-400 font-bold" title="Ascended">ASC</span>}
+                        {item.isAscended && <span className="text-amber-400 font-bold">{item.ascensionLevel > 0 ? `A${item.ascensionLevel}` : 'ASC'}</span>}
                       </div>
                     </div>
                   ))}

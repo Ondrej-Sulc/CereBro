@@ -102,6 +102,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
             stars: true,
             rank: true,
             isAscended: true,
+            ascensionLevel: true,
             isAwakened: true,
             sigLevel: true,
           }

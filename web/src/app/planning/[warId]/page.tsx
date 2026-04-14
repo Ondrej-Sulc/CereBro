@@ -126,6 +126,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
             stars: true,
             rank: true,
             isAscended: true,
+            ascensionLevel: true,
             isAwakened: true,
             sigLevel: true,
           }

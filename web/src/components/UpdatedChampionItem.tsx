@@ -105,8 +105,9 @@ export const UpdatedChampionItem = memo(({
 
                 <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
                     {item.isAscended && (
-                        <div className="bg-yellow-900/80 p-0.5 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
+                        <div className="bg-yellow-900/80 rounded border border-yellow-500/30 shadow-sm flex items-center gap-0.5 px-1 py-0.5" title={item.ascensionLevel ? `Ascension Level ${item.ascensionLevel}` : "Ascended"}>
                             <Trophy className="w-2.5 h-2.5 text-yellow-400 fill-yellow-500" />
+                            {item.ascensionLevel && item.ascensionLevel > 0 && <span className="text-[9px] font-bold text-amber-400 leading-none">A{item.ascensionLevel}</span>}
                         </div>
                     )}
                     <div className={cn("p-1 rounded-full bg-black/80 border border-white/10 shadow-sm", classColors.text)}>

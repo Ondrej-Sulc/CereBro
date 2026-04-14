@@ -218,7 +218,7 @@ export function exportPlayerText(
         })[0];
 
       const rInfo = roster
-        ? `${roster.stars}★R${roster.rank}${roster.isAwakened && roster.sigLevel > 0 ? ` S${roster.sigLevel}` : ""}${roster.isAscended ? " ASC" : ""}`
+        ? `${roster.stars}★R${roster.rank}${roster.isAwakened && roster.sigLevel > 0 ? ` S${roster.sigLevel}` : ""}${roster.isAscended && roster.ascensionLevel > 0 ? ` A${roster.ascensionLevel}` : roster.isAscended ? " ASC" : ""}`
         : "—";
 
       const roles = Array.from(champ.roles)
@@ -313,7 +313,7 @@ export function exportPlayerMarkdown(
         })[0];
 
       const rInfo = roster
-        ? `${roster.stars}★R${roster.rank}${roster.isAwakened && roster.sigLevel > 0 ? ` S${roster.sigLevel}` : ""}${roster.isAscended ? " ASC" : ""}`
+        ? `${roster.stars}★R${roster.rank}${roster.isAwakened && roster.sigLevel > 0 ? ` S${roster.sigLevel}` : ""}${roster.isAscended && roster.ascensionLevel > 0 ? ` A${roster.ascensionLevel}` : roster.isAscended ? " ASC" : ""}`
         : "—";
 
       const roles = Array.from(champ.roles)
