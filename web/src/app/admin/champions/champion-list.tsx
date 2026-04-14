@@ -30,8 +30,8 @@ export function ChampionList({ initialChampions, allAbilities }: ChampionListPro
 
   const selectedChampion = initialChampions.find(c => c.id === selectedChampionId) || null
   
-  // Create a simplified list for the editor's synergy dropdown
-  const simpleChampionList = initialChampions.map(c => ({ id: c.id, name: c.name }))
+  // Champion list for the editor's synergy dropdown (includes images + class for avatar display)
+  const simpleChampionList = initialChampions.map(c => ({ id: c.id, name: c.name, class: c.class, images: c.images }))
 
   return (
     <div className="space-y-6">

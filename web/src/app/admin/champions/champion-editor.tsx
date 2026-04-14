@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { ChampionAbilityLink, AbilityLinkType, Ability, AttackType } from "@prisma/client"
+import { ChampionAbilityLink, AbilityLinkType, Ability, AttackType, ChampionClass } from "@prisma/client"
 import { updateChampionAbility, removeChampionAbility, updateChampionDetails, addSynergy, removeSynergy, saveChampionAttacks, updateChampionFullAbilities, draftChampionAbilities, redraftChampionAbilities, confirmAbilityDraft, fetchDraftModels, AbilityDraft, ModelOption } from "./actions"
 import { AdminChampionData } from "./champion-card"
 import { Button } from "@/components/ui/button"
@@ -54,9 +54,11 @@ import { CLASSES } from "@/app/profile/roster/constants"
 import { Badge } from "@/components/ui/badge"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 
+type ChampionListItem = { id: number; name: string; class: string; images: ChampionImages }
+
 interface ChampionEditorProps {
   champion: AdminChampionData | null
-  allChampions: { id: number; name: string }[]
+  allChampions: ChampionListItem[]
   allAbilities: Ability[]
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -93,7 +95,11 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   // Combobox States
   const [abilityComboboxOpen, setAbilityComboboxOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isAddingInstance, setIsAddingInstance] = useState(false)
+
+  // Per-group "add source" inline form: abilityId → draft source string (undefined = not open)
+  const [addingSourceFor, setAddingSourceFor] = useState<Record<number, string>>({})
+  // Source field in the top-level add bar
+  const [newSource, setNewSource] = useState("")
 
   // AI Draft States
   type DraftStep = 'idle' | 'loading' | 'review' | 'applying' | 'confirming'
@@ -123,7 +129,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     setNewAbilityId(null)
     setNewType("ABILITY")
     setAbilityComboboxOpen(false)
-    setIsAddingInstance(false)
     
     setIsEditingJson(false)
     setJsonError(null)
@@ -133,6 +138,8 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     setDraftInitialPrompt("")
     setDraftSuggestions("")
     setShowSuggestForm(false)
+    setNewSource("")
+    setAddingSourceFor({})
   }
 
   // Clear currentId when closed so it resets if reopened for same champ
@@ -242,9 +249,10 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
     setIsSubmitting(true)
     try {
-      await updateChampionAbility(undefined, champion.id, newAbilityId, newType, undefined)
+      await updateChampionAbility(undefined, champion.id, newAbilityId, newType, newSource || undefined)
       toast({ title: "Ability added" })
       setNewAbilityId(null)
+      setNewSource("")
     } catch (error) {
       toast({ title: "Error adding ability", variant: "destructive" })
     } finally {
@@ -252,15 +260,13 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     }
   }
 
-  const handleAddInstance = async (abilityId: number, type: AbilityLinkType) => {
-      setIsAddingInstance(true)
+  const handleAddInstance = async (abilityId: number, type: AbilityLinkType, source?: string) => {
       try {
-          await updateChampionAbility(undefined, champion.id, abilityId, type, undefined)
-          toast({ title: "Ability instance added" })
+          await updateChampionAbility(undefined, champion.id, abilityId, type, source || undefined)
+          toast({ title: "Source added" })
       } catch (error) {
-          toast({ title: "Failed to add instance", variant: "destructive" })
-      } finally {
-          setIsAddingInstance(false)
+          toast({ title: "Failed to add source", variant: "destructive" })
+          throw error
       }
   }
 
@@ -595,50 +601,44 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                         <Popover open={abilityComboboxOpen} onOpenChange={setAbilityComboboxOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button
-                                                variant="outline"
-                                                role="combobox"
-                                                aria-expanded={abilityComboboxOpen}
-                                                className="w-full justify-between bg-slate-950/50 border-slate-800/80 hover:bg-slate-900 hover:text-white"
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={abilityComboboxOpen}
+                                                    className="flex-1 justify-between bg-slate-950/50 border-slate-800/80 hover:bg-slate-900 hover:text-white min-w-0"
                                                 >
-                                                {newAbilityId
-                                                    ? allAbilities.find((a) => a.id === newAbilityId)?.name
-                                                    : <span className="text-slate-500 font-normal">Select ability...</span>}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                    {newAbilityId ? (() => {
+                                                        const a = allAbilities.find(a => a.id === newAbilityId)
+                                                        return a ? <span className="flex items-center gap-2 truncate">{a.emoji && <span>{a.emoji}</span>}<span className="truncate">{a.name}</span></span> : null
+                                                    })() : <span className="text-slate-500 font-normal">Select ability…</span>}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-[300px] p-0 bg-slate-900 border-slate-800">
                                                 <Command className="bg-transparent">
-                                                <CommandInput placeholder="Search ability..." className="border-b border-slate-800" />
-                                                <CommandList>
-                                                    <CommandEmpty className="p-4 text-center text-sm text-slate-500">No ability found.</CommandEmpty>
-                                                    <CommandGroup>
-                                                    {allAbilities.map((ability) => (
-                                                        <CommandItem
-                                                        key={ability.id}
-                                                        value={ability.name}
-                                                        onSelect={() => {
-                                                            setNewAbilityId(ability.id)
-                                                            setAbilityComboboxOpen(false)
-                                                        }}
-                                                        className="hover:bg-slate-800/50 cursor-pointer"
-                                                        >
-                                                        <Check
-                                                            className={cn(
-                                                            "mr-2 h-4 w-4 text-primary",
-                                                            newAbilityId === ability.id ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        {ability.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                    </CommandGroup>
-                                                </CommandList>
+                                                    <CommandInput placeholder="Search ability…" className="border-b border-slate-800" />
+                                                    <CommandList className="max-h-64">
+                                                        <CommandEmpty className="p-4 text-center text-sm text-slate-500">No ability found.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {allAbilities.map(ability => (
+                                                                <CommandItem
+                                                                    key={ability.id}
+                                                                    value={ability.name}
+                                                                    onSelect={() => { setNewAbilityId(ability.id); setAbilityComboboxOpen(false) }}
+                                                                    className="flex items-center gap-2 hover:bg-slate-800/50 cursor-pointer"
+                                                                >
+                                                                    <Check className={cn("h-4 w-4 shrink-0 text-primary", newAbilityId === ability.id ? "opacity-100" : "opacity-0")} />
+                                                                    {ability.emoji && <span className="shrink-0">{ability.emoji}</span>}
+                                                                    <span className="truncate">{ability.name}</span>
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
                                                 </Command>
                                             </PopoverContent>
                                         </Popover>
 
                                         <Select value={newType} onValueChange={(v) => setNewType(v as AbilityLinkType)}>
-                                            <SelectTrigger className="w-[140px] bg-slate-950/50 border-slate-800/80">
+                                            <SelectTrigger className="w-[130px] bg-slate-950/50 border-slate-800/80">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-slate-800">
@@ -646,8 +646,16 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                 <SelectItem value="IMMUNITY" className="hover:bg-slate-800 focus:bg-slate-800 cursor-pointer">Immunity</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                        
-                                        <Button onClick={handleAddAbilityLink} disabled={!newAbilityId || isSubmitting} className="shadow-lg shadow-primary/20">
+
+                                        <Input
+                                            value={newSource}
+                                            onChange={e => setNewSource(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Enter' && newAbilityId) handleAddAbilityLink() }}
+                                            placeholder="Source (optional)"
+                                            className="flex-1 bg-slate-950/50 border-slate-800/80 text-sm focus-visible:ring-primary/50"
+                                        />
+
+                                        <Button onClick={handleAddAbilityLink} disabled={!newAbilityId || isSubmitting} className="shadow-lg shadow-primary/20 shrink-0">
                                             <Plus className="w-4 h-4 mr-2" /> Add
                                         </Button>
                                     </div>
@@ -748,23 +756,49 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                         <div className="space-y-4">
                                         {groupedAbilities.abilities.map(([title, links]) => {
                                             const firstLink = links[0]
+                                            const pendingSource = addingSourceFor[firstLink.abilityId]
+                                            const isAddingSource = pendingSource !== undefined
+                                            const closeAddSource = () => setAddingSourceFor(prev => { const n = { ...prev }; delete n[firstLink.abilityId]; return n })
                                             return (
                                                 <div key={`ability-${title}`} className="border border-slate-800/60 rounded-xl bg-slate-900/40 relative overflow-hidden group/card transition-all hover:border-amber-500/30 shadow-sm">
                                                     <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50 group-hover/card:bg-amber-500 transition-colors" />
-                                                    <div className="px-5 py-3 border-b border-slate-800/50 flex items-center gap-3 bg-slate-900/80">
-                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-amber-500/90 group-hover/card:text-amber-400 transition-colors">
+                                                    <div className="px-4 py-2.5 border-b border-slate-800/50 flex items-center gap-2.5 bg-slate-900/80">
+                                                        <h4 className="font-bold text-xs uppercase tracking-widest text-amber-500/90 group-hover/card:text-amber-400 transition-colors shrink-0">
                                                             {title}
                                                         </h4>
-                                                        <div className="ml-auto">
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm" 
-                                                                className="h-7 text-[11px] font-semibold text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-full px-3"
-                                                                onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
-                                                                disabled={isAddingInstance}
-                                                            >
-                                                                <Plus className="w-3 h-3 mr-1" /> Add Source
-                                                            </Button>
+                                                        <span className="text-[10px] font-mono text-amber-500/40 shrink-0">{links.length}</span>
+                                                        <div className="ml-auto flex items-center gap-2">
+                                                            {isAddingSource ? (
+                                                                <>
+                                                                    <Input
+                                                                        autoFocus
+                                                                        value={pendingSource}
+                                                                        onChange={e => setAddingSourceFor(prev => ({ ...prev, [firstLink.abilityId]: e.target.value }))}
+                                                                        onKeyDown={async e => {
+                                                                            if (e.key === 'Enter') { await handleAddInstance(firstLink.abilityId, firstLink.type, pendingSource); closeAddSource() }
+                                                                            if (e.key === 'Escape') closeAddSource()
+                                                                        }}
+                                                                        placeholder="Source description…"
+                                                                        className="h-7 w-44 text-xs bg-slate-950/70 border-slate-700 focus-visible:ring-amber-500/40 px-2"
+                                                                    />
+                                                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-amber-400 hover:bg-amber-500/10"
+                                                                        onClick={async () => { await handleAddInstance(firstLink.abilityId, firstLink.type, pendingSource); closeAddSource() }}>
+                                                                        <Check className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-500 hover:text-slate-300" onClick={closeAddSource}>
+                                                                        <X className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 text-[11px] font-semibold text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-full px-2.5"
+                                                                    onClick={() => setAddingSourceFor(prev => ({ ...prev, [firstLink.abilityId]: "" }))}
+                                                                >
+                                                                    <Plus className="w-3 h-3 mr-1" /> Add Source
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -798,23 +832,49 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                         <div className="space-y-4">
                                         {groupedAbilities.immunities.map(([title, links]) => {
                                             const firstLink = links[0]
+                                            const pendingSource = addingSourceFor[firstLink.abilityId]
+                                            const isAddingSource = pendingSource !== undefined
+                                            const closeAddSource = () => setAddingSourceFor(prev => { const n = { ...prev }; delete n[firstLink.abilityId]; return n })
                                             return (
                                                 <div key={`immunity-${title}`} className="border border-slate-800/60 rounded-xl bg-slate-900/40 relative overflow-hidden group/card transition-all hover:border-sky-500/30 shadow-sm">
                                                     <div className="absolute top-0 left-0 w-1 h-full bg-sky-500/50 group-hover/card:bg-sky-500 transition-colors" />
-                                                    <div className="px-5 py-3 border-b border-slate-800/50 flex items-center gap-3 bg-slate-900/80">
-                                                        <h4 className="font-bold text-sm uppercase tracking-wide text-sky-500/90 group-hover/card:text-sky-400 transition-colors">
+                                                    <div className="px-4 py-2.5 border-b border-slate-800/50 flex items-center gap-2.5 bg-slate-900/80">
+                                                        <h4 className="font-bold text-xs uppercase tracking-widest text-sky-500/90 group-hover/card:text-sky-400 transition-colors shrink-0">
                                                             {title}
                                                         </h4>
-                                                        <div className="ml-auto">
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="sm" 
-                                                                className="h-7 text-[11px] font-semibold text-slate-400 hover:text-sky-400 hover:bg-sky-500/10 rounded-full px-3"
-                                                                onClick={() => handleAddInstance(firstLink.abilityId, firstLink.type)}
-                                                                disabled={isAddingInstance}
-                                                            >
-                                                                <Plus className="w-3 h-3 mr-1" /> Add Source
-                                                            </Button>
+                                                        <span className="text-[10px] font-mono text-sky-500/40 shrink-0">{links.length}</span>
+                                                        <div className="ml-auto flex items-center gap-2">
+                                                            {isAddingSource ? (
+                                                                <>
+                                                                    <Input
+                                                                        autoFocus
+                                                                        value={pendingSource}
+                                                                        onChange={e => setAddingSourceFor(prev => ({ ...prev, [firstLink.abilityId]: e.target.value }))}
+                                                                        onKeyDown={async e => {
+                                                                            if (e.key === 'Enter') { await handleAddInstance(firstLink.abilityId, firstLink.type, pendingSource); closeAddSource() }
+                                                                            if (e.key === 'Escape') closeAddSource()
+                                                                        }}
+                                                                        placeholder="Source description…"
+                                                                        className="h-7 w-44 text-xs bg-slate-950/70 border-slate-700 focus-visible:ring-sky-500/40 px-2"
+                                                                    />
+                                                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-sky-400 hover:bg-sky-500/10"
+                                                                        onClick={async () => { await handleAddInstance(firstLink.abilityId, firstLink.type, pendingSource); closeAddSource() }}>
+                                                                        <Check className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-500 hover:text-slate-300" onClick={closeAddSource}>
+                                                                        <X className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 text-[11px] font-semibold text-slate-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-full px-2.5"
+                                                                    onClick={() => setAddingSourceFor(prev => ({ ...prev, [firstLink.abilityId]: "" }))}
+                                                                >
+                                                                    <Plus className="w-3 h-3 mr-1" /> Add Source
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -1015,196 +1075,131 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 
 function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRemoveSynergy, onDelete }: {
     link: AdminChampionData['abilities'][number],
-    allChampions: { id: number; name: string }[],
-    onUpdateSource: (val: string) => void,
+    allChampions: ChampionListItem[],
+    onUpdateSource: (val: string) => Promise<void>,
     onAddSynergy: (id: number) => void,
     onRemoveSynergy: (id: number) => void,
     onDelete: () => void
 }) {
-    const [isEditing, setIsEditing] = useState(false)
     const [source, setSource] = useState(link.source || "")
     const [prevSource, setPrevSource] = useState(link.source || "")
+    const [isSavingSource, setIsSavingSource] = useState(false)
     const [synergyOpen, setSynergyOpen] = useState(false)
 
-    // Reset state if link source changes from outside (standard React pattern)
     const normalizedSource = link.source || ""
     if (normalizedSource !== prevSource) {
         setSource(normalizedSource)
         setPrevSource(normalizedSource)
     }
 
+    const isDirty = source !== normalizedSource
+
     const availableChampions = useMemo(() => {
         const existingIds = new Set(link.synergyChampions.map(s => s.champion.id))
         return allChampions.filter(c => !existingIds.has(c.id))
     }, [allChampions, link.synergyChampions])
 
-    if (!isEditing) {
-        return (
-            <div className="flex items-start justify-between p-3 hover:bg-muted/30 transition-colors group">
-                <div className="flex items-start gap-4 flex-1 min-w-0">
-                    <div className="flex-1 min-w-0 py-1">
-                        <div className="font-medium text-sm break-words whitespace-normal">
-                            {link.source || <span className="text-muted-foreground italic">No specific source</span>}
-                        </div>
-                    </div>
-                    
-                    {/* Compact Synergy View */}
-                    <div className="flex items-center gap-1 py-1">
-                        {link.synergyChampions.length > 0 ? (
-                            <div className="flex -space-x-2">
-                                {link.synergyChampions.slice(0, 5).map(synergy => {
-                                    const images = synergy.champion.images
-                                    return (
-                                        <div key={synergy.champion.id} className="relative w-6 h-6 rounded-full border border-background overflow-hidden ring-1 ring-border" title={synergy.champion.name}>
-                                            <Image src={getChampionImageUrlOrPlaceholder(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
-                                        </div>
-                                    )
-                                })}
-                                {link.synergyChampions.length > 5 && (
-                                    <div className="relative w-6 h-6 rounded-full border border-background bg-muted flex items-center justify-center text-[9px] font-bold ring-1 ring-border">
-                                        +{link.synergyChampions.length - 5}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <span className="text-xs text-muted-foreground/50 italic">No synergies</span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                        onClick={() => setIsEditing(true)}
-                    >
-                        <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        onClick={onDelete}
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </Button>
-                </div>
-            </div>
-        )
+    const handleSaveSource = async () => {
+        setIsSavingSource(true)
+        try {
+            await onUpdateSource(source)
+        } finally {
+            setIsSavingSource(false)
+        }
     }
 
     return (
-        <div className="p-4 flex flex-col gap-4 bg-muted/20 border-l-2 border-primary">
-            <div className="flex justify-between items-start">
-                <h5 className="text-sm font-semibold">Editing Source</h5>
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 text-xs"
-                    onClick={() => setIsEditing(false)}
-                >
-                    Done
-                </Button>
-            </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-800/20 transition-colors group min-w-0">
+            {/* Inline source input — always editable */}
+            <Input
+                value={source}
+                onChange={e => setSource(e.target.value)}
+                onKeyDown={e => {
+                    if (e.key === 'Enter' && isDirty) handleSaveSource()
+                    if (e.key === 'Escape' && isDirty) setSource(normalizedSource)
+                }}
+                placeholder="No specific source"
+                className="flex-1 h-7 text-xs bg-transparent border-transparent hover:border-slate-700/60 hover:bg-slate-800/40 focus:bg-slate-800/60 focus:border-slate-600 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 min-w-0 transition-colors"
+            />
 
-            <div className="flex gap-4 items-start">
-                <div className="flex-1 space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Source Description</Label>
-                    <div className="flex gap-2">
-                        <Input 
-                            value={source} 
-                            onChange={(e) => setSource(e.target.value)} 
-                            className="h-8 text-sm"
-                            placeholder="e.g. While Awakened"
-                        />
-                        {source !== (link.source || "") && (
-                            <Button size="sm" variant="secondary" className="h-8 px-3" onClick={() => onUpdateSource(source)}>
-                                <Save className="w-3.5 h-3.5" />
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </div>
+            {/* Save / cancel shown only when dirty */}
+            {isDirty && (
+                <>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-primary hover:bg-primary/10" onClick={handleSaveSource} disabled={isSavingSource}>
+                        {isSavingSource ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-slate-500 hover:text-slate-300" onClick={() => setSource(normalizedSource)}>
+                        <X className="w-3 h-3" />
+                    </Button>
+                </>
+            )}
 
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                     <Label className="text-xs text-muted-foreground">Synergies</Label>
-                     <Popover open={synergyOpen} onOpenChange={setSynergyOpen}>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-6 text-[10px] px-2">
-                                <Plus className="w-3 h-3 mr-1" /> Add Synergy
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-0">
-                            <Command>
-                                <CommandInput placeholder="Search champion..." />
-                                <CommandList>
-                                    <CommandEmpty>No champion found.</CommandEmpty>
-                                    <CommandGroup>
-                                        {availableChampions.length === 0 ? (
-                                            <CommandItem disabled className="text-[10px] text-muted-foreground italic">
-                                                All champions already added
-                                            </CommandItem>
-                                        ) : (
-                                            availableChampions.map((c) => (
-                                                <CommandItem 
-                                                    key={c.id} 
-                                                    value={c.name}
-                                                    onSelect={() => {
-                                                        onAddSynergy(c.id)
-                                                        setSynergyOpen(false)
-                                                    }}
-                                                >
-                                                    {c.name}
-                                                </CommandItem>
-                                            ))
-                                        )}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                     </Popover>
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                    {link.synergyChampions.length === 0 && (
-                        <div className="text-[11px] text-muted-foreground italic px-2 py-1 border border-dashed rounded bg-muted/30">
-                            No active synergies linked
+            {/* Synergy avatars with per-avatar remove */}
+            <div className="flex items-center gap-1 shrink-0">
+                {link.synergyChampions.map(synergy => (
+                    <div key={synergy.champion.id} className="relative group/synergy" title={synergy.champion.name}>
+                        <div className="relative w-6 h-6 rounded-full border border-slate-700 overflow-hidden ring-1 ring-slate-900">
+                            <Image src={getChampionImageUrlOrPlaceholder(synergy.champion.images, '32')} alt={synergy.champion.name} fill className="object-cover" />
                         </div>
-                    )}
-                    {link.synergyChampions.map(synergy => {
-                         const images = synergy.champion.images
-                         return (
-                            <Badge key={synergy.champion.id} variant="secondary" className="pl-1 pr-2 py-0.5 h-7 gap-1.5 bg-background border">
-                                <div className="relative w-5 h-5 rounded-full overflow-hidden border border-muted-foreground/20">
-                                    <Image src={getChampionImageUrlOrPlaceholder(images, '32')} alt={synergy.champion.name} fill className="object-cover" />
-                                </div>
-                                <span className="font-normal">{synergy.champion.name}</span>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-4 w-4 ml-0.5 rounded-full hover:bg-destructive/20 hover:text-destructive -mr-1"
-                                    onClick={() => onRemoveSynergy(synergy.champion.id)}
-                                >
-                                    <X className="w-3 h-3" />
-                                </Button>
-                            </Badge>
-                         )
-                    })}
-                </div>
+                        <button
+                            onClick={() => onRemoveSynergy(synergy.champion.id)}
+                            className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover/synergy:opacity-100 transition-opacity"
+                        >
+                            <X className="w-2 h-2" />
+                        </button>
+                    </div>
+                ))}
+
+                {/* Add synergy — visible on row hover */}
+                <Popover open={synergyOpen} onOpenChange={setSynergyOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full border border-dashed border-slate-700 hover:border-primary text-slate-500 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Add synergy"
+                        >
+                            <Plus className="w-3 h-3" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[260px] p-0 bg-slate-900 border-slate-800" align="end">
+                        <Command className="bg-transparent">
+                            <CommandInput placeholder="Search champion…" className="border-b border-slate-800 text-xs" />
+                            <CommandList className="max-h-64">
+                                <CommandEmpty className="p-3 text-center text-xs text-slate-500">No champion found.</CommandEmpty>
+                                <CommandGroup>
+                                    {availableChampions.map(c => {
+                                        const colors = getChampionClassColors(c.class as ChampionClass)
+                                        return (
+                                            <CommandItem
+                                                key={c.id}
+                                                value={c.name}
+                                                onSelect={() => { onAddSynergy(c.id); setSynergyOpen(false) }}
+                                                className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-slate-800/50 cursor-pointer"
+                                            >
+                                                <div className={cn("relative w-7 h-7 rounded-full overflow-hidden shrink-0 border-2", colors.border)}>
+                                                    <Image src={getChampionImageUrlOrPlaceholder(c.images, '64')} alt={c.name} fill className="object-cover" />
+                                                </div>
+                                                <span className="text-xs truncate">{c.name}</span>
+                                            </CommandItem>
+                                        )
+                                    })}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
             </div>
-            
-            <div className="flex justify-end pt-2">
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
-                    onClick={onDelete}
-                >
-                    <Trash2 className="w-3 h-3 mr-1" /> Delete Entire Link
-                </Button>
-            </div>
+
+            {/* Delete — visible on row hover */}
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-slate-600 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                onClick={onDelete}
+            >
+                <Trash2 className="w-3.5 h-3.5" />
+            </Button>
         </div>
     )
 }
