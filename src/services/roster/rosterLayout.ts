@@ -210,6 +210,10 @@ export class RosterLayoutService {
       });
     }
 
+    // Post-process: detect and correct cells that are smaller due to the user
+    // touching a champion card during screenshot capture.
+    this.correctTouchedCells(cells, cellHeight);
+
     cells.sort((a, b) => {
       if (Math.abs(a.bounds.y - b.bounds.y) > cellHeight / 2) {
         return a.bounds.y - b.bounds.y;
@@ -218,5 +222,88 @@ export class RosterLayoutService {
     });
 
     return { grid: cells, avgColDist, cellDims, headerMinY };
+  }
+
+  /**
+   * Detects cells whose PI (Power Index) text sits higher than the row median,
+   * which happens when the player touches a champion card during screenshot
+   * capture — the card appears physically smaller in both dimensions.
+   *
+   * Model: the card compresses symmetrically from top and bottom by `c` pixels each.
+   *   actual_PI_y = standard_PI_y  −  c × (2 × (1 − PI_OFFSET_Y_RATIO) − 1)
+   * Solving for c:   c = delta / (2 × (1 − PI_OFFSET_Y_RATIO) − 1)
+   * Corrected height: standard_height − 2 × c
+   */
+  private correctTouchedCells(cells: GridCell[], standardCellHeight: number): void {
+    if (cells.length <= 1) return;
+
+    // Group cells into rows by clustering on bounds.y (all cells in the same
+    // row will have very similar Y values — within half a cell height).
+    const rowThreshold = standardCellHeight * 0.5;
+    const sortedByY = [...cells].sort((a, b) => a.bounds.y - b.bounds.y);
+
+    const rows: GridCell[][] = [];
+    let currentRow: GridCell[] = [sortedByY[0]];
+    for (let i = 1; i < sortedByY.length; i++) {
+      const prev = currentRow[currentRow.length - 1];
+      if (sortedByY[i].bounds.y - prev.bounds.y < rowThreshold) {
+        currentRow.push(sortedByY[i]);
+      } else {
+        rows.push(currentRow);
+        currentRow = [sortedByY[i]];
+      }
+    }
+    rows.push(currentRow);
+
+    const PI_FRACTION = 1 - CONFIG.PI_OFFSET_Y_RATIO; // 0.935
+    // Denominator in the symmetric compression model
+    const COMPRESSION_DENOM = 2 * PI_FRACTION - 1; // 2*0.935 - 1 = 0.87
+
+    for (const row of rows) {
+      if (row.length <= 1) continue;
+
+      // Collect PI bottom Y values for cells that have piBounds
+      const piBottomYs: number[] = row
+        .map(cell => (cell.piBounds ? cell.piBounds.y + cell.piBounds.height : 0))
+        .filter(y => y > 0);
+
+      if (piBottomYs.length < 2) continue;
+
+      const piSorted = [...piBottomYs].sort((a, b) => a - b);
+      const medianPIY = piSorted[Math.floor(piSorted.length / 2)];
+
+      for (const cell of row) {
+        if (!cell.piBounds) continue;
+
+        const actualPIY = cell.piBounds.y + cell.piBounds.height;
+        // Positive delta: PI is higher (smaller Y) → card is compressed
+        const delta = medianPIY - actualPIY;
+
+        if (delta > CONFIG.TOUCHED_CELL_PI_THRESHOLD) {
+          const compressionPerSide = delta / COMPRESSION_DENOM;
+          const touchedHeight = Math.round(standardCellHeight - 2 * compressionPerSide);
+          const touchedWidth  = Math.round(touchedHeight / CONFIG.CELL_HEIGHT_RATIO * CONFIG.CELL_WIDTH_RATIO);
+          const touchedY      = actualPIY - touchedHeight * PI_FRACTION;
+
+          logger.info({
+            pi: cell.powerRating,
+            delta,
+            compressionPerSide: compressionPerSide.toFixed(1),
+            oldHeight: standardCellHeight,
+            touchedHeight,
+            oldY: cell.bounds.y.toFixed(1),
+            touchedY: touchedY.toFixed(1)
+          }, "Detected touched cell — correcting bounds");
+
+          // X anchor (left edge) stays the same; only height/width/y change.
+          cell.bounds = {
+            x: cell.bounds.x,
+            y: touchedY,
+            width: touchedWidth,
+            height: touchedHeight
+          };
+        }
+      }
+    }
   }
 }

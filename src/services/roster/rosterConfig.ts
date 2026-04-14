@@ -52,4 +52,8 @@ export const CONFIG = {
   // Recognition Thresholds
   CLASS_RMSE_THRESHOLD: 80,
   CHAMPION_MATCH_THRESHOLD: 90,
+
+  // Touched cell detection: minimum PI deviation (px) above the row median to flag a cell
+  // as compressed due to the user touching it during screenshot capture.
+  TOUCHED_CELL_PI_THRESHOLD: 2,
 };

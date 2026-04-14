@@ -3111,5 +3111,115 @@
       "ascended": false,
       "pi": 39260
     }
+  ],
+  "IMG_2012.png": [
+    {
+      "class": "TECH",
+      "name": "Red Skull",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 31126
+    },
+    {
+      "class": "SCIENCE",
+      "name": "Silk",
+      "stars": 7,
+      "rank": 3,
+      "sig": 38,
+      "ascended": false,
+      "pi": 30686
+    },
+    {
+      "class": "SCIENCE",
+      "name": "High Evolutionary",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 30265
+    },
+    {
+      "class": "MYSTIC",
+      "name": "Dragon Man",
+      "stars": 7,
+      "rank": 3,
+      "sig": 40,
+      "ascended": false,
+      "pi": 30208
+    },
+    {
+      "class": "MUTANT",
+      "name": "Captain Britain",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 29782
+    },
+    {
+      "class": "TECH",
+      "name": null,
+      "stars": 7,
+      "rank": 3,
+      "sig": 21,
+      "ascended": false,
+      "pi": 29684
+    },
+    {
+      "class": "TECH",
+      "name": "Jack O'Lantern",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 29256
+    },
+    {
+      "class": "COSMIC",
+      "name": "Hyperion",
+      "stars": 7,
+      "rank": 3,
+      "sig": 20,
+      "ascended": false,
+      "pi": 28943
+    },
+    {
+      "class": "SKILL",
+      "name": "Okoye",
+      "stars": 7,
+      "rank": 3,
+      "sig": 5,
+      "ascended": false,
+      "pi": 28560
+    },
+    {
+      "class": "COSMIC",
+      "name": "Super-Skrull",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 28279
+    },
+    {
+      "class": "TECH",
+      "name": "Arnim Zola",
+      "stars": 7,
+      "rank": 3,
+      "sig": 1,
+      "ascended": false,
+      "pi": 27803
+    },
+    {
+      "class": "SKILL",
+      "name": "Shang-Chi",
+      "stars": 7,
+      "rank": 3,
+      "sig": 0,
+      "ascended": false,
+      "pi": 27700
+    }
   ]
 }

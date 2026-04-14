@@ -112,6 +112,14 @@ export class RosterImageService {
             return false;
         }
 
+        // In BG view all placed champions have a visible rank (R1+) and at least a few stars.
+        // Cells with ≤1 star and no detectable rank are UI counter noise (e.g. "30/30 DRAFTED"
+        // parsed as PI=3030 and a phantom 1-star cell at the bottom of the screen).
+        if (cell.rank === undefined && (!cell.stars || cell.stars <= 1)) {
+            logger.debug({ bounds: cell.bounds, PI: cell.powerRating }, "Discarding low-star/no-rank noise cell");
+            return false;
+        }
+
         if (cell.stars && cell.rank && cell.powerRating) {
             const key = `${cell.stars}-${cell.rank}`;
             const minPrestige = prestigeThresholds.get(key);
