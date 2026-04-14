@@ -29,7 +29,9 @@
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(git -C \"C:\\\\Code\\\\CereBro\" status)",
       "Bash(git -C \"C:\\\\Code\\\\CereBro\" diff)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(node:*)"
     ]
   }
 }
