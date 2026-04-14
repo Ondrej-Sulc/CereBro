@@ -577,7 +577,7 @@ export function RosterView({
         abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
         immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
         initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
-        canEdit={canEdit}
+        canEdit={canEdit} championCount={filteredRoster.length}
       />
 
       {filteredRoster.length === 0 ? (

@@ -52,6 +52,7 @@ interface RosterFiltersProps {
     initialAbilities: { id: string | number, name: string }[];
     initialImmunities: { id: string | number, name: string }[];
     canEdit?: boolean;
+    championCount?: number;
 }
 
 export function RosterFilters({
@@ -63,7 +64,7 @@ export function RosterFilters({
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities,
-    canEdit = true,
+    canEdit = true, championCount,
 }: RosterFiltersProps) {
     const activeFilters = useMemo(() => {
         const filters: { label: string, type: string, onRemove: () => void }[] = [];
@@ -112,7 +113,7 @@ export function RosterFilters({
             <div className="flex flex-col gap-2.5">
                 {/* Row 1: Search + View Toggle + Sort + Add */}
                 <div className="flex flex-wrap gap-2.5 items-center justify-between">
-                    <div className="flex gap-2 flex-1 min-w-[200px] max-w-full sm:max-w-md">
+                    <div className="flex gap-2 items-center flex-1 min-w-[200px] max-w-full sm:max-w-md">
                         <div className="relative flex-1">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 z-10" />
                             <Input
@@ -122,6 +123,9 @@ export function RosterFilters({
                                 className="w-full pl-8 h-8 bg-slate-950/50 border border-slate-700 rounded-md text-xs text-slate-200 placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-sky-500/50 transition-all border-none"
                             />
                         </div>
+                        {championCount !== undefined && (
+                            <span className="text-xs text-slate-500 whitespace-nowrap">{championCount} champ{championCount !== 1 ? 's' : ''}</span>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
