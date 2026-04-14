@@ -88,8 +88,8 @@ export class RosterLayoutService {
       }
       cols.push(currentCol);
 
-      // The true X coordinate is the maximum (rightmost) X in the cluster 
-      // because class icons prepended by OCR shift the bounding box left
+      // The true X coordinate is the maximum (rightmost) X in the cluster
+      // because class icons prepended by OCR shift the bounding box left.
       uniqueCols.push(...cols.map(c => Math.max(...c)));
     }
 
@@ -285,6 +285,11 @@ export class RosterLayoutService {
           const touchedWidth  = Math.round(touchedHeight / CONFIG.CELL_HEIGHT_RATIO * CONFIG.CELL_WIDTH_RATIO);
           const touchedY      = actualPIY - touchedHeight * PI_FRACTION;
 
+          // Recover the column anchor that was used for this cell.
+          // avgColDist = cellWidth / CELL_WIDTH_RATIO; colX = cellX + avgColDist * PI_OFFSET_X_RATIO
+          const origAvgColDist = cell.bounds.width / CONFIG.CELL_WIDTH_RATIO;
+          const origColX      = cell.bounds.x + origAvgColDist * CONFIG.PI_OFFSET_X_RATIO;
+
           logger.info({
             pi: cell.powerRating,
             delta,
@@ -302,6 +307,37 @@ export class RosterLayoutService {
             width: touchedWidth,
             height: touchedHeight
           };
+
+          // Column-pollution correction: a touched card is physically narrower, so
+          // its PI text (same center, less width) starts a few pixels further right.
+          // When that cell happened to be the cluster max it pulled the column anchor
+          // rightward, mis-positioning every other cell in that column.
+          // Fix: if the touched cell's PI x ≈ origColX (it WAS the max), shift every
+          // co-column non-touched cell left by the amount of the pollution.
+          const touchedPIX     = cell.piBounds!.x;
+          const pilledByTouched = origColX - touchedPIX; // 0 if touched cell IS the anchor
+
+          if (pilledByTouched <= 2) {           // touched cell set (or nearly set) the anchor
+            for (const other of cells) {
+              if (other === cell || !other.piBounds) continue;
+
+              // Same column?
+              const otherAvgColDist = other.bounds.width / CONFIG.CELL_WIDTH_RATIO;
+              const otherColX       = other.bounds.x + otherAvgColDist * CONFIG.PI_OFFSET_X_RATIO;
+              if (Math.abs(otherColX - origColX) > 2) continue;
+
+              // How far is this cell's own PI left edge below the (polluted) anchor?
+              const pollution = otherColX - other.piBounds.x;
+              if (pollution > 0 && pollution < 10) {
+                logger.info({
+                  pi: other.powerRating, origColX,
+                  ownPIX: other.piBounds.x, pollution
+                }, "Corrected column-anchor pollution from touched cell");
+
+                other.bounds = { ...other.bounds, x: other.bounds.x - pollution };
+              }
+            }
+          }
         }
       }
     }
