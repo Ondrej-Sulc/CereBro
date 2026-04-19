@@ -399,6 +399,61 @@ export const redraftChampionAbilities = withActionContext('redraftChampionAbilit
     return JSON.parse(response.choices[0].message.content) as AbilityDraft
 });
 
+export type SyncTagsResult = { updated: number; skipped: string[] }
+
+export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', async (
+  formData: FormData
+): Promise<SyncTagsResult> => {
+  await ensureAdmin("MANAGE_CHAMPIONS")
+
+  const championsFile = formData.get("champion_display") as File | null
+  const tagsFile = formData.get("tags") as File | null
+
+  if (!championsFile || !tagsFile) throw new Error("Both files are required")
+
+  interface TagEntry { name: string; category_name: string }
+  interface ChampionEntry { full_name: string; champion_tags: string[] }
+
+  const tagsData: { tags: Record<string, TagEntry> } = JSON.parse(await tagsFile.text())
+  const champsData: Record<string, ChampionEntry> = JSON.parse(await championsFile.text())
+  const tagMap = new Map(Object.entries(tagsData.tags))
+
+  const dbChampions = await prisma.champion.findMany({ select: { id: true, name: true } })
+  const dbByUpperName = new Map(dbChampions.map((c) => [c.name.toUpperCase(), c]))
+
+  let updated = 0
+  const skipped: string[] = []
+
+  for (const champ of Object.values(champsData)) {
+    const dbChamp = dbByUpperName.get(champ.full_name.toUpperCase())
+    if (!dbChamp) { skipped.push(champ.full_name); continue }
+
+    await prisma.$transaction(async (tx) => {
+      const tagConnections: { id: number }[] = []
+      for (const tagId of champ.champion_tags) {
+        const entry = tagMap.get(tagId)
+        if (!entry) continue
+        const name = entry.name.replace(/\[[^\]]*\]/g, "").trim()
+        const tag = await tx.tag.upsert({
+          where: { name_category: { name, category: entry.category_name } },
+          update: {},
+          create: { name, category: entry.category_name },
+        })
+        tagConnections.push({ id: tag.id })
+      }
+      await tx.champion.update({
+        where: { id: dbChamp.id },
+        data: { tags: { set: tagConnections } },
+      })
+    })
+
+    updated++
+  }
+
+  revalidatePath('/admin/champions')
+  return { updated, skipped }
+})
+
 export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', async (
     championId: number,
     draft: AbilityDraft

@@ -3,6 +3,7 @@ import { getChampions, getAbilities } from "./actions"
 import { ChampionList } from "./champion-list"
 import { AdminChampionData } from "./champion-card"
 import { ensureAdmin } from "../actions"
+import { SyncTagsButton } from "./sync-tags-button"
 
 export const metadata: Metadata = {
   title: "Champion Management - CereBro",
@@ -22,6 +23,7 @@ export default async function AdminChampionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Champions</h1>
+        <SyncTagsButton />
       </div>
       
       <ChampionList 
