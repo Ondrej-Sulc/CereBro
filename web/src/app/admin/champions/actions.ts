@@ -399,7 +399,7 @@ export const redraftChampionAbilities = withActionContext('redraftChampionAbilit
     return JSON.parse(response.choices[0].message.content) as AbilityDraft
 });
 
-export type SyncTagsResult = { updated: number; skipped: string[] }
+export type SyncTagsResult = { updated: number; skipped: string[]; deletedTags: number }
 
 export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', async (
   formData: FormData
@@ -450,8 +450,12 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
     updated++
   }
 
+  const { count: deletedTags } = await prisma.tag.deleteMany({
+    where: { champions: { none: {} } },
+  })
+
   revalidatePath('/admin/champions')
-  return { updated, skipped }
+  return { updated, skipped, deletedTags }
 })
 
 export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', async (

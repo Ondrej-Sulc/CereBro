@@ -29,8 +29,9 @@ export function SyncTagsButton() {
 
       const result = await syncTagsFromGameData(formData)
 
+      const parts = [`${result.updated} champions updated`, `${result.deletedTags} stale tags removed`]
       toast({
-        title: `Tags synced — ${result.updated} champions updated`,
+        title: `Tags synced — ${parts.join(", ")}`,
         description: result.skipped.length > 0
           ? `${result.skipped.length} unmatched: ${result.skipped.slice(0, 5).join(", ")}${result.skipped.length > 5 ? "…" : ""}`
           : undefined,
