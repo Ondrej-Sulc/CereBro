@@ -418,13 +418,22 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
   const champsData: Record<string, ChampionEntry> = JSON.parse(await championsFile.text())
   const tagMap = new Map(Object.entries(tagsData.tags))
 
+  // Deduplicate by full_name — keep the entry with the most tags (raid/boss variants have fewer)
+  const dedupedChamps = new Map<string, ChampionEntry>()
+  for (const champ of Object.values(champsData)) {
+    const existing = dedupedChamps.get(champ.full_name)
+    if (!existing || champ.champion_tags.length > existing.champion_tags.length) {
+      dedupedChamps.set(champ.full_name, champ)
+    }
+  }
+
   const dbChampions = await prisma.champion.findMany({ select: { id: true, name: true } })
   const dbByUpperName = new Map(dbChampions.map((c) => [c.name.toUpperCase(), c]))
 
   let updated = 0
   const skipped: string[] = []
 
-  for (const champ of Object.values(champsData)) {
+  for (const champ of dedupedChamps.values()) {
     const dbChamp = dbByUpperName.get(champ.full_name.toUpperCase())
     if (!dbChamp) { skipped.push(champ.full_name); continue }
 
