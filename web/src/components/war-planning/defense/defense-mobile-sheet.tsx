@@ -73,22 +73,30 @@ export function DefenseMobileSheet({
   const [collapsedHeight, setCollapsedHeight] = useState(0);
   const [expandedHeight, setExpandedHeight] = useState(0);
   
+  const lastWidthRef = useRef(typeof window !== 'undefined' ? window.innerWidth : 0);
+
   // Recalculate heights on mount and resize
   useEffect(() => {
     const calculateHeights = () => {
       if (typeof window !== 'undefined') {
+        const currentWidth = window.innerWidth;
         const totalHeight = window.innerHeight;
-        // Handle height around 40px for handle
-        setMinDragHeight(40); 
-        setCollapsedHeight(Math.max(40, totalHeight * 0.4)); // 40% of viewport height
-        setExpandedHeight(Math.max(40, totalHeight * 0.85)); // 85% of viewport height
+        
+        // Only recalculate if width changed (orientation change) or if it's the first run
+        // This prevents the sheet from jumping when the keyboard appears on mobile
+        if (currentWidth !== lastWidthRef.current || collapsedHeight === 0) {
+            setMinDragHeight(40); 
+            setCollapsedHeight(Math.max(40, totalHeight * 0.4)); // 40% of viewport height
+            setExpandedHeight(Math.max(40, totalHeight * 0.85)); // 85% of viewport height
+            lastWidthRef.current = currentWidth;
+        }
       }
     };
 
     calculateHeights();
     window.addEventListener('resize', calculateHeights);
     return () => window.removeEventListener('resize', calculateHeights);
-  }, []);
+  }, [collapsedHeight]);
 
   const isOpen = rightPanelState !== 'closed' && rightPanelState !== 'roster';
 

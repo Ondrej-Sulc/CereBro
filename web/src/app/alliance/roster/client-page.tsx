@@ -16,7 +16,7 @@ import { ChampionImages } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FilterGroup, MultiSelectFilter } from "@/components/ui/filters";
+import { FilterGroup, MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
@@ -41,7 +41,7 @@ export function AllianceRosterMatrix({
     const [bgFilter, setBgFilter] = useState<string>("ALL");
     const [classFilter, setClassFilter] = useState<ChampionClass[]>([]);
     const [starFilter, setStarFilter] = useState<string>("ALL");
-    const [minRankFilter, setMinRankFilter] = useState<string>("0");
+    const [rankFilter, setRankFilter] = useState<string[]>([]);
     const [limitFilter, setLimitFilter] = useState<string>("10");
     const [showFilters, setShowFilters] = useState(false);
 
@@ -94,8 +94,8 @@ export function AllianceRosterMatrix({
             // Stars
             if (starFilter !== "ALL" && entry.stars !== parseInt(starFilter)) return false;
 
-            // Min Rank
-            if (parseInt(minRankFilter) > 0 && entry.rank < parseInt(minRankFilter)) return false;
+            // Rank
+            if (rankFilter.length > 0 && !rankFilter.includes(entry.rank.toString())) return false;
 
             // Tag Logic
             if (tagFilter.length > 0) {
@@ -175,9 +175,9 @@ export function AllianceRosterMatrix({
             filters.push({ label: `${starFilter} ★`, type: 'Stars', onRemove: () => setStarFilter("ALL") });
         }
 
-        if (minRankFilter !== "0") {
-            filters.push({ label: `R${minRankFilter}+`, type: 'Rank', onRemove: () => setMinRankFilter("0") });
-        }
+        rankFilter.forEach(r => {
+            filters.push({ label: `R${r}`, type: 'Rank', onRemove: () => setRankFilter(rankFilter.filter(x => x !== r)) });
+        });
 
         classFilter.forEach(cls => {
             filters.push({ label: cls.charAt(0) + cls.slice(1).toLowerCase(), type: 'Class', onRemove: () => setClassFilter(classFilter.filter(c => c !== cls)) });
@@ -200,7 +200,7 @@ export function AllianceRosterMatrix({
         });
 
         return filters;
-    }, [starFilter, minRankFilter, classFilter, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
+    }, [starFilter, rankFilter, classFilter, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
 
     const renderPlayerRow = (player: typeof players[0]) => {
         const champions = getFilteredChampionsForPlayer(player.id);
@@ -513,16 +513,18 @@ export function AllianceRosterMatrix({
                                         onChange={setStarFilter}
                                     />
 
-                                    {/* Min Rank */}
-                                    <FilterGroup
+                                    {/* Rank */}
+                                    <MultiFilterGroup
                                         options={[
-                                            { value: "0", label: "Any Rank" },
-                                            { value: "3", label: "R3+" },
-                                            { value: "4", label: "R4+" },
-                                            { value: "5", label: "R5+" },
+                                            { value: "1", label: "R1" },
+                                            { value: "2", label: "R2" },
+                                            { value: "3", label: "R3" },
+                                            { value: "4", label: "R4" },
+                                            { value: "5", label: "R5" },
+                                            { value: "6", label: "R6" },
                                         ]}
-                                        value={minRankFilter}
-                                        onChange={setMinRankFilter}
+                                        values={rankFilter}
+                                        onChange={setRankFilter}
                                     />
 
                                     {/* Limit */}
@@ -660,7 +662,7 @@ export function AllianceRosterMatrix({
                                             onClick={() => {
                                                 setBgFilter("ALL");
                                                 setStarFilter("ALL");
-                                                setMinRankFilter("0");
+                                                setRankFilter([]);
                                                 setClassFilter([]);
                                                 setTagFilter([]);
                                                 setAbilityCategoryFilter([]);

@@ -130,10 +130,14 @@ export default function DefenseEditor({
     })();
     if (newRosterId !== rosterId) setRosterId(newRosterId);
     
-    if (currentPlacement && !currentPlacement.defenderId) {
-        setIsDefenderOpen(true);
-    } else {
-        setIsDefenderOpen(false);
+    // Only auto-open/close the combobox if the target node or placement has changed.
+    // This prevents polling updates from closing an open combobox.
+    if (currentPlacement?.id !== prevPlacement?.id || currentPlacement?.nodeId !== prevPlacement?.nodeId) {
+        if (currentPlacement && !currentPlacement.defenderId) {
+            setIsDefenderOpen(true);
+        } else {
+            setIsDefenderOpen(false);
+        }
     }
   }
 
