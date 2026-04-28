@@ -62,11 +62,12 @@ export const PlayerListContent = ({
       champions: { id: number; name: string; images: ChampionImages; class: ChampionClass; isExtra?: boolean; extraId?: string }[],
       uniqueCount: number;
       assignedNodes: Set<number>;
+      prefightNodes: Set<number>;
     }>();
 
     const addChamp = (pid: string, cid: number, cname: string, cimages: ChampionImages, champClass: ChampionClass, isExtra = false, extraId?: string) => {
         if (!stats.has(pid)) {
-            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set() });
+            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set(), prefightNodes: new Set() });
         }
         const stat = stats.get(pid)!;
         if (!stat.champions.some(c => c.id === cid)) {
@@ -84,9 +85,16 @@ export const PlayerListContent = ({
 
     const addNode = (pid: string, nodeNumber: number) => {
         if (!stats.has(pid)) {
-            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set() });
+            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set(), prefightNodes: new Set() });
         }
         stats.get(pid)!.assignedNodes.add(nodeNumber);
+    };
+
+    const addPrefightNode = (pid: string, nodeNumber: number) => {
+        if (!stats.has(pid)) {
+            stats.set(pid, { champions: [], uniqueCount: 0, assignedNodes: new Set(), prefightNodes: new Set() });
+        }
+        stats.get(pid)!.prefightNodes.add(nodeNumber);
     };
 
     currentFights.forEach(fight => {
@@ -104,7 +112,7 @@ export const PlayerListContent = ({
                     if (fullChamp) {
                         addChamp(pf.player.id, pf.id, fullChamp.name, fullChamp.images, fullChamp.class);
                         if (fight.node) {
-                            addNode(pf.player.id, fight.node.nodeNumber);
+                            addPrefightNode(pf.player.id, fight.node.nodeNumber);
                         }
                     }
                 }
@@ -132,18 +140,20 @@ export const PlayerListContent = ({
         });
   }, [players, currentBattlegroup]);
 
-  const getAssignmentLabel = (assignedNodes: Set<number> | undefined) => {
-      if (!assignedNodes || assignedNodes.size === 0) return "Unassigned";
+  const getAssignmentLabel = (assignedNodes: Set<number> | undefined, prefightNodes: Set<number> | undefined) => {
+      const allNodes = new Set([...(assignedNodes || []), ...(prefightNodes || [])]);
+      
+      if (allNodes.size === 0) return "Unassigned";
 
       if (war.mapType === WarMapType.BIG_THING) {
-          const nodes = Array.from(assignedNodes).sort((a, b) => a - b);
+          const nodes = Array.from(allNodes).sort((a, b) => a - b);
           return `Node ${nodes.join(", ")}`;
       }
 
       const s1Paths = new Set<number>();
       const s2Paths = new Set<number>();
       
-      assignedNodes.forEach(node => {
+      allNodes.forEach(node => {
           const pathInfo = getPathInfo(node);
           if (pathInfo?.section === 1) s1Paths.add(pathInfo.path);
           if (pathInfo?.section === 2) s2Paths.add(pathInfo.path);
@@ -185,7 +195,7 @@ export const PlayerListContent = ({
                   const isSelected = highlightedPlayerId === player.id;
                   const isFull = count >= championLimit;
                   const playerColor = getPlayerColor(player.id);
-                  const assignmentLabel = getAssignmentLabel(stat?.assignedNodes);
+                  const assignmentLabel = getAssignmentLabel(stat?.assignedNodes, stat?.prefightNodes);
 
                   return (
                       <div

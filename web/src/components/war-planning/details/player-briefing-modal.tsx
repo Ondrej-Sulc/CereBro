@@ -26,7 +26,9 @@ import {
     X,
     Plus,
     Loader2,
-    Copy
+    Copy,
+    Share,
+    Send
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -43,6 +45,12 @@ import { useToast } from "@/hooks/use-toast";
 import { usePlayerColor } from "../player-color-context";
 import { Champion } from "@/types/champion";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
 
@@ -58,6 +66,7 @@ interface PlayerBriefingModalProps {
     isReadOnly?: boolean;
     onAddExtra?: (playerId: string, championId: number) => void;
     onRemoveExtra?: (extraId: string) => void;
+    onDistributePlayer?: (playerId: string, battlegroup: number) => void;
 }
 
 const FightVideos = ({ fight, warTier }: { fight: FightWithNode; warTier: number }) => {
@@ -113,7 +122,8 @@ export const PlayerBriefingModal = ({
     activeDefensePlan,
     isReadOnly = false,
     onAddExtra,
-    onRemoveExtra
+    onRemoveExtra,
+    onDistributePlayer
 }: PlayerBriefingModalProps) => {
     const { toast } = useToast();
     const { getPlayerColor } = usePlayerColor();
@@ -302,34 +312,41 @@ export const PlayerBriefingModal = ({
                             </div>
                         </div>
                         <div className="shrink-0 flex items-center gap-1.5">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
-                                onClick={handleCopyPlan}
-                            >
-                                <Copy className="h-3 w-3 sm:h-4 sm:w-4 text-emerald-400" />
-                                <span className="hidden sm:inline">Copy Text</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
-                                onClick={handleCopyMarkdown}
-                            >
-                                <Copy className="h-3 w-3 sm:h-4 sm:w-4 text-sky-400" />
-                                <span className="hidden sm:inline">Copy Markdown</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
-                                onClick={handleDownloadMyMap}
-                                disabled={isDownloading}
-                            >
-                                {isDownloading ? <Loader2 className="animate-spin h-3 w-3 sm:h-4 sm:w-4 text-sky-400" /> : <Download className="h-3 w-3 sm:h-4 sm:w-4 text-sky-400" />}
-                                <span className="hidden sm:inline">Download Map</span>
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="bg-slate-900 border-slate-700 hover:bg-slate-800 gap-1 hover:border-slate-500 transition-colors h-7 sm:h-9 px-2 sm:px-3 text-[10px] sm:text-xs"
+                                    >
+                                        <Share className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-400" />
+                                        <span className="hidden sm:inline">Share</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56 bg-slate-950 border-slate-800 text-slate-200 z-[110]">
+                                    {!isReadOnly && onDistributePlayer && player.battlegroup && (
+                                        <DropdownMenuItem 
+                                            onClick={() => onDistributePlayer(player.id, player.battlegroup!)}
+                                            className="cursor-pointer focus:bg-slate-900 focus:text-white"
+                                        >
+                                            <Send className="h-4 w-4 mr-2 text-indigo-400" />
+                                            Send to Discord Thread
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={handleCopyPlan} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Copy className="h-4 w-4 mr-2 text-emerald-400" />
+                                        Copy Text
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleCopyMarkdown} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Copy className="h-4 w-4 mr-2 text-sky-400" />
+                                        Copy Markdown
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleDownloadMyMap} disabled={isDownloading} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        {isDownloading ? <Loader2 className="animate-spin h-4 w-4 mr-2 text-amber-400" /> : <Download className="h-4 w-4 mr-2 text-amber-400" />}
+                                        Download Map
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </DialogHeader>

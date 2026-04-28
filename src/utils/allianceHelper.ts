@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, ButtonInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, MessageFlags } from "discord.js";
+import { ChatInputCommandInteraction, ButtonInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, MessageFlags, AutocompleteInteraction } from "discord.js";
 import { Alliance } from "@prisma/client";
 import { prisma } from "../services/prismaService.js";
 import { getActivePlayer } from "./playerHelper.js";
@@ -9,7 +9,7 @@ import { getActivePlayer } from "./playerHelper.js";
  * If the user has no active profile in an alliance on this server, it might need to ask (not implemented in this base helper yet).
  */
 export async function getAlliance(
-  interaction: ChatInputCommandInteraction | ButtonInteraction
+  interaction: ChatInputCommandInteraction | ButtonInteraction | AutocompleteInteraction
 ): Promise<Alliance | null> {
   const guildId = interaction.guildId;
   if (!guildId) return null;

@@ -4,7 +4,7 @@ import {
   AutocompleteInteraction,
 } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
-import { handlePlan } from "./plan.js";
+import { handlePlan, handlePlanAutocomplete } from "./plan.js";
 import { handleDetails } from "./details.js";
 import { handleSearchSubcommand, handleSearchAutocomplete } from "./search.js";
 import { handleUploadSubcommand } from "./upload.js";
@@ -27,11 +27,12 @@ export const command: Command = {
             .setMinValue(1)
             .setMaxValue(3)
         )
-        .addUserOption((option) =>
+        .addStringOption((option) =>
           option
             .setName("player")
             .setDescription("A specific player to send the plan to.")
             .setRequired(false)
+            .setAutocomplete(true)
         )
         .addAttachmentOption((option) =>
           option
@@ -125,6 +126,8 @@ export const command: Command = {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === 'search') {
         await handleSearchAutocomplete(interaction);
+    } else if (subcommand === 'plan') {
+        await handlePlanAutocomplete(interaction);
     }
   }
 };

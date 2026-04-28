@@ -1,9 +1,43 @@
-import { ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { ChatInputCommandInteraction, MessageFlags, AutocompleteInteraction } from "discord.js";
 import { prisma } from "../../services/prismaService";
 import { distributeWarPlan } from "../../services/distribution/warPlanDistributor";
 import { capitalize } from "./utils";
 import { getActivePlayer } from "../../utils/playerHelper";
 import { getAlliance } from "../../utils/allianceHelper";
+
+export async function handlePlanAutocomplete(interaction: AutocompleteInteraction) {
+  const focusedValue = interaction.options.getFocused().toLowerCase();
+  const battlegroup = interaction.options.getInteger("battlegroup") || undefined;
+  
+  if (!interaction.guild) {
+      await interaction.respond([]);
+      return;
+  }
+  
+  const alliance = await getAlliance(interaction);
+  if (!alliance) {
+      await interaction.respond([]);
+      return;
+  }
+  
+  const whereClause: any = { allianceId: alliance.id };
+  if (battlegroup) {
+      whereClause.battlegroup = battlegroup;
+  }
+  
+  const players = await prisma.player.findMany({
+      where: whereClause,
+      select: { id: true, ingameName: true }
+  });
+  
+  const filtered = players
+      .filter(p => p.ingameName.toLowerCase().includes(focusedValue))
+      .slice(0, 25);
+      
+  await interaction.respond(
+      filtered.map(p => ({ name: p.ingameName, value: p.id }))
+  );
+}
 
 export async function handlePlan(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -21,20 +55,20 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
   }
 
   // Permission Check
-  const player = await getActivePlayer(interaction.user.id);
-  if (!player || (!player.isOfficer && !player.isBotAdmin)) {
+  const activePlayer = await getActivePlayer(interaction.user.id);
+  if (!activePlayer || (!activePlayer.isOfficer && !activePlayer.isBotAdmin)) {
       await interaction.editReply("You must be an Alliance Officer or Bot Admin to distribute war plans.");
       return;
   }
 
   // Ensure they belong to THIS alliance if they aren't a global admin
-  if (!player.isBotAdmin && player.allianceId !== alliance.id) {
+  if (!activePlayer.isBotAdmin && activePlayer.allianceId !== alliance.id) {
        await interaction.editReply("You are not an officer of this alliance.");
        return;
   }
 
   const battlegroup = interaction.options.getInteger("battlegroup", true);
-  const targetUser = interaction.options.getUser("player");
+  const targetPlayerId = interaction.options.getString("player") || undefined;
 
   // Find the active War (latest one)
   const war = await prisma.war.findFirst({
@@ -45,20 +79,6 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
   if (!war) {
     await interaction.editReply("No active war found for this alliance.");
     return;
-  }
-
-  // If targeting a specific user, resolve their DB ID
-  let targetPlayerId: string | undefined;
-  if (targetUser) {
-      // Find player by Discord ID
-      const player = await prisma.player.findFirst({
-          where: { discordId: targetUser.id }
-      });
-      if (!player) {
-           await interaction.editReply(`Player ${targetUser.username} is not registered.`);
-           return;
-      }
-      targetPlayerId = player.id;
   }
 
   const result = await distributeWarPlan(

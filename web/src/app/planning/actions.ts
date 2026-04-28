@@ -641,7 +641,7 @@ export const getExtraChampions = withActionContext('getExtraChampions', async (w
   }));
 });
 
-export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string) => {
+export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string, targetPlayerId?: string) => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -671,7 +671,8 @@ export const distributePlan = withActionContext('distributePlan', async (warId: 
   const alliance = war.alliance;
   if (!alliance) throw new Error("Alliance not found");
 
-  if (!targetChannelId) {
+  // We only check for missing channels if we are distributing to a whole BG (not a single player or custom channel)
+  if (!targetChannelId && !targetPlayerId) {
       const requiredBgs = battlegroup ? [battlegroup] : Array.from(new Set(war.fights.map(p => p.battlegroup)));
       const missingChannels = [];
 
@@ -697,8 +698,9 @@ export const distributePlan = withActionContext('distributePlan', async (warId: 
         allianceId: war.allianceId,
         warId,
         battlegroup,
-        targetChannelId
-      } as { allianceId: string; warId: string; battlegroup?: number; targetChannelId?: string }
+        targetChannelId,
+        targetPlayerId
+      } as { allianceId: string; warId: string; battlegroup?: number; targetChannelId?: string; targetPlayerId?: string }
     }
   });
 

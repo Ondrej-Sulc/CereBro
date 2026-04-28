@@ -138,6 +138,23 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     }
   }, [props.warId, toast]);
 
+  const handleDistributePlayer = useCallback(async (playerId: string, battlegroup: number) => {
+    try {
+        await distributePlan(props.warId, battlegroup, undefined, playerId);
+        toast({
+            title: "Plan Distribution Started",
+            description: `Distribution job queued for player's thread.`,
+        });
+    } catch (e: unknown) {
+        const error = e as Error;
+        toast({
+            title: "Distribution Failed",
+            description: error.message,
+            variant: "destructive",
+        });
+    }
+  }, [props.warId, toast]);
+
   const handleAddExtraWithToast = useCallback((playerId: string, championId: number, starLevel?: number) => {
       handleAddExtra(playerId, championId);
       
@@ -206,6 +223,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             isReadOnly={isReadOnly}
             onAddExtra={handleAddExtraWithToast}
             onRemoveExtra={handleRemoveExtra}
+            onDistributePlayer={handleDistributePlayer}
         />
 
         {/* Close War Dialog */}
