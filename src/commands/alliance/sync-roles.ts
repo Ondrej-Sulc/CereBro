@@ -123,6 +123,11 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string): Prom
           }
 
           if (globalPlayer) {
+            // If this is an automatic sync and the player is already in another alliance, do not move them.
+            if (!isManual && globalPlayer.allianceId && globalPlayer.allianceId !== alliance.id) {
+              continue;
+            }
+
             // Player exists, link them to this alliance and ensure botUserId
             const updateData: any = {
               allianceId: alliance.id,
@@ -278,7 +283,7 @@ export async function handleAllianceSyncRoles(interaction: ChatInputCommandInter
 
   try {
     await interaction.editReply('Starting role synchronization... This may take a moment.');
-    const result = await syncRolesForGuild(interaction.guild, alliance.id);
+    const result = await syncRolesForGuild(interaction.guild, alliance.id, true);
     await interaction.followUp({
       content: `Role synchronization complete for **${alliance.name}**.\n` +
         `✅ **${result.created}** new profiles created.\n` +
