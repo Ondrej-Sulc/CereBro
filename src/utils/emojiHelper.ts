@@ -76,3 +76,7 @@ export async function createDiscordEmoji(
 
     return emoji;
 }
+
+export function stripEmojis(text: string): string {
+    return text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Emoji_Modifier_Base}\p{Emoji_Component}\p{Emoji}]/gu, '').trim();
+}

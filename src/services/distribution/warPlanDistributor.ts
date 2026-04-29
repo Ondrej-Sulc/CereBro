@@ -7,6 +7,7 @@ import { getPathInfo } from '../../data/war-planning/path-logic';
 import { WarMapType } from '@prisma/client';
 import logger from '../loggerService';
 import { getChampionImageUrl } from '../../utils/championHelper';
+import { stripEmojis } from '../../utils/emojiHelper';
 import { config } from '../../config';
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -791,7 +792,8 @@ export async function distributeWarPlan(
                         const videoLinks = validVideos.map(v => {
                             const deathNote = v.death > 0 ? ` (💀 ${v.death})` : '';
                             const videoLink = `${config.botBaseUrl}/war-videos/${v.videoId}`;
-                            return `🎥 [${v.playerName}${deathNote}](${videoLink})`;
+                            const cleanPlayerName = stripEmojis(v.playerName);
+                            return `🎥 [${cleanPlayerName}${deathNote}](${videoLink})`;
                         });
                         line += ` | ${videoLinks.join(' ')}`;
                     }
