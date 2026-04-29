@@ -18,10 +18,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10000mb',
     },
+    proxyClientMaxBodySize: '50mb',
   },
-  // Increase the default 10MB body size limit for API route handlers (e.g. roster image uploads)
-  // @ts-expect-error - middlewareClientMaxBodySize may not be in types yet
-  middlewareClientMaxBodySize: '200mb',
   outputFileTracingRoot: path.join(__dirname, '../../'),
   images: {
     qualities: [10, 75, 90],

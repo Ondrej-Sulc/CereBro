@@ -10,6 +10,7 @@ import { ChampionImages } from "@/types/champion"
 import { withActionContext } from "@/lib/with-request-context"
 import { OpenRouterService } from "@cerebro/core/services/openRouterService"
 import { abilityDraftPrompt } from "@cerebro/core/prompts/abilityDraft"
+import { matchGameChampionIdentity } from "@cerebro/core/services/mcocGameStatsImportService"
 
 type AbilityDraftItem = { name: string; source: string }
 export type AbilityDraft = { abilities?: AbilityDraftItem[]; immunities?: AbilityDraftItem[] }
@@ -399,7 +400,15 @@ export const redraftChampionAbilities = withActionContext('redraftChampionAbilit
     return JSON.parse(response.choices[0].message.content) as AbilityDraft
 });
 
-export type SyncTagsResult = { updated: number; skipped: string[]; deletedTags: number }
+export type SyncTagsResult = {
+  sourceChampions: number
+  dedupedChampions: number
+  sourceTags: number
+  updated: number
+  skipped: string[]
+  blocked: string[]
+  deletedTags: number
+}
 
 export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', async (
   formData: FormData
@@ -412,30 +421,55 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
   if (!championsFile || !tagsFile) throw new Error("Both files are required")
 
   interface TagEntry { name: string; category_name: string }
-  interface ChampionEntry { full_name: string; champion_tags: string[] }
+  interface ChampionEntry { id?: string; full_name: string; short_name?: string; champion_tags: string[] }
 
   const tagsData: { tags: Record<string, TagEntry> } = JSON.parse(await tagsFile.text())
   const champsData: Record<string, ChampionEntry> = JSON.parse(await championsFile.text())
   const tagMap = new Map(Object.entries(tagsData.tags))
+  const sourceChampions = Object.keys(champsData).length
 
-  // Deduplicate by full_name — keep the entry with the most tags (raid/boss variants have fewer)
+  const dbChampions = await prisma.champion.findMany({
+    select: { id: true, name: true, shortName: true, gameId: true },
+  })
+  const dbGameIds = new Set(dbChampions.map(champion => champion.gameId).filter(Boolean))
+
+  // Deduplicate by full_name. Prefer the playable game ID we already know, then the entry with the most tags.
   const dedupedChamps = new Map<string, ChampionEntry>()
   for (const champ of Object.values(champsData)) {
-    const existing = dedupedChamps.get(champ.full_name)
-    if (!existing || champ.champion_tags.length > existing.champion_tags.length) {
-      dedupedChamps.set(champ.full_name, champ)
+    const key = champ.full_name
+    const existing = dedupedChamps.get(key)
+    const existingHasKnownGameId = !!existing?.id && dbGameIds.has(existing.id)
+    const currentHasKnownGameId = !!champ.id && dbGameIds.has(champ.id)
+    if (
+      !existing ||
+      (!existingHasKnownGameId && currentHasKnownGameId) ||
+      (existingHasKnownGameId === currentHasKnownGameId && champ.champion_tags.length > existing.champion_tags.length)
+    ) {
+      dedupedChamps.set(key, champ)
     }
   }
 
-  const dbChampions = await prisma.champion.findMany({ select: { id: true, name: true } })
-  const dbByUpperName = new Map(dbChampions.map((c) => [c.name.toUpperCase(), c]))
-
   let updated = 0
   const skipped: string[] = []
+  const blocked: string[] = []
 
   for (const champ of dedupedChamps.values()) {
-    const dbChamp = dbByUpperName.get(champ.full_name.toUpperCase())
-    if (!dbChamp) { skipped.push(champ.full_name); continue }
+    const match = matchGameChampionIdentity(
+      {
+        gameId: champ.id || "",
+        gameFullName: champ.full_name,
+        gameShortName: "",
+      },
+      dbChampions
+    )
+    if (match.status === "unmatched") {
+      skipped.push(`${champ.id || champ.full_name}: ${champ.full_name}`)
+      continue
+    }
+    if (match.status !== "matched") {
+      blocked.push(`${champ.id || champ.full_name}: ${champ.full_name} (${match.reason})`)
+      continue
+    }
 
     await prisma.$transaction(async (tx) => {
       const tagConnections: { id: number }[] = []
@@ -451,7 +485,7 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
         tagConnections.push({ id: tag.id })
       }
       await tx.champion.update({
-        where: { id: dbChamp.id },
+        where: { id: match.champion.id },
         data: { tags: { set: tagConnections } },
       })
     })
@@ -464,7 +498,15 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
   })
 
   revalidatePath('/admin/champions')
-  return { updated, skipped, deletedTags }
+  return {
+    sourceChampions,
+    dedupedChampions: dedupedChamps.size,
+    sourceTags: tagMap.size,
+    updated,
+    skipped,
+    blocked,
+    deletedTags,
+  }
 })
 
 export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', async (

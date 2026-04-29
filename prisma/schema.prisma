@@ -29,6 +29,7 @@ model Champion {
   id                           Int                          @id @default(autoincrement())
   name                         String                       @unique
   shortName                    String
+  gameId                       String?                      @unique
   class                        ChampionClass
   releaseDate                  DateTime
   obtainable                   String[]
@@ -40,8 +41,11 @@ model Champion {
   updatedAt                    DateTime                     @updatedAt
   attacks                      Attack[]
   abilities                    ChampionAbilityLink[]
+  abilityTexts                 ChampionAbilityText[]
+  abilityCurves                ChampionAbilityCurve[]
   synergyProviderFor           ChampionAbilitySynergy[]
   prestigeData                 ChampionPrestige[]
+  stats                        ChampionStats[]
   duels                        Duel[]
   placedPrefights              FightPrefight[]
   questSelectedAsCounter       PlayerQuestEncounter[]       @relation("PlayerSelectedCounter")
@@ -69,6 +73,74 @@ model ChampionPrestige {
 
   @@unique([championId, rarity, rank, sig])
   @@index([championId])
+}
+
+model ChampionStats {
+  id                      Int      @id @default(autoincrement())
+  championId              Int
+  tierId                  String
+  rarity                  Int?
+  rarityLabel             String?
+  rank                    Int
+  level                   Int?
+  challengeRating         Int
+  health                  Int?
+  attack                  Int?
+  healthRating            Int?
+  attackRating            Int?
+  prestige                Int?
+  armorRating             Int?
+  armorPenetration        Int?
+  criticalRating          Int?
+  criticalResistance      Int?
+  criticalDamageRating    Int?
+  blockProficiency        Int?
+  blockPenetration        Int?
+  specialDamageMultiplier Float?
+  energyResistance        Int?
+  physicalResistance      Int?
+  baseAbilityIds          String[]
+  sigAbilityIds           String[]
+  champion                Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([tierId, rank])
+  @@index([championId])
+  @@index([rarity, rank])
+  @@index([challengeRating])
+}
+
+model ChampionAbilityText {
+  id         Int      @id @default(autoincrement())
+  championId Int
+  sourceId   String
+  group      String
+  title      String?
+  sortOrder  Int
+  template   Json
+  champion   Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([championId, sourceId])
+  @@index([championId, group])
+}
+
+model ChampionAbilityCurve {
+  id         Int       @id @default(autoincrement())
+  championId Int?
+  curveId    String    @unique
+  kind       String
+  formula    String
+  params     Json
+  minSig     Int?
+  maxSig     Int?
+  champion   Champion? @relation(fields: [championId], references: [id], onDelete: Cascade)
+}
+
+model GameGlossaryTerm {
+  id          String  @id
+  name        String
+  description String?
+  category    String?
+  raw         Json?
 }
 
 model Duel {
