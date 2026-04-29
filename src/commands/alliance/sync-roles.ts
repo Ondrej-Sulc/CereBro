@@ -8,7 +8,7 @@ import { checkAndCleanupAlliance } from '../../services/allianceService.js';
  * @param guild The guild to sync roles for.
  * @returns An object containing the count of updated, created, and removed players.
  */
-export async function syncRolesForGuild(guild: Guild, allianceId?: string): Promise<{ updated: number; created: number; removed: number }> {
+export async function syncRolesForGuild(guild: Guild, allianceId?: string, isManual: boolean = false): Promise<{ updated: number; created: number; removed: number }> {
   const alliances = await prisma.alliance.findMany({
     where: allianceId ? { id: allianceId, guildId: guild.id } : { guildId: guild.id },
   });

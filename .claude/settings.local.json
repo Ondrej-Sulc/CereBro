@@ -35,7 +35,8 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); tags=d.get\\('tags',d.get\\('tag_list',{}\\)\\); print\\(json.dumps\\(list\\(tags.items\\(\\)\\)[:30], indent=2\\)\\) if isinstance\\(tags, dict\\) else print\\(json.dumps\\(tags[:30], indent=2\\)\\)\")",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(list\\(d.keys\\(\\)\\)\\)\")",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(list\\(d.items\\(\\)\\)[0]\\)\")",
-      "Bash(xargs head *)"
+      "Bash(xargs head *)",
+      "Bash(python *)"
     ]
   }
 }
