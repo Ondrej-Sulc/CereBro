@@ -810,10 +810,11 @@
             "required": true
           },
           {
+            "autocomplete": true,
+            "type": 3,
             "name": "player",
             "description": "A specific player to send the plan to.",
-            "required": false,
-            "type": 6
+            "required": false
           },
           {
             "name": "image",
