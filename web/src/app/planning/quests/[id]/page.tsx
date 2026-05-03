@@ -140,7 +140,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
 
     // Fetch the user's roster with tags and abilities
     // Fetch filter metadata in parallel
-    const [rosterEntries, tags, abilityCategories, abilityLinks, immunityLinks, popularCounters, featuredPicks, alliancePicks] = await Promise.all([
+    const [rosterEntries, allChampions, tags, abilityCategories, abilityLinks, immunityLinks, popularCounters, featuredPicks, alliancePicks] = await Promise.all([
         prisma.roster.findMany({
             where: { playerId: activePlayer.id },
             include: {
@@ -166,6 +166,20 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 { champion: { name: 'asc' } }
             ]
         }),
+        prisma.champion.findMany({
+            include: {
+                tags: true,
+                abilities: {
+                    include: {
+                        ability: {
+                            include: {
+                                categories: { select: { name: true } }
+                            }
+                        }
+                    }
+                }
+            }
+        }),
         prisma.tag.findMany({ orderBy: { name: 'asc' } }),
         prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
         prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
@@ -185,6 +199,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     // Map roster entries to typed objects, ensuring JsonValue fields are cast correctly
     const roster: RosterWithChampion[] = rosterEntries.map(entry => ({
         ...entry,
+        isUnowned: false,
         champion: {
             ...entry.champion,
             images: entry.champion.images as unknown as ChampionImages,
@@ -199,6 +214,40 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             }))
         }
     }));
+
+    const ownedChampionIds = new Set(rosterEntries.map(r => r.championId));
+    const unownedChampions = allChampions.filter(c => !ownedChampionIds.has(c.id));
+    
+    const unownedEntries: RosterWithChampion[] = unownedChampions.map(c => ({
+        id: `unowned-${c.id}`,
+        playerId: activePlayer.id,
+        championId: c.id,
+        stars: 0,
+        rank: 0,
+        sigLevel: 0,
+        isAwakened: false,
+        isAscended: false,
+        ascensionLevel: 0,
+        powerRating: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isUnowned: true,
+        champion: {
+            ...c,
+            images: c.images as unknown as ChampionImages,
+            tags: c.tags,
+            abilities: c.abilities.map(link => ({
+                ...link,
+                ability: {
+                    id: link.ability.id,
+                    name: link.ability.name,
+                    categories: link.ability.categories
+                }
+            }))
+        }
+    }));
+
+    roster.push(...unownedEntries);
 
     interface QuestCreator {
         id: string;
