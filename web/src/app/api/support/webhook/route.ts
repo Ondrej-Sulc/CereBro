@@ -21,7 +21,7 @@ function getSubscriptionId(subscription: string | Stripe.Subscription | null | u
 }
 
 function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
-  const sub = invoice.subscription ?? (invoice as any).subscription_details?.subscription;
+  const sub = (invoice as any).subscription ?? (invoice as any).subscription_details?.subscription;
   return getSubscriptionId(sub as string | Stripe.Subscription | null | undefined);
 }
 

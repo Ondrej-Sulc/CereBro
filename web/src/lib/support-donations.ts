@@ -238,7 +238,14 @@ export async function listTopSupporters(limit = 3) {
     const key = d.playerId ?? d.discordId ?? d.supporterName ?? null;
     if (!key) continue;
 
-    const name = (d.player?.ingameName || d.supporterName)?.trim();
+    let name = d.player?.ingameName?.trim();
+    if (!name && d.supporterName) {
+      name = d.supporterName.trim();
+      if (!d.discordId) {
+        // Show only first name if no Discord sign-in
+        name = name.split(" ")[0];
+      }
+    }
     if (!name) continue;
 
     const existing = totals.get(key);
