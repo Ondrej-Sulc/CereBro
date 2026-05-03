@@ -529,7 +529,10 @@ function DetailGroup({
                             return (
                                 <Tooltip key={i}>
                                     <TooltipTrigger asChild>
-                                        <button className="text-left w-full focus:outline-none">
+                                        <button 
+                                            className="text-left w-full focus:outline-none"
+                                            onClick={(e) => e.preventDefault()}
+                                        >
                                             {itemContent}
                                         </button>
                                     </TooltipTrigger>

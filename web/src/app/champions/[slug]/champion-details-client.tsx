@@ -458,7 +458,7 @@ function StatTile({ icon, label, value, max, accent }: { icon: ReactNode; label:
       {percentage != null && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="relative z-10 mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-900 cursor-help">
+            <div onClick={(e) => e.preventDefault()} className="relative z-10 mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-900 cursor-help">
               <div className="h-full rounded-full opacity-80" style={{ width: `${percentage}%`, backgroundColor: accent }} />
             </div>
           </TooltipTrigger>
@@ -507,7 +507,7 @@ function StatsPanel({ stat, maxStatsByTier, accent }: { stat?: ChampionStatRow; 
               </div>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-950 cursor-help">
+                  <div onClick={(e) => e.preventDefault()} className="h-1.5 w-full overflow-hidden rounded-full bg-slate-950 cursor-help">
                     <div className="h-full rounded-full opacity-80" style={{ width: `${percentage}%`, backgroundColor: accent }} />
                   </div>
                 </TooltipTrigger>
@@ -649,7 +649,7 @@ function renderNode(
     return (
       <Tooltip key={index}>
         <TooltipTrigger asChild>
-          <span className="inline-flex cursor-help items-center rounded bg-slate-800 px-1.5 py-0.5 text-xs font-semibold text-slate-100">
+          <span onClick={(e) => e.preventDefault()} className="inline-flex cursor-help items-center rounded bg-slate-800 px-1.5 py-0.5 text-xs font-semibold text-slate-100">
             {resolvedValue == null ? node.placeholderIndex : formatCurveValue(resolvedValue, curve, node.source)}
           </span>
         </TooltipTrigger>
@@ -668,7 +668,7 @@ function renderNode(
     return (
       <Tooltip key={index}>
         <TooltipTrigger asChild>
-          <button type="button" className="inline-flex items-center gap-1 font-semibold text-sky-300 underline decoration-sky-300/40 underline-offset-2 hover:text-sky-200">
+          <button onClick={(e) => e.preventDefault()} type="button" className="inline-flex items-center gap-1 font-semibold text-sky-300 underline decoration-sky-300/40 underline-offset-2 hover:text-sky-200">
             {node.label}
           </button>
         </TooltipTrigger>
@@ -821,6 +821,7 @@ function AbilitySummary({
               <Tooltip key={item.name}>
                 <TooltipTrigger asChild>
                   <Badge 
+                    onClick={(e) => e.preventDefault()}
                     variant="outline" 
                     className={cn(
                       "h-auto whitespace-normal px-3 py-2 text-left flex items-center gap-2 text-sm cursor-help transition-all hover:scale-[1.02]", 
