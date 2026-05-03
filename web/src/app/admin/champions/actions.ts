@@ -11,6 +11,7 @@ import { withActionContext } from "@/lib/with-request-context"
 import { OpenRouterService } from "@cerebro/core/services/openRouterService"
 import { abilityDraftPrompt } from "@cerebro/core/prompts/abilityDraft"
 import { matchGameChampionIdentity } from "@cerebro/core/services/mcocGameStatsImportService"
+import { generateChampionSlug } from "@/lib/championHelper"
 
 type AbilityDraftItem = { name: string; source: string }
 export type AbilityDraft = { abilities?: AbilityDraftItem[]; immunities?: AbilityDraftItem[] }
@@ -115,6 +116,7 @@ export const updateChampionDetails = withActionContext('updateChampionDetails', 
         where: { id },
         data: {
             name: data.name,
+            slug: generateChampionSlug(data.name),
             shortName: data.shortName,
             class: championClassValue,
             releaseDate: data.releaseDate,

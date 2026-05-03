@@ -10,8 +10,9 @@ export type GameDescriptionChampion = {
   full_name?: string;
   short_name?: string;
   bio?: string;
-  base_abilities?: Array<{ description?: string; buff_name?: string }>;
-  sig_ability?: { title?: string; description?: string } | null;
+  base_abilities?: Array<{ description?: string; buff_name?: string; group?: string; source?: GameDescriptionTextSource }>;
+  sig_ability?: { title?: string; description?: string; source?: GameDescriptionTextSource } | null;
+  sig_abilities?: Array<{ title?: string; description?: string; buff_name?: string; source?: GameDescriptionTextSource }>;
   special_attacks?: Array<{ name?: string; description?: string }>;
 };
 
@@ -30,9 +31,30 @@ export type GameGlossaryFile = Record<string, GameGlossaryEntry>;
 
 export type GameDescriptionTemplateNode =
   | { type: 'text'; value: string }
-  | { type: 'value'; key: string; placeholderIndex: number; source: { kind: 'placeholder' } }
+  | { type: 'value'; key: string; placeholderIndex: number; source: GameDescriptionValueSource }
   | { type: 'glossary'; id: string; label: string }
   | { type: 'color'; color: string; children: GameDescriptionTemplateNode[] };
+
+export type GameDescriptionValueSource =
+  | { kind: 'placeholder' }
+  | {
+      kind: 'abilityParam';
+      componentId?: string;
+      buffType?: string;
+      paramName?: string;
+      field?: string;
+      rawValue?: number;
+      curveId?: string;
+      secondaryCurveId?: string;
+      display?: { multiplier?: number; precision?: number };
+    };
+
+export type GameDescriptionTextSource = {
+  panel_id?: string;
+  component_id?: string;
+  hud_id?: string;
+  placeholder_sources?: Record<string, GameDescriptionValueSource>;
+};
 
 export type GameDescriptionTemplate = {
   raw: string;
@@ -66,6 +88,8 @@ type PreparedTextRecord = {
   template: GameDescriptionTemplate;
 };
 
+type SignatureAbilityRecord = { title?: string; description?: string; buff_name?: string; source?: GameDescriptionTextSource };
+
 export function parseMcocGameDescriptionsJson(text: string): GameDescriptionsFile {
   const data = JSON.parse(text) as GameDescriptionsFile;
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -92,7 +116,11 @@ function pushText(nodes: GameDescriptionTemplateNode[], value: string) {
   nodes.push({ type: 'text', value });
 }
 
-function parseInline(text: string): GameDescriptionTemplateNode[] {
+function cleanDisplayTitle(value?: string | null) {
+  return value?.replace(/\[[0-9a-fA-F]{6,8}\]|\[-\]/g, '').trim() || null;
+}
+
+function parseInline(text: string, placeholderSources: Record<string, GameDescriptionValueSource> = {}): GameDescriptionTemplateNode[] {
   const nodes: GameDescriptionTemplateNode[] = [];
   const tokenPattern = /\[k=glossary\/([^\]]+)\]([\s\S]*?)\[\/k\]|\[([0-9a-fA-F]{6,8})\]([\s\S]*?)\[-\]|\{(\d+)\}/g;
   let cursor = 0;
@@ -111,7 +139,7 @@ function parseInline(text: string): GameDescriptionTemplateNode[] {
       nodes.push({
         type: 'color',
         color: match[3],
-        children: parseInline(match[4] ?? ''),
+        children: parseInline(match[4] ?? '', placeholderSources),
       });
     } else if (match[5] !== undefined) {
       const placeholderIndex = Number(match[5]);
@@ -119,7 +147,7 @@ function parseInline(text: string): GameDescriptionTemplateNode[] {
         type: 'value',
         key: `placeholder_${placeholderIndex}`,
         placeholderIndex,
-        source: { kind: 'placeholder' },
+        source: placeholderSources[String(placeholderIndex)] ?? { kind: 'placeholder' },
       });
     }
 
@@ -130,13 +158,14 @@ function parseInline(text: string): GameDescriptionTemplateNode[] {
   return nodes;
 }
 
-export function buildDescriptionTemplate(text: string): GameDescriptionTemplate {
+export function buildDescriptionTemplate(text: string, source?: GameDescriptionTextSource): GameDescriptionTemplate {
   const paragraphs = text.split(/\r?\n+/).filter(paragraph => paragraph.trim().length > 0);
+  const placeholderSources = source?.placeholder_sources ?? {};
   return {
     raw: text,
     blocks: (paragraphs.length ? paragraphs : ['']).map(paragraph => ({
       type: 'paragraph',
-      children: parseInline(paragraph),
+      children: parseInline(paragraph, placeholderSources),
     })),
   };
 }
@@ -158,22 +187,31 @@ function buildTextRecords(champion: GameDescriptionChampion): PreparedTextRecord
   for (const [index, ability] of (champion.base_abilities ?? []).entries()) {
     const description = ability.description?.trim();
     if (!description) continue;
+    const group = normalizeTextGroup(ability.group);
     records.push({
-      sourceId: `base:${index + 1}`,
-      group: 'base',
-      title: ability.buff_name?.trim() || null,
+      sourceId: `${group}:${index + 1}`,
+      group,
+      title: cleanDisplayTitle(ability.buff_name),
       sortOrder: sortOrder++,
-      template: buildDescriptionTemplate(description),
+      template: buildDescriptionTemplate(description, ability.source),
     });
   }
 
-  if (champion.sig_ability?.description?.trim()) {
+  const signatureAbilities: SignatureAbilityRecord[] = champion.sig_abilities?.length
+    ? champion.sig_abilities
+    : champion.sig_ability
+      ? [champion.sig_ability]
+      : [];
+
+  for (const [index, ability] of signatureAbilities.entries()) {
+    const description = ability.description?.trim();
+    if (!description) continue;
     records.push({
-      sourceId: 'signature',
+      sourceId: index === 0 ? 'signature' : `signature:${index + 1}`,
       group: 'signature',
-      title: champion.sig_ability.title?.trim() || null,
+      title: cleanDisplayTitle(ability.title) || cleanDisplayTitle(ability.buff_name),
       sortOrder: sortOrder++,
-      template: buildDescriptionTemplate(champion.sig_ability.description),
+      template: buildDescriptionTemplate(description, ability.source),
     });
   }
 
@@ -183,13 +221,17 @@ function buildTextRecords(champion: GameDescriptionChampion): PreparedTextRecord
     records.push({
       sourceId: `special:${index + 1}`,
       group: 'special',
-      title: attack.name?.trim() || null,
+      title: cleanDisplayTitle(attack.name),
       sortOrder: sortOrder++,
       template: buildDescriptionTemplate(description),
     });
   }
 
   return records;
+}
+
+function normalizeTextGroup(value?: string | null) {
+  return value && /^[a-z][a-z0-9_-]*$/i.test(value) ? value : 'base';
 }
 
 function formatMatchIssue(gameId: string, champion: GameDescriptionChampion, reason: string) {
@@ -301,7 +343,9 @@ export async function importMcocGameDescriptions(
     const records = buildTextRecords(champion);
     await prisma.$transaction(async tx => {
       const deleted = await tx.championAbilityText.deleteMany({
-        where: { championId: match.champion.id },
+        where: {
+          championId: match.champion.id,
+        },
       });
       textRecordsDeleted += deleted.count;
 
