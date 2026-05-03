@@ -582,15 +582,15 @@ function RosterSelector({
                                 </div>
                                 {(() => {
                                     let encounterRoster = filteredGlobalRoster.filter(r => {
-                                        if (quest.minStarLevel && r.stars < quest.minStarLevel) return false;
-                                        if (quest.maxStarLevel && r.stars > quest.maxStarLevel) return false;
+                                        if (quest.minStarLevel && !r.isUnowned && r.stars < quest.minStarLevel) return false;
+                                        if (quest.maxStarLevel && !r.isUnowned && r.stars > quest.maxStarLevel) return false;
                                         if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
                                         if (quest.requiredTags && quest.requiredTags.length > 0) {
                                             const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
                                             if (!hasTag) return false;
                                         }
-                                        if (encounter.minStarLevel && r.stars < encounter.minStarLevel) return false;
-                                        if (encounter.maxStarLevel && r.stars > encounter.maxStarLevel) return false;
+                                        if (encounter.minStarLevel && !r.isUnowned && r.stars < encounter.minStarLevel) return false;
+                                        if (encounter.maxStarLevel && !r.isUnowned && r.stars > encounter.maxStarLevel) return false;
                                         if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
                                         if (encounter.requiredTags && encounter.requiredTags.length > 0) {
                                             const hasTag = encounter.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
@@ -618,6 +618,8 @@ function RosterSelector({
                                     encounterRoster = encounterRoster.sort((a, b) => {
                                         if (selections[encounter.id] === a.id && selections[encounter.id] !== b.id) return -1;
                                         if (selections[encounter.id] !== a.id && selections[encounter.id] === b.id) return 1;
+                                        // Push unowned to bottom
+                                        if (a.isUnowned !== b.isUnowned) return a.isUnowned ? 1 : -1;
                                         if (b.stars !== a.stars) return b.stars - a.stars;
                                         if (b.rank !== a.rank) return b.rank - a.rank;
                                         if (b.isAscended !== a.isAscended) return b.isAscended ? 1 : -1;
@@ -635,8 +637,8 @@ function RosterSelector({
                                                     const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
                                                     const isInTeam = Object.values(selections).includes(r.id);
                                                     return (
-                                                        <div key={r.id} onClick={() => handleSelectCounter(encounter.id, r.id)} title={`${r.champion.name} - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`} className="cursor-pointer">
-                                                            <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended, ascensionLevel: r.ascensionLevel }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} />
+                                                        <div key={r.id} onClick={() => handleSelectCounter(encounter.id, r.id)} title={`${r.champion.name}${r.isUnowned ? ' (Unowned)' : ` - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}`} className="cursor-pointer">
+                                                            <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended, ascensionLevel: r.ascensionLevel }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} isMissing={r.isUnowned} />
                                                         </div>
                                                     );
                                                 })}

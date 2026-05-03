@@ -13,6 +13,7 @@ export type SynergyWithChampion = PlayerQuestSynergyChampion & {
 
 export type RosterWithChampion = Roster & {
     champion: Champion;
+    isUnowned?: boolean;
 };
 
 export interface FilterMetadata {

@@ -11,8 +11,8 @@ type RestrictionInput = {
 const matchesRestrictions = (restrictions: RestrictionInput | undefined, r: RosterWithChampion): boolean => {
     if (!restrictions) return true;
 
-    if (restrictions.minStarLevel && r.stars < restrictions.minStarLevel) return false;
-    if (restrictions.maxStarLevel && r.stars > restrictions.maxStarLevel) return false;
+    if (restrictions.minStarLevel && !r.isUnowned && r.stars < restrictions.minStarLevel) return false;
+    if (restrictions.maxStarLevel && !r.isUnowned && r.stars > restrictions.maxStarLevel) return false;
     if (
         restrictions.requiredClasses &&
         restrictions.requiredClasses.length > 0 &&
