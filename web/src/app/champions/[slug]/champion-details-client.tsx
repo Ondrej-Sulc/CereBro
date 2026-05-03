@@ -4,7 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react"
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
-import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, ExternalLink, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Tags, Zap } from "lucide-react"
+import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, ExternalLink, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Zap } from "lucide-react"
 import { ChampionClass } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Slider } from "@/components/ui/slider"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { calculateMcocPrestige, maxSigForRarity } from "@/lib/mcoc-prestige"
@@ -131,6 +132,16 @@ type GlossaryTerm = {
   category: string | null
   iconUrl: string | null
   raw: unknown
+}
+
+type GroupedAbilityLink = {
+  name: string
+  iconUrl?: string | null
+  gameGlossaryTermId?: string | null
+  sources: Array<{
+    label: string
+    synergyChampions: Array<{ name: string; slug: string | null; images: unknown }>
+  }>
 }
 
 const chartConfig = {
@@ -366,43 +377,62 @@ export function ChampionDetailsClient({
 
               <StatsPanel stat={selectedStat} maxStatsByTier={maxStatsByTier} accent={classColors.color} />
 
-              <div className="space-y-4">
-                {immunities.length > 0 && (
-                  <AbilitySummary title="Immunities" icon={<Shield className="h-4 w-4" />} items={immunities} tone="sky" glossaryById={glossaryById} />
-                )}
-                <AbilitySummary title="Abilities" icon={<Zap className="h-4 w-4" />} items={abilities} tone="amber" glossaryById={glossaryById} />
-              </div>
             </div>
 
-            <div className="space-y-6 min-w-0">
-              <TextPanel
-                title="Signature Ability"
-                icon={<Sparkles className="h-5 w-5" />}
-                records={signatureTexts}
-                glossaryById={glossaryById}
-                curves={selectedCurves}
-                sigLevel={sigLevel}
-                stat={displayStat}
-                accent={classColors.color}
-                emptyText="No signature ability text imported."
-                chart={<CurvePanel curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} accent={classColors.color} />}
-              />
-              {descriptionGroups.map(([group, records]) => {
-                const groupTitle = abilityTextGroupTitle(group);
-                return (
+            <div className="min-w-0">
+              <Tabs defaultValue="overview" className="space-y-5">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-950/80 border border-slate-800 p-1 h-11 rounded-lg">
+                  <TabsTrigger value="overview" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="descriptions" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+                    Full Descriptions
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="overview" className="mt-0 space-y-6 outline-none">
+                  {immunities.length > 0 && (
+                    <AbilitySummary title="Immunities" icon={<Shield className="h-4 w-4" />} items={immunities} tone="sky" glossaryById={glossaryById} accent={classColors.color} />
+                  )}
+                  <AbilitySummary title="Abilities" icon={<Zap className="h-4 w-4" />} items={abilities} tone="amber" glossaryById={glossaryById} accent={classColors.color} />
+                </TabsContent>
+
+                <TabsContent value="descriptions" className="mt-0 space-y-6 outline-none">
+                  <section className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-3 backdrop-blur">
+                    <p className="text-sm leading-relaxed text-amber-100">
+                      Full descriptions are still a work in progress. Some exact numeric values may be inaccurate while the parsing and value resolution logic is being refined.
+                    </p>
+                  </section>
                   <TextPanel
-                    key={group}
-                    title={groupTitle}
-                    icon={<BookOpenText className="h-5 w-5" />}
-                    records={records}
+                    title="Signature Ability"
+                    icon={<Sparkles className="h-5 w-5" />}
+                    records={signatureTexts}
                     glossaryById={glossaryById}
                     curves={selectedCurves}
                     sigLevel={sigLevel}
                     stat={displayStat}
                     accent={classColors.color}
+                    emptyText="No signature ability text imported."
+                    chart={<CurvePanel curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} accent={classColors.color} />}
                   />
-                );
-              })}
+                  {descriptionGroups.map(([group, records]) => {
+                    const groupTitle = abilityTextGroupTitle(group);
+                    return (
+                      <TextPanel
+                        key={group}
+                        title={groupTitle}
+                        icon={<BookOpenText className="h-5 w-5" />}
+                        records={records}
+                        glossaryById={glossaryById}
+                        curves={selectedCurves}
+                        sigLevel={sigLevel}
+                        stat={displayStat}
+                        accent={classColors.color}
+                      />
+                    );
+                  })}
+                </TabsContent>
+              </Tabs>
             </div>
           </section>
         </div>
@@ -796,88 +826,127 @@ function AbilitySummary({
   items,
   tone,
   glossaryById,
+  accent,
 }: {
   title: string
   icon: ReactNode
   items: ChampionDetailsPayload["abilities"]
   tone: "sky" | "amber"
   glossaryById: Map<string, GlossaryTerm>
+  accent?: string
 }) {
   const grouped = groupAbilityLinks(items)
-  const toneClass = tone === "sky" ? "border-sky-900/70 bg-sky-950/20 text-sky-200" : "border-amber-900/70 bg-amber-950/20 text-amber-200"
+  const defaultIconColor = tone === "sky" ? "#38bdf8" : "#fbbf24"
 
   return (
-    <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-black uppercase text-white">{icon}{title}</h2>
+    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-white">
+          <span style={{ color: accent ?? defaultIconColor }}>{icon}</span>
+          {title}
+        </h2>
+      </div>
       {grouped.length ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="grid gap-3">
           {grouped.map(item => {
-            const term = item.gameGlossaryTermId ? glossaryById.get(item.gameGlossaryTermId) : undefined;
-            const raw = term?.raw as Record<string, unknown> | undefined;
-            const primaryColor = typeof raw?.color_primary === "string" ? normalizeHexColor(raw.color_primary) : undefined;
-            const secondaryColor = typeof raw?.color_secondary === "string" ? normalizeHexColor(raw.color_secondary) : undefined;
+            const term = item.gameGlossaryTermId ? glossaryById.get(item.gameGlossaryTermId) : undefined
+            const raw = term?.raw as Record<string, unknown> | undefined
+            const primaryColor = typeof raw?.color_primary === "string" ? normalizeHexColor(raw.color_primary) : undefined
+            const description = term?.description?.trim() || rawGlossaryDescription(term?.raw)
+            const displayColor = primaryColor || accent || defaultIconColor
 
-            return (
-              <Tooltip key={item.name}>
-                <TooltipTrigger asChild>
-                  <Badge 
-                    onClick={(e) => e.preventDefault()}
-                    variant="outline" 
-                    className={cn(
-                      "h-auto whitespace-normal px-3 py-2 text-left flex items-center gap-2 text-sm cursor-help transition-all hover:scale-[1.02]", 
-                      !primaryColor && toneClass
-                    )}
-                    style={primaryColor ? {
-                      borderColor: primaryColor,
-                      backgroundColor: secondaryColor ? `${secondaryColor}25` : `${primaryColor}20`,
-                      color: primaryColor,
-                    } : undefined}
-                  >
-                    {item.iconUrl && (
-                      <div 
-                        className="shrink-0 h-5 w-5 bg-current" 
+            const cardContent = (
+              <button
+                type="button"
+                onClick={(e) => e.preventDefault()}
+                className={cn(
+                  "group relative w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950/80 text-left transition-colors hover:border-slate-600 hover:bg-slate-900/70"
+                )}
+                style={{
+                  boxShadow: `inset 3px 0 0 ${displayColor}88`,
+                }}
+              >
+                <div className="absolute -left-10 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-20" style={{ backgroundColor: displayColor }} />
+                <div className="relative px-4 py-3.5">
+                  <div className="flex items-center gap-3">
+                    {item.iconUrl ? (
+                      <div
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 shadow-inner"
                         style={{
-                          maskImage: `url(${item.iconUrl})`,
-                          maskSize: 'contain',
-                          maskRepeat: 'no-repeat',
-                          maskPosition: 'center',
-                          WebkitMaskImage: `url(${item.iconUrl})`,
-                          WebkitMaskSize: 'contain',
-                          WebkitMaskRepeat: 'no-repeat',
-                          WebkitMaskPosition: 'center',
+                          boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 24px ${displayColor}24`,
+                          background: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), ${displayColor} 38%, rgba(2,6,23,0.95) 105%)`,
                         }}
-                      />
-                    )}
-                    <span className="font-semibold">{item.name}</span>
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm border-slate-700 bg-slate-950 p-4 shadow-xl">
-                  <div className="flex items-start gap-3.5">
-                    {item.iconUrl && (
-                      <div 
-                        className="mt-0.5 shrink-0 h-6 w-6" 
-                        style={{
-                          backgroundColor: primaryColor || (tone === "sky" ? "#38bdf8" : "#fbbf24"),
-                          maskImage: `url(${item.iconUrl})`,
-                          maskSize: 'contain',
-                          maskRepeat: 'no-repeat',
-                          maskPosition: 'center',
-                          WebkitMaskImage: `url(${item.iconUrl})`,
-                          WebkitMaskSize: 'contain',
-                          WebkitMaskRepeat: 'no-repeat',
-                          WebkitMaskPosition: 'center',
-                        }}
-                      />
-                    )}
-                    <div className="space-y-1.5">
-                      <p className="font-black text-base text-white" style={{ color: primaryColor || "inherit" }}>
-                        {term?.name?.trim() || item.name}
-                      </p>
-                      <p className="text-sm leading-relaxed text-slate-300">
-                        {term?.description?.trim() || rawGlossaryDescription(term?.raw) || "No glossary description imported yet."}
-                      </p>
+                        >
+                        <div
+                          className="h-7 w-7"
+                          style={{
+                            backgroundColor: "#ffffff",
+                            maskImage: `url(${item.iconUrl})`,
+                            maskSize: "contain",
+                            maskRepeat: "no-repeat",
+                            maskPosition: "center",
+                            WebkitMaskImage: `url(${item.iconUrl})`,
+                            WebkitMaskSize: "contain",
+                            WebkitMaskRepeat: "no-repeat",
+                            WebkitMaskPosition: "center",
+                          }}
+                        />
+                      </div>
+                    ) : null}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="truncate text-base font-black text-white" style={{ color: primaryColor || undefined }}>
+                            {item.name}
+                          </div>
+                        </div>
+                      </div>
+                      {item.sources.length > 0 && (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {item.sources.map(source => (
+                            <span key={`${item.name}-${source.label}`} className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-1.5 text-[11px] font-medium leading-tight text-slate-300">
+                              {source.label}
+                              {source.synergyChampions.length > 0 && (
+                                <span className="flex -space-x-1">
+                                  {source.synergyChampions.slice(0, 3).map(champion => (
+                                    <span
+                                      key={`${item.name}-${source.label}-${champion.name}`}
+                                      className="relative h-5 w-5 overflow-hidden rounded-full border border-slate-950 ring-1 ring-slate-700"
+                                      title={champion.name}
+                                    >
+                                      <Image
+                                        src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")}
+                                        alt={champion.name}
+                                        fill
+                                        sizes="20px"
+                                        className="object-cover"
+                                      />
+                                    </span>
+                                  ))}
+                                </span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
+                </div>
+              </button>
+            )
+
+            if (!description) {
+              return <div key={`${title}-${item.name}`}>{cardContent}</div>
+            }
+
+            return (
+              <Tooltip key={`${title}-${item.name}`}>
+                <TooltipTrigger asChild>
+                  {cardContent}
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm border-slate-700 bg-slate-950 p-4 shadow-xl">
+                  <AbilityTooltipContent item={item} description={description} color={displayColor} />
                 </TooltipContent>
               </Tooltip>
             )
@@ -887,6 +956,45 @@ function AbilitySummary({
         <p className="text-sm text-slate-500">No {title.toLowerCase()} recorded.</p>
       )}
     </section>
+  )
+}
+
+function AbilityTooltipContent({ item, description, color }: { item: GroupedAbilityLink; description: string; color: string }) {
+  return (
+    <div className="flex items-start gap-3.5">
+      {item.iconUrl && (
+        <div
+          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15"
+          style={{
+            background: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), ${color} 38%, rgba(2,6,23,0.95) 105%)`,
+            boxShadow: `0 0 20px ${color}24`,
+          }}
+        >
+          <div
+            className="h-5 w-5"
+            style={{
+              backgroundColor: "#ffffff",
+              maskImage: `url(${item.iconUrl})`,
+              maskSize: "contain",
+              maskRepeat: "no-repeat",
+              maskPosition: "center",
+              WebkitMaskImage: `url(${item.iconUrl})`,
+              WebkitMaskSize: "contain",
+              WebkitMaskRepeat: "no-repeat",
+              WebkitMaskPosition: "center",
+            }}
+          />
+        </div>
+      )}
+      <div className="space-y-1.5">
+        <p className="text-base font-black text-white" style={{ color }}>
+          {item.name}
+        </p>
+        <p className="text-sm leading-relaxed text-slate-300">
+          {description}
+        </p>
+      </div>
+    </div>
   )
 }
 
@@ -1197,14 +1305,71 @@ function abilityTextGroupTitle(group: string) {
     .join(" ")
 }
 
-function groupAbilityLinks<T extends { ability: { name: string; iconUrl?: string | null; gameGlossaryTermId?: string | null } }>(items: T[]) {
-  const names = new Map<string, T>()
-  for (const item of items) names.set(item.ability.name, item)
-  return Array.from(names.values()).map(item => ({ 
-    name: item.ability.name,
-    iconUrl: item.ability.iconUrl,
-    gameGlossaryTermId: item.ability.gameGlossaryTermId,
-  }))
+function groupAbilityLinks<
+  T extends {
+    source: string | null
+    ability: { name: string; iconUrl?: string | null; gameGlossaryTermId?: string | null }
+    synergyChampions?: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
+  }
+>(items: T[]): GroupedAbilityLink[] {
+  const names = new Map<string, GroupedAbilityLink>()
+
+  for (const item of items) {
+    const name = item.ability.name
+    const existing = names.get(name)
+    const normalizedSource = normalizeAbilitySource(item.source)
+    const sourceSynergies = dedupeSynergyChampions(item.synergyChampions ?? [])
+
+    if (!existing) {
+      names.set(name, {
+        name,
+        iconUrl: item.ability.iconUrl,
+        gameGlossaryTermId: item.ability.gameGlossaryTermId,
+        sources: normalizedSource ? [{ label: normalizedSource, synergyChampions: sourceSynergies }] : [],
+      })
+      continue
+    }
+
+    if (!normalizedSource) {
+      continue
+    }
+
+    const existingSource = existing.sources.find(source => source.label === normalizedSource)
+    if (!existingSource) {
+      existing.sources.push({ label: normalizedSource, synergyChampions: sourceSynergies })
+      continue
+    }
+
+    existingSource.synergyChampions = dedupeSynergyChampions([
+      ...existingSource.synergyChampions.map(champion => ({ champion })),
+      ...(item.synergyChampions ?? []),
+    ])
+  }
+
+  return Array.from(names.values())
+    .map(item => ({
+      ...item,
+      sources: item.sources.sort((a, b) => a.label.localeCompare(b.label)),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function dedupeSynergyChampions(
+  items: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
+): Array<{ name: string; slug: string | null; images: unknown }> {
+  const champions = new Map<string, { name: string; slug: string | null; images: unknown }>()
+  for (const item of items) {
+    champions.set(item.champion.slug ?? item.champion.name, item.champion)
+  }
+  return Array.from(champions.values()).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function normalizeAbilitySource(source: string | null) {
+  if (!source) return null
+  const trimmed = source.trim()
+  if (!trimmed) return null
+  const normalized = trimmed.toLowerCase().replace(/\s+/g, "_")
+  return abilityTextGroupTitle(normalized)
 }
 
 function rawGlossaryDescription(raw: unknown) {

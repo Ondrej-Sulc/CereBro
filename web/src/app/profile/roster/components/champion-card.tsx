@@ -46,10 +46,10 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
     const cardContent = (
         <div
             className={cn(
-                "group relative aspect-[3/4] rounded-lg overflow-hidden border transition-colors cursor-pointer bg-slate-900 shadow-lg",
+                "group relative aspect-[3/4] rounded-lg overflow-hidden border cursor-pointer bg-slate-900 shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/40 hover:border-white/20",
                 classColors.bg,
                 borderClass,
-                item.isUnowned && "grayscale opacity-60 hover:grayscale-[0.3] hover:opacity-100 transition-all duration-300"
+                item.isUnowned && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 transition-all duration-300"
             )}
             onClick={() => {
                 if (mode === 'edit') {
@@ -65,17 +65,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                 alt={item.champion.name}
                 fill
                 sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 10vw"
-                className="object-cover transition-transform group-hover:scale-105 p-1"
+                className="object-cover p-1 transition-transform duration-300 group-hover:scale-[1.07]"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
             <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
-                {item.isUnowned ? (
-                    <Badge variant="outline" className="bg-slate-900/80 border-slate-500/50 text-slate-300 text-[9px] px-1 py-0 h-4 font-bold leading-none tracking-wide">
-                        UNOWNED
-                    </Badge>
-                ) : (
+                {!item.isUnowned && (
                     <>
                         <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none">
                             {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}{item.stars === 7 && item.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{item.ascensionLevel}</span>}
@@ -175,6 +171,38 @@ function normalizeHexColor(color: string): string | undefined {
     return undefined;
 }
 
+function EffectIcon({ iconUrl, color, size = "sm" }: { iconUrl: string | null; color: string; size?: "sm" | "md" }) {
+    if (!iconUrl) return null;
+
+    const circleSize = size === "md" ? "h-8 w-8" : "h-7 w-7";
+    const glyphSize = size === "md" ? "h-5 w-5" : "h-[18px] w-[18px]";
+
+    return (
+        <span
+            className={cn("flex shrink-0 items-center justify-center rounded-full border border-white/15 shadow-inner", circleSize)}
+            style={{
+                background: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), ${color} 38%, rgba(2,6,23,0.95) 105%)`,
+                boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 20px ${color}24`,
+            }}
+        >
+            <span
+                className={glyphSize}
+                style={{
+                    backgroundColor: "#ffffff",
+                    maskImage: `url(${iconUrl})`,
+                    maskSize: "contain",
+                    maskRepeat: "no-repeat",
+                    maskPosition: "center",
+                    WebkitMaskImage: `url(${iconUrl})`,
+                    WebkitMaskSize: "contain",
+                    WebkitMaskRepeat: "no-repeat",
+                    WebkitMaskPosition: "center",
+                }}
+            />
+        </span>
+    );
+}
+
 function QuickChampionDialog({
     item,
     prestige,
@@ -201,7 +229,10 @@ function QuickChampionDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-slate-950 border-slate-800 text-slate-200 p-0 overflow-hidden w-[calc(100vw-2rem)] sm:w-full sm:max-w-[560px] lg:max-w-[900px] rounded-2xl gap-0 shadow-2xl">
+            <DialogContent
+                className="bg-slate-950 border-slate-800 text-slate-200 p-0 overflow-hidden w-[calc(100vw-1rem)] h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] sm:w-full sm:h-auto sm:max-h-[92vh] sm:max-w-[560px] lg:max-w-[900px] rounded-2xl gap-0 shadow-2xl"
+                onOpenAutoFocus={(event) => event.preventDefault()}
+            >
                 <DialogTitle className="sr-only">{item.champion.name}</DialogTitle>
                 <DialogDescription className="sr-only">Champion quick details</DialogDescription>
 
@@ -239,19 +270,20 @@ function QuickChampionDialog({
 
                 <TooltipProvider>
                     {/* Content */}
-                    <div className="relative z-10 flex flex-col w-full max-h-[92vh]">
+                    <div className="relative z-10 flex h-full min-h-0 flex-col w-full sm:max-h-[92vh]">
                         {/* Top accent line */}
                         <div className="absolute inset-x-0 top-0 h-px z-20 opacity-90" style={{ backgroundColor: classColors.color }} />
 
                     {/* ── Header: portrait + name/stats ── */}
-                    <div className="flex gap-0 lg:gap-0 min-h-[220px]">
+                    <div className="flex min-h-[220px] flex-col gap-3 px-4 py-4 sm:min-h-[11rem] sm:flex-row sm:items-center sm:gap-0 sm:px-0 sm:py-0 lg:min-h-[13rem]">
                         {/* Portrait */}
-                        <div className="relative shrink-0 w-36 lg:w-52 self-stretch overflow-hidden">
+                        <div className="relative hidden h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:mx-4 sm:block sm:h-[11rem] sm:w-[11rem] lg:h-[13rem] lg:w-[13rem]">
+                            <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${classColors.color}22` }} />
                             <Image
                                 src={heroUrl}
                                 alt=""
                                 fill
-                                sizes="(max-width: 1024px) 144px, 208px"
+                                sizes="(max-width: 640px) 6rem, (max-width: 1024px) 11rem, 13rem"
                                 className="object-cover object-center opacity-25 blur-md scale-110"
                                 priority
                             />
@@ -259,59 +291,80 @@ function QuickChampionDialog({
                                 src={portraitUrl}
                                 alt={item.champion.name}
                                 fill
-                                sizes="(max-width: 1024px) 144px, 208px"
-                                className="object-cover object-top p-1"
+                                sizes="(max-width: 640px) 6rem, (max-width: 1024px) 11rem, 13rem"
+                                className="object-cover object-center p-1"
                                 priority
                             />
                             {/* Edge fade */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-950/80" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-slate-950/10 sm:bg-gradient-to-r sm:from-transparent sm:via-transparent sm:to-slate-950/35" />
                             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-transparent to-slate-950/60" />
                         </div>
 
                         {/* Name / stats */}
-                        <div className="flex-1 min-w-0 px-4 pt-5 pb-4 flex flex-col justify-between gap-3">
-                            <div className="space-y-2">
-                                {/* Class badge */}
-                                <span
-                                    className="inline-block text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-current/20 bg-black/30"
-                                    style={{ color: classColors.color }}
-                                >
-                                    {item.champion.class}
-                                </span>
+                        <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 rounded-2xl border border-white/8 bg-black/15 px-4 py-3 backdrop-blur-[2px] sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-1 sm:py-5 sm:pr-5 sm:backdrop-blur-0">
+                            <div className="flex items-start gap-3 sm:block sm:space-y-2.5">
+                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 shadow-lg shadow-black/25 ring-1 ring-white/5 sm:hidden">
+                                    <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${classColors.color}22` }} />
+                                    <Image
+                                        src={heroUrl}
+                                        alt=""
+                                        fill
+                                        sizes="5rem"
+                                        className="object-cover object-center opacity-25 blur-md scale-110"
+                                        priority
+                                    />
+                                    <Image
+                                        src={portraitUrl}
+                                        alt={item.champion.name}
+                                        fill
+                                        sizes="5rem"
+                                        className="object-cover object-center p-1"
+                                        priority
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-slate-950/30" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/15 via-transparent to-slate-950/55" />
+                                </div>
 
-                                {/* Name */}
-                                <h2 className={cn("text-3xl lg:text-4xl font-black leading-none tracking-tight drop-shadow-lg", classColors.text)}>
-                                    {item.champion.name}
-                                </h2>
+                                <div className="min-w-0 space-y-2.5">
+                                    <span
+                                        className="inline-block text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-current/20 bg-black/30"
+                                        style={{ color: classColors.color }}
+                                    >
+                                        {item.champion.class}
+                                    </span>
 
-                                {/* Stats row */}
-                                {item.isUnowned ? (
-                                    <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Unowned</span>
-                                ) : (
-                                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                                        <span className="inline-flex items-center gap-1 rounded-lg bg-black/40 border border-white/10 px-2.5 py-1 text-sm font-black text-white">
-                                            {item.stars}<span className="text-yellow-400">★</span> R{item.rank}
-                                        </span>
-                                        {item.isAwakened && (
-                                            <span className="inline-flex items-center rounded-lg bg-sky-950/60 border border-sky-500/30 px-2.5 py-1 text-sm font-black text-sky-300">
-                                                S{item.sigLevel}
+                                    <h2 className={cn("text-[1.7rem] sm:text-[2rem] lg:text-4xl font-black leading-[0.95] tracking-tight drop-shadow-lg", classColors.text)}>
+                                        {item.champion.name}
+                                    </h2>
+
+                                    {item.isUnowned ? (
+                                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Unowned</span>
+                                    ) : (
+                                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                                            <span className="inline-flex items-center gap-1 rounded-lg bg-black/40 border border-white/10 px-2.5 py-1 text-sm font-black text-white">
+                                                {item.stars}<span className="text-yellow-400">★</span> R{item.rank}
                                             </span>
-                                        )}
-                                        {item.stars === 7 && (item.ascensionLevel || 0) > 0 && (
-                                            <span className="inline-flex items-center rounded-lg bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 text-sm font-black text-amber-300">
-                                                A{item.ascensionLevel}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
+                                            {item.isAwakened && (
+                                                <span className="inline-flex items-center rounded-lg bg-sky-950/60 border border-sky-500/30 px-2.5 py-1 text-sm font-black text-sky-300">
+                                                    S{item.sigLevel}
+                                                </span>
+                                            )}
+                                            {item.stars === 7 && (item.ascensionLevel || 0) > 0 && (
+                                                <span className="inline-flex items-center rounded-lg bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 text-sm font-black text-amber-300">
+                                                    A{item.ascensionLevel}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Prestige */}
                             {prestige !== undefined && prestige > 0 && (
-                                <div className="flex items-end gap-2">
+                                <div className="flex items-end gap-2 pt-1">
                                     <div>
                                         <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest leading-none mb-1">Prestige</p>
-                                        <p className="text-4xl font-black text-white tabular-nums leading-none drop-shadow" style={{ color: classColors.color }}>
+                                        <p className="text-[1.9rem] sm:text-[2.5rem] font-black text-white tabular-nums leading-none drop-shadow" style={{ color: classColors.color }}>
                                             {prestige.toLocaleString()}
                                         </p>
                                     </div>
@@ -323,7 +376,7 @@ function QuickChampionDialog({
                     <div className="h-px bg-slate-800/80" />
 
                     {/* ── Body: abilities / tags ── */}
-                    <ScrollArea className="max-h-[50vh]">
+                    <ScrollArea className="flex-1 min-h-0">
                         <div className="space-y-5 px-4 py-4">
                             <DetailGroup title="Immunities" icon={<Shield className="w-4 h-4" />} items={displayImmunities} tone="sky" emptyText="No immunities recorded." />
                             <DetailGroup title="Abilities" icon={<Zap className="w-4 h-4" />} items={displayAbilities} tone="amber" emptyText="No abilities recorded." />
@@ -465,22 +518,7 @@ function DetailGroup({
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <div className="flex flex-wrap items-center gap-1.5">
-                                            {item.iconUrl && (
-                                                <div
-                                                    className="shrink-0 h-5 w-5"
-                                                    style={{
-                                                        backgroundColor: itemColor,
-                                                        maskImage: `url(${item.iconUrl})`,
-                                                        maskSize: 'contain',
-                                                        maskRepeat: 'no-repeat',
-                                                        maskPosition: 'center',
-                                                        WebkitMaskImage: `url(${item.iconUrl})`,
-                                                        WebkitMaskSize: 'contain',
-                                                        WebkitMaskRepeat: 'no-repeat',
-                                                        WebkitMaskPosition: 'center',
-                                                    }}
-                                                />
-                                            )}
+                                            <EffectIcon iconUrl={item.iconUrl} color={itemColor} />
                                             <span 
                                                 className="text-sm font-bold leading-snug"
                                                 style={{ color: item.primaryColor ? itemColor : undefined }}
@@ -496,32 +534,40 @@ function DetailGroup({
                                                 </span>
                                             )}
                                         </div>
-                                        {item.instances.some(inst => inst.source) && (
-                                            <div className="mt-0.5 flex flex-wrap gap-1">
-                                                {item.instances
-                                                    .filter(inst => inst.source)
-                                                    .map((inst, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] leading-tight text-slate-400"
-                                                        >
-                                                            {inst.source}
-                                                        </span>
-                                                    ))}
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {item.instances.some(inst => inst.synergyChampions.length > 0) && (
-                                        <div className="flex shrink-0 -space-x-1.5 pt-0.5">
-                                            {item.instances.flatMap(inst => inst.synergyChampions).slice(0, 5).map((sc, scIdx) => (
-                                                <div key={scIdx} className="relative h-6 w-6 overflow-hidden rounded-full border border-slate-950 ring-1 ring-slate-700" title={sc.name}>
-                                                    <Image src={getChampionImageUrlOrPlaceholder(sc.images, '64')} alt={sc.name} fill className="object-cover" />
+                                </div>
+                                {item.instances.some(inst => inst.source || inst.synergyChampions.length > 0) && (
+                                    <div className="mt-1.5 space-y-1.5">
+                                        {item.instances
+                                            .filter(inst => inst.source || inst.synergyChampions.length > 0)
+                                            .map((inst, idx) => (
+                                                <div key={idx} className="rounded-md border border-white/[0.08] bg-black/15 px-2 py-1.5">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        {inst.source && (
+                                                            <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] leading-tight text-slate-300">
+                                                                {inst.source}
+                                                            </span>
+                                                        )}
+                                                        {inst.synergyChampions.length > 0 && (
+                                                            <>
+                                                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                                                                    Synergy
+                                                                </span>
+                                                                <div className="flex shrink-0 -space-x-1.5">
+                                                                    {inst.synergyChampions.slice(0, 5).map((sc, scIdx) => (
+                                                                        <div key={`${idx}-${scIdx}-${sc.name}`} className="relative h-6 w-6 overflow-hidden rounded-full border border-slate-950 ring-1 ring-slate-700" title={sc.name}>
+                                                                            <Image src={getChampionImageUrlOrPlaceholder(sc.images, '64')} alt={sc.name} fill className="object-cover" />
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
-                                        </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         );
 
@@ -542,22 +588,7 @@ function DetailGroup({
                                     >
                                         <div className="space-y-2">
                                             <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                                                {item.iconUrl && (
-                                                    <div
-                                                        className="shrink-0 h-5 w-5"
-                                                        style={{
-                                                            backgroundColor: itemColor,
-                                                            maskImage: `url(${item.iconUrl})`,
-                                                            maskSize: 'contain',
-                                                            maskRepeat: 'no-repeat',
-                                                            maskPosition: 'center',
-                                                            WebkitMaskImage: `url(${item.iconUrl})`,
-                                                            WebkitMaskSize: 'contain',
-                                                            WebkitMaskRepeat: 'no-repeat',
-                                                            WebkitMaskPosition: 'center',
-                                                        }}
-                                                    />
-                                                )}
+                                                <EffectIcon iconUrl={item.iconUrl} color={itemColor} size="md" />
                                                 <span className="font-bold text-sm" style={{ color: itemColor }}>
                                                     {item.name}
                                                 </span>
