@@ -872,14 +872,16 @@ function AbilitySummary({
                   <div className="flex items-center gap-3">
                     {item.iconUrl ? (
                       <div
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 shadow-inner"
+                        className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-inner"
                         style={{
-                          boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 24px ${displayColor}24`,
-                          background: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), ${displayColor} 38%, rgba(2,6,23,0.95) 105%)`,
+                          backgroundColor: displayColor,
+                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -10px 16px rgba(0,0,0,0.22), 0 0 24px ${displayColor}24`,
                         }}
                         >
+                        <div className="absolute left-1.5 top-1.5 h-4 w-4 rounded-full bg-white/35 blur-[2px]" />
+                        <div className="absolute inset-x-1 bottom-0 h-4 rounded-full bg-black/15 blur-sm" />
                         <div
-                          className="h-7 w-7"
+                          className="relative h-8 w-8"
                           style={{
                             backgroundColor: "#ffffff",
                             maskImage: `url(${item.iconUrl})`,
@@ -905,7 +907,7 @@ function AbilitySummary({
                       {item.sources.length > 0 && (
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           {item.sources.map(source => (
-                            <span key={`${item.name}-${source.label}`} className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-1.5 text-[11px] font-medium leading-tight text-slate-300">
+                            <span key={`${item.name}-${source.label}`} className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-1.5 text-xs font-medium leading-tight text-slate-300">
                               {source.label}
                               {source.synergyChampions.length > 0 && (
                                 <span className="flex -space-x-1">
@@ -964,14 +966,16 @@ function AbilityTooltipContent({ item, description, color }: { item: GroupedAbil
     <div className="flex items-start gap-3.5">
       {item.iconUrl && (
         <div
-          className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15"
+          className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15"
           style={{
-            background: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), ${color} 38%, rgba(2,6,23,0.95) 105%)`,
-            boxShadow: `0 0 20px ${color}24`,
+            backgroundColor: color,
+            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -8px 12px rgba(0,0,0,0.2), 0 0 20px ${color}24`,
           }}
         >
+          <div className="absolute left-1 top-1 h-3 w-3 rounded-full bg-white/35 blur-[2px]" />
+          <div className="absolute inset-x-1 bottom-0 h-3 rounded-full bg-black/15 blur-sm" />
           <div
-            className="h-5 w-5"
+            className="relative h-6 w-6"
             style={{
               backgroundColor: "#ffffff",
               maskImage: `url(${item.iconUrl})`,

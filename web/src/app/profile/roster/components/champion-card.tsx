@@ -175,18 +175,20 @@ function EffectIcon({ iconUrl, color, size = "sm" }: { iconUrl: string | null; c
     if (!iconUrl) return null;
 
     const circleSize = size === "md" ? "h-8 w-8" : "h-7 w-7";
-    const glyphSize = size === "md" ? "h-5 w-5" : "h-[18px] w-[18px]";
+    const glyphSize = size === "md" ? "h-6 w-6" : "h-5 w-5";
 
     return (
         <span
-            className={cn("flex shrink-0 items-center justify-center rounded-full border border-white/15 shadow-inner", circleSize)}
+            className={cn("relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-inner", circleSize)}
             style={{
-                background: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.28), ${color} 38%, rgba(2,6,23,0.95) 105%)`,
-                boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.14), 0 0 20px ${color}24`,
+                backgroundColor: color,
+                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -8px 12px rgba(0,0,0,0.2), 0 0 20px ${color}24`,
             }}
         >
+            <span className="absolute left-1 top-1 h-3 w-3 rounded-full bg-white/35 blur-[2px]" />
+            <span className="absolute inset-x-1 bottom-0 h-3 rounded-full bg-black/15 blur-sm" />
             <span
-                className={glyphSize}
+                className={cn("relative", glyphSize)}
                 style={{
                     backgroundColor: "#ffffff",
                     maskImage: `url(${iconUrl})`,
@@ -545,7 +547,7 @@ function DetailGroup({
                                                 <div key={idx} className="rounded-md border border-white/[0.08] bg-black/15 px-2 py-1.5">
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         {inst.source && (
-                                                            <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] leading-tight text-slate-300">
+                                                            <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-xs leading-tight text-slate-300">
                                                                 {inst.source}
                                                             </span>
                                                         )}
