@@ -275,6 +275,7 @@ export async function listPublicSupporters() {
     select: {
       id: true,
       supporterName: true,
+      discordId: true,
       createdAt: true,
       player: {
         select: {
@@ -288,14 +289,24 @@ export async function listPublicSupporters() {
 
   const supporterMap = new Map<string, { id: string; name: string; lastDonationAt: Date }>();
   for (const donation of donations) {
-    const rawName = donation.player?.ingameName || donation.supporterName;
-    const name = rawName?.trim();
+    let name = donation.player?.ingameName?.trim();
+    if (!name && donation.supporterName) {
+      name = donation.supporterName.trim();
+      if (!donation.discordId) {
+        // Show only first name if no Discord sign-in
+        name = name.split(" ")[0];
+      }
+    }
+
     if (!name) {
       continue;
     }
 
-    if (!supporterMap.has(name)) {
-      supporterMap.set(name, {
+    // Deduplicate by original full name/ingameName to prevent multiple entries for same person
+    const key = donation.player?.ingameName?.trim() || donation.supporterName?.trim() || name;
+
+    if (!supporterMap.has(key)) {
+      supporterMap.set(key, {
         id: donation.id,
         name,
         lastDonationAt: donation.createdAt,

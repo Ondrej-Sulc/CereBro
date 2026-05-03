@@ -514,7 +514,7 @@ export default function SupportPageClient({
                   {supporters.length > 0 && (
                     <div className="border-t border-slate-800/70 pt-5">
                       <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">
-                        {supporters.length} supporter{supporters.length !== 1 ? "s" : ""} this month
+                        {supporters.length} recent supporter{supporters.length !== 1 ? "s" : ""}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {supporters.map((supporter, idx) => (
@@ -758,7 +758,7 @@ export default function SupportPageClient({
               {supporters.length > 0 ? (
                 <div className="mt-7 border-t border-slate-800/70 pt-5">
                   <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">
-                    {supporters.length} supporter{supporters.length !== 1 ? "s" : ""} this month
+                    {supporters.length} recent supporter{supporters.length !== 1 ? "s" : ""}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {supporters.map((supporter, idx) => (

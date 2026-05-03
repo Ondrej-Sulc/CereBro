@@ -21,7 +21,7 @@ function getSubscriptionId(subscription: string | Stripe.Subscription | null | u
 }
 
 function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
-  const sub = invoice.parent?.subscription_details?.subscription;
+  const sub = invoice.subscription ?? (invoice as any).subscription_details?.subscription;
   return getSubscriptionId(sub as string | Stripe.Subscription | null | undefined);
 }
 
@@ -174,8 +174,8 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<N
   // payment_intent is not available on Invoice in Stripe SDK v20+
   const paymentIntentId: string | null = null;
 
-  // Pull metadata from parent.subscription_details (populated from subscription_data.metadata at checkout)
-  const meta = invoice.parent?.subscription_details?.metadata ?? {};
+  // Pull metadata from subscription_details (populated from subscription_data.metadata at checkout)
+  const meta = (invoice as any).subscription_details?.metadata ?? {};
 
   let playerId: string | null = meta.playerId || null;
   let botUserId: string | null = meta.botUserId || null;
