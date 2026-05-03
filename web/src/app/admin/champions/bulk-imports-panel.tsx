@@ -1,11 +1,12 @@
 "use client"
 
-import { BookOpenText, Database, Sparkles, Tags } from "lucide-react"
+import { BookOpenText, Database, Gauge, Sparkles, Tags } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ImportGameStatsButton } from "./import-game-stats-button"
 import { SyncTagsButton } from "./sync-tags-button"
 import { ImportGameDescriptionsButton } from "./import-game-descriptions-button"
 import { ImportAbilityCurvesButton } from "./import-ability-curves-button"
+import { ImportSigPrestigeButton } from "./import-sig-prestige-button"
 
 import { ImportGlossaryIconsButton } from "./import-glossary-icons-button"
 
@@ -69,6 +70,21 @@ export function BulkImportsPanel() {
         </CardHeader>
         <CardContent>
           <ImportAbilityCurvesButton />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Gauge className="h-4 w-4" />
+            Signature Prestige
+          </CardTitle>
+          <CardDescription>
+            Upload mcoc_sig_prestige.json to import captured sig 1 and max-sig prestige rows, plus sig 0 baselines from game stats.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImportSigPrestigeButton />
         </CardContent>
       </Card>
 
