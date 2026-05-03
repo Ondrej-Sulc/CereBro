@@ -12,6 +12,10 @@ export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
             source: string | null;
             ability: {
                 name: string;
+                iconUrl: string | null;
+                gameGlossaryTermId: string | null;
+                description: string | null;
+                gameGlossaryTerm: { raw: unknown } | null;
                 categories: { name: string }[];
             };
             synergyChampions: {

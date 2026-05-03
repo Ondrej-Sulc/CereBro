@@ -66,6 +66,15 @@ export function normalizeChampionName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+export function generateChampionSlug(name: string): string {
+  if (!name) return "champion";
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "champion";
+}
+
 /**
  * Returns a Tailwind border + shadow class string for a given star level.
  * Centralized here to avoid duplication across ChampionCard, UpdatedChampionItem, and the Quest Timeline.

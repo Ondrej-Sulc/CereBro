@@ -40,6 +40,10 @@ export default async function RosterPage(props: {
                 ability: {
                   select: {
                     name: true,
+                    iconUrl: true,
+                    gameGlossaryTermId: true,
+                    description: true,
+                    gameGlossaryTerm: { select: { raw: true } },
                     categories: { select: { name: true } }
                   }
                 },

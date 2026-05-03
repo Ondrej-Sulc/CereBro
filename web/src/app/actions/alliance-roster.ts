@@ -196,13 +196,13 @@ export const getAllianceTagsAndTactics = withActionContext('getAllianceTagsAndTa
 
     const abilities = await prisma.ability.findMany({
         where: { id: { in: abilityLinks.map(l => l.abilityId) } },
-        select: { id: true, name: true, description: true, emoji: true },
+        select: { id: true, name: true, description: true, emoji: true, iconUrl: true, gameGlossaryTermId: true },
         orderBy: { name: 'asc' }
     });
 
     const immunities = await prisma.ability.findMany({
         where: { id: { in: immunityLinks.map(l => l.abilityId) } },
-        select: { id: true, name: true, description: true, emoji: true },
+        select: { id: true, name: true, description: true, emoji: true, iconUrl: true, gameGlossaryTermId: true },
         orderBy: { name: 'asc' }
     });
 

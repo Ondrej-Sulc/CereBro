@@ -88,14 +88,14 @@ export function PrestigeCurveChart({ data, currentSig, championClass }: Prestige
               content={
                 <ChartTooltipContent
                   indicator="dot"
-                  labelFormatter={(value) => `Sig Level ${value}`}
+                  labelFormatter={(_, payload) => `Sig Level ${payload?.[0]?.payload?.sig ?? ""}`}
                 />
               }
             />
 
             <Area
               dataKey="prestige"
-              type="monotone"
+              type="natural"
               fill="url(#fillPrestige)"
               stroke={classColors.color}
               strokeWidth={2}

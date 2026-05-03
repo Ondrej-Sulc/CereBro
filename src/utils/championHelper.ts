@@ -35,3 +35,12 @@ export function normalizeChampionName(name: string): string {
   if (!name) return "";
   return name.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
+
+export function generateChampionSlug(name: string): string {
+  if (!name) return "champion";
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || "champion";
+}

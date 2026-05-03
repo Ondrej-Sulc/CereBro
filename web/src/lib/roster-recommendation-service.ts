@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ChampionClass, Prisma } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry, Recommendation, SigRecommendation } from "@/app/profile/roster/types";
+import { calculateMcocPrestige, maxSigForRarity } from "@/lib/mcoc-prestige";
 
 interface RecommendationOptions {
     targetRank: number;
@@ -29,64 +30,34 @@ export async function calculateRosterRecommendations(
 
     const championIds = Array.from(new Set(roster.map(r => r.championId)));
 
-    // Fetch ALL prestige data for these champions to enable interpolation
+    // Fetch prestige endpoint rows for these champions. In-between sigs are
+    // calculated from rarity-normalized curves.
     const allPrestigeData = await prisma.championPrestige.findMany({
         where: { championId: { in: championIds } },
         select: { championId: true, rarity: true, rank: true, sig: true, prestige: true }
     });
 
-    // Build a structured lookup: ChampionID -> Rarity -> Rank -> Sig -> Prestige
-    const prestigeLookup = new Map<number, Map<number, Map<number, Map<number, number>>>>();
-
+    const prestigeLookup = new Map<string, typeof allPrestigeData>();
     for (const p of allPrestigeData) {
-        if (!prestigeLookup.has(p.championId)) prestigeLookup.set(p.championId, new Map());
-        const rarityMap = prestigeLookup.get(p.championId)!;
-
-        if (!rarityMap.has(p.rarity)) rarityMap.set(p.rarity, new Map());
-        const rankMap = rarityMap.get(p.rarity)!;
-
-        if (!rankMap.has(p.rank)) rankMap.set(p.rank, new Map());
-        const sigMap = rankMap.get(p.rank)!;
-
-        sigMap.set(p.sig, p.prestige);
+        const key = `${p.championId}:${p.rarity}:${p.rank}`;
+        const rows = prestigeLookup.get(key) ?? [];
+        rows.push(p);
+        prestigeLookup.set(key, rows);
     }
 
-    // Helper for Linear Interpolation
-    const getInterpolatedPrestige = (champId: number, rarity: number, rank: number, sig: number, ascensionLevel: number = 0): number => {
-        const sigs = prestigeLookup.get(champId)?.get(rarity)?.get(rank);
-        if (!sigs) return 0;
-
-        let basePrestige = 0;
-
-        if (sigs.has(sig)) {
-            basePrestige = sigs.get(sig)!;
-        } else {
-            // Find bounds
-            const sortedSigs = Array.from(sigs.keys()).sort((a, b) => a - b);
-            const lowerSig = sortedSigs.filter(s => s <= sig).pop();
-            const upperSig = sortedSigs.find(s => s > sig);
-
-            if (lowerSig !== undefined && upperSig !== undefined) {
-                const lowerVal = sigs.get(lowerSig)!;
-                const upperVal = sigs.get(upperSig)!;
-                const fraction = (sig - lowerSig) / (upperSig - lowerSig);
-                basePrestige = Math.round((lowerVal + (upperVal - lowerVal) * fraction) / 10) * 10;
-            } else if (lowerSig !== undefined) {
-                basePrestige = sigs.get(lowerSig)!;
-            } else if (upperSig !== undefined) {
-                basePrestige = sigs.get(upperSig)!;
-            }
-        }
+    const getCalculatedPrestige = (champId: number, rarity: number, rank: number, sig: number, ascensionLevel: number = 0): number => {
+        const rows = prestigeLookup.get(`${champId}:${rarity}:${rank}`) ?? [];
+        let basePrestige = calculateMcocPrestige(rows, { rarity, rank, prestige: null }, sig) ?? 0;
 
         if (basePrestige > 0 && rarity === 7 && ascensionLevel > 0) {
-            basePrestige = Math.round((basePrestige * Math.pow(1.08, ascensionLevel)) / 10) * 10;
+            basePrestige = basePrestige * Math.pow(1.08, ascensionLevel);
         }
 
-        return basePrestige;
+        return roundPrestigeToGameDisplay(basePrestige);
     };
 
     const rosterWithPrestige = roster.map(r => {
-        const prestige = getInterpolatedPrestige(r.championId, r.stars, r.rank, r.sigLevel || 0, r.ascensionLevel || 0);
+        const prestige = getCalculatedPrestige(r.championId, r.stars, r.rank, r.sigLevel || 0, r.ascensionLevel || 0);
         return { ...r, prestige };
     });
 
@@ -117,7 +88,7 @@ export async function calculateRosterRecommendations(
     });
 
     const allRecommendations = candidates.map(c => {
-        const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank + 1, c.sigLevel || 0, c.ascensionLevel || 0);
+        const nextPrestige = getCalculatedPrestige(c.championId, c.stars, c.rank + 1, c.sigLevel || 0, c.ascensionLevel || 0);
         if (nextPrestige === 0) return null;
 
         const currentPrestige = rosterPrestigeMap[c.id] || 0;
@@ -158,7 +129,7 @@ export async function calculateRosterRecommendations(
         const isDupped = r.isAwakened && (r.sigLevel || 0) > 0;
         if (options.sigAwakenedOnly && !isDupped) return false;
 
-        if ((r.sigLevel || 0) >= 200) return false;
+        if ((r.sigLevel || 0) >= maxSigForRarity(r.stars)) return false;
         if (r.stars === 7) return true;
         if (r.stars === 6 && r.rank >= 4) return true;
         return false;
@@ -179,9 +150,9 @@ export async function calculateRosterRecommendations(
                 const idx = simState.findIndex(r => r.id === cand.id);
                 const charState = simState[idx];
 
-                if (charState.currentSig >= 200) continue;
+                if (charState.currentSig >= maxSigForRarity(cand.stars)) continue;
 
-                const nextPrestige = getInterpolatedPrestige(cand.championId, cand.stars, cand.rank, charState.currentSig + 1, cand.ascensionLevel || 0);
+                const nextPrestige = getCalculatedPrestige(cand.championId, cand.stars, cand.rank, charState.currentSig + 1, cand.ascensionLevel || 0);
                 if (nextPrestige <= charState.currentPrestige) continue;
 
                 let moveGain = 0;
@@ -216,7 +187,7 @@ export async function calculateRosterRecommendations(
         sigRecommendations = Object.entries(addedSigs).map(([id, added]) => {
             const original = rosterWithPrestige.find(r => r.id === id)!;
             const finalSig = (original.sigLevel || 0) + added;
-            const finalPrestige = getInterpolatedPrestige(original.championId, original.stars, original.rank, finalSig, original.ascensionLevel || 0);
+            const finalPrestige = getCalculatedPrestige(original.championId, original.stars, original.rank, finalSig, original.ascensionLevel || 0);
 
             const isolationList = rosterWithPrestige.map(r => r.id === id ? finalPrestige : r.prestige).sort((a, b) => b - a);
             const isoSum = isolationList.slice(0, 30).reduce((s, p) => s + p, 0);
@@ -243,11 +214,12 @@ export async function calculateRosterRecommendations(
     } else {
         // DEFAULT: MAX SIG POTENTIAL
         sigRecommendations = sigCandidates.map(c => {
-            const nextPrestige = getInterpolatedPrestige(c.championId, c.stars, c.rank, 200, c.ascensionLevel || 0);
+            const maxSig = maxSigForRarity(c.stars);
+            const nextPrestige = getCalculatedPrestige(c.championId, c.stars, c.rank, maxSig, c.ascensionLevel || 0);
             if (nextPrestige === 0) return null;
 
             const currentPrestige = rosterPrestigeMap[c.id] || 0;
-            const sigsNeeded = 200 - (c.sigLevel || 0);
+            const sigsNeeded = maxSig - (c.sigLevel || 0);
 
             const simulatedPrestigeList = rosterWithPrestige.map(r =>
                 r.id === c.id ? nextPrestige : r.prestige
@@ -270,7 +242,7 @@ export async function calculateRosterRecommendations(
                 ascensionLevel: c.ascensionLevel || 0,
                 rank: c.rank,
                 fromSig: c.sigLevel || 0,
-                toSig: 200,
+                toSig: maxSig,
                 prestigeGain: prestigeGain,
                 accountGain: delta,
                 prestigePerSig: parseFloat(efficiency.toFixed(2))
@@ -286,4 +258,8 @@ export async function calculateRosterRecommendations(
         recommendations,
         sigRecommendations
     };
+}
+
+function roundPrestigeToGameDisplay(value: number) {
+    return value > 0 ? Math.round(value / 10) * 10 : 0;
 }
