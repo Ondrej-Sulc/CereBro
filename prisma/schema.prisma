@@ -17,17 +17,21 @@ model AbilityCategory {
 }
 
 model Ability {
-  id          Int                   @id @default(autoincrement())
-  name        String                @unique
-  description String?
-  emoji       String?
-  champions   ChampionAbilityLink[]
-  categories  AbilityCategory[]     @relation("AbilityToAbilityCategory")
+  id                 Int                   @id @default(autoincrement())
+  name               String                @unique
+  description        String?
+  emoji              String?
+  iconUrl            String?
+  gameGlossaryTermId String?               @unique
+  gameGlossaryTerm   GameGlossaryTerm?     @relation(fields: [gameGlossaryTermId], references: [id])
+  champions          ChampionAbilityLink[]
+  categories         AbilityCategory[]     @relation("AbilityToAbilityCategory")
 }
 
 model Champion {
   id                           Int                          @id @default(autoincrement())
   name                         String                       @unique
+  slug                         String?                      @unique
   shortName                    String
   gameId                       String?                      @unique
   class                        ChampionClass
@@ -136,11 +140,13 @@ model ChampionAbilityCurve {
 }
 
 model GameGlossaryTerm {
-  id          String  @id
+  id          String   @id
   name        String
   description String?
   category    String?
   raw         Json?
+  iconUrl     String?
+  ability     Ability?
 }
 
 model Duel {
