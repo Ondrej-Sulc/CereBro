@@ -1,10 +1,13 @@
 "use client"
 
-import { BookOpenText, Database, Tags } from "lucide-react"
+import { BookOpenText, Database, Sparkles, Tags } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ImportGameStatsButton } from "./import-game-stats-button"
 import { SyncTagsButton } from "./sync-tags-button"
 import { ImportGameDescriptionsButton } from "./import-game-descriptions-button"
+import { ImportAbilityCurvesButton } from "./import-ability-curves-button"
+
+import { ImportGlossaryIconsButton } from "./import-glossary-icons-button"
 
 export function BulkImportsPanel() {
   return (
@@ -51,6 +54,36 @@ export function BulkImportsPanel() {
         </CardHeader>
         <CardContent>
           <ImportGameDescriptionsButton />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4" />
+            Signature Curves
+          </CardTitle>
+          <CardDescription>
+            Upload mcoc_ability_curves.json to import signature ability curve coefficients for champion descriptions and charts.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImportAbilityCurvesButton />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Database className="h-4 w-4" />
+            Glossary Icons
+          </CardTitle>
+          <CardDescription>
+            Upload poc_glossary_gcp_db_updates_execute_en.json to update glossary terms and linked abilities with their in-game icons.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImportGlossaryIconsButton />
         </CardContent>
       </Card>
     </div>
