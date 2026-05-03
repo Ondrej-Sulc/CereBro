@@ -101,8 +101,8 @@ export function RosterFilters({
             filters.push({ label: imm, type: 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
         });
 
-        if (showUnowned) {
-            filters.push({ label: 'Yes', type: 'Unowned', onRemove: () => onShowUnownedChange(false) });
+        if (!showUnowned) {
+            filters.push({ label: 'Hidden', type: 'Unowned', onRemove: () => onShowUnownedChange(true) });
         }
 
         return filters;
@@ -238,7 +238,7 @@ export function RosterFilters({
                             className="h-7 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 ml-auto"
                             onClick={() => {
                                 onSearchChange("");
-                                onShowUnownedChange(false);
+                                onShowUnownedChange(true);
                                 onFilterStarsChange([]);
                                 onFilterRanksChange([]);
                                 onFilterClassesChange([]);

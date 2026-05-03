@@ -109,7 +109,7 @@ export function RosterView({
   const [filterStars, setFilterStars] = useState<number[]>([]);
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
-  const [showUnowned, setShowUnowned] = useState(false);
+  const [showUnowned, setShowUnowned] = useState(true);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(initialShowInsights);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
