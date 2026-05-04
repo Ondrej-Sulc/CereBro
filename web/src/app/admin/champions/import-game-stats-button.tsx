@@ -69,6 +69,7 @@ export function ImportGameStatsButton() {
           `${result.matched}/${result.championCount} champions matched`,
           `${result.unmatched.length} skipped`,
           `${written?.updatedChampions ?? 0} game IDs set`,
+          `${written?.deletedStaleNullStats ?? 0} stale null rows removed`,
         ].join(", "),
         variant: result.canWrite ? "default" : "destructive",
       })
@@ -148,7 +149,7 @@ function ImportResultsDialog({
           <ResultMetric label="Champions matched" value={`${report.matched}/${report.championCount}`} />
           <ResultMetric label="Rank rows in file" value={report.rankCount.toLocaleString()} />
           <ResultMetric label="Stats upserted" value={(written?.upsertedStats ?? 0).toLocaleString()} />
-          <ResultMetric label="Game IDs set" value={(written?.updatedChampions ?? 0).toLocaleString()} />
+          <ResultMetric label="Stale null rows removed" value={(written?.deletedStaleNullStats ?? 0).toLocaleString()} />
         </div>
 
         <div className="flex flex-wrap gap-2">

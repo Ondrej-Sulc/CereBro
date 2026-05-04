@@ -77,6 +77,7 @@ export type McocGameStatsImportReport = {
   written?: {
     updatedChampions: number;
     upsertedStats: number;
+    deletedStaleNullStats: number;
   };
 };
 
@@ -320,6 +321,8 @@ async function writeImport(
 ) {
   let updatedChampions = 0;
   let upsertedStats = 0;
+  let deletedStaleNullStats = 0;
+  const importedKeys = new Set<string>();
 
   for (const gameChampion of data.champions) {
     const match = matches.get(gameChampion.gameId);
@@ -335,6 +338,7 @@ async function writeImport(
 
     for (const tier of gameChampion.tiers) {
       for (const rank of tier.ranks) {
+        importedKeys.add(`${tier.tierId}:${rank.rank}`);
         await prisma.championStats.upsert({
           where: {
             tierId_rank: {
@@ -348,11 +352,11 @@ async function writeImport(
             rarityLabel: tier.rarityLabel ?? null,
             level: rank.level ?? null,
             challengeRating: rank.challengeRating,
-            health: rank.health ?? null,
-            attack: rank.attack ?? null,
-            healthRating: rank.healthRating ?? null,
-            attackRating: rank.attackRating ?? null,
-            prestige: rank.prestige ?? null,
+            health: rank.health ?? undefined,
+            attack: rank.attack ?? undefined,
+            healthRating: rank.healthRating ?? undefined,
+            attackRating: rank.attackRating ?? undefined,
+            prestige: rank.prestige ?? undefined,
             armorRating: rank.armorRating ?? null,
             armorPenetration: rank.armorPenetration ?? null,
             criticalRating: rank.criticalRating ?? null,
@@ -398,7 +402,29 @@ async function writeImport(
     }
   }
 
-  return { updatedChampions, upsertedStats };
+  const staleNullRows = await prisma.championStats.findMany({
+    where: {
+      health: null,
+      attack: null,
+      healthRating: null,
+      attackRating: null,
+      prestige: null,
+    },
+    select: { id: true, tierId: true, rank: true },
+  });
+  const staleIds = staleNullRows
+    .filter(row => !importedKeys.has(`${row.tierId}:${row.rank}`))
+    .map(row => row.id);
+
+  for (let index = 0; index < staleIds.length; index += 1000) {
+    const ids = staleIds.slice(index, index + 1000);
+    const result = await prisma.championStats.deleteMany({
+      where: { id: { in: ids } },
+    });
+    deletedStaleNullStats += result.count;
+  }
+
+  return { updatedChampions, upsertedStats, deletedStaleNullStats };
 }
 
 export async function importMcocGameStats(
