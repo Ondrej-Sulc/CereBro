@@ -292,7 +292,9 @@ export const getQuestPlanById = unstable_cache(
                     include: {
                         defender: true,
                         requiredTags: true,
-                        recommendedChampions: true,
+                        recommendedChampions: {
+                            where: { isPlayable: true }
+                        },
                         videos: {
                             include: {
                                 player: {

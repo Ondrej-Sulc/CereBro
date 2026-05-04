@@ -168,6 +168,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             ]
         }),
         prisma.champion.findMany({
+            where: { isPlayable: true },
             include: {
                 tags: true,
                 abilities: {
