@@ -406,10 +406,66 @@ export type SyncTagsResult = {
   sourceChampions: number
   dedupedChampions: number
   sourceTags: number
+  sourceGenderTiers: number
+  genderTagged: number
+  genderMissing: number
   updated: number
   skipped: string[]
   blocked: string[]
   deletedTags: number
+}
+
+const HERO_TIER_SUFFIXES = ["_mls", "_cm", "_un", "_rar", "_ep", "_leg", "_t6", "_t7"].sort((a, b) => b.length - a.length)
+const GENDER_CATEGORY = "Gender"
+
+interface HeroTierEntry {
+  id?: string
+  size?: string
+  tags?: string[]
+}
+
+function splitHeroTierId(tierId: string) {
+  for (const suffix of HERO_TIER_SUFFIXES) {
+    if (tierId.endsWith(suffix)) {
+      return tierId.slice(0, -suffix.length)
+    }
+  }
+  return tierId
+}
+
+function inferGenderFromTier(entry: HeroTierEntry): "Male" | "Female" | null {
+  const tags = new Set(entry.tags ?? [])
+  if (entry.size === "female" || tags.has("female") || tags.has("fem")) return "Female"
+  if (tags.has("male")) return "Male"
+  return null
+}
+
+function buildGenderMapFromHeroTiers(heroTiersData: Record<string, HeroTierEntry>) {
+  const countsByGameId = new Map<string, Map<"Male" | "Female", number>>()
+
+  for (const [tierId, tier] of Object.entries(heroTiersData)) {
+    const gender = inferGenderFromTier(tier)
+    if (!gender) continue
+    const gameId = splitHeroTierId(tier.id || tierId)
+    const counts = countsByGameId.get(gameId) ?? new Map<"Male" | "Female", number>()
+    counts.set(gender, (counts.get(gender) ?? 0) + 1)
+    countsByGameId.set(gameId, counts)
+  }
+
+  const genderByGameId = new Map<string, "Male" | "Female">()
+  for (const [gameId, counts] of countsByGameId) {
+    const male = counts.get("Male") ?? 0
+    const female = counts.get("Female") ?? 0
+    if (female > male) {
+      genderByGameId.set(gameId, "Female")
+    } else if (male > female) {
+      genderByGameId.set(gameId, "Male")
+    } else if (female > 0) {
+      genderByGameId.set(gameId, "Female")
+    }
+  }
+
+  return { genderByGameId, sourceGenderTiers: Object.keys(heroTiersData).length }
 }
 
 export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', async (
@@ -419,15 +475,18 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
 
   const championsFile = formData.get("champion_display") as File | null
   const tagsFile = formData.get("tags") as File | null
+  const heroTiersFile = formData.get("hero_tiers") as File | null
 
-  if (!championsFile || !tagsFile) throw new Error("Both files are required")
+  if (!championsFile || !tagsFile || !heroTiersFile) throw new Error("champion_display.json, tags.json, and hero_tiers.json are required")
 
   interface TagEntry { name: string; category_name: string }
   interface ChampionEntry { id?: string; full_name: string; short_name?: string; champion_tags: string[] }
 
   const tagsData: { tags: Record<string, TagEntry> } = JSON.parse(await tagsFile.text())
   const champsData: Record<string, ChampionEntry> = JSON.parse(await championsFile.text())
+  const heroTiersData: Record<string, HeroTierEntry> = JSON.parse(await heroTiersFile.text())
   const tagMap = new Map(Object.entries(tagsData.tags))
+  const { genderByGameId, sourceGenderTiers } = buildGenderMapFromHeroTiers(heroTiersData)
   const sourceChampions = Object.keys(champsData).length
 
   const dbChampions = await prisma.champion.findMany({
@@ -452,6 +511,8 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
   }
 
   let updated = 0
+  let genderTagged = 0
+  let genderMissing = 0
   const skipped: string[] = []
   const blocked: string[] = []
 
@@ -486,9 +547,24 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
         })
         tagConnections.push({ id: tag.id })
       }
+
+      const gender = genderByGameId.get(champ.id || match.champion.gameId || "")
+      if (gender) {
+        const genderTag = await tx.tag.upsert({
+          where: { name_category: { name: gender, category: GENDER_CATEGORY } },
+          update: {},
+          create: { name: gender, category: GENDER_CATEGORY },
+        })
+        tagConnections.push({ id: genderTag.id })
+        genderTagged++
+      } else {
+        genderMissing++
+      }
+
+      const dedupedConnections = [...new Map(tagConnections.map(tag => [tag.id, tag])).values()]
       await tx.champion.update({
         where: { id: match.champion.id },
-        data: { tags: { set: tagConnections } },
+        data: { tags: { set: dedupedConnections } },
       })
     })
 
@@ -504,6 +580,9 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
     sourceChampions,
     dedupedChampions: dedupedChamps.size,
     sourceTags: tagMap.size,
+    sourceGenderTiers,
+    genderTagged,
+    genderMissing,
     updated,
     skipped,
     blocked,

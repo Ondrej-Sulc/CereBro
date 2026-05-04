@@ -19,6 +19,7 @@ export function SyncTagsButton() {
   const { toast } = useToast()
   const championsRef = useRef<HTMLInputElement>(null)
   const tagsRef = useRef<HTMLInputElement>(null)
+  const heroTiersRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<SyncTagsResult | null>(null)
   const [resultsOpen, setResultsOpen] = useState(false)
@@ -26,9 +27,10 @@ export function SyncTagsButton() {
   async function handleSync() {
     const champFile = championsRef.current?.files?.[0]
     const tagsFile = tagsRef.current?.files?.[0]
+    const heroTiersFile = heroTiersRef.current?.files?.[0]
 
-    if (!champFile || !tagsFile) {
-      toast({ title: "Select both files first", variant: "destructive" })
+    if (!champFile || !tagsFile || !heroTiersFile) {
+      toast({ title: "Select all three files first", variant: "destructive" })
       return
     }
 
@@ -37,12 +39,17 @@ export function SyncTagsButton() {
       const formData = new FormData()
       formData.append("champion_display", champFile)
       formData.append("tags", tagsFile)
+      formData.append("hero_tiers", heroTiersFile)
 
       const result = await syncTagsFromGameData(formData)
       setReport(result)
       setResultsOpen(true)
 
-      const parts = [`${result.updated} champions updated`, `${result.deletedTags} stale tags removed`]
+      const parts = [
+        `${result.updated} champions updated`,
+        `${result.genderTagged} gender tags applied`,
+        `${result.deletedTags} stale tags removed`,
+      ]
 
       toast({
         title: `Tags synced - ${parts.join(", ")}`,
@@ -82,6 +89,15 @@ export function SyncTagsButton() {
             type="file"
             accept=".json"
             className="w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:font-medium cursor-pointer sm:w-36"
+          />
+        </label>
+        <label className="text-sm text-muted-foreground">
+          <span className="sr-only">hero_tiers.json</span>
+          <input
+            ref={heroTiersRef}
+            type="file"
+            accept=".json"
+            className="w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:font-medium cursor-pointer sm:w-40"
           />
         </label>
         <Button variant="outline" size="sm" onClick={handleSync} disabled={loading}>
@@ -124,7 +140,7 @@ function TagsResultsDialog({
             Champion Tags Import Results
           </DialogTitle>
           <DialogDescription>
-            Synced champion_display.json and tags.json into champion tag assignments.
+            Synced champion_display.json, tags.json, and hero_tiers.json into champion tag assignments.
           </DialogDescription>
         </DialogHeader>
 
@@ -132,6 +148,9 @@ function TagsResultsDialog({
           <ResultMetric label="Champions updated" value={report.updated.toLocaleString()} />
           <ResultMetric label="Entries processed" value={`${report.dedupedChampions}/${report.sourceChampions}`} />
           <ResultMetric label="Tags in file" value={report.sourceTags.toLocaleString()} />
+          <ResultMetric label="Gender tagged" value={report.genderTagged.toLocaleString()} />
+          <ResultMetric label="Gender missing" value={report.genderMissing.toLocaleString()} />
+          <ResultMetric label="Gender tier rows" value={report.sourceGenderTiers.toLocaleString()} />
           <ResultMetric label="Stale tags removed" value={report.deletedTags.toLocaleString()} />
         </div>
 

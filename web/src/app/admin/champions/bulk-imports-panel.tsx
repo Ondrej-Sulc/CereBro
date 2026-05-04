@@ -35,7 +35,7 @@ export function BulkImportsPanel() {
             Champion Tags
           </CardTitle>
           <CardDescription>
-            Upload champion_display.json and tags.json to sync game tag assignments onto CereBro champions.
+            Upload champion_display.json, tags.json, and hero_tiers.json to sync game tag and gender assignments onto CereBro champions.
           </CardDescription>
         </CardHeader>
         <CardContent>
