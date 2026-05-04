@@ -106,6 +106,16 @@ const manualGameIdToChampionName: Record<string, string> = {
   brothervoodoo: 'Doctor Voodoo',
 };
 
+const SUFFIX_RARITY: Record<string, number> = {
+  un: 2,
+  rar: 3,
+  ep: 4,
+  leg: 5,
+  t6: 6,
+  t7: 7,
+  mls: 1,
+};
+
 export function parseMcocGameStatsJson(text: string): GameStatsFile {
   const data = JSON.parse(text) as GameStatsFile;
   if (!Array.isArray(data.champions)) {
@@ -410,10 +420,24 @@ async function writeImport(
       attackRating: null,
       prestige: null,
     },
-    select: { id: true, tierId: true, rank: true },
+    select: { id: true, championId: true, tierId: true, rank: true },
   });
+  const staleChampionIds = [...new Set(staleNullRows.map(row => row.championId))];
+  const prestigeRows = await prisma.championPrestige.findMany({
+    where: { championId: { in: staleChampionIds } },
+    select: { championId: true, rarity: true, rank: true },
+  });
+  const prestigeKeys = new Set(
+    prestigeRows.map(row => `${row.championId}:${row.rarity}:${row.rank}`)
+  );
   const staleIds = staleNullRows
-    .filter(row => !importedKeys.has(`${row.tierId}:${row.rank}`))
+    .filter(row => {
+      if (importedKeys.has(`${row.tierId}:${row.rank}`)) return false;
+      const raritySuffix = row.tierId.match(/_(un|rar|ep|leg|t6|t7|mls)$/)?.[1];
+      const rarity = raritySuffix ? SUFFIX_RARITY[raritySuffix] : null;
+      if (rarity && prestigeKeys.has(`${row.championId}:${rarity}:${row.rank}`)) return false;
+      return true;
+    })
     .map(row => row.id);
 
   for (let index = 0; index < staleIds.length; index += 1000) {
