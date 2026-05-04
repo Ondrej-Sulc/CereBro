@@ -47,7 +47,7 @@ export const UpdatedChampionItem = memo(({
     popularityLabel?: string;
     variant?: "square" | "tall";
 }) => {
-    const borderClass = isMissing ? "border-slate-800" : getStarBorderClass(item.stars);
+    const borderClass = isMissing ? "border-slate-700 border-dashed" : getStarBorderClass(item.stars);
     const classColors = getChampionClassColors(item.champion.championClass);
 
     if (variant === "tall") {
@@ -61,7 +61,7 @@ export const UpdatedChampionItem = memo(({
                     isRecommended && !isSelected && !isInTeam && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
                     isInTeam && !isSelected && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
                     isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)]",
-                    isMissing && !isUnavailable && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed",
+                    isMissing && !isUnavailable && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 cursor-not-allowed",
                     isUnavailable && "opacity-60 saturate-50 contrast-125 cursor-not-allowed"
                 )}
             >
@@ -98,7 +98,7 @@ export const UpdatedChampionItem = memo(({
                         </>
                     ) : (
                         <div className="bg-slate-900/80 border border-slate-700 text-slate-400 text-[9px] px-1 py-0 h-4 font-bold leading-none rounded-sm flex items-center">
-                            Missing
+                            Unowned
                         </div>
                     )}
                 </div>
@@ -155,14 +155,14 @@ export const UpdatedChampionItem = memo(({
             isRecommended && !isSelected && !isInTeam && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
             isInTeam && !isSelected && !isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.3)] z-10",
             isUnavailable && "ring-2 ring-offset-2 ring-offset-slate-950 ring-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)] z-10",
-            isMissing && !isUnavailable && "opacity-60 grayscale hover:grayscale-0 cursor-not-allowed",
+            isMissing && !isUnavailable && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 cursor-not-allowed",
             isUnavailable && "opacity-60 saturate-50 contrast-125 cursor-not-allowed"
             )}>
             {/* Top Section: Smaller Portrait */}
             <div className={cn(
             "relative aspect-square w-full overflow-hidden border-b-2",
             classColors.bg,
-            isMissing ? "border-slate-800" : getStarBorderClass(item.stars)
+            isMissing ? "border-slate-700 border-dashed" : getStarBorderClass(item.stars)
             )}>
             <Image
             src={getChampionImageUrlOrPlaceholder(item.champion.images, '128')}
@@ -239,7 +239,7 @@ export const UpdatedChampionItem = memo(({
                             )}
                         </>
                     ) : (
-                        <span className="text-slate-500">Not in roster</span>
+                        <span className="text-slate-500">Unowned</span>
                     )}
                 </div>
             </div>

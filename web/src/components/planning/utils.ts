@@ -1,5 +1,6 @@
 import { RosterWithChampion, QuestWithRelations, EncounterWithRelations } from "./types";
 import { Tag } from "@prisma/client";
+import { hasObtainableStarInRange } from "@/lib/champion-obtainable";
 
 type RestrictionInput = {
     minStarLevel?: number | null;
@@ -11,8 +12,19 @@ type RestrictionInput = {
 const matchesRestrictions = (restrictions: RestrictionInput | undefined, r: RosterWithChampion): boolean => {
     if (!restrictions) return true;
 
-    if (restrictions.minStarLevel && !r.isUnowned && r.stars < restrictions.minStarLevel) return false;
-    if (restrictions.maxStarLevel && !r.isUnowned && r.stars > restrictions.maxStarLevel) return false;
+    if (r.isUnowned) {
+        if (restrictions.minStarLevel || restrictions.maxStarLevel) {
+            if (r.stars > 0) {
+                if (restrictions.minStarLevel && r.stars < restrictions.minStarLevel) return false;
+                if (restrictions.maxStarLevel && r.stars > restrictions.maxStarLevel) return false;
+            } else if (!hasObtainableStarInRange(r.champion, restrictions.minStarLevel, restrictions.maxStarLevel)) {
+                return false;
+            }
+        }
+    } else {
+        if (restrictions.minStarLevel && r.stars < restrictions.minStarLevel) return false;
+        if (restrictions.maxStarLevel && r.stars > restrictions.maxStarLevel) return false;
+    }
     if (
         restrictions.requiredClasses &&
         restrictions.requiredClasses.length > 0 &&
@@ -67,6 +79,7 @@ export const getValidRosterCountForChampion = (
 ) => {
     return roster.filter(r => 
         r.championId === championId && 
+        !r.isUnowned &&
         isChampionValidForEncounterOrQuest(r, quest, encounter)
     ).length;
 };

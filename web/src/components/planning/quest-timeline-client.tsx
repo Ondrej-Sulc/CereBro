@@ -275,7 +275,7 @@ const isChampionUnavailableForEncounter = ({
     quest: QuestTimelineProps["quest"];
     encounter: EncounterWithRelations;
 }): boolean => {
-    if (!userChamp || quest.teamLimit !== null || selections[encounterId] === userChamp.id) {
+    if (!userChamp || userChamp.isUnowned || quest.teamLimit !== null || selections[encounterId] === userChamp.id) {
         return false;
     }
 
@@ -832,13 +832,17 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         // Find highest version in roster that matches restrictions
         const validRosterEntries = roster
             .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
-            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
+            .sort((a, b) => {
+                if (a.isUnowned !== b.isUnowned) return a.isUnowned ? 1 : -1;
+                return b.stars - a.stars || b.rank - a.rank;
+            });
 
         // Best version that is either unused or used in THIS encounter
         const userChamp = validRosterEntries.find(r => 
             !Object.values(selections).includes(r.id) || 
             selections[encounter.id] === r.id
         ) || validRosterEntries[0];
+        const isMissing = !userChamp || userChamp.isUnowned;
 
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
         
@@ -861,13 +865,13 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             <div
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (userChamp && !isUnavailable) {
+                    if (userChamp && !userChamp.isUnowned && !isUnavailable) {
                         handleSelectCounter(encounter.id, userChamp.id);
                     }
                 }}
                 className={cn(
                     "flex flex-col gap-1.5", 
-                    isUnavailable ? "cursor-not-allowed" : "cursor-pointer group"
+                    (isUnavailable || isMissing) ? "cursor-not-allowed" : "cursor-pointer group"
                 )}
             >
                 <div className="relative">
@@ -898,7 +902,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                         }}
                         isSelected={isSelected}
                         isRecommended={!isSelected && isRecommendedTab}
-                        isMissing={!userChamp}
+                        isMissing={isMissing}
                         isInTeam={isChampInTeam}
                         isUnavailable={isUnavailable}
                         popularityLabel={!isCompact ? popularityLabel : undefined}
@@ -911,11 +915,15 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const renderListPick = (p: PickCounterWithChampion, encounter: EncounterWithRelations) => {
         const validRosterEntries = roster
             .filter(r => r.championId === p.championId && isChampionValidForEncounterOrQuest(r, quest, encounter))
-            .sort((a, b) => b.stars - a.stars || b.rank - a.rank);
+            .sort((a, b) => {
+                if (a.isUnowned !== b.isUnowned) return a.isUnowned ? 1 : -1;
+                return b.stars - a.stars || b.rank - a.rank;
+            });
         const userChamp = validRosterEntries.find(r => 
             !Object.values(selections).includes(r.id) || 
             selections[encounter.id] === r.id
         ) || validRosterEntries[0];
+        const isMissing = !userChamp || userChamp.isUnowned;
         
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
         const isInTeam = Object.values(selections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
@@ -941,14 +949,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 key={p.championId} 
                 className={cn(
                     "flex bg-slate-900/40 rounded-2xl border transition-all duration-300 group/pick-card shadow-lg overflow-hidden",
-                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : "cursor-pointer bg-slate-900/40 backdrop-blur-md shadow-xl",
+                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : isMissing ? "cursor-not-allowed border-slate-800/80 bg-slate-900/40 backdrop-blur-md shadow-xl" : "cursor-pointer bg-slate-900/40 backdrop-blur-md shadow-xl",
                     !isUnavailable && isSelected && "border-sky-500/60 ring-1 ring-sky-500/30 bg-sky-950/20 shadow-sky-500/10",
                     !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 bg-emerald-950/10 shadow-emerald-500/10",
                     !isUnavailable && !isSelected && !isInTeam && cn("border-slate-800/80 hover:bg-slate-800/60 hover:border-slate-600", classColors.hoverBorder)
                 )}
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (userChamp && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
+                    if (userChamp && !userChamp.isUnowned && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
                 }}
             >
                 {/* Champion Side (Main Card) */}
@@ -982,7 +990,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             // We handle borders/selection on the outer container
                             isSelected={false}
                             isRecommended={false}
-                            isMissing={!userChamp}
+                            isMissing={isMissing}
                             isInTeam={false}
                             isUnavailable={false}
                         />

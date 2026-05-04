@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { ChampionImages } from "@/types/champion";
 import { cache } from "react";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { getObtainableStarLevels } from "@/lib/champion-obtainable";
 
 function PlayerCount({ count, className, iconOnly = false }: { count: number; className?: string; iconOnly?: boolean }) {
     if (count <= 0) return null;
@@ -215,14 +216,18 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         }
     }));
 
-    const ownedChampionIds = new Set(rosterEntries.map(r => r.championId));
-    const unownedChampions = allChampions.filter(c => !ownedChampionIds.has(c.id));
+    const ownedChampionStars = new Set(rosterEntries.map(r => `${r.championId}:${r.stars}`));
+    const unownedChampions = allChampions.flatMap(c =>
+        getObtainableStarLevels(c)
+            .filter(stars => !ownedChampionStars.has(`${c.id}:${stars}`))
+            .map(stars => ({ champion: c, stars }))
+    );
     
-    const unownedEntries: RosterWithChampion[] = unownedChampions.map(c => ({
-        id: `unowned-${c.id}`,
+    const unownedEntries: RosterWithChampion[] = unownedChampions.map(({ champion: c, stars }) => ({
+        id: `unowned-${c.id}-${stars}`,
         playerId: activePlayer.id,
         championId: c.id,
-        stars: 0,
+        stars,
         rank: 0,
         sigLevel: 0,
         isAwakened: false,

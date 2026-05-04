@@ -31,6 +31,7 @@ import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { EnhancedCountersMap, PickCounterWithChampion, PopularCountersMap } from "@/app/actions/quests";
 import { Champion } from "@/types/champion";
 import { FilterMetadata } from "../types";
+import { isChampionValidForEncounterOrQuest } from "../utils";
 
 type EncounterTab = "recommended" | "featured" | "alliance";
 
@@ -581,21 +582,18 @@ function RosterSelector({
                                     )}
                                 </div>
                                 {(() => {
-                                    let encounterRoster = filteredGlobalRoster.filter(r => {
-                                        if (quest.minStarLevel && !r.isUnowned && r.stars < quest.minStarLevel) return false;
-                                        if (quest.maxStarLevel && !r.isUnowned && r.stars > quest.maxStarLevel) return false;
-                                        if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
-                                        if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                            const hasAllTags = quest.requiredTags.every((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-                                            if (!hasAllTags) return false;
-                                        }
-                                        if (encounter.minStarLevel && !r.isUnowned && r.stars < encounter.minStarLevel) return false;
-                                        if (encounter.maxStarLevel && !r.isUnowned && r.stars > encounter.maxStarLevel) return false;
-                                        if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
-                                        if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                            const hasAllTags = encounter.requiredTags.every(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                            if (!hasAllTags) return false;
-                                        }
+                                    let encounterRoster = filteredGlobalRoster.filter(r =>
+                                        isChampionValidForEncounterOrQuest(r, quest, encounter)
+                                    );
+                                    const validOwnedChampionIds = new Set(
+                                        encounterRoster.filter(r => !r.isUnowned).map(r => r.championId)
+                                    );
+                                    const seenUnownedChampionIds = new Set<number>();
+                                    encounterRoster = encounterRoster.filter(r => {
+                                        if (!r.isUnowned) return true;
+                                        if (validOwnedChampionIds.has(r.championId)) return false;
+                                        if (seenUnownedChampionIds.has(r.championId)) return false;
+                                        seenUnownedChampionIds.add(r.championId);
                                         return true;
                                     });
                                     if (quest.teamLimit === null) {
@@ -607,6 +605,7 @@ function RosterSelector({
                                             return acc;
                                         }, {} as Record<number, number>);
                                         const availableCount = encounterRoster.reduce((acc, r) => {
+                                            if (r.isUnowned) return acc;
                                             acc[r.championId] = (acc[r.championId] || 0) + 1;
                                             return acc;
                                         }, {} as Record<number, number>);
@@ -627,7 +626,12 @@ function RosterSelector({
                                         if (nameCompare !== 0) return nameCompare;
                                         return a.id.localeCompare(b.id);
                                     });
-                                    if (roster.length === 0) return <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl"><p className="text-slate-400 text-lg">Your roster is empty.</p><p className="text-slate-500 text-sm mt-2">Go to the Roster section to add some champions before planning!</p></div>;
+                                    if (!roster.some(r => !r.isUnowned)) return (
+                                        <div className="p-8 text-center border border-dashed border-slate-700 bg-slate-900/30 rounded-xl">
+                                            <p className="text-slate-400 text-lg">Your roster has not been added yet.</p>
+                                            <p className="text-slate-500 text-sm mt-2">Go to your profile roster and update your champions before planning.</p>
+                                        </div>
+                                    );
                                     if (encounterRoster.length === 0) return <div className="p-6 text-center border border-dashed border-slate-800 bg-slate-900/20 rounded-xl"><p className="text-slate-400">No champions in your roster match the current filters or quest restrictions.</p></div>;
                                     return (
                                         <div className="space-y-4">
@@ -637,7 +641,14 @@ function RosterSelector({
                                                     const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
                                                     const isInTeam = Object.values(selections).includes(r.id);
                                                     return (
-                                                        <div key={r.id} onClick={() => handleSelectCounter(encounter.id, r.id)} title={`${r.champion.name}${r.isUnowned ? ' (Unowned)' : ` - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}`} className="cursor-pointer">
+                                                        <div
+                                                            key={r.id}
+                                                            onClick={() => {
+                                                                if (!r.isUnowned) handleSelectCounter(encounter.id, r.id);
+                                                            }}
+                                                            title={`${r.champion.name}${r.isUnowned ? ' (Unowned)' : ` - ${r.stars}★ Rank ${r.rank} Sig ${r.sigLevel || 0}`}`}
+                                                            className={r.isUnowned ? "cursor-not-allowed" : "cursor-pointer"}
+                                                        >
                                                             <UpdatedChampionItem item={{ stars: r.stars, rank: r.rank, isAwakened: r.isAwakened, sigLevel: r.sigLevel, powerRating: r.powerRating, champion: { id: r.champion.id, name: r.champion.shortName || r.champion.name, championClass: r.champion.class, images: r.champion.images }, isAscended: r.isAscended, ascensionLevel: r.ascensionLevel }} isSelected={isSelected} isRecommended={isRecommended} isInTeam={isInTeam} isMissing={r.isUnowned} />
                                                         </div>
                                                     );

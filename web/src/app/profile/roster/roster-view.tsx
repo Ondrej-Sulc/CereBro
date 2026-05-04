@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
+import { isChampionObtainableAs } from "@/lib/champion-obtainable";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
@@ -344,10 +345,18 @@ export function RosterView({
 
     if (showUnowned) {
       const ownedChampionIds = new Set(roster.map(r => r.championId));
-      const unownedChampions = allChampions.filter(c => !ownedChampionIds.has(c.id));
+      const ownedChampionStars = new Set(roster.map(r => `${r.championId}:${r.stars}`));
+      const hasStarFilter = filterStars.length > 0;
+      const unownedChampions = allChampions.filter(c => {
+        if (!hasStarFilter) return !ownedChampionIds.has(c.id);
+
+        return filterStars.some(stars =>
+          isChampionObtainableAs(c, stars) && !ownedChampionStars.has(`${c.id}:${stars}`)
+        );
+      });
 
       const unownedEntries: ProfileRosterEntry[] = unownedChampions.map(c => ({
-        id: `unowned-${c.id}`,
+        id: hasStarFilter ? `unowned-${c.id}-${filterStars.join("-")}` : `unowned-${c.id}`,
         playerId: roster[0]?.playerId || '',
         championId: c.id,
         stars: 0,
