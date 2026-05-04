@@ -21,10 +21,10 @@ const matchesRestrictions = (restrictions: RestrictionInput | undefined, r: Rost
         return false;
     }
     if (restrictions.requiredTags && restrictions.requiredTags.length > 0) {
-        const hasTag = restrictions.requiredTags.some((tag) =>
+        const hasAllTags = restrictions.requiredTags.every((tag) =>
             r.champion.tags?.some(ct => ct.id === tag.id)
         );
-        if (!hasTag) return false;
+        if (!hasAllTags) return false;
     }
 
     return true;

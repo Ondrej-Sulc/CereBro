@@ -586,15 +586,15 @@ function RosterSelector({
                                         if (quest.maxStarLevel && !r.isUnowned && r.stars > quest.maxStarLevel) return false;
                                         if (quest.requiredClasses && quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(r.champion.class)) return false;
                                         if (quest.requiredTags && quest.requiredTags.length > 0) {
-                                            const hasTag = quest.requiredTags.some((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
-                                            if (!hasTag) return false;
+                                            const hasAllTags = quest.requiredTags.every((tag: Tag) => r.champion.tags?.some(ct => ct.id === tag.id));
+                                            if (!hasAllTags) return false;
                                         }
                                         if (encounter.minStarLevel && !r.isUnowned && r.stars < encounter.minStarLevel) return false;
                                         if (encounter.maxStarLevel && !r.isUnowned && r.stars > encounter.maxStarLevel) return false;
                                         if (encounter.requiredClasses && encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(r.champion.class)) return false;
                                         if (encounter.requiredTags && encounter.requiredTags.length > 0) {
-                                            const hasTag = encounter.requiredTags.some(tag => r.champion.tags?.some(ct => ct.id === tag.id));
-                                            if (!hasTag) return false;
+                                            const hasAllTags = encounter.requiredTags.every(tag => r.champion.tags?.some(ct => ct.id === tag.id));
+                                            if (!hasAllTags) return false;
                                         }
                                         return true;
                                     });

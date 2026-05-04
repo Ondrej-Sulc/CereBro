@@ -1130,10 +1130,10 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
         if (quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(champ.class)) throw new Error(`Quest requires class: ${quest.requiredClasses.join(", ")}`);
         
         if (quest.requiredTags.length > 0) {
-            const hasTag = quest.requiredTags.some(qt => champ.tags.some(ct => ct.id === qt.id));
-            if (!hasTag) {
+            const hasAllTags = quest.requiredTags.every(qt => champ.tags.some(ct => ct.id === qt.id));
+            if (!hasAllTags) {
                 const tagNames = quest.requiredTags.map(t => t.name).join(", ");
-                throw new Error(`Quest requires champions with one of: ${tagNames}`);
+                throw new Error(`Quest requires champions with all of: ${tagNames}`);
             }
         }
 
