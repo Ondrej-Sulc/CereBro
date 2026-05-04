@@ -610,6 +610,7 @@ function RosterSelector({
                                             return acc;
                                         }, {} as Record<number, number>);
                                         encounterRoster = encounterRoster.filter(r => {
+                                            if (r.isUnowned) return true;
                                             if (selections[encounter.id] === r.id) return true;
                                             return (otherSelectionsCount[r.championId] || 0) < (availableCount[r.championId] || 0);
                                         });
