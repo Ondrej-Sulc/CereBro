@@ -7,6 +7,7 @@ import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { Prisma } from "@prisma/client";
 import { withRouteContext } from "@/lib/with-request-context";
+import { maxAscensionLevelForRarity } from "@/lib/mcoc-prestige";
 
 const addSchema = z.object({
   championId: z.number().int().min(1),
@@ -17,6 +18,14 @@ const addSchema = z.object({
   isAscended: z.boolean().optional().default(false),
   ascensionLevel: z.number().int().min(0).max(5).optional().default(0),
   targetPlayerId: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.ascensionLevel > maxAscensionLevelForRarity(data.stars)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["ascensionLevel"],
+      message: "Ascension level is only allowed for 7-star champions.",
+    });
+  }
 });
 
 async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchema>) {

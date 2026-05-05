@@ -106,26 +106,59 @@ export function projectMcocPrestige({
   return applyAscensionToPrestige(basePrestige, stat?.rarity, ascensionLevel);
 }
 
+/**
+ * Expands an ascension-free prestige curve. Returned points are base
+ * ascensionLevel=0 values; apply ascension with projectMcocPrestigeFromCurve.
+ */
 export function expandMcocPrestigeCurve({
   prestigeData,
   stat,
-  ascensionLevel = 0,
 }: {
   prestigeData: McocPrestigeEndpoint[];
   stat: McocPrestigeStat;
-  ascensionLevel?: number;
 }): McocPrestigePoint[] {
   const maxSig = maxSigForRarity(stat.rarity);
   const points: McocPrestigePoint[] = [];
+  const rows = prestigeData.filter(row => row.rarity === stat.rarity && row.rank === stat.rank);
+  const prestige0 = rows.find(row => row.sig === 0)?.prestige ?? stat.prestige ?? null;
+  const prestige1 = rows.find(row => row.sig === 1)?.prestige ?? null;
+  const prestigeMax = rows.find(row => row.sig === maxSig)?.prestige ?? null;
+  const curve = stat.rarity
+    ? MCOC_PRESTIGE_RARITY_CURVES[stat.rarity as keyof typeof MCOC_PRESTIGE_RARITY_CURVES]
+    : undefined;
+  const prestigeBySig = new Map<number, number>();
+
+  if (prestige0 == null) return points;
 
   for (let sig = 0; sig <= maxSig; sig++) {
-    const prestige = projectMcocPrestige({ prestigeData, stat, sigLevel: sig, ascensionLevel });
+    if (sig === 0) {
+      prestigeBySig.set(sig, prestige0);
+    } else if (prestige1 == null) {
+      prestigeBySig.set(sig, prestige0);
+    } else if (sig === 1) {
+      prestigeBySig.set(sig, prestige1);
+    } else if (prestigeMax == null || prestigeMax <= prestige1) {
+      prestigeBySig.set(sig, prestige1);
+    } else if (sig >= maxSig) {
+      prestigeBySig.set(sig, prestigeMax);
+    } else {
+      const factor = curve?.[sig - 1];
+      prestigeBySig.set(sig, factor == null ? prestige1 : Math.round(prestige1 + (prestigeMax - prestige1) * factor));
+    }
+  }
+
+  for (let sig = 0; sig <= maxSig; sig++) {
+    const prestige = prestigeBySig.get(sig);
     if (prestige != null) points.push({ sig, prestige });
   }
 
   return points;
 }
 
+/**
+ * Projects prestige from an ascension-free curve. The curve must contain base
+ * prestige values only; ascension is applied exactly once here.
+ */
 export function projectMcocPrestigeFromCurve({
   curve,
   sigLevel,

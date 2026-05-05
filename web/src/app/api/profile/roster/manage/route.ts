@@ -6,6 +6,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { withRouteContext } from "@/lib/with-request-context";
+import { clampAscensionLevelForRarity } from "@/lib/mcoc-prestige";
 
 const updateSchema = z.object({
   id: z.string(),
@@ -62,13 +63,18 @@ export const PUT = withRouteContext(async (req: Request) => {
       );
     }
 
+    const normalizedAscensionLevel =
+      ascensionLevel === undefined
+        ? undefined
+        : clampAscensionLevelForRarity(ascensionLevel, rosterEntry.stars);
+
     const updatedRoster = await prisma.roster.update({
       where: { id },
       data: {
         rank,
         isAwakened,
         isAscended,
-        ascensionLevel,
+        ascensionLevel: normalizedAscensionLevel,
         sigLevel,
       },
       include: {

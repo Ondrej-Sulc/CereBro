@@ -76,7 +76,9 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
     const classColors = getChampionClassColors(item.champion.class);
     const maxRank = getMaxRank(item.stars);
     const maxSig = maxSigForRarity(item.stars);
-    const sigQuickValues = item.stars >= 5 ? [0, 50, 100, 150, 200] : [0, 25, 50, 75, 99];
+    const sigQuickValues = Array.from(
+        new Set([0, 0.25, 0.5, 0.75, 1].map(value => Math.max(0, Math.min(maxSig, Math.round(maxSig * value)))))
+    ).sort((a, b) => a - b);
     const heroUrl = getChampionImageUrl(item.champion.images, 'full', 'hero');
 
     const setSig = (val: number) => {
