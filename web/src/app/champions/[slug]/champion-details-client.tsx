@@ -17,44 +17,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
+import {
+  buildMultiCurveData,
+  curveLabel,
+  groupAbilityTexts,
+  normalizeChampionAbilityTextTemplate,
+  resolveChampionAbilityTextValue,
+  validateChampionAbilityTextTemplate,
+  type TemplateNode,
+} from "@/lib/champion-ability-text"
 import { cn } from "@/lib/utils"
 import { ChampionImages } from "@/types/champion"
 
-type TemplateNode =
-  | { type: "text"; value: string }
-  | { type: "value"; key: string; placeholderIndex: number; source?: TemplateValueSource }
-  | { type: "glossary"; id: string; label: string }
-  | { type: "color"; color: string; children: TemplateNode[] }
-
-type TemplateValueSource =
-  | { kind: "placeholder" }
-  | {
-    kind: "abilityParam"
-    componentId?: string
-    buffType?: string
-    paramName?: string
-    field?: string
-    rawValue?: number
-    curveId?: string
-    secondaryCurveId?: string
-    scaleVar?: string
-    baseVal?: number
-    chance?: number
-    duration?: number
-    atkFrac?: number
-    f22?: number
-    f23?: number
-    f24?: number
-    f27?: number
-    display?: { multiplier?: number; precision?: number }
-  }
-
 const CURVE_COLORS = ["#38bdf8", "#fbbf24", "#a78bfa", "#34d399", "#fb7185", "#f97316", "#22c55e", "#e879f9"]
-
-type TextTemplate = {
-  raw: string
-  blocks?: Array<{ type: "paragraph"; children: TemplateNode[] }>
-}
 
 type ChampionDetailsPayload = {
   id: number
@@ -281,7 +256,7 @@ export function ChampionDetailsClient({
                 </div>
                 {bioTexts.map(record => (
                   <div key={record.id} className="text-sm leading-7 text-slate-300">
-                    <RenderedTemplate template={record.template as TextTemplate} glossaryById={glossaryById} curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} />
+                    <RenderedTemplate template={record.template} glossaryById={glossaryById} curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} />
                   </div>
                 ))}
               </div>
@@ -614,7 +589,7 @@ function TextPanel({
                   )}
                   <div className="space-y-3 text-slate-300">
                     {group.records.map(record => (
-                      <RenderedTemplate key={record.id} template={record.template as TextTemplate} glossaryById={glossaryById} curves={curves} sigLevel={sigLevel} stat={stat} />
+                      <RenderedTemplate key={record.id} template={record.template} glossaryById={glossaryById} curves={curves} sigLevel={sigLevel} stat={stat} />
                     ))}
                   </div>
                 </div>
@@ -636,13 +611,23 @@ function RenderedTemplate({
   sigLevel = 200,
   stat,
 }: {
-  template: TextTemplate
+  template: unknown
   glossaryById: Map<string, GlossaryTerm>
   curves?: ChampionDetailsPayload["abilityCurves"]
   sigLevel?: number
   stat?: ChampionStatRow
 }) {
-  const blocks = template.blocks?.length ? template.blocks : [{ type: "paragraph" as const, children: [{ type: "text" as const, value: template.raw }] }]
+  let blocks: ReturnType<typeof normalizeChampionAbilityTextTemplate>
+  try {
+    blocks = normalizeChampionAbilityTextTemplate(validateChampionAbilityTextTemplate(template))
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Champion Ability Text template is malformed."
+    return (
+      <div className="rounded border border-amber-500/40 bg-amber-950/30 px-2 py-1 text-sm text-amber-100">
+        {message}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-1.5 text-sm leading-6 text-slate-300">
@@ -663,17 +648,24 @@ function renderNode(
 ): ReactNode {
   if (node.type === "text") return <span key={index}>{node.value}</span>
   if (node.type === "value") {
-    const curve = findCurveForValueNode(node, curves, stat)
-    const resolvedValue = resolveTemplateValue(node, curve, sigLevel, stat)
+    const resolved = resolveChampionAbilityTextValue({ node, curves, sigLevel, stat })
     return (
       <Tooltip key={index}>
         <TooltipTrigger asChild>
-          <span onClick={(e) => e.preventDefault()} className="inline-flex cursor-help items-center rounded bg-slate-800 px-1.5 py-0.5 text-xs font-semibold text-slate-100">
-            {resolvedValue == null ? node.placeholderIndex : formatCurveValue(resolvedValue, curve, node.source)}
+          <span
+            onClick={(e) => e.preventDefault()}
+            className={cn(
+              "inline-flex cursor-help items-center rounded px-1.5 py-0.5 text-xs font-semibold",
+              resolved.status === "resolved"
+                ? "bg-slate-800 text-slate-100"
+                : "border border-amber-500/40 bg-amber-950/40 text-amber-100"
+            )}
+          >
+            {resolved.status === "resolved" ? resolved.displayValue : `Error ${node.placeholderIndex}`}
           </span>
         </TooltipTrigger>
         <TooltipContent className="border-slate-700 bg-slate-950 text-xs text-slate-300">
-          {curve ? `Resolved at Sig ${sigLevel}.` : resolvedValue == null ? "Runtime placeholder not resolved yet." : "Resolved from game component data."}
+          {resolved.detail}
         </TooltipContent>
       </Tooltip>
     )
@@ -989,301 +981,6 @@ function AbilityTooltipContent({ item, description, color }: { item: GroupedAbil
       </div>
     </div>
   )
-}
-
-function findCurveForValueNode(
-  node: Extract<TemplateNode, { type: "value" }>,
-  curves: ChampionDetailsPayload["abilityCurves"],
-  stat?: ChampionStatRow
-) {
-  const source = node.source
-  if (!source || source.kind !== "abilityParam") return null
-  const explicitCurveId = source.curveId && source.curveId !== "none" ? source.curveId : null
-  const selectedPanelIds = new Set(stat?.sigAbilityIds ?? [])
-
-  const byComponentAndCurve = curves.find(curve => {
-    const params = curve.params as Record<string, unknown> | null
-    const curveSource = params && isRecord(params.source) ? params.source : null
-    return (
-      curveSource?.componentId === source.componentId &&
-      (!explicitCurveId || params?.sourceCurveId === explicitCurveId) &&
-      curveAppliesToValueSource(curve, source)
-    )
-  })
-  if (byComponentAndCurve) return byComponentAndCurve
-
-  const bySelectedPanel = curves.find(curve => {
-    const params = curve.params as Record<string, unknown> | null
-    const curveSource = params && isRecord(params.source) ? params.source : null
-    return (
-      typeof curveSource?.panelId === "string" &&
-      selectedPanelIds.has(curveSource.panelId) &&
-      curveSourceMatchesValueSource(curve, source) &&
-      curveAppliesToValueSource(curve, source)
-    )
-  })
-  if (bySelectedPanel) return bySelectedPanel
-
-  if (explicitCurveId) return null
-
-  return curves.find(curve => {
-    const params = curve.params as Record<string, unknown> | null
-    const curveSource = params && isRecord(params.source) ? params.source : null
-    return curveSource?.componentId === source.componentId && curveAppliesToValueSource(curve, source)
-  }) ?? null
-}
-
-function curveSourceMatchesValueSource(
-  curve: ChampionDetailsPayload["abilityCurves"][number],
-  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
-) {
-  const params = curve.params as Record<string, unknown> | null
-  const curveSource = params && isRecord(params.source) ? params.source : null
-  const ability = curveSource && isRecord(curveSource.ability) ? curveSource.ability : null
-  const abilityBuffType = typeof ability?.buffType === "string" ? ability.buffType : null
-
-  if (source.buffType && abilityBuffType && source.buffType !== abilityBuffType) return false
-  return true
-}
-
-function curveAppliesToValueSource(
-  curve: ChampionDetailsPayload["abilityCurves"][number],
-  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
-) {
-  const params = curve.params as Record<string, unknown> | null
-  const curveSource = params && isRecord(params.source) ? params.source : null
-  const ability = curveSource && isRecord(curveSource.ability) ? curveSource.ability : null
-  const display = params && isRecord(params.display) ? params.display : null
-  const abilityParamName = typeof ability?.paramName === "string" ? ability.paramName : null
-  const displayBaseField = typeof display?.baseField === "string" ? display.baseField : null
-
-  if (source.paramName && abilityParamName && source.paramName !== abilityParamName) return false
-  if (source.field && displayBaseField && source.field !== displayBaseField) return false
-  return true
-}
-
-function resolveTemplateValue(
-  node: Extract<TemplateNode, { type: "value" }>,
-  curve: ChampionDetailsPayload["abilityCurves"][number] | null,
-  sigLevel: number,
-  stat?: ChampionStatRow
-) {
-  const source = node.source
-  if (!source || source.kind !== "abilityParam") {
-    return curve ? evaluateCurveDisplay(curve, sigLevel) : null
-  }
-
-  const buffType = source.buffType ?? ""
-  if (buffType === "fury" && stat?.attack && curve) {
-    return (evaluateCurveDisplay(curve, sigLevel) / 100) * stat.attack
-  }
-  if (buffType === "fury" && source.paramName === "attackPercent" && stat?.attack && typeof source.rawValue === "number") {
-    return stat.attack * source.rawValue
-  }
-
-  if (["armor_up", "resist_physical", "resist_magic", "crit_resist"].includes(buffType) && stat?.challengeRating && curve) {
-    const percent = evaluateCurveDisplay(curve, sigLevel) / 100
-    return percentToRating(percent, stat.challengeRating)
-  }
-  if ((isRatingBuffType(buffType) || source.paramName === "ratingPercent") && stat?.challengeRating && typeof source.rawValue === "number") {
-    return percentToRating(Math.abs(source.rawValue), stat.challengeRating)
-  }
-
-  if (curve) return evaluateCurveDisplay(curve, sigLevel)
-  if (source.scaleVar === "self.attack" && source.display?.multiplier !== 100 && stat?.attack && typeof source.rawValue === "number") {
-    // Prevent duration, chance, maxStacks, or count from mistakenly scaling with Attack Rating
-    if (source.paramName !== "duration" && source.paramName !== "maxStacks" && source.paramName !== "chance" && source.paramName !== "count" && source.paramName !== "time") {
-      return stat.attack * source.rawValue
-    }
-  }
-  return evaluateStaticValueSource(source)
-}
-
-function evaluateStaticValueSource(source?: TemplateValueSource) {
-  if (!source || source.kind !== "abilityParam" || typeof source.rawValue !== "number") return null
-  const multiplier = source.display?.multiplier ?? 1
-  return source.rawValue * multiplier
-}
-
-function percentToRating(percent: number, challengeRating: number) {
-  if (!Number.isFinite(percent) || percent <= 0 || percent >= 1) return 0
-  const challengeScalar = 1500 + challengeRating * 5
-  return (percent * challengeScalar) / (1 - percent)
-}
-
-function isRatingBuffType(buffType: string) {
-  return [
-    "armor_up",
-    "armor_pen",
-    "block_penetration",
-    "crit_rating",
-    "crit_resist",
-    "resist_physical",
-    "resist_magic",
-  ].includes(buffType)
-}
-
-function buildMultiCurveData(curves: ChampionDetailsPayload["abilityCurves"], stat?: ChampionStatRow, sigLevel?: number) {
-  if (!curves.length) return []
-  const minSig = Math.max(1, Math.min(...curves.map(curve => curve.minSig ?? 1)))
-  const maxSig = Math.max(...curves.map(curve => curve.maxSig ?? 200))
-  const step = Math.max(1, Math.ceil((maxSig - minSig) / 80))
-  const data: Array<Record<string, number>> = []
-
-  for (let sig = minSig; sig <= maxSig; sig += step) {
-    data.push(buildMultiCurvePoint(curves, sig, stat))
-  }
-
-  // Inject the current selection if it was skipped by the step
-  if (sigLevel !== undefined && sigLevel >= minSig && sigLevel <= maxSig) {
-    if (!data.some(p => p.sig === sigLevel)) {
-      data.push(buildMultiCurvePoint(curves, sigLevel, stat))
-      data.sort((a, b) => a.sig - b.sig)
-    }
-  }
-
-  if (data[data.length - 1]?.sig !== maxSig) {
-    data.push(buildMultiCurvePoint(curves, maxSig, stat))
-    data.sort((a, b) => a.sig - b.sig)
-  }
-  return data
-}
-
-function buildMultiCurvePoint(curves: ChampionDetailsPayload["abilityCurves"], sig: number, stat?: ChampionStatRow) {
-  const point: Record<string, number> = { sig }
-  curves.forEach((curve, index) => {
-    point[`curve${index}`] = Number(evaluateCurveOutput(curve, sig, stat).toFixed(4))
-  })
-  return point
-}
-
-function buildCurveData(curve: ChampionDetailsPayload["abilityCurves"][number]) {
-  const params = curve.params as Record<string, unknown> | null
-  if (!params) return []
-
-  const points = Array.isArray(params.points) ? params.points : null
-  if (points) {
-    return points
-      .map(point => {
-        if (!point || typeof point !== "object") return null
-        const p = point as Record<string, unknown>
-        return { sig: Number(p.sig), value: Number(p.value) }
-      })
-      .filter((point): point is { sig: number; value: number } => !!point && Number.isFinite(point.sig) && Number.isFinite(point.value))
-  }
-
-  const f2 = readNumber(params, ["f2", "base", "coefficient"])
-  const f3 = readNumber(params, ["f3", "linear"]) ?? 0
-  const f4 = readNumber(params, ["f4", "offset"]) ?? 0
-  const f5 = readNumber(params, ["f5", "exponent"]) ?? 1
-  if (f2 == null) return []
-
-  const minSig = curve.minSig ?? 0
-  const maxSig = curve.maxSig ?? 200
-  const step = Math.max(1, Math.ceil((maxSig - minSig) / 80))
-  const data: Array<{ sig: number; value: number }> = []
-  for (let sig = minSig; sig <= maxSig; sig += step) {
-    data.push({ sig, value: Number(evaluateCurveDisplay(curve, sig).toFixed(4)) })
-  }
-  if (data[data.length - 1]?.sig !== maxSig) {
-    data.push({ sig: maxSig, value: Number(evaluateCurveDisplay(curve, maxSig).toFixed(4)) })
-  }
-  return data
-}
-
-function evaluateCurveDisplay(curve: ChampionDetailsPayload["abilityCurves"][number], sig: number) {
-  const params = curve.params as Record<string, unknown> | null
-  if (!params) return 0
-
-  const f2 = readNumber(params, ["f2", "base", "coefficient"]) ?? 0
-  const f3 = readNumber(params, ["f3", "linear"]) ?? 0
-  const f4 = readNumber(params, ["f4", "offset"]) ?? 0
-  const f5 = readNumber(params, ["f5", "exponent"]) ?? 1
-  const f6 = readNumber(params, ["f6", "cap"])
-  const formulaType = typeof params.formulaType === "string" ? params.formulaType : null
-  const source = isRecord(params.source) ? params.source : null
-  const ability = source && isRecord(source.ability) ? source.ability : null
-  const display = isRecord(params.display) ? params.display : null
-  const baseField = typeof display?.baseField === "string" ? display.baseField : null
-  const multiplier = readNumber(display ?? {}, ["multiplier"]) ?? 1
-  const base = baseField && ability ? readNumber(ability, [baseField]) ?? 0 : 0
-
-  let curveValue = 0
-  if (sig > 0) {
-    curveValue = formulaType === "legacyLogBaseMultiplier"
-      ? f2 * Math.log(sig) + f3 * sig + f4
-      : f2 * Math.pow(sig, f5) + f3 * sig + f4
-  }
-  if (f6 != null && Math.abs(f6) < 99999) {
-    curveValue = curveValue >= 0 ? Math.min(curveValue, f6) : Math.max(curveValue, f6)
-  }
-  return (base + curveValue) * multiplier
-}
-
-function evaluateCurveOutput(curve: ChampionDetailsPayload["abilityCurves"][number], sig: number, stat?: ChampionStatRow) {
-  const params = curve.params as Record<string, unknown> | null
-  const source = params && isRecord(params.source) ? params.source : null
-  const ability = source && isRecord(source.ability) ? source.ability : null
-  const buffType = typeof ability?.buffType === "string" ? ability.buffType : ""
-
-  if (buffType === "fury" && stat?.attack) {
-    return (evaluateCurveDisplay(curve, sig) / 100) * stat.attack
-  }
-
-  if (["armor_up", "resist_physical", "resist_magic", "crit_resist"].includes(buffType) && stat?.challengeRating) {
-    return percentToRating(evaluateCurveDisplay(curve, sig) / 100, stat.challengeRating)
-  }
-
-  return evaluateCurveDisplay(curve, sig)
-}
-
-function formatCurveValue(value: number, curve?: ChampionDetailsPayload["abilityCurves"][number] | null, source?: TemplateValueSource) {
-  const params = curve?.params as Record<string, unknown> | null | undefined
-  const display = params && isRecord(params.display) ? params.display : null
-  const outputPrecision = source?.kind === "abilityParam" && ["fury", "resist_physical", "resist_magic", "crit_resist", "armor_up"].includes(source.buffType ?? "")
-    ? 2
-    : null
-  const precision = outputPrecision ?? readNumber(display ?? {}, ["precision"]) ?? (source?.kind === "abilityParam" ? source.display?.precision ?? 1 : 1)
-  return value.toLocaleString("en-US", {
-    maximumFractionDigits: precision,
-    minimumFractionDigits: value % 1 === 0 ? 0 : Math.min(precision, 1),
-  })
-}
-
-function curveLabel(curve: ChampionDetailsPayload["abilityCurves"][number]) {
-  const params = curve.params as Record<string, unknown> | null
-  const source = params && isRecord(params.source) ? params.source : null
-  const ability = source && isRecord(source.ability) ? source.ability : null
-  const buffType = typeof ability?.buffType === "string" ? ability.buffType : ""
-  if (buffType) {
-    return buffType
-      .split("_")
-      .filter(Boolean)
-      .map(part => part[0]?.toUpperCase() + part.slice(1))
-      .join(" ")
-  }
-  return curve.curveId.split(":")[1] ?? curve.curveId
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value)
-}
-
-function readNumber(params: Record<string, unknown>, keys: string[]) {
-  for (const key of keys) {
-    const value = params[key]
-    if (typeof value === "number" && Number.isFinite(value)) return value
-    if (typeof value === "string" && Number.isFinite(Number(value))) return Number(value)
-  }
-  return null
-}
-
-function groupAbilityTexts<T extends { group: string }>(records: T[]) {
-  return records.reduce<Record<string, T[]>>((groups, record) => {
-    groups[record.group] ??= []
-    groups[record.group].push(record)
-    return groups
-  }, {})
 }
 
 function abilityTextGroupTitle(group: string) {
