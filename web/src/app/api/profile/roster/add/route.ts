@@ -19,11 +19,12 @@ const addSchema = z.object({
   ascensionLevel: z.number().int().min(0).max(5).optional().default(0),
   targetPlayerId: z.string().optional(),
 }).superRefine((data, ctx) => {
-  if (data.ascensionLevel > maxAscensionLevelForRarity(data.stars)) {
+  const maxAscensionLevel = maxAscensionLevelForRarity(data.stars);
+  if (data.ascensionLevel > maxAscensionLevel) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["ascensionLevel"],
-      message: "Ascension level is only allowed for 7-star champions.",
+      message: `Ascension level exceeds the maximum allowed for this rarity (${maxAscensionLevel}).`,
     });
   }
 });

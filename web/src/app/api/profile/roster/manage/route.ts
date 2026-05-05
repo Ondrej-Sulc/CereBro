@@ -63,10 +63,23 @@ export const PUT = withRouteContext(async (req: Request) => {
       );
     }
 
-    const normalizedAscensionLevel =
-      ascensionLevel === undefined
-        ? undefined
-        : clampAscensionLevelForRarity(ascensionLevel, rosterEntry.stars);
+    if (
+      ascensionLevel !== undefined &&
+      ascensionLevel !== clampAscensionLevelForRarity(ascensionLevel, rosterEntry.stars)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Invalid data",
+          details: [
+            {
+              path: ["ascensionLevel"],
+              message: "Ascension level exceeds the maximum allowed for this rarity.",
+            },
+          ],
+        },
+        { status: 400 }
+      );
+    }
 
     const updatedRoster = await prisma.roster.update({
       where: { id },
@@ -74,7 +87,7 @@ export const PUT = withRouteContext(async (req: Request) => {
         rank,
         isAwakened,
         isAscended,
-        ascensionLevel: normalizedAscensionLevel,
+        ascensionLevel,
         sigLevel,
       },
       include: {
