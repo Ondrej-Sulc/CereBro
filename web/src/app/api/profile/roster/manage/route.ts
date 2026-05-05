@@ -12,7 +12,7 @@ const updateSchema = z.object({
   rank: z.number().min(1).max(10).optional(),
   isAwakened: z.boolean().optional(),
   isAscended: z.boolean().optional(),
-  ascensionLevel: z.number().min(0).max(2).optional(),
+  ascensionLevel: z.number().min(0).max(5).optional(),
   sigLevel: z.number().min(0).max(200).optional(),
 });
 

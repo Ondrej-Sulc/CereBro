@@ -15,7 +15,7 @@ const addSchema = z.object({
   sigLevel: z.number().int().min(0).max(200).optional().default(0),
   isAwakened: z.boolean().optional().default(false),
   isAscended: z.boolean().optional().default(false),
-  ascensionLevel: z.number().int().min(0).max(2).optional().default(0),
+  ascensionLevel: z.number().int().min(0).max(5).optional().default(0),
   targetPlayerId: z.string().optional(),
 });
 

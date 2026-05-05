@@ -8,6 +8,7 @@ import { getChampionImageUrl, getMaxRank } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { maxSigForRarity } from "@/lib/mcoc-prestige";
 
 interface NewChampionFormData {
     championId: number | null;
@@ -34,7 +35,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
     const heroUrl = selectedChampion ? getChampionImageUrl(selectedChampion.images, 'full', 'hero') : null;
 
     const maxRank = getMaxRank(newChampion.stars);
-    const maxSig = newChampion.stars >= 5 ? 200 : 99;
+    const maxSig = maxSigForRarity(newChampion.stars);
     const sigQuickValues = newChampion.stars >= 5 ? [0, 50, 100, 150, 200] : [0, 25, 50, 75, 99];
 
     const setSig = (val: number) => {
@@ -45,7 +46,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
     const handleStarChange = (newStars: number) => {
         const newMaxRank = getMaxRank(newStars);
         const clampedRank = Math.min(newChampion.rank, newMaxRank);
-        const newMaxSig = newStars >= 5 ? 200 : 99;
+        const newMaxSig = maxSigForRarity(newStars);
         const clampedSig = Math.min(newChampion.sigLevel, newMaxSig);
         onNewChampionChange({...newChampion, stars: newStars, rank: clampedRank, sigLevel: clampedSig});
     };
