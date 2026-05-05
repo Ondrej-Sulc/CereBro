@@ -16,7 +16,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
-import { calculateMcocPrestige, maxSigForRarity } from "@/lib/mcoc-prestige"
+import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
 import { cn } from "@/lib/utils"
 import { ChampionImages } from "@/types/champion"
 
@@ -193,8 +193,12 @@ export function ChampionDetailsClient({
   const bioTexts = textGroups.bio ?? []
   const selectedRarityLabel = selectedStat?.rarityLabel ?? (selectedRarity ? `${selectedRarity}-star` : "No stats")
   const selectedCurves = champion.abilityCurves.filter(curve => (curve.maxSig ?? 200) === currentMaxSig)
-  const selectedBasePrestige = calculateMcocPrestige(champion.prestigeData, selectedStat, sigLevel)
-  const selectedPrestige = applyAscensionToPrestige(selectedBasePrestige, selectedStat?.rarity, ascensionLevel)
+  const selectedPrestige = projectMcocPrestige({
+    prestigeData: champion.prestigeData,
+    stat: selectedStat,
+    sigLevel,
+    ascensionLevel,
+  })
   const displayStat = useMemo(
     () => applyAscensionToStat(selectedStat, ascensionLevel),
     [selectedStat, ascensionLevel]
@@ -205,8 +209,8 @@ export function ChampionDetailsClient({
   const displayMaxStats = useMemo(
     () => ({
       ...maxStats,
-      health: applyAscensionToNumber(maxStats.health, selectedStat?.rarity, ascensionLevel),
-      attack: applyAscensionToNumber(maxStats.attack, selectedStat?.rarity, ascensionLevel),
+      health: applyAscensionToStatValue(maxStats.health, selectedStat?.rarity, ascensionLevel),
+      attack: applyAscensionToStatValue(maxStats.attack, selectedStat?.rarity, ascensionLevel),
     }),
     [maxStats, selectedStat?.rarity, ascensionLevel]
   )
@@ -337,7 +341,7 @@ export function ChampionDetailsClient({
                         max={currentMaxSig}
                         step={1}
                         value={[sigLevel]}
-                        onValueChange={val => setSigLevel(val[0])}
+                        onValueChange={(val: number[]) => setSigLevel(val[0])}
                         className="flex-1"
                       />
                       <span className="w-12 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-center font-mono text-sm text-slate-100">
@@ -451,27 +455,12 @@ function HeroMetric({ icon, label, value, accent }: { icon: ReactNode; label: st
   )
 }
 
-function ascensionMultiplier(rarity: number | null | undefined, ascensionLevel: number) {
-  return rarity === 7 && ascensionLevel > 0 ? Math.pow(1.08, ascensionLevel) : 1
-}
-
-function applyAscensionToNumber(value: number | null | undefined, rarity: number | null | undefined, ascensionLevel: number) {
-  if (value == null) return null
-  return Math.round(value * ascensionMultiplier(rarity, ascensionLevel))
-}
-
-function applyAscensionToPrestige(value: number | null | undefined, rarity: number | null | undefined, ascensionLevel: number) {
-  if (value == null) return null
-  const scaled = value * ascensionMultiplier(rarity, ascensionLevel)
-  return Math.round(scaled / 10) * 10
-}
-
 function applyAscensionToStat(stat: ChampionStatRow | undefined, ascensionLevel: number): ChampionStatRow | undefined {
   if (!stat) return stat
   return {
     ...stat,
-    health: applyAscensionToNumber(stat.health, stat.rarity, ascensionLevel),
-    attack: applyAscensionToNumber(stat.attack, stat.rarity, ascensionLevel),
+    health: applyAscensionToStatValue(stat.health, stat.rarity, ascensionLevel),
+    attack: applyAscensionToStatValue(stat.attack, stat.rarity, ascensionLevel),
   }
 }
 

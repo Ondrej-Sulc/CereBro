@@ -7,6 +7,7 @@ import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { Prisma } from "@prisma/client";
 import { withRouteContext } from "@/lib/with-request-context";
+import { maxAscensionLevelForRarity } from "@/lib/mcoc-prestige";
 
 const addSchema = z.object({
   championId: z.number().int().min(1),
@@ -15,8 +16,17 @@ const addSchema = z.object({
   sigLevel: z.number().int().min(0).max(200).optional().default(0),
   isAwakened: z.boolean().optional().default(false),
   isAscended: z.boolean().optional().default(false),
-  ascensionLevel: z.number().int().min(0).max(2).optional().default(0),
+  ascensionLevel: z.number().int().min(0).max(5).optional().default(0),
   targetPlayerId: z.string().optional(),
+}).superRefine((data, ctx) => {
+  const maxAscensionLevel = maxAscensionLevelForRarity(data.stars);
+  if (data.ascensionLevel > maxAscensionLevel) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["ascensionLevel"],
+      message: `Ascension level exceeds the maximum allowed for this rarity (${maxAscensionLevel}).`,
+    });
+  }
 });
 
 async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchema>) {

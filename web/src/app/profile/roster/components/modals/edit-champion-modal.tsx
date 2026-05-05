@@ -9,6 +9,7 @@ import { getChampionImageUrl, getMaxRank } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ProfileRosterEntry, PrestigePoint } from "../../types";
+import { maxSigForRarity, projectMcocPrestigeFromCurve } from "@/lib/mcoc-prestige";
 
 interface EditChampionModalProps {
     item: ProfileRosterEntry | null;
@@ -17,26 +18,6 @@ interface EditChampionModalProps {
     onUpdate: (data: Partial<ProfileRosterEntry> & { id: string }) => void;
     onDelete: (id: string) => void;
     onItemChange: (item: ProfileRosterEntry) => void;
-}
-
-function computePrestige(curve: PrestigePoint[], sig: number, stars: number, ascensionLevel: number): number {
-    if (!curve.length) return 0;
-    const point = curve.find(p => p.sig === sig);
-    let base = point?.prestige ?? 0;
-    if (!base) {
-        const lower = [...curve].filter(p => p.sig <= sig).pop();
-        const upper = curve.find(p => p.sig > sig);
-        if (lower && upper) {
-            const t = (sig - lower.sig) / (upper.sig - lower.sig);
-            base = Math.round((lower.prestige + t * (upper.prestige - lower.prestige)) / 10) * 10;
-        } else {
-            base = lower?.prestige ?? upper?.prestige ?? 0;
-        }
-    }
-    if (base > 0 && stars === 7 && ascensionLevel > 0) {
-        base = Math.round((base * Math.pow(1.08, ascensionLevel)) / 10) * 10;
-    }
-    return base;
 }
 
 export function EditChampionModal({ item, prestige: initialPrestige, onClose, onUpdate, onDelete, onItemChange }: EditChampionModalProps) {
@@ -79,7 +60,12 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
         if (!item) return;
         const curve = prestigeCurves.get(item.rank);
         if (!curve) { setLivePrestige(undefined); return; }
-        const computed = computePrestige(curve, item.sigLevel || 0, item.stars, item.ascensionLevel || 0);
+        const computed = projectMcocPrestigeFromCurve({
+            curve,
+            sigLevel: item.sigLevel || 0,
+            rarity: item.stars,
+            ascensionLevel: item.ascensionLevel || 0,
+        });
         setLivePrestige(computed || undefined);
     }, [item, prestigeCurves]);
 
@@ -89,8 +75,10 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
 
     const classColors = getChampionClassColors(item.champion.class);
     const maxRank = getMaxRank(item.stars);
-    const maxSig = item.stars >= 5 ? 200 : 99;
-    const sigQuickValues = item.stars >= 5 ? [0, 50, 100, 150, 200] : [0, 25, 50, 75, 99];
+    const maxSig = maxSigForRarity(item.stars);
+    const sigQuickValues = Array.from(
+        new Set([0, 0.25, 0.5, 0.75, 1].map(value => Math.max(0, Math.min(maxSig, Math.round(maxSig * value)))))
+    ).sort((a, b) => a - b);
     const heroUrl = getChampionImageUrl(item.champion.images, 'full', 'hero');
 
     const setSig = (val: number) => {

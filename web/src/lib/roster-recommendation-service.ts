@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { ChampionClass, Prisma } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry, Recommendation, SigRecommendation } from "@/app/profile/roster/types";
-import { calculateMcocPrestige, maxSigForRarity } from "@/lib/mcoc-prestige";
+import { maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige";
 
 interface RecommendationOptions {
     targetRank: number;
@@ -47,13 +47,12 @@ export async function calculateRosterRecommendations(
 
     const getCalculatedPrestige = (champId: number, rarity: number, rank: number, sig: number, ascensionLevel: number = 0): number => {
         const rows = prestigeLookup.get(`${champId}:${rarity}:${rank}`) ?? [];
-        let basePrestige = calculateMcocPrestige(rows, { rarity, rank, prestige: null }, sig) ?? 0;
-
-        if (basePrestige > 0 && rarity === 7 && ascensionLevel > 0) {
-            basePrestige = basePrestige * Math.pow(1.08, ascensionLevel);
-        }
-
-        return roundPrestigeToGameDisplay(basePrestige);
+        return projectMcocPrestige({
+            prestigeData: rows,
+            stat: { rarity, rank, prestige: null },
+            sigLevel: sig,
+            ascensionLevel,
+        }) ?? 0;
     };
 
     const rosterWithPrestige = roster.map(r => {
@@ -258,8 +257,4 @@ export async function calculateRosterRecommendations(
         recommendations,
         sigRecommendations
     };
-}
-
-function roundPrestigeToGameDisplay(value: number) {
-    return value > 0 ? Math.round(value / 10) * 10 : 0;
 }

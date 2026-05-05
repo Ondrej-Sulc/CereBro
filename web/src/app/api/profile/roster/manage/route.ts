@@ -6,13 +6,14 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { withRouteContext } from "@/lib/with-request-context";
+import { clampAscensionLevelForRarity } from "@/lib/mcoc-prestige";
 
 const updateSchema = z.object({
   id: z.string(),
   rank: z.number().min(1).max(10).optional(),
   isAwakened: z.boolean().optional(),
   isAscended: z.boolean().optional(),
-  ascensionLevel: z.number().min(0).max(2).optional(),
+  ascensionLevel: z.number().min(0).max(5).optional(),
   sigLevel: z.number().min(0).max(200).optional(),
 });
 
@@ -59,6 +60,24 @@ export const PUT = withRouteContext(async (req: Request) => {
           rosterId: id,
         },
         "Officer/admin roster edit"
+      );
+    }
+
+    if (
+      ascensionLevel !== undefined &&
+      ascensionLevel !== clampAscensionLevelForRarity(ascensionLevel, rosterEntry.stars)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Invalid data",
+          details: [
+            {
+              path: ["ascensionLevel"],
+              message: "Ascension level exceeds the maximum allowed for this rarity.",
+            },
+          ],
+        },
+        { status: 400 }
       );
     }
 
