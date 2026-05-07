@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { buildDescriptionTemplate } from "@cerebro/core/services/mcocGameDescriptionsImportService";
 import {
   buildMultiCurveData,
   normalizeChampionAbilityTextTemplate,
+  prepareChampionAbilityCurveView,
+  prepareChampionAbilityText,
   resolveChampionAbilityTextValue,
   validateChampionAbilityTextTemplate,
   type ChampionAbilityCurve,
@@ -79,6 +82,92 @@ describe("Champion Ability Text", () => {
     expect(() => validateChampionAbilityTextTemplate({ raw: 123 })).toThrow(/template.raw/);
   });
 
+  it("prepares render-ready blocks through one interface", () => {
+    const prepared = prepareChampionAbilityText({
+      template: {
+        raw: "Gain {0} Attack.",
+        blocks: [{
+          type: "paragraph",
+          children: [
+            { type: "text", value: "Gain " },
+            {
+              type: "value",
+              key: "placeholder_0",
+              placeholderIndex: 0,
+              source: {
+                kind: "abilityParam",
+                buffType: "fury",
+                paramName: "attackPercent",
+                rawValue: 0.15,
+              },
+            },
+            { type: "text", value: " Attack." },
+          ],
+        }],
+      },
+      curves: [],
+      sigLevel: 1,
+      stat: { attack: 1000, challengeRating: 100, sigAbilityIds: [] },
+    });
+
+    expect(prepared.status).toBe("ready");
+    if (prepared.status !== "ready") return;
+    const valueNode = prepared.blocks[0].children[1];
+    expect(valueNode).toMatchObject({
+      type: "value",
+      placeholderIndex: 0,
+      resolution: {
+        status: "resolved",
+        displayValue: "150",
+      },
+    });
+  });
+
+  it("returns malformed templates as structured preparation errors", () => {
+    const prepared = prepareChampionAbilityText({ template: { raw: 123 } });
+
+    expect(prepared).toMatchObject({
+      status: "error",
+      error: {
+        code: "MALFORMED_TEMPLATE",
+      },
+    });
+  });
+
+  it("prepares templates produced by the game descriptions importer", () => {
+    const template = buildDescriptionTemplate("Projectile hits deal {0} Energy Damage.", {
+      placeholder_sources: {
+        0: {
+          kind: "abilityParam",
+          componentId: "sp1_damage",
+          buffType: "coldsnap",
+          paramName: "modifier",
+          field: "chance",
+          rawValue: 0.25,
+          scaleVar: "self.attack",
+          display: { multiplier: 1, precision: 1 },
+        },
+      },
+    });
+
+    const prepared = prepareChampionAbilityText({
+      template,
+      sigLevel: 1,
+      stat: { attack: 1000, challengeRating: 100, sigAbilityIds: [] },
+    });
+
+    expect(prepared.status).toBe("ready");
+    if (prepared.status !== "ready") return;
+    const valueNode = prepared.blocks[0].children[1];
+    expect(valueNode).toMatchObject({
+      type: "value",
+      resolution: {
+        status: "resolved",
+        displayValue: "250",
+      },
+    });
+  });
+
   it("resolves static attack-scaled fury values", () => {
     const result = resolveChampionAbilityTextValue({
       node: {
@@ -154,6 +243,20 @@ describe("Champion Ability Text", () => {
 
     expect(data).toContainEqual({ sig: 10, curve0: 200 });
     expect(data.at(-1)).toEqual({ sig: 20, curve0: 400 });
+  });
+
+  it("prepares chart-ready curve view data with domain and series labels", () => {
+    const view = prepareChampionAbilityCurveView({
+      curves: [furyCurve],
+      stat: { attack: 1000, challengeRating: 100, sigAbilityIds: [] },
+      sigLevel: 10,
+    });
+
+    expect(view.data).toContainEqual({ sig: 10, curve0: 200 });
+    expect(view.domain).toEqual([-18, 438]);
+    expect(view.series).toMatchObject([
+      { id: 1, dataKey: "curve0", label: "Fury" },
+    ]);
   });
 
   it("resolves Serpent duration from duration field, not curve display chance", () => {

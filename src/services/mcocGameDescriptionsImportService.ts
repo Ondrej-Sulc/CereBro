@@ -4,6 +4,11 @@ import {
   MatchResult,
   matchGameChampionIdentity,
 } from './mcocGameStatsImportService';
+import type {
+  ChampionAbilityTextTemplate,
+  ChampionAbilityTextTemplateNode,
+  ChampionAbilityTextTemplateValueSource,
+} from '../domain/champion-ability-text/types';
 
 export type GameDescriptionChampion = {
   base_id?: string;
@@ -29,25 +34,8 @@ export type GameGlossaryEntry = {
 
 export type GameGlossaryFile = Record<string, GameGlossaryEntry>;
 
-export type GameDescriptionTemplateNode =
-  | { type: 'text'; value: string }
-  | { type: 'value'; key: string; placeholderIndex: number; source: GameDescriptionValueSource }
-  | { type: 'glossary'; id: string; label: string }
-  | { type: 'color'; color: string; children: GameDescriptionTemplateNode[] };
-
-export type GameDescriptionValueSource =
-  | { kind: 'placeholder' }
-  | {
-      kind: 'abilityParam';
-      componentId?: string;
-      buffType?: string;
-      paramName?: string;
-      field?: string;
-      rawValue?: number;
-      curveId?: string;
-      secondaryCurveId?: string;
-      display?: { multiplier?: number; precision?: number };
-    };
+export type GameDescriptionTemplateNode = ChampionAbilityTextTemplateNode;
+export type GameDescriptionValueSource = ChampionAbilityTextTemplateValueSource;
 
 export type GameDescriptionTextSource = {
   panel_id?: string;
@@ -56,13 +44,7 @@ export type GameDescriptionTextSource = {
   placeholder_sources?: Record<string, GameDescriptionValueSource>;
 };
 
-export type GameDescriptionTemplate = {
-  raw: string;
-  blocks: Array<{
-    type: 'paragraph';
-    children: GameDescriptionTemplateNode[];
-  }>;
-};
+export type GameDescriptionTemplate = ChampionAbilityTextTemplate;
 
 export type McocGameDescriptionsImportReport = {
   championCount: number;

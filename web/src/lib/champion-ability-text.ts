@@ -1,36 +1,12 @@
-export type TemplateNode =
-  | { type: "text"; value: string }
-  | { type: "value"; key: string; placeholderIndex: number; source?: TemplateValueSource; hint?: string }
-  | { type: "glossary"; id: string; label: string }
-  | { type: "color"; color: string; children: TemplateNode[] };
+import type {
+  ChampionAbilityTextTemplate,
+  ChampionAbilityTextTemplateNode,
+  ChampionAbilityTextTemplateValueSource,
+} from "@cerebro/core/domain/champion-ability-text/types";
 
-export type TemplateValueSource =
-  | { kind: "placeholder" }
-  | {
-    kind: "abilityParam";
-    componentId?: string;
-    buffType?: string;
-    paramName?: string;
-    field?: string;
-    rawValue?: number;
-    curveId?: string;
-    secondaryCurveId?: string;
-    scaleVar?: string;
-    baseVal?: number;
-    chance?: number;
-    duration?: number;
-    atkFrac?: number;
-    f22?: number;
-    f23?: number;
-    f24?: number;
-    f27?: number;
-    display?: { multiplier?: number; precision?: number };
-  };
-
-export type TextTemplate = {
-  raw: string;
-  blocks?: Array<{ type: "paragraph"; children: TemplateNode[] }>;
-};
+export type TemplateNode = ChampionAbilityTextTemplateNode;
+export type TemplateValueSource = ChampionAbilityTextTemplateValueSource;
+export type TextTemplate = ChampionAbilityTextTemplate;
 
 export type ChampionAbilityCurve = {
   id: number;
@@ -67,6 +43,34 @@ export type ChampionAbilityTextError = {
   code: "UNRESOLVED_PLACEHOLDER" | "EXPLICIT_CURVE_NOT_FOUND" | "MALFORMED_TEMPLATE";
   message: string;
   placeholderIndex?: number;
+};
+
+export type PreparedChampionAbilityTextNode =
+  | { type: "text"; value: string }
+  | { type: "value"; key: string; placeholderIndex: number; resolution: ResolvedAbilityTextValue }
+  | { type: "glossary"; id: string; label: string }
+  | { type: "color"; color: string; children: PreparedChampionAbilityTextNode[] };
+
+export type PreparedChampionAbilityTextBlock = {
+  type: "paragraph";
+  children: PreparedChampionAbilityTextNode[];
+};
+
+export type PreparedChampionAbilityText =
+  | { status: "ready"; blocks: PreparedChampionAbilityTextBlock[] }
+  | { status: "error"; error: ChampionAbilityTextError };
+
+export type PreparedChampionAbilityCurveSeries = {
+  id: number;
+  dataKey: string;
+  label: string;
+  curve: ChampionAbilityCurve;
+};
+
+export type PreparedChampionAbilityCurveView = {
+  data: Array<Record<string, number>>;
+  domain: [number, number];
+  series: PreparedChampionAbilityCurveSeries[];
 };
 
 export function validateChampionAbilityTextTemplate(template: unknown): TextTemplate {
@@ -113,6 +117,40 @@ export function groupAbilityTexts<T extends { group: string }>(records: T[]) {
     groups[record.group].push(record);
     return groups;
   }, {});
+}
+
+export function prepareChampionAbilityText({
+  template,
+  curves = [],
+  sigLevel = 200,
+  stat,
+}: {
+  template: unknown;
+  curves?: ChampionAbilityCurve[];
+  sigLevel?: number;
+  stat?: ChampionAbilityStat;
+}): PreparedChampionAbilityText {
+  let blocks: ReturnType<typeof normalizeChampionAbilityTextTemplate>;
+
+  try {
+    blocks = normalizeChampionAbilityTextTemplate(validateChampionAbilityTextTemplate(template));
+  } catch (error) {
+    return {
+      status: "error",
+      error: {
+        code: "MALFORMED_TEMPLATE",
+        message: error instanceof Error ? error.message : "Champion Ability Text template is malformed.",
+      },
+    };
+  }
+
+  return {
+    status: "ready",
+    blocks: blocks.map(block => ({
+      type: block.type,
+      children: block.children.map(node => prepareChampionAbilityTextNode(node, curves, sigLevel, stat)),
+    })),
+  };
 }
 
 export function resolveChampionAbilityTextValue({
@@ -184,6 +222,30 @@ export function buildMultiCurveData(curves: ChampionAbilityCurve[], stat?: Champ
   return data;
 }
 
+export function prepareChampionAbilityCurveView({
+  curves,
+  stat,
+  sigLevel,
+}: {
+  curves: ChampionAbilityCurve[];
+  stat?: ChampionAbilityStat;
+  sigLevel?: number;
+}): PreparedChampionAbilityCurveView {
+  const data = buildMultiCurveData(curves, stat, sigLevel);
+  const series = curves.map((curve, index) => ({
+    id: curve.id,
+    dataKey: `curve${index}`,
+    label: curveLabel(curve),
+    curve,
+  }));
+
+  return {
+    data,
+    domain: curveValueDomain(data, series.map(item => item.dataKey)),
+    series,
+  };
+}
+
 export function curveLabel(curve: ChampionAbilityCurve) {
   const params = curve.params as Record<string, unknown> | null;
   const source = params && isRecord(params.source) ? params.source : null;
@@ -197,6 +259,49 @@ export function curveLabel(curve: ChampionAbilityCurve) {
       .join(" ");
   }
   return curve.curveId.split(":")[1] ?? curve.curveId;
+}
+
+function curveValueDomain(data: Array<Record<string, number>>, dataKeys: string[]): [number, number] {
+  let min = Infinity;
+  let max = -Infinity;
+
+  data.forEach(point => {
+    dataKeys.forEach(key => {
+      const value = point[key];
+      if (typeof value !== "number" || !Number.isFinite(value)) return;
+      if (value < min) min = value;
+      if (value > max) max = value;
+    });
+  });
+
+  if (min === Infinity || max === -Infinity) return [0, 0];
+
+  const range = max - min;
+  const pad = range === 0 ? Math.max(Math.abs(max) * 0.1, 1) : range * 0.1;
+  return [min - pad, max + pad];
+}
+
+function prepareChampionAbilityTextNode(
+  node: TemplateNode,
+  curves: ChampionAbilityCurve[],
+  sigLevel: number,
+  stat?: ChampionAbilityStat
+): PreparedChampionAbilityTextNode {
+  if (node.type === "text") return { type: "text", value: node.value };
+  if (node.type === "glossary") return { type: "glossary", id: node.id, label: node.label };
+  if (node.type === "color") {
+    return {
+      type: "color",
+      color: node.color,
+      children: node.children.map(child => prepareChampionAbilityTextNode(child, curves, sigLevel, stat)),
+    };
+  }
+  return {
+    type: "value",
+    key: node.key,
+    placeholderIndex: node.placeholderIndex,
+    resolution: resolveChampionAbilityTextValue({ node, curves, sigLevel, stat }),
+  };
 }
 
 function validateTemplateNode(node: unknown, path: string): TemplateNode {

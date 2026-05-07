@@ -18,13 +18,10 @@ import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
 import {
-  buildMultiCurveData,
-  curveLabel,
   groupAbilityTexts,
-  normalizeChampionAbilityTextTemplate,
-  resolveChampionAbilityTextValue,
-  validateChampionAbilityTextTemplate,
-  type TemplateNode,
+  prepareChampionAbilityCurveView,
+  prepareChampionAbilityText,
+  type PreparedChampionAbilityTextNode,
 } from "@/lib/champion-ability-text"
 import { cn } from "@/lib/utils"
 import { ChampionImages } from "@/types/champion"
@@ -617,38 +614,32 @@ function RenderedTemplate({
   sigLevel?: number
   stat?: ChampionStatRow
 }) {
-  let blocks: ReturnType<typeof normalizeChampionAbilityTextTemplate>
-  try {
-    blocks = normalizeChampionAbilityTextTemplate(validateChampionAbilityTextTemplate(template))
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Champion Ability Text template is malformed."
+  const prepared = prepareChampionAbilityText({ template, curves, sigLevel, stat })
+  if (prepared.status === "error") {
     return (
       <div className="rounded border border-amber-500/40 bg-amber-950/30 px-2 py-1 text-sm text-amber-100">
-        {message}
+        {prepared.error.message}
       </div>
     )
   }
 
   return (
     <div className="space-y-1.5 text-sm leading-6 text-slate-300">
-      {blocks.map((block, index) => (
-        <div key={index} className="inline-block w-full">{block.children.map((node, nodeIndex) => renderNode(node, nodeIndex, glossaryById, curves, sigLevel, stat))}</div>
+      {prepared.blocks.map((block, index) => (
+        <div key={index} className="inline-block w-full">{block.children.map((node, nodeIndex) => renderNode(node, nodeIndex, glossaryById))}</div>
       ))}
     </div>
   )
 }
 
 function renderNode(
-  node: TemplateNode,
+  node: PreparedChampionAbilityTextNode,
   index: number,
-  glossaryById: Map<string, GlossaryTerm>,
-  curves: ChampionDetailsPayload["abilityCurves"],
-  sigLevel: number,
-  stat?: ChampionStatRow
+  glossaryById: Map<string, GlossaryTerm>
 ): ReactNode {
   if (node.type === "text") return <span key={index}>{node.value}</span>
   if (node.type === "value") {
-    const resolved = resolveChampionAbilityTextValue({ node, curves, sigLevel, stat })
+    const resolved = node.resolution
     return (
       <Tooltip key={index}>
         <TooltipTrigger asChild>
@@ -713,34 +704,16 @@ function renderNode(
     )
   }
   if (node.type === "color") {
-    return <span key={index} style={{ color: normalizeHexColor(node.color) }}>{node.children.map((child, childIndex) => renderNode(child, childIndex, glossaryById, curves, sigLevel, stat))}</span>
+    return <span key={index} style={{ color: normalizeHexColor(node.color) }}>{node.children.map((child, childIndex) => renderNode(child, childIndex, glossaryById))}</span>
   }
   return null
 }
 
 function CurvePanel({ curves, sigLevel, stat, accent }: { curves: ChampionDetailsPayload["abilityCurves"]; sigLevel: number; stat?: ChampionStatRow; accent: string }) {
-  const data = buildMultiCurveData(curves, stat, sigLevel)
-
-  const { minVal, maxPrestige } = useMemo(() => {
-    let minV = Infinity;
-    let maxV = -Infinity;
-    data.forEach(d => {
-      Object.keys(d).forEach(k => {
-        if (k.startsWith('curve')) {
-          const val = d[k];
-          if (val < minV) minV = val;
-          if (val > maxV) maxV = val;
-        }
-      });
-    });
-    if (minV === Infinity || maxV === -Infinity) {
-      return { minVal: 0, maxPrestige: 0 };
-    }
-
-    const range = maxV - minV;
-    const pad = range === 0 ? maxV * 0.1 : range * 0.1;
-    return { minVal: minV - pad, maxPrestige: maxV + pad };
-  }, [data]);
+  const curveView = useMemo(
+    () => prepareChampionAbilityCurveView({ curves, stat, sigLevel }),
+    [curves, stat, sigLevel]
+  )
 
   return (
     <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
@@ -750,12 +723,12 @@ function CurvePanel({ curves, sigLevel, stat, accent }: { curves: ChampionDetail
           <h2 className="text-sm font-black uppercase text-white">Signature Curve</h2>
         </div>
       </div>
-      {curves.length && data.length ? (
+      {curveView.series.length && curveView.data.length ? (
         <ChartContainer config={chartConfig} className="aspect-auto h-56 w-full">
-          <AreaChart data={data} margin={{ left: 0, right: 12, top: 10, bottom: 8 }}>
+          <AreaChart data={curveView.data} margin={{ left: 0, right: 12, top: 10, bottom: 8 }}>
             <defs>
-              {curves.map((curve, index) => (
-                <linearGradient key={curve.id} id={`signatureCurveFill${index}`} x1="0" y1="0" x2="0" y2="1">
+              {curveView.series.map((series, index) => (
+                <linearGradient key={series.id} id={`signatureCurveFill${index}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={CURVE_COLORS[index % CURVE_COLORS.length] ?? accent} stopOpacity={0.35} />
                   <stop offset="95%" stopColor={CURVE_COLORS[index % CURVE_COLORS.length] ?? accent} stopOpacity={0.04} />
                 </linearGradient>
@@ -763,16 +736,16 @@ function CurvePanel({ curves, sigLevel, stat, accent }: { curves: ChampionDetail
             </defs>
             <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.12} />
             <XAxis dataKey="sig" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-            <YAxis tickLine={false} axisLine={false} tickMargin={8} width={46} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={[minVal, maxPrestige]} tickFormatter={(val) => Math.round(val).toLocaleString()} />
+            <YAxis tickLine={false} axisLine={false} tickMargin={8} width={46} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={curveView.domain} tickFormatter={(val) => Math.round(val).toLocaleString()} />
             <ChartTooltip content={<ChartTooltipContent indicator="dot" labelFormatter={(_, payload) => {
               const sig = payload?.[0]?.payload?.sig;
               return sig === sigLevel ? `Sig ${sig} (Selected)` : `Sig ${sig ?? '?'}`;
             }} />} />
-            {curves.map((curve, index) => (
+            {curveView.series.map((series, index) => (
               <Area
-                key={curve.id}
-                dataKey={`curve${index}`}
-                name={curveLabel(curve)}
+                key={series.id}
+                dataKey={series.dataKey}
+                name={series.label}
                 type="monotone"
                 fill={`url(#signatureCurveFill${index})`}
                 stroke={CURVE_COLORS[index % CURVE_COLORS.length] ?? accent}
@@ -787,12 +760,12 @@ function CurvePanel({ curves, sigLevel, stat, accent }: { curves: ChampionDetail
           Signature curve records are not imported yet. The chart is ready to render once `ChampionAbilityCurve` has data.
         </div>
       )}
-      {curves.length > 1 && (
+      {curveView.series.length > 1 && (
         <div className="mt-3 flex flex-wrap gap-2">
-          {curves.map((curve, index) => (
-            <span key={curve.id} className="inline-flex items-center gap-1.5 rounded border border-slate-800 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-300">
+          {curveView.series.map((series, index) => (
+            <span key={series.id} className="inline-flex items-center gap-1.5 rounded border border-slate-800 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-300">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CURVE_COLORS[index % CURVE_COLORS.length] ?? accent }} />
-              {curveLabel(curve)}
+              {series.label}
             </span>
           ))}
         </div>
