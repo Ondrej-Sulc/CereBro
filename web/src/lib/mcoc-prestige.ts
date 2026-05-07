@@ -42,7 +42,7 @@ export function roundPrestigeToGameDisplay(value: number) {
 
 export function ascensionMultiplierForRarity(rarity: number | null | undefined, ascensionLevel: number) {
   const clampedAscension = clampAscensionLevelForRarity(ascensionLevel, rarity);
-  return rarity === 7 && clampedAscension > 0 ? Math.pow(1.08, clampedAscension) : 1;
+  return rarity === 7 && clampedAscension > 0 ? 1 + clampedAscension * 0.08 : 1;
 }
 
 export function applyAscensionToPrestige(

@@ -29,7 +29,7 @@ describe("MCOC Prestige Projection", () => {
     expect(maxAscensionLevelForRarity(7)).toBe(5);
   });
 
-  it("projects game-display prestige with 7-star ascension scaling", () => {
+  it("projects game-display prestige with additive 7-star ascension scaling from base", () => {
     expect(projectMcocPrestige({
       prestigeData: endpoints,
       stat: sevenStarRankThree,
@@ -41,8 +41,22 @@ describe("MCOC Prestige Projection", () => {
       prestigeData: endpoints,
       stat: sevenStarRankThree,
       sigLevel: 0,
+      ascensionLevel: 1,
+    })).toBe(23760);
+
+    expect(projectMcocPrestige({
+      prestigeData: endpoints,
+      stat: sevenStarRankThree,
+      sigLevel: 0,
+      ascensionLevel: 2,
+    })).toBe(25520);
+
+    expect(projectMcocPrestige({
+      prestigeData: endpoints,
+      stat: sevenStarRankThree,
+      sigLevel: 0,
       ascensionLevel: 5,
-    })).toBe(32330);
+    })).toBe(30800);
   });
 
   it("expands chart curves through the same projection rules", () => {
@@ -60,6 +74,6 @@ describe("MCOC Prestige Projection", () => {
       sigLevel: 200,
       rarity: 7,
       ascensionLevel: 5,
-    })).toBe(38200);
+    })).toBe(36400);
   });
 });
