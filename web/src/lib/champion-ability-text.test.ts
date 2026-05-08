@@ -837,4 +837,111 @@ describe("Champion Ability Text", () => {
     expect(result.status).toBe("resolved");
     if (result.status === "resolved") expect(result.displayValue).toBe("15");
   });
+
+  it("resolves Spider-Ham curve-backed signature duration as seconds", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "Porker Poppers last for " },
+          {
+            type: "value",
+            key: "placeholder_2",
+            placeholderIndex: 2,
+            source: {
+              kind: "abilityParam",
+              componentId: "spham_sig_ev_sting_5s",
+              buffType: "power_sting",
+              paramName: "duration",
+              field: "duration",
+              rawValue: 6.929500102996826,
+              curveId: "crv_spham_sting_5s",
+              baseVal: 1,
+              chance: 0.3499999940395355,
+              duration: 6.929500102996826,
+              display: { multiplier: 1, precision: 0 },
+            },
+          },
+          { type: "text", value: " second(s)." },
+        ],
+      }],
+    };
+    const curve: ChampionAbilityCurve = {
+      id: 3,
+      curveId: "spiderham:spham_sig_ev_sting_5s:crv_spham_sting_5s",
+      kind: "signature",
+      formula: "sig",
+      minSig: 0,
+      maxSig: 200,
+      params: {
+        f2: 0.07050000131130219,
+        f3: 0,
+        f4: 0,
+        f5: 0.8700000047683716,
+        f6: 7.070499897003174,
+        source: {
+          componentId: "spham_sig_ev_sting_5s",
+          ability: {
+            buffType: "power_sting",
+            duration: 6.929500102996826,
+            paramName: "duration",
+          },
+        },
+        display: { baseField: "duration", precision: 0, multiplier: 1 },
+        sourceCurveId: "crv_spham_sting_5s",
+      },
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({ node, curves: [curve], sigLevel: 200 });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("14");
+  });
+
+  it("scales Spider-Ham Porker Popper damage from attack even when source scale metadata is generic", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "dealing " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "spham_sp2_ui",
+              buffType: "dummy_ui",
+              paramName: "modifier",
+              field: "chance",
+              rawValue: 0.6000000238418579,
+              baseVal: 0.029999999329447746,
+              chance: 0.6000000238418579,
+              duration: 9,
+              display: { multiplier: 1, precision: 1 },
+            },
+          },
+          { type: "text", value: " Damage." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({
+      node,
+      curves: [],
+      sigLevel: 1,
+      stat: { attack: 6762, challengeRating: 220, sigAbilityIds: [] },
+    });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("4,057.2");
+  });
 });

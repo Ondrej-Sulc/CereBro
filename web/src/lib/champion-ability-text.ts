@@ -564,7 +564,7 @@ function resolveTemplateValue(
     return stat.attack * source.rawValue;
   }
 
-  const timeValue = resolveTimeValue(node, source);
+  const timeValue = resolveTimeValue(node, source, curve, sigLevel);
   if (timeValue != null) return timeValue;
 
   if (["armor_up", "resist_physical", "resist_magic", "crit_resist"].includes(buffType) && stat?.challengeRating && curve) {
@@ -613,9 +613,12 @@ function isDamageText(node: Extract<TemplateNode, { type: "value" }>) {
 
 function resolveTimeValue(
   node: Extract<TemplateNode, { type: "value" }>,
-  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>,
+  curve: ChampionAbilityCurve | null,
+  sigLevel: number
 ) {
   if (!isTimeText(node)) return null;
+  if (curve) return evaluateCurveDisplayForSource(curve, source, sigLevel);
   const fieldValue = source.field ? readSourceNumber(source, source.field) : null;
   if (fieldValue == null) return null;
   if (source.display?.multiplier === 100 && Math.abs(fieldValue) > 0 && Math.abs(fieldValue) < 1) {
