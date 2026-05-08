@@ -564,6 +564,9 @@ function resolveTemplateValue(
     return stat.attack * source.rawValue;
   }
 
+  const timeValue = resolveTimeValue(node, source);
+  if (timeValue != null) return timeValue;
+
   if (["armor_up", "resist_physical", "resist_magic", "crit_resist"].includes(buffType) && stat?.challengeRating && curve) {
     const percent = evaluateCurveDisplay(curve, sigLevel) / 100;
     return percentToRating(percent, stat.challengeRating);
@@ -608,6 +611,25 @@ function isDamageText(node: Extract<TemplateNode, { type: "value" }>) {
   return /\b(damage|direct damage|energy damage)\b/i.test(node.hint ?? "");
 }
 
+function resolveTimeValue(
+  node: Extract<TemplateNode, { type: "value" }>,
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
+) {
+  if (!isTimeText(node)) return null;
+  const fieldValue = source.field ? readSourceNumber(source, source.field) : null;
+  if (fieldValue == null) return null;
+  if (source.display?.multiplier === 100 && Math.abs(fieldValue) > 0 && Math.abs(fieldValue) < 1) {
+    return normalizePercentValue(fieldValue);
+  }
+  return fieldValue;
+}
+
+function isTimeText(node: Extract<TemplateNode, { type: "value" }>) {
+  const hint = node.hint ?? "";
+  if (/\bper second\b/i.test(hint)) return false;
+  return /\b(second|seconds|second\(s\)|duration|cooldown)\b/i.test(hint);
+}
+
 function resolveStaticRatingPercent(
   node: Extract<TemplateNode, { type: "value" }>,
   source: Extract<TemplateValueSource, { kind: "abilityParam" }>
@@ -646,7 +668,12 @@ function resolveSourceValue(
     return normalizePercentValue(source.chance);
   }
 
-  if (source.field === "base_val" && typeof source.chance === "number" && source.chance !== 1) {
+  if (
+    source.field === "base_val" &&
+    typeof source.chance === "number" &&
+    source.chance !== 1 &&
+    (Math.abs(fieldValue ?? 0) === 1 || Math.abs(source.chance) > 1)
+  ) {
     return normalizePercentValue(source.chance);
   }
 

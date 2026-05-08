@@ -746,4 +746,95 @@ describe("Champion Ability Text", () => {
     expect(result.status).toBe("resolved");
     if (result.status === "resolved") expect(result.displayValue).toBe("650");
   });
+
+  it("resolves Scorpion time placeholders before percent fallbacks", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "inflicts a Petrify Debuff of " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "scrpn_sp2_info1",
+              buffType: "dummy_ui",
+              paramName: "modifier",
+              field: "base_val",
+              rawValue: 0.20000000298023224,
+              baseVal: 0.20000000298023224,
+              chance: 0.4000000059604645,
+              duration: 2,
+              display: { multiplier: 100, precision: 1 },
+            },
+          },
+          { type: "text", value: "% Potency that lasts for " },
+          {
+            type: "value",
+            key: "placeholder_0",
+            placeholderIndex: 0,
+            source: {
+              kind: "abilityParam",
+              componentId: "scrpn_sp2_info1",
+              buffType: "dummy_ui",
+              paramName: "chance",
+              field: "chance",
+              rawValue: 0.4000000059604645,
+              baseVal: 0.20000000298023224,
+              chance: 0.4000000059604645,
+              duration: 2,
+              display: { multiplier: 100, precision: 1 },
+            },
+          },
+          { type: "text", value: " seconds." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const values = block.children.filter((node): node is Extract<typeof node, { type: "value" }> => node.type === "value");
+    const resolved = values.map(node => resolveChampionAbilityTextValue({ node, curves: [], sigLevel: 1 }));
+
+    expect(resolved.map(result => result.status === "resolved" ? result.displayValue : "error")).toEqual(["20", "40"]);
+  });
+
+  it("resolves Scorpion second values from baseVal when that is the source field", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "inflict 10 Torment Debuffs that last for " },
+          {
+            type: "value",
+            key: "placeholder_0",
+            placeholderIndex: 0,
+            source: {
+              kind: "abilityParam",
+              componentId: "scrpn_sp3_dummy_1",
+              buffType: "dummy_ui",
+              paramName: "modifier",
+              field: "base_val",
+              rawValue: 0.15000000596046448,
+              baseVal: 0.15000000596046448,
+              chance: 10,
+              duration: 3,
+              display: { multiplier: 100, precision: 1 },
+            },
+          },
+          { type: "text", value: " seconds." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({ node, curves: [], sigLevel: 1 });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("15");
+  });
 });
