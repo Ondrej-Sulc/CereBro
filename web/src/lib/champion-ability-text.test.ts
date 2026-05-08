@@ -531,4 +531,219 @@ describe("Champion Ability Text", () => {
     expect(result.status).toBe("resolved");
     if (result.status === "resolved") expect(result.displayValue).toBe("1,693.5");
   });
+
+  it("uses negative chance as duration reduction percent", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "reduces Buffs by " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "carl_ind_nerf",
+              buffType: "duration_percent",
+              paramName: "modifier",
+              field: "base_val",
+              rawValue: 1,
+              scaleVar: "1",
+              baseVal: 1,
+              chance: -0.8999999761581421,
+              duration: -1,
+              display: { multiplier: 100, precision: 1 },
+            },
+          },
+          { type: "text", value: "%." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({ node, curves: [], sigLevel: 1 });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("90");
+  });
+
+  it("converts potency text from percent to challenge rating", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "inflicts a " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "carl_light_ui",
+              buffType: "dummy_ui",
+              paramName: "modifier",
+              field: "base_val",
+              rawValue: 0.15000000596046448,
+              scaleVar: "1",
+              baseVal: 0.15000000596046448,
+              chance: 0.15000000596046448,
+              duration: 6,
+              display: { multiplier: 100, precision: 1 },
+            },
+          },
+          { type: "text", value: " potency Vulnerability." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({
+      node,
+      curves: [],
+      sigLevel: 1,
+      stat: { attack: 5953, challengeRating: 220, sigAbilityIds: [] },
+    });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("458.8");
+  });
+
+  it("converts critical rating text from chance percent to challenge rating", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "gains " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "carl_sp3_crit",
+              buffType: "crit_rating",
+              paramName: "modifier",
+              field: "base_val",
+              rawValue: 1,
+              scaleVar: "1",
+              baseVal: 1,
+              chance: 0.800000011920929,
+              duration: 15,
+              display: { multiplier: 100, precision: 1 },
+            },
+          },
+          { type: "text", value: " Critical Rating." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({
+      node,
+      curves: [],
+      sigLevel: 1,
+      stat: { attack: 5953, challengeRating: 220, sigAbilityIds: [] },
+    });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("10,400");
+  });
+
+  it("converts resistance and vulnerability potency text to challenge rating", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "gain a " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "srpnt_chnl_res",
+              buffType: "resist_up",
+              paramName: "modifier",
+              field: "chance",
+              rawValue: 0.4000000059604645,
+              scaleVar: "1",
+              baseVal: 1,
+              chance: 0.4000000059604645,
+              duration: -1,
+              display: { multiplier: 1, precision: 1 },
+            },
+          },
+          { type: "text", value: " Resistance Up." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({
+      node,
+      curves: [],
+      sigLevel: 1,
+      stat: { attack: 5549, challengeRating: 220, sigAbilityIds: [] },
+    });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("1,733");
+  });
+
+  it("converts rating-like dummy info labels such as Pierce", () => {
+    const template: TextTemplate = {
+      raw: "",
+      blocks: [{
+        type: "paragraph",
+        children: [
+          { type: "text", value: "gain a " },
+          {
+            type: "value",
+            key: "placeholder_1",
+            placeholderIndex: 1,
+            source: {
+              kind: "abilityParam",
+              componentId: "srpnt_chnl_prc_info",
+              buffType: "dummy_info",
+              paramName: "modifier",
+              field: "chance",
+              rawValue: 0.20000000298023224,
+              scaleVar: "1",
+              baseVal: 0.10000000149011612,
+              chance: 0.20000000298023224,
+              duration: -1,
+              display: { multiplier: 1, precision: 1 },
+            },
+          },
+          { type: "text", value: " Pierce." },
+        ],
+      }],
+    };
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children[1];
+    if (node.type !== "value") throw new Error("Expected value node");
+
+    const result = resolveChampionAbilityTextValue({
+      node,
+      curves: [],
+      sigLevel: 1,
+      stat: { attack: 5549, challengeRating: 220, sigAbilityIds: [] },
+    });
+
+    expect(result.status).toBe("resolved");
+    if (result.status === "resolved") expect(result.displayValue).toBe("650");
+  });
 });

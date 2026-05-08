@@ -568,6 +568,10 @@ function resolveTemplateValue(
     const percent = evaluateCurveDisplay(curve, sigLevel) / 100;
     return percentToRating(percent, stat.challengeRating);
   }
+  const staticRatingPercent = resolveStaticRatingPercent(node, source);
+  if (staticRatingPercent != null && stat?.challengeRating) {
+    return percentToRating(staticRatingPercent, stat.challengeRating);
+  }
   if (isPercentPlaceholder(node, source)) {
     const sourceValue = resolveSourceValue(node, source);
     if (sourceValue != null) return sourceValue;
@@ -602,6 +606,27 @@ function resolveAttackScaledValue(
 
 function isDamageText(node: Extract<TemplateNode, { type: "value" }>) {
   return /\b(damage|direct damage|energy damage)\b/i.test(node.hint ?? "");
+}
+
+function resolveStaticRatingPercent(
+  node: Extract<TemplateNode, { type: "value" }>,
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
+) {
+  if (!isRatingBuffType(source.buffType ?? "") && !isRatingText(node) && !isPotencyText(node)) return null;
+  const candidates = [source.chance, source.rawValue, source.baseVal].filter(
+    (value): value is number => typeof value === "number" && Number.isFinite(value)
+  );
+  return candidates
+    .map(value => Math.abs(value))
+    .find(value => value > 0 && value < 1) ?? null;
+}
+
+function isPotencyText(node: Extract<TemplateNode, { type: "value" }>) {
+  return /\bpotency\b/i.test(node.hint ?? "");
+}
+
+function isRatingText(node: Extract<TemplateNode, { type: "value" }>) {
+  return /\b(resistance up|physical vulnerability|energy vulnerability|pierce)\b/i.test(node.hint ?? "");
 }
 
 function resolveSourceValue(
@@ -681,8 +706,11 @@ function isRatingBuffType(buffType: string) {
     "block_penetration",
     "crit_rating",
     "crit_resist",
+    "resist_up",
     "resist_physical",
     "resist_magic",
+    "vuln_physical",
+    "vuln_energy",
   ].includes(buffType);
 }
 
@@ -785,9 +813,10 @@ function formatAbilityTextValue(value: number, curve: ChampionAbilityCurve | nul
   const outputPrecision = source?.kind === "abilityParam" && ["fury", "resist_physical", "resist_magic", "crit_resist", "armor_up"].includes(source.buffType ?? "")
     ? 2
     : null;
+  const ratingPrecision = source?.kind === "abilityParam" && (isRatingBuffType(source.buffType ?? "") || isRatingText(node)) ? 0 : null;
   const damagePrecision = isDamageText(node) ? 1 : null;
   const durationPrecision = source?.kind === "abilityParam" && source.field === "duration" && !!curve ? 2 : null;
-  const precision = damagePrecision ?? durationPrecision ?? outputPrecision ?? readNumber(display ?? {}, ["precision"]) ?? (source?.kind === "abilityParam" ? source.display?.precision ?? 1 : 1);
+  const precision = damagePrecision ?? durationPrecision ?? ratingPrecision ?? outputPrecision ?? readNumber(display ?? {}, ["precision"]) ?? (source?.kind === "abilityParam" ? source.display?.precision ?? 1 : 1);
   return value.toLocaleString("en-US", {
     maximumFractionDigits: precision,
     minimumFractionDigits: value % 1 === 0 ? 0 : Math.min(precision, 1),

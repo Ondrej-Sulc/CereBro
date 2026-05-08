@@ -161,8 +161,16 @@ export function ChampionDetailsClient({
   const abilities = champion.abilities.filter(link => link.type === "ABILITY")
   const textGroups = groupAbilityTexts(champion.abilityTexts)
   const signatureTexts = textGroups.signature ?? []
-  const descriptionGroups = Object.entries(textGroups).filter(([group]) => group !== "signature" && group !== "bio")
+  const specialAttackTexts = textGroups.special ?? []
+  const descriptionGroups = Object.entries(textGroups).filter(([group]) => group !== "signature" && group !== "bio" && group !== "special")
   const bioTexts = textGroups.bio ?? []
+  const specialAttackTextByNumber = useMemo(() => {
+    const entries = new Map<string, ChampionDetailsPayload["abilityTexts"][number]>()
+    for (const [index, record] of specialAttackTexts.entries()) {
+      entries.set(String(index + 1), record)
+    }
+    return entries
+  }, [specialAttackTexts])
   const selectedRarityLabel = selectedStat?.rarityLabel ?? (selectedRarity ? `${selectedRarity}-star` : "No stats")
   const selectedCurves = champion.abilityCurves.filter(curve => (curve.maxSig ?? 200) === currentMaxSig)
   const selectedPrestige = projectMcocPrestige({
@@ -392,13 +400,18 @@ export function ChampionDetailsClient({
                     chart={<CurvePanel curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} accent={classColors.color} />}
                   />
                   {descriptionGroups.map(([group, records]) => {
-                    const groupTitle = abilityTextGroupTitle(group);
+                    const specialMatch = group.match(/^special([123])$/)
+                    const specialIntro = specialMatch ? specialAttackTextByNumber.get(specialMatch[1]) : undefined
+                    const groupTitle = specialIntro?.title
+                      ? `${abilityTextGroupTitle(group)} - ${formatGameText(specialIntro.title)}`
+                      : abilityTextGroupTitle(group);
                     return (
                       <TextPanel
                         key={group}
                         title={groupTitle}
                         icon={<BookOpenText className="h-5 w-5" />}
                         records={records}
+                        introRecord={specialIntro}
                         glossaryById={glossaryById}
                         curves={selectedCurves}
                         sigLevel={sigLevel}
@@ -525,10 +538,12 @@ function TextPanel({
   accent,
   emptyText = "No text imported.",
   chart,
+  introRecord,
 }: {
   title: string
   icon: ReactNode
   records: ChampionDetailsPayload["abilityTexts"]
+  introRecord?: ChampionDetailsPayload["abilityTexts"][number]
   glossaryById: Map<string, GlossaryTerm>
   curves?: ChampionDetailsPayload["abilityCurves"]
   sigLevel?: number
@@ -576,6 +591,11 @@ function TextPanel({
         </AccordionTrigger>
         <AccordionContent className="pb-3">
           {chart && <div className="mb-6">{chart}</div>}
+          {introRecord && (
+            <div className="mb-4 rounded-lg border border-slate-800/80 bg-slate-900/30 p-3 italic text-slate-300">
+              <RenderedTemplate template={introRecord.template} glossaryById={glossaryById} curves={curves} sigLevel={sigLevel} stat={stat} />
+            </div>
+          )}
 
           {groupedRecords.length ? (
             <div className="space-y-3">
