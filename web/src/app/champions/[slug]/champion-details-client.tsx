@@ -2,13 +2,12 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react"
-import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
 import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, ExternalLink, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Zap } from "lucide-react"
 import { ChampionClass } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Slider } from "@/components/ui/slider"
@@ -19,16 +18,25 @@ import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
 import {
   groupAbilityTexts,
-  prepareChampionAbilityCurveView,
   prepareChampionAbilityText,
   type PreparedChampionAbilityTextNode,
 } from "@/lib/champion-ability-text"
 import { cn } from "@/lib/utils"
 import { ChampionImages } from "@/types/champion"
 
-const CURVE_COLORS = ["#38bdf8", "#fbbf24", "#a78bfa", "#34d399", "#fb7185", "#f97316", "#22c55e", "#e879f9"]
+const CurvePanel = dynamic(
+  () => import("./champion-curve-panel").then(module => module.CurvePanel),
+  {
+    ssr: false,
+    loading: () => (
+      <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
+        <div className="h-56 animate-pulse rounded-md bg-slate-900/50" />
+      </section>
+    ),
+  }
+)
 
-type ChampionDetailsPayload = {
+export type ChampionDetailsPayload = {
   id: number
   name: string
   shortName: string
@@ -70,7 +78,7 @@ type ChampionDetailsPayload = {
   }>
 }
 
-type ChampionStatRow = {
+export type ChampionStatRow = {
   id: number
   tierId: string
   rarity: number | null
@@ -116,13 +124,6 @@ type GroupedAbilityLink = {
   }>
 }
 
-const chartConfig = {
-  value: {
-    label: "Value",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig
-
 export function ChampionDetailsClient({
   champion,
   glossaryTerms,
@@ -149,6 +150,7 @@ export function ChampionDetailsClient({
   const currentMaxSig = maxSigForRarity(selectedStat?.rarity)
   const [sigLevel, setSigLevel] = useState(200)
   const [ascensionLevel, setAscensionLevel] = useState(0)
+  const [activeTab, setActiveTab] = useState("overview")
   useEffect(() => {
     setSigLevel(value => Math.min(value, currentMaxSig))
   }, [currentMaxSig])
@@ -199,7 +201,7 @@ export function ChampionDetailsClient({
     <TooltipProvider>
       <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
         <div className="pointer-events-none absolute inset-0">
-          <Image src={heroUrl} alt="" fill priority sizes="100vw" className="object-cover object-center opacity-24 blur-2xl scale-110 saturate-50" />
+          <Image src={heroUrl} alt="" fill sizes="100vw" className="object-cover object-center opacity-24 blur-2xl scale-110 saturate-50" />
           <div className="absolute inset-0 bg-slate-950/70" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-slate-950/85 to-slate-950" />
           <div className="absolute inset-x-0 top-0 h-px opacity-80" style={{ backgroundColor: classColors.color }} />
@@ -214,7 +216,7 @@ export function ChampionDetailsClient({
 
           <section className="grid min-h-[420px] gap-6 lg:grid-cols-[minmax(260px,360px)_1fr] lg:items-end">
             <div className="relative mx-auto aspect-square w-full max-w-[360px] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950/50 shadow-2xl shadow-black/40">
-              <Image src={heroUrl} alt="" fill priority sizes="(max-width: 1024px) 80vw, 360px" className="object-cover object-center opacity-25 blur-md scale-110" />
+              <Image src={heroUrl} alt="" fill sizes="(max-width: 1024px) 80vw, 360px" className="object-cover object-center opacity-25 blur-md scale-110" />
               <Image src={portraitUrl} alt={champion.name} fill priority sizes="(max-width: 1024px) 80vw, 360px" className="object-cover object-center p-2" />
               <div className="absolute inset-0 shadow-[inset_0_0_30px_20px_rgba(2,6,23,1)] pointer-events-none" />
               <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/90 to-transparent pointer-events-none" />
@@ -364,7 +366,7 @@ export function ChampionDetailsClient({
             </div>
 
             <div className="min-w-0">
-              <Tabs defaultValue="overview" className="space-y-5">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
                 <TabsList className="grid w-full grid-cols-2 bg-slate-950/80 border border-slate-800 p-1 h-11 rounded-lg">
                   <TabsTrigger value="overview" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
                     Overview
@@ -381,46 +383,48 @@ export function ChampionDetailsClient({
                   <AbilitySummary title="Abilities" icon={<Zap className="h-4 w-4" />} items={abilities} tone="amber" glossaryById={glossaryById} accent={classColors.color} />
                 </TabsContent>
 
-                <TabsContent value="descriptions" className="mt-0 space-y-6 outline-none">
-                  <section className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-3 backdrop-blur">
-                    <p className="text-sm leading-relaxed text-amber-100">
-                      Full descriptions are still a work in progress. Some exact numeric values may be inaccurate while the parsing and value resolution logic is being refined.
-                    </p>
-                  </section>
-                  <TextPanel
-                    title="Signature Ability"
-                    icon={<Sparkles className="h-5 w-5" />}
-                    records={signatureTexts}
-                    glossaryById={glossaryById}
-                    curves={selectedCurves}
-                    sigLevel={sigLevel}
-                    stat={displayStat}
-                    accent={classColors.color}
-                    emptyText="No signature ability text imported."
-                    chart={<CurvePanel curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} accent={classColors.color} />}
-                  />
-                  {descriptionGroups.map(([group, records]) => {
-                    const specialMatch = group.match(/^special([123])$/)
-                    const specialIntro = specialMatch ? specialAttackTextByNumber.get(specialMatch[1]) : undefined
-                    const groupTitle = specialIntro?.title
-                      ? `${abilityTextGroupTitle(group)} - ${formatGameText(specialIntro.title)}`
-                      : abilityTextGroupTitle(group);
-                    return (
-                      <TextPanel
-                        key={group}
-                        title={groupTitle}
-                        icon={<BookOpenText className="h-5 w-5" />}
-                        records={records}
-                        introRecord={specialIntro}
-                        glossaryById={glossaryById}
-                        curves={selectedCurves}
-                        sigLevel={sigLevel}
-                        stat={displayStat}
-                        accent={classColors.color}
-                      />
-                    );
-                  })}
-                </TabsContent>
+                {activeTab === "descriptions" && (
+                  <TabsContent value="descriptions" className="mt-0 space-y-6 outline-none">
+                    <section className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-3 backdrop-blur">
+                      <p className="text-sm leading-relaxed text-amber-100">
+                        Full descriptions are still a work in progress. Some exact numeric values may be inaccurate while the parsing and value resolution logic is being refined.
+                      </p>
+                    </section>
+                    <TextPanel
+                      title="Signature Ability"
+                      icon={<Sparkles className="h-5 w-5" />}
+                      records={signatureTexts}
+                      glossaryById={glossaryById}
+                      curves={selectedCurves}
+                      sigLevel={sigLevel}
+                      stat={displayStat}
+                      accent={classColors.color}
+                      emptyText="No signature ability text imported."
+                      chart={<CurvePanel curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} accent={classColors.color} />}
+                    />
+                    {descriptionGroups.map(([group, records]) => {
+                      const specialMatch = group.match(/^special([123])$/)
+                      const specialIntro = specialMatch ? specialAttackTextByNumber.get(specialMatch[1]) : undefined
+                      const groupTitle = specialIntro?.title
+                        ? `${abilityTextGroupTitle(group)} - ${formatGameText(specialIntro.title)}`
+                        : abilityTextGroupTitle(group);
+                      return (
+                        <TextPanel
+                          key={group}
+                          title={groupTitle}
+                          icon={<BookOpenText className="h-5 w-5" />}
+                          records={records}
+                          introRecord={specialIntro}
+                          glossaryById={glossaryById}
+                          curves={selectedCurves}
+                          sigLevel={sigLevel}
+                          stat={displayStat}
+                          accent={classColors.color}
+                        />
+                      );
+                    })}
+                  </TabsContent>
+                )}
               </Tabs>
             </div>
           </section>
@@ -727,71 +731,6 @@ function renderNode(
     return <span key={index} style={{ color: normalizeHexColor(node.color) }}>{node.children.map((child, childIndex) => renderNode(child, childIndex, glossaryById))}</span>
   }
   return null
-}
-
-function CurvePanel({ curves, sigLevel, stat, accent }: { curves: ChampionDetailsPayload["abilityCurves"]; sigLevel: number; stat?: ChampionStatRow; accent: string }) {
-  const curveView = useMemo(
-    () => prepareChampionAbilityCurveView({ curves, stat, sigLevel }),
-    [curves, stat, sigLevel]
-  )
-
-  return (
-    <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4" style={{ color: accent }} />
-          <h2 className="text-sm font-black uppercase text-white">Signature Curve</h2>
-        </div>
-      </div>
-      {curveView.series.length && curveView.data.length ? (
-        <ChartContainer config={chartConfig} className="aspect-auto h-56 w-full">
-          <AreaChart data={curveView.data} margin={{ left: 0, right: 12, top: 10, bottom: 8 }}>
-            <defs>
-              {curveView.series.map((series, index) => (
-                <linearGradient key={series.id} id={`signatureCurveFill${index}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={CURVE_COLORS[index % CURVE_COLORS.length] ?? accent} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={CURVE_COLORS[index % CURVE_COLORS.length] ?? accent} stopOpacity={0.04} />
-                </linearGradient>
-              ))}
-            </defs>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.12} />
-            <XAxis dataKey="sig" tickLine={false} axisLine={false} tickMargin={8} minTickGap={28} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-            <YAxis tickLine={false} axisLine={false} tickMargin={8} width={46} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={curveView.domain} tickFormatter={(val) => Math.round(val).toLocaleString()} />
-            <ChartTooltip content={<ChartTooltipContent indicator="dot" labelFormatter={(_, payload) => {
-              const sig = payload?.[0]?.payload?.sig;
-              return sig === sigLevel ? `Sig ${sig} (Selected)` : `Sig ${sig ?? '?'}`;
-            }} />} />
-            {curveView.series.map((series, index) => (
-              <Area
-                key={series.id}
-                dataKey={series.dataKey}
-                name={series.label}
-                type="monotone"
-                fill={`url(#signatureCurveFill${index})`}
-                stroke={CURVE_COLORS[index % CURVE_COLORS.length] ?? accent}
-                strokeWidth={2}
-              />
-            ))}
-            <ReferenceLine x={sigLevel} stroke="#f8fafc" strokeDasharray="3 3" />
-          </AreaChart>
-        </ChartContainer>
-      ) : (
-        <div className="rounded-md border border-dashed border-slate-800 bg-slate-900/40 p-4 text-sm leading-6 text-slate-400">
-          Signature curve records are not imported yet. The chart is ready to render once `ChampionAbilityCurve` has data.
-        </div>
-      )}
-      {curveView.series.length > 1 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {curveView.series.map((series, index) => (
-            <span key={series.id} className="inline-flex items-center gap-1.5 rounded border border-slate-800 bg-slate-900/60 px-2 py-1 text-[11px] text-slate-300">
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CURVE_COLORS[index % CURVE_COLORS.length] ?? accent }} />
-              {series.label}
-            </span>
-          ))}
-        </div>
-      )}
-    </section>
-  )
 }
 
 function AbilitySummary({

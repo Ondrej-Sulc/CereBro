@@ -125,7 +125,8 @@ const getChampionDetails = unstable_cache(
 )
 
 const getGlossaryTerms = unstable_cache(
-  async () => prisma.gameGlossaryTerm.findMany({
+  async (ids: string[]) => prisma.gameGlossaryTerm.findMany({
+    where: { id: { in: ids } },
     select: {
       id: true,
       name: true,
@@ -185,13 +186,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ChampionDetailsPage({ params }: PageProps) {
   const { slug } = await params
-  const [champion, glossaryTerms, maxStatsByTier] = await Promise.all([
+  const [champion, maxStatsByTier] = await Promise.all([
     getChampionDetails(slug),
-    getGlossaryTerms(),
     getMaxStatsByTier(),
   ])
 
   if (!champion) notFound()
+
+  const glossaryIds = collectChampionGlossaryIds(champion)
+  const glossaryTerms = glossaryIds.length ? await getGlossaryTerms(glossaryIds) : []
 
   return (
     <ChampionDetailsClient
@@ -206,4 +209,37 @@ export default async function ChampionDetailsPage({ params }: PageProps) {
       maxStatsByTier={maxStatsByTier}
     />
   )
+}
+
+function collectChampionGlossaryIds(champion: Awaited<ReturnType<typeof getChampionDetails>>) {
+  const ids = new Set<string>()
+  if (!champion) return []
+
+  for (const link of champion.abilities) {
+    if (link.ability.gameGlossaryTermId) ids.add(link.ability.gameGlossaryTermId)
+  }
+
+  for (const record of champion.abilityTexts) {
+    collectGlossaryIdsFromTemplate(record.template, ids)
+  }
+
+  return Array.from(ids).sort()
+}
+
+function collectGlossaryIdsFromTemplate(value: unknown, ids: Set<string>) {
+  if (!value || typeof value !== "object") return
+
+  if (Array.isArray(value)) {
+    for (const item of value) collectGlossaryIdsFromTemplate(item, ids)
+    return
+  }
+
+  const record = value as Record<string, unknown>
+  if (record.type === "glossary" && typeof record.id === "string") {
+    ids.add(record.id)
+  }
+
+  for (const item of Object.values(record)) {
+    collectGlossaryIdsFromTemplate(item, ids)
+  }
 }
