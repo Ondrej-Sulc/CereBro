@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { ChampionAbilityLink, AbilityLinkType, AttackType, ChampionClass, Prisma } from "@prisma/client"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { ensureAdmin } from "../actions"
 
 import { AdminChampionData } from "./champion-card"
@@ -19,6 +19,13 @@ export type AbilityDraft = { abilities?: AbilityDraftItem[]; immunities?: Abilit
 export type ModelOption = { id: string; name: string }
 
 const DRAFT_MODEL_PROVIDERS = ['google/', 'anthropic/', 'openai/', 'meta-llama/', 'x-ai/', 'mistralai/']
+
+function revalidateChampionData() {
+    revalidatePath('/admin/champions')
+    revalidatePath('/champions/[slug]', 'page')
+    revalidateTag('champion-details', 'default')
+    revalidateTag('champion-details-shared', 'default')
+}
 
 // Module-level cache: valid for 10 minutes in long-running server process
 let _modelCache: { data: ModelOption[]; expiresAt: number } | null = null
@@ -123,7 +130,7 @@ export const updateChampionDetails = withActionContext('updateChampionDetails', 
             obtainable: data.obtainable
         }
     })
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });
 
 export const updateChampionFullAbilities = withActionContext('updateChampionFullAbilities', async (id: number, fullAbilities: FullAbilitiesInput | undefined) => {
@@ -166,7 +173,7 @@ export const updateChampionFullAbilities = withActionContext('updateChampionFull
         where: { id },
         data: { fullAbilities: fullAbilities as Prisma.InputJsonValue }
     })
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });
 
 export const updateChampionAbility = withActionContext('updateChampionAbility', async (
@@ -207,7 +214,7 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
             })
         }
     }
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });
 
 export const removeChampionAbility = withActionContext('removeChampionAbility', async (linkId: number) => {
@@ -215,7 +222,7 @@ export const removeChampionAbility = withActionContext('removeChampionAbility', 
     await prisma.championAbilityLink.delete({
         where: { id: linkId }
     })
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });
 
 export const addSynergy = withActionContext('addSynergy', async (linkId: number, championId: number) => {
@@ -235,7 +242,7 @@ export const addSynergy = withActionContext('addSynergy', async (linkId: number,
         },
         update: {} // Do nothing if already exists
     })
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });
 
 export const removeSynergy = withActionContext('removeSynergy', async (linkId: number, championId: number) => {
@@ -246,7 +253,7 @@ export const removeSynergy = withActionContext('removeSynergy', async (linkId: n
             championId
         }
     })
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });
 
 export const saveChampionAttacks = withActionContext('saveChampionAttacks', async (
@@ -315,7 +322,7 @@ export const saveChampionAttacks = withActionContext('saveChampionAttacks', asyn
         }
     });
     
-    revalidatePath('/admin/champions');
+    revalidateChampionData();
 });
 
 export const fetchDraftModels = withActionContext('fetchDraftModels', async (): Promise<ModelOption[]> => {
@@ -575,7 +582,7 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
     where: { champions: { none: {} } },
   })
 
-  revalidatePath('/admin/champions')
+  revalidateChampionData()
   return {
     sourceChampions,
     dedupedChampions: dedupedChamps.size,
@@ -619,5 +626,5 @@ export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', asyn
         }
     }
 
-    revalidatePath('/admin/champions')
+    revalidateChampionData()
 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { requireBotAdmin } from "@/lib/auth-helpers"
 import {
@@ -30,6 +30,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
 
     revalidatePath("/admin/champions")
     revalidatePath("/champions/[slug]", "page")
+    revalidateTag("champion-details", "default")
     return NextResponse.json(report)
   } catch (error) {
     return NextResponse.json(
