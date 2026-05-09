@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, ChangeEvent } from "react";
+import { useState, useMemo, ChangeEvent, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -10,15 +10,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
     Trash2, Plus, Edit, FolderPlus, Map as MapIcon, Search, X, FolderTree, Copy,
     Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning, Tag as TagIcon,
-    Trophy, Youtube, Loader2, EyeOff, Eye, Archive, Pencil, Check, Upload, Folder
+    Trophy, Youtube, Loader2, EyeOff, Eye, Archive, Pencil, Check, Upload, Folder, FileJson
 } from "lucide-react";
-import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan, updateQuestCategory, uploadQuestCategoryThumbnail } from "@/app/actions/quests";
+import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan, updateQuestCategory, uploadQuestCategoryThumbnail, importQuestPlan } from "@/app/actions/quests";
 import { cn } from "@/lib/utils";
 
 type QuestCategoryFlat = QuestCategory & { thumbnailUrl?: string | null };
@@ -72,6 +73,10 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isCreating, setIsCreating] = useState(false);
+    const [importJsonText, setImportJsonText] = useState("");
+    const [isImporting, setIsImporting] = useState(false);
+    const [importError, setImportError] = useState<string | null>(null);
+    const importFileInputRef = useRef<HTMLInputElement | null>(null);
 
     // Category edit dialog state
     const [editingCategory, setEditingCategory] = useState<QuestCategoryFlat | null>(null);
@@ -128,6 +133,42 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to duplicate quest";
             toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleImport = async (jsonText: string = importJsonText) => {
+        const trimmed = jsonText.trim();
+        if (!trimmed || isImporting) return;
+        setIsImporting(true);
+        setImportError(null);
+        try {
+            const res = await importQuestPlan(trimmed);
+            if (res.success && res.planId) {
+                toast({ title: "Import complete", description: "Draft quest plan created." });
+                router.push(`/admin/quests/${res.planId}`);
+            }
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to import quest";
+            setImportError(msg);
+            toast({ title: "Import failed", description: msg.split("\n")[0], variant: "destructive" });
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
+    const handleImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            setImportJsonText(text);
+            await handleImport(text);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to read import file";
+            setImportError(msg);
+            toast({ title: "Import failed", description: msg, variant: "destructive" });
+        } finally {
+            e.target.value = "";
         }
     };
 
@@ -494,6 +535,70 @@ export default function AdminQuestManagerClient({ initialQuests, categories }: P
                                 ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating…</>
                                 : <><Plus className="mr-2 h-4 w-4" /> Create &amp; Build</>}
                         </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Import Quest */}
+                <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                    <div className="h-0.5 w-full bg-emerald-500" />
+                    <CardHeader className="pb-3 pt-4">
+                        <CardTitle className="flex items-center gap-2.5 text-base">
+                            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                <FileJson className="w-4 h-4 text-emerald-400" />
+                            </div>
+                            Import Quest JSON
+                        </CardTitle>
+                        <CardDescription>Create a new draft from an exported quest plan.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <input
+                            ref={importFileInputRef}
+                            type="file"
+                            accept="application/json,.json"
+                            className="hidden"
+                            onChange={handleImportFile}
+                            disabled={isImporting}
+                        />
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1 bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                onClick={() => importFileInputRef.current?.click()}
+                                disabled={isImporting}
+                            >
+                                {isImporting
+                                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    : <Upload className="mr-2 h-4 w-4" />}
+                                Select JSON
+                            </Button>
+                            <Button
+                                type="button"
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white"
+                                onClick={() => handleImport()}
+                                disabled={!importJsonText.trim() || isImporting}
+                            >
+                                {isImporting
+                                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    : <FileJson className="mr-2 h-4 w-4" />}
+                                Import
+                            </Button>
+                        </div>
+                        <Textarea
+                            value={importJsonText}
+                            onChange={e => {
+                                setImportJsonText(e.target.value);
+                                setImportError(null);
+                            }}
+                            placeholder="Paste exported quest JSON..."
+                            className="min-h-28 bg-slate-900 border-slate-800 text-xs font-mono focus-visible:ring-emerald-500"
+                            disabled={isImporting}
+                        />
+                        {importError && (
+                            <pre className="max-h-44 overflow-auto whitespace-pre-wrap rounded-lg border border-red-900/50 bg-red-950/30 p-3 text-[11px] leading-relaxed text-red-200">
+                                {importError}
+                            </pre>
+                        )}
                     </CardContent>
                 </Card>
 

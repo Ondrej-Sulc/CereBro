@@ -1,4 +1,4 @@
-import type { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma, PlayerQuestSynergyChampion } from "@prisma/client";
+import type { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, PlayerQuestRouteChoice, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma, PlayerQuestSynergyChampion } from "@prisma/client";
 import { ChampionImages, Champion } from "@/types/champion";
 import type { getQuestPlanById } from "@/app/actions/quests";
 import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
@@ -27,6 +27,7 @@ export interface QuestTimelineProps {
     quest: QuestWithRelations;
     roster?: RosterWithChampion[];
     savedEncounters?: PlayerQuestEncounter[];
+    savedRouteChoices?: PlayerQuestRouteChoice[];
     savedSynergies?: SynergyWithChampion[];
     popularCounters?: PopularCountersMap;
     featuredPicks?: EnhancedCountersMap;

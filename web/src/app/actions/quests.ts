@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getUserPlayerWithAlliance, requireBotAdmin } from "@/lib/auth-helpers";
 import { revalidatePath, unstable_cache, revalidateTag } from "next/cache";
 import logger from "@/lib/logger";
-import { ChampionClass, QuestPlanStatus } from "@prisma/client";
+import { ChampionClass, EncounterDifficulty, QuestPlanStatus } from "@prisma/client";
 import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
 import { QuestWithRelations, QuestSummary } from "@/types/quests";
 import { withActionContext } from "@/lib/with-request-context";
@@ -276,6 +276,27 @@ export const getQuestPlanById = unstable_cache(
             include: {
                 category: true,
                 requiredTags: true,
+                routeSections: {
+                    orderBy: { order: 'asc' },
+                    include: {
+                        parentPath: {
+                            include: {
+                                section: {
+                                    select: { id: true, title: true }
+                                }
+                            }
+                        },
+                        paths: {
+                            orderBy: { order: 'asc' },
+                            include: {
+                                encounters: {
+                                    select: { id: true },
+                                    orderBy: { sequence: 'asc' }
+                                }
+                            }
+                        }
+                    }
+                },
                 creators: {
                     include: {
                         profiles: {
@@ -935,6 +956,706 @@ export const duplicateQuestPlan = withActionContext('duplicateQuestPlan', async 
     return { success: true, planId: newPlan.id };
 });
 
+type QuestExportCategory = {
+    name: string;
+    path: string[];
+};
+
+type QuestExportChampionRef = {
+    slug: string | null;
+    name: string;
+};
+
+type QuestExportTagRef = {
+    name: string;
+    category: string;
+};
+
+type QuestExportNodeRef = {
+    name: string;
+    description: string;
+};
+
+type QuestExportCreatorRef = {
+    discordId: string;
+};
+
+type QuestExportPlayerRef = {
+    discordId: string | null;
+    ingameName: string | null;
+    botUserDiscordId: string | null;
+};
+
+type QuestPlanExportPayload = {
+    schemaVersion: 1;
+    kind: "cerebro.questPlan";
+    exportedAt: string;
+    quest: {
+        title: string;
+        videoUrl: string | null;
+        bannerUrl: string | null;
+        bannerFit: string | null;
+        bannerPosition: string | null;
+        category: QuestExportCategory | null;
+        minStarLevel: number | null;
+        maxStarLevel: number | null;
+        teamLimit: number | null;
+        requiredClasses: ChampionClass[];
+        requiredTags: QuestExportTagRef[];
+        creators: QuestExportCreatorRef[];
+    };
+    routeSections: {
+        key: string;
+        title: string;
+        order: number;
+        parentPathKey: string | null;
+        paths: {
+            key: string;
+            title: string;
+            order: number;
+        }[];
+    }[];
+    encounters: {
+        sequence: number;
+        difficulty: EncounterDifficulty;
+        tips: string | null;
+        videoUrl: string | null;
+        defender: QuestExportChampionRef | null;
+        recommendedTags: string[];
+        recommendedChampions: QuestExportChampionRef[];
+        requiredTags: QuestExportTagRef[];
+        nodes: QuestExportNodeRef[];
+        routePathKey: string | null;
+        videos: {
+            videoUrl: string;
+            player: QuestExportPlayerRef | null;
+        }[];
+    }[];
+};
+
+type MissingQuestImportReferences = {
+    champions: string[];
+    tags: string[];
+    nodeModifiers: string[];
+    categories: string[];
+    creators: string[];
+};
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function asString(value: unknown): string | null {
+    return typeof value === "string" ? value : null;
+}
+
+function asOptionalString(value: unknown): string | null {
+    return typeof value === "string" ? value : null;
+}
+
+function asNumberOrNull(value: unknown): number | null {
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function asStringArray(value: unknown): string[] {
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function uniqueStrings(values: string[]): string[] {
+    return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+}
+
+function tagKey(tag: Pick<QuestExportTagRef, "name" | "category">): string {
+    return `${tag.name}::${tag.category}`;
+}
+
+function formatTagRef(tag: Pick<QuestExportTagRef, "name" | "category">): string {
+    return tag.category ? `${tag.name} (${tag.category})` : tag.name;
+}
+
+function formatChampionRef(champion: QuestExportChampionRef): string {
+    return champion.slug ? `${champion.name} [${champion.slug}]` : champion.name;
+}
+
+function formatCategoryRef(category: QuestExportCategory): string {
+    return category.path.length > 0 ? category.path.join(" / ") : category.name;
+}
+
+function makeRouteSectionKey(order: number, title: string): string {
+    return `section:${order}:${title}`;
+}
+
+function makeRoutePathKey(sectionKey: string, order: number, title: string): string {
+    return `${sectionKey}/path:${order}:${title}`;
+}
+
+function summarizeMissingQuestImportReferences(missing: MissingQuestImportReferences): string {
+    const parts: string[] = [];
+    if (missing.champions.length) parts.push(`Champions: ${missing.champions.join(", ")}`);
+    if (missing.tags.length) parts.push(`Tags: ${missing.tags.join(", ")}`);
+    if (missing.nodeModifiers.length) parts.push(`Node modifiers: ${missing.nodeModifiers.join(", ")}`);
+    if (missing.categories.length) parts.push(`Categories: ${missing.categories.join(", ")}`);
+    if (missing.creators.length) parts.push(`Creators: ${missing.creators.join(", ")}`);
+    return parts.join("\n");
+}
+
+async function getQuestCategoryPath(categoryId: string): Promise<string[]> {
+    const path: string[] = [];
+    let currentId: string | null = categoryId;
+    const seen = new Set<string>();
+
+    while (currentId && !seen.has(currentId)) {
+        seen.add(currentId);
+        const category: { name: string; parentId: string | null } | null = await prisma.questCategory.findUnique({
+            where: { id: currentId },
+            select: { name: true, parentId: true }
+        });
+        if (!category) break;
+        path.unshift(category.name);
+        currentId = category.parentId;
+    }
+
+    return path;
+}
+
+async function resolveQuestCategoryByPath(category: QuestExportCategory | null): Promise<string | null | undefined> {
+    if (!category) return null;
+
+    const path = category.path.length > 0 ? category.path : [category.name];
+    let parentId: string | null = null;
+    let foundId: string | null = null;
+
+    for (const name of path) {
+        const found: { id: string } | null = await prisma.questCategory.findFirst({
+            where: { name, parentId },
+            select: { id: true }
+        });
+        if (!found) return undefined;
+        foundId = found.id;
+        parentId = found.id;
+    }
+
+    return foundId;
+}
+
+function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(jsonText);
+    } catch {
+        throw new Error("Invalid JSON format.");
+    }
+
+    if (!isPlainObject(parsed) || parsed.kind !== "cerebro.questPlan" || parsed.schemaVersion !== 1) {
+        throw new Error("Unsupported quest plan export. Expected kind \"cerebro.questPlan\" with schemaVersion 1.");
+    }
+    if (!isPlainObject(parsed.quest)) {
+        throw new Error("Invalid quest plan export: missing quest object.");
+    }
+
+    const quest = parsed.quest;
+    const title = asString(quest.title)?.trim();
+    if (!title) {
+        throw new Error("Invalid quest plan export: quest.title is required.");
+    }
+
+    const rawCategory = isPlainObject(quest.category) ? quest.category : null;
+    const category = rawCategory
+        ? {
+            name: asString(rawCategory.name)?.trim() || "",
+            path: asStringArray(rawCategory.path).map(item => item.trim()).filter(Boolean)
+        }
+        : null;
+    if (category && !category.name && category.path.length === 0) {
+        throw new Error("Invalid quest plan export: quest.category requires a name or path.");
+    }
+
+    const routeSections = Array.isArray(parsed.routeSections) ? parsed.routeSections : [];
+    const encounters = Array.isArray(parsed.encounters) ? parsed.encounters : [];
+
+    return {
+        schemaVersion: 1,
+        kind: "cerebro.questPlan",
+        exportedAt: asString(parsed.exportedAt) || new Date().toISOString(),
+        quest: {
+            title,
+            videoUrl: asOptionalString(quest.videoUrl),
+            bannerUrl: asOptionalString(quest.bannerUrl),
+            bannerFit: asOptionalString(quest.bannerFit) || "cover",
+            bannerPosition: asOptionalString(quest.bannerPosition) || "center",
+            category,
+            minStarLevel: asNumberOrNull(quest.minStarLevel),
+            maxStarLevel: asNumberOrNull(quest.maxStarLevel),
+            teamLimit: asNumberOrNull(quest.teamLimit),
+            requiredClasses: asStringArray(quest.requiredClasses).filter((item): item is ChampionClass =>
+                Object.values(ChampionClass).includes(item as ChampionClass)
+            ),
+            requiredTags: (Array.isArray(quest.requiredTags) ? quest.requiredTags : [])
+                .filter(isPlainObject)
+                .map(tag => ({
+                    name: asString(tag.name)?.trim() || "",
+                    category: asString(tag.category)?.trim() || ""
+                }))
+                .filter(tag => tag.name),
+            creators: (Array.isArray(quest.creators) ? quest.creators : [])
+                .filter(isPlainObject)
+                .map(creator => ({ discordId: asString(creator.discordId)?.trim() || "" }))
+                .filter(creator => creator.discordId)
+        },
+        routeSections: routeSections
+            .filter(isPlainObject)
+            .map(section => ({
+                key: asString(section.key)?.trim() || "",
+                title: asString(section.title)?.trim() || "Section",
+                order: asNumberOrNull(section.order) ?? 0,
+                parentPathKey: asOptionalString(section.parentPathKey),
+                paths: (Array.isArray(section.paths) ? section.paths : [])
+                    .filter(isPlainObject)
+                    .map(path => ({
+                        key: asString(path.key)?.trim() || "",
+                        title: asString(path.title)?.trim() || "Path",
+                        order: asNumberOrNull(path.order) ?? 0
+                    }))
+                    .filter(path => path.key)
+            }))
+            .filter(section => section.key),
+        encounters: encounters
+            .filter(isPlainObject)
+            .map(encounter => {
+                const rawDefender = isPlainObject(encounter.defender) ? encounter.defender : null;
+                return {
+                    sequence: asNumberOrNull(encounter.sequence) ?? 0,
+                    difficulty: Object.values(EncounterDifficulty).includes(encounter.difficulty as EncounterDifficulty)
+                        ? encounter.difficulty as EncounterDifficulty
+                        : EncounterDifficulty.NORMAL,
+                    tips: asOptionalString(encounter.tips),
+                    videoUrl: asOptionalString(encounter.videoUrl),
+                    defender: rawDefender ? {
+                        slug: asOptionalString(rawDefender.slug),
+                        name: asString(rawDefender.name)?.trim() || ""
+                    } : null,
+                    recommendedTags: asStringArray(encounter.recommendedTags),
+                    recommendedChampions: (Array.isArray(encounter.recommendedChampions) ? encounter.recommendedChampions : [])
+                        .filter(isPlainObject)
+                        .map(champion => ({
+                            slug: asOptionalString(champion.slug),
+                            name: asString(champion.name)?.trim() || ""
+                        }))
+                        .filter(champion => champion.name),
+                    requiredTags: (Array.isArray(encounter.requiredTags) ? encounter.requiredTags : [])
+                        .filter(isPlainObject)
+                        .map(tag => ({
+                            name: asString(tag.name)?.trim() || "",
+                            category: asString(tag.category)?.trim() || ""
+                        }))
+                        .filter(tag => tag.name),
+                    nodes: (Array.isArray(encounter.nodes) ? encounter.nodes : [])
+                        .filter(isPlainObject)
+                        .map(node => ({
+                            name: asString(node.name)?.trim() || "",
+                            description: asString(node.description)?.trim() || ""
+                        }))
+                        .filter(node => node.name),
+                    routePathKey: asOptionalString(encounter.routePathKey),
+                    videos: (Array.isArray(encounter.videos) ? encounter.videos : [])
+                        .filter(isPlainObject)
+                        .map(video => {
+                            const rawPlayer = isPlainObject(video.player) ? video.player : null;
+                            return {
+                                videoUrl: asString(video.videoUrl)?.trim() || "",
+                                player: rawPlayer ? {
+                                    discordId: asOptionalString(rawPlayer.discordId),
+                                    ingameName: asOptionalString(rawPlayer.ingameName),
+                                    botUserDiscordId: asOptionalString(rawPlayer.botUserDiscordId)
+                                } : null
+                            };
+                        })
+                        .filter(video => video.videoUrl)
+                };
+            })
+    };
+}
+
+export const exportQuestPlan = withActionContext('exportQuestPlan', async (questPlanId: string): Promise<QuestPlanExportPayload> => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const quest = await prisma.questPlan.findUnique({
+        where: { id: questPlanId },
+        include: {
+            category: true,
+            requiredTags: true,
+            creators: {
+                select: { discordId: true }
+            },
+            routeSections: {
+                orderBy: { order: 'asc' },
+                include: {
+                    paths: {
+                        orderBy: { order: 'asc' }
+                    }
+                }
+            },
+            encounters: {
+                orderBy: { sequence: 'asc' },
+                include: {
+                    defender: { select: { slug: true, name: true } },
+                    recommendedChampions: { select: { slug: true, name: true } },
+                    requiredTags: true,
+                    nodes: {
+                        include: {
+                            nodeModifier: {
+                                select: { name: true, description: true }
+                            }
+                        }
+                    },
+                    videos: {
+                        include: {
+                            player: {
+                                select: {
+                                    discordId: true,
+                                    ingameName: true,
+                                    botUser: {
+                                        select: { discordId: true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if (!quest) throw new Error("Quest plan not found.");
+
+    const sectionKeyById = new Map<string, string>();
+    const pathKeyById = new Map<string, string>();
+
+    for (const section of quest.routeSections) {
+        const sectionKey = makeRouteSectionKey(section.order, section.title);
+        sectionKeyById.set(section.id, sectionKey);
+        for (const path of section.paths) {
+            pathKeyById.set(path.id, makeRoutePathKey(sectionKey, path.order, path.title));
+        }
+    }
+
+    const categoryPath = quest.categoryId ? await getQuestCategoryPath(quest.categoryId) : [];
+
+    return {
+        schemaVersion: 1,
+        kind: "cerebro.questPlan",
+        exportedAt: new Date().toISOString(),
+        quest: {
+            title: quest.title,
+            videoUrl: quest.videoUrl,
+            bannerUrl: quest.bannerUrl,
+            bannerFit: quest.bannerFit,
+            bannerPosition: quest.bannerPosition,
+            category: quest.category ? { name: quest.category.name, path: categoryPath } : null,
+            minStarLevel: quest.minStarLevel,
+            maxStarLevel: quest.maxStarLevel,
+            teamLimit: quest.teamLimit,
+            requiredClasses: quest.requiredClasses,
+            requiredTags: quest.requiredTags.map(tag => ({ name: tag.name, category: tag.category })),
+            creators: quest.creators.map(creator => ({ discordId: creator.discordId }))
+        },
+        routeSections: quest.routeSections.map(section => ({
+            key: sectionKeyById.get(section.id)!,
+            title: section.title,
+            order: section.order,
+            parentPathKey: section.parentPathId ? pathKeyById.get(section.parentPathId) ?? null : null,
+            paths: section.paths.map(path => ({
+                key: pathKeyById.get(path.id)!,
+                title: path.title,
+                order: path.order
+            }))
+        })),
+        encounters: quest.encounters.map(encounter => ({
+            sequence: encounter.sequence,
+            difficulty: encounter.difficulty,
+            tips: encounter.tips,
+            videoUrl: encounter.videoUrl,
+            defender: encounter.defender ? { slug: encounter.defender.slug, name: encounter.defender.name } : null,
+            recommendedTags: encounter.recommendedTags,
+            recommendedChampions: encounter.recommendedChampions.map(champion => ({
+                slug: champion.slug,
+                name: champion.name
+            })),
+            requiredTags: encounter.requiredTags.map(tag => ({ name: tag.name, category: tag.category })),
+            nodes: encounter.nodes.map(node => ({
+                name: node.nodeModifier.name,
+                description: node.nodeModifier.description
+            })),
+            routePathKey: encounter.routePathId ? pathKeyById.get(encounter.routePathId) ?? null : null,
+            videos: encounter.videos.map(video => ({
+                videoUrl: video.videoUrl,
+                player: video.player ? {
+                    discordId: video.player.discordId,
+                    ingameName: video.player.ingameName,
+                    botUserDiscordId: video.player.botUser?.discordId ?? null
+                } : null
+            }))
+        }))
+    };
+});
+
+export const importQuestPlan = withActionContext('importQuestPlan', async (jsonText: string) => {
+    const actingUser = await requireBotAdmin("MANAGE_QUESTS");
+    const payload = parseQuestPlanExport(jsonText);
+
+    const missing: MissingQuestImportReferences = {
+        champions: [],
+        tags: [],
+        nodeModifiers: [],
+        categories: [],
+        creators: []
+    };
+
+    const categoryId = await resolveQuestCategoryByPath(payload.quest.category);
+    if (categoryId === undefined && payload.quest.category) {
+        missing.categories.push(formatCategoryRef(payload.quest.category));
+    }
+
+    const championRefs = [
+        ...payload.encounters.flatMap(encounter => [
+            ...(encounter.defender ? [encounter.defender] : []),
+            ...encounter.recommendedChampions
+        ])
+    ];
+    const championSlugs = uniqueStrings(championRefs.map(champion => champion.slug || ""));
+    const championNames = uniqueStrings(championRefs.map(champion => champion.name));
+
+    const [championsBySlug, championsByName] = await Promise.all([
+        championSlugs.length > 0
+            ? prisma.champion.findMany({
+                where: { slug: { in: championSlugs } },
+                select: { id: true, slug: true, name: true }
+            })
+            : Promise.resolve([]),
+        championNames.length > 0
+            ? prisma.champion.findMany({
+                where: { name: { in: championNames } },
+                select: { id: true, slug: true, name: true }
+            })
+            : Promise.resolve([])
+    ]);
+    const championIdBySlug = new Map(championsBySlug.filter(c => c.slug).map(c => [c.slug!, c.id]));
+    const championIdByName = new Map(championsByName.map(c => [c.name, c.id]));
+    const resolveChampionId = (champion: QuestExportChampionRef | null): number | null => {
+        if (!champion) return null;
+        if (champion.slug && championIdBySlug.has(champion.slug)) return championIdBySlug.get(champion.slug)!;
+        return championIdByName.get(champion.name) ?? null;
+    };
+
+    for (const champion of championRefs) {
+        if (!resolveChampionId(champion)) missing.champions.push(formatChampionRef(champion));
+    }
+
+    const tagRefs = [
+        ...payload.quest.requiredTags,
+        ...payload.encounters.flatMap(encounter => encounter.requiredTags)
+    ];
+    const tagNames = uniqueStrings(tagRefs.map(tag => tag.name));
+    const tags = tagNames.length > 0
+        ? await prisma.tag.findMany({
+            where: { name: { in: tagNames } },
+            select: { id: true, name: true, category: true }
+        })
+        : [];
+    const tagIdByKey = new Map(tags.map(tag => [tagKey(tag), tag.id]));
+    const resolveTagId = (tag: QuestExportTagRef): number | null => tagIdByKey.get(tagKey(tag)) ?? null;
+    for (const tag of tagRefs) {
+        if (!resolveTagId(tag)) missing.tags.push(formatTagRef(tag));
+    }
+
+    const nodeNames = uniqueStrings(payload.encounters.flatMap(encounter => encounter.nodes.map(node => node.name)));
+    const nodeModifiers = nodeNames.length > 0
+        ? await prisma.nodeModifier.findMany({
+            where: { name: { in: nodeNames } },
+            select: { id: true, name: true }
+        })
+        : [];
+    const nodeModifierIdByName = new Map(nodeModifiers.map(node => [node.name, node.id]));
+    for (const nodeName of nodeNames) {
+        if (!nodeModifierIdByName.has(nodeName)) missing.nodeModifiers.push(nodeName);
+    }
+
+    const creatorDiscordIds = uniqueStrings(payload.quest.creators.map(creator => creator.discordId));
+    const creators = creatorDiscordIds.length > 0
+        ? await prisma.botUser.findMany({
+            where: { discordId: { in: creatorDiscordIds } },
+            select: { id: true, discordId: true }
+        })
+        : [];
+    const creatorIdByDiscordId = new Map(creators.map(creator => [creator.discordId, creator.id]));
+    for (const discordId of creatorDiscordIds) {
+        if (!creatorIdByDiscordId.has(discordId)) missing.creators.push(discordId);
+    }
+
+    missing.champions = uniqueStrings(missing.champions);
+    missing.tags = uniqueStrings(missing.tags);
+    missing.nodeModifiers = uniqueStrings(missing.nodeModifiers);
+    missing.categories = uniqueStrings(missing.categories);
+    missing.creators = uniqueStrings(missing.creators);
+    const missingReport = summarizeMissingQuestImportReferences(missing);
+    if (missingReport) {
+        throw new Error(`Quest import is missing required references:\n${missingReport}`);
+    }
+
+    const videoPlayerRefs = payload.encounters.flatMap(encounter => encounter.videos.map(video => video.player).filter((player): player is QuestExportPlayerRef => !!player));
+    const playerBotUserDiscordIds = uniqueStrings(videoPlayerRefs.map(player => player.botUserDiscordId || ""));
+    const playerDiscordIds = uniqueStrings(videoPlayerRefs.map(player => player.discordId || ""));
+    const playerNames = uniqueStrings(videoPlayerRefs.map(player => player.ingameName || ""));
+    const playerLookupClauses = [
+        ...(playerBotUserDiscordIds.length ? [{ botUser: { discordId: { in: playerBotUserDiscordIds } } }] : []),
+        ...(playerDiscordIds.length ? [{ discordId: { in: playerDiscordIds } }] : []),
+        ...(playerNames.length ? [{ ingameName: { in: playerNames } }] : [])
+    ];
+    const players = playerLookupClauses.length > 0
+        ? await prisma.player.findMany({
+            where: {
+                OR: playerLookupClauses
+            },
+            select: {
+                id: true,
+                discordId: true,
+                ingameName: true,
+                botUser: { select: { discordId: true } }
+            }
+        })
+        : [];
+    const playerIdByBotUserDiscordId = new Map(players.filter(player => player.botUser?.discordId).map(player => [player.botUser!.discordId, player.id]));
+    const playerIdByDiscordAndName = new Map(players.map(player => [`${player.discordId}::${player.ingameName}`, player.id]));
+    const playerNameCounts = players.reduce((counts, player) => counts.set(player.ingameName, (counts.get(player.ingameName) ?? 0) + 1), new Map<string, number>());
+    const playerIdByUniqueName = new Map(players.filter(player => playerNameCounts.get(player.ingameName) === 1).map(player => [player.ingameName, player.id]));
+    const resolvePlayerId = (player: QuestExportPlayerRef | null): string | null => {
+        if (!player) return null;
+        if (player.botUserDiscordId && playerIdByBotUserDiscordId.has(player.botUserDiscordId)) {
+            return playerIdByBotUserDiscordId.get(player.botUserDiscordId)!;
+        }
+        if (player.discordId && player.ingameName && playerIdByDiscordAndName.has(`${player.discordId}::${player.ingameName}`)) {
+            return playerIdByDiscordAndName.get(`${player.discordId}::${player.ingameName}`)!;
+        }
+        if (player.ingameName && playerIdByUniqueName.has(player.ingameName)) {
+            return playerIdByUniqueName.get(player.ingameName)!;
+        }
+        return null;
+    };
+
+    const newPlanId = await prisma.$transaction(async (tx) => {
+        const plan = await tx.questPlan.create({
+            data: {
+                title: payload.quest.title,
+                status: QuestPlanStatus.DRAFT,
+                videoUrl: payload.quest.videoUrl,
+                bannerUrl: payload.quest.bannerUrl,
+                bannerFit: payload.quest.bannerFit || "cover",
+                bannerPosition: payload.quest.bannerPosition || "center",
+                categoryId: categoryId ?? null,
+                creatorId: actingUser.id,
+                minStarLevel: payload.quest.minStarLevel,
+                maxStarLevel: payload.quest.maxStarLevel,
+                teamLimit: payload.quest.teamLimit,
+                requiredClasses: payload.quest.requiredClasses,
+                requiredTags: {
+                    connect: payload.quest.requiredTags.map(tag => ({ id: resolveTagId(tag)! }))
+                },
+                creators: {
+                    connect: payload.quest.creators.map(creator => ({ id: creatorIdByDiscordId.get(creator.discordId)! }))
+                }
+            }
+        });
+
+        const pathIdByKey = new Map<string, string>();
+        const sortedSections = [...payload.routeSections].sort((a, b) => a.order - b.order);
+        for (const section of sortedSections) {
+            const createdSection = await tx.questRouteSection.create({
+                data: {
+                    questPlanId: plan.id,
+                    title: section.title,
+                    order: section.order,
+                    parentPathId: null
+                }
+            });
+            for (const path of [...section.paths].sort((a, b) => a.order - b.order)) {
+                const createdPath = await tx.questRoutePath.create({
+                    data: {
+                        sectionId: createdSection.id,
+                        title: path.title,
+                        order: path.order
+                    }
+                });
+                pathIdByKey.set(path.key, createdPath.id);
+            }
+        }
+
+        for (const section of sortedSections) {
+            if (!section.parentPathKey) continue;
+            const parentPathId = pathIdByKey.get(section.parentPathKey);
+            if (!parentPathId) continue;
+            const sectionPath = section.paths[0] ? pathIdByKey.get(section.paths[0].key) : null;
+            if (!sectionPath) continue;
+            const createdPath = await tx.questRoutePath.findUnique({
+                where: { id: sectionPath },
+                select: { sectionId: true }
+            });
+            if (createdPath) {
+                await tx.questRouteSection.update({
+                    where: { id: createdPath.sectionId },
+                    data: { parentPathId }
+                });
+            }
+        }
+
+        for (const encounter of payload.encounters) {
+            await tx.questEncounter.create({
+                data: {
+                    questPlanId: plan.id,
+                    sequence: encounter.sequence,
+                    difficulty: encounter.difficulty,
+                    tips: encounter.tips,
+                    videoUrl: encounter.videoUrl,
+                    defenderId: resolveChampionId(encounter.defender),
+                    routePathId: encounter.routePathKey ? pathIdByKey.get(encounter.routePathKey) ?? null : null,
+                    recommendedTags: encounter.recommendedTags,
+                    recommendedChampions: {
+                        connect: encounter.recommendedChampions.map(champion => ({ id: resolveChampionId(champion)! }))
+                    },
+                    requiredTags: {
+                        connect: encounter.requiredTags.map(tag => ({ id: resolveTagId(tag)! }))
+                    },
+                    nodes: {
+                        create: encounter.nodes.map(node => ({
+                            nodeModifierId: nodeModifierIdByName.get(node.name)!
+                        }))
+                    },
+                    videos: {
+                        create: encounter.videos.map(video => ({
+                            videoUrl: video.videoUrl,
+                            playerId: resolvePlayerId(video.player)
+                        }))
+                    }
+                }
+            });
+        }
+
+        return plan.id;
+    });
+
+    if (payload.routeSections.length > 0) {
+        await sortQuestEncountersByRoute(newPlanId);
+    }
+
+    revalidatePath('/admin/quests');
+    revalidatePath(`/admin/quests/${newPlanId}`);
+    revalidatePath('/planning/quests');
+    revalidatePath(`/planning/quests/${newPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
+
+    return { success: true, planId: newPlanId };
+});
+
 export const clearRecommendedChampionsInQuest = withActionContext('clearRecommendedChampionsInQuest', async (id: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 
@@ -960,6 +1681,452 @@ export const clearRecommendedChampionsInQuest = withActionContext('clearRecommen
 
     revalidatePath(`/admin/quests/${id}`);
     revalidatePath(`/planning/quests/${id}`);
+    return { success: true };
+});
+
+// --- Quest Routes ---
+
+export const createQuestRouteSection = withActionContext('createQuestRouteSection', async (
+    questPlanId: string,
+    title: string = "Section"
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const maxSection = await prisma.questRouteSection.aggregate({
+        where: { questPlanId },
+        _max: { order: true }
+    });
+
+    const section = await prisma.questRouteSection.create({
+        data: {
+            questPlanId,
+            title: title.trim() || "Section",
+            order: (maxSection._max.order ?? 0) + 1,
+            paths: {
+                create: {
+                    title: "Path A",
+                    order: 1
+                }
+            }
+        },
+        include: { paths: true }
+    });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true, section };
+});
+
+export const createQuestRoutePath = withActionContext('createQuestRoutePath', async (
+    questPlanId: string,
+    sectionId: string,
+    title: string = "Path"
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const section = await prisma.questRouteSection.findUnique({
+        where: { id: sectionId },
+        select: { id: true, questPlanId: true }
+    });
+    if (!section || section.questPlanId !== questPlanId) {
+        throw new Error("Section not found or does not belong to this quest plan.");
+    }
+
+    const maxPath = await prisma.questRoutePath.aggregate({
+        where: { sectionId },
+        _max: { order: true }
+    });
+
+    const path = await prisma.questRoutePath.create({
+        data: {
+            sectionId,
+            title: title.trim() || "Path",
+            order: (maxPath._max.order ?? 0) + 1
+        }
+    });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true, path };
+});
+
+export const duplicateQuestRoutePathFights = withActionContext('duplicateQuestRoutePathFights', async (
+    questPlanId: string,
+    sourcePathId: string
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const sourcePath = await prisma.questRoutePath.findUnique({
+        where: { id: sourcePathId },
+        include: {
+            section: {
+                select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                    questPlanId: true
+                }
+            },
+            encounters: {
+                orderBy: { sequence: 'asc' },
+                include: {
+                    requiredTags: true,
+                    recommendedChampions: true,
+                    nodes: true,
+                    videos: true
+                }
+            }
+        }
+    });
+
+    if (!sourcePath || sourcePath.section.questPlanId !== questPlanId) {
+        throw new Error("Source path not found or does not belong to this quest plan.");
+    }
+
+    const { _max: sequenceMax } = await prisma.questEncounter.aggregate({
+        where: { questPlanId },
+        _max: { sequence: true }
+    });
+
+    const created = await prisma.$transaction(async (tx) => {
+        const insertionOrder = sourcePath.section.order + 1;
+        const sectionsToShift = await tx.questRouteSection.findMany({
+            where: {
+                questPlanId,
+                order: { gte: insertionOrder }
+            },
+            select: { id: true, order: true },
+            orderBy: { order: 'desc' }
+        });
+
+        for (const sectionToShift of sectionsToShift) {
+            await tx.questRouteSection.update({
+                where: { id: sectionToShift.id },
+                data: { order: sectionToShift.order + 1 }
+            });
+        }
+
+        const section = await tx.questRouteSection.create({
+            data: {
+                questPlanId,
+                parentPathId: sourcePath.id,
+                title: `After ${sourcePath.title}`,
+                order: insertionOrder
+            }
+        });
+
+        const path = await tx.questRoutePath.create({
+            data: {
+                sectionId: section.id,
+                title: `${sourcePath.title} Copy`,
+                order: 1
+            }
+        });
+
+        let nextSequence = (sequenceMax.sequence ?? 0) + 1;
+
+        for (const encounter of sourcePath.encounters) {
+            await tx.questEncounter.create({
+                data: {
+                    questPlanId,
+                    routePathId: path.id,
+                    sequence: nextSequence++,
+                    difficulty: encounter.difficulty,
+                    videoUrl: encounter.videoUrl,
+                    tips: encounter.tips,
+                    minStarLevel: encounter.minStarLevel,
+                    maxStarLevel: encounter.maxStarLevel,
+                    requiredClasses: encounter.requiredClasses,
+                    defenderId: encounter.defenderId,
+                    recommendedTags: encounter.recommendedTags,
+                    recommendedChampions: {
+                        connect: encounter.recommendedChampions.map(champion => ({ id: champion.id }))
+                    },
+                    requiredTags: {
+                        connect: encounter.requiredTags.map(tag => ({ id: tag.id }))
+                    },
+                    nodes: {
+                        create: encounter.nodes.map(node => ({
+                            nodeModifierId: node.nodeModifierId
+                        }))
+                    },
+                    videos: {
+                        create: encounter.videos.map(video => ({
+                            videoUrl: video.videoUrl,
+                            playerId: video.playerId
+                        }))
+                    }
+                }
+            });
+        }
+
+        return {
+            sectionId: section.id,
+            pathId: path.id,
+            copiedCount: sourcePath.encounters.length
+        };
+    });
+
+    const sortedCount = await sortQuestEncountersByRoute(questPlanId);
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true, ...created, sortedCount };
+});
+
+export const updateQuestRouteSection = withActionContext('updateQuestRouteSection', async (
+    questPlanId: string,
+    sectionId: string,
+    data: { title?: string; parentPathId?: string | null }
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const section = await prisma.questRouteSection.findUnique({
+        where: { id: sectionId },
+        select: { questPlanId: true }
+    });
+    if (!section || section.questPlanId !== questPlanId) {
+        throw new Error("Section not found or does not belong to this quest plan.");
+    }
+
+    if (data.parentPathId) {
+        const parentPath = await prisma.questRoutePath.findUnique({
+            where: { id: data.parentPathId },
+            include: {
+                section: {
+                    include: {
+                        parentPath: {
+                            include: {
+                                section: {
+                                    select: { id: true, parentPathId: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!parentPath || parentPath.section.questPlanId !== questPlanId) {
+            throw new Error("Parent path not found or does not belong to this quest plan.");
+        }
+        if (parentPath.sectionId === sectionId) {
+            throw new Error("A section cannot be scoped under one of its own paths.");
+        }
+
+        let ancestorParentPathId: string | null = parentPath.section.parentPathId;
+        while (ancestorParentPathId) {
+            const ancestorPath = await prisma.questRoutePath.findUnique({
+                where: { id: ancestorParentPathId },
+                include: { section: { select: { id: true, parentPathId: true } } }
+            });
+            if (!ancestorPath) break;
+            if (ancestorPath.section.id === sectionId) {
+                throw new Error("Setting this parent would create a circular route dependency.");
+            }
+            ancestorParentPathId = ancestorPath.section.parentPathId;
+        }
+    }
+
+    await prisma.questRouteSection.update({
+        where: { id: sectionId },
+        data: {
+            title: data.title !== undefined ? (data.title.trim() || "Section") : undefined,
+            parentPathId: data.parentPathId === undefined ? undefined : data.parentPathId
+        }
+    });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true };
+});
+
+export const updateQuestRoutePath = withActionContext('updateQuestRoutePath', async (
+    questPlanId: string,
+    pathId: string,
+    data: { title?: string }
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const path = await prisma.questRoutePath.findUnique({
+        where: { id: pathId },
+        include: { section: { select: { questPlanId: true } } }
+    });
+    if (!path || path.section.questPlanId !== questPlanId) {
+        throw new Error("Path not found or does not belong to this quest plan.");
+    }
+
+    await prisma.questRoutePath.update({
+        where: { id: pathId },
+        data: {
+            title: data.title !== undefined ? (data.title.trim() || "Path") : undefined
+        }
+    });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true };
+});
+
+export const reorderQuestRouteSections = withActionContext('reorderQuestRouteSections', async (
+    questPlanId: string,
+    sectionIds: string[]
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const sections = await prisma.questRouteSection.findMany({
+        where: { id: { in: sectionIds } },
+        select: { id: true, questPlanId: true }
+    });
+    if (sections.length !== sectionIds.length || sections.some(section => section.questPlanId !== questPlanId)) {
+        throw new Error("One or more sections do not belong to this quest plan.");
+    }
+
+    const offset = sectionIds.length + 1000;
+    await prisma.$transaction([
+        ...sectionIds.map((id, index) => prisma.questRouteSection.update({ where: { id }, data: { order: offset + index } })),
+        ...sectionIds.map((id, index) => prisma.questRouteSection.update({ where: { id }, data: { order: index + 1 } })),
+    ]);
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true };
+});
+
+export const reorderQuestRoutePaths = withActionContext('reorderQuestRoutePaths', async (
+    questPlanId: string,
+    sectionId: string,
+    pathIds: string[]
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const section = await prisma.questRouteSection.findUnique({
+        where: { id: sectionId },
+        select: { questPlanId: true }
+    });
+    if (!section || section.questPlanId !== questPlanId) {
+        throw new Error("Section not found or does not belong to this quest plan.");
+    }
+
+    const paths = await prisma.questRoutePath.findMany({
+        where: { id: { in: pathIds } },
+        select: { id: true, sectionId: true }
+    });
+    if (paths.length !== pathIds.length || paths.some(path => path.sectionId !== sectionId)) {
+        throw new Error("One or more paths do not belong to this section.");
+    }
+
+    const offset = pathIds.length + 1000;
+    await prisma.$transaction([
+        ...pathIds.map((id, index) => prisma.questRoutePath.update({ where: { id }, data: { order: offset + index } })),
+        ...pathIds.map((id, index) => prisma.questRoutePath.update({ where: { id }, data: { order: index + 1 } })),
+    ]);
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true };
+});
+
+export const deleteQuestRouteSection = withActionContext('deleteQuestRouteSection', async (
+    questPlanId: string,
+    sectionId: string
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const section = await prisma.questRouteSection.findUnique({
+        where: { id: sectionId },
+        select: { questPlanId: true }
+    });
+    if (!section || section.questPlanId !== questPlanId) {
+        throw new Error("Section not found or does not belong to this quest plan.");
+    }
+
+    await prisma.questRouteSection.delete({ where: { id: sectionId } });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true };
+});
+
+export const deleteQuestRoutePath = withActionContext('deleteQuestRoutePath', async (
+    questPlanId: string,
+    pathId: string
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const path = await prisma.questRoutePath.findUnique({
+        where: { id: pathId },
+        include: { section: { select: { questPlanId: true } } }
+    });
+    if (!path || path.section.questPlanId !== questPlanId) {
+        throw new Error("Path not found or does not belong to this quest plan.");
+    }
+
+    await prisma.questRoutePath.delete({ where: { id: pathId } });
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+    return { success: true };
+});
+
+export const savePlayerQuestRouteChoice = withActionContext('savePlayerQuestRouteChoice', async (
+    questPlanId: string,
+    sectionId: string,
+    pathId: string
+) => {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+
+    const path = await prisma.questRoutePath.findUnique({
+        where: { id: pathId },
+        include: { section: { select: { id: true, questPlanId: true } } }
+    });
+    if (!path || path.section.id !== sectionId || path.section.questPlanId !== questPlanId) {
+        throw new Error("Invalid route choice for this quest plan.");
+    }
+
+    const playerPlan = await prisma.playerQuestPlan.upsert({
+        where: {
+            playerId_questPlanId: {
+                playerId: actingUser.id,
+                questPlanId
+            }
+        },
+        create: {
+            playerId: actingUser.id,
+            questPlanId
+        },
+        update: {}
+    });
+
+    await prisma.playerQuestRouteChoice.upsert({
+        where: {
+            playerQuestPlanId_questRouteSectionId: {
+                playerQuestPlanId: playerPlan.id,
+                questRouteSectionId: sectionId
+            }
+        },
+        create: {
+            playerQuestPlanId: playerPlan.id,
+            questRouteSectionId: sectionId,
+            questRoutePathId: pathId
+        },
+        update: {
+            questRoutePathId: pathId
+        }
+    });
+
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
     return { success: true };
 });
 
@@ -1038,6 +2205,73 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
     return { success: true };
 });
 
+export const savePlayerQuestEncounterRevives = withActionContext('savePlayerQuestEncounterRevives', async (questPlanId: string, questEncounterId: string, revivesUsed: number) => {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+
+    if (!Number.isInteger(revivesUsed) || revivesUsed < 0 || revivesUsed > 99) {
+        throw new Error("Revives used must be an integer between 0 and 99.");
+    }
+
+    const encounter = await prisma.questEncounter.findUnique({
+        where: { id: questEncounterId },
+        select: { questPlanId: true }
+    });
+
+    if (!encounter || encounter.questPlanId !== questPlanId) {
+        throw new Error("Invalid quest encounter or plan mismatch.");
+    }
+
+    const playerPlan = await prisma.playerQuestPlan.upsert({
+        where: {
+            playerId_questPlanId: {
+                playerId: actingUser.id,
+                questPlanId
+            }
+        },
+        create: {
+            playerId: actingUser.id,
+            questPlanId
+        },
+        update: {}
+    });
+
+    await prisma.playerQuestEncounter.upsert({
+        where: {
+            playerQuestPlanId_questEncounterId: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId
+            }
+        },
+        create: {
+            playerQuestPlanId: playerPlan.id,
+            questEncounterId,
+            questPlanId,
+            revivesUsed
+        },
+        update: {
+            revivesUsed
+        }
+    });
+
+    if (revivesUsed === 0) {
+        await prisma.playerQuestEncounter.deleteMany({
+            where: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId,
+                selectedChampionId: null,
+                revivesUsed: 0
+            }
+        });
+    }
+
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
+
+    return { success: true };
+});
+
 /**
  * Clear all counter selections for a player's quest plan.
  */
@@ -1050,8 +2284,16 @@ export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', 
     });
 
     if (playerPlan) {
+        await prisma.playerQuestEncounter.updateMany({
+            where: { playerQuestPlanId: playerPlan.id },
+            data: { selectedChampionId: null }
+        });
         await prisma.playerQuestEncounter.deleteMany({
-            where: { playerQuestPlanId: playerPlan.id }
+            where: {
+                playerQuestPlanId: playerPlan.id,
+                selectedChampionId: null,
+                revivesUsed: 0
+            }
         });
     }
 
@@ -1192,6 +2434,7 @@ export type QuestEncounterCreateInput = {
     recommendedChampionIds?: number[];
     requiredTagIds?: number[];
     nodeModifierIds?: string[];
+    routePathId?: string | null;
 };
 
 export const createQuestEncounter = withActionContext('createQuestEncounter', async (data: QuestEncounterCreateInput) => {
@@ -1204,6 +2447,16 @@ export const createQuestEncounter = withActionContext('createQuestEncounter', as
         }
     }
 
+    if (data.routePathId) {
+        const path = await prisma.questRoutePath.findUnique({
+            where: { id: data.routePathId },
+            include: { section: { select: { questPlanId: true } } }
+        });
+        if (!path || path.section.questPlanId !== data.questPlanId) {
+            throw new Error("Route path not found or does not belong to this quest plan.");
+        }
+    }
+
     const encounter = await prisma.questEncounter.create({
         data: {
             sequence: data.sequence,
@@ -1211,6 +2464,7 @@ export const createQuestEncounter = withActionContext('createQuestEncounter', as
             videoUrl: data.videoUrl,
             tips: data.tips,
             questPlanId: data.questPlanId,
+            routePathId: data.routePathId || null,
             defenderId: data.defenderId,
             recommendedTags: data.recommendedTagNames || [],
             recommendedChampions: data.recommendedChampionIds ? {
@@ -1413,6 +2667,7 @@ export type QuestEncounterUpdateInput = {
     recommendedChampionIds?: number[];
     requiredTagIds?: number[];
     nodeModifierIds?: string[];
+    routePathId?: string | null;
 };
 
 export const updateQuestEncounter = withActionContext('updateQuestEncounter', async (data: QuestEncounterUpdateInput) => {
@@ -1430,6 +2685,16 @@ export const updateQuestEncounter = withActionContext('updateQuestEncounter', as
         throw new Error("Encounter not found or does not belong to this quest plan.");
     }
 
+    if (data.routePathId) {
+        const path = await prisma.questRoutePath.findUnique({
+            where: { id: data.routePathId },
+            include: { section: { select: { questPlanId: true } } }
+        });
+        if (!path || path.section.questPlanId !== data.questPlanId) {
+            throw new Error("Route path not found or does not belong to this quest plan.");
+        }
+    }
+
     const encounter = await prisma.questEncounter.update({
         where: { id: data.id },
         data: {
@@ -1438,6 +2703,7 @@ export const updateQuestEncounter = withActionContext('updateQuestEncounter', as
             videoUrl: data.videoUrl,
             tips: data.tips,
             defenderId: data.defenderId,
+            routePathId: data.routePathId === undefined ? undefined : data.routePathId,
             recommendedTags: data.recommendedTagNames !== undefined ? data.recommendedTagNames : undefined,
             recommendedChampions: data.recommendedChampionIds !== undefined ? {
                 set: data.recommendedChampionIds.map(id => ({ id }))
@@ -1520,6 +2786,112 @@ export const reorderQuestEncounters = withActionContext('reorderQuestEncounters'
     return { success: true };
 });
 
+async function sortQuestEncountersByRoute(questPlanId: string) {
+    const [sections, unassignedEncounters] = await Promise.all([
+        prisma.questRouteSection.findMany({
+            where: { questPlanId },
+            orderBy: { order: 'asc' },
+            include: {
+                paths: {
+                    orderBy: { order: 'asc' },
+                    include: {
+                        encounters: {
+                            select: { id: true, sequence: true },
+                            orderBy: { sequence: 'asc' }
+                        }
+                    }
+                }
+            }
+        }),
+        prisma.questEncounter.findMany({
+            where: {
+                questPlanId,
+                routePathId: null
+            },
+            select: { id: true, sequence: true },
+            orderBy: { sequence: 'asc' }
+        })
+    ]);
+
+    if (sections.length === 0) {
+        throw new Error("This quest has no route sections to sort by.");
+    }
+
+    const childSectionsByParentPathId = new Map<string, typeof sections>();
+    const rootSections: typeof sections = [];
+    for (const section of sections) {
+        if (section.parentPathId) {
+            const current = childSectionsByParentPathId.get(section.parentPathId) || [];
+            current.push(section);
+            childSectionsByParentPathId.set(section.parentPathId, current);
+        } else {
+            rootSections.push(section);
+        }
+    }
+
+    const orderedEncounterIds: string[] = [];
+    const seenEncounterIds = new Set<string>();
+    const seenSectionIds = new Set<string>();
+
+    const appendEncounter = (id: string) => {
+        if (seenEncounterIds.has(id)) return;
+        seenEncounterIds.add(id);
+        orderedEncounterIds.push(id);
+    };
+
+    const visitSection = (section: (typeof sections)[number]) => {
+        if (seenSectionIds.has(section.id)) return;
+        seenSectionIds.add(section.id);
+
+        for (const path of section.paths) {
+            for (const encounter of path.encounters) {
+                appendEncounter(encounter.id);
+            }
+            for (const childSection of childSectionsByParentPathId.get(path.id) || []) {
+                visitSection(childSection);
+            }
+        }
+    };
+
+    for (const section of rootSections) {
+        visitSection(section);
+    }
+    for (const section of sections) {
+        visitSection(section);
+    }
+    for (const encounter of unassignedEncounters) {
+        appendEncounter(encounter.id);
+    }
+
+    if (orderedEncounterIds.length === 0) {
+        return { success: true, count: 0 };
+    }
+
+    const offset = orderedEncounterIds.length + 1000;
+    await prisma.$transaction([
+        ...orderedEncounterIds.map((id, index) =>
+            prisma.questEncounter.update({ where: { id }, data: { sequence: offset + index } })
+        ),
+        ...orderedEncounterIds.map((id, index) =>
+            prisma.questEncounter.update({ where: { id }, data: { sequence: index + 1 } })
+        ),
+    ]);
+
+    return orderedEncounterIds.length;
+}
+
+export const reorderQuestEncountersByRoute = withActionContext('reorderQuestEncountersByRoute', async (questPlanId: string) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const count = await sortQuestEncountersByRoute(questPlanId);
+
+    revalidatePath(`/admin/quests/${questPlanId}`);
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plan-detail', 'default');
+
+    return { success: true, count };
+});
+
 // --- Bulk Video Assignment ---
 
 export type BulkEncounterVideoInput = {
@@ -1586,6 +2958,27 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                     category: true,
                     requiredTags: true,
                     creators: true,
+                    routeSections: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                            parentPath: {
+                                include: {
+                                    section: {
+                                        select: { id: true, title: true }
+                                    }
+                                }
+                            },
+                            paths: {
+                                orderBy: { order: 'asc' },
+                                include: {
+                                    encounters: {
+                                        select: { id: true },
+                                        orderBy: { sequence: 'asc' }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     encounters: {
                         orderBy: { sequence: 'asc' },
                         include: {
@@ -1615,7 +3008,8 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                 include: {
                     champion: true
                 }
-            }
+            },
+            routeChoices: true
         }
     });
 
@@ -1701,7 +3095,10 @@ export const getPlayerQuestPlansForProfile = withActionContext('getPlayerQuestPl
             playerId,
             encounters: {
                 some: {
-                    selectedChampionId: { not: null }
+                    OR: [
+                        { selectedChampionId: { not: null } },
+                        { revivesUsed: { gt: 0 } }
+                    ]
                 }
             },
             questPlan: {
@@ -1725,7 +3122,12 @@ export const getPlayerQuestPlansForProfile = withActionContext('getPlayerQuestPl
                 }
             },
             encounters: {
-                where: { selectedChampionId: { not: null } },
+                where: {
+                    OR: [
+                        { selectedChampionId: { not: null } },
+                        { revivesUsed: { gt: 0 } }
+                    ]
+                },
                 select: { id: true }
             }
         },

@@ -143,9 +143,11 @@ export function ReadOnlyPlanShell({
             <QuestTimelineClient
                 quest={quest}
                 roster={roster}
+                savedEncounters={plan.encounters || []}
                 readOnly
                 initialSelections={selections}
                 rosterMap={plan.rosterMap}
+                savedRouteChoices={plan.routeChoices || []}
                 savedSynergies={savedSynergies}
             />
         </div>

@@ -1,4 +1,4 @@
-import { QuestPlan, QuestCategory, Player, Tag, QuestPlanStatus, Champion, QuestEncounter, NodeModifier, QuestEncounterNode } from "@prisma/client";
+import { QuestPlan, QuestCategory, Player, Tag, QuestPlanStatus, Champion, QuestEncounter, NodeModifier, QuestEncounterNode, QuestRouteSection, QuestRoutePath } from "@prisma/client";
 
 export type CreatorInfo = {
     id: string;
@@ -23,6 +23,14 @@ export type QuestWithRelations = QuestPlan & {
     creators: CreatorInfo[];
     requiredTags: Tag[];
     encounters: EncounterWithRelations[];
+    routeSections: (QuestRouteSection & {
+        parentPath: (QuestRoutePath & {
+            section: { id: string; title: string };
+        }) | null;
+        paths: (QuestRoutePath & {
+            encounters: { id: string }[];
+        })[];
+    })[];
     personalProgress?: number;
     _count?: {
         playerPlans: number;

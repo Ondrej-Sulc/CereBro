@@ -1,0 +1,1 @@
+ALTER TABLE "PlayerQuestEncounter" ADD COLUMN "revivesUsed" INTEGER NOT NULL DEFAULT 0;

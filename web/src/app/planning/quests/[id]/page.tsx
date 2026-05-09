@@ -122,6 +122,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         },
         include: {
             encounters: true,
+            routeChoices: true,
             synergyChampions: {
                 include: {
                     champion: {
@@ -430,6 +431,7 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
                 quest={quest}
                 roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
+                savedRouteChoices={playerPlan?.routeChoices || []}
                 savedSynergies={savedSynergies}
                 popularCounters={popularCounters}
                 featuredPicks={featuredPicks}

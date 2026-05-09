@@ -1,5 +1,5 @@
 "use client";
-import { EncounterCard } from "./encounter-card/EncounterCard";
+import { EncounterCard, ReviveOrbIcon } from "./encounter-card/EncounterCard";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestSynergy, clearAllQuestCounters } from "@/app/actions/quests";
+import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestSynergy, clearAllQuestCounters, savePlayerQuestRouteChoice } from "@/app/actions/quests";
 import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
@@ -49,11 +49,12 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
     const teamMap = useMemo(() => {
         const map: Record<number, { champion: ChampionCounterData; assignedEncounters: any[] }> = {};
         picks.forEach(p => {
+            const enc = quest.encounters.find((e: any) => e.id === p.encounterId);
+            if (!enc) return;
             if (!map[p.champion.id]) {
                 map[p.champion.id] = { champion: p.champion, assignedEncounters: [] };
             }
-            const enc = quest.encounters.find((e: any) => e.id === p.encounterId);
-            if (enc) map[p.champion.id].assignedEncounters.push(enc);
+            map[p.champion.id].assignedEncounters.push(enc);
         });
         const result = Object.values(map);
         result.forEach(v => v.assignedEncounters.sort((a, b) => a.sequence - b.sequence));
@@ -264,6 +265,7 @@ const isChampionUnavailableForEncounter = ({
     userChamp,
     encounterId,
     selections,
+    activeEncounterIds,
     roster,
     quest,
     encounter
@@ -271,6 +273,7 @@ const isChampionUnavailableForEncounter = ({
     userChamp: RosterWithChampion | undefined;
     encounterId: string;
     selections: Record<string, string | null>;
+    activeEncounterIds?: Set<string>;
     roster: RosterWithChampion[];
     quest: QuestTimelineProps["quest"];
     encounter: EncounterWithRelations;
@@ -280,6 +283,9 @@ const isChampionUnavailableForEncounter = ({
     }
 
     const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
+        if (activeEncounterIds && !activeEncounterIds.has(encId)) {
+            return acc;
+        }
         if (encId !== encounterId && rid !== null) {
             const r = roster.find(re => re.id === rid);
             if (r?.championId === userChamp.championId) {
@@ -293,7 +299,7 @@ const isChampionUnavailableForEncounter = ({
     return otherSelectionsCount >= validRosterCount;
 };
 
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], savedSynergies = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], savedRouteChoices = [], savedSynergies = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -305,13 +311,82 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [isSharing, setIsSharing] = useState(false);
     const [shareSuccess, setShareSuccess] = useState(false);
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
+    const [routeChoices, setRouteChoices] = useState<Record<string, string>>(() => {
+        const initial: Record<string, string> = {};
+        savedRouteChoices.forEach(choice => {
+            initial[choice.questRouteSectionId] = choice.questRoutePathId;
+        });
+        quest.routeSections?.forEach(section => {
+            if (!initial[section.id] && section.paths[0]) {
+                initial[section.id] = section.paths[0].id;
+            }
+        });
+        return initial;
+    });
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
     const [isClearPlanOpen, setIsClearPlanOpen] = useState(false);
     const [isNodesCollapsed, setIsNodesCollapsed] = useState(false);
     const [isSynergyPickerOpen, setIsSynergyPickerOpen] = useState(false);
+    const routeMapRef = useRef<HTMLDivElement>(null);
+    const routeStartRef = useRef<HTMLDivElement>(null);
+    const routeEndRef = useRef<HTMLDivElement>(null);
+    const routeCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [routeConnectorPaths, setRouteConnectorPaths] = useState<string[]>([]);
+    const [routeMapSize, setRouteMapSize] = useState({ width: 0, height: 0 });
 
     // Track synergy champions locally
     const [synergyIds, setSynergyIds] = useState<number[]>(() => savedSynergies.map(s => s.championId));
+
+    // Track selections locally for immediate UI updates
+    const [selections, setSelections] = useState<Record<string, string | null>>(() => {
+        const initial: Record<string, string | null> = {};
+        
+        if (readOnly) {
+            // In read-only mode, we use the rosterMap to get the IDs directly
+            Object.keys(initialSelections || {}).forEach(encId => {
+                const rosterEntry = rosterMap[encId];
+                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
+            });
+            return initial;
+        }
+
+        // For interactive mode, initialize from savedEncounters and find matching roster entries
+        const availableRoster = [...roster];
+        savedEncounters.forEach(se => {
+            if (se.selectedChampionId) {
+                const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
+                const rosterIndex = availableRoster.findIndex(r => 
+                    r.championId === se.selectedChampionId && 
+                    isChampionValidForEncounterOrQuest(r, quest, encounter)
+                );
+                
+                if (rosterIndex !== -1) {
+                    initial[se.questEncounterId] = availableRoster[rosterIndex].id;
+                    // Remove from available so it's not assigned to another encounter
+                    // ONLY if it's an infinite quest (no team limit)
+                    if (quest.teamLimit === null) {
+                        availableRoster.splice(rosterIndex, 1);
+                    }
+                } else {
+                    initial[se.questEncounterId] = null;
+                }
+            } else {
+                initial[se.questEncounterId] = null;
+            }
+        });
+        return initial;
+    });
+
+    const [revivesByEncounterId, setRevivesByEncounterId] = useState<Record<string, number>>(() => {
+        const initial: Record<string, number> = {};
+        savedEncounters.forEach(encounter => {
+            const count = Math.max(0, Math.min(99, Number((encounter as { revivesUsed?: number }).revivesUsed || 0)));
+            if (count > 0) {
+                initial[encounter.questEncounterId] = count;
+            }
+        });
+        return initial;
+    });
 
     // Champion Removal State
     const [championToRemove, setChampionToRemove] = useState<{
@@ -376,7 +451,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         try {
             await clearAllQuestCounters(quest.id);
             setSelections({});
-            toast({ title: "Plan Cleared", description: "All counter selections have been removed." });
+            toast({ title: "Plan Cleared", description: "All counter selections have been removed. Revive counts were kept." });
         } catch {
             toast({ title: "Error", description: "Failed to clear the plan.", variant: "destructive" });
         }
@@ -389,7 +464,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
     const initiateRemoveTeamMember = (rosterId: string, championId: number, championName: string) => {
         const assignedEncounters = Object.entries(selections)
-            .filter(([encId, rId]) => rId === rosterId)
+            .filter(([encId, rId]) => activeEncounterIds.has(encId) && rId === rosterId)
             .map(([encId]) => encId);
             
         const isSynergy = synergyIds.includes(championId);
@@ -469,10 +544,326 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         );
     };
 
+    const visibleRouteSections = useMemo(() => {
+        const sections = quest.routeSections || [];
+        if (sections.length === 0) return [];
+
+        const visible = new Set<string>();
+        let changed = true;
+        while (changed) {
+            changed = false;
+            for (const section of sections) {
+                if (visible.has(section.id)) continue;
+                if (!section.parentPathId) {
+                    visible.add(section.id);
+                    changed = true;
+                    continue;
+                }
+
+                const parentSection = sections.find(candidate =>
+                    candidate.paths.some(path => path.id === section.parentPathId)
+                );
+                if (!parentSection || !visible.has(parentSection.id)) continue;
+
+                const selectedParentPathId = routeChoices[parentSection.id] || parentSection.paths[0]?.id;
+                if (selectedParentPathId === section.parentPathId) {
+                    visible.add(section.id);
+                    changed = true;
+                }
+            }
+        }
+
+        return sections.filter(section => visible.has(section.id));
+    }, [quest.routeSections, routeChoices]);
+
+    const routeFilteredEncounters = useMemo(() => {
+        if ((quest.routeSections || []).length === 0) return quest.encounters;
+
+        const selectedPathIds = new Set(
+            visibleRouteSections
+                .map(section => routeChoices[section.id] || section.paths[0]?.id)
+                .filter((id): id is string => Boolean(id))
+        );
+
+        return quest.encounters.filter(encounter => !encounter.routePathId || selectedPathIds.has(encounter.routePathId));
+    }, [quest.encounters, quest.routeSections, routeChoices, visibleRouteSections]);
+
+    const activeEncounterIds = useMemo(
+        () => new Set(routeFilteredEncounters.map(encounter => encounter.id)),
+        [routeFilteredEncounters]
+    );
+
+    const activePlayerPicksMap = useMemo(() => {
+        const next: typeof playerPicksMap = {};
+        Object.entries(playerPicksMap).forEach(([userId, userPlan]) => {
+            const picks = userPlan.picks.filter(pick => activeEncounterIds.has(pick.encounterId));
+            if (picks.length > 0) {
+                next[userId] = { ...userPlan, picks };
+            }
+        });
+        return next;
+    }, [activeEncounterIds, playerPicksMap]);
+
+    const activeSelections = useMemo(() => {
+        const next: Record<string, string | null> = {};
+        Object.entries(selections).forEach(([encounterId, rosterId]) => {
+            if (activeEncounterIds.has(encounterId)) {
+                next[encounterId] = rosterId;
+            }
+        });
+        return next;
+    }, [activeEncounterIds, selections]);
+
+    const activeRevivesTotal = useMemo(() => {
+        return Object.entries(revivesByEncounterId).reduce((total, [encounterId, revivesUsed]) => {
+            return activeEncounterIds.has(encounterId) ? total + revivesUsed : total;
+        }, 0);
+    }, [activeEncounterIds, revivesByEncounterId]);
+
+    const allRevivesTotal = useMemo(() => {
+        return Object.values(revivesByEncounterId).reduce((total, revivesUsed) => total + revivesUsed, 0);
+    }, [revivesByEncounterId]);
+
+    const activeQuest = useMemo(
+        () => ({ ...quest, encounters: routeFilteredEncounters }),
+        [quest, routeFilteredEncounters]
+    );
+
+    const encountersByRoutePathId = useMemo(() => {
+        const map = new Map<string, EncounterWithRelations[]>();
+        for (const encounter of quest.encounters) {
+            if (!encounter.routePathId) continue;
+            const encounters = map.get(encounter.routePathId) || [];
+            encounters.push(encounter);
+            map.set(encounter.routePathId, encounters);
+        }
+        for (const encounters of map.values()) {
+            encounters.sort((a, b) => a.sequence - b.sequence);
+        }
+        return map;
+    }, [quest.encounters]);
+
+    const selectedRouteSummary = useMemo(() => {
+        return visibleRouteSections.map(section => {
+            const selectedPathId = routeChoices[section.id] || section.paths[0]?.id;
+            const selectedPath = section.paths.find(path => path.id === selectedPathId);
+            return selectedPath ? { sectionTitle: section.title, pathTitle: selectedPath.title } : null;
+        }).filter((item): item is { sectionTitle: string; pathTitle: string } => Boolean(item));
+    }, [visibleRouteSections, routeChoices]);
+
+    const selectedRoutePathIds = useMemo(
+        () => visibleRouteSections
+            .map(section => routeChoices[section.id] || section.paths[0]?.id)
+            .filter((id): id is string => Boolean(id)),
+        [routeChoices, visibleRouteSections]
+    );
+
     const filteredEncounters = useMemo(() => {
-        if (difficultyFilter.length === 0) return quest.encounters;
-        return quest.encounters.filter(e => difficultyFilter.includes(e.difficulty as "EASY" | "NORMAL" | "HARD"));
-    }, [quest.encounters, difficultyFilter]);
+        if (difficultyFilter.length === 0) return routeFilteredEncounters;
+        return routeFilteredEncounters.filter(e => difficultyFilter.includes(e.difficulty as "EASY" | "NORMAL" | "HARD"));
+    }, [routeFilteredEncounters, difficultyFilter]);
+
+    const handleRouteChoice = async (sectionId: string, pathId: string) => {
+        const previous = routeChoices[sectionId];
+        if (readOnly || previous === pathId) return;
+        setRouteChoices(prev => ({ ...prev, [sectionId]: pathId }));
+        try {
+            await savePlayerQuestRouteChoice(quest.id, sectionId, pathId);
+        } catch (error: unknown) {
+            setRouteChoices(prev => ({ ...prev, [sectionId]: previous }));
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to save route choice";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const updateRouteConnectorGeometry = useCallback(() => {
+        const mapEl = routeMapRef.current;
+        const startEl = routeStartRef.current;
+        const endEl = routeEndRef.current;
+        if (!mapEl || !startEl || !endEl || selectedRoutePathIds.length === 0) {
+            setRouteConnectorPaths([]);
+            setRouteMapSize({ width: mapEl?.scrollWidth || 0, height: mapEl?.scrollHeight || 0 });
+            return;
+        }
+
+        const mapRect = mapEl.getBoundingClientRect();
+        const toPoint = (rect: DOMRect, side: "left" | "right") => ({
+            x: side === "left" ? rect.left - mapRect.left + mapEl.scrollLeft : rect.right - mapRect.left + mapEl.scrollLeft,
+            y: rect.top - mapRect.top + mapEl.scrollTop + rect.height / 2
+        });
+
+        const selectedRects = selectedRoutePathIds
+            .map(id => routeCardRefs.current[id]?.getBoundingClientRect())
+            .filter((rect): rect is DOMRect => Boolean(rect));
+
+        if (selectedRects.length !== selectedRoutePathIds.length) return;
+
+        const startRect = startEl.getBoundingClientRect();
+        const endRect = endEl.getBoundingClientRect();
+        const segments = [
+            { from: toPoint(startRect, "right"), to: toPoint(selectedRects[0], "left") },
+            ...selectedRects.slice(0, -1).map((rect, index) => ({
+                from: toPoint(rect, "right"),
+                to: toPoint(selectedRects[index + 1], "left")
+            })),
+            { from: toPoint(selectedRects[selectedRects.length - 1], "right"), to: toPoint(endRect, "left") }
+        ];
+
+        setRouteConnectorPaths(segments.map(({ from, to }) => {
+            const controlOffset = Math.min(96, Math.max(24, Math.abs(to.x - from.x) / 2));
+            return `M ${from.x} ${from.y} C ${from.x + controlOffset} ${from.y}, ${to.x - controlOffset} ${to.y}, ${to.x} ${to.y}`;
+        }));
+        setRouteMapSize({ width: mapEl.scrollWidth, height: mapEl.scrollHeight });
+    }, [selectedRoutePathIds]);
+
+    useEffect(() => {
+        updateRouteConnectorGeometry();
+        window.addEventListener("resize", updateRouteConnectorGeometry);
+        return () => window.removeEventListener("resize", updateRouteConnectorGeometry);
+    }, [updateRouteConnectorGeometry, visibleRouteSections]);
+
+    const renderRoutePathCard = (
+        sectionId: string,
+        path: QuestTimelineProps["quest"]["routeSections"][number]["paths"][number],
+        isSelected: boolean,
+        compact: boolean = false
+    ) => {
+        const pathEncounters = encountersByRoutePathId.get(path.id) || [];
+        const previewLimit = compact ? 6 : 5;
+        const previewEncounters = pathEncounters.slice(0, previewLimit);
+        const hiddenCount = Math.max(0, pathEncounters.length - previewEncounters.length);
+
+        return (
+            <div
+                key={path.id}
+                ref={(node) => {
+                    routeCardRefs.current[path.id] = node;
+                }}
+                role="button"
+                tabIndex={readOnly ? -1 : 0}
+                aria-pressed={isSelected}
+                onClick={() => handleRouteChoice(sectionId, path.id)}
+                onKeyDown={(event) => {
+                    if (readOnly) return;
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleRouteChoice(sectionId, path.id);
+                    }
+                }}
+                className={cn(
+                    "group/path relative min-w-0 rounded-lg border text-left transition-all backdrop-blur-sm",
+                    compact ? cn("w-max max-w-[calc(100vw-5rem)] p-2", isSelected ? "opacity-100" : "opacity-70 hover:opacity-100") : "w-full p-2.5",
+                    isSelected
+                        ? "border-cyan-400/70 bg-slate-950 shadow-[0_0_22px_rgba(34,211,238,0.16),inset_0_0_18px_rgba(8,145,178,0.16)]"
+                        : "border-slate-800 bg-slate-950/95 hover:border-slate-700 hover:bg-slate-900",
+                    readOnly ? "cursor-default" : "cursor-pointer"
+                )}
+            >
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    <div className="min-w-0 flex items-center gap-1.5">
+                        <div className={cn(
+                            "flex shrink-0 items-center justify-center rounded-full border transition-colors",
+                            compact ? "h-4 w-4" : "h-5 w-5",
+                            isSelected ? "border-cyan-300 bg-cyan-400 text-slate-950" : "border-slate-700 bg-slate-950 text-slate-600 group-hover/path:text-slate-400"
+                        )}>
+                            {isSelected ? <Check className={compact ? "h-2.5 w-2.5" : "h-3 w-3"} /> : <div className="h-1.5 w-1.5 rounded-full bg-current" />}
+                        </div>
+                        <span className={cn(
+                            "min-w-0 truncate font-black uppercase tracking-[0.08em]",
+                            compact ? "text-[10px]" : "text-[11px]",
+                            isSelected ? "text-cyan-100" : "text-slate-300"
+                        )}>
+                            {path.title}
+                        </span>
+                    </div>
+                    <span className={cn(
+                        "shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider",
+                        isSelected ? "border-cyan-700/60 bg-cyan-950/60 text-cyan-200" : "border-slate-800 bg-slate-950/80 text-slate-600"
+                    )}>
+                        {pathEncounters.length > 0 ? pathEncounters.length : "Choice"}
+                    </span>
+                </div>
+                <div className={cn("mt-2 flex items-center", compact ? "min-h-7" : "min-h-9")}>
+                    {previewEncounters.length > 0 ? (
+                        <div className="flex min-w-0 items-center overflow-hidden pr-1">
+                            {previewEncounters.map((encounter, encounterIndex) => {
+                                const classColors = encounter.defender
+                                    ? getChampionClassColors(encounter.defender.class as ChampionClass)
+                                    : null;
+                                const difficultyClasses = encounter.difficulty === "HARD"
+                                    ? "border-red-500/70 bg-red-950/50 shadow-red-950/50"
+                                    : encounter.difficulty === "EASY"
+                                        ? "border-emerald-500/60 bg-emerald-950/40 shadow-emerald-950/40"
+                                        : encounter.difficulty === "NORMAL"
+                                            ? "border-amber-500/60 bg-amber-950/40 shadow-amber-950/40"
+                                            : "border-slate-700 bg-slate-950";
+                                const difficultyDot = encounter.difficulty === "HARD"
+                                    ? "bg-red-400"
+                                    : encounter.difficulty === "EASY"
+                                        ? "bg-emerald-400"
+                                        : encounter.difficulty === "NORMAL"
+                                            ? "bg-amber-400"
+                                            : "bg-slate-500";
+                                return (
+                                    <div key={encounter.id} className="flex items-center">
+                                        {encounterIndex > 0 && (
+                                            <div className={cn(
+                                                "h-px shrink-0",
+                                                compact ? "w-2" : "w-3",
+                                                isSelected ? "bg-cyan-600/80" : "bg-slate-800"
+                                            )} />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                scrollToEncounter(encounter.id);
+                                            }}
+                                            className={cn(
+                                                "relative shrink-0 overflow-hidden rounded-md border shadow-sm transition-transform hover:-translate-y-0.5 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70",
+                                                compact ? "h-8 w-8" : "h-9 w-9",
+                                                classColors?.bg || "bg-slate-950",
+                                                difficultyClasses,
+                                                isSelected && "outline outline-1 outline-offset-1 outline-cyan-300/60",
+                                                classColors?.border && encounter.difficulty !== "HARD" && encounter.difficulty !== "EASY" && encounter.difficulty !== "NORMAL" ? classColors.border : null
+                                            )}
+                                            title={`Fight ${encounter.sequence}: ${encounter.defender?.name || "Unknown defender"} (${encounter.difficulty})`}
+                                        >
+                                            <div className="absolute inset-0 bg-slate-950/25" />
+                                            {encounter.defender ? (
+                                                <Image
+                                                    src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "64")}
+                                                    alt={encounter.defender.name}
+                                                    fill
+                                                    className="object-cover rounded-[5px] p-0.5"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-600">?</div>
+                                            )}
+                                            <div className={cn("absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full ring-1 ring-slate-950", difficultyDot)} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                            {hiddenCount > 0 && (
+                                <>
+                                    <div className={cn("h-px shrink-0", compact ? "w-2" : "w-3", isSelected ? "bg-cyan-600/80" : "bg-slate-800")} />
+                                    <div className={cn("relative flex shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-950 text-[10px] font-black text-slate-500", compact ? "h-8 w-8" : "h-9 w-9")}>
+                                        +{hiddenCount}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                            <ChevronRight className="h-3 w-3" />
+                            <span>Unlocks later sections</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -484,46 +875,6 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
     const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
     const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
-
-    // Track selections locally for immediate UI updates
-    const [selections, setSelections] = useState<Record<string, string | null>>(() => {
-        const initial: Record<string, string | null> = {};
-        
-        if (readOnly) {
-            // In read-only mode, we use the rosterMap to get the IDs directly
-            Object.keys(initialSelections || {}).forEach(encId => {
-                const rosterEntry = rosterMap[encId];
-                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
-            });
-            return initial;
-        }
-
-        // For interactive mode, initialize from savedEncounters and find matching roster entries
-        const availableRoster = [...roster];
-        savedEncounters.forEach(se => {
-            if (se.selectedChampionId) {
-                const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
-                const rosterIndex = availableRoster.findIndex(r => 
-                    r.championId === se.selectedChampionId && 
-                    isChampionValidForEncounterOrQuest(r, quest, encounter)
-                );
-                
-                if (rosterIndex !== -1) {
-                    initial[se.questEncounterId] = availableRoster[rosterIndex].id;
-                    // Remove from available so it's not assigned to another encounter
-                    // ONLY if it's an infinite quest (no team limit)
-                    if (quest.teamLimit === null) {
-                        availableRoster.splice(rosterIndex, 1);
-                    }
-                } else {
-                    initial[se.questEncounterId] = null;
-                }
-            } else {
-                initial[se.questEncounterId] = null;
-            }
-        });
-        return initial;
-    });
 
     const getStickyOffset = useCallback(() => {
         const stickyTeam = document.querySelector('[data-sticky-team]');
@@ -650,11 +1001,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         // If selecting a NEW roster entry (not unselecting, and not already selected for this fight)
         if (previousRosterId !== rosterId) {
             // Check if this specific roster entry is already in the team for another fight
-            const isAlreadyInTeam = Object.values(selections).includes(rosterId);
+            const isAlreadyInTeam = Object.values(activeSelections).includes(rosterId);
 
             if (quest.teamLimit !== null) {
                 // Check if the CHAMPION is already in the team (either as counter or synergy)
-                const isChampInTeam = Object.values(selections).some(rid => {
+                const isChampInTeam = Object.values(activeSelections).some(rid => {
                     if (!rid) return false;
                     return roster.find(r => r.id === rid)?.championId === championId;
                 }) || synergyIds.includes(championId);
@@ -708,12 +1059,46 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         }
     };
 
+    const handleSetRevives = async (encounterId: string, revivesUsed: number) => {
+        if (readOnly) return;
+
+        const nextRevives = Math.max(0, Math.min(99, revivesUsed));
+        const previousRevives = revivesByEncounterId[encounterId] || 0;
+        if (nextRevives === previousRevives) return;
+
+        setRevivesByEncounterId(prev => {
+            const next = { ...prev };
+            if (nextRevives > 0) {
+                next[encounterId] = nextRevives;
+            } else {
+                delete next[encounterId];
+            }
+            return next;
+        });
+
+        try {
+            await savePlayerQuestEncounterRevives(quest.id, encounterId, nextRevives);
+        } catch (error) {
+            console.error("Failed to save revive count", error);
+            setRevivesByEncounterId(prev => {
+                const next = { ...prev };
+                if (previousRevives > 0) {
+                    next[encounterId] = previousRevives;
+                } else {
+                    delete next[encounterId];
+                }
+                return next;
+            });
+            toast({ title: "Error", description: "Failed to save revive count.", variant: "destructive" });
+        }
+    };
+
     const handleSelectSynergy = async (championId: number) => {
         const isRemoving = synergyIds.includes(championId);
         
         if (!isRemoving && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
             // Check if they are already in the team as a counter
-            const isAlreadyInTeam = Object.values(selections).some(rid => {
+            const isAlreadyInTeam = Object.values(activeSelections).some(rid => {
                 if (!rid) return false;
                 return roster.find(r => r.id === rid)?.championId === championId;
             });
@@ -758,7 +1143,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         const teamMap = new Map<string, RosterWithChampion>();
         
         // 1. Add champions selected for encounters
-        Object.entries(selections).forEach(([encId, rosterId]) => {
+        Object.entries(activeSelections).forEach(([encId, rosterId]) => {
             if (rosterId !== null) {
                 const r = resolveRosterItem(rosterId, encId);
                 if (r) {
@@ -806,7 +1191,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         });
         
         return Array.from(teamMap.values());
-    }, [selections, synergyIds, resolveRosterItem, roster, savedSynergies]);
+    }, [activeSelections, synergyIds, resolveRosterItem, roster, savedSynergies]);
 
     const renderChampionItem = (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
         if (readOnly) {
@@ -839,7 +1224,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
 
         // Best version that is either unused or used in THIS encounter
         const userChamp = validRosterEntries.find(r => 
-            !Object.values(selections).includes(r.id) || 
+            !Object.values(activeSelections).includes(r.id) || 
             selections[encounter.id] === r.id
         ) || validRosterEntries[0];
         const isMissing = !userChamp || userChamp.isUnowned;
@@ -847,7 +1232,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
         
         // Check if any version of this champion is in the team
-        const isChampInTeam = Object.values(selections).some(rid => {
+        const isChampInTeam = Object.values(activeSelections).some(rid => {
             if (!rid) return false;
             return roster.find(r => r.id === rid)?.championId === c.id;
         });
@@ -856,6 +1241,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             userChamp,
             encounterId: encounter.id,
             selections,
+            activeEncounterIds,
             roster,
             quest,
             encounter
@@ -920,18 +1306,19 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 return b.stars - a.stars || b.rank - a.rank;
             });
         const userChamp = validRosterEntries.find(r => 
-            !Object.values(selections).includes(r.id) || 
+            !Object.values(activeSelections).includes(r.id) || 
             selections[encounter.id] === r.id
         ) || validRosterEntries[0];
         const isMissing = !userChamp || userChamp.isUnowned;
         
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
-        const isInTeam = Object.values(selections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
+        const isInTeam = Object.values(activeSelections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
 
         const isUnavailable = isChampionUnavailableForEncounter({
             userChamp,
             encounterId: encounter.id,
             selections,
+            activeEncounterIds,
             roster,
             quest,
             encounter
@@ -1025,8 +1412,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     >
                                         <PlayerTeamSummary 
                                             user={user} 
-                                            picks={playerPicksMap[user.id]?.picks || []} 
-                                            quest={quest} 
+                                            picks={activePlayerPicksMap[user.id]?.picks || []} 
+                                            quest={activeQuest} 
                                             scrollToEncounter={scrollToEncounter} 
                                         />
                                     </PopoverContent>
@@ -1051,9 +1438,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     >
                                         <MultiPlayerPopover 
                                             users={users} 
-                                            quest={quest} 
+                                            quest={activeQuest} 
                                             scrollToEncounter={scrollToEncounter} 
-                                            playerPicksMap={playerPicksMap} 
+                                            playerPicksMap={activePlayerPicksMap} 
                                         />
                                     </PopoverContent>
                                 </Popover>
@@ -1147,6 +1534,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                             <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
                                         )}
                                     </div>
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/35 border border-emerald-800/60 shadow-inner">
+                                        <ReviveOrbIcon className="h-4 w-4" />
+                                        <span className="text-[10px] font-black text-emerald-100">{activeRevivesTotal}</span>
+                                        <span className="text-[10px] text-emerald-200/70 font-bold">Revives</span>
+                                        {allRevivesTotal !== activeRevivesTotal && (
+                                            <span className="text-[10px] text-slate-500 font-bold ml-1">All {allRevivesTotal}</span>
+                                        )}
+                                    </div>
                                     <motion.div
                                         animate={{ rotate: isTeamExpanded ? 180 : 0 }}
                                         transition={{ duration: 0.3 }}
@@ -1183,11 +1578,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                             <div className="flex flex-col gap-6">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {selectedTeam.map(r => {
-                                                        const assignedEncounterIds = Object.entries(selections)
+                                                        const assignedEncounterIds = Object.entries(activeSelections)
                                                             .filter(([encId, rosterId]) => rosterId === r.id)
                                                             .map(([encId]) => encId);
 
-                                                        const assignedEncounters = quest.encounters
+                                                        const assignedEncounters = routeFilteredEncounters
                                                             .filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id))
                                                             .sort((a, b) => a.sequence - b.sequence);
 
@@ -1341,7 +1736,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                         <CommandGroup>
                                                                             {/* Only show unique champions from roster that meet quest requirements */}
                                                                             {roster.filter((r, i, self) => self.findIndex(t => t.championId === r.championId) === i).filter(r => isChampionValidForEncounterOrQuest(r, quest, undefined)).map((r) => {
-                                                                                const isAssigned = Object.values(selections).some(rid => {
+                                                                                const isAssigned = Object.values(activeSelections).some(rid => {
                                                                                     if (!rid) return false;
                                                                                     return roster.find(re => re.id === rid)?.championId === r.championId;
                                                                                 });
@@ -1491,6 +1886,18 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                         0%, 100% { opacity: 0.25; }
                         50%      { opacity: 0.7; }
                     }
+                    @keyframes routePulse {
+                        0%   { stroke-dashoffset: 92; opacity: 0; }
+                        10%  { opacity: 0.75; }
+                        70%  { opacity: 0.75; }
+                        100% { stroke-dashoffset: 0; opacity: 0; }
+                    }
+                    @keyframes routeHalo {
+                        0%   { stroke-dashoffset: 92; opacity: 0; }
+                        12%  { opacity: 0.32; }
+                        68%  { opacity: 0.32; }
+                        100% { stroke-dashoffset: 0; opacity: 0; }
+                    }
                 `}</style>
 
                 <div className="absolute top-0 bottom-[120px] left-3 md:left-10 -translate-x-1/2 z-0" style={{ width: '3px' }}>
@@ -1599,6 +2006,140 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             </div> {/* end header box */}
                         </div> {/* end column header */}
 
+                        {visibleRouteSections.length > 0 && (
+                            <div className="pl-6 md:pl-10 -mt-2 mb-4">
+                                <div className="rounded-xl border border-slate-800 bg-slate-950/70 overflow-hidden">
+                                    <div className="flex items-center justify-between gap-3 px-3 md:px-4 py-3 border-b border-slate-800/70 bg-slate-900/40">
+                                        <div className="min-w-0 flex items-center gap-3">
+                                            <div className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg border border-sky-900/60 bg-sky-950/30 text-sky-400">
+                                                <Crosshair className="h-4 w-4" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Route Planner</h3>
+                                                <p className="text-[11px] text-slate-600 mt-0.5 truncate">{routeFilteredEncounters.length} fights on selected route</p>
+                                            </div>
+                                        </div>
+                                        <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                                            <span>{visibleRouteSections.length}</span>
+                                            <span>{visibleRouteSections.length === 1 ? "section" : "sections"}</span>
+                                        </div>
+                                    </div>
+                                    {selectedRouteSummary.length > 0 && (
+                                        <div className="px-3 md:px-4 py-2 border-b border-slate-800/70 bg-slate-950/50 overflow-x-auto">
+                                            <div className="flex items-center gap-1.5 min-w-max">
+                                                {selectedRouteSummary.map((item, index) => (
+                                                    <div key={`${item.sectionTitle}-${index}`} className="flex items-center gap-1.5">
+                                                        {index > 0 && <ChevronRight className="h-3 w-3 text-slate-700" />}
+                                                        <div className="rounded-md border border-slate-800 bg-slate-900/70 px-2 py-1">
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.12em] text-sky-300">{item.pathTitle}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="overflow-x-auto px-3 md:px-4 py-4">
+                                        <div
+                                            ref={routeMapRef}
+                                            className="relative flex min-w-max items-center gap-9 pr-2"
+                                        >
+                                            <svg
+                                                className="pointer-events-none absolute inset-0 z-0"
+                                                width={routeMapSize.width}
+                                                height={routeMapSize.height}
+                                                viewBox={`0 0 ${routeMapSize.width} ${routeMapSize.height}`}
+                                                preserveAspectRatio="none"
+                                            >
+                                                {routeConnectorPaths.map((path, index) => (
+                                                    <g key={index}>
+                                                        <path
+                                                            d={path}
+                                                            fill="none"
+                                                            stroke="rgb(8 47 73)"
+                                                            strokeWidth="7"
+                                                            strokeLinecap="round"
+                                                            opacity="0.65"
+                                                        />
+                                                        <path
+                                                            d={path}
+                                                            fill="none"
+                                                            stroke="rgb(34 211 238)"
+                                                            strokeWidth="2.5"
+                                                            strokeLinecap="round"
+                                                            opacity="0.86"
+                                                        />
+                                                        <path
+                                                            d={path}
+                                                            fill="none"
+                                                            stroke="white"
+                                                            strokeWidth="1"
+                                                            strokeLinecap="round"
+                                                            opacity="0.24"
+                                                        />
+                                                        <path
+                                                            d={path}
+                                                            fill="none"
+                                                            stroke="rgb(34 211 238)"
+                                                            strokeWidth="8"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray="0.5 92"
+                                                            opacity="0"
+                                                            style={{
+                                                                filter: "blur(5px)",
+                                                                animation: "routeHalo 3.1s ease-in-out infinite",
+                                                                animationDelay: `${index * 0.22}s`
+                                                            }}
+                                                        />
+                                                        <path
+                                                            d={path}
+                                                            fill="none"
+                                                            stroke="rgb(236 254 255)"
+                                                            strokeWidth="4"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray="0.5 92"
+                                                            opacity="0"
+                                                            style={{
+                                                                animation: "routePulse 3.1s ease-in-out infinite",
+                                                                animationDelay: `${index * 0.22}s`
+                                                            }}
+                                                        />
+                                                    </g>
+                                                ))}
+                                            </svg>
+
+                                            <div
+                                                ref={routeStartRef}
+                                                className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-cyan-500/60 bg-cyan-950/40 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]"
+                                            >
+                                                <Crosshair className="h-5 w-5" />
+                                            </div>
+
+                                            {visibleRouteSections.map((section) => {
+                                                const selectedPathId = routeChoices[section.id] || section.paths[0]?.id;
+                                                const selectedPath = section.paths.find(path => path.id === selectedPathId) || section.paths[0];
+
+                                                return (
+                                                    <div
+                                                        key={section.id}
+                                                        className="relative z-10 flex shrink-0 flex-col justify-center gap-2"
+                                                    >
+                                                        {section.paths.map(path => renderRoutePathCard(section.id, path, path.id === selectedPath?.id, true))}
+                                                    </div>
+                                                );
+                                            })}
+
+                                            <div
+                                                ref={routeEndRef}
+                                                className="relative z-10 flex h-12 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500"
+                                            >
+                                                End
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Difficulty Filter Bar */}
                         <div className="flex items-center flex-wrap justify-between gap-x-2 gap-y-1.5 pl-6 md:pl-10 -mt-2 mb-2">
                             <div className="flex items-center gap-2 min-w-0 flex-wrap">
@@ -1667,6 +2208,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                 expandedId={expandedId}
                                 toggleExpand={toggleExpand}
                                 selections={selections}
+                                revivesUsed={revivesByEncounterId[encounter.id] || 0}
+                                onSetRevives={handleSetRevives}
                                 readOnly={readOnly}
                                 showVideoId={showVideoId}
                                 setShowVideoId={setShowVideoId}

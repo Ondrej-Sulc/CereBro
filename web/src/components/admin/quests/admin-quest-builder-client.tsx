@@ -12,15 +12,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, BulkNodeImportResult, bulkAddEncounterVideos } from "@/app/actions/quests";
+import { createQuestEncounter, deleteQuestEncounter, updateQuestPlan, updateQuestEncounter, clearRecommendedChampionsInQuest, uploadQuestBanner, updateFeaturedPlayers, reorderQuestEncounters, reorderQuestEncountersByRoute, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, BulkNodeImportResult, bulkAddEncounterVideos, createQuestRouteSection, createQuestRoutePath, duplicateQuestRoutePathFights, updateQuestRouteSection, updateQuestRoutePath, reorderQuestRouteSections, reorderQuestRoutePaths, deleteQuestRouteSection, deleteQuestRoutePath, exportQuestPlan } from "@/app/actions/quests";
 import { parseTimestamps, extractYouTubeVideoId } from "@/lib/parseTimestamps";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink,
-    XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2,
+    XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2, Download,
     ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack,
-    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video
+    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video, Copy
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -68,9 +68,14 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const { toast } = useToast();
 
     const [editingEncounterId, setEditingEncounterId] = useState<string | null>(null);
+    const [localEncounters, setLocalEncounters] = useState<EncounterWithRelations[]>(initialQuest.encounters);
 
-    const defaultSequence = String((initialQuest.encounters.length > 0
-        ? Math.max(...initialQuest.encounters.map(e => e.sequence))
+    useEffect(() => {
+        setLocalEncounters(initialQuest.encounters);
+    }, [initialQuest.encounters]);
+
+    const defaultSequence = String((localEncounters.length > 0
+        ? Math.max(...localEncounters.map(e => e.sequence))
         : 0) + 1);
 
     const [sequence, setSequence] = useState<string>(defaultSequence);
@@ -90,7 +95,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
     const [nodeModifierIds, setNodeModifierIds] = useState<string[]>([]);
     const [difficulty, setDifficulty] = useState<EncounterDifficulty>("NORMAL");
+    const [routePathId, setRoutePathId] = useState<string>("");
     const [isFormattingTips, setIsFormattingTips] = useState(false);
+    const [routeSectionTitles, setRouteSectionTitles] = useState<Record<string, string>>({});
+    const [routePathTitles, setRoutePathTitles] = useState<Record<string, string>>({});
+    const [isRouteLayoutCollapsed, setIsRouteLayoutCollapsed] = useState(false);
+    const [duplicatingRoutePathId, setDuplicatingRoutePathId] = useState<string | null>(null);
 
     // Bulk Add Encounters
     const [bulkEncountersText, setBulkEncountersText] = useState("");
@@ -125,15 +135,44 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     }, [bulkEncountersText, champions]);
 
     const sortedPathEncounters = useMemo(
-        () => [...initialQuest.encounters].sort((a, b) => a.sequence - b.sequence),
-        [initialQuest.encounters]
+        () => [...localEncounters].sort((a, b) => a.sequence - b.sequence),
+        [localEncounters]
     );
+
+    const routePathOptions = useMemo(
+        () => (initialQuest.routeSections || []).flatMap(section =>
+            section.paths.map(path => ({
+                id: path.id,
+                label: `${section.title} / ${path.title}`,
+                sectionTitle: section.title,
+                pathTitle: path.title
+            }))
+        ),
+        [initialQuest.routeSections]
+    );
+
+    const routePathLabelById = useMemo(() => {
+        return new Map(routePathOptions.map(path => [path.id, path.label]));
+    }, [routePathOptions]);
 
     const editingEncounterIndex = editingEncounterId
         ? sortedPathEncounters.findIndex((e) => e.id === editingEncounterId)
         : -1;
 
     const pathNavDisabled = sortedPathEncounters.length === 0;
+
+    useEffect(() => {
+        const sectionTitles: Record<string, string> = {};
+        const pathTitles: Record<string, string> = {};
+        (initialQuest.routeSections || []).forEach(section => {
+            sectionTitles[section.id] = section.title;
+            section.paths.forEach(path => {
+                pathTitles[path.id] = path.title;
+            });
+        });
+        setRouteSectionTitles(sectionTitles);
+        setRoutePathTitles(pathTitles);
+    }, [initialQuest.routeSections]);
 
     const parsedBulkTimestamps = useMemo(
         () => parseTimestamps(bulkVideoText, bulkVideoBaseUrl),
@@ -277,6 +316,9 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
         // A field changed while editing the same encounter — schedule autosave
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        if (effectiveSequence) {
+            updateLocalEncounterFromEditor();
+        }
         setSaveStatus('unsaved');
         autoSaveTimerRef.current = setTimeout(() => {
             saveEncounterChangesRef.current?.();
@@ -286,7 +328,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, sequence, difficulty]);
+    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, sequence, difficulty, routePathId]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
@@ -443,6 +485,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     );
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Autosave state & refs for the encounter editor
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'unsaved'>('idle');
@@ -517,28 +560,114 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     };
 
     const handleMoveEncounter = async (encounterId: string, direction: 'up' | 'down') => {
-        const encounters = [...initialQuest.encounters].sort((a, b) => a.sequence - b.sequence);
+        const encounters = [...localEncounters].sort((a, b) => a.sequence - b.sequence);
         const currentIndex = encounters.findIndex(e => e.id === encounterId);
+        const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (currentIndex === -1 || targetIndex < 0 || targetIndex >= encounters.length) return;
+
+        const previousEncounters = localEncounters;
+        const newEncounters = [...encounters];
+        [newEncounters[currentIndex], newEncounters[targetIndex]] = [newEncounters[targetIndex], newEncounters[currentIndex]];
+        const resequenced = newEncounters.map((encounter, index) => ({ ...encounter, sequence: index + 1 }));
+
+        setLocalEncounters(resequenced);
         
         try {
-            if (direction === 'up' && currentIndex > 0) {
-                const newEncounters = [...encounters];
-                [newEncounters[currentIndex - 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex - 1]];
-                await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
-                router.refresh();
-                toast({ title: "Success", description: "Encounter moved up" });
-            } else if (direction === 'down' && currentIndex < encounters.length - 1) {
-                const newEncounters = [...encounters];
-                [newEncounters[currentIndex + 1], newEncounters[currentIndex]] = [newEncounters[currentIndex], newEncounters[currentIndex + 1]];
-                await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
-                router.refresh();
-                toast({ title: "Success", description: "Encounter moved down" });
-            }
+            await reorderQuestEncounters(initialQuest.id, newEncounters.map(e => e.id));
         } catch (error: unknown) {
+            setLocalEncounters(previousEncounters);
             console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder encounters";
             toast({ title: "Error", description: `Failed to reorder encounter: ${msg}`, variant: "destructive" });
         }
+    };
+
+    const handleExportJson = async () => {
+        setIsExporting(true);
+        try {
+            const payload = await exportQuestPlan(initialQuest.id);
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement("a");
+            const safeTitle = (payload.quest.title || "quest-plan")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "")
+                .slice(0, 80) || "quest-plan";
+            anchor.href = url;
+            anchor.download = `${safeTitle}.json`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            URL.revokeObjectURL(url);
+            toast({ title: "Export ready", description: "Quest JSON downloaded." });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to export quest";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleSortEncountersByRoute = async () => {
+        if (!confirm("Resort all fights by route section and path order? This will rewrite fight sequence numbers.")) return;
+        try {
+            const result = await reorderQuestEncountersByRoute(initialQuest.id);
+            router.refresh();
+            toast({ title: "Timeline sorted", description: `Updated ${result.count} fight${result.count === 1 ? "" : "s"}.` });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to sort fights by route";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const updateLocalEncounterFromEditor = (difficultyOverride?: EncounterDifficulty) => {
+        if (!editingEncounterId) return;
+
+        const defender = defenderId
+            ? champions.find(champion => champion.id === parseInt(defenderId))
+            : null;
+        const selectedNodes = nodeModifierIds
+            .map(nodeId => nodeModifiers.find(modifier => modifier.id === nodeId))
+            .filter((modifier): modifier is NodeModifier => Boolean(modifier));
+
+        setLocalEncounters(prev => prev.map(encounter => {
+            if (encounter.id !== editingEncounterId) return encounter;
+
+            return {
+                ...encounter,
+                sequence: parseInt(effectiveSequence),
+                difficulty: difficultyOverride ?? difficulty,
+                defenderId: defender?.id ?? null,
+                defender: defender as any ?? null,
+                tips: tips || null,
+                videoUrl: videoUrl || null,
+                routePathId: routePathId || null,
+                recommendedTags,
+                recommendedChampions: champions.filter(champion => recommendedChampionIds.includes(champion.id)) as any,
+                requiredTags: tags.filter(tag => encounterRequiredTagIds.includes(tag.id)),
+                nodes: selectedNodes.map(modifier => {
+                    const existingNode = encounter.nodes.find(node => node.nodeModifierId === modifier.id);
+                    return {
+                        id: existingNode?.id ?? `local-${encounter.id}-${modifier.id}`,
+                        questEncounterId: encounter.id,
+                        nodeModifierId: modifier.id,
+                        nodeModifier: modifier
+                    };
+                }) as any,
+                videos: videos.map((video, index) => ({
+                    id: `local-video-${encounter.id}-${index}`,
+                    questEncounterId: encounter.id,
+                    playerId: video.playerId,
+                    videoUrl: video.videoUrl,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    player: video.playerName || video.playerAvatar
+                        ? { ingameName: video.playerName, avatar: video.playerAvatar }
+                        : null
+                })) as any
+            };
+        }));
     };
 
     // Saves the currently-editing encounter without canceling edit mode (used by autosave + manual save)
@@ -555,12 +684,13 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 videoUrl: videoUrl || null,
                 videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
                 tips: tips || null,
+                routePathId: routePathId || null,
                 recommendedTagNames: recommendedTags,
                 recommendedChampionIds: recommendedChampionIds,
                 requiredTagIds: encounterRequiredTagIds,
                 nodeModifierIds: nodeModifierIds
             });
-            router.refresh();
+            updateLocalEncounterFromEditor(difficultyOverride);
             setSaveStatus('saved');
             setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2500);
         } catch (error: unknown) {
@@ -588,6 +718,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     videoUrl: videoUrl || undefined,
                     videos: videos.map(v => ({ videoUrl: v.videoUrl, playerId: v.playerId })),
                     tips: tips || undefined,
+                    routePathId: routePathId || null,
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
                     requiredTagIds: encounterRequiredTagIds,
@@ -623,6 +754,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
         setNodeModifierIds(encounter.nodes?.map(n => n.nodeModifierId) || []);
         setDifficulty(encounter.difficulty as EncounterDifficulty || "NORMAL");
+        setRoutePathId(encounter.routePathId || "");
 
         setTimeout(() => {
             const el = document.getElementById("encounter-editor");
@@ -690,6 +822,164 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setRecommendedChampionIds([]);
         setNodeModifierIds([]);
         setDifficulty("NORMAL");
+        setRoutePathId("");
+    };
+
+    const handleCreateRouteSection = async () => {
+        try {
+            await createQuestRouteSection(initialQuest.id, `Section ${(initialQuest.routeSections?.length || 0) + 1}`);
+            router.refresh();
+            toast({ title: "Route section added", description: "A new section with Path A was created." });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to add route section";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleCreateRoutePath = async (sectionId: string) => {
+        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
+        try {
+            await createQuestRoutePath(initialQuest.id, sectionId, `Path ${String.fromCharCode(65 + (section?.paths.length || 0))}`);
+            router.refresh();
+            toast({ title: "Route path added", description: "A new path was added to the section." });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to add route path";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleSaveRouteSectionTitle = async (sectionId: string) => {
+        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
+        const title = routeSectionTitles[sectionId]?.trim() || "Section";
+        if (!section || title === section.title) return;
+        try {
+            await updateQuestRouteSection(initialQuest.id, sectionId, { title });
+            router.refresh();
+        } catch (error: unknown) {
+            setRouteSectionTitles(prev => ({ ...prev, [sectionId]: section.title }));
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to rename section";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleSaveRoutePathTitle = async (pathId: string) => {
+        const path = initialQuest.routeSections?.flatMap(s => s.paths).find(p => p.id === pathId);
+        const title = routePathTitles[pathId]?.trim() || "Path";
+        if (!path || title === path.title) return;
+        try {
+            await updateQuestRoutePath(initialQuest.id, pathId, { title });
+            router.refresh();
+        } catch (error: unknown) {
+            setRoutePathTitles(prev => ({ ...prev, [pathId]: path.title }));
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to rename path";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleMoveRouteSection = async (sectionId: string, direction: "up" | "down") => {
+        const sections = [...(initialQuest.routeSections || [])].sort((a, b) => a.order - b.order);
+        const index = sections.findIndex(section => section.id === sectionId);
+        if (index === -1) return;
+        const targetIndex = direction === "up" ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= sections.length) return;
+        const nextSections = [...sections];
+        [nextSections[index], nextSections[targetIndex]] = [nextSections[targetIndex], nextSections[index]];
+        try {
+            await reorderQuestRouteSections(initialQuest.id, nextSections.map(section => section.id));
+            router.refresh();
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder sections";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleChangeRouteSectionParent = async (sectionId: string, parentPathId: string) => {
+        try {
+            await updateQuestRouteSection(initialQuest.id, sectionId, {
+                parentPathId: parentPathId || null
+            });
+            router.refresh();
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to update section scope";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleMoveRoutePath = async (sectionId: string, pathId: string, direction: "up" | "down") => {
+        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
+        if (!section) return;
+        const paths = [...section.paths].sort((a, b) => a.order - b.order);
+        const index = paths.findIndex(path => path.id === pathId);
+        if (index === -1) return;
+        const targetIndex = direction === "up" ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= paths.length) return;
+        const nextPaths = [...paths];
+        [nextPaths[index], nextPaths[targetIndex]] = [nextPaths[targetIndex], nextPaths[index]];
+        try {
+            await reorderQuestRoutePaths(initialQuest.id, sectionId, nextPaths.map(path => path.id));
+            router.refresh();
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder paths";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleDuplicateRoutePath = async (sectionId: string, pathId: string) => {
+        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
+        const path = section?.paths.find(p => p.id === pathId);
+        if (!section || !path) return;
+
+        if (!confirm(`Duplicate fights from "${section.title} / ${path.title}" into a new conditional section?`)) return;
+
+        setDuplicatingRoutePathId(pathId);
+        try {
+            const result = await duplicateQuestRoutePathFights(initialQuest.id, pathId);
+            setIsRouteLayoutCollapsed(false);
+            router.refresh();
+            toast({
+                title: "Path fights duplicated",
+                description: `Copied ${result.copiedCount} fight${result.copiedCount === 1 ? "" : "s"} into a new conditional section.`
+            });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to duplicate path fights";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        } finally {
+            setDuplicatingRoutePathId(null);
+        }
+    };
+
+    const handleDeleteRouteSection = async (sectionId: string) => {
+        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
+        const assignedFightCount = section?.paths.reduce((sum, path) => sum + path.encounters.length, 0) ?? 0;
+        const message = assignedFightCount > 0
+            ? `Delete ${section?.title || "this section"}? ${assignedFightCount} assigned fight${assignedFightCount === 1 ? "" : "s"} will become shared fights.`
+            : `Delete ${section?.title || "this section"}?`;
+        if (!confirm(message)) return;
+        try {
+            await deleteQuestRouteSection(initialQuest.id, sectionId);
+            router.refresh();
+            toast({ title: "Route section deleted" });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to delete section";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const handleDeleteRoutePath = async (pathId: string) => {
+        const path = initialQuest.routeSections?.flatMap(s => s.paths).find(p => p.id === pathId);
+        const assignedFightCount = path?.encounters.length ?? 0;
+        const message = assignedFightCount > 0
+            ? `Delete ${path?.title || "this path"}? ${assignedFightCount} assigned fight${assignedFightCount === 1 ? "" : "s"} will become shared fights.`
+            : `Delete ${path?.title || "this path"}?`;
+        if (!confirm(message)) return;
+        try {
+            await deleteQuestRoutePath(initialQuest.id, pathId);
+            router.refresh();
+            toast({ title: "Route path deleted" });
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to delete path";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
     };
 
     const handleDeleteEncounter = async (encounterId: string) => {
@@ -745,11 +1035,24 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     </Button>
                     <h1 className="text-3xl font-bold">{initialQuest.title}</h1>
                 </div>
-                <Link href={`/planning/quests/${initialQuest.id}`}>
-                    <Button variant="outline" className="border-sky-800 text-sky-400 hover:bg-sky-950/50 hover:text-sky-300">
-                        <ExternalLink className="h-4 w-4 mr-2" /> View Plan
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleExportJson}
+                        disabled={isExporting}
+                        className="border-slate-700 text-slate-300 hover:bg-slate-900 hover:text-slate-100"
+                    >
+                        {isExporting
+                            ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            : <Download className="h-4 w-4 mr-2" />}
+                        Export JSON
                     </Button>
-                </Link>
+                    <Link href={`/planning/quests/${initialQuest.id}`}>
+                        <Button variant="outline" className="border-sky-800 text-sky-400 hover:bg-sky-950/50 hover:text-sky-300">
+                            <ExternalLink className="h-4 w-4 mr-2" /> View Plan
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <Tabs defaultValue="path" className="w-full space-y-6 overflow-visible">
@@ -1464,6 +1767,21 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 </div>
 
                                 <div className="space-y-2">
+                                    <Label className="text-slate-300 font-semibold">Route Path</Label>
+                                    <select
+                                        value={routePathId}
+                                        onChange={(e) => setRoutePathId(e.target.value)}
+                                        className="w-full h-10 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                    >
+                                        <option value="">Shared / always shown</option>
+                                        {routePathOptions.map(path => (
+                                            <option key={path.id} value={path.id}>{path.label}</option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[11px] text-slate-600">Assign this fight to a path, or leave it shared for all routes.</p>
+                                </div>
+
+                                <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <Label className="text-slate-300 font-semibold">Quick Tips</Label>
                                         <Button
@@ -1856,7 +2174,204 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             )}
                         </div>
                     </details>
-                    {initialQuest.encounters.length === 0 ? (
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsRouteLayoutCollapsed(prev => !prev)}
+                                className="min-w-0 flex items-center gap-2 text-left group"
+                                aria-expanded={!isRouteLayoutCollapsed}
+                            >
+                                {isRouteLayoutCollapsed ? (
+                                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
+                                ) : (
+                                    <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
+                                )}
+                                <div className="min-w-0">
+                                    <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider group-hover:text-white transition-colors">Route Layout</h3>
+                                    <p className="text-xs text-slate-500 mt-1">Create sections and paths, then assign fights from the encounter editor.</p>
+                                </div>
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                                    onClick={handleSortEncountersByRoute}
+                                    disabled={!initialQuest.routeSections?.length || !localEncounters.length}
+                                >
+                                    <LayoutList className="w-3.5 h-3.5 mr-1.5" /> Sort Fights
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-sky-800 text-sky-400 hover:bg-sky-950/40"
+                                    onClick={handleCreateRouteSection}
+                                >
+                                    <Plus className="w-3.5 h-3.5 mr-1.5" /> Section
+                                </Button>
+                            </div>
+                        </div>
+
+                        {!isRouteLayoutCollapsed && (initialQuest.routeSections?.length ? (
+                            <div className="space-y-2">
+                                {initialQuest.routeSections.map((section, sectionIndex) => (
+                                    <div key={section.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <Input
+                                                    value={routeSectionTitles[section.id] ?? section.title}
+                                                    onChange={(e) => setRouteSectionTitles(prev => ({ ...prev, [section.id]: e.target.value }))}
+                                                    onBlur={() => handleSaveRouteSectionTitle(section.id)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.currentTarget.blur();
+                                                        }
+                                                    }}
+                                                    className="h-8 bg-slate-950/70 border-slate-800 text-xs font-bold text-slate-200"
+                                                />
+                                                <div className="text-[11px] text-slate-600 mt-1">{section.paths.length} path{section.paths.length === 1 ? "" : "s"}</div>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    disabled={sectionIndex === 0}
+                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                    onClick={() => handleMoveRouteSection(section.id, "up")}
+                                                    title="Move section up"
+                                                >
+                                                    <ChevronUp className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    disabled={sectionIndex === initialQuest.routeSections.length - 1}
+                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                    onClick={() => handleMoveRouteSection(section.id, "down")}
+                                                    title="Move section down"
+                                                >
+                                                    <ChevronDown className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-7 text-[11px] text-slate-400 hover:text-sky-300 hover:bg-slate-800"
+                                                    onClick={() => handleCreateRoutePath(section.id)}
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" /> Path
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
+                                                    onClick={() => handleDeleteRouteSection(section.id)}
+                                                    title="Delete section"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Visible After</Label>
+                                            <select
+                                                value={section.parentPathId || ""}
+                                                onChange={(e) => handleChangeRouteSectionParent(section.id, e.target.value)}
+                                                className="mt-1 w-full h-8 rounded-md border border-slate-800 bg-slate-950/70 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                            >
+                                                <option value="">Always visible</option>
+                                                {routePathOptions
+                                                    .filter(path => !section.paths.some(sectionPath => sectionPath.id === path.id))
+                                                    .map(path => (
+                                                        <option key={path.id} value={path.id}>{path.label}</option>
+                                                    ))}
+                                            </select>
+                                        </div>
+                                        <div className="mt-3 space-y-1.5">
+                                            {section.paths.map((path, pathIndex) => (
+                                                <div key={path.id} className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-2">
+                                                    <Input
+                                                        value={routePathTitles[path.id] ?? path.title}
+                                                        onChange={(e) => setRoutePathTitles(prev => ({ ...prev, [path.id]: e.target.value }))}
+                                                        onBlur={() => handleSaveRoutePathTitle(path.id)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") {
+                                                                e.currentTarget.blur();
+                                                            }
+                                                        }}
+                                                        className="h-7 min-w-0 bg-slate-900 border-slate-800 text-xs text-slate-300"
+                                                    />
+                                                    <Badge variant="outline" className="shrink-0 border-slate-700 bg-slate-900/80 text-slate-500 text-[10px]">
+                                                        {path.encounters.length} fight{path.encounters.length === 1 ? "" : "s"}
+                                                    </Badge>
+                                                    <div className="flex items-center gap-0.5">
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            disabled={pathIndex === 0}
+                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "up")}
+                                                            title="Move path up"
+                                                        >
+                                                            <ChevronUp className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            disabled={pathIndex === section.paths.length - 1}
+                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "down")}
+                                                            title="Move path down"
+                                                        >
+                                                            <ChevronDown className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            disabled={duplicatingRoutePathId === path.id}
+                                                            className="h-7 w-7 text-slate-500 hover:text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
+                                                            onClick={() => handleDuplicateRoutePath(section.id, path.id)}
+                                                            title="Duplicate path fights"
+                                                        >
+                                                            {duplicatingRoutePathId === path.id ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                <Copy className="w-3.5 h-3.5" />
+                                                            )}
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
+                                                            onClick={() => handleDeleteRoutePath(path.id)}
+                                                            title="Delete path"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
+                                No route sections yet. Existing fights remain shared until you create sections and assign them to paths.
+                            </div>
+                        ))}
+                    </div>
+                    {localEncounters.length === 0 ? (
                         <p className="text-muted-foreground italic bg-slate-950/50 p-6 rounded-xl border border-dashed border-slate-800 text-center">No encounters added to this quest yet. Start by adding a fight on the left.</p>
                     ) : (
                         <div className="relative pl-6 md:pl-10 pb-20">
@@ -1867,10 +2382,11 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                             <div className="space-y-6">
                                 <AnimatePresence mode="popLayout">
-                                {initialQuest.encounters
+                                {localEncounters
                                     .sort((a, b) => a.sequence - b.sequence)
                                     .map((encounter: EncounterWithRelations, index: number) => {
                                         const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : { border: "border-slate-700", text: "text-slate-300", bg: "bg-slate-900", glow: "from-slate-950/20" };
+                                        const routePathLabel = encounter.routePathId ? routePathLabelById.get(encounter.routePathId) : null;
                                         
                                         // Generate a Class-specific glow for the card background
                                         const classGlow = encounter.defender ? (
@@ -1943,6 +2459,16 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                         ))}
                                                                     </div>
                                                                 )}
+                                                                <div className="flex gap-1 mt-1 flex-wrap">
+                                                                    <Badge variant="outline" className={cn(
+                                                                        "text-[10px] py-0 h-4 font-normal",
+                                                                        routePathLabel
+                                                                            ? "bg-sky-950/40 border-sky-800/50 text-sky-300"
+                                                                            : "bg-slate-900/80 border-slate-700/50 text-slate-500"
+                                                                    )}>
+                                                                        {routePathLabel || "Shared / always shown"}
+                                                                    </Badge>
+                                                                </div>
                                                             </div>
                                                         </div>
 
@@ -1960,7 +2486,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                 <Button
                                                                     variant="ghost" 
                                                                     size="icon"
-                                                                    disabled={index === initialQuest.encounters.length - 1}
+                                                                    disabled={index === localEncounters.length - 1}
                                                                     onClick={(e) => { e.stopPropagation(); handleMoveEncounter(encounter.id, 'down'); }}
                                                                     className="h-6 w-6 rounded bg-slate-900 border border-slate-800 hover:bg-sky-950 hover:text-sky-400"
                                                                 >

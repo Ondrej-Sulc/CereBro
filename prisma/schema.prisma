@@ -793,10 +793,45 @@ model QuestPlan {
   videoUrl        String?
   playerPlans     PlayerQuestPlan[]
   encounters      QuestEncounter[]
+  routeSections   QuestRouteSection[]
   category        QuestCategory?    @relation(fields: [categoryId], references: [id])
   creator         Player?           @relation("QuestCreator", fields: [creatorId], references: [id])
   creators        BotUser[]         @relation("QuestPlanCreators")
   requiredTags    Tag[]             @relation("QuestRequiredTags")
+}
+
+model QuestRouteSection {
+  id          String            @id @default(cuid())
+  questPlanId String
+  parentPathId String?
+  title       String
+  order       Int
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  questPlan   QuestPlan         @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  parentPath  QuestRoutePath?   @relation("RouteSectionParentPath", fields: [parentPathId], references: [id], onDelete: SetNull)
+  paths       QuestRoutePath[]
+  choices     PlayerQuestRouteChoice[]
+
+  @@unique([questPlanId, order])
+  @@index([questPlanId])
+  @@index([parentPathId])
+}
+
+model QuestRoutePath {
+  id          String            @id @default(cuid())
+  sectionId   String
+  title       String
+  order       Int
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  section     QuestRouteSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  childSections QuestRouteSection[] @relation("RouteSectionParentPath")
+  encounters  QuestEncounter[]
+  choices     PlayerQuestRouteChoice[]
+
+  @@unique([sectionId, order])
+  @@index([sectionId])
 }
 
 model QuestEncounter {
@@ -808,12 +843,14 @@ model QuestEncounter {
   maxStarLevel         Int?
   requiredClasses      ChampionClass[]
   questPlanId          String
+  routePathId          String?
   defenderId           Int?
   recommendedTags      String[]
   videoUrl             String?
   playerEncounters     PlayerQuestEncounter[]
   defender             Champion?              @relation(fields: [defenderId], references: [id])
   questPlan            QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  routePath            QuestRoutePath?         @relation(fields: [routePathId], references: [id], onDelete: SetNull)
   nodes                QuestEncounterNode[]
   recommendedChampions Champion[]             @relation("EncounterRecommendedChampions")
   requiredTags         Tag[]                  @relation("EncounterRequiredTags")
@@ -822,6 +859,7 @@ model QuestEncounter {
   @@unique([questPlanId, sequence])
   @@unique([id, questPlanId])
   @@index([questPlanId])
+  @@index([routePathId])
   @@index([defenderId])
 }
 
@@ -860,6 +898,7 @@ model PlayerQuestPlan {
   isFeatured       Boolean                      @default(false)
   encounters       PlayerQuestEncounter[]
   synergyChampions PlayerQuestSynergyChampion[]
+  routeChoices     PlayerQuestRouteChoice[]
   player           Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
   questPlan        QuestPlan                    @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
 
@@ -867,6 +906,23 @@ model PlayerQuestPlan {
   @@unique([id, questPlanId])
   @@index([playerId])
   @@index([questPlanId])
+}
+
+model PlayerQuestRouteChoice {
+  id                  String            @id @default(cuid())
+  playerQuestPlanId   String
+  questRouteSectionId String
+  questRoutePathId    String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  playerQuestPlan     PlayerQuestPlan   @relation(fields: [playerQuestPlanId], references: [id], onDelete: Cascade)
+  questRouteSection   QuestRouteSection @relation(fields: [questRouteSectionId], references: [id], onDelete: Cascade)
+  questRoutePath      QuestRoutePath    @relation(fields: [questRoutePathId], references: [id], onDelete: Cascade)
+
+  @@unique([playerQuestPlanId, questRouteSectionId])
+  @@index([playerQuestPlanId])
+  @@index([questRouteSectionId])
+  @@index([questRoutePathId])
 }
 
 model PlayerQuestSynergyChampion {
@@ -886,6 +942,7 @@ model PlayerQuestEncounter {
   playerQuestPlanId  String
   questEncounterId   String
   selectedChampionId Int?
+  revivesUsed        Int             @default(0)
   questPlanId        String
   playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
   questEncounter     QuestEncounter  @relation(fields: [questEncounterId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
