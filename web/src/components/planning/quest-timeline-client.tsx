@@ -1566,7 +1566,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                         <div className="px-4 pb-4 pt-1 max-h-[calc(100svh-60px)] md:max-h-none overflow-y-auto custom-scrollbar"
                                             style={{ WebkitOverflowScrolling: 'touch' }}
                                         >
-                                        {selectedTeam.length === 0 ? (
+                                        {selectedTeam.length === 0 && readOnly ? (
                                             <div className="py-8 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
                                                 <div className="p-3 rounded-full bg-slate-800/50 text-slate-500">
                                                     <Users className="w-6 h-6" />
