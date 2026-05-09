@@ -2382,8 +2382,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                             <div className="space-y-6">
                                 <AnimatePresence mode="popLayout">
-                                {localEncounters
-                                    .sort((a, b) => a.sequence - b.sequence)
+                                {sortedPathEncounters
                                     .map((encounter: EncounterWithRelations, index: number) => {
                                         const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : { border: "border-slate-700", text: "text-slate-300", bg: "bg-slate-900", glow: "from-slate-950/20" };
                                         const routePathLabel = encounter.routePathId ? routePathLabelById.get(encounter.routePathId) : null;

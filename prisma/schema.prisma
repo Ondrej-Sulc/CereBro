@@ -830,6 +830,7 @@ model QuestRoutePath {
   encounters  QuestEncounter[]
   choices     PlayerQuestRouteChoice[]
 
+  @@unique([id, sectionId])
   @@unique([sectionId, order])
   @@index([sectionId])
 }

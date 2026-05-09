@@ -2864,7 +2864,7 @@ async function sortQuestEncountersByRoute(questPlanId: string) {
     }
 
     if (orderedEncounterIds.length === 0) {
-        return { success: true, count: 0 };
+        return 0;
     }
 
     const offset = orderedEncounterIds.length + 1000;

@@ -38,6 +38,7 @@ CREATE UNIQUE INDEX "QuestRouteSection_questPlanId_order_key" ON "QuestRouteSect
 CREATE INDEX "QuestRouteSection_questPlanId_idx" ON "QuestRouteSection"("questPlanId");
 
 CREATE UNIQUE INDEX "QuestRoutePath_sectionId_order_key" ON "QuestRoutePath"("sectionId", "order");
+CREATE UNIQUE INDEX "QuestRoutePath_id_sectionId_key" ON "QuestRoutePath"("id", "sectionId");
 CREATE INDEX "QuestRoutePath_sectionId_idx" ON "QuestRoutePath"("sectionId");
 
 CREATE UNIQUE INDEX "PlayerQuestRouteChoice_playerQuestPlanId_questRouteSectionId_key" ON "PlayerQuestRouteChoice"("playerQuestPlanId", "questRouteSectionId");
@@ -53,3 +54,4 @@ ALTER TABLE "QuestEncounter" ADD CONSTRAINT "QuestEncounter_routePathId_fkey" FO
 ALTER TABLE "PlayerQuestRouteChoice" ADD CONSTRAINT "PlayerQuestRouteChoice_playerQuestPlanId_fkey" FOREIGN KEY ("playerQuestPlanId") REFERENCES "PlayerQuestPlan"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "PlayerQuestRouteChoice" ADD CONSTRAINT "PlayerQuestRouteChoice_questRouteSectionId_fkey" FOREIGN KEY ("questRouteSectionId") REFERENCES "QuestRouteSection"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "PlayerQuestRouteChoice" ADD CONSTRAINT "PlayerQuestRouteChoice_questRoutePathId_fkey" FOREIGN KEY ("questRoutePathId") REFERENCES "QuestRoutePath"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PlayerQuestRouteChoice" ADD CONSTRAINT "PlayerQuestRouteChoice_path_belongs_to_section_check" FOREIGN KEY ("questRoutePathId", "questRouteSectionId") REFERENCES "QuestRoutePath"("id", "sectionId") ON DELETE CASCADE ON UPDATE CASCADE;
