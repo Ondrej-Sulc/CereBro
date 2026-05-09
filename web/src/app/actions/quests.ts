@@ -252,7 +252,12 @@ export const getQuestPlans = withActionContext('getQuestPlans', async (categoryI
                 _count: {
                     select: {
                         encounters: {
-                            where: { selectedChampionId: { not: null } }
+                            where: {
+                                OR: [
+                                    { selectedChampionId: { not: null } },
+                                    { prefightChampionId: { not: null } }
+                                ]
+                            }
                         }
                     }
                 }
@@ -2138,6 +2143,87 @@ export const savePlayerQuestRouteChoice = withActionContext('savePlayerQuestRout
 
 // --- User Progress / Selections ---
 
+async function validateQuestChampionSelection(playerId: string, questPlanId: string, questEncounterId: string, championId: number) {
+    const [quest, encounter, rosterEntries, champion] = await Promise.all([
+        prisma.questPlan.findUnique({
+            where: { id: questPlanId },
+            include: { requiredTags: true }
+        }),
+        prisma.questEncounter.findUnique({
+            where: { id: questEncounterId },
+            include: { requiredTags: true }
+        }),
+        prisma.roster.findMany({
+            where: { playerId, championId },
+            orderBy: [{ stars: 'desc' }, { rank: 'desc' }]
+        }),
+        prisma.champion.findUnique({
+            where: { id: championId },
+            include: { tags: true }
+        })
+    ]);
+
+    if (!quest) throw new Error("Quest plan not found.");
+    if (!encounter || encounter.questPlanId !== questPlanId) throw new Error("Invalid quest encounter or plan mismatch.");
+    const rosterEntry = rosterEntries[0];
+    if (!rosterEntry) throw new Error("Champion not found in your roster.");
+    if (!champion) throw new Error("Champion not found.");
+
+    if (quest.minStarLevel && rosterEntry.stars < quest.minStarLevel) throw new Error(`Quest requires minimum ${quest.minStarLevel} stars.`);
+    if (quest.maxStarLevel && rosterEntry.stars > quest.maxStarLevel) throw new Error(`Quest requires maximum ${quest.maxStarLevel} stars.`);
+    if (encounter.minStarLevel && rosterEntry.stars < encounter.minStarLevel) throw new Error(`Fight requires minimum ${encounter.minStarLevel} stars.`);
+    if (encounter.maxStarLevel && rosterEntry.stars > encounter.maxStarLevel) throw new Error(`Fight requires maximum ${encounter.maxStarLevel} stars.`);
+    if (quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(champion.class)) throw new Error(`Quest requires class: ${quest.requiredClasses.join(", ")}`);
+    if (encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(champion.class)) throw new Error(`Fight requires class: ${encounter.requiredClasses.join(", ")}`);
+
+    if (quest.requiredTags.length > 0) {
+        const hasAllTags = quest.requiredTags.every(qt => champion.tags.some(ct => ct.id === qt.id));
+        if (!hasAllTags) throw new Error(`Quest requires champions with all of: ${quest.requiredTags.map(t => t.name).join(", ")}`);
+    }
+    if (encounter.requiredTags.length > 0) {
+        const hasAllTags = encounter.requiredTags.every(qt => champion.tags.some(ct => ct.id === qt.id));
+        if (!hasAllTags) throw new Error(`Fight requires champions with all of: ${encounter.requiredTags.map(t => t.name).join(", ")}`);
+    }
+
+    return quest;
+}
+
+async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number | null, candidateChampionId: number | null, replacement: { questEncounterId: string; field: "selectedChampionId" | "prefightChampionId" }) {
+    if (teamLimit === null || candidateChampionId === null) return;
+
+    const planDetails = await prisma.playerQuestPlan.findUnique({
+        where: { id: playerQuestPlanId },
+        include: {
+            encounters: {
+                select: {
+                    questEncounterId: true,
+                    selectedChampionId: true,
+                    prefightChampionId: true
+                }
+            },
+            synergyChampions: true
+        }
+    });
+
+    const uniqueChamps = new Set<number>();
+    planDetails?.encounters.forEach(encounter => {
+        const selectedId = replacement.questEncounterId === encounter.questEncounterId && replacement.field === "selectedChampionId"
+            ? candidateChampionId
+            : encounter.selectedChampionId;
+        const prefightId = replacement.questEncounterId === encounter.questEncounterId && replacement.field === "prefightChampionId"
+            ? candidateChampionId
+            : encounter.prefightChampionId;
+        if (selectedId !== null) uniqueChamps.add(selectedId);
+        if (prefightId !== null) uniqueChamps.add(prefightId);
+    });
+    planDetails?.synergyChampions.forEach(synergy => uniqueChamps.add(synergy.championId));
+    uniqueChamps.add(candidateChampionId);
+
+    if (uniqueChamps.size > teamLimit) {
+        throw new Error(`Team limit of ${teamLimit} reached.`);
+    }
+}
+
 export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter', async (questPlanId: string, questEncounterId: string, selectedChampionId: number | null) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -2152,15 +2238,9 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
         throw new Error("Invalid quest encounter or plan mismatch.");
     }
 
-    // Validate champion ownership if provided
+    let questForLimit: { teamLimit: number | null } | null = null;
     if (selectedChampionId !== null) {
-        const hasChampion = await prisma.roster.findFirst({
-            where: {
-                playerId: actingUser.id,
-                championId: selectedChampionId
-            }
-        });
-        if (!hasChampion) throw new Error("Champion not found in your roster.");
+        questForLimit = await validateQuestChampionSelection(actingUser.id, questPlanId, questEncounterId, selectedChampionId);
     }
 
     // Ensure the PlayerQuestPlan exists first
@@ -2178,7 +2258,22 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
         update: {} // No update needed if it exists
     });
 
-    // Upsert the specific encounter counter
+    const existingEncounter = await prisma.playerQuestEncounter.findUnique({
+        where: {
+            playerQuestPlanId_questEncounterId: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId
+            }
+        },
+        select: { prefightChampionId: true, revivesUsed: true }
+    });
+
+    if (selectedChampionId !== null && existingEncounter?.prefightChampionId === selectedChampionId) {
+        throw new Error("Counter and prefight champion must be different for the same fight.");
+    }
+
+    await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, selectedChampionId, { questEncounterId, field: "selectedChampionId" });
+
     await prisma.playerQuestEncounter.upsert({
         where: {
             playerQuestPlanId_questEncounterId: {
@@ -2197,6 +2292,18 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
         }
     });
 
+    if (selectedChampionId === null) {
+        await prisma.playerQuestEncounter.deleteMany({
+            where: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId,
+                selectedChampionId: null,
+                prefightChampionId: null,
+                revivesUsed: 0
+            }
+        });
+    }
+
     revalidatePath(`/planning/quests/${questPlanId}`);
     revalidateTag('quest-plans', 'default');
     revalidateTag('quest-plan-detail', 'default');
@@ -2207,6 +2314,91 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
         revalidateTag(`quest-alliance-picks-${questPlanId}-${actingUser.allianceId}`, 'default');
         revalidateTag('quest-alliance-picks', 'default');
     }
+
+    return { success: true };
+});
+
+export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQuestPrefightChampion', async (questPlanId: string, questEncounterId: string, prefightChampionId: number | null) => {
+    const actingUser = await getUserPlayerWithAlliance();
+    if (!actingUser) throw new Error("Unauthorized");
+
+    const encounter = await prisma.questEncounter.findUnique({
+        where: { id: questEncounterId },
+        select: { questPlanId: true }
+    });
+
+    if (!encounter || encounter.questPlanId !== questPlanId) {
+        throw new Error("Invalid quest encounter or plan mismatch.");
+    }
+
+    let questForLimit: { teamLimit: number | null } | null = null;
+    if (prefightChampionId !== null) {
+        questForLimit = await validateQuestChampionSelection(actingUser.id, questPlanId, questEncounterId, prefightChampionId);
+    }
+
+    const playerPlan = await prisma.playerQuestPlan.upsert({
+        where: {
+            playerId_questPlanId: {
+                playerId: actingUser.id,
+                questPlanId
+            }
+        },
+        create: {
+            playerId: actingUser.id,
+            questPlanId
+        },
+        update: {}
+    });
+
+    const existingEncounter = await prisma.playerQuestEncounter.findUnique({
+        where: {
+            playerQuestPlanId_questEncounterId: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId
+            }
+        },
+        select: { selectedChampionId: true }
+    });
+
+    if (prefightChampionId !== null && existingEncounter?.selectedChampionId === prefightChampionId) {
+        throw new Error("Counter and prefight champion must be different for the same fight.");
+    }
+
+    await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, prefightChampionId, { questEncounterId, field: "prefightChampionId" });
+
+    await prisma.playerQuestEncounter.upsert({
+        where: {
+            playerQuestPlanId_questEncounterId: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId
+            }
+        },
+        create: {
+            playerQuestPlanId: playerPlan.id,
+            questEncounterId,
+            questPlanId,
+            prefightChampionId
+        },
+        update: {
+            prefightChampionId
+        }
+    });
+
+    if (prefightChampionId === null) {
+        await prisma.playerQuestEncounter.deleteMany({
+            where: {
+                playerQuestPlanId: playerPlan.id,
+                questEncounterId,
+                selectedChampionId: null,
+                prefightChampionId: null,
+                revivesUsed: 0
+            }
+        });
+    }
+
+    revalidatePath(`/planning/quests/${questPlanId}`);
+    revalidateTag('quest-plans', 'default');
+    revalidateTag('quest-plan-detail', 'default');
 
     return { success: true };
 });
@@ -2266,6 +2458,7 @@ export const savePlayerQuestEncounterRevives = withActionContext('savePlayerQues
                 playerQuestPlanId: playerPlan.id,
                 questEncounterId,
                 selectedChampionId: null,
+                prefightChampionId: null,
                 revivesUsed: 0
             }
         });
@@ -2279,7 +2472,7 @@ export const savePlayerQuestEncounterRevives = withActionContext('savePlayerQues
 });
 
 /**
- * Clear all counter selections for a player's quest plan.
+ * Clear all counter and prefight selections for a player's quest plan.
  */
 export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', async (questPlanId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
@@ -2292,12 +2485,13 @@ export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', 
     if (playerPlan) {
         await prisma.playerQuestEncounter.updateMany({
             where: { playerQuestPlanId: playerPlan.id },
-            data: { selectedChampionId: null }
+            data: { selectedChampionId: null, prefightChampionId: null }
         });
         await prisma.playerQuestEncounter.deleteMany({
             where: {
                 playerQuestPlanId: playerPlan.id,
                 selectedChampionId: null,
+                prefightChampionId: null,
                 revivesUsed: 0
             }
         });
@@ -2391,13 +2585,21 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
             const planDetails = await prisma.playerQuestPlan.findUnique({
                 where: { id: playerPlan.id },
                 include: {
-                    encounters: { where: { selectedChampionId: { not: null } } },
+                    encounters: {
+                        where: {
+                            OR: [
+                                { selectedChampionId: { not: null } },
+                                { prefightChampionId: { not: null } }
+                            ]
+                        }
+                    },
                     synergyChampions: true
                 }
             });
             const encounterChamps = planDetails?.encounters.map(e => e.selectedChampionId).filter(id => id !== null) || [];
+            const prefightChamps = planDetails?.encounters.map(e => e.prefightChampionId).filter(id => id !== null) || [];
             const synergyChamps = planDetails?.synergyChampions.map(s => s.championId) || [];
-            const uniqueChamps = new Set([...encounterChamps, ...synergyChamps]);
+            const uniqueChamps = new Set([...encounterChamps, ...prefightChamps, ...synergyChamps]);
             
             if (!uniqueChamps.has(championId) && uniqueChamps.size >= quest.teamLimit) {
                 throw new Error(`Team limit of ${quest.teamLimit} reached.`);
@@ -3034,7 +3236,8 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
             },
             encounters: {
                 include: {
-                    selectedChampion: true
+                    selectedChampion: true,
+                    prefightChampion: true
                 }
             },
             synergyChampions: {
@@ -3055,11 +3258,14 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
     const encounterChampionIds = playerPlan.encounters
         .map(e => e.selectedChampionId)
         .filter((id): id is number => id !== null);
+    const prefightChampionIds = playerPlan.encounters
+        .map(e => e.prefightChampionId)
+        .filter((id): id is number => id !== null);
 
     const synergyChampionIds = playerPlan.synergyChampions
         .map(s => s.championId);
 
-    const allSelectedChampionIds = [...new Set([...encounterChampionIds, ...synergyChampionIds])];
+    const allSelectedChampionIds = [...new Set([...encounterChampionIds, ...prefightChampionIds, ...synergyChampionIds])];
 
     const rosterEntries = allSelectedChampionIds.length > 0
         ? await prisma.roster.findMany({
@@ -3107,6 +3313,30 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                 });
             }
         }
+        if (enc.prefightChampionId) {
+            const bestEntry = rosterEntries.find(r => r.championId === enc.prefightChampionId);
+
+            if (bestEntry) {
+                rosterMap.set(`prefight:${enc.questEncounterId}`, bestEntry);
+            } else if (enc.prefightChampion) {
+                rosterMap.set(`prefight:${enc.questEncounterId}`, {
+                    id: `fallback-prefight-${enc.id}`,
+                    playerId: playerPlan.playerId,
+                    championId: enc.prefightChampionId,
+                    stars: 0,
+                    rank: 0,
+                    level: 0,
+                    sigLevel: null,
+                    isAwakened: false,
+                    isAscended: false,
+                    ascensionLevel: 0,
+                    powerRating: 0,
+                    champion: enc.prefightChampion,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+        }
     }
 
     return {
@@ -3130,6 +3360,7 @@ export const getPlayerQuestPlansForProfile = withActionContext('getPlayerQuestPl
                 some: {
                     OR: [
                         { selectedChampionId: { not: null } },
+                        { prefightChampionId: { not: null } },
                         { revivesUsed: { gt: 0 } }
                     ]
                 }
@@ -3158,6 +3389,7 @@ export const getPlayerQuestPlansForProfile = withActionContext('getPlayerQuestPl
                 where: {
                     OR: [
                         { selectedChampionId: { not: null } },
+                        { prefightChampionId: { not: null } },
                         { revivesUsed: { gt: 0 } }
                     ]
                 },

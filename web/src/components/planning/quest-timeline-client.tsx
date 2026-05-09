@@ -7,12 +7,12 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestSynergy, clearAllQuestCounters, savePlayerQuestRouteChoice } from "@/app/actions/quests";
+import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestSynergy, clearAllQuestCounters, savePlayerQuestRouteChoice, savePlayerQuestPrefightChampion } from "@/app/actions/quests";
 import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
@@ -299,7 +299,7 @@ const isChampionUnavailableForEncounter = ({
     return otherSelectionsCount >= validRosterCount;
 };
 
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], savedRouteChoices = [], savedSynergies = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections }: QuestTimelineProps) {
+export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], savedRouteChoices = [], savedSynergies = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -377,6 +377,32 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         return initial;
     });
 
+    const [prefightSelections, setPrefightSelections] = useState<Record<string, string | null>>(() => {
+        const initial: Record<string, string | null> = {};
+
+        if (readOnly) {
+            Object.keys(initialPrefightSelections || {}).forEach(encId => {
+                const rosterEntry = rosterMap[`prefight:${encId}`];
+                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
+            });
+            return initial;
+        }
+
+        savedEncounters.forEach(se => {
+            if (se.prefightChampionId) {
+                const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
+                const rosterEntry = roster.find(r =>
+                    r.championId === se.prefightChampionId &&
+                    isChampionValidForEncounterOrQuest(r, quest, encounter)
+                );
+                initial[se.questEncounterId] = rosterEntry?.id ?? null;
+            } else {
+                initial[se.questEncounterId] = null;
+            }
+        });
+        return initial;
+    });
+
     const [revivesByEncounterId, setRevivesByEncounterId] = useState<Record<string, number>>(() => {
         const initial: Record<string, number> = {};
         savedEncounters.forEach(encounter => {
@@ -393,13 +419,14 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         rosterId: string;
         championId: number;
         assignedEncounters: string[];
+        assignedPrefights: string[];
         isSynergy: boolean;
         championName: string;
     } | null>(null);
 
     // Shared helper for champion removal logic
-    const removeTeamMemberLogic = async (target: { rosterId: string; championId: number; assignedEncounters: string[]; isSynergy: boolean }) => {
-        const { championId, assignedEncounters, isSynergy } = target;
+    const removeTeamMemberLogic = async (target: { rosterId: string; championId: number; assignedEncounters: string[]; assignedPrefights?: string[]; isSynergy: boolean }) => {
+        const { championId, assignedEncounters, assignedPrefights = [], isSynergy } = target;
 
         try {
             // Wait for all remote operations to complete successfully FIRST
@@ -412,6 +439,11 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             if (assignedEncounters.length > 0) {
                 assignedEncounters.forEach(encId => {
                     promises.push(savePlayerQuestCounter(quest.id, encId, null));
+                });
+            }
+            if (assignedPrefights.length > 0) {
+                assignedPrefights.forEach(encId => {
+                    promises.push(savePlayerQuestPrefightChampion(quest.id, encId, null));
                 });
             }
 
@@ -430,7 +462,19 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     });
                     return next;
                 });
-                toast({ title: "Assignments Cleared", description: "Champion has been unassigned from fights." });
+            }
+            if (assignedPrefights.length > 0) {
+                setPrefightSelections(prev => {
+                    const next = { ...prev };
+                    assignedPrefights.forEach(encId => {
+                        next[encId] = null;
+                    });
+                    return next;
+                });
+            }
+
+            if (assignedEncounters.length > 0 || assignedPrefights.length > 0) {
+                toast({ title: "Assignments Cleared", description: "Champion has been unassigned from fights and prefights." });
             } else if (isSynergy) {
                 toast({ title: "Synergy Removed", description: "Champion has been removed from synergy." });
             }
@@ -451,28 +495,40 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         try {
             await clearAllQuestCounters(quest.id);
             setSelections({});
-            toast({ title: "Plan Cleared", description: "All counter selections have been removed. Revive counts were kept." });
+            setPrefightSelections({});
+            toast({ title: "Plan Cleared", description: "All counter and prefight selections have been removed. Revive counts were kept." });
         } catch {
             toast({ title: "Error", description: "Failed to clear the plan.", variant: "destructive" });
         }
     };
 
     // Refactored helper for immediate execution
-    const confirmAndRemoveTeamMember = async (target: { rosterId: string, championId: number, assignedEncounters: string[], isSynergy: boolean }) => {
+    const confirmAndRemoveTeamMember = async (target: { rosterId: string, championId: number, assignedEncounters: string[], assignedPrefights?: string[], isSynergy: boolean }) => {
         await removeTeamMemberLogic(target);
     };
 
     const initiateRemoveTeamMember = (rosterId: string, championId: number, championName: string) => {
         const assignedEncounters = Object.entries(selections)
-            .filter(([encId, rId]) => activeEncounterIds.has(encId) && rId === rosterId)
+            .filter(([encId, rId]) => {
+                if (!activeEncounterIds.has(encId) || !rId) return false;
+                if (rId === rosterId) return true;
+                return quest.teamLimit !== null && roster.find(r => r.id === rId)?.championId === championId;
+            })
+            .map(([encId]) => encId);
+        const assignedPrefights = Object.entries(prefightSelections)
+            .filter(([encId, rId]) => {
+                if (!activeEncounterIds.has(encId) || !rId) return false;
+                if (rId === rosterId) return true;
+                return quest.teamLimit !== null && roster.find(r => r.id === rId)?.championId === championId;
+            })
             .map(([encId]) => encId);
             
         const isSynergy = synergyIds.includes(championId);
 
-        if (assignedEncounters.length > 1) {
-            setChampionToRemove({ rosterId, championId, assignedEncounters, isSynergy, championName });
+        if (assignedEncounters.length + assignedPrefights.length > 1) {
+            setChampionToRemove({ rosterId, championId, assignedEncounters, assignedPrefights, isSynergy, championName });
         } else {
-            confirmAndRemoveTeamMember({ rosterId, championId, assignedEncounters, isSynergy });
+            confirmAndRemoveTeamMember({ rosterId, championId, assignedEncounters, assignedPrefights, isSynergy });
         }
     };
 
@@ -613,6 +669,16 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         });
         return next;
     }, [activeEncounterIds, selections]);
+
+    const activePrefightSelections = useMemo(() => {
+        const next: Record<string, string | null> = {};
+        Object.entries(prefightSelections).forEach(([encounterId, rosterId]) => {
+            if (activeEncounterIds.has(encounterId)) {
+                next[encounterId] = rosterId;
+            }
+        });
+        return next;
+    }, [activeEncounterIds, prefightSelections]);
 
     const activeRevivesTotal = useMemo(() => {
         return Object.entries(revivesByEncounterId).reduce((total, [encounterId, revivesUsed]) => {
@@ -997,15 +1063,25 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         if (!rosterEntry) return;
         
         const championId = rosterEntry.championId;
+        const prefightRosterId = prefightSelections[encounterId];
+        const prefightChampionId = prefightRosterId ? roster.find(r => r.id === prefightRosterId)?.championId : null;
+
+        if (prefightChampionId === championId && previousRosterId !== rosterId) {
+            toast({ title: "Invalid Counter", description: "Counter champion must be different from the prefight champion for this fight.", variant: "destructive" });
+            return;
+        }
 
         // If selecting a NEW roster entry (not unselecting, and not already selected for this fight)
         if (previousRosterId !== rosterId) {
             // Check if this specific roster entry is already in the team for another fight
-            const isAlreadyInTeam = Object.values(activeSelections).includes(rosterId);
+            const isAlreadyInTeam = Object.values(activeSelections).includes(rosterId) || Object.values(activePrefightSelections).includes(rosterId);
 
             if (quest.teamLimit !== null) {
                 // Check if the CHAMPION is already in the team (either as counter or synergy)
                 const isChampInTeam = Object.values(activeSelections).some(rid => {
+                    if (!rid) return false;
+                    return roster.find(r => r.id === rid)?.championId === championId;
+                }) || Object.values(activePrefightSelections).some(rid => {
                     if (!rid) return false;
                     return roster.find(r => r.id === rid)?.championId === championId;
                 }) || synergyIds.includes(championId);
@@ -1059,6 +1135,65 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         }
     };
 
+    const handleSelectPrefight = async (encounterId: string, rosterId: string) => {
+        const previousRosterId = prefightSelections[encounterId];
+        const rosterEntry = roster.find(r => r.id === rosterId);
+        if (!rosterEntry) return;
+
+        const championId = rosterEntry.championId;
+        const counterRosterId = selections[encounterId];
+        const counterChampionId = counterRosterId ? roster.find(r => r.id === counterRosterId)?.championId : null;
+
+        if (counterChampionId === championId && previousRosterId !== rosterId) {
+            toast({ title: "Invalid Prefight", description: "Prefight champion must be different from the counter for this fight.", variant: "destructive" });
+            return;
+        }
+
+        if (previousRosterId !== rosterId) {
+            const isAlreadyInTeam = Object.values(activeSelections).includes(rosterId) || Object.values(activePrefightSelections).includes(rosterId);
+
+            if (quest.teamLimit !== null) {
+                const isChampInTeam = Object.values(activeSelections).some(rid => {
+                    if (!rid) return false;
+                    return roster.find(r => r.id === rid)?.championId === championId;
+                }) || Object.values(activePrefightSelections).some(rid => {
+                    if (!rid) return false;
+                    return roster.find(r => r.id === rid)?.championId === championId;
+                }) || synergyIds.includes(championId);
+
+                if (!isChampInTeam && selectedTeam.length >= quest.teamLimit) {
+                    toast({
+                        title: "Team Limit Reached",
+                        description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
+                        variant: "destructive"
+                    });
+                    return;
+                }
+            } else if (isAlreadyInTeam) {
+                toast({
+                    title: "Rarity Already Used",
+                    description: "This specific rarity of the champion is already used in another active assignment.",
+                    variant: "destructive"
+                });
+                return;
+            }
+        }
+
+        const newValue = previousRosterId === rosterId ? null : rosterId;
+        const newChampValue = newValue ? roster.find(r => r.id === newValue)?.championId || null : null;
+
+        setPrefightSelections(prev => ({ ...prev, [encounterId]: newValue }));
+
+        try {
+            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue);
+        } catch (error) {
+            console.error("Failed to save prefight selection", error);
+            setPrefightSelections(prev => ({ ...prev, [encounterId]: previousRosterId }));
+            const msg = error instanceof Error ? error.message : "Failed to save prefight.";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
     const handleSetRevives = async (encounterId: string, revivesUsed: number) => {
         if (readOnly) return;
 
@@ -1099,6 +1234,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         if (!isRemoving && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
             // Check if they are already in the team as a counter
             const isAlreadyInTeam = Object.values(activeSelections).some(rid => {
+                if (!rid) return false;
+                return roster.find(r => r.id === rid)?.championId === championId;
+            }) || Object.values(activePrefightSelections).some(rid => {
                 if (!rid) return false;
                 return roster.find(r => r.id === rid)?.championId === championId;
             });
@@ -1147,7 +1285,18 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             if (rosterId !== null) {
                 const r = resolveRosterItem(rosterId, encId);
                 if (r) {
-                    teamMap.set(r.id, r);
+                    teamMap.set(quest.teamLimit !== null ? `champion-${r.championId}` : r.id, r);
+                }
+            }
+        });
+
+        Object.entries(activePrefightSelections).forEach(([encId, rosterId]) => {
+            if (rosterId !== null) {
+                const r = readOnly
+                    ? (isReadOnlyRosterEntry(rosterMap[`prefight:${encId}`]) ? rosterMap[`prefight:${encId}`] as RosterWithChampion : undefined)
+                    : roster.find(entry => entry.id === rosterId);
+                if (r) {
+                    teamMap.set(quest.teamLimit !== null ? `champion-${r.championId}` : r.id, r);
                 }
             }
         });
@@ -1185,13 +1334,13 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                 }
 
                 if (bestRosterEntry) {
-                    teamMap.set(bestRosterEntry.id, bestRosterEntry);
+                    teamMap.set(quest.teamLimit !== null ? `champion-${bestRosterEntry.championId}` : bestRosterEntry.id, bestRosterEntry);
                 }
             }
         });
         
         return Array.from(teamMap.values());
-    }, [activeSelections, synergyIds, resolveRosterItem, roster, savedSynergies]);
+    }, [activeSelections, activePrefightSelections, synergyIds, resolveRosterItem, roster, savedSynergies, readOnly, rosterMap, quest.teamLimit]);
 
     const renderChampionItem = (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
         if (readOnly) {
@@ -1579,11 +1728,17 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                     {selectedTeam.map(r => {
                                                         const assignedEncounterIds = Object.entries(activeSelections)
-                                                            .filter(([encId, rosterId]) => rosterId === r.id)
+                                                            .filter(([, rosterId]) => rosterId === r.id || (quest.teamLimit !== null && !!rosterId && roster.find(entry => entry.id === rosterId)?.championId === r.championId))
+                                                            .map(([encId]) => encId);
+                                                        const assignedPrefightEncounterIds = Object.entries(activePrefightSelections)
+                                                            .filter(([, rosterId]) => rosterId === r.id || (quest.teamLimit !== null && !!rosterId && roster.find(entry => entry.id === rosterId)?.championId === r.championId))
                                                             .map(([encId]) => encId);
 
                                                         const assignedEncounters = routeFilteredEncounters
                                                             .filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id))
+                                                            .sort((a, b) => a.sequence - b.sequence);
+                                                        const assignedPrefightEncounters = routeFilteredEncounters
+                                                            .filter((e: EncounterWithRelations) => assignedPrefightEncounterIds.includes(e.id))
                                                             .sort((a, b) => a.sequence - b.sequence);
 
                                                         const classColors = getChampionClassColors(r.champion.class);
@@ -1637,9 +1792,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                             {r.champion.name}
                                                                         </h4>
                                                                         <div className="flex items-center gap-2">
-                                                                            {assignedEncounters.length > 0 ? (
+                                                                            {assignedEncounters.length + assignedPrefightEncounters.length > 0 ? (
                                                                                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                                                                    {assignedEncounters.length} {assignedEncounters.length === 1 ? 'Fight' : 'Fights'}
+                                                                                    {assignedEncounters.length} Fight{assignedEncounters.length === 1 ? '' : 's'} · {assignedPrefightEncounters.length} Prefight{assignedPrefightEncounters.length === 1 ? '' : 's'}
                                                                                 </span>
                                                                             ) : (
                                                                                 <span className="text-[10px] text-sky-500/80 font-bold uppercase tracking-widest flex items-center gap-1">
@@ -1652,7 +1807,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                 </div>
 
                                                                 <div className="mt-auto px-3 pb-3 relative z-10">
-                                                                    {assignedEncounters.length > 0 ? (
+                                                                    {assignedEncounters.length + assignedPrefightEncounters.length > 0 ? (
                                                                         <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner group-hover/team-member:border-slate-700/50 transition-colors">
                                                                             {assignedEncounters.map((enc: EncounterWithRelations) => {
                                                                                 const diffBorder = enc.difficulty === "HARD"
@@ -1696,6 +1851,24 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                                                                 </motion.div>
                                                                                 );
                                                                             })}
+                                                                            {assignedPrefightEncounters.map((enc: EncounterWithRelations) => (
+                                                                                <motion.div
+                                                                                    whileHover={{ scale: 1.05 }}
+                                                                                    whileTap={{ scale: 0.95 }}
+                                                                                    key={`prefight-tgt-${enc.id}`}
+                                                                                    role="button"
+                                                                                    tabIndex={0}
+                                                                                    aria-label={`Prefight for fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
+                                                                                    title={`Prefight for fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
+                                                                                    className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-700/70 bg-slate-950/70 text-slate-400 shadow-sm transition-colors hover:border-slate-500 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        scrollToEncounter(enc.id);
+                                                                                    }}
+                                                                                >
+                                                                                    <Zap className="h-3 w-3" />
+                                                                                </motion.div>
+                                                                            ))}
                                                                         </div>
                                                                     ) : (
                                                                         <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
@@ -2186,7 +2359,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                             {!readOnly && (
                                 <button
                                     onClick={() => setIsClearPlanOpen(true)}
-                                    title="Clear all counter selections"
+                                    title="Clear all counter and prefight selections"
                                     className="flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-slate-800 bg-slate-900/60 text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 hover:border-red-800/60 hover:bg-red-950/30 hover:text-red-400 transition-all duration-200 shrink-0"
                                 >
                                     <Trash2 className="w-2.5 h-2.5" />
@@ -2208,6 +2381,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                 expandedId={expandedId}
                                 toggleExpand={toggleExpand}
                                 selections={selections}
+                                prefightSelections={prefightSelections}
                                 revivesUsed={revivesByEncounterId[encounter.id] || 0}
                                 onSetRevives={handleSetRevives}
                                 readOnly={readOnly}
@@ -2256,7 +2430,8 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                                     isRosterExpanded,
                                     setIsRosterExpanded,
                                     resolveRosterItem,
-                                    handleSelectCounter
+                                    handleSelectCounter,
+                                    handleSelectPrefight
                                 }}
                                 isNodesCollapsed={isNodesCollapsed}
                                 setIsNodesCollapsed={setIsNodesCollapsed}
@@ -2273,7 +2448,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-white">Clear entire plan?</AlertDialogTitle>
                         <AlertDialogDescription className="text-slate-400">
-                            This will remove all counter selections for every fight in this quest. This cannot be undone.
+                            This will remove all counter and prefight selections for every fight in this quest. Revive counts will be kept.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

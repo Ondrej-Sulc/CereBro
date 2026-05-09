@@ -53,6 +53,7 @@ model Champion {
   duels                        Duel[]
   placedPrefights              FightPrefight[]
   questSelectedAsCounter       PlayerQuestEncounter[]       @relation("PlayerSelectedCounter")
+  questSelectedAsPrefight      PlayerQuestEncounter[]       @relation("PlayerSelectedPrefight")
   questSynergyPicks            PlayerQuestSynergyChampion[]
   questDefenderEncounters      QuestEncounter[]
   roster                       Roster[]
@@ -944,16 +945,19 @@ model PlayerQuestEncounter {
   playerQuestPlanId  String
   questEncounterId   String
   selectedChampionId Int?
+  prefightChampionId Int?
   revivesUsed        Int             @default(0)
   questPlanId        String
   playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
   questEncounter     QuestEncounter  @relation(fields: [questEncounterId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
   selectedChampion   Champion?       @relation("PlayerSelectedCounter", fields: [selectedChampionId], references: [id])
+  prefightChampion   Champion?       @relation("PlayerSelectedPrefight", fields: [prefightChampionId], references: [id])
 
   @@unique([playerQuestPlanId, questEncounterId])
   @@index([playerQuestPlanId])
   @@index([questEncounterId])
   @@index([selectedChampionId])
+  @@index([prefightChampionId])
 }
 
 enum ChampionClass {

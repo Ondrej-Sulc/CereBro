@@ -28,8 +28,10 @@ export function ReadOnlyPlanShell({
 }: ReadOnlyPlanShellProps) {
     // Build selections map: encounterId -> championId
     const selections: Record<string, number | null> = {};
+    const prefightSelections: Record<string, number | null> = {};
     for (const encounter of plan.encounters) {
         selections[encounter.questEncounterId] = encounter.selectedChampionId;
+        prefightSelections[encounter.questEncounterId] = encounter.prefightChampionId;
     }
 
     const attributionContent = (
@@ -146,6 +148,7 @@ export function ReadOnlyPlanShell({
                 savedEncounters={plan.encounters || []}
                 readOnly
                 initialSelections={selections}
+                initialPrefightSelections={prefightSelections}
                 rosterMap={plan.rosterMap}
                 savedRouteChoices={plan.routeChoices || []}
                 savedSynergies={savedSynergies}

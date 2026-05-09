@@ -26,7 +26,7 @@ export interface FilterMetadata {
 export interface QuestTimelineProps {
     quest: QuestWithRelations;
     roster?: RosterWithChampion[];
-    savedEncounters?: PlayerQuestEncounter[];
+    savedEncounters?: (PlayerQuestEncounter & { prefightChampionId?: number | null })[];
     savedRouteChoices?: PlayerQuestRouteChoice[];
     savedSynergies?: SynergyWithChampion[];
     popularCounters?: PopularCountersMap;
@@ -36,6 +36,7 @@ export interface QuestTimelineProps {
     readOnly?: boolean;
     rosterMap?: Record<string, unknown>;
     initialSelections?: Record<string, number | null>;
+    initialPrefightSelections?: Record<string, number | null>;
 }
 
 export function toChampionImages(images: unknown): ChampionImages {
