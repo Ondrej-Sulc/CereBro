@@ -24,15 +24,17 @@ import { useDebounce } from "@/hooks/use-debounce";
 interface AsyncBotUserComboboxProps {
   value: string; // The user id to maintain state
   displayValue: string; // The user name to display
-  onSelect: (id: string, name: string) => void;
+  onSelect: (id: string, name: string, avatar: string | null) => void;
   placeholder?: string;
   className?: string;
 }
 
 interface BotUserResult {
     id: string;
-    name: string;
+    name?: string | null;
     image?: string | null;
+    avatar?: string | null;
+    profiles?: { id: string; ingameName: string | null }[];
 }
 
 export function AsyncBotUserCombobox({
@@ -89,15 +91,15 @@ export function AsyncBotUserCombobox({
     return () => controller.abort();
   }, [debouncedSearch, open]);
 
-  const handleSelect = React.useCallback((id: string, name: string) => {
-    onSelect(id, name);
+  const handleSelect = React.useCallback((id: string, name: string, avatar: string | null) => {
+    onSelect(id, name, avatar);
     setSearch("");
     setOpen(false);
   }, [onSelect]);
 
   const handleClear = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onSelect("", "");
+    onSelect("", "", null);
     setSearch("");
   }, [onSelect]);
 
@@ -167,18 +169,22 @@ export function AsyncBotUserCombobox({
             {!loading && search.length < 2 && <div className="py-4 text-center text-xs text-slate-500">Type at least 2 characters</div>}
 
             <CommandGroup>
-                {results.map((u) => (
+                {results.map((u) => {
+                  const displayName = u.name || u.profiles?.find(profile => profile.ingameName)?.ingameName || u.id;
+                  const imageUrl = u.image || u.avatar || null;
+
+                  return (
                     <CommandItem
                         key={u.id}
-                        value={u.name}
-                        onSelect={() => handleSelect(u.id, u.name)}
+                        value={displayName}
+                        onSelect={() => handleSelect(u.id, displayName, imageUrl)}
                         className="flex items-center gap-2 cursor-pointer"
                     >
                          <div className="relative h-6 w-6 rounded-full overflow-hidden flex-shrink-0 bg-slate-800">
-                             {u.image ? (
+                             {imageUrl ? (
                                  <Image
-                                     src={u.image}
-                                     alt={u.name}
+                                     src={imageUrl}
+                                     alt={displayName}
                                      fill
                                      sizes="24px"
                                      className="object-cover"
@@ -187,9 +193,10 @@ export function AsyncBotUserCombobox({
                                  <User className="h-4 w-4 m-1 text-slate-400" />
                              )}
                          </div>
-                        <span className="truncate">{u.name}</span>
+                        <span className="truncate">{displayName}</span>
                     </CommandItem>
-                ))}
+                  );
+                })}
             </CommandGroup>
           </CommandList>
         </Command>

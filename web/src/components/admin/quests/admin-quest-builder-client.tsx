@@ -46,6 +46,7 @@ export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
 type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
 type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
 type CreatorRelation = QuestWithRelations["creators"][0];
+type SelectedCreator = { id: string; name: string; avatar: string | null; discordId?: string | null };
 
 function formatSeconds(s: number): string {
     const h = Math.floor(s / 3600);
@@ -488,7 +489,15 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [teamLimit, setTeamLimit] = useState(initialQuest.teamLimit !== null ? String(initialQuest.teamLimit) : "");
     const [requiredClasses, setRequiredClasses] = useState<ChampionClass[]>(initialQuest.requiredClasses || []);
     const [requiredTags, setRequiredTags] = useState<number[]>((initialQuest.requiredTags as Tag[])?.map(t => t.id) || []);
-    const [creatorIds, setCreatorIds] = useState<string[]>(initialQuest.creators?.map(c => c.id) || []);
+    const [creators, setCreators] = useState<SelectedCreator[]>(
+        (initialQuest.creators || []).map(c => ({
+            id: c.id,
+            name: c.name || `Creator ${c.id.slice(-4)}`,
+            avatar: (c as { image?: string | null; avatar?: string | null }).image || (c as { avatar?: string | null }).avatar || null,
+            discordId: c.discordId || null
+        }))
+    );
+    const creatorIds = creators.map(c => c.id);
     const [featuredPlayers, setFeaturedPlayers] = useState<{id: string, name: string, avatar: string | null}[]>(
         (initialQuest?.playerPlans || [])
             .filter((p: any) => p.player?.id)
@@ -1220,27 +1229,29 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 <Label className="text-slate-300">Creators</Label>
                                 <div className="flex flex-col gap-2">
                                     <div className="flex flex-wrap gap-2 min-h-[28px]">
-                                        {creatorIds.map(id => {
-                                            const existingCreator = initialQuest.creators?.find(c => c.id === id);
-                                            return (
-                                                <Badge key={id} variant={existingCreator ? "secondary" : "outline"} className={cn("flex items-center gap-1.5 px-2 py-1 bg-slate-900", !existingCreator && "bg-slate-900/50 border-slate-700 border-dashed text-slate-400")}>
-                                                    {existingCreator?.discordId && (
-                                                        <div className="w-3 h-3 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                                            <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
-                                                        </div>
-                                                    )}
-                                                    <span>{existingCreator ? (existingCreator.name || `Creator ${id.slice(-4)}`) : "New Creator"}</span>
-                                                    <button onClick={() => setCreatorIds(creatorIds.filter(i => i !== id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
-                                                </Badge>
-                                            );
-                                        })}
+                                        {creators.map(creator => (
+                                            <Badge key={creator.id} variant="secondary" className="flex items-center gap-1.5 px-2 py-1 bg-slate-900">
+                                                {creator.avatar ? (
+                                                    <div className="w-4 h-4 rounded-full overflow-hidden bg-slate-800">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img src={creator.avatar} alt={creator.name} className="w-full h-full object-cover" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-4 h-4 rounded-full bg-indigo-500/20 flex items-center justify-center text-[8px] text-indigo-300">
+                                                        {creator.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span>{creator.name}</span>
+                                                <button onClick={() => setCreators(creators.filter(i => i.id !== creator.id))} className="text-slate-500 hover:text-red-400 ml-1"><XCircle className="w-3 h-3" /></button>
+                                            </Badge>
+                                        ))}
                                     </div>
                                     <AsyncBotUserCombobox
                                         value=""
                                         displayValue=""
-                                        onSelect={(id) => {
-                                            if (id && !creatorIds.includes(id)) {
-                                                setCreatorIds([...creatorIds, id]);
+                                        onSelect={(id, name, avatar) => {
+                                            if (id && !creators.some(creator => creator.id === id)) {
+                                                setCreators([...creators, { id, name, avatar }]);
                                             }
                                         }}
                                         placeholder="Search to add creators..."
