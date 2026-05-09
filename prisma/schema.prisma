@@ -882,6 +882,7 @@ model QuestEncounterNode {
   id               String         @id @default(cuid())
   questEncounterId String
   nodeModifierId   String
+  isHighlighted    Boolean        @default(false)
   nodeModifier     NodeModifier   @relation(fields: [nodeModifierId], references: [id], onDelete: Cascade)
   questEncounter   QuestEncounter @relation(fields: [questEncounterId], references: [id], onDelete: Cascade)
 

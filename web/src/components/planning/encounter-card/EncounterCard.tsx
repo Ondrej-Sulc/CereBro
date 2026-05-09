@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { 
     AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Crosshair, 
     Filter, Info, PlayCircle, Search, Shield, ShieldAlert, TagIcon, Trash2, 
-    X, Youtube, Zap, BookOpen, Users, Minus, Plus
+    X, Youtube, Zap, BookOpen, Users, Minus, Plus, Star
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -155,6 +155,10 @@ function formatClassForIcon(cls: string): string {
     return cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase();
 }
 
+function sortEncounterNodes(nodes: EncounterNodeWithRelations[]): EncounterNodeWithRelations[] {
+    return [...nodes].sort((a, b) => Number(b.isHighlighted) - Number(a.isHighlighted));
+}
+
 export function ReviveOrbIcon({ className }: { className?: string }) {
     const iconId = useId().replace(/:/g, "");
     const coreGradientId = `revive-orb-core-${iconId}`;
@@ -281,6 +285,8 @@ function EncounterHeader({
     toggleExpand,
     handleSelectCounter
 }: EncounterHeaderProps) {
+    const sortedNodes = sortEncounterNodes(encounter.nodes);
+
     return (
         <div
             role="button"
@@ -343,16 +349,26 @@ function EncounterHeader({
                             <Youtube className="w-5 h-5 text-red-600 shrink-0" />
                         )}
                     </div>
-                    {encounter.nodes.length > 0 && !isExpanded && (
+                    {sortedNodes.length > 0 && !isExpanded && (
                         <div className="flex gap-1 mt-2 flex-wrap">
-                            {encounter.nodes.slice(0, 3).map((n: EncounterNodeWithRelations) => (
-                                <Badge key={n.id} variant="secondary" className="text-[10px] py-0 min-h-[16px] h-auto bg-slate-950/80 border-slate-800 text-slate-400 font-medium truncate max-w-[140px] sm:max-w-[200px]">
+                            {sortedNodes.slice(0, 3).map((n: EncounterNodeWithRelations) => (
+                                <Badge
+                                    key={n.id}
+                                    variant="secondary"
+                                    className={cn(
+                                        "gap-1 text-[10px] py-0 min-h-[16px] h-auto font-medium truncate max-w-[140px] sm:max-w-[200px]",
+                                        n.isHighlighted
+                                            ? "bg-amber-950/60 border-amber-600/60 text-amber-200"
+                                            : "bg-slate-950/80 border-slate-800 text-slate-400"
+                                    )}
+                                >
+                                    {n.isHighlighted && <Star className="h-2.5 w-2.5 shrink-0 fill-current" />}
                                     {n.nodeModifier.name}
                                 </Badge>
                             ))}
-                            {encounter.nodes.length > 3 && (
+                            {sortedNodes.length > 3 && (
                                 <Badge variant="secondary" className="text-[10px] py-0 min-h-[16px] h-auto bg-slate-950/80 border-slate-800 text-slate-500 font-medium shrink-0">
-                                    +{encounter.nodes.length - 3}
+                                    +{sortedNodes.length - 3}
                                 </Badge>
                             )}
                         </div>
@@ -810,6 +826,7 @@ function EncounterExpandedContent({
     renderListPick
 }: EncounterExpandedContentProps) {
     const { encounterTabs, setEncounterTabs, featuredPicks, alliancePicks, popularCounters } = tabState;
+    const sortedNodes = sortEncounterNodes(encounter.nodes);
 
     return (
         <>
@@ -905,7 +922,7 @@ function EncounterExpandedContent({
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pt-2">
                 <div className="xl:col-span-7 space-y-4">
-                    {encounter.nodes.length > 0 && (
+                    {sortedNodes.length > 0 && (
                         <div className="space-y-3">
                             <button
                                 type="button"
@@ -922,19 +939,40 @@ function EncounterExpandedContent({
                             </button>
                             {isNodesCollapsed ? (
                                 <div className="flex flex-wrap gap-1.5">
-                                    {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                        <Badge key={n.id} variant="secondary" className="text-[11px] py-0.5 bg-sky-950/40 border-sky-900/50 text-sky-300 font-medium">
+                                    {sortedNodes.map((n: EncounterNodeWithRelations) => (
+                                        <Badge
+                                            key={n.id}
+                                            variant="secondary"
+                                            className={cn(
+                                                "gap-1 text-[11px] py-0.5 font-medium",
+                                                n.isHighlighted
+                                                    ? "bg-amber-950/60 border-amber-600/60 text-amber-200"
+                                                    : "bg-sky-950/40 border-sky-900/50 text-sky-300"
+                                            )}
+                                        >
+                                            {n.isHighlighted && <Star className="h-3 w-3 shrink-0 fill-current" />}
                                             {n.nodeModifier.name}
                                         </Badge>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {encounter.nodes.map((n: EncounterNodeWithRelations) => (
-                                        <div key={n.id} className="bg-slate-950/80 p-3 rounded-lg border border-slate-800/80 group/node transition-all hover:border-sky-800/50 hover:bg-slate-900/50">
+                                    {sortedNodes.map((n: EncounterNodeWithRelations) => (
+                                        <div
+                                            key={n.id}
+                                            className={cn(
+                                                "p-3 rounded-lg border group/node transition-all",
+                                                n.isHighlighted
+                                                    ? "bg-amber-950/20 border-amber-600/50 hover:border-amber-400/60 hover:bg-amber-950/30"
+                                                    : "bg-slate-950/80 border-slate-800/80 hover:border-sky-800/50 hover:bg-slate-900/50"
+                                            )}
+                                        >
                                             <div className="flex items-center gap-2 mb-1">
-                                                <div className="p-1 rounded bg-sky-500/10 text-sky-500 shrink-0">
-                                                    <Info className="w-3.5 h-3.5" />
+                                                <div className={cn(
+                                                    "p-1 rounded shrink-0",
+                                                    n.isHighlighted ? "bg-amber-500/15 text-amber-300" : "bg-sky-500/10 text-sky-500"
+                                                )}>
+                                                    {n.isHighlighted ? <Star className="w-3.5 h-3.5 fill-current" /> : <Info className="w-3.5 h-3.5" />}
                                                 </div>
                                                 <span className="font-bold text-sm text-slate-100">{n.nodeModifier.name}</span>
                                             </div>

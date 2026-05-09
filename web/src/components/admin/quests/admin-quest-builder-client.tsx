@@ -20,7 +20,7 @@ import {
     ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink,
     XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2, Download,
     ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack,
-    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video, Copy
+    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video, Copy, Star
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -94,6 +94,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [encounterRequiredTagIds, setEncounterRequiredTagIds] = useState<number[]>([]);
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
     const [nodeModifierIds, setNodeModifierIds] = useState<string[]>([]);
+    const [highlightedNodeModifierIds, setHighlightedNodeModifierIds] = useState<string[]>([]);
     const [difficulty, setDifficulty] = useState<EncounterDifficulty>("NORMAL");
     const [routePathId, setRoutePathId] = useState<string>("");
     const [isFormattingTips, setIsFormattingTips] = useState(false);
@@ -328,7 +329,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, sequence, difficulty, routePathId]);
+    }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, highlightedNodeModifierIds, sequence, difficulty, routePathId]);
 
     // Bulk Paste states
     const [bulkChampionText, setBulkChampionText] = useState("");
@@ -357,6 +358,20 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             description: `Matched ${matchedCount} champions from ${lines.length} lines.`,
             variant: matchedCount > 0 ? "default" : "destructive"
         });
+    };
+
+    const handleNodeModifierIdsChange = (ids: string[]) => {
+        setNodeModifierIds(ids);
+        const allowedIds = new Set(ids);
+        setHighlightedNodeModifierIds(prev => prev.filter(id => allowedIds.has(id)));
+    };
+
+    const toggleNodeHighlight = (nodeModifierId: string) => {
+        setHighlightedNodeModifierIds(prev =>
+            prev.includes(nodeModifierId)
+                ? prev.filter(id => id !== nodeModifierId)
+                : [...prev, nodeModifierId]
+        );
     };
 
     const handleBulkNodeParse = () => {
@@ -413,7 +428,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             }
         });
 
-        setNodeModifierIds(Array.from(newIds));
+        handleNodeModifierIdsChange(Array.from(newIds));
         setBulkNodeText("");
         toast({
             title: "Bulk Parse Complete",
@@ -630,6 +645,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         const selectedNodes = nodeModifierIds
             .map(nodeId => nodeModifiers.find(modifier => modifier.id === nodeId))
             .filter((modifier): modifier is NodeModifier => Boolean(modifier));
+        const highlightedNodeIds = new Set(highlightedNodeModifierIds);
 
         setLocalEncounters(prev => prev.map(encounter => {
             if (encounter.id !== editingEncounterId) return encounter;
@@ -652,6 +668,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         id: existingNode?.id ?? `local-${encounter.id}-${modifier.id}`,
                         questEncounterId: encounter.id,
                         nodeModifierId: modifier.id,
+                        isHighlighted: highlightedNodeIds.has(modifier.id),
                         nodeModifier: modifier
                     };
                 }) as any,
@@ -688,7 +705,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 recommendedTagNames: recommendedTags,
                 recommendedChampionIds: recommendedChampionIds,
                 requiredTagIds: encounterRequiredTagIds,
-                nodeModifierIds: nodeModifierIds
+                nodeLinks: nodeModifierIds.map(nodeModifierId => ({
+                    nodeModifierId,
+                    isHighlighted: highlightedNodeModifierIds.includes(nodeModifierId)
+                }))
             });
             updateLocalEncounterFromEditor(difficultyOverride);
             setSaveStatus('saved');
@@ -722,7 +742,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     recommendedTagNames: recommendedTags,
                     recommendedChampionIds: recommendedChampionIds,
                     requiredTagIds: encounterRequiredTagIds,
-                    nodeModifierIds: nodeModifierIds
+                    nodeLinks: nodeModifierIds.map(nodeModifierId => ({
+                        nodeModifierId,
+                        isHighlighted: highlightedNodeModifierIds.includes(nodeModifierId)
+                    }))
                 });
                 cancelEditing();
                 router.refresh();
@@ -753,6 +776,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
         setNodeModifierIds(encounter.nodes?.map(n => n.nodeModifierId) || []);
+        setHighlightedNodeModifierIds(encounter.nodes?.filter(n => n.isHighlighted).map(n => n.nodeModifierId) || []);
         setDifficulty(encounter.difficulty as EncounterDifficulty || "NORMAL");
         setRoutePathId(encounter.routePathId || "");
 
@@ -821,6 +845,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setEncounterRequiredTagIds([]);
         setRecommendedChampionIds([]);
         setNodeModifierIds([]);
+        setHighlightedNodeModifierIds([]);
         setDifficulty("NORMAL");
         setRoutePathId("");
     };
@@ -1981,9 +2006,45 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         <MultiNodeModifierCombobox
                                             modifiers={nodeModifiers}
                                             values={nodeModifierIds}
-                                            onSelect={setNodeModifierIds}
+                                            onSelect={handleNodeModifierIdsChange}
                                             placeholder="Search nodes..."
                                         />
+                                        {nodeModifierIds.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 pt-1">
+                                                {nodeModifierIds
+                                                    .map(nodeId => nodeModifiers.find(modifier => modifier.id === nodeId))
+                                                    .filter((modifier): modifier is NodeModifier => Boolean(modifier))
+                                                    .map(modifier => {
+                                                        const isHighlighted = highlightedNodeModifierIds.includes(modifier.id);
+                                                        return (
+                                                            <div
+                                                                key={modifier.id}
+                                                                className={cn(
+                                                                    "inline-flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-[10px] font-medium",
+                                                                    isHighlighted
+                                                                        ? "border-amber-500/50 bg-amber-950/40 text-amber-100"
+                                                                        : "border-slate-800 bg-slate-950/70 text-slate-300"
+                                                                )}
+                                                            >
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleNodeHighlight(modifier.id)}
+                                                                    className={cn(
+                                                                        "flex h-4 w-4 shrink-0 items-center justify-center rounded transition-colors",
+                                                                        isHighlighted
+                                                                            ? "text-amber-300 hover:bg-amber-900/50"
+                                                                            : "text-slate-600 hover:bg-slate-800 hover:text-amber-300"
+                                                                    )}
+                                                                    title={isHighlighted ? "Remove highlight" : "Highlight node"}
+                                                                >
+                                                                    <Star className={cn("h-3 w-3", isHighlighted && "fill-current")} />
+                                                                </button>
+                                                                <span className="truncate">{modifier.name}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2451,8 +2512,20 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                 </CardTitle>
                                                                 {encounter.nodes && encounter.nodes.length > 0 && (
                                                                     <div className="flex gap-1 mt-1 flex-wrap">
-                                                                        {encounter.nodes.map((n) => (
-                                                                            <Badge key={n.id} variant="secondary" className="text-[10px] py-0 h-4 bg-slate-900/80 border-slate-700/50 text-slate-400 font-normal">
+                                                                        {[...encounter.nodes]
+                                                                            .sort((a, b) => Number(b.isHighlighted) - Number(a.isHighlighted))
+                                                                            .map((n) => (
+                                                                            <Badge
+                                                                                key={n.id}
+                                                                                variant="secondary"
+                                                                                className={cn(
+                                                                                    "gap-1 text-[10px] py-0 h-4 font-normal",
+                                                                                    n.isHighlighted
+                                                                                        ? "bg-amber-950/50 border-amber-600/50 text-amber-200"
+                                                                                        : "bg-slate-900/80 border-slate-700/50 text-slate-400"
+                                                                                )}
+                                                                            >
+                                                                                {n.isHighlighted && <Star className="h-2.5 w-2.5 fill-current" />}
                                                                                 {n.nodeModifier.name}
                                                                             </Badge>
                                                                         ))}

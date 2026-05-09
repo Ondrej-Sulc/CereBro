@@ -944,7 +944,8 @@ export const duplicateQuestPlan = withActionContext('duplicateQuestPlan', async 
                     },
                     nodes: {
                         create: e.nodes.map(n => ({
-                            nodeModifierId: n.nodeModifierId
+                            nodeModifierId: n.nodeModifierId,
+                            isHighlighted: n.isHighlighted
                         }))
                     }
                 }))
@@ -974,6 +975,7 @@ type QuestExportTagRef = {
 type QuestExportNodeRef = {
     name: string;
     description: string;
+    isHighlighted?: boolean;
 };
 
 type QuestExportCreatorRef = {
@@ -1253,7 +1255,8 @@ function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
                         .filter(isPlainObject)
                         .map(node => ({
                             name: asString(node.name)?.trim() || "",
-                            description: asString(node.description)?.trim() || ""
+                            description: asString(node.description)?.trim() || "",
+                            isHighlighted: node.isHighlighted === true
                         }))
                         .filter(node => node.name),
                     routePathKey: asOptionalString(encounter.routePathKey),
@@ -1384,7 +1387,8 @@ export const exportQuestPlan = withActionContext('exportQuestPlan', async (quest
             requiredTags: encounter.requiredTags.map(tag => ({ name: tag.name, category: tag.category })),
             nodes: encounter.nodes.map(node => ({
                 name: node.nodeModifier.name,
-                description: node.nodeModifier.description
+                description: node.nodeModifier.description,
+                isHighlighted: node.isHighlighted
             })),
             routePathKey: encounter.routePathId ? pathKeyById.get(encounter.routePathId) ?? null : null,
             videos: encounter.videos.map(video => ({
@@ -1626,7 +1630,8 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
                     },
                     nodes: {
                         create: encounter.nodes.map(node => ({
-                            nodeModifierId: nodeModifierIdByName.get(node.name)!
+                            nodeModifierId: nodeModifierIdByName.get(node.name)!,
+                            isHighlighted: Boolean(node.isHighlighted)
                         }))
                     },
                     videos: {
@@ -1849,7 +1854,8 @@ export const duplicateQuestRoutePathFights = withActionContext('duplicateQuestRo
                     },
                     nodes: {
                         create: encounter.nodes.map(node => ({
-                            nodeModifierId: node.nodeModifierId
+                            nodeModifierId: node.nodeModifierId,
+                            isHighlighted: node.isHighlighted
                         }))
                     },
                     videos: {
@@ -2434,8 +2440,28 @@ export type QuestEncounterCreateInput = {
     recommendedChampionIds?: number[];
     requiredTagIds?: number[];
     nodeModifierIds?: string[];
+    nodeLinks?: { nodeModifierId: string; isHighlighted?: boolean }[];
     routePathId?: string | null;
 };
+
+function normalizeEncounterNodeLinks(data: { nodeModifierIds?: string[]; nodeLinks?: { nodeModifierId: string; isHighlighted?: boolean }[] }) {
+    if (data.nodeLinks !== undefined) {
+        return data.nodeLinks
+            .filter(link => link.nodeModifierId)
+            .map(link => ({
+                nodeModifierId: link.nodeModifierId,
+                isHighlighted: Boolean(link.isHighlighted)
+            }));
+    }
+
+    if (data.nodeModifierIds !== undefined) {
+        return data.nodeModifierIds
+            .filter(Boolean)
+            .map(nodeModifierId => ({ nodeModifierId, isHighlighted: false }));
+    }
+
+    return undefined;
+}
 
 export const createQuestEncounter = withActionContext('createQuestEncounter', async (data: QuestEncounterCreateInput) => {
     await requireBotAdmin("MANAGE_QUESTS");
@@ -2457,6 +2483,8 @@ export const createQuestEncounter = withActionContext('createQuestEncounter', as
         }
     }
 
+    const nodeLinks = normalizeEncounterNodeLinks(data);
+
     const encounter = await prisma.questEncounter.create({
         data: {
             sequence: data.sequence,
@@ -2473,9 +2501,10 @@ export const createQuestEncounter = withActionContext('createQuestEncounter', as
             requiredTags: data.requiredTagIds ? {
                 connect: data.requiredTagIds.map(id => ({ id }))
             } : undefined,
-            nodes: data.nodeModifierIds ? {
-                create: data.nodeModifierIds.map(nodeId => ({
-                    nodeModifier: { connect: { id: nodeId } }
+            nodes: nodeLinks ? {
+                create: nodeLinks.map(node => ({
+                    nodeModifierId: node.nodeModifierId,
+                    isHighlighted: node.isHighlighted
                 }))
             } : undefined,
             videos: data.videos ? {
@@ -2667,6 +2696,7 @@ export type QuestEncounterUpdateInput = {
     recommendedChampionIds?: number[];
     requiredTagIds?: number[];
     nodeModifierIds?: string[];
+    nodeLinks?: { nodeModifierId: string; isHighlighted?: boolean }[];
     routePathId?: string | null;
 };
 
@@ -2695,6 +2725,8 @@ export const updateQuestEncounter = withActionContext('updateQuestEncounter', as
         }
     }
 
+    const nodeLinks = normalizeEncounterNodeLinks(data);
+
     const encounter = await prisma.questEncounter.update({
         where: { id: data.id },
         data: {
@@ -2711,10 +2743,11 @@ export const updateQuestEncounter = withActionContext('updateQuestEncounter', as
             requiredTags: data.requiredTagIds !== undefined ? {
                 set: data.requiredTagIds.map(id => ({ id }))
             } : undefined,
-            nodes: data.nodeModifierIds !== undefined ? {
+            nodes: nodeLinks !== undefined ? {
                 deleteMany: {},
-                create: data.nodeModifierIds.map(nodeId => ({
-                    nodeModifier: { connect: { id: nodeId } }
+                create: nodeLinks.map(node => ({
+                    nodeModifierId: node.nodeModifierId,
+                    isHighlighted: node.isHighlighted
                 }))
             } : undefined,
             videos: data.videos !== undefined ? {
