@@ -1,52 +1,82 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { BarChart3, Trophy } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, BarChart3, Trophy } from "lucide-react";
 import { PlayerStats } from "../types";
+import {
+  getPlayerSoloRate,
+  PLAYER_SORT_LABELS,
+  PlayerSortKey,
+  PlayerSortState,
+  togglePlayerSort,
+} from "../player-sort";
 import { StatCell } from "./stat-cell";
 
 interface PlayerPerformanceListProps {
   players: PlayerStats[];
   allPlayers: PlayerStats[]; // Needed for global ranking
+  sort: PlayerSortState;
+  onSortChange: (sort: PlayerSortState) => void;
   bgColors: { 1: string; 2: string; 3: string };
   onSelectPlayer: (player: PlayerStats) => void;
 }
 
-export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectPlayer }: PlayerPerformanceListProps) {
-  
-  // Sort logic is expected to be handled by parent or we assume 'players' is already sorted if filtered.
-  // However, rank calculation needs 'allPlayers' which should be sorted globally.
-  // Let's assume 'allPlayers' is the source of truth for sorting order.
-  
-  const sortedGlobalPlayers = [...allPlayers].sort((a, b) => {
-      // Primary: Rating (Descending)
-      if (a.normalizedRating !== b.normalizedRating) return b.normalizedRating - a.normalizedRating;
-      // Secondary: Fights (Descending)
-      return b.fights - a.fights;
-  });
+const SORT_KEYS: PlayerSortKey[] = ["rating", "efficiency", "fights", "deaths"];
+
+function SortHeader({
+  sortKey,
+  label,
+  sort,
+  onSortChange,
+  className,
+}: {
+  sortKey: PlayerSortKey;
+  label: string;
+  sort: PlayerSortState;
+  onSortChange: (sort: PlayerSortState) => void;
+  className?: string;
+}) {
+  const isActive = sort.key === sortKey;
+  const Icon = !isActive ? ArrowUpDown : sort.order === "asc" ? ArrowUp : ArrowDown;
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={() => onSortChange(togglePlayerSort(sort, sortKey))}
+      className={cn(
+        "h-7 px-1.5 text-xs font-black uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-slate-200",
+        isActive && "text-sky-400",
+        className
+      )}
+    >
+      {label}
+      <Icon className="ml-1.5 h-3 w-3" />
+    </Button>
+  );
+}
+
+export function PlayerPerformanceList({ players, allPlayers, sort, onSortChange, bgColors, onSelectPlayer }: PlayerPerformanceListProps) {
 
   const getRank = (
     player: PlayerStats,
     index: number,
     sortedList: PlayerStats[]
   ) => {
-    // If the passed index is from the filtered list, we need to find the index in the global list
-    const globalIndex = sortedList.findIndex(p => p.playerId === player.playerId);
-    
-    if (globalIndex === 0) return 1;
-    const prev = sortedList[globalIndex - 1];
-    if (player.normalizedRating === prev.normalizedRating && player.fights === prev.fights) {
-      let i = globalIndex - 1;
-      while (
-        i >= 0 &&
-        sortedList[i].normalizedRating === player.normalizedRating &&
-        sortedList[i].fights === player.fights
-      ) {
-        i--;
-      }
-      return i + 2;
-    }
+    const globalIndex = sortedList.findIndex(
+      p => p.playerId === player.playerId && p.battlegroup === player.battlegroup
+    );
+    if (globalIndex === -1) return index + 1;
     return globalIndex + 1;
   };
 
@@ -54,10 +84,28 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
     <>
         {/* Mobile View (Cards) */}
         <div className="md:hidden flex flex-col gap-2 p-2">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-800/60 bg-slate-950/40 p-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sort</span>
+                <Select
+                  value={sort.key}
+                  onValueChange={(value) => onSortChange(togglePlayerSort(sort, value as PlayerSortKey))}
+                >
+                  <SelectTrigger className="h-8 w-40 border-slate-800 bg-slate-900/80 text-xs font-black uppercase text-slate-300">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-slate-800 bg-slate-950 text-slate-200">
+                    {SORT_KEYS.map((key) => (
+                      <SelectItem key={key} value={key}>
+                        {PLAYER_SORT_LABELS[key]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            </div>
             {players.map((player, idx) => {
-                const rank = getRank(player, idx, sortedGlobalPlayers);
+                const rank = getRank(player, idx, allPlayers);
                 const isTop3 = rank <= 3;
-                const soloRate = player.fights > 0 ? Math.max(0, ((player.fights - player.deaths) / player.fights) * 100) : 0;
+                const soloRate = getPlayerSoloRate(player) * 100;
                 const bgAccent = bgColors[player.battlegroup as 1|2|3] || "#94a3b8";
 
                 return (
@@ -138,27 +186,28 @@ export function PlayerPerformanceList({ players, allPlayers, bgColors, onSelectP
               <tr>
                 <th className="px-4 py-3 w-12 text-center">#</th>
                 <th className="px-4 py-3 w-64">Player</th>
-                <th className="px-4 py-3 w-24 text-center">Rating</th>
-                <th className="px-4 py-3 w-48 text-center">Efficiency</th>
+                <th className="px-4 py-3 w-24 text-center">
+                  <SortHeader sortKey="rating" label="Rating" sort={sort} onSortChange={onSortChange} />
+                </th>
+                <th className="px-4 py-3 w-48 text-center">
+                  <SortHeader sortKey="efficiency" label="Efficiency" sort={sort} onSortChange={onSortChange} />
+                </th>
                 <th className="px-4 py-3 text-center" title="Path Fights">Path</th>
                 <th className="px-4 py-3 text-center" title="Mini-Boss Fights">MB</th>
                 <th className="px-4 py-3 text-center" title="Boss Fights">Boss</th>
-                <th className="px-4 py-3 text-center w-24">Total</th>
+                <th className="px-4 py-3 text-center w-32">
+                  <div className="flex items-center justify-center gap-1">
+                    <SortHeader sortKey="fights" label="Fights" sort={sort} onSortChange={onSortChange} />
+                    <SortHeader sortKey="deaths" label="Deaths" sort={sort} onSortChange={onSortChange} />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30 text-sm">
               {players.map((player, idx) => {
-                const rank = getRank(player, idx, sortedGlobalPlayers);
+                const rank = getRank(player, idx, allPlayers);
                 const isTop3 = rank <= 3;
-                const soloRate =
-                  player.fights > 0
-                    ? Math.max(
-                        0,
-                        ((player.fights - player.deaths) /
-                          player.fights) *
-                          100
-                      )
-                    : 0;
+                const soloRate = getPlayerSoloRate(player) * 100;
                 
                 const bgAccent = bgColors[player.battlegroup as 1|2|3] || "#94a3b8";
 

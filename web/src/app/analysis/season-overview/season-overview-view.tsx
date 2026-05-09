@@ -8,6 +8,7 @@ import { PlayerStats } from "./types";
 import { BattlegroupSummary } from "./components/battlegroup-summary";
 import { PlayerPerformanceList } from "./components/player-performance-list";
 import { CombatHistoryDialog } from "./components/combat-history-dialog";
+import { DEFAULT_PLAYER_SORT, sortPlayers, PlayerSortState } from "./player-sort";
 
 export type { PlayerStats } from "./types";
 
@@ -22,15 +23,11 @@ export function SeasonOverviewView({
 }: SeasonOverviewViewProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerStats | null>(null);
   const [selectedBg, setSelectedBg] = useState<1 | 2 | 3 | null>(null);
+  const [playerSort, setPlayerSort] = useState<PlayerSortState>(DEFAULT_PLAYER_SORT);
 
   const sortedPlayers = useMemo(() => {
-    return [...allPlayers].sort((a, b) => {
-        // Primary: Rating (Descending)
-        if (a.normalizedRating !== b.normalizedRating) return b.normalizedRating - a.normalizedRating;
-        // Secondary: Fights (Descending)
-        return b.fights - a.fights;
-    });
-  }, [allPlayers]);
+    return sortPlayers(allPlayers, playerSort);
+  }, [allPlayers, playerSort]);
 
   const visiblePlayers = useMemo(() => {
     if (!selectedBg) return sortedPlayers;
@@ -63,6 +60,8 @@ export function SeasonOverviewView({
             <PlayerPerformanceList 
                 players={visiblePlayers} 
                 allPlayers={sortedPlayers} 
+                sort={playerSort}
+                onSortChange={setPlayerSort}
                 bgColors={bgColors} 
                 onSelectPlayer={setSelectedPlayer} 
             />
