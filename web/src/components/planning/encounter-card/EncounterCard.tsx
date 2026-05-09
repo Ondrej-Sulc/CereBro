@@ -162,7 +162,11 @@ function formatClassForIcon(cls: string): string {
 }
 
 function sortEncounterNodes(nodes: EncounterNodeWithRelations[]): EncounterNodeWithRelations[] {
-    return [...nodes].sort((a, b) => Number(b.isHighlighted) - Number(a.isHighlighted));
+    return [...nodes].sort((a, b) => {
+        const highlightedCompare = Number(b.isHighlighted) - Number(a.isHighlighted);
+        if (highlightedCompare !== 0) return highlightedCompare;
+        return a.nodeModifier.name.localeCompare(b.nodeModifier.name);
+    });
 }
 
 export function ReviveOrbIcon({ className }: { className?: string }) {
