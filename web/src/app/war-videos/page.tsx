@@ -68,6 +68,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   const alliance = getSingleParam("alliance");
   const battlegroup = getSingleParam("battlegroup") ? parseInt(getSingleParam("battlegroup") as string) : undefined;
   const hasVideo = getSingleParam("hasVideo") === 'true';
+  const outcomeParam = getSingleParam("outcome");
+  const outcome = outcomeParam === "solo" || outcomeParam === "deaths" ? outcomeParam : undefined;
 
   // Fetch champions for filters
   const rawChampions = await getCachedChampions();
@@ -138,6 +140,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         alliance ? { war: { alliance: { name: { contains: alliance, mode: "insensitive" } } } } : {},
         battlegroup !== undefined ? { battlegroup: battlegroup } : {},
         hasVideo ? { videoId: { not: null } } : {},
+        outcome === "solo" ? { death: 0 } : {},
+        outcome === "deaths" ? { death: { gt: 0 } } : {},
       ]
     },
     include: {

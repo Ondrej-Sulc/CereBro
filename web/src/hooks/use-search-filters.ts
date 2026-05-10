@@ -5,8 +5,14 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Champion } from "@/types/champion";
 
+type FightOutcomeFilter = "" | "solo" | "deaths";
+
 interface UseSearchFiltersProps {
   champions: Champion[];
+}
+
+function parseOutcomeFilter(value: string | null): FightOutcomeFilter {
+  return value === "solo" || value === "deaths" ? value : "";
 }
 
 export function useSearchFilters({ champions }: UseSearchFiltersProps) {
@@ -14,7 +20,17 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(() =>
+    Boolean(
+      searchParams.get("outcome") ||
+        searchParams.getAll("season").length > 0 ||
+        searchParams.get("war") ||
+        searchParams.get("tier") ||
+        searchParams.get("player") ||
+        searchParams.get("alliance") ||
+        searchParams.get("battlegroup")
+    )
+  );
 
   // -- State Initialization --
 
@@ -32,6 +48,9 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
   );
   const [node, setNode] = useState(searchParams.get("node") || "");
   const [hasVideo, setHasVideo] = useState(searchParams.get("hasVideo") === "true");
+  const [outcome, setOutcome] = useState<FightOutcomeFilter>(
+    parseOutcomeFilter(searchParams.get("outcome"))
+  );
 
   // Secondary Filters
   const initialSeasons = searchParams
@@ -111,6 +130,9 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
     const videoParam = searchParams.get("hasVideo") === "true";
     if (videoParam !== hasVideo) setHasVideo(videoParam);
 
+    const outcomeParam = parseOutcomeFilter(searchParams.get("outcome"));
+    if (outcomeParam !== outcome) setOutcome(outcomeParam);
+
     // Advanced - Seasons
     const seasonParams = searchParams
       .getAll("season")
@@ -167,6 +189,7 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
 
     // Video
     if (hasVideo) params.set("hasVideo", "true");
+    if (outcome) params.set("outcome", outcome);
 
     // Advanced
     selectedSeasons.forEach((s) => params.append("season", s.toString()));
@@ -195,6 +218,7 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
     battlegroup,
     debouncedNode,
     hasVideo,
+    outcome,
     selectedSeasons,
     war,
     tier,
@@ -213,6 +237,7 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
     player,
     alliance,
     battlegroup,
+    outcome,
   ].filter(Boolean).length;
 
   // Active Filter Chips
@@ -254,18 +279,25 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
     if (battlegroup)
       filters.push({
         id: "battlegroup",
-        label: battlegroup === "0" ? "Solo" : `BG ${battlegroup}`,
+        label: battlegroup === "0" ? "Battlegroup: None" : `Battlegroup ${battlegroup}`,
         onRemove: () => setBattlegroup(""),
+      });
+    if (outcome)
+      filters.push({
+        id: "outcome",
+        label: outcome === "solo" ? "Result: Solo" : "Result: Deaths",
+        onRemove: () => setOutcome(""),
       });
 
     return filters;
-  }, [selectedSeasons, war, tier, player, alliance, battlegroup]);
+  }, [selectedSeasons, war, tier, player, alliance, battlegroup, outcome]);
 
   const clearAll = () => {
     setAttackerId("");
     setDefenderId("");
     setNode("");
     setHasVideo(false);
+    setOutcome("");
     setMapType("STANDARD");
     // Reset Advanced
     setSelectedSeasons([]);
@@ -283,6 +315,7 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
       defenderId,
       node,
       hasVideo,
+      outcome,
       selectedSeasons,
       war,
       tier,
@@ -297,6 +330,7 @@ export function useSearchFilters({ champions }: UseSearchFiltersProps) {
       setDefenderId,
       setNode,
       setHasVideo,
+      setOutcome,
       setSelectedSeasons,
       setWar,
       setTier,

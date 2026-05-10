@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, ChevronDown, ChevronUp, Video, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Filter, Video, X } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ export function SearchFilters({
     defenderId,
     node,
     hasVideo,
+    outcome,
     showAdvanced,
     selectedSeasons,
     war,
@@ -48,6 +49,7 @@ export function SearchFilters({
     setDefenderId,
     setNode,
     setHasVideo,
+    setOutcome,
     setShowAdvanced,
     clearAll,
     setSelectedSeasons,
@@ -66,7 +68,7 @@ export function SearchFilters({
     tierOptions,
   } = computed;
 
-  const hasAnyMainFilter = attackerId || defenderId || node || hasVideo || activeAdvancedCount > 0;
+  const hasAnyMainFilter = attackerId || defenderId || node || hasVideo || outcome || activeAdvancedCount > 0;
 
   return (
     <div
@@ -222,12 +224,14 @@ export function SearchFilters({
           player={player}
           alliance={alliance}
           battlegroup={battlegroup}
+          outcome={outcome}
           setSelectedSeasons={setSelectedSeasons}
           setWar={setWar}
           setTier={setTier}
           setPlayer={setPlayer}
           setAlliance={setAlliance}
           setBattlegroup={setBattlegroup}
+          setOutcome={setOutcome}
           availableSeasons={availableSeasons}
           warOptions={warOptions}
           tierOptions={tierOptions}
