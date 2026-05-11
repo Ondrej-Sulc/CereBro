@@ -17,8 +17,10 @@ import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
 import {
-  groupAbilityTexts,
-  prepareChampionAbilityText,
+  abilityTextGroupTitle,
+  prepareChampionAbilityTextView,
+  type PreparedChampionAbilityText,
+  type PreparedChampionAbilityTextPanel,
   type PreparedChampionAbilityTextNode,
 } from "@/lib/champion-ability-text"
 import { cn } from "@/lib/utils"
@@ -161,20 +163,7 @@ export function ChampionDetailsClient({
   const glossaryById = useMemo(() => new Map(glossaryTerms.map(term => [term.id, term])), [glossaryTerms])
   const immunities = champion.abilities.filter(link => link.type === "IMMUNITY")
   const abilities = champion.abilities.filter(link => link.type === "ABILITY")
-  const textGroups = groupAbilityTexts(champion.abilityTexts)
-  const signatureTexts = textGroups.signature ?? []
-  const specialAttackTexts = textGroups.special ?? []
-  const descriptionGroups = Object.entries(textGroups).filter(([group]) => group !== "signature" && group !== "bio" && group !== "special")
-  const bioTexts = textGroups.bio ?? []
-  const specialAttackTextByNumber = useMemo(() => {
-    const entries = new Map<string, ChampionDetailsPayload["abilityTexts"][number]>()
-    for (const [index, record] of specialAttackTexts.entries()) {
-      entries.set(String(index + 1), record)
-    }
-    return entries
-  }, [specialAttackTexts])
   const selectedRarityLabel = selectedStat?.rarityLabel ?? (selectedRarity ? `${selectedRarity}-star` : "No stats")
-  const selectedCurves = champion.abilityCurves.filter(curve => (curve.maxSig ?? 200) === currentMaxSig)
   const selectedPrestige = projectMcocPrestige({
     prestigeData: champion.prestigeData,
     stat: selectedStat,
@@ -184,6 +173,16 @@ export function ChampionDetailsClient({
   const displayStat = useMemo(
     () => applyAscensionToStat(selectedStat, ascensionLevel),
     [selectedStat, ascensionLevel]
+  )
+  const abilityTextView = useMemo(
+    () => prepareChampionAbilityTextView({
+      records: champion.abilityTexts,
+      curves: champion.abilityCurves,
+      maxSig: currentMaxSig,
+      sigLevel,
+      stat: displayStat,
+    }),
+    [champion.abilityTexts, champion.abilityCurves, currentMaxSig, sigLevel, displayStat]
   )
 
   const tierKey = selectedStat?.rarity && selectedStat?.rank ? `${selectedStat.rarity}-${selectedStat.rank}` : "";
@@ -254,16 +253,16 @@ export function ChampionDetailsClient({
             </div>
           </section>
 
-          {!!bioTexts.length && (
+          {!!abilityTextView.bioRecords.length && (
             <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-5 backdrop-blur flex flex-col md:flex-row gap-6 items-center">
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-2">
                   <BookOpenText className="h-5 w-5" style={{ color: classColors.color }} />
                   <h2 className="text-lg font-black text-white">Bio</h2>
                 </div>
-                {bioTexts.map(record => (
+                {abilityTextView.bioRecords.map(record => (
                   <div key={record.id} className="text-sm leading-7 text-slate-300">
-                    <RenderedTemplate template={record.template} glossaryById={glossaryById} curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} />
+                    <RenderedTemplate prepared={record.prepared} glossaryById={glossaryById} />
                   </div>
                 ))}
               </div>
@@ -391,38 +390,21 @@ export function ChampionDetailsClient({
                       </p>
                     </section>
                     <TextPanel
-                      title="Signature Ability"
+                      panel={abilityTextView.signaturePanel}
                       icon={<Sparkles className="h-5 w-5" />}
-                      records={signatureTexts}
                       glossaryById={glossaryById}
-                      curves={selectedCurves}
-                      sigLevel={sigLevel}
-                      stat={displayStat}
                       accent={classColors.color}
-                      emptyText="No signature ability text imported."
-                      chart={<CurvePanel curves={selectedCurves} sigLevel={sigLevel} stat={displayStat} accent={classColors.color} />}
+                      chart={<CurvePanel curveView={abilityTextView.curveView} sigLevel={sigLevel} accent={classColors.color} />}
                     />
-                    {descriptionGroups.map(([group, records]) => {
-                      const specialMatch = group.match(/^special([123])$/)
-                      const specialIntro = specialMatch ? specialAttackTextByNumber.get(specialMatch[1]) : undefined
-                      const groupTitle = specialIntro?.title
-                        ? `${abilityTextGroupTitle(group)} - ${formatGameText(specialIntro.title)}`
-                        : abilityTextGroupTitle(group);
-                      return (
-                        <TextPanel
-                          key={group}
-                          title={groupTitle}
-                          icon={<BookOpenText className="h-5 w-5" />}
-                          records={records}
-                          introRecord={specialIntro}
-                          glossaryById={glossaryById}
-                          curves={selectedCurves}
-                          sigLevel={sigLevel}
-                          stat={displayStat}
-                          accent={classColors.color}
-                        />
-                      );
-                    })}
+                    {abilityTextView.descriptionPanels.map(panel => (
+                      <TextPanel
+                        key={panel.group}
+                        panel={panel}
+                        icon={<BookOpenText className="h-5 w-5" />}
+                        glossaryById={glossaryById}
+                        accent={classColors.color}
+                      />
+                    ))}
                   </TabsContent>
                 )}
               </Tabs>
@@ -532,92 +514,52 @@ function StatsPanel({ stat, maxStatsByTier, accent }: { stat?: ChampionStatRow; 
 }
 
 function TextPanel({
-  title,
+  panel,
   icon,
-  records,
   glossaryById,
-  curves = [],
-  sigLevel = 200,
-  stat,
   accent,
-  emptyText = "No text imported.",
   chart,
-  introRecord,
 }: {
-  title: string
+  panel: PreparedChampionAbilityTextPanel<ChampionDetailsPayload["abilityTexts"][number]>
   icon: ReactNode
-  records: ChampionDetailsPayload["abilityTexts"]
-  introRecord?: ChampionDetailsPayload["abilityTexts"][number]
   glossaryById: Map<string, GlossaryTerm>
-  curves?: ChampionDetailsPayload["abilityCurves"]
-  sigLevel?: number
-  stat?: ChampionStatRow
   accent: string
-  emptyText?: string
   chart?: ReactNode
 }) {
-  const groupedRecords = useMemo(() => {
-    const groups: { id: string; title: string; records: typeof records }[] = [];
-    let currentGroup: { id: string; title: string; records: typeof records } | null = null;
-
-    for (const record of records) {
-      if (record.title) {
-        currentGroup = {
-          id: String(record.id),
-          title: formatGameText(record.title),
-          records: [record],
-        };
-        groups.push(currentGroup);
-      } else {
-        if (currentGroup) {
-          currentGroup.records.push(record);
-        } else {
-          currentGroup = {
-            id: String(record.id),
-            title: title === "Special Attacks" ? "Attack Details" : "Always Active",
-            records: [record],
-          };
-          groups.push(currentGroup);
-        }
-      }
-    }
-    return groups;
-  }, [records, title]);
-
   return (
-    <Accordion type="multiple" defaultValue={[title]} className="w-full">
-      <AccordionItem value={title} className="rounded-lg border border-slate-800 bg-slate-950/70 backdrop-blur px-4 border-none">
+    <Accordion type="multiple" defaultValue={[panel.title]} className="w-full">
+      <AccordionItem value={panel.title} className="rounded-lg border border-slate-800 bg-slate-950/70 backdrop-blur px-4 border-none">
         <AccordionTrigger className="hover:no-underline py-3 border-none text-left">
           <div className="flex items-center gap-2">
             <span style={{ color: accent }}>{icon}</span>
-            <h2 className="text-lg font-black text-white">{title}</h2>
+            <h2 className="text-lg font-black text-white">{panel.title}</h2>
           </div>
         </AccordionTrigger>
         <AccordionContent className="pb-3">
           {chart && <div className="mb-6">{chart}</div>}
-          {introRecord && (
+          {panel.introRecord && (
             <div className="mb-4 rounded-lg border border-slate-800/80 bg-slate-900/30 p-3 italic text-slate-300">
-              <RenderedTemplate template={introRecord.template} glossaryById={glossaryById} curves={curves} sigLevel={sigLevel} stat={stat} />
+              <RenderedTemplate prepared={panel.introRecord.prepared} glossaryById={glossaryById} />
             </div>
           )}
 
-          {groupedRecords.length ? (
+          {panel.recordGroups.length ? (
             <div className="space-y-3">
-              {groupedRecords.map(group => (
+              {panel.recordGroups.map(group => (
                 <div key={group.id} className="rounded-lg border border-slate-800/80 bg-slate-900/30 p-3 space-y-2">
                   {group.title && (
                     <h3 className="text-sm font-bold text-white/90">{group.title}</h3>
                   )}
                   <div className="space-y-3 text-slate-300">
                     {group.records.map(record => (
-                      <RenderedTemplate key={record.id} template={record.template} glossaryById={glossaryById} curves={curves} sigLevel={sigLevel} stat={stat} />
+                      <RenderedTemplate key={record.id} prepared={record.prepared} glossaryById={glossaryById} />
                     ))}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">{emptyText}</p>
+            <p className="text-sm text-slate-500">{panel.emptyText}</p>
           )}
         </AccordionContent>
       </AccordionItem>
@@ -626,19 +568,12 @@ function TextPanel({
 }
 
 function RenderedTemplate({
-  template,
+  prepared,
   glossaryById,
-  curves = [],
-  sigLevel = 200,
-  stat,
 }: {
-  template: unknown
+  prepared: PreparedChampionAbilityText
   glossaryById: Map<string, GlossaryTerm>
-  curves?: ChampionDetailsPayload["abilityCurves"]
-  sigLevel?: number
-  stat?: ChampionStatRow
 }) {
-  const prepared = prepareChampionAbilityText({ template, curves, sigLevel, stat })
   if (prepared.status === "error") {
     return (
       <div className="rounded border border-amber-500/40 bg-amber-950/30 px-2 py-1 text-sm text-amber-100">
@@ -915,18 +850,6 @@ function AbilityTooltipContent({ item, description, color }: { item: GroupedAbil
   )
 }
 
-function abilityTextGroupTitle(group: string) {
-  if (group === "base") return "Base Abilities"
-  if (group === "special") return "Special Attacks"
-  const specialMatch = group.match(/^special([123])$/)
-  if (specialMatch) return `Special Attack ${specialMatch[1]}`
-  return group
-    .split(/[_-]+/)
-    .filter(Boolean)
-    .map(part => part[0]?.toUpperCase() + part.slice(1))
-    .join(" ")
-}
-
 function groupAbilityLinks<
   T extends {
     source: string | null
@@ -1004,10 +927,6 @@ function normalizeHexColor(color: string): CSSProperties["color"] {
   if (/^[0-9a-fA-F]{6}$/.test(color)) return `#${color}`
   if (/^[0-9a-fA-F]{8}$/.test(color)) return `#${color.slice(0, 6)}`
   return undefined
-}
-
-function formatGameText(value: string) {
-  return value.replace(/\[[0-9a-fA-F]{6,8}\]([\s\S]*?)\[-\]/g, "$1")
 }
 
 function formatNumber(value: number | null | undefined) {

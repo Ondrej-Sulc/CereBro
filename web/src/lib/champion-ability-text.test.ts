@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import { buildDescriptionTemplate } from "@cerebro/core/services/mcocGameDescriptionsImportService";
 import {
   buildMultiCurveData,
+  collectChampionAbilityTextGlossaryIds,
   normalizeChampionAbilityTextTemplate,
   prepareChampionAbilityCurveView,
   prepareChampionAbilityText,
+  prepareChampionAbilityTextView,
   resolveChampionAbilityTextValue,
   validateChampionAbilityTextTemplate,
   type ChampionAbilityCurve,
@@ -121,6 +123,84 @@ describe("Champion Ability Text", () => {
         displayValue: "150",
       },
     });
+  });
+
+  it("prepares the Champion Details ability text view through one interface", () => {
+    const records = [
+      {
+        id: 1,
+        group: "bio",
+        title: null,
+        sortOrder: 0,
+        template: buildDescriptionTemplate("Bio with [k=glossary/fury]Fury[/k]."),
+      },
+      {
+        id: 2,
+        group: "signature",
+        title: "[ff0000]Snake Sense[-]",
+        sortOrder: 1,
+        template: buildDescriptionTemplate("Gain {0} Attack.", {
+          placeholder_sources: {
+            0: {
+              kind: "abilityParam",
+              componentId: "component-1",
+              buffType: "fury",
+              paramName: "attackPercent",
+            },
+          },
+        }),
+      },
+      {
+        id: 3,
+        group: "special",
+        title: "Special 1",
+        sortOrder: 2,
+        template: buildDescriptionTemplate("Intro text."),
+      },
+      {
+        id: 4,
+        group: "special1",
+        title: null,
+        sortOrder: 3,
+        template: buildDescriptionTemplate("Follow-up text."),
+      },
+    ];
+
+    const view = prepareChampionAbilityTextView({
+      records,
+      curves: [
+        furyCurve,
+        { ...furyCurve, id: 22, curveId: "champion:fury:99", maxSig: 99 },
+      ],
+      maxSig: 20,
+      sigLevel: 10,
+      stat: { attack: 1000, challengeRating: 100, sigAbilityIds: [] },
+    });
+
+    expect(view.glossaryIds).toEqual(["fury"]);
+    expect(view.selectedCurves.map(curve => curve.curveId)).toEqual(["champion:fury"]);
+    expect(view.bioRecords).toHaveLength(1);
+    expect(view.signaturePanel.recordGroups[0]).toMatchObject({
+      title: "Snake Sense",
+      records: [{ id: 2 }],
+    });
+    expect(view.descriptionPanels[0]).toMatchObject({
+      group: "special1",
+      title: "Special Attack 1 - Special 1",
+      introRecord: { id: 3 },
+      recordGroups: [{
+        title: "Always Active",
+        records: [{ id: 4 }],
+      }],
+    });
+    expect(view.curveView.series).toHaveLength(1);
+  });
+
+  it("collects glossary IDs from imported ability text templates", () => {
+    expect(collectChampionAbilityTextGlossaryIds([
+      { template: buildDescriptionTemplate("[k=glossary/fury]Fury[/k] and [k=glossary/armor_up]Armor Up[/k].") },
+      { template: buildDescriptionTemplate("[k=glossary/fury]Fury[/k] again.") },
+    ])).toEqual(["armor_up", "fury"]);
   });
 
   it("returns malformed templates as structured preparation errors", () => {

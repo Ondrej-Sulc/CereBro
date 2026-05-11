@@ -1,11 +1,9 @@
 "use client"
 
-import { useMemo } from "react"
 import { Area, AreaChart, CartesianGrid, ReferenceLine, XAxis, YAxis } from "recharts"
 import { Sparkles } from "lucide-react"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { prepareChampionAbilityCurveView } from "@/lib/champion-ability-text"
-import type { ChampionDetailsPayload, ChampionStatRow } from "./champion-details-client"
+import type { PreparedChampionAbilityCurveView } from "@/lib/champion-ability-text"
 
 const CURVE_COLORS = ["#38bdf8", "#fbbf24", "#a78bfa", "#34d399", "#fb7185", "#f97316", "#22c55e", "#e879f9"]
 
@@ -17,21 +15,14 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function CurvePanel({
-  curves,
+  curveView,
   sigLevel,
-  stat,
   accent,
 }: {
-  curves: ChampionDetailsPayload["abilityCurves"]
+  curveView: PreparedChampionAbilityCurveView
   sigLevel: number
-  stat?: ChampionStatRow
   accent: string
 }) {
-  const curveView = useMemo(
-    () => prepareChampionAbilityCurveView({ curves, stat, sigLevel }),
-    [curves, stat, sigLevel]
-  )
-
   return (
     <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
       <div className="mb-3 flex items-center justify-between gap-3">

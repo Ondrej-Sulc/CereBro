@@ -73,6 +73,51 @@ export type PreparedChampionAbilityCurveView = {
   series: PreparedChampionAbilityCurveSeries[];
 };
 
+export type ChampionAbilityTextRecord = {
+  id: number | string;
+  group: string;
+  title: string | null;
+  sortOrder?: number;
+  template: unknown;
+};
+
+export type PreparedChampionAbilityTextRecord<
+  TRecord extends ChampionAbilityTextRecord = ChampionAbilityTextRecord,
+> = TRecord & {
+  displayTitle: string | null;
+  prepared: PreparedChampionAbilityText;
+};
+
+export type PreparedChampionAbilityTextRecordGroup<
+  TRecord extends ChampionAbilityTextRecord = ChampionAbilityTextRecord,
+> = {
+  id: string;
+  title: string;
+  records: Array<PreparedChampionAbilityTextRecord<TRecord>>;
+};
+
+export type PreparedChampionAbilityTextPanel<
+  TRecord extends ChampionAbilityTextRecord = ChampionAbilityTextRecord,
+> = {
+  group: string;
+  title: string;
+  records: Array<PreparedChampionAbilityTextRecord<TRecord>>;
+  recordGroups: Array<PreparedChampionAbilityTextRecordGroup<TRecord>>;
+  introRecord?: PreparedChampionAbilityTextRecord<TRecord>;
+  emptyText: string;
+};
+
+export type PreparedChampionAbilityTextView<
+  TRecord extends ChampionAbilityTextRecord = ChampionAbilityTextRecord,
+> = {
+  glossaryIds: string[];
+  selectedCurves: ChampionAbilityCurve[];
+  curveView: PreparedChampionAbilityCurveView;
+  bioRecords: Array<PreparedChampionAbilityTextRecord<TRecord>>;
+  signaturePanel: PreparedChampionAbilityTextPanel<TRecord>;
+  descriptionPanels: Array<PreparedChampionAbilityTextPanel<TRecord>>;
+};
+
 export function validateChampionAbilityTextTemplate(template: unknown): TextTemplate {
   if (!isRecord(template)) {
     throw new Error("Champion Ability Text template must be an object.");
@@ -117,6 +162,98 @@ export function groupAbilityTexts<T extends { group: string }>(records: T[]) {
     groups[record.group].push(record);
     return groups;
   }, {});
+}
+
+export function collectChampionAbilityTextGlossaryIds(records: Array<{ template: unknown }>): string[] {
+  const ids = new Set<string>();
+  for (const record of records) {
+    collectGlossaryIdsFromTemplate(record.template, ids);
+  }
+  return Array.from(ids).sort();
+}
+
+export function prepareChampionAbilityTextView<
+  TRecord extends ChampionAbilityTextRecord,
+>({
+  records,
+  curves = [],
+  maxSig = 200,
+  sigLevel = 200,
+  stat,
+}: {
+  records: TRecord[];
+  curves?: ChampionAbilityCurve[];
+  maxSig?: number;
+  sigLevel?: number;
+  stat?: ChampionAbilityStat;
+}): PreparedChampionAbilityTextView<TRecord> {
+  const selectedCurves = curves.filter(curve => (curve.maxSig ?? 200) === maxSig);
+  const preparedRecords = records.map(record => ({
+    ...record,
+    displayTitle: record.title ? formatGameText(record.title) : null,
+    prepared: prepareChampionAbilityText({
+      template: record.template,
+      curves: selectedCurves,
+      sigLevel,
+      stat,
+    }),
+  }));
+
+  const textGroups = groupAbilityTexts(preparedRecords);
+  const bioRecords = textGroups.bio ?? [];
+  const signatureRecords = textGroups.signature ?? [];
+  const specialAttackTextByNumber = new Map<string, PreparedChampionAbilityTextRecord<TRecord>>();
+
+  for (const [index, record] of (textGroups.special ?? []).entries()) {
+    specialAttackTextByNumber.set(String(index + 1), record);
+  }
+
+  const descriptionPanels = Object.entries(textGroups)
+    .filter(([group]) => group !== "signature" && group !== "bio" && group !== "special")
+    .map(([group, groupRecords]) => {
+      const specialMatch = group.match(/^special([123])$/);
+      const introRecord = specialMatch ? specialAttackTextByNumber.get(specialMatch[1]) : undefined;
+      const title = introRecord?.displayTitle
+        ? `${abilityTextGroupTitle(group)} - ${introRecord.displayTitle}`
+        : abilityTextGroupTitle(group);
+
+      return createAbilityTextPanel({
+        group,
+        title,
+        records: groupRecords,
+        introRecord,
+      });
+    });
+
+  return {
+    glossaryIds: collectChampionAbilityTextGlossaryIds(records),
+    selectedCurves,
+    curveView: prepareChampionAbilityCurveView({ curves: selectedCurves, stat, sigLevel }),
+    bioRecords,
+    signaturePanel: createAbilityTextPanel({
+      group: "signature",
+      title: "Signature Ability",
+      records: signatureRecords,
+      emptyText: "No signature ability text imported.",
+    }),
+    descriptionPanels,
+  };
+}
+
+export function abilityTextGroupTitle(group: string) {
+  if (group === "base") return "Base Abilities";
+  if (group === "special") return "Special Attacks";
+  const specialMatch = group.match(/^special([123])$/);
+  if (specialMatch) return `Special Attack ${specialMatch[1]}`;
+  return group
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map(part => part[0]?.toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export function formatGameText(value: string) {
+  return value.replace(/\[[0-9a-fA-F]{6,8}\]([\s\S]*?)\[-\]/g, "$1");
 }
 
 export function prepareChampionAbilityText({
@@ -279,6 +416,72 @@ function curveValueDomain(data: Array<Record<string, number>>, dataKeys: string[
   const range = max - min;
   const pad = range === 0 ? Math.max(Math.abs(max) * 0.1, 1) : range * 0.1;
   return [min - pad, max + pad];
+}
+
+function createAbilityTextPanel<
+  TRecord extends ChampionAbilityTextRecord,
+>({
+  group,
+  title,
+  records,
+  introRecord,
+  emptyText = "No text imported.",
+}: {
+  group: string;
+  title: string;
+  records: Array<PreparedChampionAbilityTextRecord<TRecord>>;
+  introRecord?: PreparedChampionAbilityTextRecord<TRecord>;
+  emptyText?: string;
+}): PreparedChampionAbilityTextPanel<TRecord> {
+  const recordGroups: Array<PreparedChampionAbilityTextRecordGroup<TRecord>> = [];
+  let currentGroup: PreparedChampionAbilityTextRecordGroup<TRecord> | null = null;
+
+  for (const record of records) {
+    if (record.displayTitle) {
+      currentGroup = {
+        id: String(record.id),
+        title: record.displayTitle,
+        records: [record],
+      };
+      recordGroups.push(currentGroup);
+    } else if (currentGroup) {
+      currentGroup.records.push(record);
+    } else {
+      currentGroup = {
+        id: String(record.id),
+        title: title === "Special Attacks" ? "Attack Details" : "Always Active",
+        records: [record],
+      };
+      recordGroups.push(currentGroup);
+    }
+  }
+
+  return {
+    group,
+    title,
+    records,
+    recordGroups,
+    introRecord,
+    emptyText,
+  };
+}
+
+function collectGlossaryIdsFromTemplate(value: unknown, ids: Set<string>) {
+  if (!value || typeof value !== "object") return;
+
+  if (Array.isArray(value)) {
+    for (const item of value) collectGlossaryIdsFromTemplate(item, ids);
+    return;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (record.type === "glossary" && typeof record.id === "string") {
+    ids.add(record.id);
+  }
+
+  for (const item of Object.values(record)) {
+    collectGlossaryIdsFromTemplate(item, ids);
+  }
 }
 
 function prepareChampionAbilityTextNode(

@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import { AbilityLinkType } from "@prisma/client"
 import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { collectChampionAbilityTextGlossaryIds } from "@/lib/champion-ability-text"
 import { ChampionDetailsClient } from "./champion-details-client"
 
 type PageProps = {
@@ -219,27 +220,9 @@ function collectChampionGlossaryIds(champion: Awaited<ReturnType<typeof getChamp
     if (link.ability.gameGlossaryTermId) ids.add(link.ability.gameGlossaryTermId)
   }
 
-  for (const record of champion.abilityTexts) {
-    collectGlossaryIdsFromTemplate(record.template, ids)
+  for (const id of collectChampionAbilityTextGlossaryIds(champion.abilityTexts)) {
+    ids.add(id)
   }
 
   return Array.from(ids).sort()
-}
-
-function collectGlossaryIdsFromTemplate(value: unknown, ids: Set<string>) {
-  if (!value || typeof value !== "object") return
-
-  if (Array.isArray(value)) {
-    for (const item of value) collectGlossaryIdsFromTemplate(item, ids)
-    return
-  }
-
-  const record = value as Record<string, unknown>
-  if (record.type === "glossary" && typeof record.id === "string") {
-    ids.add(record.id)
-  }
-
-  for (const item of Object.values(record)) {
-    collectGlossaryIdsFromTemplate(item, ids)
-  }
 }
