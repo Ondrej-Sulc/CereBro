@@ -68,6 +68,7 @@ import { createWar, deleteWar, updateWarDetails } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
 import { EditWarDialog } from "./edit-war-dialog";
 import { WarResult } from "@prisma/client";
+import { reportClientError } from "@/lib/observability/client";
 
 interface ExtendedWar extends War {
     fights?: { death: number }[];
@@ -93,16 +94,16 @@ export default function WarPlanningDashboard({
   isBotAdmin,
   isOfficer,
 }: WarPlanningDashboardProps) {
+  const defaultMapType = wars[0]?.mapType || WarMapType.STANDARD;
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedMapType, setSelectedMapType] = useState<WarMapType>(wars[0]?.mapType || WarMapType.STANDARD);
+  const [selectedMapType, setSelectedMapType] = useState<WarMapType>(defaultMapType);
+  const [lastDefaultMapType, setLastDefaultMapType] = useState<WarMapType>(defaultMapType);
   const [isOffSeason, setIsOffSeason] = useState(false);
 
-  // Sync selectedMapType with props when wars change
-  useEffect(() => {
-    if (wars.length > 0 && wars[0].mapType !== selectedMapType) {
-      setSelectedMapType(wars[0].mapType);
-    }
-  }, [wars]);
+  if (lastDefaultMapType !== defaultMapType) {
+    setLastDefaultMapType(defaultMapType);
+    setSelectedMapType(defaultMapType);
+  }
 
   const activeWars = wars.filter((w) => w.status === WarStatus.PLANNING);
   const archivedWars = wars.filter((w) => w.status === WarStatus.FINISHED);
@@ -489,7 +490,7 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: Exte
                         description: `War against ${war.enemyAlliance} has been deleted.`
                       });
                     } catch (error) {
-                      console.error("Failed to delete war:", error);
+                      reportClientError("war_planning_delete_war", error, { war_id: war.id });
                       toast({
                         title: "Delete Failed",
                         description: "Could not delete the war plan. Please try again.",

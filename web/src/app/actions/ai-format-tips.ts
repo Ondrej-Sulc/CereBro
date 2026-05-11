@@ -2,6 +2,7 @@
 
 import { OpenRouterService, OpenRouterMessage } from "@cerebro/core/services/openRouterService";
 import { withActionContext } from "@/lib/with-request-context";
+import logger from "@/lib/logger";
 
 export const autoFormatTipsAction = withActionContext('autoFormatTipsAction', async (rawTips: string): Promise<{ success: boolean; formattedTips?: string; error?: string }> => {
     if (!rawTips || rawTips.trim().length === 0) {
@@ -45,14 +46,14 @@ ${rawTips}`
             typeof response.choices[0].message.content === "string" &&
             response.choices[0].message.content.trim().length > 0
         ) {
-            let result = response.choices[0].message.content.trim();
+            const result = response.choices[0].message.content.trim();
             return { success: true, formattedTips: result };
         } else {
             return { success: false, error: "No response from AI." };
         }
 
     } catch (error: unknown) {
-        console.error("Error auto-formatting tips:", error);
+        logger.error({ err: error }, "Error auto-formatting tips");
         return { success: false, error: error instanceof Error ? error.message : "Failed to contact AI service." };
     }
 });

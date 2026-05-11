@@ -6,6 +6,7 @@ import { AlertTriangle, Loader } from 'lucide-react';
 import { WarVideoForm } from './WarVideoForm';
 import { Champion } from '@/types/champion';
 import { War, WarFight, Player as PrismaPlayer, WarNode as PrismaWarNode } from '@prisma/client';
+import { reportClientError } from '@/lib/observability/client';
 
 // Define types for fetched data
 type WarNode = PrismaWarNode;
@@ -81,7 +82,10 @@ export default function UploadWarVideoPage() {
         setPageStatus('ready');
       } catch (error: unknown) {
         const err = error as Error;
-        console.error('Failed to fetch data:', err);
+        reportClientError('war_video_upload_page_fetch_data', err, {
+          has_session_token: Boolean(sessionToken),
+          has_url_token: Boolean(urlToken),
+        });
         setErrorMessage(err.message || 'An unknown error occurred.');
         setPageStatus('error');
       }
@@ -93,11 +97,9 @@ export default function UploadWarVideoPage() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
+        .then(() => {})
         .catch((error) => {
-          console.error('Service Worker registration failed:', error);
+          reportClientError('war_video_upload_service_worker_registration', error);
         });
     }
   }, []);

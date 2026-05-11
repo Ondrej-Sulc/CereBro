@@ -4,6 +4,7 @@ import { CheckCircle2, Heart, RefreshCw, BarChart2, ExternalLink } from "lucide-
 import PageBackground from "@/components/PageBackground";
 import { DISCORD_INVITE } from "@/lib/links";
 import { prisma } from "@/lib/prisma";
+import logger from "@/lib/logger";
 
 function formatEur(minor: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -33,7 +34,7 @@ async function fetchDonationInfo(session_id?: string | string[]): Promise<{
       amountMinor: donation?.amountMinor ?? null,
     };
   } catch (error) {
-    console.error("Donation status verification failed:", error);
+    logger.error({ err: error, stripeCheckoutSessionId: normalizedSessionId }, "Donation status verification failed");
     return { status: null, isSubscription: false, amountMinor: null };
   }
 }

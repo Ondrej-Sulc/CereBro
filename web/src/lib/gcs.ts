@@ -1,4 +1,5 @@
 import { Storage } from "@google-cloud/storage";
+import logger from "@/lib/logger";
 
 interface GcsCredentials {
     project_id: string;
@@ -31,7 +32,7 @@ function getStorage() {
         });
         return storage;
     } catch (error) {
-        console.error("Error loading/parsing Google credentials", error);
+        logger.error({ err: error }, "Error loading or parsing Google credentials");
         throw new Error("Failed to initialize GCS storage");
     }
 }
@@ -76,7 +77,7 @@ export async function deleteFromGcs(path: string): Promise<void> {
         if (isNotFoundError(error)) {
             return;
         }
-        console.error(`Failed to delete ${path} from GCS`, error);
+        logger.error({ err: error, path }, "Failed to delete object from GCS");
         throw error;
     }
 }

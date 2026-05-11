@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Champion } from "@/types/champion";
 import { War, WarFight, Player as PrismaPlayer, WarNode as PrismaWarNode } from '@prisma/client';
 import { FightData } from "@/components/FightBlock";
+import { reportClientError } from "@/lib/observability/client";
 
 interface PlayerWithAlliance extends PrismaPlayer {
   alliance?: {
@@ -127,7 +128,7 @@ export function useWarVideoForm({
         wakeLock.current = await navigator.wakeLock.request('screen');
       }
     } catch (err) {
-      console.warn('Wake Lock request failed:', err);
+      reportClientError("war_video_upload_wake_lock_request", err);
     }
   };
 
@@ -138,7 +139,7 @@ export function useWarVideoForm({
         wakeLock.current = null;
       }
     } catch (err) {
-      console.warn('Wake Lock release failed:', err);
+      reportClientError("war_video_upload_wake_lock_release", err);
     }
   };
 
@@ -609,11 +610,11 @@ export function useWarVideoForm({
         }
       } catch (error: unknown) {
         const err = error as Error;
-        console.error("Submission error:", err);
-        console.error("Error details:", {
-          message: err.message,
-          stack: err.stack,
-          name: err.name
+        reportClientError("war_video_upload_submit", err, {
+          source_mode: sourceMode,
+          upload_mode: uploadMode,
+          context_mode: contextMode,
+          fight_count: fights.length,
         });
         toast({
           title: "Upload Failed",

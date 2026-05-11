@@ -36,6 +36,7 @@ import {
 
 import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
+import { reportClientError } from "@/lib/observability/client";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
 
@@ -480,7 +481,7 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             }
             
         } catch (error) {
-            console.error("Failed to remove champion completely", error);
+            reportClientError("quest_timeline_remove_team_member", error, { quest_id: quest.id });
             toast({ title: "Error", description: "Failed to remove champion completely. Some operations may have failed.", variant: "destructive" });
         }
     };
@@ -1129,7 +1130,10 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         try {
             await savePlayerQuestCounter(quest.id, encounterId, newChampValue);
         } catch (error) {
-            console.error("Failed to save counter selection", error);
+            reportClientError("quest_timeline_save_counter", error, {
+                quest_id: quest.id,
+                encounter_id: encounterId,
+            });
             setSelections(prev => ({ ...prev, [encounterId]: previousRosterId }));
             toast({ title: "Error", description: "Failed to save selection.", variant: "destructive" });
         }
@@ -1187,7 +1191,10 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         try {
             await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue);
         } catch (error) {
-            console.error("Failed to save prefight selection", error);
+            reportClientError("quest_timeline_save_prefight", error, {
+                quest_id: quest.id,
+                encounter_id: encounterId,
+            });
             setPrefightSelections(prev => ({ ...prev, [encounterId]: previousRosterId }));
             const msg = error instanceof Error ? error.message : "Failed to save prefight.";
             toast({ title: "Error", description: msg, variant: "destructive" });
@@ -1214,7 +1221,10 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         try {
             await savePlayerQuestEncounterRevives(quest.id, encounterId, nextRevives);
         } catch (error) {
-            console.error("Failed to save revive count", error);
+            reportClientError("quest_timeline_save_revives", error, {
+                quest_id: quest.id,
+                encounter_id: encounterId,
+            });
             setRevivesByEncounterId(prev => {
                 const next = { ...prev };
                 if (previousRevives > 0) {
@@ -1259,7 +1269,10 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         try {
             await savePlayerQuestSynergy(quest.id, championId, isRemoving);
         } catch (error) {
-            console.error("Failed to save synergy selection", error);
+            reportClientError("quest_timeline_save_synergy", error, {
+                quest_id: quest.id,
+                champion_id: championId,
+            });
             setSynergyIds(prev => isRemoving 
                 ? [...prev, championId]
                 : prev.filter(id => id !== championId)

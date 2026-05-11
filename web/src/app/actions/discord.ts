@@ -7,6 +7,7 @@ import { BotJobType } from "@prisma/client";
 import { config } from "@cerebro/core/config";
 import { getFromCache } from "@/lib/cache";
 import { withActionContext } from "@/lib/with-request-context";
+import logger from "@/lib/logger";
 
 export interface DiscordGuild {
     id: string;
@@ -42,7 +43,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 2, ti
 
         if (response.status === 429 && retries > 0) {
             const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
-            console.warn(`Discord Rate Limit (429) hit for ${url}. Retrying in ${retryAfter}ms...`);
+            logger.warn({ url, retryAfter, retries }, "Discord rate limit hit, retrying");
             await new Promise(resolve => setTimeout(resolve, retryAfter));
             return fetchWithRetry(url, options, retries - 1, timeout);
         }
@@ -50,7 +51,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 2, ti
         return response;
     } catch (error) {
         if (error instanceof Error && error.name === 'AbortError' && retries > 0) {
-            console.warn(`Fetch timeout for ${url}. Retrying...`);
+            logger.warn({ url, timeout, retries }, "Discord fetch timed out, retrying");
             return fetchWithRetry(url, options, retries - 1, timeout);
         }
         throw error;
@@ -142,10 +143,10 @@ export const getDiscordGuilds = withActionContext('getDiscordGuilds', async () =
                         features = data.features || features;
                         icon = data.icon || icon;
                     } else if (detailRes.status === 429) {
-                        console.error(`Persistent 429 for guild ${guild.id} after retries.`);
+                        logger.error({ guildId: guild.id }, "Persistent Discord rate limit after retries");
                     }
                 } catch (e) {
-                    console.error(`Failed to fetch details for guild ${guild.id}`, e);
+                    logger.error({ err: e, guildId: guild.id }, "Failed to fetch Discord guild details");
                 }
 
                 return {
@@ -206,7 +207,7 @@ export const cleanupSmallGuilds = withActionContext('cleanupSmallGuilds', async 
             await leaveDiscordGuild(guild.id, true);
             count++;
         } catch (e) {
-            console.error(`Failed to queue leave for ${guild.id}`, e);
+            logger.error({ err: e, guildId: guild.id }, "Failed to queue Discord guild leave");
         }
     }
 

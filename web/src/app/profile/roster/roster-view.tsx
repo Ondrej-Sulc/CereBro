@@ -24,6 +24,7 @@ import { AddChampionModal } from "./components/modals/add-champion-modal";
 import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { switchProfile } from "../actions";
+import { reportClientError } from "@/lib/observability/client";
 
 function buildRosterQueryParams(params: {
   simulationTargetRank: number;
@@ -180,8 +181,10 @@ export function RosterView({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ championPrestige: val }),
-    }).catch(err => console.error("Failed to update prestige:", err));
-  }, [player.championPrestige]);
+    }).catch(err => reportClientError("profile_roster_update_prestige", err, {
+      player_id: player.id,
+    }));
+  }, [player.championPrestige, player.id]);
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
@@ -224,7 +227,9 @@ export function RosterView({
         lastFetchedParams.current = currentParams;
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') return;
-        console.error(error);
+        reportClientError("profile_roster_fetch_recommendations", error, {
+          player_id: targetPlayerId ?? player.id,
+        });
         toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
       } finally {
         if (!controller.signal.aborted) {
@@ -236,7 +241,7 @@ export function RosterView({
 
     fetchData();
     return () => controller.abort();
-  }, [currentParams, simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, initialLimit, toast, memoizedPrestigeMap]);
+  }, [currentParams, initialTop30Average, player.id, targetPlayerId, toast, memoizedPrestigeMap, triggerPrestigeUpdate]);
 
   const handleProfileSwitch = async (playerId: string) => {
     try {
@@ -475,7 +480,7 @@ export function RosterView({
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-white tracking-tight">
-              {player.ingameName}'s Roster
+              {player.ingameName}&apos;s Roster
             </h1>
             {!targetPlayerId && profiles.length > 1 && (
               <DropdownMenu>

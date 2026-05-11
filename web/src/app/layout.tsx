@@ -83,7 +83,6 @@ export default function RootLayout({
 
                 window.onerror = function(msg, url, line, col, error) {
                   if (isStaleError(msg, error && error.name)) {
-                    console.warn("Critical deployment mismatch detected (window.onerror), reloading...");
                     safeReload();
                     return true;
                   }
@@ -92,7 +91,6 @@ export default function RootLayout({
                 window.onunhandledrejection = function(event) {
                   var msg = (event.reason && event.reason.message) || String(event.reason || "");
                   if (isStaleError(msg, event.reason && event.reason.name)) {
-                    console.warn("Critical deployment mismatch detected (unhandledrejection), reloading...");
                     safeReload();
                   }
                 };

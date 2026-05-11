@@ -6,7 +6,7 @@ import { getFromCache } from "@/lib/cache"
 import logger from "@/lib/logger"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
-  console.error("❌ Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required for Auth.js");
+  logger.error("Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required for Auth.js");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -14,7 +14,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   logger: {
     error(error) {
-      const authError = error as any;
+      const authError = error as { type?: string; cause?: unknown };
       // InvalidCheck (PKCE/state mismatch) is expected: abandoned flows, multiple tabs, browser cookie restrictions.
       // Log at warn to avoid noise; everything else is a real error.
       if (authError?.type === "InvalidCheck") {

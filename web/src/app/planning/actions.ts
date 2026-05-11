@@ -16,6 +16,7 @@ import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/n
 import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { withActionContext } from "@/lib/with-request-context";
+import logger from "@/lib/logger";
 
 export interface ExtraChampion {
   id: string;
@@ -68,7 +69,15 @@ export const getGuildChannels = withActionContext('getGuildChannels', async (all
     });
 
     if (!response.ok) {
-        console.error("Failed to fetch channels", await response.text());
+        logger.warn(
+            {
+                allianceId: targetAllianceId,
+                guildId: alliance.guildId,
+                status: response.status,
+                responseText: await response.text(),
+            },
+            "Failed to fetch Discord channels"
+        );
         return [];
     }
 

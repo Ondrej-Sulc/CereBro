@@ -27,6 +27,7 @@ import { VirtuosoGrid } from "react-virtuoso";
 import axios from "axios";
 import Link from "next/link";
 import { UpdatedChampionItem, ChampionData, RosterWithChampion } from "@/components/UpdatedChampionItem";
+import { reportClientError } from "@/lib/observability/client";
 
 // Define local types matching what the API returns
 
@@ -277,7 +278,10 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
             } else if (err instanceof Error) {
                 errorMessage = err.message;
             }
-            console.error("Failed to update roster:", err);
+            reportClientError("roster_update_form_submit", err, {
+                mode,
+                file_count: files.length,
+            });
             setResult({
                 success: 0,
                 added: [],

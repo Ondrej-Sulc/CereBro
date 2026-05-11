@@ -35,10 +35,6 @@ export default function RootError({
         error_message: error.message,
         digest: error.digest,
       });
-      console.warn('Deployment mismatch or chunk failure detected, reloading page...', { 
-        name: error.name, 
-        message: error.message 
-      });
       // Add a small delay to avoid infinite reload loops
       const lastReload = sessionStorage.getItem('last-deployment-reload');
       const now = Date.now();
@@ -51,7 +47,6 @@ export default function RootError({
         source: 'root_error_boundary',
         digest: error.digest,
       })
-      console.error("Global Error Boundary caught:", error)
     }
   }, [error, isStale])
 

@@ -25,6 +25,7 @@ import {
 import { updateWarDetails } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
 import { ResultSwitch, DeathCounter } from "./war-result-controls";
+import { reportClientError } from "@/lib/observability/client";
 
 interface EditWarDialogProps {
   war: War;
@@ -80,7 +81,7 @@ export function EditWarDialog({
           toast({ title: "War Updated", description: "Details have been successfully updated." });
           if (onOpenChange) onOpenChange(false);
       } catch (error) {
-          console.error("Failed to update war:", error);
+          reportClientError("war_planning_update_war_details", error, { war_id: war.id });
           toast({ title: "Update Failed", description: "Could not update war details.", variant: "destructive" });
       } finally {
           setIsEditing(false);

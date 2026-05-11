@@ -4,6 +4,7 @@ import { Champion } from "@/types/champion";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { RightPanelState } from "./use-war-planning";
 import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
+import { reportClientError } from "@/lib/observability/client";
 
 interface WarNodeWithAllocations extends WarNode {
     allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
@@ -72,7 +73,7 @@ export function useDefensePlanning({
       const data: PlacementWithNode[] = await res.json();
       setCurrentPlacements(data);
     } catch (err: unknown) {
-      console.error(err);
+      reportClientError("defense_planning_fetch_placements", err, { plan_id: planId });
       const msg = err instanceof Error ? err.message : String(err);
       setError("Failed to load placements: " + msg);
     } finally {
@@ -97,7 +98,7 @@ export function useDefensePlanning({
             setNodesMap(map);
         } catch (err) {
             if (err instanceof Error && err.name === 'AbortError') return;
-            console.error(err);
+            reportClientError("defense_planning_fetch_nodes", err, { plan_id: planId });
             setError("Failed to load map configuration.");
         }
     }
@@ -144,7 +145,7 @@ export function useDefensePlanning({
                  });
              });
         } catch (e) {
-            console.error("Polling error", e);
+            reportClientError("defense_planning_poll", e, { plan_id: planId });
         } finally {
             inFlight = false;
         }
@@ -318,7 +319,11 @@ export function useDefensePlanning({
       try {
         await updatePlacement(payload);
       } catch (error: unknown) {
-        console.error("Failed to save placement:", error);
+        reportClientError("defense_planning_save_placement", error, {
+          plan_id: planId,
+          placement_id: updatedPlacement.id,
+          node_id: updatedPlacement.nodeId,
+        });
         const msg = error instanceof Error ? error.message : String(error);
         setError("Failed to save changes: " + msg);
         // Re-fetch placements to ensure UI is in sync with server state after error

@@ -119,11 +119,11 @@ export const uploadQuestCategoryThumbnail = withActionContext('uploadQuestCatego
             data: { thumbnailUrl: publicUrl }
         });
     } catch (error) {
-        console.error("Failed to update quest category with thumbnail URL, deleted GCS object.", error);
+        logger.error({ err: error, categoryId, fileName }, "Failed to update quest category thumbnail URL, deleting GCS object");
         try {
             await deleteFromGcs(fileName);
         } catch (delErr) {
-            console.error("Failed to delete GCS object during cleanup", delErr);
+            logger.error({ err: delErr, fileName }, "Failed to delete GCS object during quest category thumbnail cleanup");
         }
         throw error;
     }
@@ -139,7 +139,7 @@ export const uploadQuestCategoryThumbnail = withActionContext('uploadQuestCatego
                 await deleteFromGcs(oldPath);
             }
         } catch (delErr) {
-            console.error("Failed to delete old category thumbnail from GCS", delErr);
+            logger.error({ err: delErr, categoryId, thumbnailUrl: category.thumbnailUrl }, "Failed to delete old quest category thumbnail from GCS");
         }
     }
 
@@ -431,7 +431,7 @@ export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', 
         
         return { success: true };
     } catch (e: any) {
-        console.error(e);
+        logger.error({ err: e, questPlanId }, "Failed to update featured quest players");
         return { success: false, error: e.message || "Failed to update featured players" };
     }
 });
@@ -885,7 +885,7 @@ export const uploadQuestBanner = withActionContext('uploadQuestBanner', async (q
     } catch (error) {
         // If the DB update fails, the uploaded GCS object should not be orphaned
         await deleteFromGcs(fileName);
-        console.error("Failed to update quest plan with banner URL, deleted GCS object.", error);
+        logger.error({ err: error, questPlanId, fileName }, "Failed to update quest plan banner URL, deleted GCS object");
         throw error;
     }
 

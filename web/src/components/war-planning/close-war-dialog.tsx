@@ -18,6 +18,7 @@ import { WarStatus } from "@prisma/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ResultSwitch, DeathCounter } from "./war-result-controls";
+import { reportClientError } from "@/lib/observability/client";
 
 interface CloseWarDialogProps {
   war: War;
@@ -63,7 +64,7 @@ export function CloseWarDialog({
           onOpenChange(false);
           if (onSuccess) onSuccess();
       } catch (error) {
-          console.error("Failed to close war:", error);
+          reportClientError("war_planning_close_war", error, { war_id: war.id });
           const message = error instanceof Error ? error.message : "Could not close war. Please try again.";
           toast({ title: "Update Failed", description: message, variant: "destructive" });
       } finally {

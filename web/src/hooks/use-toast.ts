@@ -7,6 +7,7 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import { captureDeploymentMismatchReload } from "@/lib/observability/client"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -150,7 +151,9 @@ function toast({ ...props }: Toast) {
      props.description.includes('was not found on the server') ||
      props.description.includes('older or newer deployment'))
   ) {
-    console.warn("Detected Server Action mismatch from toast, reloading...");
+    captureDeploymentMismatchReload({
+      source: "toast_server_action_mismatch",
+    });
     props.title = "Update Required";
     props.description = "Application updated. Reloading...";
     props.variant = "destructive";

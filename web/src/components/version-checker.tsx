@@ -1,15 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
+import { useEffect, useRef } from 'react';
+import { captureDeploymentMismatchReload } from '@/lib/observability/client';
 
 const POLLING_INTERVAL = 2 * 60 * 1000; // 2 minutes
-const AUTO_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 
 export function VersionChecker({ initialVersion }: { initialVersion: string }) {
-  const { toast } = useToast();
-  const [hasNotified, setHasNotified] = useState(false);
   const lastVisibleTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -27,7 +23,12 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
                name === "ChunkLoadError";
     };
 
-    const safeReload = () => {
+    const safeReload = (source: string, properties: Record<string, unknown> = {}) => {
+        captureDeploymentMismatchReload({
+            source,
+            client_version: initialVersion,
+            ...properties,
+        });
         try {
             const lastReload = sessionStorage.getItem('last-deployment-reload');
             const now = Date.now();
@@ -35,7 +36,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
                 sessionStorage.setItem('last-deployment-reload', now.toString());
                 window.location.reload();
             }
-        } catch (e) {
+        } catch {
             window.location.reload();
         }
     };
@@ -43,16 +44,20 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
     const handleGlobalError = (event: ErrorEvent) => {
       const msg = event.message || "";
       if (isStaleError(msg, event.error?.name)) {
-        console.warn("Detected deployment/chunk mismatch, reloading...", msg);
-        safeReload();
+        safeReload("version_checker_window_error", {
+          error_name: event.error?.name,
+          error_message: msg,
+        });
       }
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
         const msg = event.reason?.message || String(event.reason || "");
         if (isStaleError(msg, event.reason?.name)) {
-          console.warn("Detected deployment/chunk mismatch (unhandled rejection), reloading...", msg);
-          safeReload();
+          safeReload("version_checker_unhandled_rejection", {
+            error_name: event.reason?.name,
+            error_message: msg,
+          });
         }
     };
 
@@ -68,8 +73,9 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
         
         // Only check if we have a server version and it's not the default 'dev'
         if (serverVersion && initialVersion !== 'dev' && serverVersion !== initialVersion) {
-            console.warn("Detected version mismatch from header, reloading...", { server: serverVersion, client: initialVersion });
-            safeReload();
+            safeReload("version_checker_response_header", {
+              server_version: serverVersion,
+            });
         }
         return response;
       } catch (error) {
@@ -89,11 +95,12 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
         const data = await res.json();
         
         if (data.version && data.version !== initialVersion) {
-            console.warn("Detected version mismatch from poll, reloading...", { server: data.version, client: initialVersion });
-            safeReload();
+            safeReload("version_checker_poll", {
+              server_version: data.version,
+            });
         }
-      } catch (error) {
-        console.error("Failed to check version:", error);
+      } catch {
+        // Version checks are opportunistic; network failures are handled by the next poll.
       }
     };
 
@@ -118,7 +125,7 @@ export function VersionChecker({ initialVersion }: { initialVersion: string }) {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [initialVersion, hasNotified, toast]);
+  }, [initialVersion]);
 
   return null;
 }
