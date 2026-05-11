@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "./types";
-import { calculateRosterRecommendations } from "@/lib/roster-recommendation-service";
+import { loadRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
 import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
@@ -109,7 +109,7 @@ export default async function RosterPage(props: {
     effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
   }
 
-  const { prestigeMap, recommendations, sigRecommendations, top30Average } = await calculateRosterRecommendations(
+  const { prestigeMap, recommendations, sigRecommendations, top30Average } = await loadRosterPrestigeInsights(
     typedRosterEntries,
     {
       targetRank: effectiveTargetRank,

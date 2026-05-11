@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { calculateRosterRecommendations } from "@/lib/roster-recommendation-service";
+import { loadRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
 import { ChampionClass } from "@prisma/client";
 import { ProfileRosterEntry } from "@/app/profile/roster/types";
 import logger from "@/lib/logger";
@@ -76,7 +76,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
     effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
   }
 
-  const result = await calculateRosterRecommendations(roster as unknown as ProfileRosterEntry[], {
+  const result = await loadRosterPrestigeInsights(roster as unknown as ProfileRosterEntry[], {
     targetRank: effectiveTargetRank,
     sigBudget,
     rankClassFilter,

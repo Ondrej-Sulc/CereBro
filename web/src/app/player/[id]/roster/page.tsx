@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "@/app/profile/roster/types";
 import { UploadSection } from "./upload-section";
-import { calculateRosterRecommendations } from "@/lib/roster-recommendation-service";
+import { loadRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
 import { cache } from "react";
 
 interface PlayerRosterPageProps {
@@ -125,7 +125,7 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
     const effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
 
     // Calculate prestige map and top 30 average on the server to ensure correct sorting by default
-    const { prestigeMap, top30Average } = await calculateRosterRecommendations(typedRosterEntries, {
+    const { prestigeMap, top30Average } = await loadRosterPrestigeInsights(typedRosterEntries, {
         targetRank: effectiveTargetRank,
         sigBudget: 0,
         rankClassFilter: [],
