@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requestContextStorage, type RequestContext } from "./request-context";
 import { auth } from "@/auth";
 import { sendErrorToDiscord } from "./discord-alert";
+import logger from "./logger";
+import {
+  captureServerException,
+  captureServerOperation,
+} from "./observability/server";
 
 /** Next.js redirect() and notFound() throw errors with special digest prefixes. */
 function isNextInternalError(error: unknown): boolean {
@@ -49,9 +54,39 @@ export function withActionContext<TArgs extends unknown[], TReturn>(
       await enrichWithSession(ctx);
 
       try {
-        return await fn(...args);
+        const result = await fn(...args);
+        const durationMs = Date.now() - ctx.startTime;
+
+        captureServerOperation({
+          kind: "server_action",
+          name: actionName,
+          durationMs,
+          outcome: "success",
+        });
+
+        if (durationMs >= 3000) {
+          logger.warn({ action: actionName, durationMs }, "Slow Server Action completed");
+        } else {
+          logger.debug({ action: actionName, durationMs }, "Server Action completed");
+        }
+
+        return result;
       } catch (error) {
         if (!isNextInternalError(error)) {
+          const durationMs = Date.now() - ctx.startTime;
+          logger.error({ err: error, action: actionName, durationMs }, "Server Action failed");
+          captureServerException(error, {
+            operation_kind: "server_action",
+            operation_name: actionName,
+            duration_ms: durationMs,
+          });
+          captureServerOperation({
+            kind: "server_action",
+            name: actionName,
+            durationMs,
+            outcome: "exception",
+            error,
+          });
           sendErrorToDiscord({
             error,
             message: `Server Action: ${actionName}`,
@@ -85,6 +120,7 @@ export function withRouteContext<
   return async (...args: TArgs) => {
     const req = args[0];
     const url = new URL(req.url);
+    const method = req.method;
 
     const ctx: RequestContext = {
       correlationId: crypto.randomUUID(),
@@ -97,6 +133,10 @@ export function withRouteContext<
 
       try {
         const response = await handler(...args);
+        const durationMs = Date.now() - ctx.startTime;
+        const status = response.status;
+        const outcome =
+          status >= 500 ? "server_error" : status >= 400 ? "client_error" : "success";
 
         // Attach correlation ID to response headers for client-side tracing.
         // Redirect responses (e.g. from Auth.js error handling) have immutable
@@ -107,9 +147,42 @@ export function withRouteContext<
           // immutable headers — no-op
         }
 
+        captureServerOperation({
+          kind: "api_route",
+          name: ctx.path ?? url.pathname,
+          method,
+          status,
+          durationMs,
+          outcome,
+        });
+
+        if (status >= 500) {
+          logger.warn({ path: ctx.path, method, status, durationMs }, "API Route completed with server error");
+        } else if (durationMs >= 3000) {
+          logger.warn({ path: ctx.path, method, status, durationMs }, "Slow API Route completed");
+        } else {
+          logger.debug({ path: ctx.path, method, status, durationMs }, "API Route completed");
+        }
+
         return response;
       } catch (error) {
         if (!isNextInternalError(error)) {
+          const durationMs = Date.now() - ctx.startTime;
+          logger.error({ err: error, path: ctx.path, method, durationMs }, "API Route failed");
+          captureServerException(error, {
+            operation_kind: "api_route",
+            operation_name: ctx.path,
+            method,
+            duration_ms: durationMs,
+          });
+          captureServerOperation({
+            kind: "api_route",
+            name: ctx.path ?? url.pathname,
+            method,
+            durationMs,
+            outcome: "exception",
+            error,
+          });
           sendErrorToDiscord({
             error,
             message: `API Route: ${ctx.path}`,

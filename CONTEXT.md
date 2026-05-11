@@ -17,3 +17,9 @@ It owns Top 30 average calculation, rank-up impact simulation, signature budget 
 Champion Ability Text is the domain rule set for validating imported game ability text templates and resolving their placeholders against champion ability curves, selected signature level, and selected champion stats.
 
 It owns template shape, curve matching, static value resolution, game-stat value conversion, unresolved placeholder reporting, and chart-ready ability curve points used by Champion Details.
+
+## Website Observability
+
+Website Observability is the domain rule set for turning website requests, server actions, client errors, and product interactions into searchable logs, PostHog events, error reports, and dashboard metrics.
+
+It owns correlation IDs, identity and alliance grouping, event naming, privacy-safe property shaping, slow-operation detection, and the adapter choices used by Railway logs, PostHog, Discord alerts, and admin usage views.

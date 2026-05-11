@@ -5,13 +5,18 @@ import { PostHogProvider } from 'posthog-js/react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
+const posthog_key = process.env.NEXT_PUBLIC_POSTHOG_KEY
+const posthog_host = process.env.NEXT_PUBLIC_POSTHOG_HOST
+const isPostHogConfigured = Boolean(posthog_key && posthog_host)
+
 if (typeof window !== 'undefined') {
-  const posthog_key = process.env.NEXT_PUBLIC_POSTHOG_KEY
-  const posthog_host = process.env.NEXT_PUBLIC_POSTHOG_HOST
   if (posthog_key && posthog_host) {
     posthog.init(posthog_key, {
       api_host: posthog_host,
-      capture_pageview: false // we capture pageviews manually
+      capture_pageview: false, // we capture pageviews manually
+      capture_exceptions: true,
+      defaults: '2025-05-24',
+      mask_personal_data_properties: true,
     })
   }
 }
@@ -21,13 +26,12 @@ export function PostHogPageview(): null {
   const searchParams = useSearchParams()
 
   useEffect(() => {
+    if (!isPostHogConfigured) return
     if (pathname) {
-      let url = window.origin + pathname
-      if (searchParams.toString()) {
-        url = url + `?${searchParams.toString()}`
-      }
+      const url = window.origin + pathname
       posthog.capture('$pageview', {
         '$current_url': url,
+        path: pathname,
       })
     }
   }, [pathname, searchParams])
