@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { loadRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
-import { ChampionClass } from "@prisma/client";
-import { ProfileRosterEntry } from "@/app/profile/roster/types";
+import { loadPlayerRosterPrestigeInsightSnapshot, visibleRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
 import logger from "@/lib/logger";
 import { withRouteContext } from "@/lib/with-request-context";
 
@@ -28,75 +26,11 @@ export const GET = withRouteContext(async (req: NextRequest) => {
     }
   }
 
-  // Parse filters and options
-  const targetRank = parseInt(searchParams.get("targetRank") || "0");
-  const sigBudget = parseInt(searchParams.get("sigBudget") || "0");
-  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "5", 10) || 5, 1), 100);
-
-  const validClasses = Object.values(ChampionClass);
-  const rankClassFilterRaw = searchParams.get("rankClassFilter") ? searchParams.get("rankClassFilter")!.split(',') : [];
-  const sigClassFilterRaw = searchParams.get("sigClassFilter") ? searchParams.get("sigClassFilter")!.split(',') : [];
-
-  const rankClassFilter = rankClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
-  const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
-  const rankSagaFilter = searchParams.get("rankSagaFilter") === 'true';
-  const sigSagaFilter = searchParams.get("sigSagaFilter") === 'true';
-  const sigAwakenedOnly = searchParams.get("sigAwakenedOnly") === 'true';
-
-  // Fetch roster
-  const roster = await prisma.roster.findMany({
-    where: { playerId: targetPlayerId },
-    include: {
-      champion: {
-        include: {
-          tags: { select: { id: true, name: true } },
-          abilities: {
-            include: {
-              ability: {
-                select: {
-                  name: true,
-                  categories: { select: { name: true } }
-                }
-              },
-              synergyChampions: {
-                include: { champion: { select: { name: true, images: true } } }
-              }
-            }
-          }
-        }
-      }
-    },
-    orderBy: [{ stars: "desc" }, { rank: "desc" }],
-  });
-
-  // Determine default target rank if not set
-  let effectiveTargetRank = targetRank;
-  if (effectiveTargetRank === 0) {
-    const highest7StarRank = roster.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
-    effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
-  }
-
-  const result = await loadRosterPrestigeInsights(roster as unknown as ProfileRosterEntry[], {
-    targetRank: effectiveTargetRank,
-    sigBudget,
-    rankClassFilter,
-    sigClassFilter,
-    rankSagaFilter,
-    sigSagaFilter,
-    sigAwakenedOnly,
-    limit
-  });
+  const { insights } = await loadPlayerRosterPrestigeInsightSnapshot(targetPlayerId, searchParams);
 
   // If viewing someone else and not an officer/admin, strip sensitive insights
   const isOfficerOrAdmin = currentUser.isBotAdmin || (currentUser.isOfficer && currentUser.allianceId !== null);
-  if (targetPlayerId !== currentUser.id && !isOfficerOrAdmin) {
-    return NextResponse.json({
-        top30Average: result.top30Average,
-        prestigeMap: result.prestigeMap,
-        recommendations: [],
-        sigRecommendations: []
-    });
-  }
-
-  return NextResponse.json(result);
+  return NextResponse.json(visibleRosterPrestigeInsights(insights, {
+    includeSuggestions: targetPlayerId === currentUser.id || isOfficerOrAdmin,
+  }));
 });

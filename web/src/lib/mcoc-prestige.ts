@@ -18,6 +18,15 @@ export type McocPrestigePoint = {
   prestige: number;
 };
 
+export type McocPrestigeLookupInput = {
+  championId: number;
+  rarity: number;
+  rank: number;
+  sigLevel: number;
+  ascensionLevel?: number;
+  fallbackPrestige?: number | null;
+};
+
 export function maxSigForRarity(rarity: number | null | undefined) {
   return rarity && rarity < 5 ? 99 : 200;
 }
@@ -104,6 +113,39 @@ export function projectMcocPrestige({
 }) {
   const basePrestige = calculateMcocPrestige(prestigeData, stat, sigLevel);
   return applyAscensionToPrestige(basePrestige, stat?.rarity, ascensionLevel);
+}
+
+export function createMcocPrestigeProjector(prestigeData: Array<McocPrestigeEndpoint & { championId: number }>) {
+  const rowsByChampionTier = new Map<string, McocPrestigeEndpoint[]>();
+
+  for (const row of prestigeData) {
+    const key = prestigeLookupKey(row.championId, row.rarity, row.rank);
+    const rows = rowsByChampionTier.get(key) ?? [];
+    rows.push(row);
+    rowsByChampionTier.set(key, rows);
+  }
+
+  return {
+    project({
+      championId,
+      rarity,
+      rank,
+      sigLevel,
+      ascensionLevel = 0,
+      fallbackPrestige = null,
+    }: McocPrestigeLookupInput) {
+      return projectMcocPrestige({
+        prestigeData: rowsByChampionTier.get(prestigeLookupKey(championId, rarity, rank)) ?? [],
+        stat: { rarity, rank, prestige: fallbackPrestige },
+        sigLevel,
+        ascensionLevel,
+      }) ?? 0;
+    },
+  };
+}
+
+function prestigeLookupKey(championId: number, rarity: number, rank: number) {
+  return `${championId}:${rarity}:${rank}`;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { ChampionClass } from "@prisma/client";
 import type { ChampionImages } from "../types/champion";
-import { maxSigForRarity, projectMcocPrestige } from "./mcoc-prestige";
+import { createMcocPrestigeProjector, maxSigForRarity } from "./mcoc-prestige";
 
 export interface RosterPrestigeInsightOptions {
     targetRank: number;
@@ -81,22 +81,16 @@ export function calculateRosterPrestigeInsights(
         return emptyRosterPrestigeInsights();
     }
 
-    const prestigeLookup = new Map<string, RosterPrestigeRow[]>();
-    for (const p of prestigeRows) {
-        const key = `${p.championId}:${p.rarity}:${p.rank}`;
-        const rows = prestigeLookup.get(key) ?? [];
-        rows.push(p);
-        prestigeLookup.set(key, rows);
-    }
+    const prestigeProjector = createMcocPrestigeProjector(prestigeRows);
 
     const getCalculatedPrestige = (champId: number, rarity: number, rank: number, sig: number, ascensionLevel: number = 0): number => {
-        const rows = prestigeLookup.get(`${champId}:${rarity}:${rank}`) ?? [];
-        return projectMcocPrestige({
-            prestigeData: rows,
-            stat: { rarity, rank, prestige: null },
+        return prestigeProjector.project({
+            championId: champId,
+            rarity,
+            rank,
             sigLevel: sig,
             ascensionLevel,
-        }) ?? 0;
+        });
     };
 
     const rosterWithPrestige = roster.map(r => {

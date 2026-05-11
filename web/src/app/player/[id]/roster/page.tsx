@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "@/app/profile/roster/types";
 import { UploadSection } from "./upload-section";
-import { loadRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
+import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
 import { cache } from "react";
 
 interface PlayerRosterPageProps {
@@ -120,20 +120,11 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
     const protocol = reqHeaders.get("x-forwarded-proto") ?? "http";
     const shareUrl = `${protocol}://${host}/player/${targetPlayer.id}/roster`;
 
-    // Determine default target rank for RosterView (prestige insights are hidden for other players)
-    const highest7StarRank = typedRosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
-    const effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
-
     // Calculate prestige map and top 30 average on the server to ensure correct sorting by default
-    const { prestigeMap, top30Average } = await loadRosterPrestigeInsights(typedRosterEntries, {
-        targetRank: effectiveTargetRank,
-        sigBudget: 0,
-        rankClassFilter: [],
-        sigClassFilter: [],
-        rankSagaFilter: false,
-        sigSagaFilter: false,
-        limit: 5,
-    });
+    const {
+        options: insightOptions,
+        insights: { prestigeMap, top30Average },
+    } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, {});
 
     return (
         <div className="container mx-auto p-4 sm:p-8 space-y-6">
@@ -160,17 +151,17 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
                 profiles={[]}
                 top30Average={top30Average}
                 prestigeMap={prestigeMap}
-                simulationTargetRank={effectiveTargetRank}
-                initialRankClassFilter={[]}
-                initialSigClassFilter={[]}
-                initialRankSagaFilter={false}
-                initialSigSagaFilter={false}
-                initialSigAwakenedOnly={false}
+                simulationTargetRank={insightOptions.targetRank}
+                initialRankClassFilter={insightOptions.rankClassFilter}
+                initialSigClassFilter={insightOptions.sigClassFilter}
+                initialRankSagaFilter={insightOptions.rankSagaFilter}
+                initialSigSagaFilter={insightOptions.sigSagaFilter}
+                initialSigAwakenedOnly={insightOptions.sigAwakenedOnly ?? false}
                 initialTags={tags}
                 initialAbilityCategories={abilityCategories}
                 initialAbilities={abilities}
                 initialImmunities={immunities}
-                initialLimit={5}
+                initialLimit={insightOptions.limit ?? 5}
                 canEdit={canEdit}
                 targetPlayerId={targetPlayerId}
                 shareUrl={shareUrl}

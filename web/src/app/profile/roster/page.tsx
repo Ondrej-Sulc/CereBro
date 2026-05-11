@@ -5,10 +5,9 @@ import { getUserPlayerWithAlliance, getUserProfiles } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "./types";
-import { loadRosterPrestigeInsights } from "@/lib/roster-recommendation-service";
+import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
 import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
@@ -67,22 +66,6 @@ export default async function RosterPage(props: {
   const abilities = await prisma.ability.findMany({ where: { id: { in: abilityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
   const immunities = await prisma.ability.findMany({ where: { id: { in: immunityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: 'asc' } });
 
-  // Parse initial filters for Client Component
-  const validClasses = Object.values(ChampionClass);
-  const rankClassFilterRaw = searchParams.rankClassFilter ? searchParams.rankClassFilter.split(',') : [];
-  const sigClassFilterRaw = searchParams.sigClassFilter ? searchParams.sigClassFilter.split(',') : [];
-
-  const rankClassFilter = rankClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
-  const sigClassFilter = sigClassFilterRaw.filter((c): c is ChampionClass => validClasses.includes(c as ChampionClass));
-  const rankSagaFilter = searchParams.rankSagaFilter === 'true';
-  const sigSagaFilter = searchParams.sigSagaFilter === 'true';
-  const sigAwakenedOnly = searchParams.sigAwakenedOnly === 'true';
-
-  const targetRank = searchParams.targetRank ? parseInt(searchParams.targetRank) : 0; // 0 lets the client/api decide default
-  const sigBudget = searchParams.sigBudget ? parseInt(searchParams.sigBudget) : 0;
-  const limit = searchParams.limit ? Math.min(Math.max(parseInt(searchParams.limit, 10) || 5, 1), 100) : 5;
-  const showInsights = searchParams.insights === 'true';
-
   // Safely map and type-cast the roster entries to ensure JsonValue fields match our local interfaces
   const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
     ...entry,
@@ -102,26 +85,11 @@ export default async function RosterPage(props: {
     }
   }));
 
-  // Determine default target rank if not set
-  let effectiveTargetRank = targetRank;
-  if (effectiveTargetRank === 0) {
-    const highest7StarRank = typedRosterEntries.reduce((max, r) => (r.stars === 7 ? Math.max(max, r.rank) : max), 0);
-    effectiveTargetRank = highest7StarRank > 0 ? highest7StarRank : 3;
-  }
-
-  const { prestigeMap, recommendations, sigRecommendations, top30Average } = await loadRosterPrestigeInsights(
-    typedRosterEntries,
-    {
-      targetRank: effectiveTargetRank,
-      sigBudget,
-      rankClassFilter,
-      sigClassFilter,
-      rankSagaFilter,
-      sigSagaFilter,
-      sigAwakenedOnly,
-      limit
-    }
-  );
+  const {
+    options: insightOptions,
+    insights: { prestigeMap, recommendations, sigRecommendations, top30Average },
+  } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, searchParams);
+  const showInsights = searchParams.insights === 'true';
 
   const reqHeaders = await headers();
   const host = reqHeaders.get("host") ?? "localhost:3000";
@@ -141,18 +109,18 @@ export default async function RosterPage(props: {
         prestigeMap={prestigeMap}
         recommendations={recommendations}
         sigRecommendations={sigRecommendations}
-        simulationTargetRank={effectiveTargetRank}
-        initialSigBudget={sigBudget}
-        initialRankClassFilter={rankClassFilter}
-        initialSigClassFilter={sigClassFilter}
-        initialRankSagaFilter={rankSagaFilter}
-        initialSigSagaFilter={sigSagaFilter}
-        initialSigAwakenedOnly={sigAwakenedOnly}
+        simulationTargetRank={insightOptions.targetRank}
+        initialSigBudget={insightOptions.sigBudget}
+        initialRankClassFilter={insightOptions.rankClassFilter}
+        initialSigClassFilter={insightOptions.sigClassFilter}
+        initialRankSagaFilter={insightOptions.rankSagaFilter}
+        initialSigSagaFilter={insightOptions.sigSagaFilter}
+        initialSigAwakenedOnly={insightOptions.sigAwakenedOnly ?? false}
         initialTags={tags}
         initialAbilityCategories={abilityCategories}
         initialAbilities={abilities}
         initialImmunities={immunities}
-        initialLimit={limit}
+        initialLimit={insightOptions.limit ?? 5}
         initialShowInsights={showInsights}
       />
     </div>

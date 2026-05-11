@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createMcocPrestigeProjector,
   expandMcocPrestigeCurve,
   maxAscensionLevelForRarity,
   maxSigForRarity,
@@ -75,5 +76,29 @@ describe("MCOC Prestige Projection", () => {
       rarity: 7,
       ascensionLevel: 5,
     })).toBe(36400);
+  });
+
+  it("projects by champion, rarity, and rank through an indexed lookup", () => {
+    const projector = createMcocPrestigeProjector([
+      { championId: 1, rarity: 7, rank: 3, sig: 0, prestige: 22000 },
+      { championId: 1, rarity: 7, rank: 3, sig: 1, prestige: 22100 },
+      { championId: 1, rarity: 7, rank: 3, sig: 200, prestige: 26000 },
+      { championId: 2, rarity: 7, rank: 3, sig: 0, prestige: 30000 },
+    ]);
+
+    expect(projector.project({
+      championId: 1,
+      rarity: 7,
+      rank: 3,
+      sigLevel: 1,
+      ascensionLevel: 1,
+    })).toBe(23870);
+
+    expect(projector.project({
+      championId: 2,
+      rarity: 7,
+      rank: 3,
+      sigLevel: 1,
+    })).toBe(30000);
   });
 });
