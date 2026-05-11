@@ -4,6 +4,7 @@ import logger from "@/lib/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { processRosterScreenshot, processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
+import { recordRosterUploadEvent } from "@cerebro/core/services/rosterUploadTrackingService";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { withRouteContext } from "@/lib/with-request-context";
 import { revalidatePath } from "next/cache";
@@ -51,6 +52,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
 
     // Resolve effective player — officer/admin may upload on behalf of another player
     let effectivePlayerId = player.id;
+    let effectiveAllianceId = player.allianceId;
     if (targetPlayerIdRaw && targetPlayerIdRaw !== player.id) {
       const targetPlayer = await prisma.player.findUnique({
         where: { id: targetPlayerIdRaw },
@@ -79,6 +81,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         "Officer/admin roster screenshot upload"
       );
       effectivePlayerId = targetPlayerIdRaw;
+      effectiveAllianceId = targetPlayer.allianceId;
     }
 
     logger.info({
@@ -94,6 +97,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
 
     const startTime = Date.now();
     let totalCount = 0;
+    let successfulFiles = 0;
     const errors: string[] = [];
 
     const allAdded = [];
@@ -131,6 +135,10 @@ export const POST = withRouteContext(async (req: NextRequest) => {
             const added = updateResult.champions.flat();
             totalCount += added.length;
             allAdded.push(...added);
+            successfulFiles++;
+            if (updateResult.errors?.length) {
+                errors.push(...updateResult.errors.map((error) => `File ${file.name}: ${error}`));
+            }
             logger.info({
                 playerId: effectivePlayerId,
                 fileName: file.name,
@@ -158,6 +166,30 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         errorCount: errors.length,
         duration
     }, "Completed roster update request");
+
+    await recordRosterUploadEvent({
+        source: "web",
+        mode: mode === "stats-view" ? "stats-view" : "grid-view",
+        actorPlayerId: player.id,
+        targetPlayerId: effectivePlayerId,
+        actorBotUserId: player.botUserId,
+        allianceId: effectiveAllianceId,
+        discordUserId: account.providerAccountId,
+        fileCount: files.length,
+        visionRequestCount: files.length,
+        processedChampionCount: totalCount,
+        successCount: successfulFiles,
+        errorCount: errors.length,
+        durationMs: duration,
+        errorMessages: errors,
+        metadata: {
+            targetChanged: effectivePlayerId !== player.id,
+            stars: Number.isNaN(stars) ? null : stars,
+            rank: Number.isNaN(rank) ? null : rank,
+            isAscended,
+            ascensionLevel,
+        },
+    });
 
     // Invalidate caches
     revalidatePath("/profile/roster");

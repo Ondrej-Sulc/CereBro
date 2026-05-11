@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Sword,
   LineChart,
+  Activity,
   Shield,
   Users,
   Ban,
@@ -49,6 +50,7 @@ const groups: SidebarGroup[] = [
     items: [
       { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
       { title: "Insights", href: "/admin/insights", icon: LineChart, permission: "VIEW_INSIGHTS" },
+      { title: "Usage", href: "/admin/usage", icon: Activity, permission: "VIEW_INSIGHTS" },
     ]
   },
   {

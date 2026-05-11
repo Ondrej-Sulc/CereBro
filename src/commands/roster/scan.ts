@@ -9,13 +9,14 @@ import {
   TextDisplayBuilder,
   Client,
 } from "discord.js";
-import { getActivePlayer, getPlayer, isAuthorizedToManage } from "../../utils/playerHelper";
+import { ActivePlayerWithAlliance, getActivePlayer, getPlayer, isAuthorizedToManage } from "../../utils/playerHelper";
 import { processBGViewScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleError } from "../../utils/errorHandler";
 import { config } from "../../config";
 import logger from "../../services/loggerService";
+import { recordRosterUploadEvent } from "../../services/rosterUploadTrackingService";
 
 const SCAN_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_LIST_DISPLAY_CHAMPS = 40;
@@ -109,7 +110,7 @@ export async function handleScan(
         "Processing scan message"
       );
       try {
-        await processMessage(message, targetPlayer.id, interaction.client);
+        await processMessage(message, callerPlayer, targetPlayer, interaction.client);
       } catch (error) {
         logger.error({ error, msgId: message.id }, "Error processing scan message");
         await message.reply({
@@ -129,10 +130,16 @@ export async function handleScan(
   }
 }
 
-async function processMessage(message: Message, playerId: string, client: Client) {
+async function processMessage(
+  message: Message,
+  callerPlayer: ActivePlayerWithAlliance,
+  targetPlayer: ActivePlayerWithAlliance,
+  client: Client
+) {
   // Acknowledge receipt
   const processingMsg = await message.reply("⏳ Processing images...");
   const resolveEmojis = createEmojiResolver(client);
+  const startTime = Date.now();
 
   const images = Array.from(message.attachments.values()).filter(
     (att) => att.contentType?.startsWith("image/")
@@ -152,7 +159,7 @@ async function processMessage(message: Message, playerId: string, client: Client
       const result = await processBGViewScreenshot(
         image.url,
         false, // debugMode
-        playerId
+        targetPlayer.id
       );
 
       if ("error" in result && typeof result.error === "string") {
@@ -172,7 +179,7 @@ async function processMessage(message: Message, playerId: string, client: Client
       const { userMessage } = handleError(err, {
         location: "roster scan",
         userId: message.author.id,
-        extra: { image: image.name, playerId },
+        extra: { image: image.name, playerId: targetPlayer.id },
       });
       return { success: false, error: `Error processing ${image.name}: ${userMessage}`, count: 0, added: [] };
     }
@@ -189,13 +196,38 @@ async function processMessage(message: Message, playerId: string, client: Client
   });
 
   const totalCount = allAddedChampions.length;
+  const successCount = batchResults.filter((res) => res.success).length;
+  const duration = Date.now() - startTime;
   logger.info({ 
-      userId: playerId, 
+      userId: targetPlayer.id, 
       msgId: message.id, 
       processed: batchResults.length, 
       added: totalCount, 
-      errors: globalErrors.length 
+      errors: globalErrors.length,
+      duration
   }, "Scan batch complete");
+
+  await recordRosterUploadEvent({
+      source: "discord",
+      mode: "bg-view",
+      actorPlayerId: callerPlayer.id,
+      targetPlayerId: targetPlayer.id,
+      actorBotUserId: callerPlayer.botUserId,
+      allianceId: targetPlayer.allianceId,
+      discordUserId: message.author.id,
+      fileCount: images.length,
+      visionRequestCount: images.length,
+      processedChampionCount: totalCount,
+      successCount,
+      errorCount: globalErrors.length,
+      durationMs: duration,
+      errorMessages: globalErrors,
+      metadata: {
+        messageId: message.id,
+        channelId: message.channelId,
+        targetChanged: callerPlayer.id !== targetPlayer.id,
+      },
+  });
 
   // --- Build Response with Container V2 ---
   const container = new ContainerBuilder();

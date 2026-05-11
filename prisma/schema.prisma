@@ -262,6 +262,7 @@ model BotUser {
   activeProfileId   String?
   profiles          Player[]
   createdQuestPlans QuestPlan[]       @relation("QuestPlanCreators")
+  rosterUploadEvents RosterUploadEvent[]
   supportDonations  SupportDonation[]
 }
 
@@ -298,6 +299,8 @@ model Player {
   defensePlacements  WarDefensePlacement[]
   extraChampions     WarExtraChampion[]
   playedInFights     WarFight[]                  @relation("PlayerInFight")
+  rosterUploadsAsActor  RosterUploadEvent[]         @relation("RosterUploadActor")
+  rosterUploadsAsTarget RosterUploadEvent[]         @relation("RosterUploadTarget")
   submittedVideos    WarVideo[]                  @relation("SubmittedBy")
   supportDonations   SupportDonation[]
 
@@ -385,6 +388,7 @@ model Alliance {
   config                 AllianceConfig?
   membershipRequests     AllianceMembershipRequest[]
   members                Player[]
+  rosterUploadEvents     RosterUploadEvent[]
   wars                   War[]
   defensePlans           WarDefensePlan[]
 }
@@ -465,6 +469,40 @@ model Roster {
   @@unique([playerId, championId, stars])
   @@index([playerId])
   @@index([championId])
+}
+
+model RosterUploadEvent {
+  id                     String    @id @default(cuid())
+  source                 String
+  mode                   String
+  status                 String
+  fileCount              Int
+  visionRequestCount     Int       @default(0)
+  processedChampionCount Int       @default(0)
+  successCount           Int       @default(0)
+  errorCount             Int       @default(0)
+  durationMs             Int?
+  errorMessages          String[]  @default([])
+  metadata               Json?
+  discordUserId          String?
+  actorPlayerId          String?
+  targetPlayerId         String?
+  actorBotUserId         String?
+  allianceId             String?
+  createdAt              DateTime  @default(now())
+  actorPlayer            Player?   @relation("RosterUploadActor", fields: [actorPlayerId], references: [id], onDelete: SetNull)
+  targetPlayer           Player?   @relation("RosterUploadTarget", fields: [targetPlayerId], references: [id], onDelete: SetNull)
+  actorBotUser           BotUser?  @relation(fields: [actorBotUserId], references: [id], onDelete: SetNull)
+  alliance               Alliance? @relation(fields: [allianceId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([source, mode, createdAt])
+  @@index([status, createdAt])
+  @@index([actorPlayerId, createdAt])
+  @@index([targetPlayerId, createdAt])
+  @@index([actorBotUserId, createdAt])
+  @@index([allianceId, createdAt])
+  @@index([discordUserId, createdAt])
 }
 
 model War {

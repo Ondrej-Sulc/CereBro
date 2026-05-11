@@ -12,6 +12,7 @@ import { processRosterScreenshot } from "./ocr/process";
 import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleError } from "../../utils/errorHandler";
+import { recordRosterUploadEvent } from "../../services/rosterUploadTrackingService";
 
 export async function handleUpdate(
   interaction: ChatInputCommandInteraction
@@ -63,6 +64,7 @@ export async function handleUpdate(
     return;
   }
 
+  const startTime = Date.now();
   let allAddedChampions: RosterWithChampion[][] = [];
   const errorMessages: string[] = [];
 
@@ -93,14 +95,43 @@ export async function handleUpdate(
 
   const results = await Promise.all(promises);
 
+  let successCount = 0;
   results.forEach((result) => {
     if (result) {
       if ("error" in result && typeof result.error === "string") {
         errorMessages.push(result.error);
       } else {
+        successCount++;
         allAddedChampions.push(...(result as RosterUpdateResult).champions);
       }
     }
+  });
+
+  const totalCount = allAddedChampions.flat().length;
+  await recordRosterUploadEvent({
+    source: "discord",
+    mode: "grid-view",
+    actorPlayerId: callerPlayer.id,
+    targetPlayerId: player.id,
+    actorBotUserId: callerPlayer.botUserId,
+    allianceId: player.allianceId,
+    discordUserId: interaction.user.id,
+    fileCount: images.length,
+    visionRequestCount: images.length,
+    processedChampionCount: totalCount,
+    successCount,
+    errorCount: errorMessages.length,
+    durationMs: Date.now() - startTime,
+    errorMessages,
+    metadata: {
+      interactionId: interaction.id,
+      channelId: interaction.channelId,
+      targetChanged: callerPlayer.id !== player.id,
+      stars,
+      rank,
+      isAscended,
+      ascensionLevel,
+    },
   });
 
   const container = new ContainerBuilder();
@@ -119,7 +150,7 @@ export async function handleUpdate(
   container.addTextDisplayComponents(title);
 
   const summary = new TextDisplayBuilder().setContent(
-    `Total champions added/updated: ${allAddedChampions.flat().length}`
+    `Total champions added/updated: ${totalCount}`
   );
   container.addTextDisplayComponents(summary);
 
