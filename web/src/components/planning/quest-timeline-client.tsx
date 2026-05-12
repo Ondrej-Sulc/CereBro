@@ -31,7 +31,9 @@ import {
 } from "./types";
 import {
     isChampionValidForEncounterOrQuest,
-    getValidRosterCountForChampion
+    getValidRosterCountForChampion,
+    questEncounterSelectionConflictReason,
+    wouldExceedQuestTeamLimit
 } from "./utils";
 
 import type { ChampionClass } from "@prisma/client";
@@ -681,6 +683,32 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         return next;
     }, [activeEncounterIds, prefightSelections]);
 
+    const activeQuestAssignments = useMemo(() => {
+        const encounterIds = new Set([
+            ...Object.keys(activeSelections),
+            ...Object.keys(activePrefightSelections),
+        ]);
+
+        return Array.from(encounterIds).map(questEncounterId => {
+            const selectedRosterId = activeSelections[questEncounterId];
+            const prefightRosterId = activePrefightSelections[questEncounterId];
+            return {
+                questEncounterId,
+                selectedChampionId: selectedRosterId
+                    ? roster.find(entry => entry.id === selectedRosterId)?.championId ?? null
+                    : null,
+                prefightChampionId: prefightRosterId
+                    ? roster.find(entry => entry.id === prefightRosterId)?.championId ?? null
+                    : null,
+            };
+        });
+    }, [activeSelections, activePrefightSelections, roster]);
+
+    const activeSynergyChampions = useMemo(
+        () => synergyIds.map(championId => ({ championId })),
+        [synergyIds]
+    );
+
     const activeRevivesTotal = useMemo(() => {
         return Object.entries(revivesByEncounterId).reduce((total, [encounterId, revivesUsed]) => {
             return activeEncounterIds.has(encounterId) ? total + revivesUsed : total;
@@ -1067,8 +1095,13 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         const prefightRosterId = prefightSelections[encounterId];
         const prefightChampionId = prefightRosterId ? roster.find(r => r.id === prefightRosterId)?.championId : null;
 
-        if (prefightChampionId === championId && previousRosterId !== rosterId) {
-            toast({ title: "Invalid Counter", description: "Counter champion must be different from the prefight champion for this fight.", variant: "destructive" });
+        const conflictReason = questEncounterSelectionConflictReason({
+            field: "selectedChampionId",
+            candidateChampionId: championId,
+            prefightChampionId,
+        });
+        if (conflictReason && previousRosterId !== rosterId) {
+            toast({ title: "Invalid Counter", description: conflictReason, variant: "destructive" });
             return;
         }
 
@@ -1078,17 +1111,16 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             const isAlreadyInTeam = Object.values(activeSelections).includes(rosterId) || Object.values(activePrefightSelections).includes(rosterId);
 
             if (quest.teamLimit !== null) {
-                // Check if the CHAMPION is already in the team (either as counter or synergy)
-                const isChampInTeam = Object.values(activeSelections).some(rid => {
-                    if (!rid) return false;
-                    return roster.find(r => r.id === rid)?.championId === championId;
-                }) || Object.values(activePrefightSelections).some(rid => {
-                    if (!rid) return false;
-                    return roster.find(r => r.id === rid)?.championId === championId;
-                }) || synergyIds.includes(championId);
-
-                // If they aren't in the team, and adding them would exceed the limit, block it
-                if (!isChampInTeam && selectedTeam.length >= quest.teamLimit) {
+                if (wouldExceedQuestTeamLimit({
+                    teamLimit: quest.teamLimit,
+                    encounters: activeQuestAssignments,
+                    synergyChampions: activeSynergyChampions,
+                    replacement: {
+                        field: "selectedChampionId",
+                        questEncounterId: encounterId,
+                        championId,
+                    },
+                })) {
                     toast({
                         title: "Team Limit Reached",
                         description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
@@ -1148,8 +1180,13 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         const counterRosterId = selections[encounterId];
         const counterChampionId = counterRosterId ? roster.find(r => r.id === counterRosterId)?.championId : null;
 
-        if (counterChampionId === championId && previousRosterId !== rosterId) {
-            toast({ title: "Invalid Prefight", description: "Prefight champion must be different from the counter for this fight.", variant: "destructive" });
+        const conflictReason = questEncounterSelectionConflictReason({
+            field: "prefightChampionId",
+            candidateChampionId: championId,
+            selectedChampionId: counterChampionId,
+        });
+        if (conflictReason && previousRosterId !== rosterId) {
+            toast({ title: "Invalid Prefight", description: conflictReason, variant: "destructive" });
             return;
         }
 
@@ -1157,15 +1194,16 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             const isAlreadyInTeam = Object.values(activeSelections).includes(rosterId) || Object.values(activePrefightSelections).includes(rosterId);
 
             if (quest.teamLimit !== null) {
-                const isChampInTeam = Object.values(activeSelections).some(rid => {
-                    if (!rid) return false;
-                    return roster.find(r => r.id === rid)?.championId === championId;
-                }) || Object.values(activePrefightSelections).some(rid => {
-                    if (!rid) return false;
-                    return roster.find(r => r.id === rid)?.championId === championId;
-                }) || synergyIds.includes(championId);
-
-                if (!isChampInTeam && selectedTeam.length >= quest.teamLimit) {
+                if (wouldExceedQuestTeamLimit({
+                    teamLimit: quest.teamLimit,
+                    encounters: activeQuestAssignments,
+                    synergyChampions: activeSynergyChampions,
+                    replacement: {
+                        field: "prefightChampionId",
+                        questEncounterId: encounterId,
+                        championId,
+                    },
+                })) {
                     toast({
                         title: "Team Limit Reached",
                         description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
@@ -1241,24 +1279,21 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
     const handleSelectSynergy = async (championId: number) => {
         const isRemoving = synergyIds.includes(championId);
         
-        if (!isRemoving && quest.teamLimit !== null && selectedTeam.length >= quest.teamLimit) {
-            // Check if they are already in the team as a counter
-            const isAlreadyInTeam = Object.values(activeSelections).some(rid => {
-                if (!rid) return false;
-                return roster.find(r => r.id === rid)?.championId === championId;
-            }) || Object.values(activePrefightSelections).some(rid => {
-                if (!rid) return false;
-                return roster.find(r => r.id === rid)?.championId === championId;
+        if (!isRemoving && quest.teamLimit !== null && wouldExceedQuestTeamLimit({
+            teamLimit: quest.teamLimit,
+            encounters: activeQuestAssignments,
+            synergyChampions: activeSynergyChampions,
+            replacement: {
+                field: "synergyChampionId",
+                championId,
+            },
+        })) {
+            toast({
+                title: "Team Limit Reached",
+                description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
+                variant: "destructive"
             });
-
-            if (!isAlreadyInTeam) {
-                toast({
-                    title: "Team Limit Reached",
-                    description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
-                    variant: "destructive"
-                });
-                return;
-            }
+            return;
         }
 
         setSynergyIds(prev => isRemoving 

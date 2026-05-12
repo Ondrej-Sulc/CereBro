@@ -18,6 +18,12 @@ Champion Ability Text is the domain rule set for validating imported game abilit
 
 It owns template shape, curve matching, static value resolution, game-stat value conversion, unresolved placeholder reporting, and chart-ready ability curve points used by Champion Details.
 
+## Quest Planning
+
+Quest Planning is the domain rule set for turning quest plans, route choices, fight restrictions, player rosters, selected counters, prefight champions, synergy champions, and revive counts into a player's saved quest plan.
+
+It owns quest and fight restriction matching, owned and unowned champion availability, team-limit simulation, counter and prefight conflict rules, route-aware progress, and user-facing rejection reasons used by the quest timeline and quest planning server actions.
+
 ## Website Observability
 
 Website Observability is the domain rule set for turning website requests, server actions, client errors, and product interactions into searchable logs, PostHog events, error reports, and dashboard metrics.

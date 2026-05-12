@@ -8,6 +8,12 @@ import { ChampionClass, EncounterDifficulty, QuestPlanStatus } from "@prisma/cli
 import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
 import { QuestWithRelations, QuestSummary } from "@/types/quests";
 import { withActionContext } from "@/lib/with-request-context";
+import {
+    questEncounterSelectionConflictReason,
+    validateOwnedChampionForQuestSelection,
+    wouldExceedQuestTeamLimit,
+    type QuestSelectionField,
+} from "@/lib/player-quest-selection";
 
 // --- Quest Categories ---
 
@@ -2165,30 +2171,22 @@ async function validateQuestChampionSelection(playerId: string, questPlanId: str
 
     if (!quest) throw new Error("Quest plan not found.");
     if (!encounter || encounter.questPlanId !== questPlanId) throw new Error("Invalid quest encounter or plan mismatch.");
-    const rosterEntry = rosterEntries[0];
-    if (!rosterEntry) throw new Error("Champion not found in your roster.");
     if (!champion) throw new Error("Champion not found.");
 
-    if (quest.minStarLevel && rosterEntry.stars < quest.minStarLevel) throw new Error(`Quest requires minimum ${quest.minStarLevel} stars.`);
-    if (quest.maxStarLevel && rosterEntry.stars > quest.maxStarLevel) throw new Error(`Quest requires maximum ${quest.maxStarLevel} stars.`);
-    if (encounter.minStarLevel && rosterEntry.stars < encounter.minStarLevel) throw new Error(`Fight requires minimum ${encounter.minStarLevel} stars.`);
-    if (encounter.maxStarLevel && rosterEntry.stars > encounter.maxStarLevel) throw new Error(`Fight requires maximum ${encounter.maxStarLevel} stars.`);
-    if (quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(champion.class)) throw new Error(`Quest requires class: ${quest.requiredClasses.join(", ")}`);
-    if (encounter.requiredClasses.length > 0 && !encounter.requiredClasses.includes(champion.class)) throw new Error(`Fight requires class: ${encounter.requiredClasses.join(", ")}`);
-
-    if (quest.requiredTags.length > 0) {
-        const hasAllTags = quest.requiredTags.every(qt => champion.tags.some(ct => ct.id === qt.id));
-        if (!hasAllTags) throw new Error(`Quest requires champions with all of: ${quest.requiredTags.map(t => t.name).join(", ")}`);
-    }
-    if (encounter.requiredTags.length > 0) {
-        const hasAllTags = encounter.requiredTags.every(qt => champion.tags.some(ct => ct.id === qt.id));
-        if (!hasAllTags) throw new Error(`Fight requires champions with all of: ${encounter.requiredTags.map(t => t.name).join(", ")}`);
+    const validation = validateOwnedChampionForQuestSelection({
+        rosterEntries,
+        champion,
+        quest,
+        encounter,
+    });
+    if (!validation.valid) {
+        throw new Error(validation.reason);
     }
 
     return quest;
 }
 
-async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number | null, candidateChampionId: number | null, replacement: { questEncounterId: string; field: "selectedChampionId" | "prefightChampionId" }) {
+async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number | null, candidateChampionId: number | null, replacement: { questEncounterId?: string; field: QuestSelectionField }) {
     if (teamLimit === null || candidateChampionId === null) return;
 
     const planDetails = await prisma.playerQuestPlan.findUnique({
@@ -2205,21 +2203,15 @@ async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number
         }
     });
 
-    const uniqueChamps = new Set<number>();
-    planDetails?.encounters.forEach(encounter => {
-        const selectedId = replacement.questEncounterId === encounter.questEncounterId && replacement.field === "selectedChampionId"
-            ? candidateChampionId
-            : encounter.selectedChampionId;
-        const prefightId = replacement.questEncounterId === encounter.questEncounterId && replacement.field === "prefightChampionId"
-            ? candidateChampionId
-            : encounter.prefightChampionId;
-        if (selectedId !== null) uniqueChamps.add(selectedId);
-        if (prefightId !== null) uniqueChamps.add(prefightId);
-    });
-    planDetails?.synergyChampions.forEach(synergy => uniqueChamps.add(synergy.championId));
-    uniqueChamps.add(candidateChampionId);
-
-    if (uniqueChamps.size > teamLimit) {
+    if (wouldExceedQuestTeamLimit({
+        teamLimit,
+        encounters: planDetails?.encounters ?? [],
+        synergyChampions: planDetails?.synergyChampions ?? [],
+        replacement: {
+            ...replacement,
+            championId: candidateChampionId,
+        },
+    })) {
         throw new Error(`Team limit of ${teamLimit} reached.`);
     }
 }
@@ -2268,9 +2260,12 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
         select: { prefightChampionId: true, revivesUsed: true }
     });
 
-    if (selectedChampionId !== null && existingEncounter?.prefightChampionId === selectedChampionId) {
-        throw new Error("Counter and prefight champion must be different for the same fight.");
-    }
+    const counterConflict = questEncounterSelectionConflictReason({
+        field: "selectedChampionId",
+        candidateChampionId: selectedChampionId,
+        prefightChampionId: existingEncounter?.prefightChampionId,
+    });
+    if (counterConflict) throw new Error(counterConflict);
 
     await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, selectedChampionId, { questEncounterId, field: "selectedChampionId" });
 
@@ -2360,9 +2355,12 @@ export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQues
         select: { selectedChampionId: true }
     });
 
-    if (prefightChampionId !== null && existingEncounter?.selectedChampionId === prefightChampionId) {
-        throw new Error("Counter and prefight champion must be different for the same fight.");
-    }
+    const prefightConflict = questEncounterSelectionConflictReason({
+        field: "prefightChampionId",
+        candidateChampionId: prefightChampionId,
+        selectedChampionId: existingEncounter?.selectedChampionId,
+    });
+    if (prefightConflict) throw new Error(prefightConflict);
 
     await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, prefightChampionId, { questEncounterId, field: "prefightChampionId" });
 
@@ -2553,9 +2551,6 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
                 { rank: 'desc' }
             ]
         });
-        const hasChampion = rosterEntries[0];
-        if (!hasChampion) throw new Error("Champion not found in your roster.");
-
         const quest = await prisma.questPlan.findUnique({
             where: { id: questPlanId },
             include: { requiredTags: true }
@@ -2568,43 +2563,16 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
         });
         if (!champ) throw new Error("Champion not found.");
 
-        // Check quest invariants against the BEST version of this champion they own
-        if (quest.minStarLevel && hasChampion.stars < quest.minStarLevel) throw new Error(`Quest requires minimum ${quest.minStarLevel}★`);
-        if (quest.maxStarLevel && hasChampion.stars > quest.maxStarLevel) throw new Error(`Quest requires maximum ${quest.maxStarLevel}★`);
-        if (quest.requiredClasses.length > 0 && !quest.requiredClasses.includes(champ.class)) throw new Error(`Quest requires class: ${quest.requiredClasses.join(", ")}`);
-        
-        if (quest.requiredTags.length > 0) {
-            const hasAllTags = quest.requiredTags.every(qt => champ.tags.some(ct => ct.id === qt.id));
-            if (!hasAllTags) {
-                const tagNames = quest.requiredTags.map(t => t.name).join(", ");
-                throw new Error(`Quest requires champions with all of: ${tagNames}`);
-            }
+        const validation = validateOwnedChampionForQuestSelection({
+            rosterEntries,
+            champion: champ,
+            quest,
+        });
+        if (!validation.valid) {
+            throw new Error(validation.reason);
         }
 
-        if (quest.teamLimit !== null) {
-            const planDetails = await prisma.playerQuestPlan.findUnique({
-                where: { id: playerPlan.id },
-                include: {
-                    encounters: {
-                        where: {
-                            OR: [
-                                { selectedChampionId: { not: null } },
-                                { prefightChampionId: { not: null } }
-                            ]
-                        }
-                    },
-                    synergyChampions: true
-                }
-            });
-            const encounterChamps = planDetails?.encounters.map(e => e.selectedChampionId).filter(id => id !== null) || [];
-            const prefightChamps = planDetails?.encounters.map(e => e.prefightChampionId).filter(id => id !== null) || [];
-            const synergyChamps = planDetails?.synergyChampions.map(s => s.championId) || [];
-            const uniqueChamps = new Set([...encounterChamps, ...prefightChamps, ...synergyChamps]);
-            
-            if (!uniqueChamps.has(championId) && uniqueChamps.size >= quest.teamLimit) {
-                throw new Error(`Team limit of ${quest.teamLimit} reached.`);
-            }
-        }
+        await assertQuestTeamLimit(playerPlan.id, quest.teamLimit, championId, { field: "synergyChampionId" });
 
         await prisma.playerQuestSynergyChampion.upsert({
             where: {
