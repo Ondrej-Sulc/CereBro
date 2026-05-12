@@ -165,8 +165,25 @@ function sortEncounterNodes(nodes: EncounterNodeWithRelations[]): EncounterNodeW
     return [...nodes].sort((a, b) => {
         const highlightedCompare = Number(b.isHighlighted) - Number(a.isHighlighted);
         if (highlightedCompare !== 0) return highlightedCompare;
-        return a.nodeModifier.name.localeCompare(b.nodeModifier.name);
+
+        const nameCompare = compareStableText(a.nodeModifier.name, b.nodeModifier.name);
+        if (nameCompare !== 0) return nameCompare;
+
+        const modifierCompare = compareStableText(a.nodeModifierId, b.nodeModifierId);
+        if (modifierCompare !== 0) return modifierCompare;
+
+        return compareStableText(a.id, b.id);
     });
+}
+
+function compareStableText(a: string, b: string): number {
+    const left = a.toLowerCase();
+    const right = b.toLowerCase();
+    if (left < right) return -1;
+    if (left > right) return 1;
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
 }
 
 export function ReviveOrbIcon({ className }: { className?: string }) {

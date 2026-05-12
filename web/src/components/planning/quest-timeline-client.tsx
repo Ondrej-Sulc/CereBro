@@ -46,6 +46,20 @@ import { reportClientError } from "@/lib/observability/client";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
 type QuestRouteSectionWithRelations = NonNullable<QuestTimelineProps["quest"]["routeSections"]>[number];
+const EMPTY_ROSTER: NonNullable<QuestTimelineProps["roster"]> = [];
+const EMPTY_SAVED_ENCOUNTERS: NonNullable<QuestTimelineProps["savedEncounters"]> = [];
+const EMPTY_SAVED_ROUTE_CHOICES: NonNullable<QuestTimelineProps["savedRouteChoices"]> = [];
+const EMPTY_SAVED_SYNERGIES: NonNullable<QuestTimelineProps["savedSynergies"]> = [];
+const EMPTY_POPULAR_COUNTERS: NonNullable<QuestTimelineProps["popularCounters"]> = {};
+const EMPTY_FEATURED_PICKS: NonNullable<QuestTimelineProps["featuredPicks"]> = {};
+const EMPTY_ALLIANCE_PICKS: NonNullable<QuestTimelineProps["alliancePicks"]> = {};
+const EMPTY_FILTER_METADATA: NonNullable<QuestTimelineProps["filterMetadata"]> = {
+    tags: [],
+    abilityCategories: [],
+    abilities: [],
+    immunities: []
+};
+const EMPTY_ROSTER_MAP: NonNullable<QuestTimelineProps["rosterMap"]> = {};
 
 const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: { 
     user: { name: string; avatar: string | null };
@@ -307,7 +321,7 @@ const isChampionUnavailableForEncounter = ({
     return otherSelectionsCount >= validRosterCount;
 };
 
-export default function QuestTimelineClient({ quest, roster = [], savedEncounters = [], savedRouteChoices = [], savedSynergies = [], popularCounters = {}, featuredPicks = {}, alliancePicks = {}, filterMetadata = { tags: [], abilityCategories: [], abilities: [], immunities: [] }, readOnly = false, rosterMap = {}, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
+export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, savedEncounters = EMPTY_SAVED_ENCOUNTERS, savedRouteChoices = EMPTY_SAVED_ROUTE_CHOICES, savedSynergies = EMPTY_SAVED_SYNERGIES, popularCounters = EMPTY_POPULAR_COUNTERS, featuredPicks = EMPTY_FEATURED_PICKS, alliancePicks = EMPTY_ALLIANCE_PICKS, filterMetadata = EMPTY_FILTER_METADATA, readOnly = false, rosterMap = EMPTY_ROSTER_MAP, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -697,8 +711,9 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
         const startEl = routeStartRef.current;
         const endEl = routeEndRef.current;
         if (!mapEl || !startEl || !endEl || selectedRoutePathIds.length === 0) {
-            setRouteConnectorPaths([]);
-            setRouteMapSize({ width: mapEl?.scrollWidth || 0, height: mapEl?.scrollHeight || 0 });
+            const nextSize = { width: mapEl?.scrollWidth || 0, height: mapEl?.scrollHeight || 0 };
+            setRouteConnectorPaths(prev => prev.length === 0 ? prev : []);
+            setRouteMapSize(prev => prev.width === nextSize.width && prev.height === nextSize.height ? prev : nextSize);
             return;
         }
 
@@ -725,18 +740,25 @@ export default function QuestTimelineClient({ quest, roster = [], savedEncounter
             { from: toPoint(selectedRects[selectedRects.length - 1], "right"), to: toPoint(endRect, "left") }
         ];
 
-        setRouteConnectorPaths(segments.map(({ from, to }) => {
+        const nextPaths = segments.map(({ from, to }) => {
             const controlOffset = Math.min(96, Math.max(24, Math.abs(to.x - from.x) / 2));
             return `M ${from.x} ${from.y} C ${from.x + controlOffset} ${from.y}, ${to.x - controlOffset} ${to.y}, ${to.x} ${to.y}`;
-        }));
-        setRouteMapSize({ width: mapEl.scrollWidth, height: mapEl.scrollHeight });
+        });
+        const nextSize = { width: mapEl.scrollWidth, height: mapEl.scrollHeight };
+
+        setRouteConnectorPaths(prev =>
+            prev.length === nextPaths.length && prev.every((path, index) => path === nextPaths[index])
+                ? prev
+                : nextPaths
+        );
+        setRouteMapSize(prev => prev.width === nextSize.width && prev.height === nextSize.height ? prev : nextSize);
     }, [selectedRoutePathIds]);
 
     useEffect(() => {
         updateRouteConnectorGeometry();
         window.addEventListener("resize", updateRouteConnectorGeometry);
         return () => window.removeEventListener("resize", updateRouteConnectorGeometry);
-    }, [updateRouteConnectorGeometry, visibleRouteSections]);
+    }, [updateRouteConnectorGeometry]);
 
     const renderRoutePathCard = (
         sectionId: string,
