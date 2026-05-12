@@ -24,6 +24,8 @@ Quest Planning is the domain rule set for turning quest plans, route choices, fi
 
 It owns quest and fight restriction matching, owned and unowned champion availability, team-limit simulation, counter and prefight conflict rules, route-aware progress, and user-facing rejection reasons used by the quest timeline and quest planning server actions.
 
+Quest Planning Projection is the render-ready view of a player's route-aware plan. It owns visible route sections, active encounters, active assignments, selected team members, route summaries, and revive totals before the quest timeline renders them.
+
 ## Website Observability
 
 Website Observability is the domain rule set for turning website requests, server actions, client errors, and product interactions into searchable logs, PostHog events, error reports, and dashboard metrics.
