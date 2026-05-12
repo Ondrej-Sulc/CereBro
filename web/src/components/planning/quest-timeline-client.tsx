@@ -1103,7 +1103,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
 
         try {
-            await savePlayerQuestCounter(quest.id, encounterId, newChampValue);
+            await savePlayerQuestCounter(quest.id, encounterId, newChampValue, routeChoices);
         } catch (error) {
             reportClientError("quest_timeline_save_counter", error, {
                 quest_id: quest.id,
@@ -1170,7 +1170,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         setPrefightSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
         try {
-            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue);
+            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue, routeChoices);
         } catch (error) {
             reportClientError("quest_timeline_save_prefight", error, {
                 quest_id: quest.id,
@@ -1245,7 +1245,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         );
 
         try {
-            await savePlayerQuestSynergy(quest.id, championId, isRemoving);
+            await savePlayerQuestSynergy(quest.id, championId, isRemoving, routeChoices);
         } catch (error) {
             reportClientError("quest_timeline_save_synergy", error, {
                 quest_id: quest.id,
@@ -2297,8 +2297,8 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                                 quest={quest}
                                 expandedId={expandedId}
                                 toggleExpand={toggleExpand}
-                                selections={selections}
-                                prefightSelections={prefightSelections}
+                                selections={activeSelections}
+                                prefightSelections={activePrefightSelections}
                                 revivesUsed={revivesByEncounterId[encounter.id] || 0}
                                 onSetRevives={handleSetRevives}
                                 readOnly={readOnly}

@@ -114,6 +114,7 @@ interface RosterSelectorProps {
     encounter: EncounterWithRelations;
     quest: QuestWithRelations;
     selections: Record<string, string | null>;
+    prefightSelections: Record<string, string | null>;
     rosterState: EncounterRosterState;
     filterState: EncounterFilterState;
 }
@@ -587,6 +588,7 @@ function RosterSelector({
     encounter,
     quest,
     selections,
+    prefightSelections,
     rosterState,
     filterState
 }: RosterSelectorProps) {
@@ -625,6 +627,10 @@ function RosterSelector({
         setImmunityLogic,
         clearAllFilters
     } = filterState;
+    const activeAssignmentIds = new Set([
+        ...Object.values(selections).filter((id): id is string => Boolean(id)),
+        ...Object.values(prefightSelections).filter((id): id is string => Boolean(id)),
+    ]);
 
     return (
         <div className="pt-6 mt-4 border-t border-slate-800/50">
@@ -811,11 +817,13 @@ function RosterSelector({
                                         return true;
                                     });
                                     if (quest.teamLimit === null) {
-                                        const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-                                            if (encId !== encounter.id && rid !== null) {
-                                                const rosterEntry = roster.find(re => re.id === rid);
-                                                if (rosterEntry) acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
-                                            }
+                                        const otherSelectionsCount = [
+                                            ...Object.entries(selections),
+                                            ...Object.entries(prefightSelections),
+                                        ].reduce((acc, [encId, rid]) => {
+                                            if (encId === encounter.id || rid === null) return acc;
+                                            const rosterEntry = roster.find(re => re.id === rid);
+                                            if (rosterEntry) acc[rosterEntry.championId] = (acc[rosterEntry.championId] || 0) + 1;
                                             return acc;
                                         }, {} as Record<number, number>);
                                         const availableCount = encounterRoster.reduce((acc, r) => {
@@ -854,7 +862,7 @@ function RosterSelector({
                                                 {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
                                                     const isSelected = selections[encounter.id] === r.id;
                                                     const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
-                                                    const isInTeam = Object.values(selections).includes(r.id);
+                                                    const isInTeam = activeAssignmentIds.has(r.id);
                                                     return (
                                                         <div
                                                             key={r.id}
@@ -1413,6 +1421,7 @@ function EncounterExpandedContent({
                     encounter={encounter}
                     quest={quest}
                     selections={selections}
+                    prefightSelections={prefightSelections}
                     rosterState={rosterState}
                     filterState={filterState}
                 />

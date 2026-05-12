@@ -14,6 +14,12 @@ import {
     wouldExceedQuestTeamLimit,
     type QuestSelectionField,
 } from "@/lib/player-quest-selection";
+import {
+    createInitialQuestRouteChoices,
+    getRouteFilteredQuestEncounters,
+    getVisibleQuestRouteSections,
+    type QuestPlanningRouteChoices,
+} from "@/lib/quest-planning-projection";
 
 // --- Quest Categories ---
 
@@ -2186,7 +2192,13 @@ async function validateQuestChampionSelection(playerId: string, questPlanId: str
     return quest;
 }
 
-async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number | null, candidateChampionId: number | null, replacement: { questEncounterId?: string; field: QuestSelectionField }) {
+async function assertQuestTeamLimit(
+    playerQuestPlanId: string,
+    teamLimit: number | null,
+    candidateChampionId: number | null,
+    replacement: { questEncounterId?: string; field: QuestSelectionField },
+    routeChoicesOverride?: QuestPlanningRouteChoices
+) {
     if (teamLimit === null || candidateChampionId === null) return;
 
     const planDetails = await prisma.playerQuestPlan.findUnique({
@@ -2196,17 +2208,76 @@ async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number
                 select: {
                     questEncounterId: true,
                     selectedChampionId: true,
-                    prefightChampionId: true
+                    prefightChampionId: true,
+                    questEncounter: {
+                        select: {
+                            id: true,
+                            routePathId: true,
+                            sequence: true,
+                        }
+                    }
                 }
             },
-            synergyChampions: true
+            synergyChampions: true,
+            routeChoices: true,
+            questPlan: {
+                select: {
+                    encounters: {
+                        select: {
+                            id: true,
+                            routePathId: true,
+                            sequence: true,
+                        }
+                    },
+                    routeSections: {
+                        orderBy: { order: "asc" },
+                        select: {
+                            id: true,
+                            title: true,
+                            parentPathId: true,
+                            paths: {
+                                orderBy: { order: "asc" },
+                                select: {
+                                    id: true,
+                                    title: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     });
+    if (!planDetails) return;
+
+    const savedRouteChoices = createInitialQuestRouteChoices({
+        routeSections: planDetails.questPlan.routeSections,
+        savedRouteChoices: planDetails.routeChoices,
+    });
+    const routeChoices = routeChoicesOverride
+        ? sanitizeQuestRouteChoices(planDetails.questPlan.routeSections, {
+            ...savedRouteChoices,
+            ...routeChoicesOverride,
+        })
+        : savedRouteChoices;
+    const visibleRouteSections = getVisibleQuestRouteSections({
+        routeSections: planDetails.questPlan.routeSections,
+        routeChoices,
+    });
+    const activeEncounterIds = new Set(getRouteFilteredQuestEncounters({
+        encounters: planDetails.questPlan.encounters,
+        routeSections: planDetails.questPlan.routeSections,
+        visibleRouteSections,
+        routeChoices,
+    }).map(encounter => encounter.id));
+    const activeEncounters = planDetails.encounters
+        .filter(encounter => activeEncounterIds.has(encounter.questEncounterId))
+        .map(({ questEncounter: _questEncounter, ...encounter }) => encounter);
 
     if (wouldExceedQuestTeamLimit({
         teamLimit,
-        encounters: planDetails?.encounters ?? [],
-        synergyChampions: planDetails?.synergyChampions ?? [],
+        encounters: activeEncounters,
+        synergyChampions: planDetails.synergyChampions,
         replacement: {
             ...replacement,
             championId: candidateChampionId,
@@ -2216,7 +2287,21 @@ async function assertQuestTeamLimit(playerQuestPlanId: string, teamLimit: number
     }
 }
 
-export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter', async (questPlanId: string, questEncounterId: string, selectedChampionId: number | null) => {
+function sanitizeQuestRouteChoices(
+    routeSections: Array<{ id: string; paths: Array<{ id: string }> }>,
+    choices: QuestPlanningRouteChoices
+) {
+    const sanitized: QuestPlanningRouteChoices = {};
+    for (const section of routeSections) {
+        const choice = choices[section.id];
+        if (choice && section.paths.some(path => path.id === choice)) {
+            sanitized[section.id] = choice;
+        }
+    }
+    return sanitized;
+}
+
+export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter', async (questPlanId: string, questEncounterId: string, selectedChampionId: number | null, routeChoices?: QuestPlanningRouteChoices) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -2267,7 +2352,7 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
     });
     if (counterConflict) throw new Error(counterConflict);
 
-    await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, selectedChampionId, { questEncounterId, field: "selectedChampionId" });
+    await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, selectedChampionId, { questEncounterId, field: "selectedChampionId" }, routeChoices);
 
     await prisma.playerQuestEncounter.upsert({
         where: {
@@ -2313,7 +2398,7 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
     return { success: true };
 });
 
-export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQuestPrefightChampion', async (questPlanId: string, questEncounterId: string, prefightChampionId: number | null) => {
+export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQuestPrefightChampion', async (questPlanId: string, questEncounterId: string, prefightChampionId: number | null, routeChoices?: QuestPlanningRouteChoices) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -2362,7 +2447,7 @@ export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQues
     });
     if (prefightConflict) throw new Error(prefightConflict);
 
-    await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, prefightChampionId, { questEncounterId, field: "prefightChampionId" });
+    await assertQuestTeamLimit(playerPlan.id, questForLimit?.teamLimit ?? null, prefightChampionId, { questEncounterId, field: "prefightChampionId" }, routeChoices);
 
     await prisma.playerQuestEncounter.upsert({
         where: {
@@ -2513,7 +2598,7 @@ export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', 
  * Save or remove a synergy champion for a player's quest plan.
  * Synergy champions are not assigned to any specific encounter but count towards the team limit.
  */
-export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy', async (questPlanId: string, championId: number, isRemoving: boolean = false) => {
+export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy', async (questPlanId: string, championId: number, isRemoving: boolean = false, routeChoices?: QuestPlanningRouteChoices) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
@@ -2572,7 +2657,7 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
             throw new Error(validation.reason);
         }
 
-        await assertQuestTeamLimit(playerPlan.id, quest.teamLimit, championId, { field: "synergyChampionId" });
+        await assertQuestTeamLimit(playerPlan.id, quest.teamLimit, championId, { field: "synergyChampionId" }, routeChoices);
 
         await prisma.playerQuestSynergyChampion.upsert({
             where: {
