@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { startOfDay, subDays } from "date-fns";
-import { Activity, AlertTriangle, Camera, CheckCircle2, Clock, Users } from "lucide-react";
+import { Activity, AlertTriangle, Camera, CheckCircle2, Clock, ShieldCheck, Users } from "lucide-react";
+import { ALLIANCE_UNLOCK_THRESHOLD_MINOR, FREE_SCREENSHOT_MONTHLY_LIMIT, PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { ensureAdmin } from "../actions";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,14 @@ function formatNumber(value: number | bigint | null | undefined): string {
   return Number(value ?? 0).toLocaleString();
 }
 
+function formatEuroMinor(value: number | null | undefined): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format((value ?? 0) / 100);
+}
+
 function formatDuration(ms: number | null | undefined): string {
   if (!ms || ms <= 0) return "n/a";
   if (ms < 1000) return `${ms}ms`;
@@ -53,6 +62,9 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
   const { days: rawDays } = await searchParams;
   const days = parseDays(rawDays);
   const startDate = startOfDay(subDays(new Date(), days));
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const lastUpdated = new Date().toISOString();
 
   const [
@@ -139,7 +151,7 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
   const allianceIds = topAllianceRows.map((row) => row.allianceId).filter((id): id is string => !!id);
   const actorIds = topActorRows.map((row) => row.actorPlayerId).filter((id): id is string => !!id);
 
-  const [alliances, actors] = await Promise.all([
+  const [alliances, actors, currentMonthAllianceDonations] = await Promise.all([
     allianceIds.length
       ? prisma.alliance.findMany({
           where: { id: { in: allianceIds } },
@@ -152,10 +164,32 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
           select: { id: true, ingameName: true, alliance: { select: { name: true } } },
         })
       : [],
+    allianceIds.length
+      ? prisma.supportDonation.findMany({
+          where: {
+            status: "succeeded",
+            createdAt: { gte: monthStart, lt: monthEnd },
+            player: { allianceId: { in: allianceIds } },
+          },
+          select: {
+            amountMinor: true,
+            player: { select: { allianceId: true } },
+          },
+        })
+      : [],
   ]);
 
   const allianceNameById = new Map(alliances.map((alliance) => [alliance.id, alliance.name]));
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
+  const allianceDonationMinorById = new Map<string, number>();
+  for (const donation of currentMonthAllianceDonations) {
+    const allianceId = donation.player?.allianceId;
+    if (!allianceId) continue;
+    allianceDonationMinorById.set(
+      allianceId,
+      (allianceDonationMinorById.get(allianceId) ?? 0) + donation.amountMinor
+    );
+  }
 
   const totalBatches = totals._count.id;
   const totalFiles = totals._sum.fileCount ?? 0;
@@ -186,7 +220,7 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-1.5">
@@ -237,6 +271,20 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
             <p className="text-2xl font-bold">{formatDuration(Math.round(totals._avg.durationMs ?? 0))}</p>
             <p className="text-xs text-muted-foreground">
               {percent(failedBatchCount + partialBatchCount, totalBatches)} non-clean batches, {formatNumber(totalErrors)} issues
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5" /> Quota Rules
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{FREE_SCREENSHOT_MONTHLY_LIMIT}/month</p>
+            <p className="text-xs text-muted-foreground">
+              Personal lifetime unlock at {formatEuroMinor(PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR)}, alliance at {formatEuroMinor(ALLIANCE_UNLOCK_THRESHOLD_MINOR)}/month
             </p>
           </CardContent>
         </Card>
@@ -301,31 +349,43 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
                   <TableHead>Alliance</TableHead>
                   <TableHead className="text-right">Screenshots</TableHead>
                   <TableHead className="text-right">Requests</TableHead>
+                  <TableHead className="text-right">Month Support</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Champions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topAllianceRows.map((row) => (
-                  <TableRow key={row.allianceId}>
-                    <TableCell className="font-medium">
-                      {row.allianceId ? (
-                        <Link href={`/admin/alliances/${row.allianceId}`} className="hover:underline">
-                          {allianceNameById.get(row.allianceId) ?? "Unknown alliance"}
-                        </Link>
-                      ) : (
-                        "No alliance"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatNumber(row._sum.fileCount)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{formatNumber(row._sum.visionRequestCount)}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row._sum.processedChampionCount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {topAllianceRows.map((row) => {
+                  const currentMonthMinor = row.allianceId ? allianceDonationMinorById.get(row.allianceId) ?? 0 : 0;
+                  const isUnlocked = currentMonthMinor >= ALLIANCE_UNLOCK_THRESHOLD_MINOR;
+                  return (
+                    <TableRow key={row.allianceId}>
+                      <TableCell className="font-medium">
+                        {row.allianceId ? (
+                          <Link href={`/admin/alliances/${row.allianceId}`} className="hover:underline">
+                            {allianceNameById.get(row.allianceId) ?? "Unknown alliance"}
+                          </Link>
+                        ) : (
+                          "No alliance"
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row._sum.fileCount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row._sum.visionRequestCount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatEuroMinor(currentMonthMinor)}</TableCell>
+                      <TableCell>
+                        <Badge variant={isUnlocked ? "secondary" : "outline"}>
+                          {isUnlocked ? "Unlocked" : "Locked"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatNumber(row._sum.processedChampionCount)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {topAllianceRows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
                       No alliance-linked usage yet.
                     </TableCell>
                   </TableRow>

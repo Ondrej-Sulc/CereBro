@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Wrench } from "lucide-react";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { getRosterScreenshotQuota } from "@cerebro/core/services/rosterScreenshotQuotaService";
 
 export const metadata: Metadata = {
   title: "Update Roster - CereBro",
@@ -44,6 +45,17 @@ export default async function RosterUpdatePage() {
             orderBy: { ingameName: 'asc' }
         });
     }
+
+    const quota = await getRosterScreenshotQuota(
+        {
+            playerId: currentUser.id,
+            botUserId: currentUser.botUserId,
+            discordId: currentUser.discordId,
+            allianceId: currentUser.allianceId,
+        },
+        0,
+        { prisma }
+    );
     
     return (
         <div className="min-h-screen relative">
@@ -76,6 +88,14 @@ export default async function RosterUpdatePage() {
                     currentUser={{ id: currentUser.id, ingameName: currentUser.ingameName }}
                     allProfiles={allProfiles}
                     allianceMembers={allianceMembers}
+                    quota={{
+                        limit: quota.limit,
+                        used: quota.used,
+                        remaining: quota.remaining,
+                        resetAt: quota.resetAt,
+                        supportUrl: quota.supportUrl,
+                        unlimitedReason: quota.unlimitedReason,
+                    }}
                 />
             </div>
         </div>

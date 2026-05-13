@@ -4,13 +4,15 @@ import { useState } from "react";
 import { Upload, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RosterUpdateForm } from "@/components/RosterUpdateForm";
+import type { RosterScreenshotQuotaSummary } from "@/components/RosterUpdateForm";
 
 interface UploadSectionProps {
     targetPlayerId: string;
     playerName: string;
+    quota: RosterScreenshotQuotaSummary | null;
 }
 
-export function UploadSection({ targetPlayerId, playerName }: UploadSectionProps) {
+export function UploadSection({ targetPlayerId, playerName, quota }: UploadSectionProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -34,7 +36,7 @@ export function UploadSection({ targetPlayerId, playerName }: UploadSectionProps
             </button>
             {open && (
                 <div className="p-4 bg-slate-900/50">
-                    <RosterUpdateForm targetPlayerId={targetPlayerId} compact />
+                    <RosterUpdateForm targetPlayerId={targetPlayerId} compact quota={quota} />
                 </div>
             )}
         </div>

@@ -13,6 +13,7 @@ import { ProfileRosterEntry } from "@/app/profile/roster/types";
 import { UploadSection } from "./upload-section";
 import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
 import { cache } from "react";
+import { getRosterScreenshotQuota } from "@cerebro/core/services/rosterScreenshotQuotaService";
 
 interface PlayerRosterPageProps {
     params: Promise<{ id: string }>;
@@ -126,6 +127,19 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
         insights: { prestigeMap, top30Average },
     } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, {});
 
+    const quota = currentUser
+        ? await getRosterScreenshotQuota(
+            {
+                playerId: currentUser.id,
+                botUserId: currentUser.botUserId,
+                discordId: currentUser.discordId,
+                allianceId: currentUser.allianceId,
+            },
+            0,
+            { prisma }
+        )
+        : null;
+
     return (
         <div className="container mx-auto p-4 sm:p-8 space-y-6">
             {/* Back navigation */}
@@ -140,7 +154,18 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
 
             {/* Officer/admin upload section */}
             {canEdit && targetPlayerId && (
-                <UploadSection targetPlayerId={targetPlayerId} playerName={targetPlayer.ingameName} />
+                <UploadSection
+                    targetPlayerId={targetPlayerId}
+                    playerName={targetPlayer.ingameName}
+                    quota={quota ? {
+                        limit: quota.limit,
+                        used: quota.used,
+                        remaining: quota.remaining,
+                        resetAt: quota.resetAt,
+                        supportUrl: quota.supportUrl,
+                        unlimitedReason: quota.unlimitedReason,
+                    } : null}
+                />
             )}
 
             <RosterView

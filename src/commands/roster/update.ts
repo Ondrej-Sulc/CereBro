@@ -13,6 +13,7 @@ import { RosterUpdateResult, RosterWithChampion } from "./ocr/types";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleError } from "../../utils/errorHandler";
 import { recordRosterUploadEvent } from "../../services/rosterUploadTrackingService";
+import { formatDiscordQuotaExceededMessage, getRosterScreenshotQuota } from "../../services/rosterScreenshotQuotaService";
 
 export async function handleUpdate(
   interaction: ChatInputCommandInteraction
@@ -61,6 +62,21 @@ export async function handleUpdate(
 
   if (images.length === 0) {
     await interaction.editReply("You must provide at least one image.");
+    return;
+  }
+
+  const quota = await getRosterScreenshotQuota(
+    {
+      playerId: callerPlayer.id,
+      botUserId: callerPlayer.botUserId,
+      discordId: interaction.user.id,
+      allianceId: callerPlayer.allianceId,
+    },
+    images.length
+  );
+
+  if (!quota.allowed) {
+    await interaction.editReply(formatDiscordQuotaExceededMessage(quota));
     return;
   }
 

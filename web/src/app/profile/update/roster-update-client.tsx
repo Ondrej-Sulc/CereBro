@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { RosterUpdateForm } from "@/components/RosterUpdateForm";
+import type { RosterScreenshotQuotaSummary } from "@/components/RosterUpdateForm";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { UserCircle, Shield } from "lucide-react";
@@ -15,9 +16,10 @@ interface RosterUpdateClientProps {
     currentUser: PlayerOption;
     allProfiles: PlayerOption[];
     allianceMembers: PlayerOption[];
+    quota: RosterScreenshotQuotaSummary | null;
 }
 
-export function RosterUpdateClient({ currentUser, allProfiles, allianceMembers }: RosterUpdateClientProps) {
+export function RosterUpdateClient({ currentUser, allProfiles, allianceMembers, quota }: RosterUpdateClientProps) {
     const [targetPlayerId, setTargetPlayerId] = useState<string>(currentUser.id);
 
     // Make sure the active user is at the top of the "Your Profiles" list
@@ -73,7 +75,7 @@ export function RosterUpdateClient({ currentUser, allProfiles, allianceMembers }
                 </Select>
             </div>
             
-            <RosterUpdateForm targetPlayerId={targetPlayerId === currentUser.id ? undefined : targetPlayerId} />
+            <RosterUpdateForm targetPlayerId={targetPlayerId === currentUser.id ? undefined : targetPlayerId} quota={quota} />
         </div>
     );
 }

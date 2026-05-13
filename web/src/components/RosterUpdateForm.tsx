@@ -38,6 +38,24 @@ interface UpdateResult {
     errors: string[];
 }
 
+interface QuotaLimitError {
+    limit: number;
+    used: number;
+    remaining: number;
+    requested: number;
+    resetAt: string;
+    supportUrl: string;
+}
+
+export interface RosterScreenshotQuotaSummary {
+    limit: number;
+    used: number;
+    remaining: number;
+    resetAt: string;
+    supportUrl: string;
+    unlimitedReason?: "personal_supporter" | "personal_lifetime_supporter" | "alliance_unlocked";
+}
+
 interface RosterApiItem extends Omit<RosterWithChampion, 'champion'> {
     champion: {
         id: number;
@@ -65,12 +83,14 @@ interface RosterUpdateFormProps {
     targetPlayerId?: string;
     /** When true, strips the outer Card/max-w wrapper for embedding inside another container */
     compact?: boolean;
+    quota?: RosterScreenshotQuotaSummary | null;
 }
 
-export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpdateFormProps = {}) {
+export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null }: RosterUpdateFormProps = {}) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<UpdateResult | null>(null);
+    const [quotaLimitError, setQuotaLimitError] = useState<QuotaLimitError | null>(null);
 
     const [mode, setMode] = useState<"stats-view" | "grid-view">("stats-view");
     const [stars, setStars] = useState("6");
@@ -198,6 +218,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
 
         setLoading(true);
         setResult(null);
+        setQuotaLimitError(null);
         setUploadProgress(0);
         setStatusMessage("Preparing images...");
 
@@ -274,7 +295,18 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
         } catch (err: unknown) {
             let errorMessage = "Failed to update roster";
             if (axios.isAxiosError(err)) {
-                errorMessage = err.response?.data?.error || err.message;
+                const data = err.response?.data as Partial<QuotaLimitError> & { error?: string; reason?: string } | undefined;
+                errorMessage = data?.error || err.message;
+                if (err.response?.status === 403 && data?.reason === "free_limit_exceeded") {
+                    setQuotaLimitError({
+                        limit: typeof data.limit === "number" ? data.limit : 5,
+                        used: typeof data.used === "number" ? data.used : 0,
+                        remaining: typeof data.remaining === "number" ? data.remaining : 0,
+                        requested: typeof data.requested === "number" ? data.requested : files.length,
+                        resetAt: typeof data.resetAt === "string" ? data.resetAt : "",
+                        supportUrl: typeof data.supportUrl === "string" ? data.supportUrl : "/support",
+                    });
+                }
             } else if (err instanceof Error) {
                 errorMessage = err.message;
             }
@@ -292,8 +324,42 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
         }
     };
 
+    const quotaStatus = quota ? (
+        <Alert className="border-sky-900/50 bg-sky-950/20 text-sky-100">
+            <AlertTitle>
+                {quota.unlimitedReason ? "Screenshot Uploads Unlocked" : "Monthly Screenshot Limit"}
+            </AlertTitle>
+            <AlertDescription>
+                {quota.unlimitedReason ? (
+                    <p className="mt-1 text-sm text-sky-200/80">
+                        {quota.unlimitedReason === "alliance_unlocked"
+                            ? "Your alliance has unlocked roster screenshot uploads this month."
+                            : quota.unlimitedReason === "personal_lifetime_supporter"
+                                ? "Your lifetime support unlocks roster screenshot uploads."
+                                : "Your supporter status unlocks roster screenshot uploads this month."}
+                    </p>
+                ) : (
+                    <div className="mt-1 space-y-1 text-sm text-sky-200/80">
+                        <p>
+                            You have used {quota.used}/{quota.limit} screenshots this month, with {quota.remaining} remaining.
+                        </p>
+                        <p>
+                            Resets{quota.resetAt ? ` on ${new Date(quota.resetAt).toLocaleDateString()}` : ""}.
+                            {" "}
+                            <Link href={quota.supportUrl} className="font-semibold underline underline-offset-4">
+                                Support CereBro
+                            </Link>
+                            {" "}Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance unlocks uploads for everyone in it.
+                        </p>
+                    </div>
+                )}
+            </AlertDescription>
+        </Alert>
+    ) : null;
+
     const formContent = (
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {quotaStatus}
 
                         <Tabs
                             value={mode}
@@ -586,13 +652,30 @@ export function RosterUpdateForm({ targetPlayerId, compact = false }: RosterUpda
                         {/* Error Summary */}
                         {result.errors.length > 0 && (
                             <Alert variant="destructive" className="border-red-900 bg-red-950/20">
-                                <AlertTitle>Issues Found</AlertTitle>
+                                <AlertTitle>{quotaLimitError ? "Screenshot Limit Reached" : "Issues Found"}</AlertTitle>
                                 <AlertDescription>
-                                    <ul className="list-disc pl-4 space-y-1 mt-2 text-sm text-red-200/80">
-                                        {result.errors.map((err, i) => (
-                                            <li key={i}>{err}</li>
-                                        ))}
-                                    </ul>
+                                    {quotaLimitError ? (
+                                        <div className="mt-2 space-y-2 text-sm text-red-200/80">
+                                            <p>
+                                                You have used {quotaLimitError.used}/{quotaLimitError.limit} screenshots this month.
+                                                This batch has {quotaLimitError.requested} screenshots, with {quotaLimitError.remaining} remaining.
+                                            </p>
+                                            <p>
+                                                The limit resets{quotaLimitError.resetAt ? ` on ${new Date(quotaLimitError.resetAt).toLocaleDateString()}` : ""}.
+                                                {" "}
+                                                <Link href={quotaLimitError.supportUrl} className="font-semibold underline underline-offset-4">
+                                                    Support CereBro
+                                                </Link>
+                                                {" "}Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance unlocks uploads for everyone in it.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <ul className="list-disc pl-4 space-y-1 mt-2 text-sm text-red-200/80">
+                                            {result.errors.map((err, i) => (
+                                                <li key={i}>{err}</li>
+                                            ))}
+                                        </ul>
+                                    )}
                                 </AlertDescription>
                             </Alert>
                         )}

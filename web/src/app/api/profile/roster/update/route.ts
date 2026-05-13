@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { processRosterScreenshot, processBGViewScreenshot } from "@cerebro/core/commands/roster/ocr/process";
 import { RosterUpdateResult } from "@cerebro/core/commands/roster/ocr/types";
 import { recordRosterUploadEvent } from "@cerebro/core/services/rosterUploadTrackingService";
+import { getRosterScreenshotQuota } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { withRouteContext } from "@/lib/with-request-context";
 import { revalidatePath } from "next/cache";
@@ -82,6 +83,33 @@ export const POST = withRouteContext(async (req: NextRequest) => {
       );
       effectivePlayerId = targetPlayerIdRaw;
       effectiveAllianceId = targetPlayer.allianceId;
+    }
+
+    const quota = await getRosterScreenshotQuota(
+      {
+        playerId: player.id,
+        botUserId: player.botUserId,
+        discordId: account.providerAccountId,
+        allianceId: player.allianceId,
+      },
+      files.length,
+      { prisma }
+    );
+
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `You have used ${quota.used}/${quota.limit} screenshots this month. This batch has ${quota.requested} screenshots.`,
+          limit: quota.limit,
+          used: quota.used,
+          remaining: quota.remaining,
+          requested: quota.requested,
+          resetAt: quota.resetAt,
+          supportUrl: quota.supportUrl,
+          reason: quota.reason,
+        },
+        { status: 403 }
+      );
     }
 
     logger.info({

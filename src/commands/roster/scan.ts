@@ -17,6 +17,7 @@ import { handleError } from "../../utils/errorHandler";
 import { config } from "../../config";
 import logger from "../../services/loggerService";
 import { recordRosterUploadEvent } from "../../services/rosterUploadTrackingService";
+import { formatDiscordQuotaExceededMessage, getRosterScreenshotQuota } from "../../services/rosterScreenshotQuotaService";
 
 const SCAN_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_LIST_DISPLAY_CHAMPS = 40;
@@ -147,6 +148,21 @@ async function processMessage(
 
   if (images.length === 0) {
     await processingMsg.edit("❌ No valid images found in this message.");
+    return;
+  }
+
+  const quota = await getRosterScreenshotQuota(
+    {
+      playerId: callerPlayer.id,
+      botUserId: callerPlayer.botUserId,
+      discordId: message.author.id,
+      allianceId: callerPlayer.allianceId,
+    },
+    images.length
+  );
+
+  if (!quota.allowed) {
+    await processingMsg.edit(formatDiscordQuotaExceededMessage(quota));
     return;
   }
 
