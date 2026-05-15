@@ -15,7 +15,7 @@ function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustom
   return typeof customer === "string" ? customer : customer.id;
 }
 
-function getSubscriptionId(subscription: string | Stripe.Subscription | Stripe.DeletedSubscription | null | undefined): string | null {
+function getSubscriptionId(subscription: string | Stripe.Subscription | null | undefined): string | null {
   if (!subscription) return null;
   return typeof subscription === "string" ? subscription : subscription.id;
 }
@@ -25,7 +25,7 @@ function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   return getSubscriptionId(sub as string | Stripe.Subscription | null | undefined);
 }
 
-async function updateStoredSubscriptionStatus(subscription: Stripe.Subscription | Stripe.DeletedSubscription) {
+async function updateStoredSubscriptionStatus(subscription: Stripe.Subscription) {
   await prisma.supportDonation.updateMany({
     where: { stripeSubscriptionId: subscription.id },
     data: { stripeSubscriptionStatus: subscription.status },
@@ -87,7 +87,7 @@ export const POST = withRouteContext(async (request: NextRequest): Promise<NextR
   }
 
   if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
-    await updateStoredSubscriptionStatus(event.data.object as Stripe.Subscription | Stripe.DeletedSubscription);
+    await updateStoredSubscriptionStatus(event.data.object as Stripe.Subscription);
     return NextResponse.json({ received: true });
   }
 
