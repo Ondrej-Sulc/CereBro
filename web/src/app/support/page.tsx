@@ -4,17 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { getMonthlyTargetMinor, getCurrentMonthCoveredMinor } from "@/lib/support-config";
 import { listTopSupporters } from "@/lib/support-donations";
 
+const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"];
+
 export default async function SupportPage() {
   const session = await auth();
   const discordId = session?.user?.discordId ?? null;
 
-  const [stripeCustomerDonation, targetMinor, coveredMinor, topSupporters] = await Promise.all([
+  const [stripeCustomerDonations, targetMinor, coveredMinor, topSupporters] = await Promise.all([
     discordId
-      ? prisma.supportDonation.findFirst({
+      ? prisma.supportDonation.findMany({
           where: { discordId, stripeCustomerId: { not: null } },
           select: {
             stripeCustomerId: true,
             stripeSubscriptionId: true,
+            stripeSubscriptionStatus: true,
             amountMinor: true,
             supporterName: true,
             player: { select: { ingameName: true } },
@@ -27,12 +30,23 @@ export default async function SupportPage() {
     listTopSupporters(3),
   ]);
 
+  const stripeCustomerDonation = stripeCustomerDonations?.[0] ?? null;
+  const activeSubscriptionDonation =
+    stripeCustomerDonations?.find(
+      (donation) =>
+        !!donation.stripeSubscriptionId &&
+        !!donation.stripeSubscriptionStatus &&
+        ACTIVE_SUBSCRIPTION_STATUSES.includes(donation.stripeSubscriptionStatus),
+    ) ?? null;
+
   const currentUserName =
+    activeSubscriptionDonation?.player?.ingameName ??
+    activeSubscriptionDonation?.supporterName ??
     stripeCustomerDonation?.player?.ingameName ??
     stripeCustomerDonation?.supporterName ??
     null;
-  const subscriptionTierMinor = stripeCustomerDonation?.stripeSubscriptionId
-    ? stripeCustomerDonation.amountMinor
+  const subscriptionTierMinor = activeSubscriptionDonation
+    ? activeSubscriptionDonation.amountMinor
     : null;
   const supporterRank =
     currentUserName

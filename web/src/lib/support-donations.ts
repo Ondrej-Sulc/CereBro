@@ -19,12 +19,136 @@ type UpsertDonationInput = {
   stripePaymentIntentId: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
+  stripeSubscriptionStatus?: string | null;
   supporterName: string | null;
   supporterEmail: string | null;
   playerId: string | null;
   botUserId: string | null;
   discordId: string | null;
 };
+
+type SupporterDonationForTotal = {
+  amountMinor: number;
+  supporterName: string | null;
+  supporterEmail?: string | null;
+  playerId: string | null;
+  botUserId?: string | null;
+  discordId: string | null;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  createdAt: Date;
+  player: {
+    ingameName: string | null;
+  } | null;
+};
+
+function normalizeAlias(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase();
+  return normalized ? normalized : null;
+}
+
+function getDonationAliases(donation: SupporterDonationForTotal) {
+  const aliases = [
+    donation.playerId ? `player:${donation.playerId}` : null,
+    donation.botUserId ? `botUser:${donation.botUserId}` : null,
+    donation.discordId ? `discord:${donation.discordId}` : null,
+    donation.stripeCustomerId ? `stripeCustomer:${donation.stripeCustomerId}` : null,
+    donation.stripeSubscriptionId ? `stripeSubscription:${donation.stripeSubscriptionId}` : null,
+  ];
+
+  const email = normalizeAlias(donation.supporterEmail);
+  if (email) aliases.push(`email:${email}`);
+
+  const playerName = normalizeAlias(donation.player?.ingameName);
+  if (playerName) aliases.push(`playerName:${playerName}`);
+
+  const supporterName = normalizeAlias(donation.supporterName);
+  if (supporterName) aliases.push(`supporterName:${supporterName}`);
+
+  return aliases.filter((alias): alias is string => !!alias);
+}
+
+function getDisplayName(donation: SupporterDonationForTotal) {
+  let name = donation.player?.ingameName?.trim();
+  if (!name && donation.supporterName) {
+    name = donation.supporterName.trim();
+    if (!donation.discordId) {
+      // Show only first name if no Discord sign-in
+      name = name.split(" ")[0];
+    }
+  }
+
+  return name || null;
+}
+
+function rankSupporterTotals(donations: SupporterDonationForTotal[], limit: number) {
+  const aliasToGroup = new Map<string, string>();
+  const totals = new Map<string, { name: string; totalMinor: number; lastAt: Date }>();
+
+  function mergeGroups(targetGroup: string, sourceGroup: string) {
+    if (targetGroup === sourceGroup) return targetGroup;
+
+    const target = totals.get(targetGroup);
+    const source = totals.get(sourceGroup);
+    if (target && source) {
+      target.totalMinor += source.totalMinor;
+      if (source.lastAt > target.lastAt) {
+        target.name = source.name;
+        target.lastAt = source.lastAt;
+      }
+      totals.delete(sourceGroup);
+    }
+
+    for (const [alias, group] of aliasToGroup.entries()) {
+      if (group === sourceGroup) {
+        aliasToGroup.set(alias, targetGroup);
+      }
+    }
+
+    return targetGroup;
+  }
+
+  for (const donation of donations) {
+    const name = getDisplayName(donation);
+    if (!name) continue;
+
+    const aliases = getDonationAliases(donation);
+    if (aliases.length === 0) continue;
+
+    let group = aliases.map((alias) => aliasToGroup.get(alias)).find((aliasGroup): aliasGroup is string => !!aliasGroup);
+    if (!group) {
+      group = aliases[0];
+    }
+
+    for (const alias of aliases) {
+      const existingGroup = aliasToGroup.get(alias);
+      if (existingGroup) {
+        group = mergeGroups(group, existingGroup);
+      }
+      aliasToGroup.set(alias, group);
+    }
+
+    const existing = totals.get(group);
+    if (existing) {
+      existing.totalMinor += donation.amountMinor;
+      if (donation.createdAt > existing.lastAt) {
+        existing.name = name;
+        existing.lastAt = donation.createdAt;
+      }
+    } else {
+      totals.set(group, { name, totalMinor: donation.amountMinor, lastAt: donation.createdAt });
+    }
+  }
+
+  return Array.from(totals.values())
+    .sort((a, b) => b.totalMinor - a.totalMinor || b.lastAt.getTime() - a.lastAt.getTime())
+    .slice(0, limit)
+    .map((item, index) => ({
+      rank: index + 1,
+      name: item.name,
+      totalMinor: item.totalMinor,
+    }));
+}
 
 export async function upsertSupportDonation(input: UpsertDonationInput) {
   const donation = await prisma.$transaction(async (tx) => {
@@ -40,6 +164,7 @@ export async function upsertSupportDonation(input: UpsertDonationInput) {
       stripePaymentIntentId: input.stripePaymentIntentId,
       stripeCustomerId: input.stripeCustomerId,
       stripeSubscriptionId: input.stripeSubscriptionId,
+      stripeSubscriptionStatus: input.stripeSubscriptionStatus ?? null,
       playerId: input.playerId,
       botUserId: input.botUserId,
       discordId: input.discordId,
@@ -222,8 +347,12 @@ export async function listTopSupporters(limit = 3) {
     select: {
       amountMinor: true,
       supporterName: true,
+      supporterEmail: true,
       playerId: true,
+      botUserId: true,
       discordId: true,
+      stripeCustomerId: true,
+      stripeSubscriptionId: true,
       createdAt: true,
       player: {
         select: { ingameName: true },
@@ -231,44 +360,7 @@ export async function listTopSupporters(limit = 3) {
     },
   });
 
-  // Group by canonical identity: playerId > discordId > supporterName
-  const totals = new Map<string, { name: string; totalMinor: number; lastAt: Date }>();
-
-  for (const d of donations) {
-    const key = d.playerId ?? d.discordId ?? d.supporterName ?? null;
-    if (!key) continue;
-
-    let name = d.player?.ingameName?.trim();
-    if (!name && d.supporterName) {
-      name = d.supporterName.trim();
-      if (!d.discordId) {
-        // Show only first name if no Discord sign-in
-        name = name.split(" ")[0];
-      }
-    }
-    if (!name) continue;
-
-    const existing = totals.get(key);
-    if (existing) {
-      existing.totalMinor += d.amountMinor;
-      // Keep the most recent name (player ingameName may have changed)
-      if (d.createdAt > existing.lastAt) {
-        existing.name = name;
-        existing.lastAt = d.createdAt;
-      }
-    } else {
-      totals.set(key, { name, totalMinor: d.amountMinor, lastAt: d.createdAt });
-    }
-  }
-
-  return Array.from(totals.values())
-    .sort((a, b) => b.totalMinor - a.totalMinor)
-    .slice(0, limit)
-    .map((item, index) => ({
-      rank: index + 1,
-      name: item.name,
-      totalMinor: item.totalMinor,
-    }));
+  return rankSupporterTotals(donations, limit);
 }
 
 export async function listPublicSupporters() {

@@ -23,13 +23,50 @@ export async function getCurrentMonthCoveredMinor(): Promise<number> {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const result = await prisma.supportDonation.aggregate({
+  const donations = await prisma.supportDonation.findMany({
     where: {
       status: "succeeded",
-      createdAt: { gte: monthStart },
+      anonymizedAt: null,
+      deletedAt: null,
+      consentRevoked: false,
+      OR: [
+        { createdAt: { gte: monthStart } },
+        {
+          stripeSubscriptionId: { not: null },
+          stripeSubscriptionStatus: { in: ["active", "trialing", "past_due"] },
+        },
+      ],
     },
-    _sum: { amountMinor: true },
+    select: {
+      amountMinor: true,
+      stripeSubscriptionId: true,
+      createdAt: true,
+    },
   });
 
-  return result._sum.amountMinor ?? 0;
+  let coveredMinor = 0;
+  const latestSubscriptionDonations = new Map<string, { amountMinor: number; createdAt: Date }>();
+
+  for (const donation of donations) {
+    if (!donation.stripeSubscriptionId) {
+      if (donation.createdAt >= monthStart) {
+        coveredMinor += donation.amountMinor;
+      }
+      continue;
+    }
+
+    const existing = latestSubscriptionDonations.get(donation.stripeSubscriptionId);
+    if (!existing || donation.createdAt > existing.createdAt) {
+      latestSubscriptionDonations.set(donation.stripeSubscriptionId, {
+        amountMinor: donation.amountMinor,
+        createdAt: donation.createdAt,
+      });
+    }
+  }
+
+  for (const donation of latestSubscriptionDonations.values()) {
+    coveredMinor += donation.amountMinor;
+  }
+
+  return coveredMinor;
 }

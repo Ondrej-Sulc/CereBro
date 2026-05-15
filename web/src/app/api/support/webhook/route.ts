@@ -15,7 +15,7 @@ function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustom
   return typeof customer === "string" ? customer : customer.id;
 }
 
-function getSubscriptionId(subscription: string | Stripe.Subscription | null | undefined): string | null {
+function getSubscriptionId(subscription: string | Stripe.Subscription | Stripe.DeletedSubscription | null | undefined): string | null {
   if (!subscription) return null;
   return typeof subscription === "string" ? subscription : subscription.id;
 }
@@ -23,6 +23,18 @@ function getSubscriptionId(subscription: string | Stripe.Subscription | null | u
 function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
   const sub = (invoice as any).subscription ?? (invoice as any).subscription_details?.subscription;
   return getSubscriptionId(sub as string | Stripe.Subscription | null | undefined);
+}
+
+async function updateStoredSubscriptionStatus(subscription: Stripe.Subscription | Stripe.DeletedSubscription) {
+  await prisma.supportDonation.updateMany({
+    where: { stripeSubscriptionId: subscription.id },
+    data: { stripeSubscriptionStatus: subscription.status },
+  });
+
+  logger.info(
+    { stripeSubscriptionId: subscription.id, stripeSubscriptionStatus: subscription.status },
+    "Updated stored support subscription status",
+  );
 }
 
 function mapDonationStatus(event: Stripe.Event, session: Stripe.Checkout.Session): string {
@@ -74,6 +86,11 @@ export const POST = withRouteContext(async (request: NextRequest): Promise<NextR
     return handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
   }
 
+  if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    await updateStoredSubscriptionStatus(event.data.object as Stripe.Subscription | Stripe.DeletedSubscription);
+    return NextResponse.json({ received: true });
+  }
+
   if (!CHECKOUT_SESSION_EVENTS.has(event.type)) {
     return NextResponse.json({ received: true });
   }
@@ -121,6 +138,7 @@ export const POST = withRouteContext(async (request: NextRequest): Promise<NextR
       stripePaymentIntentId: paymentIntentId,
       stripeCustomerId,
       stripeSubscriptionId,
+      stripeSubscriptionStatus: stripeSubscriptionId ? "active" : null,
       supporterName,
       supporterEmail,
       playerId,
@@ -216,6 +234,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<N
       stripePaymentIntentId: paymentIntentId,
       stripeCustomerId,
       stripeSubscriptionId,
+      stripeSubscriptionStatus: "active",
       supporterName,
       supporterEmail,
       playerId,

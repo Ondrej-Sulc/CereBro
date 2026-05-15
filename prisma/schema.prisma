@@ -310,33 +310,35 @@ model Player {
 }
 
 model SupportDonation {
-  id                      String    @id @default(cuid())
-  amountMinor             Int
-  currency                String
-  status                  String
-  stripeCheckoutSessionId String    @unique
-  stripePaymentIntentId   String?
-  stripeCustomerId        String?
-  stripeSubscriptionId    String?
-  supporterName           String?
-  supporterEmail          String?
-  retentionState          String    @default("ACTIVE")
-  anonymizedAt            DateTime?
-  deletedAt               DateTime?
-  consentRevoked          Boolean   @default(false)
-  discordId               String?
-  botUserId               String?
-  playerId                String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  player                  Player?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
-  botUser                 BotUser?  @relation(fields: [botUserId], references: [id], onDelete: SetNull)
+  id                       String    @id @default(cuid())
+  amountMinor              Int
+  currency                 String
+  status                   String
+  stripeCheckoutSessionId  String    @unique
+  stripePaymentIntentId    String?
+  stripeCustomerId         String?
+  stripeSubscriptionId     String?
+  stripeSubscriptionStatus String?
+  supporterName            String?
+  supporterEmail           String?
+  retentionState           String    @default("ACTIVE")
+  anonymizedAt             DateTime?
+  deletedAt                DateTime?
+  consentRevoked           Boolean   @default(false)
+  discordId                String?
+  botUserId                String?
+  playerId                 String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  player                   Player?   @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  botUser                  BotUser?  @relation(fields: [botUserId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([playerId, createdAt])
   @@index([botUserId, createdAt])
   @@index([discordId, createdAt])
   @@index([stripeSubscriptionId])
+  @@index([stripeSubscriptionStatus])
   @@index([retentionState, anonymizedAt, deletedAt])
 }
 
