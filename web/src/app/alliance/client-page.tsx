@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updatePlayerRole, updateAllianceColors, updateAlliancePalette, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings, updateAllianceGeneral } from "../actions/alliance";
 import { PALETTES, PALETTE_LABELS, PALETTE_DESCRIPTIONS, DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle, Heart, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
+import { ALLIANCE_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
 
 interface MembershipRequest {
     id: string;
@@ -69,9 +70,14 @@ interface AllianceWithRequests {
     linkCode: string | null;
     linkCodeExpires: Date | null;
     removeMissingMembers: boolean;
+    screenshotUnlock?: {
+        currentMonthMinor: number;
+        thresholdMinor: number;
+        unlocked: boolean;
+    };
 }
 
-type PlayerWithRoster = Player & { _count: { roster: number } };
+type PlayerWithRoster = Player & { _count: { roster: number }; isSupporter?: boolean };
 
 interface ClientPageProps {
     members: PlayerWithRoster[];
@@ -85,6 +91,25 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const [loadingId, setLoadingId] = useState<string | null>(null);
 
     const isOfficer = currentUser.isOfficer || currentUser.isBotAdmin;
+    const screenshotUnlock = alliance.screenshotUnlock ?? {
+        currentMonthMinor: 0,
+        thresholdMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR,
+        unlocked: false,
+    };
+    const screenshotUnlockPercent = Math.min(
+        Math.round((screenshotUnlock.currentMonthMinor / screenshotUnlock.thresholdMinor) * 100),
+        100
+    );
+    const screenshotUnlockRemainingMinor = Math.max(
+        screenshotUnlock.thresholdMinor - screenshotUnlock.currentMonthMinor,
+        0
+    );
+    const formatEuroMinor = (amountMinor: number) =>
+        new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "EUR",
+            maximumFractionDigits: 0,
+        }).format(amountMinor / 100);
 
     const [colors, setColors] = useState({
         bg1: alliance.battlegroup1Color || "#ef4444",
@@ -347,6 +372,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                 </div>
                 <h3 className="font-bold text-base" style={{ color: accentColor || '#e2e8f0' }}>{title}</h3>
                 <div className="ml-auto flex items-center gap-2">
+                    {players.some(player => player.isSupporter) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-400">
+                            <Heart className="w-3 h-3 fill-amber-400/50" />
+                            {players.filter(player => player.isSupporter).length}
+                        </span>
+                    )}
                     {stats?.avgPrestige != null && (
                         <span className="text-[10px] text-slate-500">avg {stats.avgPrestige.toLocaleString('en-US')}</span>
                     )}
@@ -355,9 +386,22 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             </div>
             <div className="flex flex-col gap-2">
                 {players.map(player => (
-                    <Card key={player.id} className={cn("bg-slate-900/50 border-slate-800 transition-all group/card overflow-hidden", loadingId === player.id && "opacity-50")} style={{ borderLeftColor: playerColorMap.get(player.id), borderLeftWidth: '3px' }}>
+                    <Card
+                        key={player.id}
+                        className={cn(
+                            "transition-all group/card overflow-hidden",
+                            player.isSupporter
+                                ? "bg-amber-950/20 border-amber-500/35 shadow-[0_0_18px_rgba(245,158,11,0.08)]"
+                                : "bg-slate-900/50 border-slate-800",
+                            loadingId === player.id && "opacity-50"
+                        )}
+                        style={{ borderLeftColor: player.isSupporter ? "#f59e0b" : playerColorMap.get(player.id), borderLeftWidth: '3px' }}
+                    >
                         <CardContent className="p-2.5 flex items-center gap-3">
-                            <Avatar className="h-9 w-9 border border-slate-700">
+                            <Avatar className={cn(
+                                "h-9 w-9 border",
+                                player.isSupporter ? "border-amber-500/50 ring-2 ring-amber-500/10" : "border-slate-700"
+                            )}>
                                 <AvatarImage src={player.avatar || undefined} />
                                 <AvatarFallback className="text-xs">{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
@@ -366,6 +410,9 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 <div className="flex items-center gap-1.5">
                                     <Link href={`/player/${player.id}`} className="font-semibold text-sm truncate hover:text-sky-400 transition-colors" onClick={(e) => e.stopPropagation()}>{player.ingameName}</Link>
                                     {player.isOfficer && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                                    {player.isSupporter && (
+                                        <Heart className="w-3.5 h-3.5 text-amber-400 fill-amber-400/50 shrink-0" />
+                                    )}
                                 </div>
                                 <p className="text-[10px] text-slate-400">
                                     Prestige: {player.championPrestige?.toLocaleString('en-US') || "N/A"}
@@ -939,6 +986,53 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                     </Button>
                 </div>
             </div>
+
+            <Card className={cn(
+                "mb-6 border overflow-hidden",
+                screenshotUnlock.unlocked
+                    ? "bg-emerald-950/20 border-emerald-800/40"
+                    : "bg-slate-900/50 border-slate-800"
+            )}>
+                <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
+                    <div className={cn(
+                        "h-10 w-10 rounded-lg border flex items-center justify-center shrink-0",
+                        screenshotUnlock.unlocked
+                            ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+                            : "bg-amber-500/10 border-amber-500/25 text-amber-300"
+                    )}>
+                        <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="font-bold text-sm text-white">Alliance screenshot uploads</h2>
+                            {screenshotUnlock.unlocked ? (
+                                <Badge className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">Unlocked</Badge>
+                            ) : (
+                                <Badge variant="outline" className="border-slate-700 text-slate-400">{screenshotUnlockPercent}% funded</Badge>
+                            )}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">
+                            {screenshotUnlock.unlocked
+                                ? "This alliance has unlimited roster screenshot uploads this month."
+                                : `${formatEuroMinor(screenshotUnlockRemainingMinor)} more support this month unlocks unlimited roster screenshot uploads for the alliance.`}
+                        </p>
+                    </div>
+                    <div className="md:w-48">
+                        <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div
+                                className={cn(
+                                    "h-full rounded-full",
+                                    screenshotUnlock.unlocked ? "bg-emerald-400" : "bg-amber-400"
+                                )}
+                                style={{ width: `${screenshotUnlockPercent}%` }}
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1 text-right">
+                            {formatEuroMinor(screenshotUnlock.currentMonthMinor)} / {formatEuroMinor(screenshotUnlock.thresholdMinor)}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {renderColumn("Unassigned", groups.unassigned, <Users className="w-5 h-5"/>, undefined, bgStats.unassigned)}
