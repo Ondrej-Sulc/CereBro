@@ -21,6 +21,7 @@ import { ProfileManager } from "./components/profile-manager";
 import { RelicPrestigeEditor } from "./components/relic-prestige-editor";
 import { ManageSubscriptionButton } from "./components/manage-subscription-button";
 import { Heart, Sparkles } from "lucide-react";
+import { isPlayerSupporter } from "@/lib/support-status";
 
 export const metadata: Metadata = {
   title: "My Profile - CereBro",
@@ -46,7 +47,7 @@ export default async function ProfilePage() {
 
     logger.info({ userId: player.id }, "User accessing Profile page");
 
-    const [rosterResult, prestigeHistory, allProfiles, supporterDonation] = await Promise.all([
+    const [rosterResult, prestigeHistory, allProfiles, supporterDonation, supporter] = await Promise.all([
         getRoster(player.id, null, null, null),
         prisma.prestigeLog.findMany({
             where: { playerId: player.id },
@@ -73,6 +74,7 @@ export default async function ProfilePage() {
             select: { stripeCustomerId: true, stripeSubscriptionId: true },
             orderBy: { createdAt: "desc" },
         }),
+        isPlayerSupporter(player),
     ]);
 
     const roster = typeof rosterResult === "string" ? [] : rosterResult;
@@ -122,7 +124,7 @@ export default async function ProfilePage() {
             <Separator className="bg-slate-800" />
 
             {/* Supporter Section */}
-            {supporterDonation?.stripeCustomerId && (
+            {supporter && (
                 <>
                     <style>{`
                         @keyframes supporter-glow {
@@ -166,7 +168,7 @@ export default async function ProfilePage() {
                                 <div>
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <p className="text-amber-200 font-bold text-sm tracking-wide">CereBro Supporter</p>
-                                        {supporterDonation.stripeSubscriptionId && (
+                                        {supporterDonation?.stripeSubscriptionId && (
                                             <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
                                                 <span
                                                     className="w-1.5 h-1.5 rounded-full bg-emerald-400"
@@ -177,7 +179,7 @@ export default async function ProfilePage() {
                                         )}
                                     </div>
                                     <p className="text-slate-400 text-xs mt-0.5">
-                                        {supporterDonation.stripeSubscriptionId
+                                        {supporterDonation?.stripeSubscriptionId
                                             ? "Thank you for your monthly support — it keeps CereBro running!"
                                             : "Thank you for your one-time contribution!"}
                                     </p>
@@ -185,7 +187,7 @@ export default async function ProfilePage() {
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
-                                {supporterDonation.stripeSubscriptionId && <ManageSubscriptionButton />}
+                                {supporterDonation?.stripeSubscriptionId && <ManageSubscriptionButton />}
                                 <Link href="/support">
                                     <Button variant="ghost" className="text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/10 text-sm">
                                         Support again

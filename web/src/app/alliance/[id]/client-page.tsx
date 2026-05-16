@@ -5,8 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Shield, Users } from "lucide-react";
+import { Crown, Heart, Shield, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ALLIANCE_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
 
 type PublicPlayer = {
     id: string;
@@ -14,6 +15,7 @@ type PublicPlayer = {
     avatar: string | null;
     battlegroup: number | null;
     isOfficer: boolean;
+    isSupporter: boolean;
     championPrestige: number | null;
     _count: { roster: number };
 };
@@ -26,6 +28,11 @@ interface AlliancePublicData {
     battlegroup1Color: string;
     battlegroup2Color: string;
     battlegroup3Color: string;
+    screenshotUnlock?: {
+        currentMonthMinor: number;
+        thresholdMinor: number;
+        unlocked: boolean;
+    };
     players: PublicPlayer[];
 }
 
@@ -38,6 +45,26 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
     const [sortBy, setSortBy] = useState<'name' | 'prestige'>('name');
 
     const isOwnAlliance = currentUser.allianceId === alliance.id;
+    const screenshotUnlock = alliance.screenshotUnlock ?? {
+        currentMonthMinor: 0,
+        thresholdMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR,
+        unlocked: false,
+    };
+    const screenshotUnlockPercent = Math.min(
+        Math.round((screenshotUnlock.currentMonthMinor / screenshotUnlock.thresholdMinor) * 100),
+        100
+    );
+    const screenshotUnlockRemainingMinor = Math.max(
+        screenshotUnlock.thresholdMinor - screenshotUnlock.currentMonthMinor,
+        0
+    );
+
+    const formatEuroMinor = (amountMinor: number) =>
+        new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "EUR",
+            maximumFractionDigits: 0,
+        }).format(amountMinor / 100);
 
     const sortPlayers = (players: PublicPlayer[]) => {
         if (sortBy === 'prestige') {
@@ -107,6 +134,12 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                                         {player.ingameName}
                                     </Link>
                                     {player.isOfficer && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />}
+                                    {player.isSupporter && (
+                                        <Badge className="h-4 px-1.5 text-[9px] bg-amber-500/10 border border-amber-500/30 text-amber-300">
+                                            <Heart className="w-2.5 h-2.5 mr-1 fill-amber-400/50" />
+                                            Supporter
+                                        </Badge>
+                                    )}
                                 </div>
                                 <p className="text-[10px] text-slate-400">
                                     Prestige: {player.championPrestige?.toLocaleString('en-US') || "N/A"}
@@ -166,6 +199,53 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                     </button>
                 </div>
             </div>
+
+            <Card className={cn(
+                "mb-6 border overflow-hidden",
+                screenshotUnlock.unlocked
+                    ? "bg-emerald-950/20 border-emerald-800/40"
+                    : "bg-slate-900/50 border-slate-800"
+            )}>
+                <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-4">
+                    <div className={cn(
+                        "h-10 w-10 rounded-lg border flex items-center justify-center shrink-0",
+                        screenshotUnlock.unlocked
+                            ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+                            : "bg-amber-500/10 border-amber-500/25 text-amber-300"
+                    )}>
+                        <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="font-bold text-sm text-white">Alliance screenshot uploads</h2>
+                            {screenshotUnlock.unlocked ? (
+                                <Badge className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-300">Unlocked</Badge>
+                            ) : (
+                                <Badge variant="outline" className="border-slate-700 text-slate-400">{screenshotUnlockPercent}% funded</Badge>
+                            )}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">
+                            {screenshotUnlock.unlocked
+                                ? "This alliance has unlimited roster screenshot uploads this month."
+                                : `${formatEuroMinor(screenshotUnlockRemainingMinor)} more support this month unlocks unlimited roster screenshot uploads for the alliance.`}
+                        </p>
+                    </div>
+                    <div className="md:w-48">
+                        <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div
+                                className={cn(
+                                    "h-full rounded-full",
+                                    screenshotUnlock.unlocked ? "bg-emerald-400" : "bg-amber-400"
+                                )}
+                                style={{ width: `${screenshotUnlockPercent}%` }}
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1 text-right">
+                            {formatEuroMinor(screenshotUnlock.currentMonthMinor)} / {formatEuroMinor(screenshotUnlock.thresholdMinor)}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {renderColumn("Unassigned", groups.unassigned, <Users className="w-5 h-5" />, undefined, bgStats.unassigned)}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { AlliancePublicClient } from "./client-page";
 import { Metadata } from "next";
+import { getAllianceScreenshotUnlockStatus, listSupporterPlayerIds } from "@/lib/support-status";
 
 interface Props {
     params: Promise<{ id: string }>;
@@ -26,7 +27,7 @@ export default async function AlliancePublicPage({ params }: Props) {
 
     const { id } = await params;
 
-    const [allianceData, players] = await Promise.all([
+    const [allianceData, players, screenshotUnlock] = await Promise.all([
         prisma.alliance.findUnique({
             where: { id },
             select: {
@@ -46,6 +47,8 @@ export default async function AlliancePublicPage({ params }: Props) {
             select: {
                 id: true,
                 ingameName: true,
+                discordId: true,
+                botUserId: true,
                 avatar: true,
                 battlegroup: true,
                 isOfficer: true,
@@ -53,11 +56,26 @@ export default async function AlliancePublicPage({ params }: Props) {
                 _count: { select: { roster: true } },
             },
         }),
+        getAllianceScreenshotUnlockStatus(id),
     ]);
 
     if (!allianceData) notFound();
 
-    const alliance = { ...allianceData, players };
+    const supporterPlayerIds = await listSupporterPlayerIds(players);
+    const alliance = {
+        ...allianceData,
+        screenshotUnlock,
+        players: players.map((player) => ({
+            id: player.id,
+            ingameName: player.ingameName,
+            avatar: player.avatar,
+            battlegroup: player.battlegroup,
+            isOfficer: player.isOfficer,
+            championPrestige: player.championPrestige,
+            _count: player._count,
+            isSupporter: supporterPlayerIds.has(player.id),
+        })),
+    };
 
     return <AlliancePublicClient alliance={alliance} currentUser={currentUser} />;
 }

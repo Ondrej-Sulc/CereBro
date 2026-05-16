@@ -17,6 +17,7 @@ import { ChampionClass } from "@prisma/client";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { cache } from "react";
 import { getYoutubeVideoId } from "@/lib/youtube";
+import { isPlayerSupporter } from "@/lib/support-status";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
@@ -60,7 +61,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
 
     const currentUser = await getUserPlayerWithAlliance();
 
-    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds] = await Promise.all([
+    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
@@ -130,7 +131,8 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
             _count: { id: true },
             _sum: { death: true }
         }),
-        prisma.warFight.groupBy({ by: ['warId'], where: { playerId: id } })
+        prisma.warFight.groupBy({ by: ['warId'], where: { playerId: id } }),
+        isPlayerSupporter(player),
     ]);
 
     const totalFights = fightAggregate._count.id;
@@ -179,6 +181,11 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                             {player.isOfficer && (
                                 <Badge className="bg-amber-950/50 border border-amber-700/50 text-amber-400 text-[10px] font-black uppercase tracking-wide px-2">
                                     Officer
+                                </Badge>
+                            )}
+                            {supporter && (
+                                <Badge className="bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wide px-2">
+                                    Supporter
                                 </Badge>
                             )}
                             {player.battlegroup && (
