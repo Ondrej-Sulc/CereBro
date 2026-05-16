@@ -114,6 +114,12 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                 </div>
                 <h3 className="font-bold text-base" style={{ color: accentColor || '#e2e8f0' }}>{title}</h3>
                 <div className="ml-auto flex items-center gap-2">
+                    {players.some(player => player.isSupporter) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-400">
+                            <Heart className="w-3 h-3 fill-amber-400/50" />
+                            {players.filter(player => player.isSupporter).length}
+                        </span>
+                    )}
                     {stats?.avgPrestige != null && (
                         <span className="text-[10px] text-slate-500">avg {stats.avgPrestige.toLocaleString('en-US')}</span>
                     )}
@@ -122,9 +128,20 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
             </div>
             <div className="flex flex-col gap-2">
                 {players.map(player => (
-                    <Card key={player.id} className="bg-slate-900/50 border-slate-800 overflow-hidden">
+                    <Card
+                        key={player.id}
+                        className={cn(
+                            "overflow-hidden transition-colors",
+                            player.isSupporter
+                                ? "bg-amber-950/20 border-amber-500/35 shadow-[0_0_18px_rgba(245,158,11,0.08)]"
+                                : "bg-slate-900/50 border-slate-800"
+                        )}
+                    >
                         <CardContent className="p-2.5 flex items-center gap-3">
-                            <Avatar className="h-9 w-9 border border-slate-700">
+                            <Avatar className={cn(
+                                "h-9 w-9 border",
+                                player.isSupporter ? "border-amber-500/50 ring-2 ring-amber-500/10" : "border-slate-700"
+                            )}>
                                 <AvatarImage src={player.avatar || undefined} />
                                 <AvatarFallback className="text-xs">{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
@@ -135,10 +152,7 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                                     </Link>
                                     {player.isOfficer && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500 shrink-0" />}
                                     {player.isSupporter && (
-                                        <Badge className="h-4 px-1.5 text-[9px] bg-amber-500/10 border border-amber-500/30 text-amber-300">
-                                            <Heart className="w-2.5 h-2.5 mr-1 fill-amber-400/50" />
-                                            Supporter
-                                        </Badge>
+                                        <Heart className="w-3.5 h-3.5 text-amber-400 fill-amber-400/50 shrink-0" />
                                     )}
                                 </div>
                                 <p className="text-[10px] text-slate-400">
@@ -177,9 +191,7 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                     {alliance.description && (
                         <p className="text-sm text-slate-400 mt-1 max-w-lg">{alliance.description}</p>
                     )}
-                    <p className="text-sm text-slate-500 mt-0.5">
-                        {alliance.players.length} members
-                    </p>
+                    <p className="text-sm text-slate-500 mt-0.5">{alliance.players.length} members</p>
                 </div>
 
                 <div role="group" aria-label="Sort by" className="flex items-center rounded-md border border-slate-700 bg-slate-900/50 p-0.5">

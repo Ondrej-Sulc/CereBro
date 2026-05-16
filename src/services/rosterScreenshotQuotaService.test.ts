@@ -22,6 +22,8 @@ type Donation = {
   playerId?: string | null;
   botUserId?: string | null;
   discordId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripeSubscriptionStatus?: string | null;
 };
 
 function inRange(date: Date, range: { gte?: Date; lt?: Date }) {
@@ -62,6 +64,36 @@ function createPrismaFake({
           inRange(donation.createdAt, where.createdAt) &&
           matchesOr(donation, where.OR)
         ) ?? null,
+      findMany: async ({ where }: { where: { status: string; OR?: Array<Record<string, unknown>>; player?: { allianceId?: string | null } } }) =>
+        donations
+          .filter((donation) => donation.status === where.status)
+          .filter((donation) => !where.player?.allianceId || !!donation.playerId && playerAlliance[donation.playerId] === where.player.allianceId)
+          .filter((donation) => {
+            if (!where.OR || where.OR.length === 0) return true;
+            return where.OR.some((clause) => {
+              if ("createdAt" in clause) {
+                return inRange(donation.createdAt, clause.createdAt as { gte?: Date; lt?: Date });
+              }
+              if ("stripeSubscriptionId" in clause || "stripeSubscriptionStatus" in clause) {
+                const subscriptionClause = clause as {
+                  stripeSubscriptionId?: { not?: null };
+                  stripeSubscriptionStatus?: { in?: string[] };
+                };
+                return (
+                  (!!subscriptionClause.stripeSubscriptionId?.not === false || !!donation.stripeSubscriptionId) &&
+                  (!subscriptionClause.stripeSubscriptionStatus?.in ||
+                    !!donation.stripeSubscriptionStatus &&
+                    subscriptionClause.stripeSubscriptionStatus.in.includes(donation.stripeSubscriptionStatus))
+                );
+              }
+              return false;
+            });
+          })
+          .map((donation) => ({
+            amountMinor: donation.amountMinor,
+            stripeSubscriptionId: donation.stripeSubscriptionId ?? null,
+            createdAt: donation.createdAt,
+          })),
       aggregate: async ({ where }: { where: { status: string; createdAt?: { gte?: Date; lt?: Date }; OR?: Array<Record<string, unknown>>; player?: { allianceId?: string | null } } }) => ({
         _sum: {
           amountMinor: donations
@@ -194,6 +226,29 @@ describe("roster screenshot quota", () => {
 
     expect(quota.allowed).toBe(false);
     expect(quota.allianceCurrentMonthMinor).toBe(0);
+  });
+
+  it("counts an active subscription from a previous month toward the current alliance unlock", async () => {
+    const quota = await getRosterScreenshotQuota(actor, 1, {
+      now,
+      prisma: createPrismaFake({
+        uploadEvents: [{ fileCount: 5, createdAt: currentMonth, actorPlayerId: actor.playerId }],
+        playerAlliance: { donor1: "alliance-1" },
+        donations: [{
+          id: "donation-1",
+          amountMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR,
+          status: "succeeded",
+          createdAt: previousMonth,
+          playerId: "donor1",
+          stripeSubscriptionId: "sub_1",
+          stripeSubscriptionStatus: "active",
+        }],
+      }),
+    });
+
+    expect(quota.allowed).toBe(true);
+    expect(quota.unlimitedReason).toBe("alliance_unlocked");
+    expect(quota.allianceCurrentMonthMinor).toBe(ALLIANCE_UNLOCK_THRESHOLD_MINOR);
   });
 
   it("does not count donations from members of other alliances", async () => {
