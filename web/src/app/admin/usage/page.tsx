@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { startOfDay, subDays } from "date-fns";
-import { Activity, AlertTriangle, Camera, CheckCircle2, Clock, ShieldCheck, Users } from "lucide-react";
+import { Activity, AlertTriangle, Camera, CheckCircle2, Clock, ShieldCheck, UserCircle, Users } from "lucide-react";
+import type { Prisma } from "@prisma/client";
 import { ALLIANCE_UNLOCK_THRESHOLD_MINOR, FREE_SCREENSHOT_MONTHLY_LIMIT, PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { ensureAdmin } from "../actions";
 import { prisma } from "@/lib/prisma";
@@ -16,8 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TimeframeSelector } from "../insights/timeframe-selector";
 import { LastUpdated } from "../insights/last-updated";
+import { PlayerUsageFilter } from "./player-usage-filter";
 
 export const metadata: Metadata = {
   title: "Usage - CereBro Admin",
@@ -25,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 type UsagePageProps = {
-  searchParams: Promise<{ days?: string }>;
+  searchParams: Promise<{ days?: string; playerId?: string }>;
 };
 
 function parseDays(raw: string | undefined): number {
@@ -56,16 +59,37 @@ function percent(part: number, total: number): string {
   return `${Math.round((part / total) * 100)}%`;
 }
 
+function getStatusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  if (status === "success") return "secondary";
+  if (status === "failed") return "destructive";
+  return "outline";
+}
+
+function getPlayerUsageRole(event: { actorPlayerId: string | null; targetPlayerId: string | null }, playerId: string): string {
+  const isActor = event.actorPlayerId === playerId;
+  const isTarget = event.targetPlayerId === playerId;
+  if (isActor && isTarget) return "Actor + target";
+  if (isActor) return "Actor";
+  if (isTarget) return "Target";
+  return "Related";
+}
+
 export default async function UsagePage({ searchParams }: UsagePageProps) {
   await ensureAdmin("VIEW_INSIGHTS");
 
-  const { days: rawDays } = await searchParams;
+  const { days: rawDays, playerId } = await searchParams;
   const days = parseDays(rawDays);
   const startDate = startOfDay(subDays(new Date(), days));
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const lastUpdated = new Date().toISOString();
+  const playerUsageWhere: Prisma.RosterUploadEventWhereInput | null = playerId
+    ? {
+        createdAt: { gte: startDate },
+        OR: [{ actorPlayerId: playerId }, { targetPlayerId: playerId }],
+      }
+    : null;
 
   const [
     totals,
@@ -75,6 +99,12 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
     topAllianceRows,
     topActorRows,
     recentProblemEvents,
+    selectedPlayer,
+    playerUsageTotals,
+    playerUsageActorCount,
+    playerUsageTargetCount,
+    playerUsageRows,
+    recentPlayerEvents,
   ] = await Promise.all([
     prisma.rosterUploadEvent.aggregate({
       where: { createdAt: { gte: startDate } },
@@ -146,6 +176,80 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
       orderBy: { createdAt: "desc" },
       take: 10,
     }),
+    playerId
+      ? prisma.player.findUnique({
+          where: { id: playerId },
+          select: {
+            id: true,
+            ingameName: true,
+            avatar: true,
+            alliance: { select: { id: true, name: true } },
+          },
+        })
+      : null,
+    playerUsageWhere
+      ? prisma.rosterUploadEvent.aggregate({
+          where: playerUsageWhere,
+          _count: { id: true },
+          _sum: {
+            fileCount: true,
+            visionRequestCount: true,
+            processedChampionCount: true,
+            successCount: true,
+            errorCount: true,
+          },
+          _avg: { durationMs: true },
+        })
+      : null,
+    playerId
+      ? prisma.rosterUploadEvent.count({
+          where: { createdAt: { gte: startDate }, actorPlayerId: playerId },
+        })
+      : 0,
+    playerId
+      ? prisma.rosterUploadEvent.count({
+          where: { createdAt: { gte: startDate }, targetPlayerId: playerId },
+        })
+      : 0,
+    playerUsageWhere
+      ? prisma.rosterUploadEvent.groupBy({
+          by: ["source", "mode", "status"],
+          where: playerUsageWhere,
+          _count: { id: true },
+          _sum: {
+            fileCount: true,
+            visionRequestCount: true,
+            processedChampionCount: true,
+            errorCount: true,
+          },
+          orderBy: [{ source: "asc" }, { mode: "asc" }, { status: "asc" }],
+        })
+      : [],
+    playerUsageWhere
+      ? prisma.rosterUploadEvent.findMany({
+          where: playerUsageWhere,
+          select: {
+            id: true,
+            createdAt: true,
+            source: true,
+            mode: true,
+            status: true,
+            fileCount: true,
+            visionRequestCount: true,
+            processedChampionCount: true,
+            errorCount: true,
+            durationMs: true,
+            errorMessages: true,
+            actorPlayerId: true,
+            targetPlayerId: true,
+            actorPlayer: { select: { id: true, ingameName: true } },
+            targetPlayer: { select: { id: true, ingameName: true } },
+            alliance: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 25,
+        })
+      : [],
   ]);
 
   const allianceIds = topAllianceRows.map((row) => row.allianceId).filter((id): id is string => !!id);
@@ -202,6 +306,13 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
   const partialBatchCount = sourceRows
     .filter((row) => row.status === "partial")
     .reduce((sum, row) => sum + row._count.id, 0);
+  const playerUsageBatchCount = playerUsageTotals?._count.id ?? 0;
+  const playerUsageFailedBatchCount = playerUsageRows
+    .filter((row) => row.status === "failed")
+    .reduce((sum, row) => sum + row._count.id, 0);
+  const playerUsagePartialBatchCount = playerUsageRows
+    .filter((row) => row.status === "partial")
+    .reduce((sum, row) => sum + row._count.id, 0);
 
   return (
     <div className="space-y-6">
@@ -219,6 +330,206 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
           <LastUpdated createdAtIso={lastUpdated} />
         </div>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Player Usage Search</CardTitle>
+          <CardDescription>Find upload batches submitted by a player or targeting that player&apos;s roster.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Suspense fallback={<div className="h-10 w-full rounded-md bg-muted animate-pulse md:w-[320px]" />}>
+            <PlayerUsageFilter selectedPlayerName={selectedPlayer?.ingameName ?? ""} />
+          </Suspense>
+        </CardContent>
+      </Card>
+
+      {playerId && (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedPlayer?.avatar || ""} alt={selectedPlayer?.ingameName ?? "Selected player"} />
+                  <AvatarFallback>
+                    <UserCircle className="h-7 w-7" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <CardTitle>
+                    {selectedPlayer ? (
+                      <Link href={`/player/${selectedPlayer.id}`} className="hover:underline">
+                        {selectedPlayer.ingameName}
+                      </Link>
+                    ) : (
+                      "Player not found"
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    {selectedPlayer?.alliance ? (
+                      <Link href={`/admin/alliances/${selectedPlayer.alliance.id}`} className="hover:underline">
+                        {selectedPlayer.alliance.name}
+                      </Link>
+                    ) : selectedPlayer ? (
+                      "No alliance"
+                    ) : (
+                      "The selected player id does not match an existing profile."
+                    )}
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline" className="w-fit">
+                Last {days} days
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {selectedPlayer ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Screenshots</p>
+                    <p className="text-2xl font-bold">{formatNumber(playerUsageTotals?._sum.fileCount)}</p>
+                    <p className="text-xs text-muted-foreground">{formatNumber(playerUsageBatchCount)} batches</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Vision Requests</p>
+                    <p className="text-2xl font-bold">{formatNumber(playerUsageTotals?._sum.visionRequestCount)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatNumber(playerUsageTotals?._sum.processedChampionCount)} champions
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Role Split</p>
+                    <p className="text-2xl font-bold">{formatNumber(playerUsageActorCount)} / {formatNumber(playerUsageTargetCount)}</p>
+                    <p className="text-xs text-muted-foreground">actor / target batches</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Processing Health</p>
+                    <p className="text-2xl font-bold">{formatDuration(Math.round(playerUsageTotals?._avg.durationMs ?? 0))}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {percent(playerUsageFailedBatchCount + playerUsagePartialBatchCount, playerUsageBatchCount)} non-clean
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Errors</p>
+                    <p className="text-2xl font-bold">{formatNumber(playerUsageTotals?._sum.errorCount)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatNumber(playerUsageTotals?._sum.successCount)} successful files
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <div className="rounded-lg border">
+                    <div className="border-b p-4">
+                      <h3 className="font-semibold">Player Breakdown</h3>
+                      <p className="text-sm text-muted-foreground">Volume by source, mode, and outcome.</p>
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Source</TableHead>
+                          <TableHead>Mode</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Screenshots</TableHead>
+                          <TableHead className="text-right">Batches</TableHead>
+                          <TableHead className="text-right">Champions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {playerUsageRows.map((row) => (
+                          <TableRow key={`${row.source}-${row.mode}-${row.status}`}>
+                            <TableCell className="font-medium capitalize">{row.source}</TableCell>
+                            <TableCell>{row.mode}</TableCell>
+                            <TableCell>
+                              <Badge variant={getStatusBadgeVariant(row.status)}>{row.status}</Badge>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{formatNumber(row._sum.fileCount)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{formatNumber(row._count.id)}</TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {formatNumber(row._sum.processedChampionCount)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {playerUsageRows.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
+                              No usage events recorded for this player in the selected period.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="rounded-lg border">
+                    <div className="border-b p-4">
+                      <h3 className="font-semibold">Recent Player Events</h3>
+                      <p className="text-sm text-muted-foreground">Latest related upload batches.</p>
+                    </div>
+                    <div className="max-h-[520px] overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Players</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Files</TableHead>
+                            <TableHead className="text-right">Duration</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {recentPlayerEvents.map((event) => (
+                            <TableRow key={event.id}>
+                              <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                                {event.createdAt.toLocaleString()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{getPlayerUsageRole(event, selectedPlayer.id)}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {event.actorPlayer?.ingameName ?? "Unknown"} → {event.targetPlayer?.ingameName ?? "Unknown"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {event.source} · {event.mode}
+                                  {event.alliance ? ` · ${event.alliance.name}` : ""}
+                                  {event.errorMessages.length > 0 ? ` · ${event.errorMessages[0]}` : ""}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={getStatusBadgeVariant(event.status)}>{event.status}</Badge>
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatNumber(event.fileCount)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatDuration(event.durationMs)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {recentPlayerEvents.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
+                                No recent upload batches match this player.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Clear the player search or select another player to view detailed usage.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card>

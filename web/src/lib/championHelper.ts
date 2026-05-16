@@ -1,7 +1,7 @@
 import { ChampionImages } from '@/types/champion';
 import { Prisma } from '@prisma/client';
 
-export function isChampionImages(obj: any): obj is ChampionImages {
+export function isChampionImages(obj: unknown): obj is ChampionImages {
   if (!obj || typeof obj !== 'object') return false;
   return (
     'hero' in obj &&

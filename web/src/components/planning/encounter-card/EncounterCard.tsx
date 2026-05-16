@@ -39,6 +39,13 @@ import { FilterMetadata } from "../types";
 import { isChampionValidForEncounterOrQuest } from "../utils";
 
 type EncounterTab = "recommended" | "featured" | "alliance";
+type EncounterVideoGuide = {
+    videoUrl: string;
+    player?: { ingameName: string | null; avatar?: string | null } | null;
+};
+type EncounterWithVideoGuides = EncounterWithRelations & {
+    videos?: EncounterVideoGuide[];
+};
 
 interface EncounterFilterState {
     searchQuery: string;
@@ -175,6 +182,10 @@ function sortEncounterNodes(nodes: EncounterNodeWithRelations[]): EncounterNodeW
 
         return compareStableText(a.id, b.id);
     });
+}
+
+function getEncounterVideos(encounter: EncounterWithRelations): EncounterVideoGuide[] {
+    return (encounter as EncounterWithVideoGuides).videos ?? [];
 }
 
 function compareStableText(a: string, b: string): number {
@@ -374,7 +385,7 @@ function EncounterHeader({
                         <CardTitle className={`text-lg md:text-2xl font-black truncate leading-none ${colors ? colors.text : "text-slate-300"}`}>
                             {encounter.defender?.name || "Unknown Defender"}
                         </CardTitle>
-                        {(encounter.videoUrl || ((encounter as any).videos && (encounter as any).videos.length > 0)) && (
+                        {(encounter.videoUrl || getEncounterVideos(encounter).length > 0) && (
                             <Youtube className="w-5 h-5 text-red-600 shrink-0" />
                         )}
                     </div>
@@ -1128,7 +1139,7 @@ function EncounterExpandedContent({
                     </div>
                 ) : null}
 
-                {((encounter as any).videos?.length > 0 || encounter.videoUrl) && (
+                {(getEncounterVideos(encounter).length > 0 || encounter.videoUrl) && (
                     <div className="flex flex-col gap-2">
                         {showVideoId?.startsWith(encounter.id + "|") && (
                             <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
@@ -1170,7 +1181,7 @@ function EncounterExpandedContent({
                                 </div>
                                 
                                 {(() => {
-                                    const allVideos = [...((encounter as any).videos || [])];
+                                    const allVideos = [...getEncounterVideos(encounter)];
                                     if (encounter.videoUrl && !allVideos.some(v => v.videoUrl === encounter.videoUrl)) {
                                         allVideos.push({ videoUrl: encounter.videoUrl, player: { ingameName: "Strategy Guide" } });
                                     }
@@ -1184,7 +1195,7 @@ function EncounterExpandedContent({
                                             }}
                                         >
                                             <PlayCircle className="w-4 h-4 text-red-500/70 group-hover/video:text-red-500" />
-                                            {video.player?.avatar && <img src={video.player.avatar} alt={video.player.ingameName} className="w-4 h-4 rounded-full" />}
+                                            {video.player?.avatar && <img src={video.player.avatar} alt={video.player.ingameName ?? "Player"} className="w-4 h-4 rounded-full" />}
                                             <span className="text-xs font-medium text-slate-300 group-hover/video:text-white">{video.player?.ingameName || "Strategy Guide"}</span>
                                         </button>
                                     ));
@@ -1388,7 +1399,7 @@ function EncounterExpandedContent({
                             if (activeTab === "featured" && featuredPicks[encounter.id]?.length > 0) {
                                 return (
                                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                        {featuredPicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
+                                        {featuredPicks[encounter.id].map((p) => renderListPick(p, encounter))}
                                     </div>
                                 );
                             }
@@ -1396,7 +1407,7 @@ function EncounterExpandedContent({
                             if (activeTab === "alliance" && alliancePicks[encounter.id]?.length > 0) {
                                 return (
                                     <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 sm:gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                        {alliancePicks[encounter.id].map((p: any) => renderListPick(p, encounter))}
+                                        {alliancePicks[encounter.id].map((p) => renderListPick(p, encounter))}
                                     </div>
                                 );
                             }

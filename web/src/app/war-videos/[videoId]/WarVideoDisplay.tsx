@@ -116,8 +116,9 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
         const { error } = await response.json();
         toast({ title: 'Error', description: error, variant: 'destructive' });
       }
-    } catch (error: any) {
-      toast({ title: 'Network Error', description: error.message, variant: 'destructive' });
+    } catch (error: unknown) {
+      const description = error instanceof Error ? error.message : "Request failed";
+      toast({ title: 'Network Error', description, variant: 'destructive' });
     }
   };
 
@@ -136,8 +137,9 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
         const { error } = await response.json();
         toast({ title: 'Error', description: error, variant: 'destructive' });
       }
-    } catch (error: any) {
-      toast({ title: 'Network Error', description: error.message, variant: 'destructive' });
+    } catch (error: unknown) {
+      const description = error instanceof Error ? error.message : "Request failed";
+      toast({ title: 'Network Error', description, variant: 'destructive' });
     }
   };
 

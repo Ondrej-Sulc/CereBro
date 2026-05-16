@@ -3,11 +3,10 @@
 import Image from "next/image"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react"
-import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, ExternalLink, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Zap } from "lucide-react"
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react"
+import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Zap } from "lucide-react"
 import { ChampionClass } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Slider } from "@/components/ui/slider"
@@ -153,12 +152,8 @@ export function ChampionDetailsClient({
   const [sigLevel, setSigLevel] = useState(200)
   const [ascensionLevel, setAscensionLevel] = useState(0)
   const [activeTab, setActiveTab] = useState("overview")
-  useEffect(() => {
-    setSigLevel(value => Math.min(value, currentMaxSig))
-  }, [currentMaxSig])
-  useEffect(() => {
-    if (selectedStat?.rarity !== 7) setAscensionLevel(0)
-  }, [selectedStat?.rarity])
+  const cappedSigLevel = Math.min(sigLevel, currentMaxSig)
+  const effectiveAscensionLevel = selectedStat?.rarity === 7 ? ascensionLevel : 0
 
   const glossaryById = useMemo(() => new Map(glossaryTerms.map(term => [term.id, term])), [glossaryTerms])
   const immunities = champion.abilities.filter(link => link.type === "IMMUNITY")
@@ -167,34 +162,25 @@ export function ChampionDetailsClient({
   const selectedPrestige = projectMcocPrestige({
     prestigeData: champion.prestigeData,
     stat: selectedStat,
-    sigLevel,
-    ascensionLevel,
+    sigLevel: cappedSigLevel,
+    ascensionLevel: effectiveAscensionLevel,
   })
-  const displayStat = useMemo(
-    () => applyAscensionToStat(selectedStat, ascensionLevel),
-    [selectedStat, ascensionLevel]
-  )
-  const abilityTextView = useMemo(
-    () => prepareChampionAbilityTextView({
-      records: champion.abilityTexts,
-      curves: champion.abilityCurves,
-      maxSig: currentMaxSig,
-      sigLevel,
-      stat: displayStat,
-    }),
-    [champion.abilityTexts, champion.abilityCurves, currentMaxSig, sigLevel, displayStat]
-  )
+  const displayStat = applyAscensionToStat(selectedStat, effectiveAscensionLevel)
+  const abilityTextView = prepareChampionAbilityTextView({
+    records: champion.abilityTexts,
+    curves: champion.abilityCurves,
+    maxSig: currentMaxSig,
+    sigLevel: cappedSigLevel,
+    stat: displayStat,
+  })
 
   const tierKey = selectedStat?.rarity && selectedStat?.rank ? `${selectedStat.rarity}-${selectedStat.rank}` : "";
   const maxStats = maxStatsByTier[tierKey] || {};
-  const displayMaxStats = useMemo(
-    () => ({
-      ...maxStats,
-      health: applyAscensionToStatValue(maxStats.health, selectedStat?.rarity, ascensionLevel),
-      attack: applyAscensionToStatValue(maxStats.attack, selectedStat?.rarity, ascensionLevel),
-    }),
-    [maxStats, selectedStat?.rarity, ascensionLevel]
-  )
+  const displayMaxStats = {
+    ...maxStats,
+    health: applyAscensionToStatValue(maxStats.health, selectedStat?.rarity, effectiveAscensionLevel),
+    attack: applyAscensionToStatValue(maxStats.attack, selectedStat?.rarity, effectiveAscensionLevel),
+  }
 
   return (
     <TooltipProvider>
@@ -321,12 +307,12 @@ export function ChampionDetailsClient({
                         min={0}
                         max={currentMaxSig}
                         step={1}
-                        value={[sigLevel]}
+                        value={[cappedSigLevel]}
                         onValueChange={(val: number[]) => setSigLevel(val[0])}
                         className="flex-1"
                       />
                       <span className="w-12 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-center font-mono text-sm text-slate-100">
-                        {sigLevel}
+                        {cappedSigLevel}
                       </span>
                     </div>
                   </label>
@@ -341,7 +327,7 @@ export function ChampionDetailsClient({
                             onClick={() => setAscensionLevel(level)}
                             className={cn(
                               "h-9 rounded border text-xs font-black transition-colors",
-                              ascensionLevel === level
+                              effectiveAscensionLevel === level
                                 ? "border-amber-400/40 bg-amber-500/20 text-amber-200"
                                 : "border-slate-700 bg-slate-900 text-slate-500 hover:border-slate-600 hover:text-slate-300"
                             )}
@@ -394,7 +380,7 @@ export function ChampionDetailsClient({
                       icon={<Sparkles className="h-5 w-5" />}
                       glossaryById={glossaryById}
                       accent={classColors.color}
-                      chart={<CurvePanel curveView={abilityTextView.curveView} sigLevel={sigLevel} accent={classColors.color} />}
+                      chart={<CurvePanel curveView={abilityTextView.curveView} sigLevel={cappedSigLevel} accent={classColors.color} />}
                     />
                     {abilityTextView.descriptionPanels.map(panel => (
                       <TextPanel

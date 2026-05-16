@@ -28,7 +28,7 @@ export default async function RosterUpdatePage() {
     }
 
     // Check if user is admin
-    let isBotAdmin = currentUser.isBotAdmin;
+    const isBotAdmin = currentUser.isBotAdmin;
 
     // Fetch all profiles belonging to this Discord user
     const allProfiles = await prisma.player.findMany({

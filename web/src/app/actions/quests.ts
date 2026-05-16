@@ -463,9 +463,10 @@ export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', 
         revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
         
         return { success: true };
-    } catch (e: any) {
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : "Failed to update featured players";
         logger.error({ err: e, questPlanId }, "Failed to update featured quest players");
-        return { success: false, error: e.message || "Failed to update featured players" };
+        return { success: false, error: message };
     }
 });
 
@@ -656,7 +657,7 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
                         map["SYNERGY"].push({
                             championId: syn.championId,
                             count: 1,
-                            champion: syn.champion as any,
+                            champion: syn.champion as ChampionCounterData,
                             pickedBy: [player]
                         });
                     }
@@ -756,7 +757,7 @@ export const getEncounterAlliancePicks = async (questPlanId: string, allianceId:
                         map["SYNERGY"].push({
                             championId: syn.championId,
                             count: 1,
-                            champion: syn.champion as any,
+                            champion: syn.champion as ChampionCounterData,
                             pickedBy: [pickedByData]
                         });
                     }
@@ -2777,7 +2778,7 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
         : [];
 
     // Build a map: questEncounterId -> roster entry
-    const rosterMap = new Map<string, any>();
+    const rosterMap = new Map<string, unknown>();
     for (const enc of playerPlan.encounters) {
         if (enc.selectedChampionId) {
             // Find "best" entry for this champion
@@ -2837,7 +2838,7 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
         rosterEntries,
         rosterMap: Object.fromEntries(
             Array.from(rosterMap.entries())
-        ) as Record<string, any>
+        ) as Record<string, unknown>
     };
 });
 

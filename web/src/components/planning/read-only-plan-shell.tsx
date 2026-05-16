@@ -5,12 +5,58 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft } from "lucide-react";
 import QuestTimelineClient from "@/components/planning/quest-timeline-client";
 import { ChampionImages } from "@/types/champion";
-import { RosterWithChampion, SynergyWithChampion } from "./types";
+import { RosterWithChampion, SynergyWithChampion, type QuestTimelineProps } from "./types";
+
+type ReadOnlyChampionLink = {
+    ability: {
+        id: number;
+        name: string;
+    };
+};
+
+type ReadOnlyChampion = {
+    images: unknown;
+    tags?: unknown[];
+    abilities?: ReadOnlyChampionLink[];
+};
+
+type ReadOnlyRosterEntry = {
+    champion: ReadOnlyChampion;
+};
+
+type ReadOnlySynergyChampion = {
+    champion: ReadOnlyChampion;
+};
+
+type ReadOnlyPlan = {
+    encounters: {
+        questEncounterId: string;
+        selectedChampionId: number | null;
+        prefightChampionId: number | null;
+    }[];
+    rosterEntries?: ReadOnlyRosterEntry[];
+    synergyChampions?: ReadOnlySynergyChampion[];
+    rosterMap?: Record<string, unknown>;
+    routeChoices?: unknown[];
+};
+
+type ReadOnlyQuest = {
+    title: string;
+    bannerUrl?: string | null;
+    bannerFit?: string | null;
+    bannerPosition?: string | null;
+    category?: { name: string } | null;
+};
+
+type ReadOnlyPlayer = {
+    avatar?: string | null;
+    ingameName: string;
+};
 
 interface ReadOnlyPlanShellProps {
-    plan: any; // Using any for the complex nested type from getPlayerQuestPlanForViewing
-    quest: any;
-    player: any;
+    plan: ReadOnlyPlan;
+    quest: ReadOnlyQuest;
+    player: ReadOnlyPlayer;
     backLinkHref: string;
     backLinkText: string;
     subtitle: string;
@@ -48,13 +94,13 @@ export function ReadOnlyPlanShell({
     );
 
     // Map roster entries to typed objects for the team summary
-    const roster: RosterWithChampion[] = (plan.rosterEntries || []).map((entry: any) => ({
+    const roster = (plan.rosterEntries || []).map((entry) => ({
         ...entry,
         champion: {
             ...entry.champion,
             images: entry.champion.images as unknown as ChampionImages,
             tags: entry.champion.tags || [],
-            abilities: (entry.champion.abilities || []).map((link: any) => ({
+            abilities: (entry.champion.abilities || []).map((link) => ({
                 ...link,
                 ability: {
                     id: link.ability.id,
@@ -63,16 +109,16 @@ export function ReadOnlyPlanShell({
                 }
             }))
         }
-    }));
+    })) as unknown as RosterWithChampion[];
 
     // Map synergy champions for correct typing
-    const savedSynergies: SynergyWithChampion[] = (plan.synergyChampions || []).map((s: any) => ({
+    const savedSynergies = (plan.synergyChampions || []).map((s) => ({
         ...s,
         champion: {
             ...s.champion,
             images: s.champion.images as unknown as ChampionImages,
             tags: s.champion.tags || [],
-            abilities: (s.champion.abilities || []).map((link: any) => ({
+            abilities: (s.champion.abilities || []).map((link) => ({
                 ...link,
                 ability: {
                     id: link.ability.id,
@@ -81,7 +127,7 @@ export function ReadOnlyPlanShell({
                 }
             }))
         }
-    }));
+    })) as unknown as SynergyWithChampion[];
 
     return (
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
@@ -143,14 +189,14 @@ export function ReadOnlyPlanShell({
 
             {/* Read-only Timeline */}
             <QuestTimelineClient
-                quest={quest}
+                quest={quest as unknown as QuestTimelineProps["quest"]}
                 roster={roster}
-                savedEncounters={plan.encounters || []}
+                savedEncounters={plan.encounters as unknown as NonNullable<QuestTimelineProps["savedEncounters"]>}
                 readOnly
                 initialSelections={selections}
                 initialPrefightSelections={prefightSelections}
                 rosterMap={plan.rosterMap}
-                savedRouteChoices={plan.routeChoices || []}
+                savedRouteChoices={(plan.routeChoices || []) as unknown as NonNullable<QuestTimelineProps["savedRouteChoices"]>}
                 savedSynergies={savedSynergies}
             />
         </div>

@@ -27,7 +27,7 @@ declare global {
 
 export const isAbortedResponse = (error: unknown): boolean => {
   if (!error) return false;
-  const err = error as any;
+  const err = error as { name?: unknown; message?: unknown };
   return (
     err?.name === 'ResponseAborted' ||
     (typeof err?.message === 'string' && err.message.includes('ResponseAborted'))
@@ -38,7 +38,7 @@ export const isAbortedResponse = (error: unknown): boolean => {
 if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
   globalThis.__LOGGER_INITIALIZED__ = true;
 
-  const formatArgs = (args: any[]): string | any[] => {
+  const formatArgs = (args: unknown[]): string | unknown[] => {
     if (args.length === 1 && typeof args[0] === 'string') return args[0];
     return args;
   };
@@ -46,14 +46,14 @@ if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
   const originalError = console.error;
   const originalWarn = console.warn;
 
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     logger.error({ consoleArgs: formatArgs(args) }, 'console.error');
     // We still call the original to ensure it appears in the terminal during dev
     // and because Next.js might be doing its own interception.
     originalError.apply(console, args);
   };
 
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     logger.warn({ consoleArgs: formatArgs(args) }, 'console.warn');
     originalWarn.apply(console, args);
   };

@@ -3,11 +3,9 @@ import { EncounterCard, ReviveOrbIcon } from "./encounter-card/EncounterCard";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { Card, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, Search, X, Trash2, Crosshair, Youtube, Users, Share2, Check, Target, Swords, Ban, ShieldAlert, Zap } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, X, Trash2, Crosshair, Users, Share2, Check, Target, Swords, ShieldAlert, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -15,12 +13,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { getShareablePlanId, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestSynergy, clearAllQuestCounters, savePlayerQuestRouteChoice, savePlayerQuestPrefightChampion } from "@/app/actions/quests";
 import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quests";
 import { getChampionClassColors } from "@/lib/championClassHelper";
-import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
+import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { ChampionAvatar } from "@/components/champion-avatar";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
-import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
-import { MultiSelectFilter } from "@/components/ui/filters";
 import { useToast } from "@/hooks/use-toast";
 import {
     EncounterWithRelations,
@@ -46,6 +42,12 @@ import { reportClientError } from "@/lib/observability/client";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
 type QuestRouteSectionWithRelations = NonNullable<QuestTimelineProps["quest"]["routeSections"]>[number];
+type PlayerPickSummary = { encounterId: string; champion: ChampionCounterData };
+type PlayerPicksMap = Record<string, {
+    name: string;
+    avatar: string | null;
+    picks: PlayerPickSummary[];
+}>;
 const EMPTY_ROSTER: NonNullable<QuestTimelineProps["roster"]> = [];
 const EMPTY_SAVED_ENCOUNTERS: NonNullable<QuestTimelineProps["savedEncounters"]> = [];
 const EMPTY_SAVED_ROUTE_CHOICES: NonNullable<QuestTimelineProps["savedRouteChoices"]> = [];
@@ -69,9 +71,9 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
 }) => {
     // Group picks by champion
     const teamMap = useMemo(() => {
-        const map: Record<number, { champion: ChampionCounterData; assignedEncounters: any[] }> = {};
+        const map: Record<number, { champion: ChampionCounterData; assignedEncounters: EncounterWithRelations[] }> = {};
         picks.forEach(p => {
-            const enc = quest.encounters.find((e: any) => e.id === p.encounterId);
+            const enc = quest.encounters.find((e) => e.id === p.encounterId);
             if (!enc) return;
             if (!map[p.champion.id]) {
                 map[p.champion.id] = { champion: p.champion, assignedEncounters: [] };
@@ -96,7 +98,7 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
                     )}
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-base font-black text-white tracking-tight">{user.name}'s Plan</span>
+                    <span className="text-base font-black text-white tracking-tight">{user.name}&apos;s Plan</span>
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">{teamMap.length} Champions selected</span>
                 </div>
             </div>
@@ -149,7 +151,7 @@ const PlayerTeamSummary = ({ user, picks, quest, scrollToEncounter }: {
                                 <div className="px-3 pb-3">
                                     {assignedEncounters.length > 0 ? (
                                         <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner">
-                                            {assignedEncounters.map((enc: any) => {
+                                            {assignedEncounters.map((enc) => {
                                                 const diffBorder = enc.difficulty === "HARD"
                                                     ? "border-red-700/60"
                                                     : enc.difficulty === "EASY"
@@ -208,7 +210,7 @@ const MultiPlayerPopover = ({
     users: { id: string; name: string; avatar: string | null }[];
     quest: QuestTimelineProps["quest"];
     scrollToEncounter: (id: string) => void;
-    playerPicksMap: any;
+    playerPicksMap: PlayerPicksMap;
 }) => {
     const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
 
@@ -342,7 +344,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
     const [isClearPlanOpen, setIsClearPlanOpen] = useState(false);
     const [isNodesCollapsed, setIsNodesCollapsed] = useState(false);
-    const [isSynergyPickerOpen, setIsSynergyPickerOpen] = useState(false);
     const routeMapRef = useRef<HTMLDivElement>(null);
     const routeStartRef = useRef<HTMLDivElement>(null);
     const routeEndRef = useRef<HTMLDivElement>(null);
@@ -446,7 +447,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
 
         try {
             // Wait for all remote operations to complete successfully FIRST
-            const promises: Promise<any>[] = [];
+            const promises: Promise<unknown>[] = [];
             
             if (isSynergy) {
                 promises.push(savePlayerQuestSynergy(quest.id, championId, true));
@@ -556,10 +557,10 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
             picks: { encounterId: string; champion: ChampionCounterData }[] 
         }> = {};
 
-        const addPicks = (picksMap: Record<string, any[]>) => {
+        const addPicks = (picksMap: Record<string, PickCounterWithChampion[]>) => {
             Object.entries(picksMap).forEach(([encId, counters]) => {
                 counters.forEach(c => {
-                    c.pickedBy?.forEach((user: any) => {
+                    c.pickedBy?.forEach((user) => {
                         if (!map[user.id]) {
                             map[user.id] = { name: user.name, avatar: user.avatar, picks: [] };
                         }
@@ -930,7 +931,11 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
             const rect = element.getBoundingClientRect();
             window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'smooth' });
         };
-        delay > 0 ? setTimeout(doScroll, delay) : requestAnimationFrame(doScroll);
+        if (delay > 0) {
+            setTimeout(doScroll, delay);
+        } else {
+            requestAnimationFrame(doScroll);
+        }
     }, [getStickyOffset]);
 
     const toggleExpand = (id: string) => {

@@ -253,18 +253,17 @@ function BarTrack({
 }
 
 export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Props) {
-  if (targetMinor <= 0) return null;
-
-  const barsCleared = Math.floor(coveredMinor / targetMinor);
-  const overflow = coveredMinor % targetMinor;
-  const fillPct = Math.round((overflow / targetMinor) * 100);
-  const celebrated = barsCleared >= 1;
-
   const [animBar, setAnimBar] = useState(0);
   const [displayPct, setDisplayPct] = useState(0);
   const [shownHistory, setShownHistory] = useState(0);
   const [justCompleted, setJustCompleted] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
+
+  const safeTargetMinor = Math.max(targetMinor, 1);
+  const barsCleared = targetMinor > 0 ? Math.floor(coveredMinor / safeTargetMinor) : 0;
+  const overflow = targetMinor > 0 ? coveredMinor % safeTargetMinor : 0;
+  const fillPct = targetMinor > 0 ? Math.round((overflow / safeTargetMinor) * 100) : 0;
+  const celebrated = barsCleared >= 1;
 
   const BAR_FILL_MS = 600;
   const FLASH_MS = 180;
@@ -307,6 +306,8 @@ export function FundingBar({ coveredMinor, targetMinor, previewMinor = 0 }: Prop
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (targetMinor <= 0) return null;
 
   // When the bar is exactly full (no overflow), animBar has advanced to barsCleared
   // but displayPct reset to 0. Render as if we're still on bar (animBar-1) at 100%.

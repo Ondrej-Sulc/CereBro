@@ -55,6 +55,18 @@ import { Badge } from "@/components/ui/badge"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 
 type ChampionListItem = { id: number; name: string; class: string; images: ChampionImages }
+type FullAbilityDescription = {
+  title?: string;
+  type?: string;
+  description?: string;
+};
+type FullAbilitiesView = {
+  signature?: {
+    name?: string;
+    description?: string;
+  };
+  abilities_breakdown?: FullAbilityDescription[];
+};
 
 interface ChampionEditorProps {
   champion: AdminChampionData | null
@@ -225,9 +237,10 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
       }
 
       setJsonError(null)
-    } catch (error: any) {
-      setJsonError(error.message || "Invalid JSON format")
-      toast({ title: "Invalid JSON format", description: error.message, variant: "destructive" })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Invalid JSON format"
+      setJsonError(message)
+      toast({ title: "Invalid JSON format", description: message, variant: "destructive" })
       return
     }
 
@@ -236,9 +249,10 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
       await updateChampionFullAbilities(champion.id, parsedJson)
       toast({ title: "Descriptions JSON updated" })
       setIsEditingJson(false)
-    } catch (error: any) {
-      setJsonError(error.message || "Server Error")
-      toast({ title: "Failed to save JSON", description: error.message, variant: "destructive" })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Server Error"
+      setJsonError(message)
+      toast({ title: "Failed to save JSON", description: message, variant: "destructive" })
     } finally {
       setIsSubmitting(false)
     }
@@ -954,7 +968,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                 </div>
                                 <div className="space-y-8 pb-20 pr-4">
                                     {(() => {
-                                        const fa = champion.fullAbilities as any;
+                                        const fa = champion.fullAbilities as FullAbilitiesView | null;
                                         if (!fa || (!fa.signature && (!fa.abilities_breakdown || fa.abilities_breakdown.length === 0))) {
                                             return (
                                                 <div className="flex flex-col items-center justify-center py-32 bg-slate-900/40 border border-slate-800/60 border-dashed rounded-xl">
@@ -996,7 +1010,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                             <div className="h-px bg-slate-800/80 flex-1" />
                                                         </div>
                                                         <div className="space-y-4">
-                                                            {fa.abilities_breakdown.map((ability: any, idx: number) => {
+                                                            {fa.abilities_breakdown.map((ability, idx) => {
                                                                 if (!ability?.title && !ability?.description) return null;
                                                                 return (
                                                                 <div key={idx} className="p-5 border border-slate-800/60 rounded-xl bg-slate-900/40 shadow-sm transition-colors hover:border-slate-700/80">

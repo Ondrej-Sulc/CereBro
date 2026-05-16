@@ -9,13 +9,17 @@ const { GET: _GET, POST: _POST } = handlers;
  * 1. Catch and log errors in JSON format via Pino.
  * 2. Handle 'ResponseAborted' which is common in Next.js 15/Auth.js v5 redirects.
  */
-const wrapHandler = <Req extends Request, Args extends any[], R>(
+const wrapHandler = <Req extends Request, Args extends unknown[], R>(
   handler: (req: Req, ...args: Args) => Promise<R> | R
 ) => async (req: Req, ...args: Args): Promise<R | Response> => {
   try {
     return await handler(req, ...args);
-  } catch (error: any) {
-    if (error?.message?.includes('next_redirect') || error?.digest?.startsWith('NEXT_REDIRECT')) {
+  } catch (error: unknown) {
+    const authError = error as { message?: unknown; digest?: unknown; stack?: unknown; name?: unknown };
+    if (
+      (typeof authError.message === "string" && authError.message.includes('next_redirect')) ||
+      (typeof authError.digest === "string" && authError.digest.startsWith('NEXT_REDIRECT'))
+    ) {
       throw error;
     }
 
@@ -29,9 +33,9 @@ const wrapHandler = <Req extends Request, Args extends any[], R>(
     // Log the error in JSON format before re-throwing
     logger.error({ 
       error: {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
+        message: authError.message,
+        stack: authError.stack,
+        name: authError.name,
       }, 
       url: req.url 
     }, "Critical error in Auth handler");

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useEffect, useSyncExternalStore } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -87,6 +87,27 @@ const groups: SidebarGroup[] = [
   }
 ]
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "admin-sidebar-collapsed"
+const SIDEBAR_COLLAPSED_EVENT = "admin-sidebar-collapsed-change"
+
+function subscribeToSidebarCollapsed(callback: () => void) {
+  window.addEventListener(SIDEBAR_COLLAPSED_EVENT, callback)
+  window.addEventListener("storage", callback)
+
+  return () => {
+    window.removeEventListener(SIDEBAR_COLLAPSED_EVENT, callback)
+    window.removeEventListener("storage", callback)
+  }
+}
+
+function getSidebarCollapsedSnapshot() {
+  return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
+}
+
+function getServerSidebarCollapsedSnapshot() {
+  return false
+}
+
 interface AdminSidebarProps {
   isBotAdmin: boolean;
   permissions: string[];
@@ -95,29 +116,17 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ isBotAdmin, permissions, isMobile }: AdminSidebarProps) {
   const pathname = usePathname()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const isCollapsed = useSyncExternalStore(
+    subscribeToSidebarCollapsed,
+    getSidebarCollapsedSnapshot,
+    getServerSidebarCollapsedSnapshot
+  )
 
-  // Persist collapse state
   useEffect(() => {
     if (!isMobile) {
-      const saved = localStorage.getItem("admin-sidebar-collapsed")
-      if (saved !== null) {
-          setIsCollapsed(saved === "true")
-      }
+      window.dispatchEvent(new CustomEvent("admin-sidebar-toggle", { detail: { collapsed: isCollapsed } }))
     }
-    setIsMounted(true)
-  }, [isMobile])
-
-  useEffect(() => {
-    if (isMounted && !isMobile) {
-        localStorage.setItem("admin-sidebar-collapsed", String(isCollapsed))
-        // Dispatch custom event for layout to react to width change
-        window.dispatchEvent(new CustomEvent("admin-sidebar-toggle", { detail: { collapsed: isCollapsed } }))
-    }
-  }, [isCollapsed, isMounted, isMobile])
-
-  if (!isMounted) return null
+  }, [isCollapsed, isMobile])
 
   // Filter groups based on permissions
   const filteredGroups = groups.map(group => {
@@ -134,6 +143,10 @@ export function AdminSidebar({ isBotAdmin, permissions, isMobile }: AdminSidebar
   }).filter(group => group.items.length > 0);
 
   const collapsedState = isMobile ? false : isCollapsed;
+  const toggleCollapsed = () => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(!isCollapsed))
+    window.dispatchEvent(new Event(SIDEBAR_COLLAPSED_EVENT))
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -149,7 +162,7 @@ export function AdminSidebar({ isBotAdmin, permissions, isMobile }: AdminSidebar
                   variant="ghost" 
                   size="icon" 
                   className="h-8 w-8 ml-auto" 
-                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  onClick={toggleCollapsed}
               >
                   {collapsedState ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </Button>

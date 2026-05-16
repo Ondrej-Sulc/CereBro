@@ -1,22 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
 export function LastUpdated({ createdAtIso }: { createdAtIso: string }) {
-  const [timestamp, setTimestamp] = useState<string>("");
-
-  useEffect(() => {
-    const d = new Date(createdAtIso);
-    if (isNaN(d.getTime())) {
-      setTimestamp("…");
-    } else {
-      setTimestamp(d.toLocaleTimeString());
-    }
-  }, [createdAtIso]);
+  const date = new Date(createdAtIso);
+  const timestamp = Number.isNaN(date.getTime()) ? "..." : date.toLocaleTimeString();
 
   return (
     <div className="text-sm text-muted-foreground italic">
-       Last updated: {timestamp || "..."}
+       Last updated: {timestamp}
     </div>
   );
 }

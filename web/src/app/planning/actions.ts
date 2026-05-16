@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
-import { WarFight, WarMapType, War, Alliance, WarResult } from "@prisma/client";
+import { WarFight, WarMapType, War, Alliance, WarResult, ChampionClass } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -863,12 +863,12 @@ export const getWarMapPng = withActionContext('getWarMapPng', async (warId: stri
         include: { champion: true }
     });
 
-    const bannedChampionsMap = new Map<number, { url: string, class: any }>();
+    const bannedChampionsMap = new Map<number, { url: string, class: ChampionClass }>();
     const uniqueImageUrls = new Set<string>();
 
     seasonBans.forEach(b => {
         if (b.champion && b.champion.images) {
-            const url = getChampionImageUrl(b.champion.images as any, '64', 'primary');
+            const url = getChampionImageUrl(b.champion.images, '64', 'primary');
             bannedChampionsMap.set(b.champion.id, { url, class: b.champion.class });
             uniqueImageUrls.add(url);
         }
@@ -876,7 +876,7 @@ export const getWarMapPng = withActionContext('getWarMapPng', async (warId: stri
 
     war.bans.forEach(b => {
         if (b.champion && b.champion.images) {
-            const url = getChampionImageUrl(b.champion.images as any, '64', 'primary');
+            const url = getChampionImageUrl(b.champion.images, '64', 'primary');
             bannedChampionsMap.set(b.champion.id, { url, class: b.champion.class });
             uniqueImageUrls.add(url);
         }
@@ -908,27 +908,27 @@ export const getWarMapPng = withActionContext('getWarMapPng', async (warId: stri
 
         let defenderImage: string | undefined;
         if (fight.defender?.images) {
-            defenderImage = getChampionImageUrl(fight.defender.images as any, '64', 'primary');
+            defenderImage = getChampionImageUrl(fight.defender.images, '64', 'primary');
             uniqueImageUrls.add(defenderImage);
         }
 
         let attackerImage: string | undefined;
         if (fight.attacker?.images) {
-            attackerImage = getChampionImageUrl(fight.attacker.images as any, '64', 'primary');
+            attackerImage = getChampionImageUrl(fight.attacker.images, '64', 'primary');
             uniqueImageUrls.add(attackerImage);
         }
 
         const prefightImages: { url: string; borderColor: string }[] = [];
         fight.prefightChampions.forEach(pf => {
             if (pf.champion?.images) {
-                const url = getChampionImageUrl(pf.champion.images as any, '64', 'primary');
+                const url = getChampionImageUrl(pf.champion.images, '64', 'primary');
                 uniqueImageUrls.add(url);
                 prefightImages.push({ url, borderColor: (pf.player?.id && globalColorMap.get(pf.player.id)) || '#94a3b8' });
             }
         });
 
-        const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some((t: any) => t.id === activeTactic.attackTag!.id));
-        const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some((t: any) => t.id === activeTactic.defenseTag!.id));
+        const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some((t: { id: number }) => t.id === activeTactic.attackTag!.id));
+        const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some((t: { id: number }) => t.id === activeTactic.defenseTag!.id));
 
         assignments.set(fight.node.nodeNumber, {
             defenderName: fight.defender?.name,
@@ -971,12 +971,12 @@ export const getWarMapPng = withActionContext('getWarMapPng', async (warId: stri
                 pathLabel = `${s1Str} / ${s2Str}`;
             }
 
-            const assignedChampions: { url: string, class: any }[] = [];
+            const assignedChampions: { url: string, class: ChampionClass }[] = [];
             const seenIds = new Set<number>();
             pFights.forEach(f => {
                 if (f.attacker && !seenIds.has(f.attacker.id)) {
                     seenIds.add(f.attacker.id);
-                    assignedChampions.push({ url: getChampionImageUrl(f.attacker.images as any, '64', 'primary'), class: f.attacker.class });
+                    assignedChampions.push({ url: getChampionImageUrl(f.attacker.images, '64', 'primary'), class: f.attacker.class });
                 }
             });
             bgFights.forEach(f => {
@@ -984,7 +984,7 @@ export const getWarMapPng = withActionContext('getWarMapPng', async (warId: stri
                     if (pf.playerId === p.id && pf.champion && !seenIds.has(pf.champion.id)) {
                         seenIds.add(pf.champion.id);
                         if (pf.champion.images) {
-                            assignedChampions.push({ url: getChampionImageUrl(pf.champion.images as any, '64', 'primary'), class: pf.champion.class });
+                            assignedChampions.push({ url: getChampionImageUrl(pf.champion.images, '64', 'primary'), class: pf.champion.class });
                         }
                     }
                 });
@@ -992,7 +992,7 @@ export const getWarMapPng = withActionContext('getWarMapPng', async (warId: stri
             pExtras.forEach(e => {
                 if (e.champion && !seenIds.has(e.champion.id)) {
                     seenIds.add(e.champion.id);
-                    assignedChampions.push({ url: getChampionImageUrl(e.champion.images as any, '64', 'primary'), class: e.champion.class });
+                    assignedChampions.push({ url: getChampionImageUrl(e.champion.images, '64', 'primary'), class: e.champion.class });
                 }
             });
 

@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Bot, MessageSquare, UserPlus, Link2, Shield, TerminalSquare } from "lucide-react";
+import { Bot, MessageSquare, UserPlus, Link2, Shield, TerminalSquare, type LucideIcon } from "lucide-react";
 import { DISCORD_INVITE } from "@/lib/links";
 
 const steps: Step[] = [
@@ -61,7 +61,7 @@ interface Step {
   id: string;
   title: string;
   subtitle: string;
-  icon: any;
+  icon: LucideIcon;
   accent: Accent;
   description: string;
   chips: string[];

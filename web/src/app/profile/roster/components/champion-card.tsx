@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, type CSSProperties, type ReactNode, useState } from "react";
+import { memo, type ReactNode, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -432,7 +432,7 @@ function groupItems(
     const grouped = items.reduce((acc, curr) => {
         const name = curr.ability.name;
         if (!acc[name]) {
-            const raw = curr.ability.gameGlossaryTerm?.raw as any;
+            const raw = curr.ability.gameGlossaryTerm?.raw as Record<string, unknown> | null | undefined;
             acc[name] = { 
                 name, 
                 iconUrl: curr.ability.iconUrl ?? null,

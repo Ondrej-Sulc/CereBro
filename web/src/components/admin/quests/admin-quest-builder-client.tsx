@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { QuestPlan, QuestEncounter, Champion as PrismaChampion, QuestCategory, Tag, ChampionClass, QuestPlanStatus, EncounterDifficulty, Prisma } from "@prisma/client";
+import { QuestCategory, Tag, ChampionClass, QuestPlanStatus, EncounterDifficulty, Prisma } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,25 +28,50 @@ import { MultiNodeModifierCombobox } from "@/components/comboboxes/MultiNodeModi
 import { MultiTagCombobox } from "@/components/comboboxes/MultiTagCombobox";
 import { AsyncBotUserCombobox } from "@/components/comboboxes/AsyncBotUserCombobox";
 import { AsyncPlayerSearchCombobox } from "@/components/comboboxes/AsyncPlayerSearchCombobox";
-import { NodeModifier, QuestEncounterNode } from "@prisma/client";
+import { NodeModifier } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
 import { getQuestPlanById } from "@/app/actions/quests";
-import { ChampionImages, Champion } from "@/types/champion";
+import { Champion } from "@/types/champion";
 
 type BaseQuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
     creators: (BaseQuestWithRelations["creators"][0] & { name?: string })[];
-    playerPlans: any[]; // Manual bypass for Prisma relation inference
+    playerPlans: { player?: { id: string; ingameName: string | null; avatar: string | null } | null }[];
 };
 type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
-type EncounterNodeWithRelations = EncounterWithRelations["nodes"][0];
-type CreatorRelation = QuestWithRelations["creators"][0];
 type SelectedCreator = { id: string; name: string; avatar: string | null; discordId?: string | null };
+type EncounterVideoFormValue = { videoUrl: string; playerId: string | null; playerName: string | null; playerAvatar: string | null };
+type EncounterWithVideos = EncounterWithRelations & {
+    videos?: {
+        videoUrl: string;
+        playerId: string | null;
+        player?: { ingameName: string | null; avatar: string | null } | null;
+    }[];
+};
+
+function getErrorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error ? error.message : fallback;
+}
+
+function getEncounterVideos(encounter: EncounterWithRelations): EncounterVideoFormValue[] {
+    return ((encounter as EncounterWithVideos).videos ?? []).map((v) => ({
+        videoUrl: v.videoUrl,
+        playerId: v.playerId,
+        playerName: v.player?.ingameName || null,
+        playerAvatar: v.player?.avatar || null
+    }));
+}
+
+function hasPlayer(
+    plan: QuestWithRelations["playerPlans"][number]
+): plan is { player: { id: string; ingameName: string | null; avatar: string | null } } {
+    return Boolean(plan.player?.id);
+}
 
 function formatSeconds(s: number): string {
     const h = Math.floor(s / 3600);
@@ -90,7 +115,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [defenderId, setDefenderId] = useState<string>("");
     const [tips, setTips] = useState<string>("");
     const [videoUrl, setVideoUrl] = useState<string>("");
-    const [videos, setVideos] = useState<{ videoUrl: string, playerId: string | null, playerName: string | null, playerAvatar: string | null }[]>([]);
+    const [videos, setVideos] = useState<EncounterVideoFormValue[]>([]);
     const [recommendedTags, setRecommendedTags] = useState<string[]>([]);
     const [encounterRequiredTagIds, setEncounterRequiredTagIds] = useState<number[]>([]);
     const [recommendedChampionIds, setRecommendedChampionIds] = useState<number[]>([]);
@@ -228,8 +253,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 setBulkEncountersText("");
                 router.refresh();
             }
-        } catch (error: any) {
-            toast({ title: "Error", description: error.message || "Failed to bulk add", variant: "destructive" });
+        } catch (error: unknown) {
+            toast({ title: "Error", description: getErrorMessage(error, "Failed to bulk add"), variant: "destructive" });
         } finally {
             setIsBulkAdding(false);
         }
@@ -252,20 +277,17 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 });
                 router.refresh();
             }
-        } catch (error: any) {
-            toast({ title: "Error", description: error.message || "Failed to import node modifiers", variant: "destructive" });
+        } catch (error: unknown) {
+            toast({ title: "Error", description: getErrorMessage(error, "Failed to import node modifiers"), variant: "destructive" });
         } finally {
             setIsBulkNodeImporting(false);
         }
     };
 
     // Keep handler refs up-to-date each render to avoid stale closures in the keyboard effect
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleAddOrUpdateEncounterRef = useRef<() => Promise<void>>(null as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleSaveSettingsRef = useRef<() => Promise<void>>(null as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cancelEditingRef = useRef<() => void>(null as any);
+    const handleAddOrUpdateEncounterRef = useRef<() => Promise<void>>(async () => {});
+    const handleSaveSettingsRef = useRef<() => Promise<void>>(async () => {});
+    const cancelEditingRef = useRef<() => void>(() => {});
     useEffect(() => {
         handleAddOrUpdateEncounterRef.current = handleAddOrUpdateEncounter;
         handleSaveSettingsRef.current = handleSaveSettings;
@@ -500,8 +522,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const creatorIds = creators.map(c => c.id);
     const [featuredPlayers, setFeaturedPlayers] = useState<{id: string, name: string, avatar: string | null}[]>(
         (initialQuest?.playerPlans || [])
-            .filter((p: any) => p.player?.id)
-            .map((p: any) => ({
+            .filter(hasPlayer)
+            .map((p) => ({
                 id: p.player.id,
                 name: p.player.ingameName || "Unknown",
                 avatar: p.player.avatar || null
@@ -515,8 +537,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'unsaved'>('idle');
     const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const encIdForAutoSaveRef = useRef<string | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const saveEncounterChangesRef = useRef<() => Promise<void>>(null as any);
+    const saveEncounterChangesRef = useRef<() => Promise<void>>(async () => {});
 
     const AVAILABLE_CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "COSMIC", "TECH", "MYSTIC"];
 
@@ -664,12 +685,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 sequence: parseInt(effectiveSequence),
                 difficulty: difficultyOverride ?? difficulty,
                 defenderId: defender?.id ?? null,
-                defender: defender as any ?? null,
+                defender: (defender ?? null) as EncounterWithRelations["defender"],
                 tips: tips || null,
                 videoUrl: videoUrl || null,
                 routePathId: routePathId || null,
                 recommendedTags,
-                recommendedChampions: champions.filter(champion => recommendedChampionIds.includes(champion.id)) as any,
+                recommendedChampions: champions.filter(champion => recommendedChampionIds.includes(champion.id)) as unknown as EncounterWithRelations["recommendedChampions"],
                 requiredTags: tags.filter(tag => encounterRequiredTagIds.includes(tag.id)),
                 nodes: selectedNodes.map(modifier => {
                     const existingNode = encounter.nodes.find(node => node.nodeModifierId === modifier.id);
@@ -680,7 +701,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         isHighlighted: highlightedNodeIds.has(modifier.id),
                         nodeModifier: modifier
                     };
-                }) as any,
+                }) as EncounterWithRelations["nodes"],
                 videos: videos.map((video, index) => ({
                     id: `local-video-${encounter.id}-${index}`,
                     questEncounterId: encounter.id,
@@ -691,7 +712,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     player: video.playerName || video.playerAvatar
                         ? { ingameName: video.playerName, avatar: video.playerAvatar }
                         : null
-                })) as any
+                })) as EncounterWithVideos["videos"]
             };
         }));
     };
@@ -775,12 +796,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setDefenderId(encounter.defenderId ? String(encounter.defenderId) : "");
         setTips(encounter.tips || "");
         setVideoUrl(encounter.videoUrl || "");
-        setVideos((encounter as any).videos?.map((v: any) => ({
-            videoUrl: v.videoUrl,
-            playerId: v.playerId,
-            playerName: v.player?.ingameName || null,
-            playerAvatar: v.player?.avatar || null
-        })) || []);
+        setVideos(getEncounterVideos(encounter));
         setRecommendedTags(encounter.recommendedTags);
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
         setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
@@ -1864,7 +1880,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                             {videos.map((v, i) => (
                                                 <div key={i} className="flex items-center gap-3 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg group">
                                                     {v.playerAvatar ? (
-                                                        <img src={v.playerAvatar} alt={v.playerName || "Player"} className="w-7 h-7 rounded-full border border-slate-700 shrink-0" />
+                                                        <Image src={v.playerAvatar} alt={v.playerName || "Player"} width={28} height={28} className="w-7 h-7 rounded-full border border-slate-700 shrink-0" />
                                                     ) : (
                                                         <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
                                                             {(v.playerName || "?").charAt(0).toUpperCase()}
@@ -2194,7 +2210,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 <div className="px-4 pb-4 pt-3 space-y-3">
                                     <p className="text-xs text-slate-500 leading-relaxed">
                                         Paste the JSON array of champion nodes. Existing encounters are matched by champion name; unmatched champions get new encounters.
-                                        "Champion Boost", "Health", and "WARNING" nodes are ignored. Node modifiers are created if not already in the database.
+                                        &quot;Champion Boost&quot;, &quot;Health&quot;, and &quot;WARNING&quot; nodes are ignored. Node modifiers are created if not already in the database.
                                     </p>
                                     <Textarea
                                         value={bulkNodeJsonText}

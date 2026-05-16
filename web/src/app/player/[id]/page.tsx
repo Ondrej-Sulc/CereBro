@@ -147,9 +147,10 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
     const lastActiveDate = lastFightDate && lastVideoDate
         ? new Date(Math.max(lastFightDate.getTime(), lastVideoDate.getTime()))
         : lastFightDate ?? lastVideoDate;
+    const currentTime = new Date().getTime();
 
     const formatRelativeDate = (date: Date): string => {
-        const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+        const days = Math.floor((currentTime - date.getTime()) / 86_400_000);
         if (days === 0) return "Active today";
         if (days === 1) return "Active yesterday";
         if (days < 30) return `Active ${days}d ago`;

@@ -424,7 +424,7 @@ export async function listPublicSupporters() {
 }
 
 export async function listSupportDonationsWithPiiForAdmin() {
-  const actor = await requireBotAdmin("support:read_donation_pii" as any);
+  const actor = await requireBotAdmin("MANAGE_SYSTEM");
   logger.info({ actorId: actor.id }, "Read support donations with PII");
 
   return prisma.supportDonation.findMany({

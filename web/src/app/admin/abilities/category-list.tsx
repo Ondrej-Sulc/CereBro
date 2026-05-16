@@ -35,6 +35,10 @@ import { createAbilityCategory, updateAbilityCategory, deleteAbilityCategory } f
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : ""
+}
+
 type Category = {
     id: number;
     name: string;
@@ -81,8 +85,9 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
             }
             router.refresh()
             setIsDialogOpen(false)
-        } catch (error: any) {
-            if (error.message?.includes('Unique constraint') || error.message?.includes('P2002')) {
+        } catch (error: unknown) {
+            const message = getErrorMessage(error)
+            if (message.includes('Unique constraint') || message.includes('P2002')) {
                 toast({ title: "Category name already exists", variant: "destructive" })
             } else {
                 toast({ title: "Error saving category", variant: "destructive" })
@@ -112,10 +117,11 @@ export function CategoryList({ initialCategories }: { initialCategories: Categor
             await deleteAbilityCategory(deleteCategory.id)
             toast({ title: "Category deleted" })
             router.refresh()
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = getErrorMessage(error)
             toast({ 
                 title: "Error deleting category", 
-                description: error.message?.includes('Foreign key constraint') 
+                description: message.includes('Foreign key constraint') 
                     ? "Cannot delete because abilities are still linked to this category."
                     : "An unexpected error occurred.",
                 variant: "destructive" 

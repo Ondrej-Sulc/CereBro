@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import { Settings } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { AVAILABLE_PERMISSIONS } from "@/lib/permissions"
@@ -57,8 +56,9 @@ export function EditPermissionsDialog({ botUserId, initialPermissions, userName,
       } else {
         toast({ title: "Error", description: result.error, variant: "destructive" })
       }
-    } catch (error: any) {
-      toast({ title: "Error", description: error?.message || "An unexpected error occurred", variant: "destructive" })
+    } catch (error: unknown) {
+      const description = error instanceof Error ? error.message : "An unexpected error occurred"
+      toast({ title: "Error", description, variant: "destructive" })
     } finally {
       setIsPending(false)
     }

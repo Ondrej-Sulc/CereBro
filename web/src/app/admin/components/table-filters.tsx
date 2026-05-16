@@ -3,11 +3,10 @@
 import { Input } from "@/components/ui/input"
 import { Search, X } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useTransition, useState, useEffect } from "react"
+import { useTransition, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useDebouncedCallback } from "use-debounce"
-import { useRef } from "react"
 
 interface FilterOption {
   label: string
@@ -30,15 +29,6 @@ export function TableFilters({ placeholder = "Search...", filters = [] }: TableF
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
   const [query, setQuery] = useState(searchParams.get("query") || "")
-  
-  // Track pending changes to avoid clobbering during debounce
-  const pendingParamsRef = useRef(new URLSearchParams(searchParams.toString()))
-
-  // Sync state when URL changes (e.g. Back button or external updates)
-  useEffect(() => {
-    setQuery(searchParams.get("query") || "")
-    pendingParamsRef.current = new URLSearchParams(searchParams.toString())
-  }, [searchParams])
 
   const debouncedPush = useDebouncedCallback((queryString: string) => {
     startTransition(() => {
@@ -48,7 +38,7 @@ export function TableFilters({ placeholder = "Search...", filters = [] }: TableF
 
   function handleSearch(term: string) {
     setQuery(term)
-    const params = pendingParamsRef.current
+    const params = new URLSearchParams(searchParams.toString())
     params.set("page", "1")
     if (term) {
       params.set("query", term)
@@ -59,7 +49,7 @@ export function TableFilters({ placeholder = "Search...", filters = [] }: TableF
   }
 
   function handleFilterChange(name: string, value: string) {
-    const params = pendingParamsRef.current
+    const params = new URLSearchParams(searchParams.toString())
     params.set("page", "1")
     if (value && value !== "all") {
       params.set(name, value)
@@ -71,7 +61,6 @@ export function TableFilters({ placeholder = "Search...", filters = [] }: TableF
 
   function clearFilters() {
     debouncedPush.cancel()
-    pendingParamsRef.current = new URLSearchParams()
     startTransition(() => {
       router.push(`${pathname}`)
     })

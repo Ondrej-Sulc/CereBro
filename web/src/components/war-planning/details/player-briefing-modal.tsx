@@ -34,10 +34,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PlayerWithRoster, FightWithNode } from "@cerebro/core/data/war-planning/types";
-import { War, WarMapType, ChampionClass } from "@prisma/client";
+import { War, WarMapType, ChampionClass, Prisma } from "@prisma/client";
 import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ExtraChampion } from "../hooks/use-war-planning";
 import { getChampionClassColors } from "@/lib/championClassHelper";
+import type { ChampionImages } from "@/types/champion";
 import { getActiveModifiers } from "@/lib/node-modifier-utils";
 import { getFightVideos, getWarMapPng } from "@/app/planning/actions";
 import { exportPlayerText, exportPlayerMarkdown } from "@/lib/war-plan-export";
@@ -144,7 +145,7 @@ export const PlayerBriefingModal = ({
         const uniqueChamps = new Map<number, { 
             id: number; 
             name: string; 
-            images: any; 
+            images: Prisma.JsonValue | ChampionImages; 
             class: ChampionClass;
             roles: Set<'attacker' | 'prefight' | 'extra'>;
             extraId?: string;

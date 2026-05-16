@@ -59,7 +59,7 @@ export type QuestTeamReplacement = {
   championId: number | null;
 };
 
-export type QuestSelectionValidation<T extends object = {}> =
+export type QuestSelectionValidation<T extends object = object> =
   | ({ valid: true } & T)
   | { valid: false; reason: string };
 
@@ -272,6 +272,6 @@ function starRangeMessage(scope: "Quest" | "Fight", min?: number | null, max?: n
   return `${scope} star requirements are not met.`;
 }
 
-function invalid<T extends object = {}>(reason: string): QuestSelectionValidation<T> {
+function invalid<T extends object = object>(reason: string): QuestSelectionValidation<T> {
   return { valid: false, reason };
 }
