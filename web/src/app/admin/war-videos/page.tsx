@@ -200,14 +200,23 @@ export default async function AdminWarVideosPage({ searchParams }: AdminWarVideo
   ]);
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const activeStatusLabel = statusOptions.find((option) => option.value === status)?.label ?? "Pending";
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">War Video Queue</h1>
-        <p className="text-sm text-muted-foreground">
-          Review pending submissions and manage published or rejected war videos.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-semibold tracking-tight">War Video Queue</h1>
+          <p className="text-sm text-muted-foreground">
+            Review pending submissions and manage published or rejected war videos.
+          </p>
+        </div>
+        <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm sm:text-right">
+          <div className="font-semibold">{total.toLocaleString()} matching {total === 1 ? "video" : "videos"}</div>
+          <div className="text-xs text-muted-foreground">
+            {activeStatusLabel}{query ? `, "${query}"` : ""}
+          </div>
+        </div>
       </div>
 
       <form className="grid gap-3 md:grid-cols-[180px_minmax(240px,1fr)_auto_auto]" action="/admin/war-videos">
@@ -274,6 +283,11 @@ export default async function AdminWarVideosPage({ searchParams }: AdminWarVideo
                       <Link href={`/player/${video.submittedBy.id}`} className="font-medium hover:text-sky-500">
                         {video.submittedBy.ingameName}
                       </Link>
+                      {video.submittedBy.isTrustedUploader && (
+                        <Badge variant="outline" className="mt-1 w-fit border-emerald-500/40 bg-emerald-500/10 text-[10px] text-emerald-300">
+                          Trusted uploader
+                        </Badge>
+                      )}
                       <span className="text-xs text-muted-foreground">Video player: {playerName}</span>
                     </div>
                   </TableCell>

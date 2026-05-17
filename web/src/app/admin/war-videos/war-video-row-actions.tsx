@@ -23,17 +23,29 @@ interface WarVideoRowActionsProps {
   status: string;
 }
 
-async function postVideoAction(path: string, videoId: string) {
+type VideoActionResponse = {
+  message?: string;
+  approvedCount?: number;
+  trustedUploader?: {
+    id: string;
+    ingameName: string;
+  };
+};
+
+async function postVideoAction(path: string, videoId: string): Promise<VideoActionResponse> {
   const response = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ videoId }),
   });
 
+  const body = await response.json().catch(() => null);
+
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
     throw new Error(body?.error || "Request failed");
   }
+
+  return body || {};
 }
 
 export function WarVideoRowActions({ videoId, status }: WarVideoRowActionsProps) {
@@ -46,8 +58,14 @@ export function WarVideoRowActions({ videoId, status }: WarVideoRowActionsProps)
   const approve = async () => {
     setIsApproving(true);
     try {
-      await postVideoAction("/api/admin/war-videos/approve", videoId);
-      toast({ title: "Video approved" });
+      const result = await postVideoAction("/api/admin/war-videos/approve", videoId);
+      const approvedCount = result.approvedCount ?? 1;
+      toast({
+        title: "Video approved",
+        description: result.trustedUploader
+          ? `${result.trustedUploader.ingameName} is now trusted. ${approvedCount} pending ${approvedCount === 1 ? "video was" : "videos were"} published.`
+          : undefined,
+      });
       router.refresh();
     } catch (error) {
       const description = error instanceof Error ? error.message : "Request failed";

@@ -16,7 +16,10 @@ export const POST = withRouteContext(async (req: NextRequest) => {
       return NextResponse.json({ error: 'Missing videoId' }, { status: 400 });
     }
 
-    const video = await prisma.warVideo.findUnique({ where: { id: videoId } });
+    const video = await prisma.warVideo.findUnique({
+      where: { id: videoId },
+      include: { submittedBy: true },
+    });
     if (!video) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 });
     }
@@ -25,13 +28,36 @@ export const POST = withRouteContext(async (req: NextRequest) => {
       return NextResponse.json({ message: 'Video already approved' }, { status: 200 });
     }
 
-    await prisma.warVideo.update({
-      where: { id: videoId },
-      data: { status: 'PUBLISHED' },
-    });
+    const [, approvedVideos] = await prisma.$transaction([
+      prisma.player.update({
+        where: { id: video.submittedById },
+        data: { isTrustedUploader: true },
+      }),
+      prisma.warVideo.updateMany({
+        where: {
+          OR: [
+            { id: videoId },
+            { submittedById: video.submittedById, status: 'UPLOADED' },
+          ],
+        },
+        data: { status: 'PUBLISHED' },
+      }),
+    ]);
 
-    logger.info({ videoId }, 'War video approved');
-    return NextResponse.json({ message: 'Video approved' }, { status: 200 });
+    logger.info({
+      videoId,
+      submittedById: video.submittedById,
+      approvedCount: approvedVideos.count,
+    }, 'War video approved and uploader trusted');
+
+    return NextResponse.json({
+      message: 'Video approved',
+      approvedCount: approvedVideos.count,
+      trustedUploader: {
+        id: video.submittedBy.id,
+        ingameName: video.submittedBy.ingameName,
+      },
+    }, { status: 200 });
   } catch (error) {
     logger.error({ err: error }, 'Error approving video');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
