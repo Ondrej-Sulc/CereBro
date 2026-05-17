@@ -5,6 +5,7 @@ import { UserButton } from '@/components/UserButton';
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { auth } from "@/auth";
 import { PostHogIdentity, type PostHogIdentityPayload } from "@/components/PostHogIdentity";
+import { getAppVersion } from "@/lib/app-version";
 
 export async function MainLayout({ children }: { children: React.ReactNode }) {
   let isInAlliance = false;
@@ -41,7 +42,7 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
     <div className="relative z-10 min-h-screen flex flex-col">
       <PostHogIdentity
         identity={posthogIdentity}
-        appVersion={process.env.APP_VERSION || "dev"}
+        appVersion={getAppVersion()}
       />
       <Header userButton={<UserButton />} isInAlliance={isInAlliance} />
       <main className="flex-grow">

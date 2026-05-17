@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getAppVersion } from '@/lib/app-version'
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   const response = NextResponse.next()
   
   // Attach the current build version to every response header
   // This allows the client to detect deployment mismatches proactively
-  const appVersion = process.env.APP_VERSION || 'dev'
+  const appVersion = getAppVersion()
   response.headers.set('x-app-version', appVersion)
   
   return response

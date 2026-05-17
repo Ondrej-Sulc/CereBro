@@ -1,4 +1,5 @@
 import { PostHog } from "posthog-node";
+import { getAppVersion } from "@/lib/app-version";
 import { getRequestContext } from "@/lib/request-context";
 import { ObservabilityEvents, type ObservabilityEventName, type ProductEventName } from "./events";
 import {
@@ -60,7 +61,7 @@ function getBaseProperties(): ObservabilityProperties {
   const ctx = getRequestContext();
 
   return {
-    app_version: process.env.APP_VERSION || "dev",
+    app_version: getAppVersion(),
     component: "web-server",
     env: process.env.NODE_ENV,
     correlation_id: ctx?.correlationId,

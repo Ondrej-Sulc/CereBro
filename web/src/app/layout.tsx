@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { VersionChecker } from "@/components/version-checker";
 import { QueryErrorToast } from "@/components/QueryErrorToast";
+import { getAppVersion } from "@/lib/app-version";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const appVersion = process.env.APP_VERSION || 'dev';
+  const appVersion = getAppVersion();
 
   return (
     <html lang="en" className="dark">
