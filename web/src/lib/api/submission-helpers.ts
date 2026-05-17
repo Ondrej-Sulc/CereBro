@@ -1,4 +1,4 @@
-import { PrismaClient, WarMapType, Player, UploadToken, Alliance } from '@prisma/client';
+import { Prisma, PrismaClient, WarMapType, Player, UploadToken, Alliance } from '@prisma/client';
 import logger from "@/lib/logger";
 import crypto from 'crypto';
 
@@ -34,6 +34,26 @@ interface FightUpdate extends FightInput {
     id: string;
     battlegroup?: string;
 }
+
+export type EditableFightInput = FightInput & {
+    id?: string;
+};
+
+export type SyncWarVideoEditParams = {
+    videoId: string;
+    allianceId: string | null;
+    season: number;
+    warNumber: number | null;
+    warTier: number;
+    battlegroup: number;
+    mapType: WarMapType;
+    fights: EditableFightInput[];
+    playerId: string;
+    customPlayerName?: string;
+    isGlobal?: boolean;
+};
+
+type PrismaLike = PrismaClient | Prisma.TransactionClient;
 
 export async function validateUploadToken(
   prisma: PrismaClient, 
@@ -74,7 +94,7 @@ export async function validateUploadToken(
 }
 
 export async function processNewFights(
-    prisma: PrismaClient,
+    prisma: PrismaLike,
     params: {
         allianceId: string | null;
         season: number;
@@ -305,7 +325,7 @@ export async function processNewFights(
     return createdFights.map(f => f.id);
 }
 
-export async function processFightUpdates(prisma: PrismaClient, updates: FightUpdate[]): Promise<string[]> {
+export async function processFightUpdates(prisma: PrismaLike, updates: FightUpdate[]): Promise<string[]> {
     const ids: string[] = [];
     logger.info({ count: updates.length }, "Processing fight updates");
     
@@ -357,6 +377,295 @@ export async function processFightUpdates(prisma: PrismaClient, updates: FightUp
         logger.error({ error, updates }, "Failed to process fight updates");
         throw error;
     }
+}
+
+export async function syncWarVideoEditedFights(
+    prisma: PrismaClient,
+    params: SyncWarVideoEditParams
+): Promise<{ fightIds: string[]; fightListChanged: boolean }> {
+    if (!Array.isArray(params.fights) || params.fights.length === 0) {
+        throw new Error("At least one fight is required");
+    }
+
+    const currentFightIds = await prisma.warFight.findMany({
+        where: { videoId: params.videoId },
+        select: { id: true },
+    });
+    const currentIdSet = new Set(currentFightIds.map(fight => fight.id));
+    const submittedExistingIds = params.fights
+        .map(fight => fight.id)
+        .filter((id): id is string => !!id);
+
+    const invalidIds = submittedExistingIds.filter(id => !currentIdSet.has(id));
+    if (invalidIds.length > 0) {
+        throw new Error("One or more fights do not belong to this video");
+    }
+
+    const existingSubmittedSet = new Set(submittedExistingIds);
+    const idsToDetach = [...currentIdSet].filter(id => !existingSubmittedSet.has(id));
+    const newFights = params.fights.filter(fight => !fight.id);
+    const existingUpdates = params.fights.filter((fight): fight is EditableFightInput & { id: string } => !!fight.id);
+
+    const resolved = await resolveWarAndPlayer(prisma, params);
+
+    if (params.warNumber !== null) {
+        await assertRegularWarFightMatches(prisma, {
+            warId: resolved.warId,
+            season: params.season,
+            warNumber: params.warNumber,
+            battlegroup: resolved.battlegroup,
+            fights: params.fights,
+            allowedExistingIds: currentIdSet,
+        });
+    }
+
+    const fightIds = await prisma.$transaction(async (tx) => {
+        if (idsToDetach.length > 0) {
+            await tx.warFight.updateMany({
+                where: { id: { in: idsToDetach }, videoId: params.videoId },
+                data: { videoId: null },
+            });
+        }
+
+        for (const fight of existingUpdates) {
+            await updateFightForVideoEdit(tx, {
+                fight,
+                warId: resolved.warId,
+                playerId: resolved.playerId,
+                battlegroup: resolved.battlegroup,
+            });
+        }
+
+        const createdIds: string[] = [];
+        for (const fight of newFights) {
+            const created = await tx.warFight.create({
+                data: {
+                    warId: resolved.warId,
+                    playerId: resolved.playerId,
+                    nodeId: parseInt(fight.nodeId),
+                    attackerId: parseInt(fight.attackerId),
+                    defenderId: parseInt(fight.defenderId),
+                    death: fight.death,
+                    battlegroup: resolved.battlegroup,
+                    videoId: params.videoId,
+                    prefightChampions: buildPrefightCreate(fight.prefightChampionIds, resolved.playerId),
+                },
+            });
+            createdIds.push(created.id);
+        }
+
+        return [...existingUpdates.map(fight => fight.id), ...createdIds];
+    });
+
+    return {
+        fightIds,
+        fightListChanged: idsToDetach.length > 0 || newFights.length > 0,
+    };
+}
+
+async function resolveWarAndPlayer(
+    prisma: PrismaLike,
+    params: Omit<SyncWarVideoEditParams, "videoId" | "fights">
+): Promise<{ warId: string; playerId: string; battlegroup: number }> {
+    let targetAllianceId = params.allianceId;
+    let targetBattlegroup = params.battlegroup;
+
+    if (!targetAllianceId || params.isGlobal) {
+        const globalAlliance = await prisma.alliance.upsert({
+            where: { id: GLOBAL_ALLIANCE_ID },
+            update: {},
+            create: {
+                id: GLOBAL_ALLIANCE_ID,
+                guildId: "GLOBAL",
+                name: "Mercenaries (Global)",
+                canUploadFiles: false,
+            },
+        });
+        targetAllianceId = globalAlliance.id;
+        targetBattlegroup = 0;
+    }
+
+    let finalPlayerId = params.playerId;
+    if (params.customPlayerName && (!params.playerId || params.playerId === "")) {
+        let player = await prisma.player.findFirst({
+            where: {
+                ingameName: {
+                    equals: params.customPlayerName,
+                    mode: 'insensitive',
+                },
+            },
+        });
+
+        if (!player) {
+            player = await prisma.player.create({
+                data: {
+                    ingameName: params.customPlayerName,
+                    discordId: `guest_${crypto.randomBytes(8).toString('hex')}`,
+                    isActive: false,
+                    allianceId: null,
+                },
+            });
+        }
+        finalPlayerId = player.id;
+    }
+
+    if (!finalPlayerId) {
+        throw new Error("Player in video is required");
+    }
+
+    let war;
+    if (params.warNumber === null) {
+        war = await prisma.war.findFirst({
+            where: {
+                allianceId: targetAllianceId,
+                season: params.season,
+                warNumber: null,
+                mapType: params.mapType,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        if (!war) {
+            war = await prisma.war.create({
+                data: {
+                    season: params.season,
+                    warTier: params.warTier,
+                    warNumber: null,
+                    enemyAlliance: 'Offseason',
+                    allianceId: targetAllianceId,
+                    mapType: params.mapType,
+                    status: 'FINISHED',
+                },
+            });
+        } else {
+            war = await prisma.war.update({
+                where: { id: war.id },
+                data: { warTier: params.warTier, status: 'FINISHED' },
+            });
+        }
+    } else {
+        war = await prisma.war.upsert({
+            where: {
+                allianceId_season_warNumber: {
+                    allianceId: targetAllianceId,
+                    season: params.season,
+                    warNumber: params.warNumber,
+                },
+            },
+            update: {
+                warTier: params.warTier,
+                mapType: params.mapType,
+                status: 'FINISHED',
+            },
+            create: {
+                season: params.season,
+                warTier: params.warTier,
+                warNumber: params.warNumber,
+                allianceId: targetAllianceId,
+                mapType: params.mapType,
+                status: 'FINISHED',
+            },
+        });
+    }
+
+    return {
+        warId: war.id,
+        playerId: finalPlayerId,
+        battlegroup: targetBattlegroup,
+    };
+}
+
+async function assertRegularWarFightMatches(
+    prisma: PrismaLike,
+    params: {
+        warId: string;
+        season: number;
+        warNumber: number;
+        battlegroup: number;
+        fights: EditableFightInput[];
+        allowedExistingIds: Set<string>;
+    }
+) {
+    const nodeIds = params.fights.map(fight => parseInt(fight.nodeId));
+    const existingFights = await prisma.warFight.findMany({
+        where: {
+            warId: params.warId,
+            battlegroup: params.battlegroup,
+            nodeId: { in: nodeIds },
+        },
+        select: { id: true, nodeId: true, attackerId: true, defenderId: true },
+    });
+
+    const submittedByNode = new Map(params.fights.map(fight => [parseInt(fight.nodeId), fight]));
+    const mismatches = existingFights.flatMap(existing => {
+        const submitted = submittedByNode.get(existing.nodeId);
+        if (!submitted || params.allowedExistingIds.has(existing.id)) return [];
+        const attackerMatch = existing.attackerId === parseInt(submitted.attackerId);
+        const defenderMatch = existing.defenderId === parseInt(submitted.defenderId);
+        if (attackerMatch && defenderMatch) return [];
+        return [{
+            nodeId: existing.nodeId,
+            submittedAttackerId: parseInt(submitted.attackerId),
+            existingAttackerId: existing.attackerId,
+            submittedDefenderId: parseInt(submitted.defenderId),
+            existingDefenderId: existing.defenderId,
+        }];
+    });
+
+    if (mismatches.length > 0) {
+        throw new FightMismatchError(mismatches, {
+            season: params.season,
+            warNumber: params.warNumber,
+            battlegroup: params.battlegroup,
+        });
+    }
+}
+
+async function updateFightForVideoEdit(
+    prisma: Prisma.TransactionClient,
+    params: {
+        fight: EditableFightInput & { id: string };
+        warId: string;
+        playerId: string;
+        battlegroup: number;
+    }
+) {
+    await prisma.warFight.update({
+        where: { id: params.fight.id },
+        data: {
+            warId: params.warId,
+            playerId: params.playerId,
+            nodeId: parseInt(params.fight.nodeId),
+            attackerId: parseInt(params.fight.attackerId),
+            defenderId: parseInt(params.fight.defenderId),
+            death: params.fight.death,
+            battlegroup: params.battlegroup,
+            prefightChampions: {
+                deleteMany: {},
+                create: parsePrefightIds(params.fight.prefightChampionIds).map(championId => ({
+                    championId,
+                    playerId: params.playerId,
+                })),
+            },
+        },
+    });
+}
+
+function buildPrefightCreate(prefightChampionIds: string[] | undefined, playerId: string) {
+    const championIds = parsePrefightIds(prefightChampionIds);
+    if (championIds.length === 0) return undefined;
+    return {
+        create: championIds.map(championId => ({
+            championId,
+            playerId,
+        })),
+    };
+}
+
+function parsePrefightIds(prefightChampionIds: string[] | undefined): number[] {
+    return (prefightChampionIds || [])
+        .map((id: string) => parseInt(id))
+        .filter((id: number) => !isNaN(id));
 }
 
 export async function queueVideoNotification(

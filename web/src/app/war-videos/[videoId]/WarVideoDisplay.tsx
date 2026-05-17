@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from '@/types/champion';
 import { WarNode, Player, ChampionClass, War, WarTactic, Tag } from '@prisma/client';
-import { Check, Trash, Swords, Shield, Diamond, Info, Play } from 'lucide-react';
+import { Check, Trash, Swords, Shield, Diamond, Info, Play, Pencil } from 'lucide-react';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { cn } from '@/lib/utils';
 import { Champion } from '@/types/champion';
@@ -42,6 +42,7 @@ export interface WarVideo {
 interface WarVideoDisplayProps {
   warVideo: WarVideo;
   isAdmin: boolean;
+  canEdit: boolean;
   activeTactic?: (WarTactic & { attackTag: Tag | null; defenseTag: Tag | null }) | null;
 }
 
@@ -80,7 +81,7 @@ const VideoThumbnail = ({ videoId }: { videoId: string }) => {
   );
 };
 
-export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: WarVideoDisplayProps) {
+export default function WarVideoDisplay({ warVideo, isAdmin, canEdit, activeTactic }: WarVideoDisplayProps) {
   const router = useRouter();
   const { toast } = useToast();
   const videoId = getYoutubeVideoId(warVideo.url);
@@ -150,7 +151,8 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
     <div className="container mx-auto p-4 max-w-6xl space-y-6">
       {/* Header Section */}
       <div className="glass rounded-xl border border-slate-800/50 p-4 sm:p-6">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex flex-col gap-2 min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-white">
             {`MCOC AW: S${war.season}${war.warNumber ? ` W${war.warNumber}` : ' Offseason'} T${war.warTier}${war.enemyAlliance ? ` vs ${war.enemyAlliance}` : ''}`}
           </h1>
@@ -161,12 +163,20 @@ export default function WarVideoDisplay({ warVideo, isAdmin, activeTactic }: War
             <span className="hidden sm:inline">•</span>
             <span className="text-purple-400 font-medium">{warVideo.fights.length} {warVideo.fights.length === 1 ? 'Fight' : 'Fights'}</span>
           </div>
+          </div>
+          {canEdit && (
+            <Link href={`/war-videos/${warVideo.id}/edit`} className="shrink-0">
+              <Button variant="outline" className="w-full sm:w-auto bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50">
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Admin Actions */}
       {isAdmin && warVideo.status === 'UPLOADED' && (
-        <div className="glass rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex flex-wrap gap-4">
+        <div className="glass rounded-xl border border-slate-800/50 bg-slate-950/30 p-4 flex flex-wrap gap-4">
           <Button onClick={handleApprove} className="bg-green-600 hover:bg-green-700 text-white border-0">
             <Check className="mr-2 h-4 w-4" /> Approve
           </Button>

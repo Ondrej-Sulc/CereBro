@@ -10,6 +10,7 @@ interface WarVideoHeaderProps {
   sourceMode: "upload" | "link";
   setSourceMode: (mode: "upload" | "link") => void;
   canUploadFiles: boolean;
+  isEditMode?: boolean;
 }
 
 export function WarVideoHeader({
@@ -18,12 +19,13 @@ export function WarVideoHeader({
   sourceMode,
   setSourceMode,
   canUploadFiles,
+  isEditMode = false,
 }: WarVideoHeaderProps) {
   return (
     <div className="glass rounded-xl border border-slate-800/60 p-4 sm:p-6 flex flex-col gap-4 bg-slate-950/30 shadow-sm">
       <h3 className="text-xl font-bold text-white flex items-center gap-3">
         <UploadCloud className="h-6 w-6 text-sky-400" />
-        Upload War Video
+        {isEditMode ? "Edit War Video" : "Upload War Video"}
       </h3>
 
       {/* Source Mode Toggle (Upload/Link) */}
@@ -63,7 +65,7 @@ export function WarVideoHeader({
       </div>
 
       {/* Upload Mode Toggle (Single/Multiple) */}
-      <div>
+      {!isEditMode && <div>
         <Label className="text-sm font-medium text-slate-300 mb-2 block">Upload Mode</Label>
         <div className="flex bg-slate-950/50 rounded-lg p-1 border border-slate-800/50">
           <Button
@@ -89,7 +91,7 @@ export function WarVideoHeader({
             Separate Videos (per fight)
           </Button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

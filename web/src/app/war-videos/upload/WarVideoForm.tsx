@@ -48,6 +48,7 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
     errors,
     isOffseason,
     setIsOffseason,
+    isEditMode,
 
     // Computed
     canUploadFiles,
@@ -75,6 +76,7 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           sourceMode={sourceMode}
           setSourceMode={setSourceMode}
           canUploadFiles={canUploadFiles}
+          isEditMode={isEditMode}
         />
 
         <VideoInputSection
@@ -130,6 +132,7 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           description={description}
           setDescription={setDescription}
           uploadMode={uploadMode}
+          isEditing={isEditMode}
         />
       </div>
 
@@ -144,7 +147,7 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
         disabled={isSubmitDisabled()}
         className="w-full bg-gradient-to-r from-sky-500 to-indigo-500 text-white hover:from-sky-600 hover:to-indigo-600 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all text-base py-6"
       >
-        {isSubmitting ? "Uploading..." : "Upload Video(s)"}
+        {isSubmitting ? (isEditMode ? "Saving..." : "Uploading...") : (isEditMode ? (sourceMode === "upload" ? "Replace Video" : "Save Changes") : "Upload Video(s)")}
       </Button>
     </form>
   );

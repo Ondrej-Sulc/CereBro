@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import logger from "@/lib/logger";
 import { getYouTubeService } from '@cerebro/core/services/youtubeService';
-import { isUserBotAdmin } from "@/lib/auth-helpers";
 import { withRouteContext } from '@/lib/with-request-context';
+import { canManageWarVideos } from '@/lib/admin-war-video-auth';
 
 function extractYouTubeId(url: string): string | null {
   const match = url.match(
@@ -14,8 +14,7 @@ function extractYouTubeId(url: string): string | null {
 
 export const POST = withRouteContext(async (req: NextRequest) => {
   try {
-    const isAdmin = await isUserBotAdmin();
-    if (!isAdmin) {
+    if (!(await canManageWarVideos())) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

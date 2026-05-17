@@ -1,8 +1,14 @@
+import { Menu } from "lucide-react"
 import { ensureAdmin } from "./actions"
 import { AdminSidebar } from "./admin-sidebar"
-import { Menu } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 export default async function AdminLayout({
   children,
@@ -10,40 +16,48 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const user = await ensureAdmin()
-  const isBotAdmin = user.isBotAdmin || false;
-  const permissions: string[] = user.permissions || [];
+  const isBotAdmin = user.isBotAdmin || false
+  const permissions: string[] = user.permissions || []
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:block w-auto flex-shrink-0">
-        <div className="sticky top-20">
+    <div className="w-full max-w-[1600px] mx-auto px-3 py-3 md:px-4 md:py-6">
+      <div className="flex flex-col gap-4 md:flex-row md:gap-6">
+        <aside className="hidden shrink-0 md:block">
+          <div className="sticky top-20">
             <AdminSidebar isBotAdmin={isBotAdmin} permissions={permissions} />
-        </div>
-      </aside>
+          </div>
+        </aside>
 
-      <main className="flex-1 min-w-0">
-        {/* Mobile Header with Sheet */}
-        <div className="md:hidden flex items-center justify-between mb-4 bg-card rounded-lg border shadow-sm p-4">
-            <h2 className="text-lg font-semibold tracking-tight">Admin Menu</h2>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[280px] p-0 pt-10">
-                <AdminSidebar isBotAdmin={isBotAdmin} permissions={permissions} isMobile />
-              </SheetContent>
-            </Sheet>
-        </div>
+        <main className="min-w-0 flex-1">
+          <div className="sticky top-0 z-30 -mx-3 mb-3 border-b bg-background/95 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/75 md:hidden">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin</p>
+                <h2 className="truncate text-base font-semibold tracking-tight">Control Panel</h2>
+              </div>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Open admin navigation">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[304px] p-0">
+                  <SheetHeader className="border-b px-4 py-4 text-left">
+                    <SheetTitle>Admin</SheetTitle>
+                  </SheetHeader>
+                  <div className="py-3">
+                    <AdminSidebar isBotAdmin={isBotAdmin} permissions={permissions} isMobile />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
 
-        {/* min-w-0: flex child can shrink; avoid overflow-x-auto here — it creates a scrollport and breaks position:sticky inside admin pages (e.g. quest builder). */}
-        <div className="bg-card rounded-lg border shadow-sm p-4 md:p-6 min-w-0">
+          <div className="rounded-lg border bg-card p-4 shadow-sm md:p-6">
             {children}
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

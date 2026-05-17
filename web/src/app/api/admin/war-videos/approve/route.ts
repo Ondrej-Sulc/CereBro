@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import logger from "@/lib/logger";
-import { isUserBotAdmin } from "@/lib/auth-helpers";
 import { withRouteContext } from '@/lib/with-request-context';
+import { canManageWarVideos } from '@/lib/admin-war-video-auth';
 
 export const POST = withRouteContext(async (req: NextRequest) => {
   try {
-    const isAdmin = await isUserBotAdmin();
-    if (!isAdmin) {
+    if (!(await canManageWarVideos())) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

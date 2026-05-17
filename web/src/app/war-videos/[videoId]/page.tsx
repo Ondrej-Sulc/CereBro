@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { prisma } from '@cerebro/core/services/prismaService';
 import { notFound } from 'next/navigation';
 import WarVideoDisplay, { WarVideo } from './WarVideoDisplay';
-import { isUserBotAdmin } from "@/lib/auth-helpers";
+import { canManageWarVideos } from "@/lib/admin-war-video-auth";
+import { getWarVideoEditAccess } from "@/lib/war-video-edit-auth";
 import { cache } from "react";
 
 export const dynamic = 'force-dynamic';
@@ -54,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const isAdmin = await isUserBotAdmin();
+  const isAdmin = await canManageWarVideos();
   if (!isAdmin && (warVideo.status !== 'PUBLISHED' || warVideo.visibility !== 'public')) {
     return {
       title: "Alliance War Video - CereBro",
@@ -82,7 +83,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function WarVideoPage(props: PageProps) {
   const { params } = props;
 
-  const isAdmin = await isUserBotAdmin();
+  const isAdmin = await canManageWarVideos();
 
   const resolvedParams = await params;
   const { videoId } = resolvedParams;
@@ -142,6 +143,8 @@ export default async function WarVideoPage(props: PageProps) {
     notFound();
   }
 
+  const editAccess = await getWarVideoEditAccess(warVideo.submittedById);
+
   let activeTactic = null;
   const war = warVideo.fights[0]?.war;
   if (war?.warTier != null) {
@@ -155,5 +158,5 @@ export default async function WarVideoPage(props: PageProps) {
      });
   }
 
-  return <WarVideoDisplay warVideo={warVideo as unknown as WarVideo} isAdmin={isAdmin} activeTactic={activeTactic} />;
+  return <WarVideoDisplay warVideo={warVideo as unknown as WarVideo} isAdmin={isAdmin} canEdit={editAccess.canEdit} activeTactic={activeTactic} />;
 }

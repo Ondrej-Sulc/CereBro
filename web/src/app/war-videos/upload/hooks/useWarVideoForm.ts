@@ -15,9 +15,9 @@ interface PlayerWithAlliance extends PrismaPlayer {
 
 export interface PreFilledFight extends WarFight {
   war: War;
-  player: PrismaPlayer;
-  attacker: Champion;
-  defender: Champion;
+  player: PrismaPlayer | null;
+  attacker: Champion | null;
+  defender: Champion | null;
   node: PrismaWarNode;
   prefightChampions: Champion[];
 }
@@ -29,6 +29,14 @@ export interface UseWarVideoFormProps {
   initialPlayers: PlayerWithAlliance[];
   initialUserId: string;
   preFilledFights: PreFilledFight[] | null;
+  mode?: "create" | "edit";
+  editVideoId?: string;
+  initialVideo?: {
+    url: string | null;
+    description: string | null;
+    visibility: "public" | "alliance" | string;
+  };
+  canUploadFilesOverride?: boolean;
 }
 
 export function useWarVideoForm({
@@ -38,6 +46,10 @@ export function useWarVideoForm({
   initialPlayers,
   initialUserId,
   preFilledFights,
+  mode = "create",
+  editVideoId,
+  initialVideo,
+  canUploadFilesOverride,
 }: UseWarVideoFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -46,14 +58,14 @@ export function useWarVideoForm({
   const [uploadMode, setUploadMode] = useState<"single" | "multiple">("single");
   const [sourceMode, setSourceMode] = useState<"upload" | "link">("link");
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string>("");
+  const [videoUrl, setVideoUrl] = useState<string>(() => initialVideo?.url || "");
   const [fights, setFights] = useState<FightData[]>(() => {
     if (preFilledFights && preFilledFights.length > 0) {
       return preFilledFights.map(pf => ({
         id: pf.id, // Use the WarFight ID
         nodeId: String(pf.nodeId),
-        attackerId: String(pf.attackerId),
-        defenderId: String(pf.defenderId),
+        attackerId: pf.attackerId ? String(pf.attackerId) : "",
+        defenderId: pf.defenderId ? String(pf.defenderId) : "",
         prefightChampionIds: pf.prefightChampions.map(c => String(c.id)),
         death: pf.death,
         videoFile: null, // No video file initially
@@ -89,8 +101,8 @@ export function useWarVideoForm({
   });
   const [playerInVideoId, setPlayerInVideoId] = useState<string>(() => preFilledFights?.[0]?.player?.id || initialUserId);
   const [customPlayerName, setCustomPlayerName] = useState<string>(""); // New state for custom names
-  const [visibility, setVisibility] = useState<"public" | "alliance">("public");
-  const [description, setDescription] = useState<string>("");
+  const [visibility, setVisibility] = useState<"public" | "alliance">(() => initialVideo?.visibility === "alliance" ? "alliance" : "public");
+  const [description, setDescription] = useState<string>(() => initialVideo?.description || "");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isOffseason, setIsOffseason] = useState<boolean>(() => preFilledFights?.[0]?.war?.warNumber === null || preFilledFights?.[0]?.war?.warNumber === 0);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -104,7 +116,8 @@ export function useWarVideoForm({
     initialPlayers.find(p => p.id === initialUserId), 
     [initialPlayers, initialUserId]
   );
-  const canUploadFiles = !!currentUser?.alliance?.canUploadFiles;
+  const isEditMode = mode === "edit";
+  const canUploadFiles = canUploadFilesOverride ?? !!currentUser?.alliance?.canUploadFiles;
   const isSolo = !currentUser?.alliance; // User has no alliance
 
   // Context Mode: 'alliance' (normal) or 'global' (external/solo upload)
@@ -180,6 +193,7 @@ export function useWarVideoForm({
 
   // Effect to set default visibility based on source mode
   useEffect(() => {
+    if (isEditMode) return;
     if (contextMode === 'alliance' && !isSolo) {
       if (sourceMode === 'upload') {
         setVisibility('alliance');
@@ -187,7 +201,7 @@ export function useWarVideoForm({
         setVisibility('public');
       }
     }
-  }, [sourceMode, contextMode, isSolo]);
+  }, [sourceMode, contextMode, isSolo, isEditMode]);
 
   // Effect to update battlegroup if playerInVideoId changes and not pre-filled
   useEffect(() => {
@@ -395,6 +409,64 @@ export function useWarVideoForm({
     []
   );
 
+  const updateVideo = useCallback(
+    async (body: object) => {
+      if (!editVideoId) throw new Error("Missing video ID");
+      const response = await fetch(`/api/war-videos/${editVideoId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'Failed to update video');
+      }
+
+      return response.json();
+    },
+    [editVideoId]
+  );
+
+  const updateVideoWithFile = useCallback(
+    async (formData: FormData) => {
+      if (!editVideoId) throw new Error("Missing video ID");
+      return new Promise<{ videoIds: string[] }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setUploadProgress(Math.round((event.loaded * 100) / event.total));
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              resolve(JSON.parse(xhr.responseText));
+            } catch {
+              reject(new Error('Invalid response from server'));
+            }
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              reject(new Error(errorData.details || errorData.error || 'Failed to update video'));
+            } catch {
+              reject(new Error(xhr.responseText || 'Failed to update video'));
+            }
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error during video update'));
+        xhr.open('PATCH', `/api/war-videos/${editVideoId}`, true);
+        xhr.send(formData);
+      });
+    },
+    [editVideoId]
+  );
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -422,6 +494,33 @@ export function useWarVideoForm({
       const isGlobal = contextMode === 'global';
 
       try {
+        if (isEditMode) {
+          setCurrentUpload(sourceMode === 'upload' ? "Replacing video..." : "Saving changes...");
+          const payload = {
+            videoUrl,
+            visibility,
+            description,
+            playerId: playerInVideoId,
+            customPlayerName: customPlayerName || undefined,
+            isGlobal,
+            fights,
+            season,
+            warNumber: isOffseason ? null : warNumber,
+            warTier,
+            battlegroup,
+            mapType,
+          };
+
+          const result = sourceMode === 'upload'
+            ? await updateVideoWithFile(buildEditFormData(payload, videoFile))
+            : await updateVideo(payload);
+
+          toast({ title: "Success!", description: "Video has been updated." });
+          router.push(`/war-videos/${result.videoIds?.[0] || editVideoId}`);
+          router.refresh();
+          return;
+        }
+
         if (sourceMode === 'link') {
           // --- Handle URL Submission ---
           setCurrentUpload("Linking video...");
@@ -652,14 +751,22 @@ export function useWarVideoForm({
       sourceMode,
       uploadVideo,
       linkVideo,
+      updateVideo,
+      updateVideoWithFile,
       battlegroup,
       mapType,
       contextMode, // Dependency
+      isEditMode,
+      editVideoId,
     ]
   );
 
   const isSubmitDisabled = () => {
     if (isSubmitting || !token) return true;
+    if (isEditMode) {
+      if (sourceMode === 'upload') return !videoFile;
+      return !videoUrl;
+    }
     if (uploadMode === "single") {
       if (sourceMode === 'upload') return !videoFile;
       if (sourceMode === 'link') return !videoUrl;
@@ -726,5 +833,37 @@ export function useWarVideoForm({
     handleRemoveFight,
     handleSubmit,
     handlePlayerChange, // Export
+    isEditMode,
   };
+}
+
+function buildEditFormData(payload: {
+  videoUrl: string;
+  visibility: "public" | "alliance";
+  description: string;
+  playerId: string;
+  customPlayerName?: string;
+  isGlobal: boolean;
+  fights: FightData[];
+  season: string;
+  warNumber: string | null;
+  warTier: string;
+  battlegroup: string;
+  mapType: string;
+}, videoFile: File | null) {
+  const formData = new FormData();
+  if (videoFile) formData.append("videoFile", videoFile);
+  formData.append("videoUrl", payload.videoUrl);
+  formData.append("visibility", payload.visibility);
+  formData.append("description", payload.description);
+  if (payload.playerId) formData.append("playerId", payload.playerId);
+  if (payload.customPlayerName) formData.append("customPlayerName", payload.customPlayerName);
+  if (payload.isGlobal) formData.append("isGlobal", "true");
+  formData.append("fights", JSON.stringify(payload.fights));
+  formData.append("season", payload.season);
+  if (payload.warNumber !== null) formData.append("warNumber", payload.warNumber);
+  formData.append("warTier", payload.warTier);
+  formData.append("battlegroup", payload.battlegroup);
+  formData.append("mapType", payload.mapType);
+  return formData;
 }

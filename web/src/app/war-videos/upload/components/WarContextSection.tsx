@@ -44,6 +44,7 @@ interface WarContextSectionProps {
   setContextMode: (mode: "alliance" | "global") => void;
   hasAlliance: boolean;
   uploadMode?: "single" | "multiple";
+  isEditing?: boolean;
 }
 
 export function WarContextSection({
@@ -76,7 +77,10 @@ export function WarContextSection({
   setContextMode,
   hasAlliance,
   uploadMode = "single",
+  isEditing = false,
 }: WarContextSectionProps) {
+  const lockPrefilledContext = !!preFilledFights && !isEditing;
+
   return (
     <div className="glass rounded-xl border border-slate-800/60 p-4 sm:p-6 space-y-6 bg-slate-950/30 shadow-sm">
       <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -141,7 +145,7 @@ export function WarContextSection({
             customValue={customPlayerName}
             onChange={handlePlayerChange}
             options={playerOptions}
-            disabled={!!preFilledFights}
+            disabled={lockPrefilledContext}
           />
         </div>
 
@@ -155,7 +159,7 @@ export function WarContextSection({
               placeholder="Select BG..."
               options={battlegroupOptions}
               required
-              disabled={!!preFilledFights}
+              disabled={lockPrefilledContext}
             />
             {errors.battlegroup && (
               <p className="text-sm text-red-400 mt-2">{errors.battlegroup}</p>
@@ -175,7 +179,7 @@ export function WarContextSection({
             onChange={(e) => setSeason(e.target.value)}
             required
             className="bg-slate-900/50 border-slate-700/50"
-            disabled={!!preFilledFights}
+            disabled={lockPrefilledContext}
           />
           {errors.season && (
             <p className="text-sm text-red-400 mt-2">{errors.season}</p>
@@ -192,7 +196,7 @@ export function WarContextSection({
               placeholder="Select number..."
               options={warNumberOptions}
               required={!isOffseason}
-              disabled={isOffseason || !!preFilledFights}
+              disabled={isOffseason || lockPrefilledContext}
               contentClassName="max-h-60 overflow-y-auto"
             />
             {errors.warNumber && (
@@ -211,7 +215,7 @@ export function WarContextSection({
             options={warTierOptions}
             required
             contentClassName="max-h-60 overflow-y-auto"
-            disabled={!!preFilledFights}
+            disabled={lockPrefilledContext}
           />
           {errors.warTier && (
             <p className="text-sm text-red-400 mt-2">{errors.warTier}</p>
