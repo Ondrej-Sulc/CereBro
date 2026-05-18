@@ -9,6 +9,7 @@ import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
 import { QuestWithRelations, QuestSummary } from "@/types/quests";
 import { withActionContext } from "@/lib/with-request-context";
 import { projectSavedQuestPlanRosterMap } from "@/lib/saved-quest-plan-projection";
+import { orderQuestEncounterIdsByRoute } from "@/lib/quest-planning-route-progress";
 import {
     clearAllQuestCounters as clearAllQuestCountersAction,
     savePlayerQuestCounter as savePlayerQuestCounterAction,
@@ -2546,51 +2547,10 @@ async function sortQuestEncountersByRoute(questPlanId: string) {
         throw new Error("This quest has no route sections to sort by.");
     }
 
-    const childSectionsByParentPathId = new Map<string, typeof sections>();
-    const rootSections: typeof sections = [];
-    for (const section of sections) {
-        if (section.parentPathId) {
-            const current = childSectionsByParentPathId.get(section.parentPathId) || [];
-            current.push(section);
-            childSectionsByParentPathId.set(section.parentPathId, current);
-        } else {
-            rootSections.push(section);
-        }
-    }
-
-    const orderedEncounterIds: string[] = [];
-    const seenEncounterIds = new Set<string>();
-    const seenSectionIds = new Set<string>();
-
-    const appendEncounter = (id: string) => {
-        if (seenEncounterIds.has(id)) return;
-        seenEncounterIds.add(id);
-        orderedEncounterIds.push(id);
-    };
-
-    const visitSection = (section: (typeof sections)[number]) => {
-        if (seenSectionIds.has(section.id)) return;
-        seenSectionIds.add(section.id);
-
-        for (const path of section.paths) {
-            for (const encounter of path.encounters) {
-                appendEncounter(encounter.id);
-            }
-            for (const childSection of childSectionsByParentPathId.get(path.id) || []) {
-                visitSection(childSection);
-            }
-        }
-    };
-
-    for (const section of rootSections) {
-        visitSection(section);
-    }
-    for (const section of sections) {
-        visitSection(section);
-    }
-    for (const encounter of unassignedEncounters) {
-        appendEncounter(encounter.id);
-    }
+    const orderedEncounterIds = orderQuestEncounterIdsByRoute({
+        routeSections: sections,
+        unassignedEncounters,
+    });
 
     if (orderedEncounterIds.length === 0) {
         return 0;

@@ -1,19 +1,34 @@
 import type { QuestSelectionAssignment, QuestSelectionSynergy } from "./player-quest-selection";
+import {
+  createInitialQuestRouteChoices,
+  getActiveQuestEncounterIds,
+  getRouteFilteredQuestEncounters,
+  getSelectedQuestRoutePathIds,
+  getVisibleQuestRouteSections,
+  projectQuestRouteProgress,
+  type QuestPlanningRouteChoices,
+  type QuestPlanningRoutePath,
+  type QuestPlanningRouteSection,
+  type QuestPlanningSavedRouteChoice,
+} from "./quest-planning-route-progress";
 
-export type QuestPlanningRouteChoices = Record<string, string>;
 export type QuestPlanningSelectionMap = Record<string, string | null>;
 export type QuestPlanningReviveMap = Record<string, number>;
 
-export type QuestPlanningRoutePath = {
-  id: string;
-  title: string;
+export {
+  createInitialQuestRouteChoices,
+  getActiveQuestEncounterIds,
+  getRouteFilteredQuestEncounters,
+  getSelectedQuestRoutePathIds,
+  getVisibleQuestRouteSections,
+  projectQuestRouteProgress,
 };
 
-export type QuestPlanningRouteSection<TPath extends QuestPlanningRoutePath = QuestPlanningRoutePath> = {
-  id: string;
-  title: string;
-  parentPathId?: string | null;
-  paths: TPath[];
+export type {
+  QuestPlanningRouteChoices,
+  QuestPlanningRoutePath,
+  QuestPlanningRouteSection,
+  QuestPlanningSavedRouteChoice,
 };
 
 export type QuestPlanningEncounter = {
@@ -40,11 +55,6 @@ export type QuestPlanningRosterEntry = {
   champion: {
     id: number;
   };
-};
-
-export type QuestPlanningSavedRouteChoice = {
-  questRouteSectionId: string;
-  questRoutePathId: string;
 };
 
 export type QuestPlanningSavedSynergy = {
@@ -91,28 +101,6 @@ export type QuestPlanningTeamMember<
   isSynergyOnly: boolean;
 };
 
-export function createInitialQuestRouteChoices<TSection extends QuestPlanningRouteSection>({
-  routeSections = [],
-  savedRouteChoices = [],
-}: {
-  routeSections?: TSection[] | null;
-  savedRouteChoices?: QuestPlanningSavedRouteChoice[];
-}): QuestPlanningRouteChoices {
-  const initial: QuestPlanningRouteChoices = {};
-
-  savedRouteChoices.forEach(choice => {
-    initial[choice.questRouteSectionId] = choice.questRoutePathId;
-  });
-
-  routeSections?.forEach(section => {
-    if (!initial[section.id] && section.paths[0]) {
-      initial[section.id] = section.paths[0].id;
-    }
-  });
-
-  return initial;
-}
-
 export function projectQuestPlanningState<
   TQuest extends QuestPlanningQuest<TEncounter, TSection>,
   TEncounter extends QuestPlanningEncounter,
@@ -145,21 +133,16 @@ export function projectQuestPlanningState<
   createSynergyRosterEntry?: (synergy: TSynergy) => TRoster;
 }): QuestPlanningProjection<TQuest, TEncounter, TSection, TRoster> {
   const routeSections = quest.routeSections ?? [];
-  const visibleRouteSections = getVisibleQuestRouteSections({
-    routeSections,
-    routeChoices,
-  });
-  const selectedRoutePathIds = getSelectedQuestRoutePathIds({
+  const {
     visibleRouteSections,
-    routeChoices,
-  });
-  const routeFilteredEncounters = getRouteFilteredQuestEncounters({
+    selectedRoutePathIds,
+    routeFilteredEncounters,
+    activeEncounterIds,
+  } = projectQuestRouteProgress({
     encounters: quest.encounters,
     routeSections,
-    visibleRouteSections,
     routeChoices,
   });
-  const activeEncounterIds = getActiveQuestEncounterIds(routeFilteredEncounters);
   const activeSelections = filterQuestSelectionMapByActiveEncounters(selections, activeEncounterIds);
   const activePrefightSelections = filterQuestSelectionMapByActiveEncounters(prefightSelections, activeEncounterIds);
   const selectedTeam = projectSelectedQuestTeam({
@@ -206,84 +189,6 @@ export function projectQuestPlanningState<
       resolveRosterEntry,
     }),
   };
-}
-
-export function getVisibleQuestRouteSections<TSection extends QuestPlanningRouteSection>({
-  routeSections,
-  routeChoices,
-}: {
-  routeSections: TSection[];
-  routeChoices: QuestPlanningRouteChoices;
-}) {
-  if (routeSections.length === 0) return [];
-
-  const visible = new Set<string>();
-  let changed = true;
-
-  while (changed) {
-    changed = false;
-    for (const section of routeSections) {
-      if (visible.has(section.id)) continue;
-      if (!section.parentPathId) {
-        visible.add(section.id);
-        changed = true;
-        continue;
-      }
-
-      const parentSection = routeSections.find(candidate =>
-        candidate.paths.some(path => path.id === section.parentPathId)
-      );
-      if (!parentSection || !visible.has(parentSection.id)) continue;
-
-      const selectedParentPathId = routeChoices[parentSection.id] || parentSection.paths[0]?.id;
-      if (selectedParentPathId === section.parentPathId) {
-        visible.add(section.id);
-        changed = true;
-      }
-    }
-  }
-
-  return routeSections.filter(section => visible.has(section.id));
-}
-
-export function getSelectedQuestRoutePathIds<TSection extends QuestPlanningRouteSection>({
-  visibleRouteSections,
-  routeChoices,
-}: {
-  visibleRouteSections: TSection[];
-  routeChoices: QuestPlanningRouteChoices;
-}) {
-  return visibleRouteSections
-    .map(section => routeChoices[section.id] || section.paths[0]?.id)
-    .filter((id): id is string => Boolean(id));
-}
-
-export function getRouteFilteredQuestEncounters<
-  TEncounter extends QuestPlanningEncounter,
-  TSection extends QuestPlanningRouteSection
->({
-  encounters,
-  routeSections,
-  visibleRouteSections,
-  routeChoices,
-}: {
-  encounters: TEncounter[];
-  routeSections: TSection[];
-  visibleRouteSections: TSection[];
-  routeChoices: QuestPlanningRouteChoices;
-}) {
-  if (routeSections.length === 0) return encounters;
-
-  const selectedPathIds = new Set(getSelectedQuestRoutePathIds({
-    visibleRouteSections,
-    routeChoices,
-  }));
-
-  return encounters.filter(encounter => !encounter.routePathId || selectedPathIds.has(encounter.routePathId));
-}
-
-export function getActiveQuestEncounterIds<TEncounter extends QuestPlanningEncounter>(encounters: TEncounter[]) {
-  return new Set(encounters.map(encounter => encounter.id));
 }
 
 export function filterQuestSelectionMapByActiveEncounters(

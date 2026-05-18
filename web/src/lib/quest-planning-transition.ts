@@ -1,12 +1,12 @@
 import {
   createInitialQuestRouteChoices,
-  getRouteFilteredQuestEncounters,
-  getVisibleQuestRouteSections,
-  type QuestPlanningEncounter,
+  projectQuestRouteProgress,
+  sanitizeQuestRouteChoices,
+  type QuestPlanningRouteEncounter,
   type QuestPlanningRouteChoices,
   type QuestPlanningRouteSection,
   type QuestPlanningSavedRouteChoice,
-} from "./quest-planning-projection";
+} from "./quest-planning-route-progress";
 import {
   questEncounterSelectionConflictReason,
   validateOwnedChampionForQuestSelection,
@@ -27,7 +27,7 @@ export type QuestPlanningTransitionKind =
   | "revives";
 
 type QuestPlanningTransitionQuest<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 > = QuestSelectionQuest & {
   encounters: TEncounter[];
@@ -54,7 +54,7 @@ type QuestPlanningChampionCandidate = {
 };
 
 export type QuestPlanningSelectionTransitionInput<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 > = {
   kind: Extract<QuestPlanningTransitionKind, "counter" | "prefight" | "synergy">;
@@ -68,7 +68,7 @@ export type QuestPlanningSelectionTransitionInput<
 };
 
 export type QuestPlanningRouteChoiceTransitionInput<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 > = {
   kind: "routeChoice";
@@ -85,7 +85,7 @@ export type QuestPlanningRevivesTransitionInput = {
 };
 
 export type QuestPlanningTransitionInput<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 > =
   | QuestPlanningSelectionTransitionInput<TEncounter, TSection>
@@ -130,7 +130,7 @@ export type QuestPlanningTransitionDecision =
     };
 
 export function decideQuestPlanningTransition<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 >(
   input: QuestPlanningTransitionInput<TEncounter, TSection>
@@ -147,7 +147,7 @@ export function decideQuestPlanningTransition<
 }
 
 function decideSelectionTransition<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 >(
   input: QuestPlanningSelectionTransitionInput<TEncounter, TSection>
@@ -236,7 +236,7 @@ function decideSelectionTransition<
 }
 
 function decideRouteChoiceTransition<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 >(
   input: QuestPlanningRouteChoiceTransitionInput<TEncounter, TSection>
@@ -282,7 +282,7 @@ function decideRevivesTransition(input: QuestPlanningRevivesTransitionInput): Qu
 }
 
 function activePlanState<
-  TEncounter extends QuestPlanningEncounter,
+  TEncounter extends QuestPlanningRouteEncounter,
   TSection extends QuestPlanningRouteSection
 >(
   quest: QuestPlanningTransitionQuest<TEncounter, TSection>,
@@ -300,34 +300,15 @@ function activePlanState<
         ...routeChoicesOverride,
       })
     : savedRouteChoices;
-  const visibleRouteSections = getVisibleQuestRouteSections({
+  const { activeEncounterIds } = projectQuestRouteProgress({
+    encounters: quest.encounters,
     routeSections,
     routeChoices,
   });
-  const activeEncounterIds = new Set(getRouteFilteredQuestEncounters({
-    encounters: quest.encounters,
-    routeSections,
-    visibleRouteSections,
-    routeChoices,
-  }).map(encounter => encounter.id));
 
   return {
     activeEncounterIds,
     activeAssignments: plan.encounters.filter(encounter => activeEncounterIds.has(encounter.questEncounterId)),
     activeSynergyChampions: plan.synergyChampions ?? [],
   };
-}
-
-function sanitizeQuestRouteChoices(
-  routeSections: Array<{ id: string; paths: Array<{ id: string }> }>,
-  choices: QuestPlanningRouteChoices
-) {
-  const sanitized: QuestPlanningRouteChoices = {};
-  for (const section of routeSections) {
-    const choice = choices[section.id];
-    if (choice && section.paths.some(path => path.id === choice)) {
-      sanitized[section.id] = choice;
-    }
-  }
-  return sanitized;
 }
