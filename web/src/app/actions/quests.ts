@@ -8,6 +8,7 @@ import { ChampionClass, EncounterDifficulty, QuestPlanStatus } from "@prisma/cli
 import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
 import { QuestWithRelations, QuestSummary } from "@/types/quests";
 import { withActionContext } from "@/lib/with-request-context";
+import { projectSavedQuestPlanRosterMap } from "@/lib/saved-quest-plan-projection";
 import {
     clearAllQuestCounters as clearAllQuestCountersAction,
     savePlayerQuestCounter as savePlayerQuestCounterAction,
@@ -21,12 +22,12 @@ export async function savePlayerQuestRouteChoice(questPlanId: string, sectionId:
     return savePlayerQuestRouteChoiceAction(questPlanId, sectionId, pathId);
 }
 
-export async function savePlayerQuestCounter(questPlanId: string, questEncounterId: string, selectedChampionId: number | null) {
-    return savePlayerQuestCounterAction(questPlanId, questEncounterId, selectedChampionId);
+export async function savePlayerQuestCounter(questPlanId: string, questEncounterId: string, selectedChampionId: number | null, selectedChampionStars: number | null = null) {
+    return savePlayerQuestCounterAction(questPlanId, questEncounterId, selectedChampionId, selectedChampionStars);
 }
 
-export async function savePlayerQuestPrefightChampion(questPlanId: string, questEncounterId: string, prefightChampionId: number | null) {
-    return savePlayerQuestPrefightChampionAction(questPlanId, questEncounterId, prefightChampionId);
+export async function savePlayerQuestPrefightChampion(questPlanId: string, questEncounterId: string, prefightChampionId: number | null, prefightChampionStars: number | null = null) {
+    return savePlayerQuestPrefightChampionAction(questPlanId, questEncounterId, prefightChampionId, prefightChampionStars);
 }
 
 export async function savePlayerQuestEncounterRevives(questPlanId: string, questEncounterId: string, revivesUsed: number) {
@@ -2776,68 +2777,14 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
         })
         : [];
 
-    // Build a map: questEncounterId -> roster entry
-    const rosterMap = new Map<string, unknown>();
-    for (const enc of playerPlan.encounters) {
-        if (enc.selectedChampionId) {
-            // Find "best" entry for this champion
-            // If we had a persisted rosterId, we'd prefer it here
-            const bestEntry = rosterEntries.find(r => r.championId === enc.selectedChampionId);
-            
-            if (bestEntry) {
-                rosterMap.set(enc.questEncounterId, bestEntry);
-            } else if (enc.selectedChampion) {
-                // Fallback using the snapshot data (selectedChampion) loaded on the encounter
-                rosterMap.set(enc.questEncounterId, {
-                    id: `fallback-${enc.id}`,
-                    playerId: playerPlan.playerId,
-                    championId: enc.selectedChampionId,
-                    stars: 0,
-                    rank: 0,
-                    level: 0,
-                    sigLevel: null,
-                    isAwakened: false,
-                    isAscended: false,
-                    ascensionLevel: 0,
-                    powerRating: 0,
-                    champion: enc.selectedChampion,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
-            }
-        }
-        if (enc.prefightChampionId) {
-            const bestEntry = rosterEntries.find(r => r.championId === enc.prefightChampionId);
-
-            if (bestEntry) {
-                rosterMap.set(`prefight:${enc.questEncounterId}`, bestEntry);
-            } else if (enc.prefightChampion) {
-                rosterMap.set(`prefight:${enc.questEncounterId}`, {
-                    id: `fallback-prefight-${enc.id}`,
-                    playerId: playerPlan.playerId,
-                    championId: enc.prefightChampionId,
-                    stars: 0,
-                    rank: 0,
-                    level: 0,
-                    sigLevel: null,
-                    isAwakened: false,
-                    isAscended: false,
-                    ascensionLevel: 0,
-                    powerRating: 0,
-                    champion: enc.prefightChampion,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
-            }
-        }
-    }
-
     return {
         ...playerPlan,
         rosterEntries,
-        rosterMap: Object.fromEntries(
-            Array.from(rosterMap.entries())
-        ) as Record<string, unknown>
+        rosterMap: projectSavedQuestPlanRosterMap({
+            playerId: playerPlan.playerId,
+            encounters: playerPlan.encounters,
+            rosterEntries,
+        }) as Record<string, unknown>
     };
 });
 

@@ -336,6 +336,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                 const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
                 const rosterIndex = availableRoster.findIndex(r => 
                     r.championId === se.selectedChampionId && 
+                    (se.selectedChampionStars == null || r.stars === se.selectedChampionStars) &&
                     isChampionValidForEncounterOrQuest(r, quest, encounter)
                 );
                 
@@ -372,6 +373,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                 const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
                 const rosterEntry = roster.find(r =>
                     r.championId === se.prefightChampionId &&
+                    (se.prefightChampionStars == null || r.stars === se.prefightChampionStars) &&
                     isChampionValidForEncounterOrQuest(r, quest, encounter)
                 );
                 initial[se.questEncounterId] = rosterEntry?.id ?? null;
@@ -1045,7 +1047,9 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
 
         const newValue = previousRosterId === rosterId ? null : rosterId;
-        const newChampValue = newValue ? roster.find(r => r.id === newValue)?.championId || null : null;
+        const newRosterEntry = newValue ? roster.find(r => r.id === newValue) : undefined;
+        const newChampValue = newRosterEntry?.championId ?? null;
+        const newStarsValue = newRosterEntry?.stars ?? null;
         
         setSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
@@ -1063,7 +1067,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
 
         try {
-            await savePlayerQuestCounter(quest.id, encounterId, newChampValue);
+            await savePlayerQuestCounter(quest.id, encounterId, newChampValue, newStarsValue);
         } catch (error) {
             reportClientError("quest_timeline_save_counter", error, {
                 quest_id: quest.id,
@@ -1125,12 +1129,14 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
 
         const newValue = previousRosterId === rosterId ? null : rosterId;
-        const newChampValue = newValue ? roster.find(r => r.id === newValue)?.championId || null : null;
+        const newRosterEntry = newValue ? roster.find(r => r.id === newValue) : undefined;
+        const newChampValue = newRosterEntry?.championId ?? null;
+        const newStarsValue = newRosterEntry?.stars ?? null;
 
         setPrefightSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
         try {
-            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue);
+            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue, newStarsValue);
         } catch (error) {
             reportClientError("quest_timeline_save_prefight", error, {
                 quest_id: quest.id,

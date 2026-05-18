@@ -76,6 +76,7 @@ describe("Quest Planning Mutation", () => {
         questPlanId: "quest-1",
         questEncounterId: "encounter-1",
         championId: 1,
+        championStars: 7,
       },
     });
 
@@ -90,8 +91,9 @@ describe("Quest Planning Mutation", () => {
         questEncounterId: "encounter-1",
         questPlanId: "quest-1",
         selectedChampionId: 1,
+        selectedChampionStars: 7,
       }),
-      update: { selectedChampionId: 1 },
+      update: { selectedChampionId: 1, selectedChampionStars: 7 },
     }));
   });
 
@@ -114,7 +116,9 @@ describe("Quest Planning Mutation", () => {
         playerQuestPlanId: "player-plan-1",
         questEncounterId: "encounter-1",
         selectedChampionId: null,
+        selectedChampionStars: null,
         prefightChampionId: null,
+        prefightChampionStars: null,
         revivesUsed: 0,
       },
     });

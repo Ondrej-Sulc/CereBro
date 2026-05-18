@@ -985,7 +985,9 @@ model PlayerQuestEncounter {
   playerQuestPlanId  String
   questEncounterId   String
   selectedChampionId Int?
+  selectedChampionStars Int?
   prefightChampionId Int?
+  prefightChampionStars Int?
   revivesUsed        Int             @default(0)
   questPlanId        String
   playerQuestPlan    PlayerQuestPlan @relation(fields: [playerQuestPlanId, questPlanId], references: [id, questPlanId], onDelete: Cascade)
@@ -997,7 +999,9 @@ model PlayerQuestEncounter {
   @@index([playerQuestPlanId])
   @@index([questEncounterId])
   @@index([selectedChampionId])
+  @@index([selectedChampionId, selectedChampionStars])
   @@index([prefightChampionId])
+  @@index([prefightChampionId, prefightChampionStars])
 }
 
 enum ChampionClass {

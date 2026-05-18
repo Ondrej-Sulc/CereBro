@@ -26,7 +26,11 @@ export interface FilterMetadata {
 export interface QuestTimelineProps {
     quest: QuestWithRelations;
     roster?: RosterWithChampion[];
-    savedEncounters?: (PlayerQuestEncounter & { prefightChampionId?: number | null })[];
+    savedEncounters?: (PlayerQuestEncounter & {
+        prefightChampionId?: number | null;
+        selectedChampionStars?: number | null;
+        prefightChampionStars?: number | null;
+    })[];
     savedRouteChoices?: PlayerQuestRouteChoice[];
     savedSynergies?: SynergyWithChampion[];
     popularCounters?: PopularCountersMap;

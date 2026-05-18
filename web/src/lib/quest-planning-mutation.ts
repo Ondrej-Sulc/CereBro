@@ -15,12 +15,14 @@ export type QuestPlanningMutationInput =
       questPlanId: string;
       questEncounterId: string;
       championId: number | null;
+      championStars?: number | null;
     }
   | {
       kind: "prefight";
       questPlanId: string;
       questEncounterId: string;
       championId: number | null;
+      championStars?: number | null;
     }
   | {
       kind: "revives";
@@ -134,6 +136,7 @@ async function applyEncounterSelectionMutation({
     questPlanId: mutation.questPlanId,
     questEncounterId: mutation.questEncounterId,
     championId: mutation.championId,
+    championStars: mutation.championStars ?? null,
     field: mutation.kind === "counter" ? "selectedChampionId" : "prefightChampionId",
     kind: mutation.kind,
   });
@@ -154,9 +157,11 @@ async function applyEncounterSelectionMutation({
       questEncounterId: intent.questEncounterId,
       questPlanId: mutation.questPlanId,
       [mutation.kind === "counter" ? "selectedChampionId" : "prefightChampionId"]: intent.championId,
+      [mutation.kind === "counter" ? "selectedChampionStars" : "prefightChampionStars"]: intent.championStars,
     },
     update: {
       [mutation.kind === "counter" ? "selectedChampionId" : "prefightChampionId"]: intent.championId,
+      [mutation.kind === "counter" ? "selectedChampionStars" : "prefightChampionStars"]: intent.championStars,
     },
   });
 
@@ -243,6 +248,7 @@ async function applySynergyMutation({
     playerQuestPlanId: playerPlan.id,
     questPlanId: mutation.questPlanId,
     championId: mutation.championId,
+    championStars: null,
     field: "synergyChampionId",
     kind: "synergy",
   });
@@ -281,7 +287,12 @@ async function clearQuestCounters({
   if (playerPlan) {
     await db.playerQuestEncounter.updateMany({
       where: { playerQuestPlanId: playerPlan.id },
-      data: { selectedChampionId: null, prefightChampionId: null },
+      data: {
+        selectedChampionId: null,
+        selectedChampionStars: null,
+        prefightChampionId: null,
+        prefightChampionStars: null,
+      },
     });
     await db.playerQuestEncounter.deleteMany({
       where: {
@@ -303,6 +314,7 @@ async function decideSelectionIntent({
   questPlanId,
   questEncounterId,
   championId,
+  championStars,
   field,
   kind,
 }: {
@@ -312,6 +324,7 @@ async function decideSelectionIntent({
   questPlanId: string;
   questEncounterId?: string;
   championId: number | null;
+  championStars: number | null;
   field: "selectedChampionId" | "prefightChampionId" | "synergyChampionId";
   kind: "counter" | "prefight" | "synergy";
 }) {
@@ -330,7 +343,9 @@ async function decideSelectionIntent({
           select: {
             questEncounterId: true,
             selectedChampionId: true,
+            selectedChampionStars: true,
             prefightChampionId: true,
+            prefightChampionStars: true,
           },
         },
         synergyChampions: {
@@ -346,7 +361,11 @@ async function decideSelectionIntent({
     }),
     championId !== null
       ? db.roster.findMany({
-          where: { playerId, championId },
+          where: {
+            playerId,
+            championId,
+            ...(championStars !== null ? { stars: championStars } : {}),
+          },
           orderBy: [{ stars: "desc" }, { rank: "desc" }],
         })
       : Promise.resolve([]),
@@ -382,7 +401,19 @@ async function decideSelectionIntent({
     encounter: encounter ?? undefined,
   });
   if (!decision.valid) throw new Error(decision.reason);
-  return decision.intent;
+  if (
+    (decision.intent.kind === "counter" || decision.intent.kind === "prefight") &&
+    decision.intent.championId !== null
+  ) {
+    return {
+      ...decision.intent,
+      championStars: rosterEntries[0]?.stars ?? championStars,
+    };
+  }
+  return {
+    ...decision.intent,
+    championStars: null,
+  };
 }
 
 async function loadQuestForPlanning(db: QuestPlanningMutationDb, questPlanId: string) {
@@ -454,7 +485,9 @@ function deleteEmptyQuestEncounterSelections(
       playerQuestPlanId,
       questEncounterId,
       selectedChampionId: null,
+      selectedChampionStars: null,
       prefightChampionId: null,
+      prefightChampionStars: null,
       revivesUsed: 0,
     },
   });

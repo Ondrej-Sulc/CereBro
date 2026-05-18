@@ -32,7 +32,9 @@ type ReadOnlyPlan = {
     encounters: {
         questEncounterId: string;
         selectedChampionId: number | null;
+        selectedChampionStars?: number | null;
         prefightChampionId: number | null;
+        prefightChampionStars?: number | null;
     }[];
     rosterEntries?: ReadOnlyRosterEntry[];
     synergyChampions?: ReadOnlySynergyChampion[];

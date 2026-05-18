@@ -56,7 +56,8 @@ export const savePlayerQuestRouteChoice = withActionContext('savePlayerQuestRout
 export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter', async (
     questPlanId: string,
     questEncounterId: string,
-    selectedChampionId: number | null
+    selectedChampionId: number | null,
+    selectedChampionStars: number | null = null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -69,6 +70,7 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
                 questPlanId,
                 questEncounterId,
                 championId: selectedChampionId,
+                championStars: selectedChampionStars,
             },
         }),
         actingUser.allianceId
@@ -78,7 +80,8 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
 export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQuestPrefightChampion', async (
     questPlanId: string,
     questEncounterId: string,
-    prefightChampionId: number | null
+    prefightChampionId: number | null,
+    prefightChampionStars: number | null = null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -91,6 +94,7 @@ export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQues
                 questPlanId,
                 questEncounterId,
                 championId: prefightChampionId,
+                championStars: prefightChampionStars,
             },
         }),
         actingUser.allianceId
