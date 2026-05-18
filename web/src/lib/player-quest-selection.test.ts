@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ChampionClass } from "@prisma/client";
 import {
   collectQuestTeamChampionIds,
+  isQuestRosterEntryUnavailableForEncounter,
   isChampionValidForEncounterOrQuest,
   questEncounterSelectionConflictReason,
   validateOwnedChampionForQuestSelection,
@@ -117,5 +118,34 @@ describe("Player Quest Selection", () => {
       synergyChampions,
       replacement: { field: "synergyChampionId", championId: 2 },
     })).toBe(false);
+  });
+
+  it("marks a roster entry unavailable when all valid copies are already selected on active encounters", () => {
+    const activeEncounterIds = new Set(["e1", "e2"]);
+    const roster = [
+      rosterEntry({ id: "r1" }),
+      rosterEntry({ id: "r2" }),
+      rosterEntry({ id: "r3", stars: 5 }),
+    ];
+
+    expect(isQuestRosterEntryUnavailableForEncounter({
+      entry: roster[1],
+      encounterId: "e2",
+      selections: { e1: "r1", e2: null, inactive: "r2" },
+      activeEncounterIds,
+      roster,
+      quest: { minStarLevel: 6, teamLimit: null },
+      encounter: { id: "e2" },
+    })).toBe(false);
+
+    expect(isQuestRosterEntryUnavailableForEncounter({
+      entry: roster[1],
+      encounterId: "e2",
+      selections: { e1: "r1", e2: null, e3: "r2" },
+      activeEncounterIds: new Set(["e1", "e2", "e3"]),
+      roster,
+      quest: { minStarLevel: 6, teamLimit: null },
+      encounter: { id: "e2" },
+    })).toBe(true);
   });
 });

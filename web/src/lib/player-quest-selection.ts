@@ -101,6 +101,38 @@ export function getValidRosterCountForChampion(
   ).length;
 }
 
+export function isQuestRosterEntryUnavailableForEncounter({
+  entry,
+  encounterId,
+  selections,
+  activeEncounterIds,
+  roster,
+  quest,
+  encounter,
+}: {
+  entry: QuestSelectionRosterEntry | undefined;
+  encounterId: string;
+  selections: Record<string, string | null>;
+  activeEncounterIds?: Set<string>;
+  roster: QuestSelectionRosterEntry[];
+  quest: QuestSelectionQuest;
+  encounter?: QuestSelectionEncounter;
+}) {
+  if (!entry || entry.isUnowned || quest.teamLimit !== null || selections[encounterId] === entry.id) {
+    return false;
+  }
+
+  const rosterById = new Map(roster.map(rosterEntry => [rosterEntry.id, rosterEntry]));
+  const otherSelectionsCount = Object.entries(selections).reduce((count, [selectedEncounterId, rosterId]) => {
+    if (activeEncounterIds && !activeEncounterIds.has(selectedEncounterId)) return count;
+    if (selectedEncounterId === encounterId || rosterId === null) return count;
+    return rosterById.get(rosterId)?.championId === entry.championId ? count + 1 : count;
+  }, 0);
+
+  const validRosterCount = getValidRosterCountForChampion(entry.championId, roster, quest, encounter);
+  return otherSelectionsCount >= validRosterCount;
+}
+
 export function validateOwnedChampionForQuestSelection({
   rosterEntries,
   champion,

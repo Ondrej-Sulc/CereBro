@@ -111,6 +111,17 @@ describe("Quest Planning Projection", () => {
     expect(projection.allRevivesTotal).toBe(12);
     expect(projection.filteredEncounters.map(encounter => encounter.id)).toEqual(["right-fight", "upper-fight"]);
     expect(projection.selectedTeam.map(entry => entry.championId)).toEqual([1, 2, 3, 4]);
+    expect(projection.selectedTeamMembers.map(member => ({
+      championId: member.rosterEntry.championId,
+      assignedEncounters: member.assignedEncounters.map(encounter => encounter.id),
+      prefightEncounters: member.prefightEncounters.map(encounter => encounter.id),
+      isSynergyOnly: member.isSynergyOnly,
+    }))).toEqual([
+      { championId: 1, assignedEncounters: ["shared"], prefightEncounters: [], isSynergyOnly: false },
+      { championId: 2, assignedEncounters: ["right-fight"], prefightEncounters: [], isSynergyOnly: false },
+      { championId: 3, assignedEncounters: [], prefightEncounters: ["upper-fight"], isSynergyOnly: false },
+      { championId: 4, assignedEncounters: [], prefightEncounters: [], isSynergyOnly: true },
+    ]);
   });
 
   it("dedupes team-limited plans by champion but keeps separate rarities for unlimited plans", () => {

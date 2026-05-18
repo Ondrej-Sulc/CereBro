@@ -78,6 +78,17 @@ export type QuestPlanningProjection<
   selectedRoutePathIds: string[];
   filteredEncounters: TEncounter[];
   selectedTeam: TRoster[];
+  selectedTeamMembers: QuestPlanningTeamMember<TRoster, TEncounter>[];
+};
+
+export type QuestPlanningTeamMember<
+  TRoster extends QuestPlanningRosterEntry,
+  TEncounter extends QuestPlanningEncounter
+> = {
+  rosterEntry: TRoster;
+  assignedEncounters: TEncounter[];
+  prefightEncounters: TEncounter[];
+  isSynergyOnly: boolean;
 };
 
 export function createInitialQuestRouteChoices<TSection extends QuestPlanningRouteSection>({
@@ -151,6 +162,16 @@ export function projectQuestPlanningState<
   const activeEncounterIds = getActiveQuestEncounterIds(routeFilteredEncounters);
   const activeSelections = filterQuestSelectionMapByActiveEncounters(selections, activeEncounterIds);
   const activePrefightSelections = filterQuestSelectionMapByActiveEncounters(prefightSelections, activeEncounterIds);
+  const selectedTeam = projectSelectedQuestTeam({
+    activeSelections,
+    activePrefightSelections,
+    synergyIds,
+    roster,
+    savedSynergies,
+    teamLimit: quest.teamLimit ?? null,
+    resolveRosterEntry,
+    createSynergyRosterEntry,
+  });
 
   return {
     visibleRouteSections,
@@ -174,15 +195,15 @@ export function projectQuestPlanningState<
     }),
     selectedRoutePathIds,
     filteredEncounters: filterQuestEncountersByDifficulty(routeFilteredEncounters, difficultyFilter),
-    selectedTeam: projectSelectedQuestTeam({
+    selectedTeam,
+    selectedTeamMembers: projectSelectedQuestTeamMembers({
       activeSelections,
       activePrefightSelections,
-      synergyIds,
       roster,
-      savedSynergies,
+      routeFilteredEncounters,
+      selectedTeam,
       teamLimit: quest.teamLimit ?? null,
       resolveRosterEntry,
-      createSynergyRosterEntry,
     }),
   };
 }
@@ -430,6 +451,68 @@ export function projectSelectedQuestTeam<
   });
 
   return Array.from(teamMap.values());
+}
+
+export function projectSelectedQuestTeamMembers<
+  TRoster extends QuestPlanningRosterEntry,
+  TEncounter extends QuestPlanningEncounter
+>({
+  activeSelections,
+  activePrefightSelections,
+  roster,
+  routeFilteredEncounters,
+  selectedTeam,
+  teamLimit,
+  resolveRosterEntry,
+}: {
+  activeSelections: QuestPlanningSelectionMap;
+  activePrefightSelections: QuestPlanningSelectionMap;
+  roster: TRoster[];
+  routeFilteredEncounters: TEncounter[];
+  selectedTeam: TRoster[];
+  teamLimit: number | null;
+  resolveRosterEntry?: QuestPlanningRosterResolver<TRoster>;
+}): Array<QuestPlanningTeamMember<TRoster, TEncounter>> {
+  const rosterById = indexQuestRosterById(roster);
+  const matchesRosterSelection = (
+    teamEntry: TRoster,
+    rosterId: string | null | undefined,
+    encounterId: string,
+    field: "selectedChampionId" | "prefightChampionId"
+  ) => {
+    if (!rosterId) return false;
+    if (teamEntry.id === rosterId) return true;
+    if (teamLimit === null) return false;
+
+    const selectedEntry = resolveRosterEntry?.({ rosterId, encounterId, field }) ?? rosterById.get(rosterId);
+    return selectedEntry?.championId === teamEntry.championId;
+  };
+
+  return selectedTeam.map(rosterEntry => {
+    const assignedEncounters = routeFilteredEncounters
+      .filter(encounter => matchesRosterSelection(
+        rosterEntry,
+        activeSelections[encounter.id],
+        encounter.id,
+        "selectedChampionId"
+      ))
+      .sort((a, b) => a.sequence - b.sequence);
+    const prefightEncounters = routeFilteredEncounters
+      .filter(encounter => matchesRosterSelection(
+        rosterEntry,
+        activePrefightSelections[encounter.id],
+        encounter.id,
+        "prefightChampionId"
+      ))
+      .sort((a, b) => a.sequence - b.sequence);
+
+    return {
+      rosterEntry,
+      assignedEncounters,
+      prefightEncounters,
+      isSynergyOnly: assignedEncounters.length === 0 && prefightEncounters.length === 0,
+    };
+  });
 }
 
 function indexQuestRosterById<TRoster extends QuestPlanningRosterEntry>(roster: TRoster[]) {

@@ -6,7 +6,6 @@ import { revalidatePath, unstable_cache, revalidateTag } from "next/cache";
 import logger from "@/lib/logger";
 import { ChampionClass, EncounterDifficulty, QuestPlanStatus } from "@prisma/client";
 import { uploadToGcs, deleteFromGcs } from "@/lib/gcs";
-import type { QuestPlanningRouteChoices } from "@/lib/quest-planning-projection";
 import { QuestWithRelations, QuestSummary } from "@/types/quests";
 import { withActionContext } from "@/lib/with-request-context";
 import {
@@ -22,12 +21,12 @@ export async function savePlayerQuestRouteChoice(questPlanId: string, sectionId:
     return savePlayerQuestRouteChoiceAction(questPlanId, sectionId, pathId);
 }
 
-export async function savePlayerQuestCounter(questPlanId: string, questEncounterId: string, selectedChampionId: number | null, routeChoices?: QuestPlanningRouteChoices) {
-    return savePlayerQuestCounterAction(questPlanId, questEncounterId, selectedChampionId, routeChoices);
+export async function savePlayerQuestCounter(questPlanId: string, questEncounterId: string, selectedChampionId: number | null) {
+    return savePlayerQuestCounterAction(questPlanId, questEncounterId, selectedChampionId);
 }
 
-export async function savePlayerQuestPrefightChampion(questPlanId: string, questEncounterId: string, prefightChampionId: number | null, routeChoices?: QuestPlanningRouteChoices) {
-    return savePlayerQuestPrefightChampionAction(questPlanId, questEncounterId, prefightChampionId, routeChoices);
+export async function savePlayerQuestPrefightChampion(questPlanId: string, questEncounterId: string, prefightChampionId: number | null) {
+    return savePlayerQuestPrefightChampionAction(questPlanId, questEncounterId, prefightChampionId);
 }
 
 export async function savePlayerQuestEncounterRevives(questPlanId: string, questEncounterId: string, revivesUsed: number) {
@@ -38,8 +37,8 @@ export async function clearAllQuestCounters(questPlanId: string) {
     return clearAllQuestCountersAction(questPlanId);
 }
 
-export async function savePlayerQuestSynergy(questPlanId: string, championId: number, isRemoving: boolean = false, routeChoices?: QuestPlanningRouteChoices) {
-    return savePlayerQuestSynergyAction(questPlanId, championId, isRemoving, routeChoices);
+export async function savePlayerQuestSynergy(questPlanId: string, championId: number, isRemoving: boolean = false) {
+    return savePlayerQuestSynergyAction(questPlanId, championId, isRemoving);
 }
 
 // --- Quest Categories ---

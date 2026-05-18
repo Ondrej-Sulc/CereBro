@@ -27,7 +27,7 @@ import {
 } from "./types";
 import {
     isChampionValidForEncounterOrQuest,
-    getValidRosterCountForChampion,
+    isQuestRosterEntryUnavailableForEncounter,
     questEncounterSelectionConflictReason,
     wouldExceedQuestTeamLimit
 } from "./utils";
@@ -285,44 +285,6 @@ const isReadOnlyRosterEntry = (value: unknown): value is RosterWithChampion => {
     );
 };
 
-const isChampionUnavailableForEncounter = ({
-    userChamp,
-    encounterId,
-    selections,
-    activeEncounterIds,
-    roster,
-    quest,
-    encounter
-}: {
-    userChamp: RosterWithChampion | undefined;
-    encounterId: string;
-    selections: Record<string, string | null>;
-    activeEncounterIds?: Set<string>;
-    roster: RosterWithChampion[];
-    quest: QuestTimelineProps["quest"];
-    encounter: EncounterWithRelations;
-}): boolean => {
-    if (!userChamp || userChamp.isUnowned || quest.teamLimit !== null || selections[encounterId] === userChamp.id) {
-        return false;
-    }
-
-    const otherSelectionsCount = Object.entries(selections).reduce((acc, [encId, rid]) => {
-        if (activeEncounterIds && !activeEncounterIds.has(encId)) {
-            return acc;
-        }
-        if (encId !== encounterId && rid !== null) {
-            const r = roster.find(re => re.id === rid);
-            if (r?.championId === userChamp.championId) {
-                return acc + 1;
-            }
-        }
-        return acc;
-    }, 0);
-
-    const validRosterCount = getValidRosterCountForChampion(userChamp.championId, roster, quest, encounter);
-    return otherSelectionsCount >= validRosterCount;
-};
-
 export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, savedEncounters = EMPTY_SAVED_ENCOUNTERS, savedRouteChoices = EMPTY_SAVED_ROUTE_CHOICES, savedSynergies = EMPTY_SAVED_SYNERGIES, popularCounters = EMPTY_POPULAR_COUNTERS, featuredPicks = EMPTY_FEATURED_PICKS, alliancePicks = EMPTY_ALLIANCE_PICKS, filterMetadata = EMPTY_FILTER_METADATA, readOnly = false, rosterMap = EMPTY_ROSTER_MAP, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
@@ -525,20 +487,12 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     };
 
     const initiateRemoveTeamMember = (rosterId: string, championId: number, championName: string) => {
-        const assignedEncounters = Object.entries(selections)
-            .filter(([encId, rId]) => {
-                if (!activeEncounterIds.has(encId) || !rId) return false;
-                if (rId === rosterId) return true;
-                return quest.teamLimit !== null && roster.find(r => r.id === rId)?.championId === championId;
-            })
-            .map(([encId]) => encId);
-        const assignedPrefights = Object.entries(prefightSelections)
-            .filter(([encId, rId]) => {
-                if (!activeEncounterIds.has(encId) || !rId) return false;
-                if (rId === rosterId) return true;
-                return quest.teamLimit !== null && roster.find(r => r.id === rId)?.championId === championId;
-            })
-            .map(([encId]) => encId);
+        const teamMember = selectedTeamMembers.find(member =>
+            member.rosterEntry.id === rosterId ||
+            (quest.teamLimit !== null && member.rosterEntry.championId === championId)
+        );
+        const assignedEncounters = teamMember?.assignedEncounters.map(encounter => encounter.id) ?? [];
+        const assignedPrefights = teamMember?.prefightEncounters.map(encounter => encounter.id) ?? [];
             
         const isSynergy = synergyIds.includes(championId);
 
@@ -657,6 +611,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         selectedRoutePathIds,
         filteredEncounters,
         selectedTeam,
+        selectedTeamMembers,
     } = useMemo(() => projectQuestPlanningState<
         QuestTimelineProps["quest"],
         EncounterWithRelations,
@@ -1108,7 +1063,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
 
         try {
-            await savePlayerQuestCounter(quest.id, encounterId, newChampValue, routeChoices);
+            await savePlayerQuestCounter(quest.id, encounterId, newChampValue);
         } catch (error) {
             reportClientError("quest_timeline_save_counter", error, {
                 quest_id: quest.id,
@@ -1175,7 +1130,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         setPrefightSelections(prev => ({ ...prev, [encounterId]: newValue }));
 
         try {
-            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue, routeChoices);
+            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue);
         } catch (error) {
             reportClientError("quest_timeline_save_prefight", error, {
                 quest_id: quest.id,
@@ -1250,7 +1205,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         );
 
         try {
-            await savePlayerQuestSynergy(quest.id, championId, isRemoving, routeChoices);
+            await savePlayerQuestSynergy(quest.id, championId, isRemoving);
         } catch (error) {
             reportClientError("quest_timeline_save_synergy", error, {
                 quest_id: quest.id,
@@ -1308,8 +1263,8 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
             return roster.find(r => r.id === rid)?.championId === c.id;
         });
         
-        const isUnavailable = isChampionUnavailableForEncounter({
-            userChamp,
+        const isUnavailable = isQuestRosterEntryUnavailableForEncounter({
+            entry: userChamp,
             encounterId: encounter.id,
             selections,
             activeEncounterIds,
@@ -1385,8 +1340,8 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
         const isInTeam = Object.values(activeSelections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
 
-        const isUnavailable = isChampionUnavailableForEncounter({
-            userChamp,
+        const isUnavailable = isQuestRosterEntryUnavailableForEncounter({
+            entry: userChamp,
             encounterId: encounter.id,
             selections,
             activeEncounterIds,
@@ -1648,21 +1603,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                                         ) : (
                                             <div className="flex flex-col gap-6">
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {selectedTeam.map(r => {
-                                                        const assignedEncounterIds = Object.entries(activeSelections)
-                                                            .filter(([, rosterId]) => rosterId === r.id || (quest.teamLimit !== null && !!rosterId && roster.find(entry => entry.id === rosterId)?.championId === r.championId))
-                                                            .map(([encId]) => encId);
-                                                        const assignedPrefightEncounterIds = Object.entries(activePrefightSelections)
-                                                            .filter(([, rosterId]) => rosterId === r.id || (quest.teamLimit !== null && !!rosterId && roster.find(entry => entry.id === rosterId)?.championId === r.championId))
-                                                            .map(([encId]) => encId);
-
-                                                        const assignedEncounters = routeFilteredEncounters
-                                                            .filter((e: EncounterWithRelations) => assignedEncounterIds.includes(e.id))
-                                                            .sort((a, b) => a.sequence - b.sequence);
-                                                        const assignedPrefightEncounters = routeFilteredEncounters
-                                                            .filter((e: EncounterWithRelations) => assignedPrefightEncounterIds.includes(e.id))
-                                                            .sort((a, b) => a.sequence - b.sequence);
-
+                                                    {selectedTeamMembers.map(({ rosterEntry: r, assignedEncounters, prefightEncounters: assignedPrefightEncounters }) => {
                                                         const classColors = getChampionClassColors(r.champion.class);
 
                                                         return (
