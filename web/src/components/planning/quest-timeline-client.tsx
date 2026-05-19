@@ -11,7 +11,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
-import type { PickCounterWithChampion, ChampionCounterData } from "@/app/actions/quest-catalog";
+import type { ChampionCounterData } from "@/app/actions/quest-catalog";
 import { getShareablePlanId } from "@/app/actions/quest-plan-sharing";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
@@ -24,7 +24,6 @@ import {
     RosterWithChampion,
     QuestTimelineProps,
     toChampionImages,
-    SynergyWithChampion
 } from "./types";
 import {
     isChampionValidForEncounterOrQuest,
@@ -35,21 +34,20 @@ import {
 } from "./utils";
 import {
     createInitialQuestRouteChoices,
-    projectQuestPlanningState,
 } from "@/lib/quest-planning-projection";
+import {
+    createInitialQuestTimelinePrefightSelections,
+    createInitialQuestTimelineRevives,
+    createInitialQuestTimelineSelections,
+    projectQuestTimelineViewModel,
+    type PlayerPicksMap,
+} from "./quest-timeline-view-model";
 
 import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
 import { reportClientError } from "@/lib/observability/client";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
-type QuestRouteSectionWithRelations = NonNullable<QuestTimelineProps["quest"]["routeSections"]>[number];
-type PlayerPickSummary = { encounterId: string; champion: ChampionCounterData };
-type PlayerPicksMap = Record<string, {
-    name: string;
-    avatar: string | null;
-    picks: PlayerPickSummary[];
-}>;
 const EMPTY_ROSTER: NonNullable<QuestTimelineProps["roster"]> = [];
 const EMPTY_SAVED_ENCOUNTERS: NonNullable<QuestTimelineProps["savedEncounters"]> = [];
 const EMPTY_SAVED_ROUTE_CHOICES: NonNullable<QuestTimelineProps["savedRouteChoices"]> = [];
@@ -272,21 +270,6 @@ const MultiPlayerPopover = ({
     );
 };
 
-const isReadOnlyRosterEntry = (value: unknown): value is RosterWithChampion => {
-    if (!value || typeof value !== "object") return false;
-    const candidate = value as Record<string, unknown>;
-    if (typeof candidate.id !== "string") return false;
-    if (typeof candidate.championId !== "number") return false;
-
-    const champion = candidate.champion;
-    if (!champion || typeof champion !== "object") return false;
-    const champCandidate = champion as Record<string, unknown>;
-    return (
-        typeof champCandidate.id === "number" &&
-        typeof champCandidate.name === "string"
-    );
-};
-
 export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, savedEncounters = EMPTY_SAVED_ENCOUNTERS, savedRouteChoices = EMPTY_SAVED_ROUTE_CHOICES, savedSynergies = EMPTY_SAVED_SYNERGIES, popularCounters = EMPTY_POPULAR_COUNTERS, featuredPicks = EMPTY_FEATURED_PICKS, alliancePicks = EMPTY_ALLIANCE_PICKS, filterMetadata = EMPTY_FILTER_METADATA, readOnly = false, rosterMap = EMPTY_ROSTER_MAP, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const headerRef = useRef<HTMLDivElement>(null);
@@ -319,83 +302,31 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     const [synergyIds, setSynergyIds] = useState<number[]>(() => savedSynergies.map(s => s.championId));
 
     // Track selections locally for immediate UI updates
-    const [selections, setSelections] = useState<Record<string, string | null>>(() => {
-        const initial: Record<string, string | null> = {};
-        
-        if (readOnly) {
-            // In read-only mode, we use the rosterMap to get the IDs directly
-            Object.keys(initialSelections || {}).forEach(encId => {
-                const rosterEntry = rosterMap[encId];
-                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
-            });
-            return initial;
-        }
+    const [selections, setSelections] = useState<Record<string, string | null>>(() =>
+        createInitialQuestTimelineSelections({
+            quest,
+            roster,
+            savedEncounters,
+            readOnly,
+            rosterMap,
+            initialSelections,
+        })
+    );
 
-        // For interactive mode, initialize from savedEncounters and find matching roster entries
-        const availableRoster = [...roster];
-        savedEncounters.forEach(se => {
-            if (se.selectedChampionId) {
-                const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
-                const rosterIndex = availableRoster.findIndex(r => 
-                    r.championId === se.selectedChampionId && 
-                    (se.selectedChampionStars == null || r.stars === se.selectedChampionStars) &&
-                    isChampionValidForEncounterOrQuest(r, quest, encounter)
-                );
-                
-                if (rosterIndex !== -1) {
-                    initial[se.questEncounterId] = availableRoster[rosterIndex].id;
-                    // Remove from available so it's not assigned to another encounter
-                    // ONLY if it's an infinite quest (no team limit)
-                    if (quest.teamLimit === null) {
-                        availableRoster.splice(rosterIndex, 1);
-                    }
-                } else {
-                    initial[se.questEncounterId] = null;
-                }
-            } else {
-                initial[se.questEncounterId] = null;
-            }
-        });
-        return initial;
-    });
+    const [prefightSelections, setPrefightSelections] = useState<Record<string, string | null>>(() =>
+        createInitialQuestTimelinePrefightSelections({
+            quest,
+            roster,
+            savedEncounters,
+            readOnly,
+            rosterMap,
+            initialPrefightSelections,
+        })
+    );
 
-    const [prefightSelections, setPrefightSelections] = useState<Record<string, string | null>>(() => {
-        const initial: Record<string, string | null> = {};
-
-        if (readOnly) {
-            Object.keys(initialPrefightSelections || {}).forEach(encId => {
-                const rosterEntry = rosterMap[`prefight:${encId}`];
-                initial[encId] = isReadOnlyRosterEntry(rosterEntry) ? rosterEntry.id : null;
-            });
-            return initial;
-        }
-
-        savedEncounters.forEach(se => {
-            if (se.prefightChampionId) {
-                const encounter = quest.encounters.find(e => e.id === se.questEncounterId);
-                const rosterEntry = roster.find(r =>
-                    r.championId === se.prefightChampionId &&
-                    (se.prefightChampionStars == null || r.stars === se.prefightChampionStars) &&
-                    isChampionValidForEncounterOrQuest(r, quest, encounter)
-                );
-                initial[se.questEncounterId] = rosterEntry?.id ?? null;
-            } else {
-                initial[se.questEncounterId] = null;
-            }
-        });
-        return initial;
-    });
-
-    const [revivesByEncounterId, setRevivesByEncounterId] = useState<Record<string, number>>(() => {
-        const initial: Record<string, number> = {};
-        savedEncounters.forEach(encounter => {
-            const count = Math.max(0, Math.min(99, Number((encounter as { revivesUsed?: number }).revivesUsed || 0)));
-            if (count > 0) {
-                initial[encounter.questEncounterId] = count;
-            }
-        });
-        return initial;
-    });
+    const [revivesByEncounterId, setRevivesByEncounterId] = useState<Record<string, number>>(() =>
+        createInitialQuestTimelineRevives(savedEncounters)
+    );
 
     // Champion Removal State
     const [championToRemove, setChampionToRemove] = useState<{
@@ -507,35 +438,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
     };
 
-    // Group picks by player for the PlayerTeamPopover
-    const playerPicksMap = useMemo(() => {
-        const map: Record<string, { 
-            name: string;
-            avatar: string | null;
-            picks: { encounterId: string; champion: ChampionCounterData }[] 
-        }> = {};
-
-        const addPicks = (picksMap: Record<string, PickCounterWithChampion[]>) => {
-            Object.entries(picksMap).forEach(([encId, counters]) => {
-                counters.forEach(c => {
-                    c.pickedBy?.forEach((user) => {
-                        if (!map[user.id]) {
-                            map[user.id] = { name: user.name, avatar: user.avatar, picks: [] };
-                        }
-                        // Only add if not already present for this encounter
-                        if (!map[user.id].picks.some(p => p.encounterId === encId)) {
-                            map[user.id].picks.push({ encounterId: encId, champion: c.champion });
-                        }
-                    });
-                });
-            });
-        };
-
-        addPicks(featuredPicks);
-        addPicks(alliancePicks);
-        return map;
-    }, [featuredPicks, alliancePicks]);
-
     useEffect(() => {
         const handleScroll = () => {
             if (!headerRef.current) return;
@@ -575,30 +477,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         );
     };
 
-    const resolveRosterItem = useCallback((rosterId: string, encounterId: string): RosterWithChampion | undefined => {
-        if (readOnly) {
-            const rosterEntry = rosterMap[encounterId];
-            return isReadOnlyRosterEntry(rosterEntry) ? rosterEntry : undefined;
-        }
-        return roster.find(r => r.id === rosterId);
-    }, [readOnly, roster, rosterMap]);
-
-    const createSynergyRosterEntry = useCallback((savedSyn: SynergyWithChampion): RosterWithChampion => ({
-        id: `synergy-${savedSyn.championId}`,
-        playerId: "",
-        championId: savedSyn.championId,
-        stars: 0,
-        rank: 0,
-        sigLevel: 0,
-        isAwakened: false,
-        isAscended: false,
-        ascensionLevel: 0,
-        powerRating: 0,
-        champion: savedSyn.champion,
-        createdAt: new Date(),
-        updatedAt: new Date()
-    }), []);
-
     const {
         visibleRouteSections,
         routeFilteredEncounters,
@@ -616,13 +494,8 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         filteredEncounters,
         selectedTeam,
         selectedTeamMembers,
-    } = useMemo(() => projectQuestPlanningState<
-        QuestTimelineProps["quest"],
-        EncounterWithRelations,
-        QuestRouteSectionWithRelations,
-        RosterWithChampion,
-        SynergyWithChampion
-    >({
+        activePlayerPicksMap,
+    } = useMemo(() => projectQuestTimelineViewModel({
         quest,
         routeChoices,
         selections,
@@ -632,26 +505,11 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         roster,
         savedSynergies,
         difficultyFilter,
-        resolveRosterEntry: ({ rosterId, encounterId, field }) => {
-            if (field === "prefightChampionId" && readOnly) {
-                const rosterEntry = rosterMap[`prefight:${encounterId}`];
-                return isReadOnlyRosterEntry(rosterEntry) ? rosterEntry : undefined;
-            }
-            return resolveRosterItem(rosterId, encounterId);
-        },
-        createSynergyRosterEntry,
-    }), [quest, routeChoices, selections, prefightSelections, synergyIds, revivesByEncounterId, roster, savedSynergies, difficultyFilter, resolveRosterItem, readOnly, rosterMap, createSynergyRosterEntry]);
-
-    const activePlayerPicksMap = useMemo(() => {
-        const next: typeof playerPicksMap = {};
-        Object.entries(playerPicksMap).forEach(([userId, userPlan]) => {
-            const picks = userPlan.picks.filter(pick => activeEncounterIds.has(pick.encounterId));
-            if (picks.length > 0) {
-                next[userId] = { ...userPlan, picks };
-            }
-        });
-        return next;
-    }, [activeEncounterIds, playerPicksMap]);
+        readOnly,
+        rosterMap,
+        featuredPicks,
+        alliancePicks,
+    }), [quest, routeChoices, selections, prefightSelections, synergyIds, revivesByEncounterId, roster, savedSynergies, difficultyFilter, readOnly, rosterMap, featuredPicks, alliancePicks]);
 
     const handleRouteChoice = async (sectionId: string, pathId: string) => {
         const previous = routeChoices[sectionId];
