@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { unstable_cache } from "next/cache";
@@ -62,13 +63,54 @@ export default async function Home() {
   const isSignedIn = !!session?.user;
 
   const heroStats = [
-    { label: "Registered Players", value: players, icon: Users },
-    { label: "Active Alliances", value: alliances, icon: Shield },
-    { label: "Champions Managed", value: rosters, icon: LayoutDashboard },
-    { label: "War Videos Uploaded", value: warVideos, icon: Video },
+    { label: "Players", value: players, icon: Users },
+    { label: "Alliances", value: alliances, icon: Shield },
+    { label: "Champions", value: rosters, icon: LayoutDashboard },
+    { label: "War Videos", value: warVideos, icon: Video },
   ];
 
   const numberFormatter = new Intl.NumberFormat("en-US");
+  const formatHeroStat = (value: number) => {
+    if (value >= 1_000_000) {
+      return `${Math.floor(value / 1_000_000)}M`;
+    }
+
+    if (value >= 10_000) {
+      return `${Math.floor(value / 1_000)}K`;
+    }
+
+    return numberFormatter.format(value);
+  };
+
+  const webFeatureCards = [
+    {
+      title: "Video Library",
+      description: "Upload fights, tag matchups, and find proven counters when the next war plan needs an answer.",
+      href: "/war-videos",
+      cta: "Browse Archive",
+      icon: Video,
+      image: "/war-archive.png",
+      accent: "text-sky-300",
+    },
+    {
+      title: "Smart Roster & Prestige",
+      description: "Filter your roster, simulate rank-ups, and spend signature stones where they move the needle.",
+      href: "/profile/roster",
+      cta: "View Roster",
+      icon: Award,
+      image: "/web-roster.png",
+      accent: "text-pink-300",
+    },
+    {
+      title: "Alliance Roster Overview",
+      description: "Give officers a searchable alliance-wide roster for defenders, counters, and battlegroup coverage.",
+      href: "/alliance/roster",
+      cta: "Open Alliance Roster",
+      icon: Users,
+      image: "/web-alliance-roster.png",
+      accent: "text-emerald-300",
+    },
+  ];
 
   return (
     <div className="min-h-screen relative page-container">
@@ -145,14 +187,14 @@ export default async function Home() {
                   {heroStats.map(({ label, value, icon: Icon }) => (
                     <div
                       key={label}
-                      className="rounded-xl border border-slate-700/70 bg-gradient-to-b from-slate-900/80 to-slate-900/40 px-4 py-4 shadow-sm shadow-sky-900/10"
+                      className="min-w-0 rounded-xl border border-slate-700/70 bg-gradient-to-b from-slate-900/80 to-slate-900/40 px-3 py-4 shadow-sm shadow-sky-900/10 sm:px-4"
                     >
                       <div className="flex items-center gap-2 text-slate-400 mb-2 min-h-[2rem]">
                         <Icon className="w-4 h-4 shrink-0 text-sky-300/80" />
                         <span className="text-[11px] uppercase tracking-wide leading-4">{label}</span>
                       </div>
-                      <p className="text-2xl font-bold text-white">
-                        {numberFormatter.format(value)}+
+                      <p className="truncate text-xl font-bold leading-tight text-white tabular-nums sm:text-2xl">
+                        {formatHeroStat(value)}+
                       </p>
                     </div>
                   ))}
@@ -240,83 +282,39 @@ export default async function Home() {
                 </ScrollReveal>
               </div>
 
-              {/* Feature 3: Archive */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <ScrollReveal direction="right" className="order-1 lg:order-1">
-                  <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
-                    <Video className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Video Library</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
-                    Upload your fights and tag them. Search the archive later to find the best counters for any defender.
-                  </p>
-                  <Link href="/war-videos" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
-                    Browse Video Archive <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </ScrollReveal>
-                <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
-                  <div className="w-full max-w-[600px]">
-                    <InteractiveScreenshotDeck
-                      images={['/war-archive.png']}
-                      alt="Video Library"
-                      orientation="landscape"
-                      overlap="space-x-0"
-                    />
-                  </div>
-                </ScrollReveal>
-              </div>
-
-              {/* Feature 4: Smart Roster & Prestige (Swapped) */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <ScrollReveal direction="left" className="order-1 lg:order-2">
-                  <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
-                    <Award className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Smart Roster & Prestige</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
-                    Visualize your roster with advanced filtering. Simulate prestige rank-ups and optimize your signature stone usage with our intelligent budget calculator.
-                  </p>
-                  <Link href="/profile/roster" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
-                    View Your Roster <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </ScrollReveal>
-                <ScrollReveal direction="right" className="order-2 lg:order-1 flex justify-center">
-                  <div className="w-full max-w-[600px]">
-                    <InteractiveScreenshotDeck
-                      images={['/web-roster.png']}
-                      alt="Roster & Prestige"
-                      orientation="landscape"
-                      overlap="space-x-0"
-                    />
-                  </div>
-                </ScrollReveal>
-              </div>
-
-              {/* Feature 5: Alliance Roster Overview */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <ScrollReveal direction="right" className="order-1 lg:order-1">
-                  <div className="w-12 h-12 rounded-xl bg-sky-900/50 border border-sky-800 flex items-center justify-center text-sky-400 mb-6">
-                    <Users className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Alliance Roster Overview</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed mb-5">
-                    Officers get a bird&apos;s-eye view of the entire alliance. Filter champions by Battlegroup, Class, or Rank to find the perfect defenders or counters for war.
-                  </p>
-                  <Link href="/alliance/roster" className="inline-flex items-center gap-2 text-sky-400 hover:text-sky-300 font-medium transition-colors">
-                    View Alliance Roster <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </ScrollReveal>
-                <ScrollReveal direction="left" className="order-2 lg:order-2 flex justify-center">
-                  <div className="w-full max-w-[600px]">
-                    <InteractiveScreenshotDeck
-                      images={['/web-alliance-roster.png']}
-                      alt="Alliance Roster Overview"
-                      orientation="landscape"
-                      overlap="space-x-0"
-                    />
-                  </div>
-                </ScrollReveal>
-              </div>
+              <ScrollReveal direction="up">
+                <div className="grid gap-4 md:grid-cols-3">
+                  {webFeatureCards.map(({ title, description, href, cta, icon: Icon, image, accent }) => (
+                    <Link
+                      key={title}
+                      href={href}
+                      className="group overflow-hidden rounded-xl border border-slate-800/80 bg-slate-950/50 transition-colors hover:border-sky-500/40 hover:bg-slate-900/70"
+                    >
+                      <div className="relative aspect-[16/9] border-b border-slate-800/80 bg-slate-900">
+                        <Image
+                          src={image}
+                          alt=""
+                          fill
+                          sizes="(min-width: 768px) 33vw, 100vw"
+                          className="h-full w-full object-cover object-top opacity-80 transition-transform duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
+                        />
+                      </div>
+                      <div className="p-5">
+                        <div className="mb-3 flex items-center gap-2">
+                          <Icon className={`h-5 w-5 ${accent}`} />
+                          <h3 className="text-lg font-semibold text-white">{title}</h3>
+                        </div>
+                        <p className="min-h-[4.5rem] text-sm leading-6 text-slate-400">
+                          {description}
+                        </p>
+                        <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-sky-300 transition-colors group-hover:text-sky-200">
+                          {cta} <ChevronRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </ScrollReveal>
             </div>
           </div>
         </section>
