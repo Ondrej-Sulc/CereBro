@@ -40,10 +40,14 @@ import {
     type PlayerPicksMap,
 } from "./quest-timeline-view-model";
 import {
+    applyQuestTimelineTeamMemberRemoval,
+    clearQuestTimelinePlanSelections,
     decideQuestTimelineCounterSelection,
     decideQuestTimelinePrefightSelection,
     decideQuestTimelineRevives,
     decideQuestTimelineSynergy,
+    decideQuestTimelineTeamMemberRemoval,
+    type QuestTimelineTeamMemberRemovalTarget,
 } from "./quest-timeline-controller";
 
 import type { ChampionClass } from "@prisma/client";
@@ -332,18 +336,11 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     );
 
     // Champion Removal State
-    const [championToRemove, setChampionToRemove] = useState<{
-        rosterId: string;
-        championId: number;
-        assignedEncounters: string[];
-        assignedPrefights: string[];
-        isSynergy: boolean;
-        championName: string;
-    } | null>(null);
+    const [championToRemove, setChampionToRemove] = useState<(QuestTimelineTeamMemberRemovalTarget & { championName: string }) | null>(null);
 
     // Shared helper for champion removal logic
-    const removeTeamMemberLogic = async (target: { rosterId: string; championId: number; assignedEncounters: string[]; assignedPrefights?: string[]; isSynergy: boolean }) => {
-        const { championId, assignedEncounters, assignedPrefights = [], isSynergy } = target;
+    const removeTeamMemberLogic = async (target: QuestTimelineTeamMemberRemovalTarget) => {
+        const { championId, assignedEncounters, assignedPrefights, isSynergy } = target;
 
         try {
             // Wait for all remote operations to complete successfully FIRST
@@ -366,29 +363,24 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
 
             await Promise.all(promises);
 
-            // If we reach here, all API calls succeeded. Now update local state.
-            if (isSynergy) {
-                setSynergyIds(prev => prev.filter(id => id !== championId));
-            }
-
-            if (assignedEncounters.length > 0) {
-                setSelections(prev => {
-                    const next = { ...prev };
-                    assignedEncounters.forEach(encId => {
-                        next[encId] = null;
-                    });
-                    return next;
-                });
-            }
-            if (assignedPrefights.length > 0) {
-                setPrefightSelections(prev => {
-                    const next = { ...prev };
-                    assignedPrefights.forEach(encId => {
-                        next[encId] = null;
-                    });
-                    return next;
-                });
-            }
+            setSelections(prev => applyQuestTimelineTeamMemberRemoval({
+                target,
+                selections: prev,
+                prefightSelections: {},
+                synergyIds: [],
+            }).selections);
+            setPrefightSelections(prev => applyQuestTimelineTeamMemberRemoval({
+                target,
+                selections: {},
+                prefightSelections: prev,
+                synergyIds: [],
+            }).prefightSelections);
+            setSynergyIds(prev => applyQuestTimelineTeamMemberRemoval({
+                target,
+                selections: {},
+                prefightSelections: {},
+                synergyIds: prev,
+            }).synergyIds);
 
             if (assignedEncounters.length > 0 || assignedPrefights.length > 0) {
                 toast({ title: "Assignments Cleared", description: "Champion has been unassigned from fights and prefights." });
@@ -411,8 +403,9 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     const executeClearPlan = async () => {
         try {
             await clearAllQuestCounters(quest.id);
-            setSelections({});
-            setPrefightSelections({});
+            const nextState = clearQuestTimelinePlanSelections();
+            setSelections(nextState.selections);
+            setPrefightSelections(nextState.prefightSelections);
             toast({ title: "Plan Cleared", description: "All counter and prefight selections have been removed. Revive counts were kept." });
         } catch {
             toast({ title: "Error", description: "Failed to clear the plan.", variant: "destructive" });
@@ -420,24 +413,24 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     };
 
     // Refactored helper for immediate execution
-    const confirmAndRemoveTeamMember = async (target: { rosterId: string, championId: number, assignedEncounters: string[], assignedPrefights?: string[], isSynergy: boolean }) => {
+    const confirmAndRemoveTeamMember = async (target: QuestTimelineTeamMemberRemovalTarget) => {
         await removeTeamMemberLogic(target);
     };
 
     const initiateRemoveTeamMember = (rosterId: string, championId: number, championName: string) => {
-        const teamMember = selectedTeamMembers.find(member =>
-            member.rosterEntry.id === rosterId ||
-            (quest.teamLimit !== null && member.rosterEntry.championId === championId)
-        );
-        const assignedEncounters = teamMember?.assignedEncounters.map(encounter => encounter.id) ?? [];
-        const assignedPrefights = teamMember?.prefightEncounters.map(encounter => encounter.id) ?? [];
-            
-        const isSynergy = synergyIds.includes(championId);
-
-        if (assignedEncounters.length + assignedPrefights.length > 1) {
-            setChampionToRemove({ rosterId, championId, assignedEncounters, assignedPrefights, isSynergy, championName });
+        const decision = decideQuestTimelineTeamMemberRemoval({
+            rosterId,
+            championId,
+            championName,
+            teamLimit: quest.teamLimit,
+            selectedTeamMembers,
+            synergyIds,
+        });
+        if (decision.kind === "ignored") return;
+        if (decision.kind === "confirm") {
+            setChampionToRemove({ ...decision.target, championName });
         } else {
-            confirmAndRemoveTeamMember({ rosterId, championId, assignedEncounters, assignedPrefights, isSynergy });
+            confirmAndRemoveTeamMember(decision.target);
         }
     };
 

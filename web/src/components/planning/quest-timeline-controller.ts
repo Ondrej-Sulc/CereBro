@@ -10,6 +10,24 @@ import type { QuestTimelineProps, RosterWithChampion } from "./types";
 type SelectionMap = Record<string, string | null>;
 type ReviveMap = Record<string, number>;
 
+export type QuestTimelineTeamMemberRemovalTarget = {
+  rosterId: string;
+  championId: number;
+  assignedEncounters: string[];
+  assignedPrefights: string[];
+  isSynergy: boolean;
+  championName?: string;
+};
+
+type QuestTimelineTeamMember = {
+  rosterEntry: {
+    id: string;
+    championId: number;
+  };
+  assignedEncounters: { id: string }[];
+  prefightEncounters: { id: string }[];
+};
+
 export type QuestTimelineSelectionDecision =
   | {
       kind: "ignored";
@@ -51,6 +69,13 @@ export type QuestTimelineSynergyDecision =
       isRemoving: boolean;
       nextSynergyIds: number[];
       rollbackSynergyIds: number[];
+    };
+
+export type QuestTimelineTeamMemberRemovalDecision =
+  | { kind: "ignored" }
+  | {
+      kind: "confirm" | "remove";
+      target: QuestTimelineTeamMemberRemovalTarget;
     };
 
 export function decideQuestTimelineCounterSelection({
@@ -302,6 +327,79 @@ export function decideQuestTimelineSynergy({
       ? synergyIds.filter(id => id !== championId)
       : [...synergyIds, championId],
     rollbackSynergyIds: synergyIds,
+  };
+}
+
+export function decideQuestTimelineTeamMemberRemoval({
+  rosterId,
+  championId,
+  championName,
+  teamLimit,
+  selectedTeamMembers,
+  synergyIds,
+}: {
+  rosterId: string;
+  championId: number;
+  championName: string;
+  teamLimit: number | null;
+  selectedTeamMembers: QuestTimelineTeamMember[];
+  synergyIds: number[];
+}): QuestTimelineTeamMemberRemovalDecision {
+  const teamMember = selectedTeamMembers.find(member =>
+    member.rosterEntry.id === rosterId ||
+    (teamLimit !== null && member.rosterEntry.championId === championId)
+  );
+  const assignedEncounters = teamMember?.assignedEncounters.map(encounter => encounter.id) ?? [];
+  const assignedPrefights = teamMember?.prefightEncounters.map(encounter => encounter.id) ?? [];
+  const target = {
+    rosterId,
+    championId,
+    assignedEncounters,
+    assignedPrefights,
+    isSynergy: synergyIds.includes(championId),
+    championName,
+  };
+
+  return {
+    kind: assignedEncounters.length + assignedPrefights.length > 1 ? "confirm" : "remove",
+    target,
+  };
+}
+
+export function applyQuestTimelineTeamMemberRemoval({
+  target,
+  selections,
+  prefightSelections,
+  synergyIds,
+}: {
+  target: QuestTimelineTeamMemberRemovalTarget;
+  selections: SelectionMap;
+  prefightSelections: SelectionMap;
+  synergyIds: number[];
+}) {
+  const nextSelections = { ...selections };
+  const nextPrefightSelections = { ...prefightSelections };
+
+  target.assignedEncounters.forEach(encounterId => {
+    nextSelections[encounterId] = null;
+  });
+  target.assignedPrefights.forEach(encounterId => {
+    nextPrefightSelections[encounterId] = null;
+  });
+
+  return {
+    selections: nextSelections,
+    prefightSelections: nextPrefightSelections,
+    synergyIds: target.isSynergy
+      ? synergyIds.filter(id => id !== target.championId)
+      : synergyIds,
+  };
+}
+
+export function clearQuestTimelinePlanSelections() {
+  return {
+    selections: {} as SelectionMap,
+    prefightSelections: {} as SelectionMap,
   };
 }
 

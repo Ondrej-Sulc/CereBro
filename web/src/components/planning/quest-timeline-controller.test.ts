@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyQuestTimelineTeamMemberRemoval,
+  clearQuestTimelinePlanSelections,
   decideQuestTimelineCounterSelection,
   decideQuestTimelinePrefightSelection,
   decideQuestTimelineRevives,
   decideQuestTimelineSynergy,
+  decideQuestTimelineTeamMemberRemoval,
 } from "./quest-timeline-controller";
 
 const champion = (id: number) => ({
@@ -206,6 +209,78 @@ describe("Quest Timeline Controller", () => {
       kind: "rejected",
       title: "Team Limit Reached",
       description: "You can only select up to 1 champions for this quest.",
+    });
+  });
+
+  it("decides whether team member removal needs confirmation", () => {
+    const selectedTeamMembers = [{
+      rosterEntry: { id: "r1", championId: 1 },
+      assignedEncounters: [{ id: "enc_1" }, { id: "enc_2" }],
+      prefightEncounters: [{ id: "enc_3" }],
+    }];
+
+    expect(decideQuestTimelineTeamMemberRemoval({
+      rosterId: "r1",
+      championId: 1,
+      championName: "Champion 1",
+      teamLimit: null,
+      selectedTeamMembers,
+      synergyIds: [1],
+    })).toEqual({
+      kind: "confirm",
+      target: {
+        rosterId: "r1",
+        championId: 1,
+        championName: "Champion 1",
+        assignedEncounters: ["enc_1", "enc_2"],
+        assignedPrefights: ["enc_3"],
+        isSynergy: true,
+      },
+    });
+
+    expect(decideQuestTimelineTeamMemberRemoval({
+      rosterId: "other-roster-row",
+      championId: 1,
+      championName: "Champion 1",
+      teamLimit: 5,
+      selectedTeamMembers,
+      synergyIds: [],
+    })).toEqual({
+      kind: "confirm",
+      target: {
+        rosterId: "other-roster-row",
+        championId: 1,
+        championName: "Champion 1",
+        assignedEncounters: ["enc_1", "enc_2"],
+        assignedPrefights: ["enc_3"],
+        isSynergy: false,
+      },
+    });
+  });
+
+  it("applies team member removal state after remote operations succeed", () => {
+    expect(applyQuestTimelineTeamMemberRemoval({
+      target: {
+        rosterId: "r1",
+        championId: 1,
+        assignedEncounters: ["enc_1"],
+        assignedPrefights: ["enc_2"],
+        isSynergy: true,
+      },
+      selections: { enc_1: "r1", untouched: "r2" },
+      prefightSelections: { enc_2: "r1" },
+      synergyIds: [1, 2],
+    })).toEqual({
+      selections: { enc_1: null, untouched: "r2" },
+      prefightSelections: { enc_2: null },
+      synergyIds: [2],
+    });
+  });
+
+  it("clears counter and prefight selections while preserving other local state elsewhere", () => {
+    expect(clearQuestTimelinePlanSelections()).toEqual({
+      selections: {},
+      prefightSelections: {},
     });
   });
 });
