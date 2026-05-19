@@ -8,6 +8,7 @@ import {
 import type { QuestTimelineProps, RosterWithChampion } from "./types";
 
 type SelectionMap = Record<string, string | null>;
+type ReviveMap = Record<string, number>;
 
 export type QuestTimelineSelectionDecision =
   | {
@@ -26,6 +27,30 @@ export type QuestTimelineSelectionDecision =
       nextChampionId: number | null;
       nextChampionStars: number | null;
       shouldClearPrefight?: boolean;
+    };
+
+export type QuestTimelineRevivesDecision =
+  | { kind: "ignored" }
+  | {
+      kind: "accepted";
+      previousRevives: number;
+      nextRevives: number;
+      nextRevivesByEncounterId: ReviveMap;
+      rollbackRevivesByEncounterId: ReviveMap;
+    };
+
+export type QuestTimelineSynergyDecision =
+  | { kind: "ignored" }
+  | {
+      kind: "rejected";
+      title: string;
+      description: string;
+    }
+  | {
+      kind: "accepted";
+      isRemoving: boolean;
+      nextSynergyIds: number[];
+      rollbackSynergyIds: number[];
     };
 
 export function decideQuestTimelineCounterSelection({
@@ -207,4 +232,89 @@ export function decideQuestTimelinePrefightSelection({
     nextChampionId: nextRosterEntry?.championId ?? null,
     nextChampionStars: nextRosterEntry?.stars ?? null,
   };
+}
+
+export function decideQuestTimelineRevives({
+  readOnly,
+  encounterId,
+  revivesUsed,
+  revivesByEncounterId,
+}: {
+  readOnly: boolean;
+  encounterId: string;
+  revivesUsed: number;
+  revivesByEncounterId: ReviveMap;
+}): QuestTimelineRevivesDecision {
+  if (readOnly) return { kind: "ignored" };
+
+  const nextRevives = Math.max(0, Math.min(99, revivesUsed));
+  const previousRevives = revivesByEncounterId[encounterId] || 0;
+  if (nextRevives === previousRevives) return { kind: "ignored" };
+
+  return {
+    kind: "accepted",
+    previousRevives,
+    nextRevives,
+    nextRevivesByEncounterId: setEncounterRevives(revivesByEncounterId, encounterId, nextRevives),
+    rollbackRevivesByEncounterId: setEncounterRevives(revivesByEncounterId, encounterId, previousRevives),
+  };
+}
+
+export function decideQuestTimelineSynergy({
+  quest,
+  championId,
+  synergyIds,
+  activeQuestAssignments,
+  activeSynergyChampions,
+}: {
+  quest: Pick<QuestTimelineProps["quest"], "teamLimit">;
+  championId: number;
+  synergyIds: number[];
+  activeQuestAssignments: QuestSelectionAssignment[];
+  activeSynergyChampions: QuestSelectionSynergy[];
+}): QuestTimelineSynergyDecision {
+  const isRemoving = synergyIds.includes(championId);
+
+  if (
+    !isRemoving &&
+    quest.teamLimit !== null &&
+    wouldExceedQuestTeamLimit({
+      teamLimit: quest.teamLimit,
+      encounters: activeQuestAssignments,
+      synergyChampions: activeSynergyChampions,
+      replacement: {
+        field: "synergyChampionId",
+        championId,
+      },
+    })
+  ) {
+    return {
+      kind: "rejected",
+      title: "Team Limit Reached",
+      description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
+    };
+  }
+
+  return {
+    kind: "accepted",
+    isRemoving,
+    nextSynergyIds: isRemoving
+      ? synergyIds.filter(id => id !== championId)
+      : [...synergyIds, championId],
+    rollbackSynergyIds: synergyIds,
+  };
+}
+
+function setEncounterRevives(
+  revivesByEncounterId: ReviveMap,
+  encounterId: string,
+  revivesUsed: number
+) {
+  const next = { ...revivesByEncounterId };
+  if (revivesUsed > 0) {
+    next[encounterId] = revivesUsed;
+  } else {
+    delete next[encounterId];
+  }
+  return next;
 }

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   decideQuestTimelineCounterSelection,
   decideQuestTimelinePrefightSelection,
+  decideQuestTimelineRevives,
+  decideQuestTimelineSynergy,
 } from "./quest-timeline-controller";
 
 const champion = (id: number) => ({
@@ -118,6 +120,92 @@ describe("Quest Timeline Controller", () => {
       nextRosterId: null,
       nextChampionId: null,
       nextChampionStars: null,
+    });
+  });
+
+  it("clamps revive counts and prepares rollback state", () => {
+    expect(decideQuestTimelineRevives({
+      readOnly: false,
+      encounterId: "enc_1",
+      revivesUsed: 120,
+      revivesByEncounterId: { enc_1: 2, enc_2: 4 },
+    })).toEqual({
+      kind: "accepted",
+      previousRevives: 2,
+      nextRevives: 99,
+      nextRevivesByEncounterId: { enc_1: 99, enc_2: 4 },
+      rollbackRevivesByEncounterId: { enc_1: 2, enc_2: 4 },
+    });
+
+    expect(decideQuestTimelineRevives({
+      readOnly: false,
+      encounterId: "enc_1",
+      revivesUsed: 0,
+      revivesByEncounterId: { enc_1: 2 },
+    })).toEqual({
+      kind: "accepted",
+      previousRevives: 2,
+      nextRevives: 0,
+      nextRevivesByEncounterId: {},
+      rollbackRevivesByEncounterId: { enc_1: 2 },
+    });
+  });
+
+  it("ignores unchanged or read-only revive updates", () => {
+    expect(decideQuestTimelineRevives({
+      readOnly: true,
+      encounterId: "enc_1",
+      revivesUsed: 5,
+      revivesByEncounterId: {},
+    })).toEqual({ kind: "ignored" });
+
+    expect(decideQuestTimelineRevives({
+      readOnly: false,
+      encounterId: "enc_1",
+      revivesUsed: 3,
+      revivesByEncounterId: { enc_1: 3 },
+    })).toEqual({ kind: "ignored" });
+  });
+
+  it("accepts synergy toggles and preserves rollback ids", () => {
+    expect(decideQuestTimelineSynergy({
+      quest: quest(5),
+      championId: 3,
+      synergyIds: [1, 2],
+      activeQuestAssignments: [],
+      activeSynergyChampions: [{ championId: 1 }, { championId: 2 }],
+    })).toEqual({
+      kind: "accepted",
+      isRemoving: false,
+      nextSynergyIds: [1, 2, 3],
+      rollbackSynergyIds: [1, 2],
+    });
+
+    expect(decideQuestTimelineSynergy({
+      quest: quest(5),
+      championId: 2,
+      synergyIds: [1, 2],
+      activeQuestAssignments: [],
+      activeSynergyChampions: [{ championId: 1 }, { championId: 2 }],
+    })).toEqual({
+      kind: "accepted",
+      isRemoving: true,
+      nextSynergyIds: [1],
+      rollbackSynergyIds: [1, 2],
+    });
+  });
+
+  it("rejects adding synergy when the team limit is reached", () => {
+    expect(decideQuestTimelineSynergy({
+      quest: quest(1),
+      championId: 2,
+      synergyIds: [],
+      activeQuestAssignments: [{ questEncounterId: "enc_1", selectedChampionId: 1 }],
+      activeSynergyChampions: [],
+    })).toEqual({
+      kind: "rejected",
+      title: "Team Limit Reached",
+      description: "You can only select up to 1 champions for this quest.",
     });
   });
 });

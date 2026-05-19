@@ -28,7 +28,6 @@ import {
 import {
     isChampionValidForEncounterOrQuest,
     isQuestRosterEntryUnavailableForEncounter,
-    wouldExceedQuestTeamLimit
 } from "./utils";
 import {
     createInitialQuestRouteChoices,
@@ -43,6 +42,8 @@ import {
 import {
     decideQuestTimelineCounterSelection,
     decideQuestTimelinePrefightSelection,
+    decideQuestTimelineRevives,
+    decideQuestTimelineSynergy,
 } from "./quest-timeline-controller";
 
 import type { ChampionClass } from "@prisma/client";
@@ -936,78 +937,52 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     };
 
     const handleSetRevives = async (encounterId: string, revivesUsed: number) => {
-        if (readOnly) return;
-
-        const nextRevives = Math.max(0, Math.min(99, revivesUsed));
-        const previousRevives = revivesByEncounterId[encounterId] || 0;
-        if (nextRevives === previousRevives) return;
-
-        setRevivesByEncounterId(prev => {
-            const next = { ...prev };
-            if (nextRevives > 0) {
-                next[encounterId] = nextRevives;
-            } else {
-                delete next[encounterId];
-            }
-            return next;
+        const decision = decideQuestTimelineRevives({
+            readOnly,
+            encounterId,
+            revivesUsed,
+            revivesByEncounterId,
         });
+        if (decision.kind === "ignored") return;
+
+        setRevivesByEncounterId(decision.nextRevivesByEncounterId);
 
         try {
-            await savePlayerQuestEncounterRevives(quest.id, encounterId, nextRevives);
+            await savePlayerQuestEncounterRevives(quest.id, encounterId, decision.nextRevives);
         } catch (error) {
             reportClientError("quest_timeline_save_revives", error, {
                 quest_id: quest.id,
                 encounter_id: encounterId,
             });
-            setRevivesByEncounterId(prev => {
-                const next = { ...prev };
-                if (previousRevives > 0) {
-                    next[encounterId] = previousRevives;
-                } else {
-                    delete next[encounterId];
-                }
-                return next;
-            });
+            setRevivesByEncounterId(decision.rollbackRevivesByEncounterId);
             toast({ title: "Error", description: "Failed to save revive count.", variant: "destructive" });
         }
     };
 
     const handleSelectSynergy = async (championId: number) => {
-        const isRemoving = synergyIds.includes(championId);
-        
-        if (!isRemoving && quest.teamLimit !== null && wouldExceedQuestTeamLimit({
-            teamLimit: quest.teamLimit,
-            encounters: activeQuestAssignments,
-            synergyChampions: activeSynergyChampions,
-            replacement: {
-                field: "synergyChampionId",
-                championId,
-            },
-        })) {
-            toast({
-                title: "Team Limit Reached",
-                description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
-                variant: "destructive"
-            });
+        const decision = decideQuestTimelineSynergy({
+            quest,
+            championId,
+            synergyIds,
+            activeQuestAssignments,
+            activeSynergyChampions,
+        });
+        if (decision.kind === "ignored") return;
+        if (decision.kind === "rejected") {
+            toast({ title: decision.title, description: decision.description, variant: "destructive" });
             return;
         }
 
-        setSynergyIds(prev => isRemoving 
-            ? prev.filter(id => id !== championId)
-            : [...prev, championId]
-        );
+        setSynergyIds(decision.nextSynergyIds);
 
         try {
-            await savePlayerQuestSynergy(quest.id, championId, isRemoving);
+            await savePlayerQuestSynergy(quest.id, championId, decision.isRemoving);
         } catch (error) {
             reportClientError("quest_timeline_save_synergy", error, {
                 quest_id: quest.id,
                 champion_id: championId,
             });
-            setSynergyIds(prev => isRemoving 
-                ? [...prev, championId]
-                : prev.filter(id => id !== championId)
-            );
+            setSynergyIds(decision.rollbackSynergyIds);
             toast({ title: "Error", description: "Failed to save synergy.", variant: "destructive" });
         }
     };
