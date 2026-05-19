@@ -873,7 +873,7 @@ function RosterSelector({
                                                 {encounterRoster.slice(0, 30).map((r: RosterWithChampion) => {
                                                     const isSelected = selections[encounter.id] === r.id;
                                                     const isRecommended = encounter.recommendedChampions.some(rc => rc.id === r.championId);
-                                                    const isInTeam = activeAssignmentIds.has(r.id);
+                                                    const isInTeam = quest.teamLimit !== null && activeAssignmentIds.has(r.id);
                                                     return (
                                                         <div
                                                             key={r.id}
@@ -1482,7 +1482,7 @@ export function EncounterCard({
     const encounterPicks = tabState.popularCounters[encounter.id] || [];
     const popularChampionIds = new Set(encounterPicks.map(p => p.championId));
 
-    const allSuggestedChamps = !readOnly
+    const allSuggestedChamps = !readOnly && quest.teamLimit !== null
         ? selectedTeam.filter((teamMember) =>
             encounter.recommendedChampions.some((rc) => rc.id === teamMember.championId) ||
             popularChampionIds.has(teamMember.championId)

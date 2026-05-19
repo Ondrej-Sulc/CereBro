@@ -7,8 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { withActionContext } from "@/lib/with-request-context";
 import { revalidateQuestCategories } from "./quest-cache-invalidation";
 
-export { getQuestCategories } from "./quest-catalog";
-
 export const createQuestCategory = withActionContext('createQuestCategory', async (name: string, order: number = 0, parentId?: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
 

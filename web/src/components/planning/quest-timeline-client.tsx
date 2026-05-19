@@ -36,6 +36,7 @@ import {
     createInitialQuestTimelinePrefightSelections,
     createInitialQuestTimelineRevives,
     createInitialQuestTimelineSelections,
+    isReadOnlyRosterEntry,
     projectQuestTimelineViewModel,
 } from "./quest-timeline-view-model";
 import {
@@ -299,6 +300,15 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         featuredPicks,
         alliancePicks,
     }), [quest, routeChoices, selections, prefightSelections, synergyIds, revivesByEncounterId, roster, savedSynergies, difficultyFilter, readOnly, rosterMap, featuredPicks, alliancePicks]);
+
+    const resolveRosterItem = useCallback((rosterId: string, encounterId: string) => {
+        if (readOnly) {
+            const rosterEntry = rosterMap[encounterId];
+            return isReadOnlyRosterEntry(rosterEntry) ? rosterEntry : null;
+        }
+
+        return roster.find(entry => entry.id === rosterId) ?? null;
+    }, [readOnly, rosterMap, roster]);
 
     const handleRouteChoice = async (sectionId: string, pathId: string) => {
         const previous = routeChoices[sectionId];
@@ -811,8 +821,8 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
 
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
         
-        // Check if any version of this champion is in the team
-        const isChampInTeam = Object.values(activeSelections).some(rid => {
+        // Team membership hints only apply to fixed-team quests.
+        const isChampInTeam = quest.teamLimit !== null && Object.values(activeSelections).some(rid => {
             if (!rid) return false;
             return roster.find(r => r.id === rid)?.championId === c.id;
         });
@@ -892,7 +902,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         const isMissing = !userChamp || userChamp.isUnowned;
         
         const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
-        const isInTeam = Object.values(activeSelections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
+        const isInTeam = quest.teamLimit !== null && Object.values(activeSelections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
 
         const isUnavailable = isQuestRosterEntryUnavailableForEncounter({
             entry: userChamp,
