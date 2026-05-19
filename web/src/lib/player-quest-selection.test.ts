@@ -5,6 +5,7 @@ import {
   isQuestRosterEntryUnavailableForEncounter,
   isChampionValidForEncounterOrQuest,
   questEncounterSelectionConflictReason,
+  unlimitedSwapsSelectionConflictReason,
   validateOwnedChampionForQuestSelection,
   wouldExceedQuestTeamLimit,
   type QuestSelectionChampion,
@@ -120,7 +121,7 @@ describe("Player Quest Selection", () => {
     })).toBe(false);
   });
 
-  it("marks a roster entry unavailable when all valid copies are already selected on active encounters", () => {
+  it("marks a champion rarity unavailable when already selected on an active Unlimited Swaps encounter", () => {
     const activeEncounterIds = new Set(["e1", "e2"]);
     const roster = [
       rosterEntry({ id: "r1" }),
@@ -136,16 +137,43 @@ describe("Player Quest Selection", () => {
       roster,
       quest: { minStarLevel: 6, teamLimit: null },
       encounter: { id: "e2" },
-    })).toBe(false);
+    })).toBe(true);
 
     expect(isQuestRosterEntryUnavailableForEncounter({
-      entry: roster[1],
+      entry: roster[2],
       encounterId: "e2",
       selections: { e1: "r1", e2: null, e3: "r2" },
       activeEncounterIds: new Set(["e1", "e2", "e3"]),
       roster,
       quest: { minStarLevel: 6, teamLimit: null },
       encounter: { id: "e2" },
-    })).toBe(true);
+    })).toBe(false);
+  });
+
+  it("enforces Unlimited Swaps by champion rarity and prefight matching", () => {
+    const encounters = [
+      { questEncounterId: "e1", selectedChampionId: 1, selectedChampionStars: 6, prefightChampionId: null },
+      { questEncounterId: "e2", selectedChampionId: 2, selectedChampionStars: 7, prefightChampionId: null },
+    ];
+
+    expect(unlimitedSwapsSelectionConflictReason({
+      encounters,
+      replacement: { field: "selectedChampionId", questEncounterId: "e2", championId: 1, championStars: 6 },
+    })).toMatch(/already used/);
+
+    expect(unlimitedSwapsSelectionConflictReason({
+      encounters,
+      replacement: { field: "selectedChampionId", questEncounterId: "e2", championId: 1, championStars: 7 },
+    })).toBeNull();
+
+    expect(unlimitedSwapsSelectionConflictReason({
+      encounters,
+      replacement: { field: "prefightChampionId", questEncounterId: "e2", championId: 2, championStars: 7 },
+    })).toBeNull();
+
+    expect(unlimitedSwapsSelectionConflictReason({
+      encounters,
+      replacement: { field: "prefightChampionId", questEncounterId: "e2", championId: 3, championStars: 7 },
+    })).toMatch(/must match/);
   });
 });

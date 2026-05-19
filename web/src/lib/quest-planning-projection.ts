@@ -229,8 +229,14 @@ export function projectQuestAssignments<TRoster extends QuestPlanningRosterEntry
       selectedChampionId: selectedRosterId
         ? rosterById.get(selectedRosterId)?.championId ?? null
         : null,
+      selectedChampionStars: selectedRosterId
+        ? rosterById.get(selectedRosterId)?.stars ?? null
+        : null,
       prefightChampionId: prefightRosterId
         ? rosterById.get(prefightRosterId)?.championId ?? null
+        : null,
+      prefightChampionStars: prefightRosterId
+        ? rosterById.get(prefightRosterId)?.stars ?? null
         : null,
     };
   });

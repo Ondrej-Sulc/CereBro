@@ -24,6 +24,10 @@ Quest Planning is the domain rule set for turning quest plans, route choices, fi
 
 It owns quest and fight restriction matching, owned and unowned champion availability, team-limit simulation, counter and prefight conflict rules, route-aware progress, and user-facing rejection reasons used by the quest timeline and quest planning server actions.
 
+Unlimited Swaps is the Quest Planning mode represented by a quest with no team limit. It allows a player to switch champions after each fight, but a specific champion rarity can only be used once across the active quest route. That uniqueness is based on champion plus star level, not roster row identity, so roster updates keep existing plans attached to the same champion rarity.
+
+In Unlimited Swaps, a prefight champion is not an additional team member. A prefight assignment must use the same champion plus star level as the counter selected for that fight.
+
 Quest Planning Projection is the render-ready view of a player's route-aware plan. It owns visible route sections, active encounters, active assignments, selected team members, route summaries, and revive totals before the quest timeline renders them.
 
 ## Website Observability

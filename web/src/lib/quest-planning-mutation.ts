@@ -158,10 +158,18 @@ async function applyEncounterSelectionMutation({
       questPlanId: mutation.questPlanId,
       [mutation.kind === "counter" ? "selectedChampionId" : "prefightChampionId"]: intent.championId,
       [mutation.kind === "counter" ? "selectedChampionStars" : "prefightChampionStars"]: intent.championStars,
+      ...(intent.clearPrefight ? {
+        prefightChampionId: null,
+        prefightChampionStars: null,
+      } : {}),
     },
     update: {
       [mutation.kind === "counter" ? "selectedChampionId" : "prefightChampionId"]: intent.championId,
       [mutation.kind === "counter" ? "selectedChampionStars" : "prefightChampionStars"]: intent.championStars,
+      ...(intent.clearPrefight ? {
+        prefightChampionId: null,
+        prefightChampionStars: null,
+      } : {}),
     },
   });
 
@@ -395,6 +403,7 @@ async function decideSelectionIntent({
     questEncounterId,
     candidate: {
       championId,
+      stars: championStars,
       champion: champion ?? undefined,
       rosterEntries,
     },

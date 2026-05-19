@@ -41,7 +41,9 @@ export type QuestSelectionEncounter = QuestSelectionRestrictions & {
 export type QuestSelectionAssignment = {
   questEncounterId: string;
   selectedChampionId?: number | null;
+  selectedChampionStars?: number | null;
   prefightChampionId?: number | null;
+  prefightChampionStars?: number | null;
 };
 
 export type QuestSelectionSynergy = {
@@ -57,6 +59,7 @@ export type QuestTeamReplacement = {
   field: QuestSelectionField;
   questEncounterId?: string;
   championId: number | null;
+  championStars?: number | null;
 };
 
 export type QuestSelectionValidation<T extends object = object> =
@@ -123,14 +126,13 @@ export function isQuestRosterEntryUnavailableForEncounter({
   }
 
   const rosterById = new Map(roster.map(rosterEntry => [rosterEntry.id, rosterEntry]));
-  const otherSelectionsCount = Object.entries(selections).reduce((count, [selectedEncounterId, rosterId]) => {
-    if (activeEncounterIds && !activeEncounterIds.has(selectedEncounterId)) return count;
-    if (selectedEncounterId === encounterId || rosterId === null) return count;
-    return rosterById.get(rosterId)?.championId === entry.championId ? count + 1 : count;
-  }, 0);
-
-  const validRosterCount = getValidRosterCountForChampion(entry.championId, roster, quest, encounter);
-  return otherSelectionsCount >= validRosterCount;
+  const entryKey = championRarityKey(entry.championId, entry.stars);
+  return Object.entries(selections).some(([selectedEncounterId, rosterId]) => {
+    if (activeEncounterIds && !activeEncounterIds.has(selectedEncounterId)) return false;
+    if (selectedEncounterId === encounterId || rosterId === null) return false;
+    const selectedEntry = rosterById.get(rosterId);
+    return championRarityKey(selectedEntry?.championId, selectedEntry?.stars) === entryKey;
+  });
 }
 
 export function validateOwnedChampionForQuestSelection({
@@ -182,6 +184,42 @@ export function questEncounterSelectionConflictReason({
   if (field === "prefightChampionId" && selectedChampionId === candidateChampionId) {
     return "Counter and prefight champion must be different for the same fight.";
   }
+  return null;
+}
+
+export function championRarityKey(championId: number | null | undefined, stars: number | null | undefined) {
+  return championId != null && stars != null ? `${championId}:${stars}` : null;
+}
+
+export function unlimitedSwapsSelectionConflictReason({
+  encounters,
+  replacement,
+}: {
+  encounters: QuestSelectionAssignment[];
+  replacement: QuestTeamReplacement;
+}) {
+  if (replacement.championId == null) return null;
+
+  const replacementKey = championRarityKey(replacement.championId, replacement.championStars);
+  if (!replacementKey) return "Champion star level is required for Unlimited Swaps.";
+
+  if (replacement.field === "selectedChampionId") {
+    const duplicate = encounters.some(encounter =>
+      encounter.questEncounterId !== replacement.questEncounterId &&
+      championRarityKey(encounter.selectedChampionId, encounter.selectedChampionStars) === replacementKey
+    );
+    return duplicate ? "This champion rarity is already used on this quest route." : null;
+  }
+
+  if (replacement.field === "prefightChampionId") {
+    const assignment = encounters.find(encounter => encounter.questEncounterId === replacement.questEncounterId);
+    const selectedKey = championRarityKey(assignment?.selectedChampionId, assignment?.selectedChampionStars);
+    if (!selectedKey) return "Select this champion as the counter before assigning prefight.";
+    return selectedKey === replacementKey
+      ? null
+      : "Unlimited Swaps prefight must match the selected counter for this fight.";
+  }
+
   return null;
 }
 

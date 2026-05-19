@@ -124,6 +124,113 @@ describe("Quest Planning Mutation", () => {
     });
   });
 
+  it("clears Unlimited Swaps prefight when counter changes", async () => {
+    const db = createMutationDb({
+      questPlan: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "quest-1",
+          teamLimit: null,
+          minStarLevel: null,
+          maxStarLevel: null,
+          requiredClasses: [],
+          requiredTags: [],
+          encounters: [{ id: "encounter-1", routePathId: null, sequence: 1 }],
+          routeSections: [],
+        }),
+      },
+      playerQuestPlan: {
+        upsert: vi.fn().mockResolvedValue({ id: "player-plan-1" }),
+        findUnique: vi.fn().mockResolvedValue({
+          id: "player-plan-1",
+          encounters: [{
+            questEncounterId: "encounter-1",
+            selectedChampionId: 2,
+            selectedChampionStars: 7,
+            prefightChampionId: 2,
+            prefightChampionStars: 7,
+          }],
+          synergyChampions: [],
+          routeChoices: [],
+        }),
+      },
+    });
+
+    await applyPlayerQuestPlanningMutation({
+      db,
+      playerId: "player-1",
+      mutation: {
+        kind: "counter",
+        questPlanId: "quest-1",
+        questEncounterId: "encounter-1",
+        championId: 1,
+        championStars: 7,
+      },
+    });
+
+    expect(db.playerQuestEncounter.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      update: {
+        selectedChampionId: 1,
+        selectedChampionStars: 7,
+        prefightChampionId: null,
+        prefightChampionStars: null,
+      },
+    }));
+  });
+
+  it("rejects duplicate champion rarity in Unlimited Swaps", async () => {
+    const db = createMutationDb({
+      questPlan: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "quest-1",
+          teamLimit: null,
+          minStarLevel: null,
+          maxStarLevel: null,
+          requiredClasses: [],
+          requiredTags: [],
+          encounters: [
+            { id: "encounter-1", routePathId: null, sequence: 1 },
+            { id: "encounter-2", routePathId: null, sequence: 2 },
+          ],
+          routeSections: [],
+        }),
+      },
+      questEncounter: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "encounter-2",
+          questPlanId: "quest-1",
+          requiredTags: [],
+        }),
+      },
+      playerQuestPlan: {
+        upsert: vi.fn().mockResolvedValue({ id: "player-plan-1" }),
+        findUnique: vi.fn().mockResolvedValue({
+          id: "player-plan-1",
+          encounters: [{
+            questEncounterId: "encounter-1",
+            selectedChampionId: 1,
+            selectedChampionStars: 7,
+            prefightChampionId: null,
+            prefightChampionStars: null,
+          }],
+          synergyChampions: [],
+          routeChoices: [],
+        }),
+      },
+    });
+
+    await expect(applyPlayerQuestPlanningMutation({
+      db,
+      playerId: "player-1",
+      mutation: {
+        kind: "counter",
+        questPlanId: "quest-1",
+        questEncounterId: "encounter-2",
+        championId: 1,
+        championStars: 7,
+      },
+    })).rejects.toThrow(/already used/);
+  });
+
   it("removes synergy champions without loading validation data", async () => {
     const db = createMutationDb();
 

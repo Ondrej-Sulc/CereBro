@@ -99,11 +99,12 @@ describe("Quest Planning Transition", () => {
     if (!decision.valid) throw new Error(decision.reason);
     expect(decision.valid).toBe(true);
     if (decision.valid) {
-      expect(decision.intent).toEqual({
+      expect(decision.intent).toMatchObject({
         kind: "counter",
         field: "selectedChampionId",
         questEncounterId: "right-fight",
         championId: 2,
+        championStars: 7,
       });
       expect(decision.activeAssignments?.map(assignment => assignment.questEncounterId)).toEqual(["shared"]);
     }
@@ -131,6 +132,98 @@ describe("Quest Planning Transition", () => {
     expect(decision).toEqual({
       valid: false,
       reason: "Team limit of 2 reached.",
+    });
+  });
+
+  it("enforces Unlimited Swaps by active route champion rarity", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "counter",
+      quest: { ...quest, teamLimit: null },
+      plan: {
+        routeChoices: [{ questRouteSectionId: "root", questRoutePathId: "right" }],
+        encounters: [
+          { questEncounterId: "shared", selectedChampionId: 1, selectedChampionStars: 7, prefightChampionId: null },
+          { questEncounterId: "left-fight", selectedChampionId: 1, selectedChampionStars: 6, prefightChampionId: null },
+        ],
+      },
+      field: "selectedChampionId",
+      questEncounterId: "right-fight",
+      candidate: {
+        championId: 1,
+        stars: 7,
+        champion: scienceChampion,
+        rosterEntries: [{ championId: 1, stars: 7, rank: 1 }],
+      },
+      encounter: { id: "right-fight" },
+    });
+
+    expect(decision).toEqual({
+      valid: false,
+      reason: "This champion rarity is already used on this quest route.",
+    });
+  });
+
+  it("requires Unlimited Swaps prefight to match the selected counter rarity", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "prefight",
+      quest: { ...quest, teamLimit: null },
+      plan: {
+        encounters: [
+          { questEncounterId: "shared", selectedChampionId: 1, selectedChampionStars: 7, prefightChampionId: null },
+        ],
+      },
+      field: "prefightChampionId",
+      questEncounterId: "shared",
+      candidate: {
+        championId: 2,
+        stars: 7,
+        champion: skillChampion,
+        rosterEntries: [{ championId: 2, stars: 7, rank: 1 }],
+      },
+      encounter: { id: "shared" },
+    });
+
+    expect(decision).toEqual({
+      valid: false,
+      reason: "Unlimited Swaps prefight must match the selected counter for this fight.",
+    });
+  });
+
+  it("clears Unlimited Swaps prefight when changing the counter rarity", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "counter",
+      quest: { ...quest, teamLimit: null },
+      plan: {
+        encounters: [
+          {
+            questEncounterId: "shared",
+            selectedChampionId: 1,
+            selectedChampionStars: 7,
+            prefightChampionId: 1,
+            prefightChampionStars: 7,
+          },
+        ],
+      },
+      field: "selectedChampionId",
+      questEncounterId: "shared",
+      candidate: {
+        championId: 2,
+        stars: 7,
+        champion: skillChampion,
+        rosterEntries: [{ championId: 2, stars: 7, rank: 1 }],
+      },
+      encounter: { id: "shared" },
+    });
+
+    expect(decision).toMatchObject({
+      valid: true,
+      intent: {
+        kind: "counter",
+        questEncounterId: "shared",
+        championId: 2,
+        championStars: 7,
+        clearPrefight: true,
+      },
     });
   });
 

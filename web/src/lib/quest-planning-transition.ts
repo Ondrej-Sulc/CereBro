@@ -9,6 +9,7 @@ import {
 } from "./quest-planning-route-progress";
 import {
   questEncounterSelectionConflictReason,
+  unlimitedSwapsSelectionConflictReason,
   validateOwnedChampionForQuestSelection,
   wouldExceedQuestTeamLimit,
   type QuestSelectionAssignment,
@@ -49,6 +50,7 @@ type OwnedRosterEntry = {
 
 type QuestPlanningChampionCandidate = {
   championId: number | null;
+  stars?: number | null;
   champion?: QuestSelectionChampion;
   rosterEntries?: OwnedRosterEntry[];
 };
@@ -98,6 +100,8 @@ export type QuestPlanningTransitionIntent =
       field: Extract<QuestSelectionField, "selectedChampionId" | "prefightChampionId">;
       questEncounterId: string;
       championId: number | null;
+      championStars?: number | null;
+      clearPrefight?: boolean;
     }
   | {
       kind: "synergy";
@@ -156,6 +160,7 @@ function decideSelectionTransition<
     return { valid: false, reason: "Quest encounter is required for this transition." };
   }
 
+  let validRosterEntry: OwnedRosterEntry | undefined;
   if (input.candidate.championId !== null) {
     if (!input.candidate.champion) return { valid: false, reason: "Champion not found." };
     const validation = validateOwnedChampionForQuestSelection({
@@ -165,14 +170,27 @@ function decideSelectionTransition<
       encounter: input.encounter,
     });
     if (!validation.valid) return validation;
+    validRosterEntry = validation.rosterEntry;
   }
 
   const active = activePlanState(input.quest, input.plan, input.routeChoicesOverride);
   const existingAssignment = input.questEncounterId
     ? input.plan.encounters.find(encounter => encounter.questEncounterId === input.questEncounterId)
     : undefined;
+  const candidateStars = validRosterEntry?.stars ?? input.candidate.stars ?? null;
 
-  if (input.field === "selectedChampionId") {
+  if (input.quest.teamLimit == null) {
+    const conflictReason = unlimitedSwapsSelectionConflictReason({
+      encounters: active.activeAssignments,
+      replacement: {
+        field: input.field,
+        questEncounterId: input.questEncounterId,
+        championId: input.candidate.championId,
+        championStars: candidateStars,
+      },
+    });
+    if (conflictReason) return { valid: false, reason: conflictReason };
+  } else if (input.field === "selectedChampionId") {
     const conflictReason = questEncounterSelectionConflictReason({
       field: "selectedChampionId",
       candidateChampionId: input.candidate.championId,
@@ -181,7 +199,7 @@ function decideSelectionTransition<
     if (conflictReason) return { valid: false, reason: conflictReason };
   }
 
-  if (input.field === "prefightChampionId") {
+  if (input.quest.teamLimit != null && input.field === "prefightChampionId") {
     const conflictReason = questEncounterSelectionConflictReason({
       field: "prefightChampionId",
       candidateChampionId: input.candidate.championId,
@@ -202,6 +220,7 @@ function decideSelectionTransition<
         field: input.field,
         questEncounterId: input.questEncounterId,
         championId: input.candidate.championId,
+        championStars: candidateStars,
       },
     })
   ) {
@@ -220,6 +239,14 @@ function decideSelectionTransition<
           field: input.field,
           questEncounterId: input.questEncounterId!,
           championId: input.candidate.championId,
+          championStars: candidateStars,
+          clearPrefight: input.field === "selectedChampionId" &&
+            input.quest.teamLimit == null &&
+            (existingAssignment?.prefightChampionId != null || existingAssignment?.prefightChampionStars != null) &&
+            (
+              existingAssignment.prefightChampionId !== input.candidate.championId ||
+              existingAssignment.prefightChampionStars !== candidateStars
+            ),
         };
 
   if (intent.kind === "synergy" && intent.championId === null) {

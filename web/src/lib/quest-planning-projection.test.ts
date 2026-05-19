@@ -99,9 +99,27 @@ describe("Quest Planning Projection", () => {
       "upper-fight": "r3",
     });
     expect(projection.activeQuestAssignments).toEqual([
-      { questEncounterId: "shared", selectedChampionId: 1, prefightChampionId: null },
-      { questEncounterId: "right-fight", selectedChampionId: 2, prefightChampionId: null },
-      { questEncounterId: "upper-fight", selectedChampionId: null, prefightChampionId: 3 },
+      {
+        questEncounterId: "shared",
+        selectedChampionId: 1,
+        selectedChampionStars: 7,
+        prefightChampionId: null,
+        prefightChampionStars: null,
+      },
+      {
+        questEncounterId: "right-fight",
+        selectedChampionId: 2,
+        selectedChampionStars: 6,
+        prefightChampionId: null,
+        prefightChampionStars: null,
+      },
+      {
+        questEncounterId: "upper-fight",
+        selectedChampionId: null,
+        selectedChampionStars: null,
+        prefightChampionId: 3,
+        prefightChampionStars: 6,
+      },
     ]);
     expect(projection.selectedRouteSummary).toEqual([
       { sectionTitle: "Opening", pathTitle: "Right" },
