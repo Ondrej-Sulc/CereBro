@@ -6,17 +6,12 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { withActionContext } from "@/lib/with-request-context";
 import { ChampionClass, QuestPlanStatus } from "@prisma/client";
-import { revalidatePath, revalidateTag } from "next/cache";
-
-function revalidateQuestPlanAdminList() {
-    revalidatePath('/admin/quests');
-    revalidatePath('/planning/quests');
-}
-
-function revalidateQuestPlanAdminDetail(questPlanId: string) {
-    revalidatePath(`/admin/quests/${questPlanId}`);
-    revalidatePath(`/planning/quests/${questPlanId}`);
-}
+import {
+    revalidateQuestFeaturedPicks,
+    revalidateQuestPlanDetail,
+    revalidateQuestPlanDetailData,
+    revalidateQuestPlanList,
+} from "./quest-cache-invalidation";
 
 export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', async (
     questPlanId: string,
@@ -51,9 +46,9 @@ export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', 
             )
         ]);
 
-        revalidateQuestPlanAdminDetail(questPlanId);
-        revalidateTag('quest-plan-detail', 'default');
-        revalidateTag(`quest-featured-picks-${questPlanId}`, 'default');
+        revalidateQuestPlanDetail(questPlanId);
+        revalidateQuestPlanDetailData();
+        revalidateQuestFeaturedPicks(questPlanId);
 
         return { success: true };
     } catch (e: unknown) {
@@ -105,7 +100,7 @@ export const createQuestPlan = withActionContext('createQuestPlan', async (data:
         }
     });
 
-    revalidateQuestPlanAdminList();
+    revalidateQuestPlanList();
     return { success: true, planId: plan.id };
 });
 
@@ -152,8 +147,8 @@ export const updateQuestPlan = withActionContext('updateQuestPlan', async (data:
         }
     });
 
-    revalidateQuestPlanAdminList();
-    revalidateQuestPlanAdminDetail(data.id);
+    revalidateQuestPlanList();
+    revalidateQuestPlanDetail(data.id);
     return { success: true };
 });
 
@@ -164,7 +159,7 @@ export const deleteQuestPlan = withActionContext('deleteQuestPlan', async (id: s
         where: { id }
     });
 
-    revalidateQuestPlanAdminList();
+    revalidateQuestPlanList();
     return { success: true };
 });
 
@@ -203,7 +198,7 @@ export const uploadQuestBanner = withActionContext('uploadQuestBanner', async (q
         throw error;
     }
 
-    revalidateQuestPlanAdminDetail(questPlanId);
+    revalidateQuestPlanDetail(questPlanId);
     return { success: true, url: publicUrl };
 });
 
@@ -270,7 +265,7 @@ export const duplicateQuestPlan = withActionContext('duplicateQuestPlan', async 
         }
     });
 
-    revalidatePath('/admin/quests');
+    revalidateQuestPlanList();
     return { success: true, planId: newPlan.id };
 });
 
@@ -297,6 +292,6 @@ export const clearRecommendedChampionsInQuest = withActionContext('clearRecommen
         );
     }
 
-    revalidateQuestPlanAdminDetail(id);
+    revalidateQuestPlanDetail(id);
     return { success: true };
 });

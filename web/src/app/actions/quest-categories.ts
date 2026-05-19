@@ -5,15 +5,9 @@ import { deleteFromGcs, uploadToGcs } from "@/lib/gcs";
 import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { withActionContext } from "@/lib/with-request-context";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateQuestCategories } from "./quest-cache-invalidation";
 
 export { getQuestCategories } from "./quest-catalog";
-
-function revalidateQuestCategories() {
-    revalidateTag('quest-categories', 'default');
-    revalidatePath('/admin/quests');
-    revalidatePath('/planning/quests');
-}
 
 export const createQuestCategory = withActionContext('createQuestCategory', async (name: string, order: number = 0, parentId?: string) => {
     await requireBotAdmin("MANAGE_QUESTS");
