@@ -19,7 +19,9 @@ import {
     Image as ImageIcon, Swords, Users, ShieldAlert, FileWarning, Tag as TagIcon,
     Trophy, Youtube, Loader2, EyeOff, Eye, Archive, Pencil, Check, Upload, Folder, FileJson
 } from "lucide-react";
-import { createQuestPlan, deleteQuestPlan, createQuestCategory, duplicateQuestPlan, updateQuestCategory, uploadQuestCategoryThumbnail, importQuestPlan } from "@/app/actions/quests";
+import { createQuestCategory, updateQuestCategory, uploadQuestCategoryThumbnail } from "@/app/actions/quest-categories";
+import { createQuestPlan, deleteQuestPlan, duplicateQuestPlan } from "@/app/actions/quest-plan-admin";
+import { importQuestPlan } from "@/app/actions/quest-plan-transfer";
 import { cn } from "@/lib/utils";
 
 type QuestCategoryFlat = QuestCategory & { thumbnailUrl?: string | null };

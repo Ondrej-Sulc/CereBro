@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getQuestPlanById } from "@/app/actions/quests";
+import { getQuestPlanById } from "@/app/actions/quest-catalog";
 import AdminQuestBuilderClient from "@/components/admin/quests/admin-quest-builder-client";
 import { QuestWithRelations } from "@/components/admin/quests/admin-quest-builder-client";
 import { Champion } from "@/types/champion";

@@ -1,7 +1,6 @@
 import type { QuestPlan, QuestEncounter, Champion as PrismaChampion, Roster, PlayerQuestEncounter, PlayerQuestRouteChoice, Tag, QuestEncounterNode, NodeModifier, ChampionClass, Prisma, PlayerQuestSynergyChampion } from "@prisma/client";
 import { ChampionImages, Champion } from "@/types/champion";
-import type { getQuestPlanById } from "@/app/actions/quests";
-import type { PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quests";
+import type { getQuestPlanById, PopularCountersMap, EnhancedCountersMap } from "@/app/actions/quest-catalog";
 
 export type QuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 export type EncounterWithRelations = QuestWithRelations["encounters"][0];

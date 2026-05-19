@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPlayerQuestPlanForViewing } from "@/app/actions/quests";
+import { getPlayerQuestPlanForViewing } from "@/app/actions/quest-plan-sharing";
 import { ReadOnlyPlanShell } from "@/components/planning/read-only-plan-shell";
 import { cache } from "react";
 

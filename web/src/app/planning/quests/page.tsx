@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import QuestListClient from "@/components/planning/quest-list-client";
 import { QuestPlanStatus } from "@prisma/client";
-import { getQuestPlans, getQuestCategories } from "@/app/actions/quests";
+import { getQuestCategories, getQuestPlans } from "@/app/actions/quest-catalog";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export const metadata: Metadata = {

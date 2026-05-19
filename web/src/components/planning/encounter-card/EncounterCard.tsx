@@ -33,7 +33,7 @@ import { getYoutubeEmbedUrl } from "@/lib/youtube";
 import { MultiSelectFilter } from "@/components/ui/filters";
 import { InfoPopover } from "@/components/ui/info-popover";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
-import { EnhancedCountersMap, PickCounterWithChampion, PopularCountersMap } from "@/app/actions/quests";
+import type { EnhancedCountersMap, PickCounterWithChampion, PopularCountersMap } from "@/app/actions/quest-catalog";
 import { Champion } from "@/types/champion";
 import { FilterMetadata } from "../types";
 import { isChampionValidForEncounterOrQuest } from "../utils";

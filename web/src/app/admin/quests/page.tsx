@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import AdminQuestManagerClient from "@/components/admin/quests/admin-quest-manager-client";
 import { QuestWithRelations } from "@/types/quests";
 import { ensureAdmin } from "../actions";
-import { getQuestPlans, getQuestCategories } from "@/app/actions/quests";
+import { getQuestCategories, getQuestPlans } from "@/app/actions/quest-catalog";
 
 export const metadata: Metadata = {
   title: "Quest Planner Management - CereBro",

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getPlayerQuestPlanForViewing } from "@/app/actions/quests";
+import { getPlayerQuestPlanForViewing } from "@/app/actions/quest-plan-sharing";
 import { ReadOnlyPlanShell } from "@/components/planning/read-only-plan-shell";
 import { QuestPlanStatus } from "@prisma/client";
 import { cache } from "react";
