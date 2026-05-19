@@ -28,8 +28,6 @@ import {
 import {
     isChampionValidForEncounterOrQuest,
     isQuestRosterEntryUnavailableForEncounter,
-    questEncounterSelectionConflictReason,
-    unlimitedSwapsSelectionConflictReason,
     wouldExceedQuestTeamLimit
 } from "./utils";
 import {
@@ -42,6 +40,10 @@ import {
     projectQuestTimelineViewModel,
     type PlayerPicksMap,
 } from "./quest-timeline-view-model";
+import {
+    decideQuestTimelineCounterSelection,
+    decideQuestTimelinePrefightSelection,
+} from "./quest-timeline-controller";
 
 import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
@@ -852,91 +854,29 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     };
 
     const handleSelectCounter = async (encounterId: string, rosterId: string) => {
-        const previousRosterId = selections[encounterId];
-        const rosterEntry = roster.find(r => r.id === rosterId);
-        if (!rosterEntry) return;
-        
-        const championId = rosterEntry.championId;
-        const championStars = rosterEntry.stars;
-        const prefightRosterId = prefightSelections[encounterId];
-        const prefightChampionId = prefightRosterId ? roster.find(r => r.id === prefightRosterId)?.championId : null;
-        const previousPrefightRosterId = prefightSelections[encounterId];
-
-        const conflictReason = quest.teamLimit === null
-            ? unlimitedSwapsSelectionConflictReason({
-                encounters: activeQuestAssignments,
-                replacement: {
-                    field: "selectedChampionId",
-                    questEncounterId: encounterId,
-                    championId,
-                    championStars,
-                },
-            })
-            : questEncounterSelectionConflictReason({
-                field: "selectedChampionId",
-                candidateChampionId: championId,
-                prefightChampionId,
-            });
-        if (conflictReason && previousRosterId !== rosterId) {
-            toast({ title: "Invalid Counter", description: conflictReason, variant: "destructive" });
+        const decision = decideQuestTimelineCounterSelection({
+            quest,
+            encounterId,
+            rosterId,
+            roster,
+            selections,
+            prefightSelections,
+            activeQuestAssignments,
+            activeSynergyChampions,
+        });
+        if (decision.kind === "ignored") return;
+        if (decision.kind === "rejected") {
+            toast({ title: decision.title, description: decision.description, variant: "destructive" });
             return;
         }
-
-        // If selecting a NEW roster entry (not unselecting, and not already selected for this fight)
-        if (previousRosterId !== rosterId) {
-            if (quest.teamLimit !== null) {
-                if (wouldExceedQuestTeamLimit({
-                    teamLimit: quest.teamLimit,
-                    encounters: activeQuestAssignments,
-                    synergyChampions: activeSynergyChampions,
-                    replacement: {
-                        field: "selectedChampionId",
-                        questEncounterId: encounterId,
-                        championId,
-                    },
-                })) {
-                    toast({
-                        title: "Team Limit Reached",
-                        description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
-                        variant: "destructive"
-                    });
-                    return; // Stop here, do not select
-                }
-            } else {
-                // Infinite team limit: check if this specific roster entry is already used
-                const unlimitedSwapsReason = unlimitedSwapsSelectionConflictReason({
-                    encounters: activeQuestAssignments,
-                    replacement: {
-                        field: "selectedChampionId",
-                        questEncounterId: encounterId,
-                        championId,
-                        championStars,
-                    },
-                });
-                if (unlimitedSwapsReason) {
-                    toast({
-                        title: "Rarity Already Used",
-                        description: unlimitedSwapsReason,
-                        variant: "destructive"
-                    });
-                    return; // Stop here
-                }
-            }
-        }
-
-        const newValue = previousRosterId === rosterId ? null : rosterId;
-        const newRosterEntry = newValue ? roster.find(r => r.id === newValue) : undefined;
-        const newChampValue = newRosterEntry?.championId ?? null;
-        const newStarsValue = newRosterEntry?.stars ?? null;
-        const shouldClearPrefight = quest.teamLimit === null && previousPrefightRosterId !== null && previousPrefightRosterId !== newValue;
         
-        setSelections(prev => ({ ...prev, [encounterId]: newValue }));
-        if (shouldClearPrefight) {
+        setSelections(prev => ({ ...prev, [encounterId]: decision.nextRosterId }));
+        if (decision.shouldClearPrefight) {
             setPrefightSelections(prev => ({ ...prev, [encounterId]: null }));
         }
 
         // Autoclose the card if a selection was made
-        if (newValue !== null) {
+        if (decision.nextRosterId !== null) {
             // Snap to card header instantly BEFORE closing so the collapse animation
             // plays in-view rather than causing a layout-shift scroll jump
             const element = document.getElementById(`encounter-${encounterId}`);
@@ -949,87 +889,47 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
 
         try {
-            await savePlayerQuestCounter(quest.id, encounterId, newChampValue, newStarsValue);
+            await savePlayerQuestCounter(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars);
         } catch (error) {
             reportClientError("quest_timeline_save_counter", error, {
                 quest_id: quest.id,
                 encounter_id: encounterId,
             });
-            setSelections(prev => ({ ...prev, [encounterId]: previousRosterId }));
-            if (shouldClearPrefight) {
-                setPrefightSelections(prev => ({ ...prev, [encounterId]: previousPrefightRosterId }));
+            setSelections(prev => ({ ...prev, [encounterId]: decision.previousRosterId }));
+            if (decision.shouldClearPrefight) {
+                setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.previousPrefightRosterId ?? null }));
             }
             toast({ title: "Error", description: "Failed to save selection.", variant: "destructive" });
         }
     };
 
     const handleSelectPrefight = async (encounterId: string, rosterId: string) => {
-        const previousRosterId = prefightSelections[encounterId];
-        const rosterEntry = roster.find(r => r.id === rosterId);
-        if (!rosterEntry) return;
-
-        const championId = rosterEntry.championId;
-        const championStars = rosterEntry.stars;
-        const counterRosterId = selections[encounterId];
-        const counterChampionId = counterRosterId ? roster.find(r => r.id === counterRosterId)?.championId : null;
-
-        const conflictReason = quest.teamLimit === null
-            ? unlimitedSwapsSelectionConflictReason({
-                encounters: activeQuestAssignments,
-                replacement: {
-                    field: "prefightChampionId",
-                    questEncounterId: encounterId,
-                    championId,
-                    championStars,
-                },
-            })
-            : questEncounterSelectionConflictReason({
-                field: "prefightChampionId",
-                candidateChampionId: championId,
-                selectedChampionId: counterChampionId,
-            });
-        if (conflictReason && previousRosterId !== rosterId) {
-            toast({ title: "Invalid Prefight", description: conflictReason, variant: "destructive" });
+        const decision = decideQuestTimelinePrefightSelection({
+            quest,
+            encounterId,
+            rosterId,
+            roster,
+            selections,
+            prefightSelections,
+            activeQuestAssignments,
+            activeSynergyChampions,
+        });
+        if (decision.kind === "ignored") return;
+        if (decision.kind === "rejected") {
+            toast({ title: decision.title, description: decision.description, variant: "destructive" });
             return;
         }
 
-        if (previousRosterId !== rosterId) {
-            if (quest.teamLimit !== null) {
-                if (wouldExceedQuestTeamLimit({
-                    teamLimit: quest.teamLimit,
-                    encounters: activeQuestAssignments,
-                    synergyChampions: activeSynergyChampions,
-                    replacement: {
-                        field: "prefightChampionId",
-                        questEncounterId: encounterId,
-                        championId,
-                    },
-                })) {
-                    toast({
-                        title: "Team Limit Reached",
-                        description: `You can only select up to ${quest.teamLimit} champions for this quest.`,
-                        variant: "destructive"
-                    });
-                    return;
-                }
-            }
-        }
-
-        const newValue = previousRosterId === rosterId ? null : rosterId;
-        const newRosterEntry = newValue ? roster.find(r => r.id === newValue) : undefined;
-        const newChampValue = newRosterEntry?.championId ?? null;
-        const newStarsValue = newRosterEntry?.stars ?? null;
-
-        setPrefightSelections(prev => ({ ...prev, [encounterId]: newValue }));
+        setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.nextRosterId }));
 
         try {
-            await savePlayerQuestPrefightChampion(quest.id, encounterId, newChampValue, newStarsValue);
+            await savePlayerQuestPrefightChampion(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars);
         } catch (error) {
             reportClientError("quest_timeline_save_prefight", error, {
                 quest_id: quest.id,
                 encounter_id: encounterId,
             });
-            setPrefightSelections(prev => ({ ...prev, [encounterId]: previousRosterId }));
+            setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.previousRosterId }));
             const msg = error instanceof Error ? error.message : "Failed to save prefight.";
             toast({ title: "Error", description: msg, variant: "destructive" });
         }
