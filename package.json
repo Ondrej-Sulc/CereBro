@@ -42,6 +42,7 @@
     "import:mcoc-sig-prestige": "tsx src/scripts/import-mcoc-sig-prestige.ts",
     "import:mcoc-game-descriptions": "tsx src/scripts/import-mcoc-game-descriptions.ts",
     "import:mcoc-ability-curves": "tsx src/scripts/import-mcoc-ability-curves.ts",
+    "audit:champion-ability-text": "tsx src/scripts/audit-champion-ability-text.ts",
     "db:dump": "tsx src/scripts/db-sync.ts export",
     "db:sync": "tsx src/scripts/db-sync.ts import",
     "test:style": "tsx src/scripts/test-image-style.ts",

@@ -21,6 +21,7 @@ export type ChampionAbilityCurve = {
 export type ChampionAbilityStat = {
   challengeRating: number;
   attack: number | null;
+  health?: number | null;
   sigAbilityIds: string[];
 };
 
@@ -47,7 +48,7 @@ export type ChampionAbilityTextError = {
 
 export type PreparedChampionAbilityTextNode =
   | { type: "text"; value: string }
-  | { type: "value"; key: string; placeholderIndex: number; resolution: ResolvedAbilityTextValue }
+  | { type: "value"; key: string; placeholderIndex: number; source?: TemplateValueSource; resolution: ResolvedAbilityTextValue }
   | { type: "glossary"; id: string; label: string }
   | { type: "color"; color: string; children: PreparedChampionAbilityTextNode[] };
 
@@ -253,7 +254,20 @@ export function abilityTextGroupTitle(group: string) {
 }
 
 export function formatGameText(value: string) {
-  return value.replace(/\[[0-9a-fA-F]{6,8}\]([\s\S]*?)\[-\]/g, "$1");
+  let formatted = value;
+  let previous: string;
+  do {
+    previous = formatted;
+    formatted = formatted
+      .replace(/\[\/?b\]/gi, "")
+      .replace(/\[k=glossary\/([^\]]*)\]([\s\S]*?)\[\/k\]/g, "$2")
+      .replace(/\[[0-9a-fA-F]{6,8}\]([\s\S]*?)\[-\]/g, "$1");
+  } while (formatted !== previous);
+  return formatted
+    .replace(/\[k=glossary\/[^\]]*\]/g, "")
+    .replace(/\[\/k\]/g, "")
+    .replace(/\[[0-9a-fA-F]{6,8}\]/g, "")
+    .replace(/\[-\]/g, "");
 }
 
 export function prepareChampionAbilityText({
@@ -435,8 +449,16 @@ function createAbilityTextPanel<
 }): PreparedChampionAbilityTextPanel<TRecord> {
   const recordGroups: Array<PreparedChampionAbilityTextRecordGroup<TRecord>> = [];
   let currentGroup: PreparedChampionAbilityTextRecordGroup<TRecord> | null = null;
+  let pendingTitle: { id: string; title: string } | null = null;
+  const visibleRecords: Array<PreparedChampionAbilityTextRecord<TRecord>> = [];
 
   for (const record of records) {
+    if (isGlossaryDefinitionRecord(record)) {
+      if (record.displayTitle) pendingTitle = { id: String(record.id), title: record.displayTitle };
+      continue;
+    }
+
+    visibleRecords.push(record);
     if (record.displayTitle) {
       currentGroup = {
         id: String(record.id),
@@ -444,6 +466,15 @@ function createAbilityTextPanel<
         records: [record],
       };
       recordGroups.push(currentGroup);
+      pendingTitle = null;
+    } else if (pendingTitle) {
+      currentGroup = {
+        id: pendingTitle.id,
+        title: pendingTitle.title,
+        records: [record],
+      };
+      recordGroups.push(currentGroup);
+      pendingTitle = null;
     } else if (currentGroup) {
       currentGroup.records.push(record);
     } else {
@@ -459,11 +490,41 @@ function createAbilityTextPanel<
   return {
     group,
     title,
-    records,
+    records: visibleRecords,
     recordGroups,
     introRecord,
     emptyText,
   };
+}
+
+function isGlossaryDefinitionRecord(record: ChampionAbilityTextRecord) {
+  if (!record.title) return false;
+  if (templateHasValueNode(record.template)) return false;
+
+  let template: TextTemplate;
+  try {
+    template = validateChampionAbilityTextTemplate(record.template);
+  } catch {
+    return false;
+  }
+  const raw = formatGameText(template.raw).trim().toLowerCase();
+  return [
+    /^each .+ represents .+\.$/,
+    /^this champion is immune to all .+ effects\.$/,
+    /^incoming attacks have a .+ chance to miss\.$/,
+    /^.+ is on cooldown and cannot be activated\.$/,
+    /^inflicts energy damage over time, decreases block proficiency by half, and prevents perfect blocks\.$/,
+    /^energy damage dealt instantly to the opponent\.$/,
+    /^increases the ability power rate and combat power rate\.?$/,
+  ].some(pattern => pattern.test(raw));
+}
+
+function templateHasValueNode(template: unknown): boolean {
+  if (!template || typeof template !== "object") return false;
+  if (Array.isArray(template)) return template.some(templateHasValueNode);
+  const record = template as Record<string, unknown>;
+  if (record.type === "value") return true;
+  return Object.values(record).some(templateHasValueNode);
 }
 
 function collectGlossaryIdsFromTemplate(value: unknown, ids: Set<string>) {
@@ -490,8 +551,8 @@ function prepareChampionAbilityTextNode(
   sigLevel: number,
   stat?: ChampionAbilityStat
 ): PreparedChampionAbilityTextNode {
-  if (node.type === "text") return { type: "text", value: node.value };
-  if (node.type === "glossary") return { type: "glossary", id: node.id, label: node.label };
+  if (node.type === "text") return { type: "text", value: formatGameText(node.value) };
+  if (node.type === "glossary") return { type: "glossary", id: node.id, label: formatGameText(node.label) };
   if (node.type === "color") {
     return {
       type: "color",
@@ -503,6 +564,7 @@ function prepareChampionAbilityTextNode(
     type: "value",
     key: node.key,
     placeholderIndex: node.placeholderIndex,
+    source: node.source,
     resolution: resolveChampionAbilityTextValue({ node, curves, sigLevel, stat }),
   };
 }
@@ -547,21 +609,24 @@ function validateTemplateNode(node: unknown, path: string): TemplateNode {
   throw new Error(`Champion Ability Text ${path}.type is not supported.`);
 }
 
-function addValueHints(nodes: TemplateNode[]): TemplateNode[] {
+function addValueHints(nodes: TemplateNode[], inheritedHint = ""): TemplateNode[] {
   const siblingSources = nodes
     .filter((node): node is Extract<TemplateNode, { type: "value" }> => node.type === "value" && node.source?.kind === "abilityParam")
     .map(node => node.source as Extract<TemplateValueSource, { kind: "abilityParam" }>);
 
   return nodes.map((node, index) => {
     if (node.type === "value") {
+      const localHint = surroundingText(nodes, index);
       return {
         ...node,
-        hint: surroundingText(nodes, index),
+        hint: `${inheritedHint} ${localHint}`.replace(/\s+/g, " ").trim().toLowerCase(),
         source: inferMissingValueSource(node, siblingSources),
       };
     }
     if (node.type === "color") {
-      return { ...node, children: addValueHints(node.children) };
+      const colorHint = surroundingText(nodes, index);
+      const combinedHint = `${inheritedHint} ${colorHint}`.replace(/\s+/g, " ").trim().toLowerCase();
+      return { ...node, children: addValueHints(node.children, combinedHint) };
     }
     return node;
   });
@@ -697,6 +762,7 @@ function findCurveForValueNode(
     return (
       typeof curveSource?.panelId === "string" &&
       selectedPanelIds.has(curveSource.panelId) &&
+      (explicitCurveId != null || curveSource?.componentId === source.componentId) &&
       curveSourceMatchesValueSource(curve, source) &&
       curveAppliesToValueSource(curve, source)
     );
@@ -737,12 +803,28 @@ function curveAppliesToValueSource(
   const displayBaseField = typeof display?.baseField === "string" ? display.baseField : null;
 
   if (source.paramName && abilityParamName && source.paramName !== abilityParamName) return false;
-  if (source.field && displayBaseField && source.field !== displayBaseField && !curveAbilityHasField(ability, source.field)) return false;
+  if (source.field && displayBaseField && !sourceFieldsEquivalent(source.field, displayBaseField)) {
+    if (canonicalSourceField(source.field) === "atkFrac" && curveSource && "secondaryCurve" in curveSource) return false;
+    if (!curveAbilityHasField(ability, source.field)) return false;
+  }
   return true;
 }
 
 function curveAbilityHasField(ability: Record<string, unknown> | null, field: string) {
-  return ability ? readNumber(ability, [field]) != null : false;
+  if (!ability) return false;
+  if (field === "base_val") return readNumber(ability, ["baseVal", "base_val"]) != null;
+  if (field === "atk_frac") return readNumber(ability, ["atkFrac", "atk_frac"]) != null;
+  return readNumber(ability, [field]) != null;
+}
+
+function sourceFieldsEquivalent(left: string, right: string) {
+  return canonicalSourceField(left) === canonicalSourceField(right);
+}
+
+function canonicalSourceField(field: string) {
+  if (field === "base_val") return "baseVal";
+  if (field === "atk_frac") return "atkFrac";
+  return field;
 }
 
 function resolveTemplateValue(
@@ -757,18 +839,36 @@ function resolveTemplateValue(
   }
 
   const buffType = source.buffType ?? "";
-  const attackScaledValue = resolveAttackScaledValue(node, source, stat);
-  if (attackScaledValue != null) return attackScaledValue;
+  const timeValue = resolveTimeValue(node, source, curve, sigLevel);
+  if (timeValue != null) return timeValue;
+
+  if (buffType === "fury" && source.paramName === "attackPercent" && stat?.attack && typeof source.rawValue === "number") {
+    return stat.attack * resolveAttackPercentSourceValue(source);
+  }
+
+  if (node.hint?.includes("%") && !isDamageAmountPlaceholder(node, source)) {
+    const indexedPercentValue = resolveIndexedPercentValue(node, source);
+    if (indexedPercentValue != null) return indexedPercentValue;
+    if (curve && source.field !== "duration") {
+      return normalizeCurveValueForSource(evaluateCurveDisplayForSource(curve, source, sigLevel), source, node);
+    }
+    const sourceValue = resolveSourceValue(node, source);
+    if (sourceValue != null) return sourceValue;
+  }
+
+  const healthScaledValue = resolveHealthScaledValue(node, source, curve, sigLevel, stat);
+  if (healthScaledValue != null) return healthScaledValue;
+
+  if (curve && stat?.attack && source.scaleVar?.includes("self.attack") && (isDamageText(node) || isDamageEffectSource(source))) {
+    return (evaluateCurveDisplay(curve, sigLevel) / 100) * stat.attack;
+  }
 
   if (buffType === "fury" && stat?.attack && curve) {
     return (evaluateCurveDisplay(curve, sigLevel) / 100) * stat.attack;
   }
-  if (buffType === "fury" && source.paramName === "attackPercent" && stat?.attack && typeof source.rawValue === "number") {
-    return stat.attack * source.rawValue;
-  }
 
-  const timeValue = resolveTimeValue(node, source, curve, sigLevel);
-  if (timeValue != null) return timeValue;
+  const attackScaledValue = resolveAttackScaledValue(node, source, stat);
+  if (attackScaledValue != null) return attackScaledValue;
 
   if (["armor_up", "resist_physical", "resist_magic", "crit_resist"].includes(buffType) && stat?.challengeRating && curve) {
     const percent = evaluateCurveDisplay(curve, sigLevel) / 100;
@@ -778,15 +878,19 @@ function resolveTemplateValue(
   if (staticRatingPercent != null && stat?.challengeRating) {
     return percentToRating(staticRatingPercent, stat.challengeRating);
   }
-  if (isPercentPlaceholder(node, source)) {
-    const sourceValue = resolveSourceValue(node, source);
-    if (sourceValue != null) return sourceValue;
-  }
   if ((isRatingBuffType(buffType) || source.paramName === "ratingPercent") && stat?.challengeRating && typeof source.rawValue === "number") {
     return percentToRating(Math.abs(source.rawValue), stat.challengeRating);
   }
 
-  if (curve) return evaluateCurveDisplayForSource(curve, source, sigLevel);
+  if (isPercentPlaceholder(node, source)) {
+    if (curve && source.field !== "duration") {
+      return normalizeCurveValueForSource(evaluateCurveDisplayForSource(curve, source, sigLevel), source, node);
+    }
+    const sourceValue = resolveSourceValue(node, source);
+    if (sourceValue != null) return sourceValue;
+  }
+
+  if (curve) return normalizeCurveValueForSource(evaluateCurveDisplayForSource(curve, source, sigLevel), source, node);
   const sourceValue = resolveSourceValue(node, source);
   if (sourceValue != null) return sourceValue;
   if (source.scaleVar === "self.attack" && source.display?.multiplier !== 100 && stat?.attack && typeof source.rawValue === "number") {
@@ -803,15 +907,63 @@ function resolveAttackScaledValue(
   stat?: ChampionAbilityStat
 ) {
   if (!stat?.attack) return null;
-  const isAttackScaled = source.scaleVar === "self.attack" || (isDamageText(node) && source.display?.multiplier !== 100);
+  const isAttackScaled = source.scaleVar === "self.attack" || source.scaleVar === "attack" || (isDamageText(node) && source.display?.multiplier !== 100);
   if (!isAttackScaled) return null;
   const fraction = source.rawValue ?? source.chance ?? source.atkFrac ?? null;
+  if (fraction != null && Math.abs(fraction) > 5) return null;
   if (fraction == null) return null;
   return stat.attack * fraction;
 }
 
+function resolveHealthScaledValue(
+  node: Extract<TemplateNode, { type: "value" }>,
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>,
+  curve: ChampionAbilityCurve | null,
+  sigLevel: number,
+  stat?: ChampionAbilityStat
+) {
+  if (!stat?.health) return null;
+  const scaleVar = source.scaleVar ?? "";
+  if (!/\b(adrenaline|health)\b/i.test(node.hint ?? "")) return null;
+  if (node.hint?.includes("%")) return null;
+  const isStaticHealthFraction = source.buffType === "regen" && typeof source.chance === "number" && source.chance > 0 && source.chance < 1;
+  if (!scaleVar.includes("self.hp.max") && !curve && !isStaticHealthFraction) return null;
+
+  const fraction = curve
+    ? evaluateCurveDisplay(curve, sigLevel) / 100
+    : source.chance && source.chance > 0 && source.chance < 1
+      ? source.chance
+      : source.rawValue && source.rawValue > 0 && source.rawValue < 1
+        ? source.rawValue
+        : null;
+  return fraction == null ? null : stat.health * fraction;
+}
+
+function resolveAttackPercentSourceValue(source: Extract<TemplateValueSource, { kind: "abilityParam" }>) {
+  const candidates = [source.chance, source.rawValue, source.baseVal].filter(
+    (value): value is number => typeof value === "number" && Number.isFinite(value)
+  );
+  return candidates.find(value => value > 1) ?? candidates[0] ?? 0;
+}
+
 function isDamageText(node: Extract<TemplateNode, { type: "value" }>) {
-  return /\b(damage|direct damage|energy damage)\b/i.test(node.hint ?? "");
+  const hint = node.hint ?? "";
+  if (/\bcritical damage rating\b/i.test(hint)) return false;
+  return /\b(damage|direct damage|energy damage)\b/i.test(hint);
+}
+
+function isDamageAmountPlaceholder(
+  node: Extract<TemplateNode, { type: "value" }>,
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
+) {
+  if (!isDamageText(node)) return false;
+  if (source.paramName === "chance" || source.paramName === "duration") return false;
+  if (source.display?.multiplier === 100) return false;
+  return true;
+}
+
+function isDamageEffectSource(source: Extract<TemplateValueSource, { kind: "abilityParam" }>) {
+  return ["bleed", "poison", "incinerate", "acid_burn", "shock", "rupture", "degen", "damage"].includes(source.buffType ?? "");
 }
 
 function resolveTimeValue(
@@ -821,7 +973,12 @@ function resolveTimeValue(
   sigLevel: number
 ) {
   if (!isTimeText(node)) return null;
-  if (curve) return evaluateCurveDisplayForSource(curve, source, sigLevel);
+  if (source.paramName === "duration" && node.placeholderIndex === 3 && source.duration === 0 && typeof source.f24 === "number" && source.f24 > 0) {
+    return source.f24;
+  }
+  if (isDamageText(node) && source.field !== "duration" && source.paramName !== "duration") return null;
+  if (isPercentPlaceholder(node, source) && source.field !== "duration" && !/\bseconds?\b/i.test(node.hint ?? "")) return null;
+  if (curve) return normalizeCurveValueForSource(evaluateCurveDisplayForSource(curve, source, sigLevel), source, node);
   const fieldValue = source.field ? readSourceNumber(source, source.field) : null;
   if (fieldValue == null) return null;
   if (source.display?.multiplier === 100 && Math.abs(fieldValue) > 0 && Math.abs(fieldValue) < 1) {
@@ -840,7 +997,8 @@ function resolveStaticRatingPercent(
   node: Extract<TemplateNode, { type: "value" }>,
   source: Extract<TemplateValueSource, { kind: "abilityParam" }>
 ) {
-  if (!isRatingBuffType(source.buffType ?? "") && !isRatingText(node) && !isPotencyText(node)) return null;
+  if (["chance", "count", "duration", "maxStacks", "time"].includes(source.paramName ?? "")) return null;
+  if (!isRatingBuffType(source.buffType ?? "") && !isRatingText(node)) return null;
   const candidates = [source.chance, source.rawValue, source.baseVal].filter(
     (value): value is number => typeof value === "number" && Number.isFinite(value)
   );
@@ -854,7 +1012,7 @@ function isPotencyText(node: Extract<TemplateNode, { type: "value" }>) {
 }
 
 function isRatingText(node: Extract<TemplateNode, { type: "value" }>) {
-  return /\b(resistance up|physical vulnerability|energy vulnerability|pierce)\b/i.test(node.hint ?? "");
+  return /\b(critical damage rating|critical rating|resistance up|physical vulnerability|energy vulnerability|vulnerability|pierce)\b/i.test(node.hint ?? "");
 }
 
 function resolveSourceValue(
@@ -866,11 +1024,18 @@ function resolveSourceValue(
 
   if (!isPercentContext) return fieldValue;
 
+  const indexedPercentValue = resolveIndexedPercentValue(node, source);
+  if (indexedPercentValue != null) return indexedPercentValue;
+
   if (source.field === "duration" && typeof source.baseVal === "number" && source.baseVal !== 1) {
     return normalizePercentValue(source.baseVal);
   }
 
   if (source.buffType === "duration_percent" && typeof source.chance === "number") {
+    return normalizePercentValue(source.chance);
+  }
+
+  if (source.paramName === "chance" && source.field !== "chance" && typeof source.chance === "number") {
     return normalizePercentValue(source.chance);
   }
 
@@ -888,6 +1053,39 @@ function resolveSourceValue(
   }
 
   if (fieldValue != null) return normalizePercentValue(fieldValue);
+  return null;
+}
+
+function resolveIndexedPercentValue(
+  node: Extract<TemplateNode, { type: "value" }>,
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
+) {
+  const componentId = source.componentId ?? "";
+
+  if (componentId === "nico_hemo_info") {
+    if (node.placeholderIndex === 1) return normalizePercentValue(source.chance ?? 0);
+    if (node.placeholderIndex === 2) return normalizePercentValue(source.duration ?? 0);
+  }
+
+  if (componentId === "nico_hemo_pv_gain") {
+    if (node.placeholderIndex === 1) return normalizePercentValue(source.chance ?? 0);
+    if (node.placeholderIndex === 0) return normalizePercentFraction(source.baseVal ?? 0);
+  }
+
+  if (componentId === "nico_hex_pwr_gn_b" && node.placeholderIndex === 3) {
+    return source.f24 ?? null;
+  }
+
+  if (componentId === "nico_hex_imm_seq" && node.placeholderIndex === 3) {
+    return source.f24 ?? null;
+  }
+
+  if (componentId === "nico_sp1_info") {
+    if (node.placeholderIndex === 0) return normalizePercentValue(source.baseVal ?? 0);
+    if (node.placeholderIndex === 2) return normalizePercentValue(source.duration ?? 0);
+    if (node.placeholderIndex === 3) return source.f24 ?? null;
+  }
+
   return null;
 }
 
@@ -913,6 +1111,7 @@ function readSourceNumber(source: Extract<TemplateValueSource, { kind: "abilityP
   if (field === "chance") return source.chance ?? null;
   if (field === "duration") return source.duration ?? source.rawValue ?? null;
   if (field === "atkFrac") return source.atkFrac ?? null;
+  if (field === "atk_frac") return source.atkFrac ?? source.rawValue ?? null;
   if (field === "f22") return source.f22 ?? null;
   if (field === "f23") return source.f23 ?? null;
   if (field === "f24") return source.f24 ?? null;
@@ -937,6 +1136,7 @@ function isRatingBuffType(buffType: string) {
     "armor_up",
     "armor_pen",
     "block_penetration",
+    "crit_damage",
     "crit_rating",
     "crit_resist",
     "resist_up",
@@ -1002,6 +1202,22 @@ function evaluateCurveDisplayForSource(
   return (base + curveValue) * multiplier;
 }
 
+function normalizeCurveValueForSource(
+  value: number,
+  source: Extract<TemplateValueSource, { kind: "abilityParam" }>,
+  node: Extract<TemplateNode, { type: "value" }>
+) {
+  if (
+    isPercentPlaceholder(node, source) &&
+    source.display?.multiplier === 100 &&
+    typeof source.rawValue === "number" &&
+    Math.abs(source.rawValue) > 1
+  ) {
+    return value / 100;
+  }
+  return value;
+}
+
 function evaluateCurveDelta(params: Record<string, unknown>, sig: number) {
   const f2 = readNumber(params, ["f2", "base", "coefficient"]) ?? 0;
   const f3 = readNumber(params, ["f3", "linear"]) ?? 0;
@@ -1036,7 +1252,13 @@ function evaluateCurveOutput(curve: ChampionAbilityCurve, sig: number, stat?: Ch
     return percentToRating(evaluateCurveDisplay(curve, sig) / 100, stat.challengeRating);
   }
 
-  return evaluateCurveDisplay(curve, sig);
+  const display = params && isRecord(params.display) ? params.display : null;
+  const baseField = typeof display?.baseField === "string" ? display.baseField : null;
+  const multiplier = readNumber(display ?? {}, ["multiplier"]) ?? 1;
+  const base = baseField && ability ? readNumber(ability, [baseField]) : null;
+  const value = evaluateCurveDisplay(curve, sig);
+  if (multiplier === 100 && typeof base === "number" && Math.abs(base) > 1) return value / 100;
+  return value;
 }
 
 function formatAbilityTextValue(value: number, curve: ChampionAbilityCurve | null, node: Extract<TemplateNode, { type: "value" }>) {
@@ -1046,13 +1268,27 @@ function formatAbilityTextValue(value: number, curve: ChampionAbilityCurve | nul
   const outputPrecision = source?.kind === "abilityParam" && ["fury", "resist_physical", "resist_magic", "crit_resist", "armor_up"].includes(source.buffType ?? "")
     ? 2
     : null;
-  const ratingPrecision = source?.kind === "abilityParam" && (isRatingBuffType(source.buffType ?? "") || isRatingText(node)) ? 0 : null;
-  const damagePrecision = isDamageText(node) ? 1 : null;
+  const ratingPrecision = source?.kind === "abilityParam" && isRatingBuffType(source.buffType ?? "") ? 0 : null;
+  const damagePrecision = isDamageText(node) || (source?.kind === "abilityParam" && isDamageEffectSource(source)) ? 2 : null;
   const durationPrecision = source?.kind === "abilityParam" && source.field === "duration" && !!curve ? 2 : null;
-  const precision = damagePrecision ?? durationPrecision ?? ratingPrecision ?? outputPrecision ?? readNumber(display ?? {}, ["precision"]) ?? (source?.kind === "abilityParam" ? source.display?.precision ?? 1 : 1);
-  return value.toLocaleString("en-US", {
+  const healthScaledPrecision = source?.kind === "abilityParam" &&
+    (source.scaleVar?.includes("self.hp.max") || (!!curve && /\b(adrenaline|health)\b/i.test(node.hint ?? ""))) &&
+    !node.hint?.includes("%")
+    ? 2
+    : null;
+  const wholeNumberCurvePercentPrecision = source?.kind === "abilityParam" &&
+    !!curve &&
+    isPercentPlaceholder(node, source) &&
+    source.display?.multiplier === 100 &&
+    typeof source.rawValue === "number" &&
+    Math.abs(source.rawValue) > 1
+    ? 2
+    : null;
+  const precision = damagePrecision ?? durationPrecision ?? healthScaledPrecision ?? ratingPrecision ?? outputPrecision ?? wholeNumberCurvePercentPrecision ?? readNumber(display ?? {}, ["precision"]) ?? (source?.kind === "abilityParam" ? source.display?.precision ?? 1 : 1);
+  const displayNumber = Math.abs(value - Math.round(value)) < 0.05 ? Math.round(value) : value;
+  return displayNumber.toLocaleString("en-US", {
     maximumFractionDigits: precision,
-    minimumFractionDigits: value % 1 === 0 ? 0 : Math.min(precision, 1),
+    minimumFractionDigits: displayNumber % 1 === 0 ? 0 : Math.min(precision, 1),
   });
 }
 

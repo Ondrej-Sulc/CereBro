@@ -140,9 +140,108 @@ function parseInline(text: string, placeholderSources: Record<string, GameDescri
   return nodes;
 }
 
+function abilityParamSources(sources: Record<string, GameDescriptionValueSource>) {
+  return Object.values(sources).filter(
+    (source): source is Extract<GameDescriptionValueSource, { kind: 'abilityParam' }> => source?.kind === 'abilityParam'
+  );
+}
+
+function readSourceField(source: Extract<GameDescriptionValueSource, { kind: 'abilityParam' }>, field: string) {
+  if (field === 'base_val') return source.baseVal ?? source.rawValue;
+  if (field === 'atk_frac') return source.atkFrac ?? source.rawValue;
+  return source[field as keyof typeof source];
+}
+
+function sourceWithField(
+  sources: Array<Extract<GameDescriptionValueSource, { kind: 'abilityParam' }>>,
+  field: string
+) {
+  return sources.find(source => typeof readSourceField(source, field) === 'number');
+}
+
+function cleanContextText(value: string) {
+  return value
+    .replace(/\[[^\]]+\]|\[\/[^\]]+\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function placeholderContext(text: string, index: number) {
+  const token = `{${index}}`;
+  const position = text.indexOf(token);
+  if (position < 0) return { before: '', after: '', context: '' };
+  const before = cleanContextText(text.slice(Math.max(0, position - 80), position));
+  const after = cleanContextText(text.slice(position + token.length, position + token.length + 80));
+  return {
+    before,
+    after,
+    context: `${before} ${after}`.trim(),
+  };
+}
+
+function inferMissingPlaceholderField(text: string, index: number) {
+  const { before, after, context } = placeholderContext(text, index);
+  if (/^(?:second|seconds|second\(s\))\b/.test(after) || /\b(?:for|lasts?|lasting|duration|cooldown|pause[sd]?)$/.test(before)) {
+    return { field: 'duration', paramName: 'duration', precision: 0 };
+  }
+  if (
+    index === 3 ||
+    /\b(?:max(?:imum)? stacks?|max|up to|or more|higher than|reaches?|threshold|cap|total|active spell|spell)s?\b/.test(context)
+  ) {
+    return { field: 'f24', paramName: /^(?:second|seconds|second\(s\))\b/.test(after) ? 'duration' : 'maxStacks', precision: 0 };
+  }
+  return null;
+}
+
+function enrichPlaceholderSources(text: string, placeholderSources: Record<string, GameDescriptionValueSource>) {
+  if (!text.includes('{')) return placeholderSources;
+  const present = [...text.matchAll(/\{(\d+)\}/g)].map(match => Number(match[1]));
+  if (!present.length) return placeholderSources;
+
+  const sources = { ...placeholderSources };
+  const abilitySources = abilityParamSources(sources);
+  if (!abilitySources.length) return sources;
+
+  for (const index of present) {
+    const key = String(index);
+    if (sources[key]) continue;
+
+    const inferred = inferMissingPlaceholderField(text, index);
+    if (!inferred) continue;
+
+    let field = inferred.field;
+    let source = sourceWithField(abilitySources, field);
+    if (!source && field === 'duration') {
+      const fallback = sourceWithField(abilitySources, 'f24');
+      if (!fallback) continue;
+      source = fallback;
+      field = 'f24';
+    }
+    if (!source) continue;
+
+    const rawValue = readSourceField(source, field);
+    if (typeof rawValue !== 'number') continue;
+    sources[key] = {
+      ...source,
+      paramName: inferred.paramName,
+      field,
+      rawValue,
+      curveId: field === 'f24' ? 'none' : source.curveId,
+      secondaryCurveId: field === 'f24' ? 'none' : source.secondaryCurveId,
+      display: {
+        multiplier: 1,
+        precision: inferred.precision,
+      },
+    };
+  }
+
+  return sources;
+}
+
 export function buildDescriptionTemplate(text: string, source?: GameDescriptionTextSource): GameDescriptionTemplate {
   const paragraphs = text.split(/\r?\n+/).filter(paragraph => paragraph.trim().length > 0);
-  const placeholderSources = source?.placeholder_sources ?? {};
+  const placeholderSources = enrichPlaceholderSources(text, source?.placeholder_sources ?? {});
   return {
     raw: text,
     blocks: (paragraphs.length ? paragraphs : ['']).map(paragraph => ({
