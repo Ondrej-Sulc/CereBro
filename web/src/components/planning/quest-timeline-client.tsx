@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
+import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -13,9 +13,6 @@ import {
 import {
     isChampionValidForEncounterOrQuest,
 } from "./utils";
-import {
-    createInitialQuestRouteChoices,
-} from "@/lib/quest-planning-projection";
 import {
     createInitialQuestTimelinePrefightSelections,
     createInitialQuestTimelineRevives,
@@ -42,6 +39,7 @@ import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
 import { useQuestPlanSharing } from "./use-quest-plan-sharing";
+import { useQuestRouteChoices } from "./use-quest-route-choices";
 import { useQuestTimelineScroll } from "./use-quest-timeline-scroll";
 import { useRouteConnectorGeometry } from "./use-route-connector-geometry";
 
@@ -77,12 +75,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         closeEncounterAfterSelection,
     } = useQuestTimelineScroll({ setShowVideoId, setIsTeamExpanded });
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
-    const [routeChoices, setRouteChoices] = useState<Record<string, string>>(() =>
-        createInitialQuestRouteChoices({
-            routeSections: quest.routeSections,
-            savedRouteChoices,
-        })
-    );
+    const { routeChoices, handleRouteChoice } = useQuestRouteChoices({ quest, savedRouteChoices, readOnly, toast });
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
     const [isClearPlanOpen, setIsClearPlanOpen] = useState(false);
     const [isNodesCollapsed, setIsNodesCollapsed] = useState(false);
@@ -275,19 +268,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
 
         return roster.find(entry => entry.id === rosterId) ?? null;
     }, [readOnly, rosterMap, roster]);
-
-    const handleRouteChoice = async (sectionId: string, pathId: string) => {
-        const previous = routeChoices[sectionId];
-        if (readOnly || previous === pathId) return;
-        setRouteChoices(prev => ({ ...prev, [sectionId]: pathId }));
-        try {
-            await savePlayerQuestRouteChoice(quest.id, sectionId, pathId);
-        } catch (error: unknown) {
-            setRouteChoices(prev => ({ ...prev, [sectionId]: previous }));
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to save route choice";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
 
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
