@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
 import { useQuestPlanSharing } from "./use-quest-plan-sharing";
+import { useQuestTimelineScroll } from "./use-quest-timeline-scroll";
 import { useRouteConnectorGeometry } from "./use-route-connector-geometry";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
@@ -62,14 +63,19 @@ const EMPTY_ROSTER_MAP: NonNullable<QuestTimelineProps["rosterMap"]> = {};
 
 export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, savedEncounters = EMPTY_SAVED_ENCOUNTERS, savedRouteChoices = EMPTY_SAVED_ROUTE_CHOICES, savedSynergies = EMPTY_SAVED_SYNERGIES, popularCounters = EMPTY_POPULAR_COUNTERS, featuredPicks = EMPTY_FEATURED_PICKS, alliancePicks = EMPTY_ALLIANCE_PICKS, filterMetadata = EMPTY_FILTER_METADATA, readOnly = false, rosterMap = EMPTY_ROSTER_MAP, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
     const { toast } = useToast();
-    const headerRef = useRef<HTMLDivElement>(null);
-    const [expandedId, setExpandedId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
     const [isTeamExpanded, setIsTeamExpanded] = useState(false);
     const [showVideoId, setShowVideoId] = useState<string | null>(null);
-    const [isScrolled, setIsScrolled] = useState(false);
     const { isSharing, shareSuccess, sharePlan } = useQuestPlanSharing({ quest, toast });
+    const {
+        headerRef,
+        expandedId,
+        isScrolled,
+        toggleExpand,
+        scrollToEncounter,
+        closeEncounterAfterSelection,
+    } = useQuestTimelineScroll({ setShowVideoId, setIsTeamExpanded });
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const [routeChoices, setRouteChoices] = useState<Record<string, string>>(() =>
         createInitialQuestRouteChoices({
@@ -209,19 +215,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
     };
 
-    useEffect(() => {
-        const handleScroll = () => {
-            if (!headerRef.current) return;
-            const rect = headerRef.current.getBoundingClientRect();
-            // Sticking happens at top-[68px]. 
-            // rect.top is relative to viewport.
-            setIsScrolled(rect.top <= 69); // 68 + 1px buffer
-        };
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        handleScroll();
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
     // Difficulty Filter State
     const [difficultyFilter, setDifficultyFilter] = useState<("EASY" | "NORMAL" | "HARD")[]>([]);
 
@@ -307,68 +300,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
     const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
 
-    const getStickyOffset = useCallback(() => {
-        const stickyTeam = document.querySelector('[data-sticky-team]');
-        return stickyTeam
-            ? stickyTeam.getBoundingClientRect().bottom + 12
-            : (window.matchMedia('(min-width: 768px)').matches ? 130 : 70);
-    }, []);
-
-    // Scroll an encounter card into view, accounting for the sticky team panel
-    const scrollToCard = useCallback((id: string, delay = 0) => {
-        const doScroll = () => {
-            const element = document.getElementById(`encounter-${id}`);
-            if (!element) return;
-            const offset = getStickyOffset();
-            const rect = element.getBoundingClientRect();
-            window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'smooth' });
-        };
-        if (delay > 0) {
-            setTimeout(doScroll, delay);
-        } else {
-            requestAnimationFrame(doScroll);
-        }
-    }, [getStickyOffset]);
-
-    const toggleExpand = (id: string) => {
-        const isOpening = expandedId !== id;
-        if (isOpening) {
-            setShowVideoId(null);
-            const newElement = document.getElementById(`encounter-${id}`);
-            if (newElement) {
-                const offset = getStickyOffset();
-                const newRect = newElement.getBoundingClientRect();
-                let targetScroll = window.scrollY + newRect.top - offset;
-
-                // If the currently open card is above the new card in the list,
-                // its collapse will shift the new card upward by (expandedHeight - collapsedHeight).
-                // Pre-subtract that delta so the new card header lands at `offset` once
-                // the animation ends — regardless of whether the old card is on-screen or not.
-                if (expandedId) {
-                    const oldElement = document.getElementById(`encounter-${expandedId}`);
-                    if (oldElement) {
-                        const oldRect = oldElement.getBoundingClientRect();
-                        if (oldRect.top < newRect.top) {
-                            const headerEl = oldElement.querySelector<HTMLElement>('[role="button"]');
-                            const collapsedHeight = headerEl ? headerEl.getBoundingClientRect().height : 100;
-                            const delta = Math.max(0, oldRect.height - collapsedHeight);
-                            targetScroll -= delta;
-                        }
-                    }
-                }
-
-                window.scrollTo({ top: Math.max(0, targetScroll), behavior: 'instant' });
-            }
-        }
-        setExpandedId(prev => prev === id ? null : id);
-    };
-
-    const scrollToEncounter = (id: string) => {
-        setExpandedId(id);
-        setIsTeamExpanded(false);
-        scrollToCard(id, 100);
-    };
-
     const filteredGlobalRoster = useMemo(() => {
         return roster.filter(r => {
             // Search query
@@ -450,15 +381,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
 
         // Autoclose the card if a selection was made
         if (decision.nextRosterId !== null) {
-            // Snap to card header instantly BEFORE closing so the collapse animation
-            // plays in-view rather than causing a layout-shift scroll jump
-            const element = document.getElementById(`encounter-${encounterId}`);
-            if (element) {
-                const offset = getStickyOffset();
-                const rect = element.getBoundingClientRect();
-                window.scrollTo({ top: window.scrollY + rect.top - offset, behavior: 'instant' });
-            }
-            setExpandedId(null);
+            closeEncounterAfterSelection(encounterId);
         }
 
         try {
