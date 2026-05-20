@@ -1,26 +1,18 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import Image from "next/image";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
-import type { PickCounterWithChampion } from "@/app/actions/quest-catalog";
 import { getShareablePlanId } from "@/app/actions/quest-plan-sharing";
-import { getChampionClassColors } from "@/lib/championClassHelper";
-import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
-import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
     EncounterWithRelations,
     RosterWithChampion,
     QuestTimelineProps,
-    toChampionImages,
 } from "./types";
 import {
     isChampionValidForEncounterOrQuest,
-    isQuestRosterEntryUnavailableForEncounter,
 } from "./utils";
 import {
     createInitialQuestRouteChoices,
@@ -44,9 +36,8 @@ import {
 } from "./quest-timeline-controller";
 
 import type { ChampionClass } from "@prisma/client";
-import type { Champion } from "@/types/champion";
 import { reportClientError } from "@/lib/observability/client";
-import { MultiPlayerPopover, PlayerTeamSummary } from "./player-team-popover";
+import { createQuestTimelinePickRenderers } from "./quest-pick-renderers";
 import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
@@ -637,265 +628,18 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         }
     };
 
-    const renderChampionItem = (c: Champion, encounter: EncounterWithRelations, popularityLabel?: string, isRecommendedTab?: boolean, isCompact?: boolean) => {
-        if (readOnly) {
-            // In readOnly mode, just show the champion reference without roster matching
-            return (
-                <UpdatedChampionItem
-                    item={{
-                        stars: 0,
-                        rank: 0,
-                        champion: {
-                            id: c.id,
-                            name: c.shortName || c.name,
-                            championClass: c.class,
-                            images: toChampionImages(c.images)
-                        }
-                    }}
-                    isRecommended
-                    popularityLabel={popularityLabel}
-                />
-            );
-        }
-
-        // Find highest version in roster that matches restrictions
-        const validRosterEntries = roster
-            .filter(r => r.championId === c.id && isChampionValidForEncounterOrQuest(r, quest, encounter))
-            .sort((a, b) => {
-                if (a.isUnowned !== b.isUnowned) return a.isUnowned ? 1 : -1;
-                return b.stars - a.stars || b.rank - a.rank;
-            });
-
-        // Best version that is either unused or used in THIS encounter
-        const userChamp = validRosterEntries.find(r => 
-            !Object.values(activeSelections).includes(r.id) || 
-            selections[encounter.id] === r.id
-        ) || validRosterEntries[0];
-        const isMissing = !userChamp || userChamp.isUnowned;
-
-        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
-        
-        // Team membership hints only apply to fixed-team quests.
-        const isChampInTeam = quest.teamLimit !== null && Object.values(activeSelections).some(rid => {
-            if (!rid) return false;
-            return roster.find(r => r.id === rid)?.championId === c.id;
-        });
-        
-        const isUnavailable = isQuestRosterEntryUnavailableForEncounter({
-            entry: userChamp,
-            encounterId: encounter.id,
-            selections,
-            activeEncounterIds,
-            roster,
-            quest,
-            encounter
-        });
-
-        return (
-            <div
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (userChamp && !userChamp.isUnowned && !isUnavailable) {
-                        handleSelectCounter(encounter.id, userChamp.id);
-                    }
-                }}
-                className={cn(
-                    "flex flex-col gap-1.5", 
-                    (isUnavailable || isMissing) ? "cursor-not-allowed" : "cursor-pointer group"
-                )}
-            >
-                <div className="relative">
-                    <UpdatedChampionItem
-                        item={userChamp ? {
-                            stars: userChamp.stars,
-                            rank: userChamp.rank,
-                            isAwakened: userChamp.isAwakened,
-                            sigLevel: userChamp.sigLevel,
-                            powerRating: userChamp.powerRating,
-                            champion: {
-                                id: userChamp.champion.id,
-                                name: userChamp.champion.shortName || userChamp.champion.name,
-                                championClass: userChamp.champion.class,
-                                    images: toChampionImages(userChamp.champion.images)
-                            },
-                            isAscended: userChamp.isAscended,
-                            ascensionLevel: userChamp.ascensionLevel
-                        } : {
-                            stars: 0,
-                            rank: 0,
-                            champion: {
-                                id: c.id,
-                                name: c.shortName || c.name,
-                                championClass: c.class,
-                                images: toChampionImages(c.images)
-                            }
-                        }}
-                        isSelected={isSelected}
-                        isRecommended={!isSelected && isRecommendedTab}
-                        isMissing={isMissing}
-                        isInTeam={isChampInTeam}
-                        isUnavailable={isUnavailable}
-                        popularityLabel={!isCompact ? popularityLabel : undefined}
-                    />
-                </div>
-            </div>
-        );
-    };
-
-    const renderListPick = (p: PickCounterWithChampion, encounter: EncounterWithRelations) => {
-        const validRosterEntries = roster
-            .filter(r => r.championId === p.championId && isChampionValidForEncounterOrQuest(r, quest, encounter))
-            .sort((a, b) => {
-                if (a.isUnowned !== b.isUnowned) return a.isUnowned ? 1 : -1;
-                return b.stars - a.stars || b.rank - a.rank;
-            });
-        const userChamp = validRosterEntries.find(r => 
-            !Object.values(activeSelections).includes(r.id) || 
-            selections[encounter.id] === r.id
-        ) || validRosterEntries[0];
-        const isMissing = !userChamp || userChamp.isUnowned;
-        
-        const isSelected = !!userChamp && selections[encounter.id] === userChamp.id;
-        const isInTeam = quest.teamLimit !== null && Object.values(activeSelections).some(rid => rid !== null && roster.find(r => r.id === rid)?.championId === p.championId);
-
-        const isUnavailable = isQuestRosterEntryUnavailableForEncounter({
-            entry: userChamp,
-            encounterId: encounter.id,
-            selections,
-            activeEncounterIds,
-            roster,
-            quest,
-            encounter
-        });
-
-        const users = p.pickedBy || [];
-        const MAX_SIDEBAR_USERS = 3;
-        const displayUsers = users.slice(0, MAX_SIDEBAR_USERS);
-        const hasMore = users.length > MAX_SIDEBAR_USERS;
-
-        const classColors = getChampionClassColors(p.champion.class as ChampionClass);
-
-        return (
-            <div 
-                key={p.championId} 
-                className={cn(
-                    "flex bg-slate-900/40 rounded-2xl border transition-all duration-300 group/pick-card shadow-lg overflow-hidden",
-                    isUnavailable ? "cursor-not-allowed border-red-950/40 bg-red-950/5 opacity-80" : isMissing ? "cursor-not-allowed border-slate-800/80 bg-slate-900/40 backdrop-blur-md shadow-xl" : "cursor-pointer bg-slate-900/40 backdrop-blur-md shadow-xl",
-                    !isUnavailable && isSelected && "border-sky-500/60 ring-1 ring-sky-500/30 bg-sky-950/20 shadow-sky-500/10",
-                    !isUnavailable && isInTeam && !isSelected && "border-emerald-500/40 bg-emerald-950/10 shadow-emerald-500/10",
-                    !isUnavailable && !isSelected && !isInTeam && cn("border-slate-800/80 hover:bg-slate-800/60 hover:border-slate-600", classColors.hoverBorder)
-                )}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (userChamp && !userChamp.isUnowned && !isUnavailable) handleSelectCounter(encounter.id, userChamp.id);
-                }}
-            >
-                {/* Champion Side (Main Card) */}
-                <div className="flex-1 min-w-0">
-                    <div className="border-0 shadow-none ring-0 rounded-none bg-transparent">
-                        <UpdatedChampionItem
-                            item={userChamp ? {
-                                stars: userChamp.stars,
-                                rank: userChamp.rank,
-                                isAwakened: userChamp.isAwakened,
-                                sigLevel: userChamp.sigLevel,
-                                powerRating: userChamp.powerRating,
-                                champion: {
-                                    id: userChamp.champion.id,
-                                    name: userChamp.champion.shortName || userChamp.champion.name,
-                                    championClass: userChamp.champion.class as ChampionClass,
-                                    images: toChampionImages(userChamp.champion.images)
-                                },
-                                isAscended: userChamp.isAscended,
-                                ascensionLevel: userChamp.ascensionLevel
-                            } : {
-                                stars: 0,
-                                rank: 0,
-                                champion: {
-                                    id: p.championId,
-                                    name: p.champion.name,
-                                    championClass: p.champion.class as ChampionClass,
-                                    images: toChampionImages(p.champion.images)
-                                }
-                            }}
-                            // We handle borders/selection on the outer container
-                            isSelected={false}
-                            isRecommended={false}
-                            isMissing={isMissing}
-                            isInTeam={false}
-                            isUnavailable={false}
-                        />
-                    </div>
-                </div>
-
-                {/* Player Sidecar (Sidebar for Badges) */}
-                <div className="w-12 shrink-0 flex flex-col items-center justify-center gap-2.5 p-1 bg-slate-950/40 border-l border-slate-800/60">
-                    {users.length > 0 && (
-                        <>
-                            {displayUsers.map((user) => (
-                                <Popover key={user.id}>
-                                    <PopoverTrigger asChild>
-                                        <div 
-                                            className="relative w-7 h-7 rounded-full overflow-hidden bg-slate-800 shrink-0 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer group/user hover:scale-110 shadow-lg"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title={`Suggested by ${user.name} - Click to see their plan`}
-                                        >
-                                            {user.avatar ? (
-                                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                                    {user.name.charAt(0)}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </PopoverTrigger>
-                                    <PopoverContent 
-                                        className="w-[90vw] sm:w-[450px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
-                                        align="end"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <PlayerTeamSummary 
-                                            user={user} 
-                                            picks={activePlayerPicksMap[user.id]?.picks || []} 
-                                            quest={activeQuest} 
-                                            scrollToEncounter={scrollToEncounter} 
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            ))}
-
-                            {hasMore && (
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <div 
-                                            className="relative w-7 h-7 rounded-full bg-slate-800 border border-slate-700 hover:border-sky-500/50 transition-all cursor-pointer flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 group/more-users"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title={`Suggested by ${users.length} players - Click to see list`}
-                                        >
-                                            <span className="text-[10px] font-black text-sky-400">+{users.length - MAX_SIDEBAR_USERS}</span>
-                                        </div>
-                                    </PopoverTrigger>
-                                    <PopoverContent 
-                                        className="w-[280px] p-0 bg-slate-950/95 border-slate-800 shadow-2xl backdrop-blur-xl rounded-2xl overflow-hidden z-[100]" 
-                                        align="end"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <MultiPlayerPopover 
-                                            users={users} 
-                                            quest={activeQuest} 
-                                            scrollToEncounter={scrollToEncounter} 
-                                            playerPicksMap={activePlayerPicksMap} 
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            )}
-                        </>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
+    const { renderChampionItem, renderListPick } = createQuestTimelinePickRenderers({
+        quest,
+        activeQuest,
+        roster,
+        readOnly,
+        selections,
+        activeSelections,
+        activeEncounterIds,
+        activePlayerPicksMap,
+        handleSelectCounter,
+        scrollToEncounter,
+    });
     return (
         <div className="relative pt-4 pb-20">
             {/* Invisible marker for scroll detection */}
