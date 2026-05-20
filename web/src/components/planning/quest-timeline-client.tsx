@@ -1,5 +1,4 @@
 "use client";
-import { EncounterCard } from "./encounter-card/EncounterCard";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
@@ -48,6 +47,7 @@ import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
 import { reportClientError } from "@/lib/observability/client";
 import { MultiPlayerPopover, PlayerTeamSummary } from "./player-team-popover";
+import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
@@ -1037,77 +1037,71 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                             onClearDifficultyFilter={() => setDifficultyFilter([])}
                             onOpenClearPlan={() => setIsClearPlanOpen(true)}
                         />
-                        {filteredEncounters.length === 0 ? (
-                            <p className="text-center text-slate-500 italic mt-8 pl-6 md:pl-10 text-sm">No {difficultyFilter.map(d => d.toLowerCase()).join(" or ")} fights in this quest.</p>
-                        ) : filteredEncounters.map((encounter: EncounterWithRelations) => {
-                            const originalIndex = quest.encounters.findIndex(e => e.id === encounter.id);
-                            return (
-                            <EncounterCard
-                                key={encounter.id}
-                                encounter={encounter}
-                                index={originalIndex}
-                                quest={quest}
-                                expandedId={expandedId}
-                                toggleExpand={toggleExpand}
-                                selections={activeSelections}
-                                prefightSelections={activePrefightSelections}
-                                revivesUsed={revivesByEncounterId[encounter.id] || 0}
-                                onSetRevives={handleSetRevives}
-                                readOnly={readOnly}
-                                showVideoId={showVideoId}
-                                setShowVideoId={setShowVideoId}
-                                tabState={{
-                                    encounterTabs,
-                                    setEncounterTabs,
-                                    featuredPicks,
-                                    alliancePicks,
-                                    popularCounters
-                                }}
-                                filterState={{
-                                    searchQuery,
-                                    setSearchQuery,
-                                    showAdvancedFilters,
-                                    setShowAdvancedFilters,
-                                    activeFiltersCount,
-                                    filterMetadata,
-                                    tagFilter,
-                                    setTagFilter,
-                                    tagLogic,
-                                    setTagLogic,
-                                    abilityCategoryFilter,
-                                    setAbilityCategoryFilter,
-                                    abilityCategoryLogic,
-                                    setAbilityCategoryLogic,
-                                    abilityFilter,
-                                    setAbilityFilter,
-                                    abilityLogic,
-                                    setAbilityLogic,
-                                    immunityFilter,
-                                    setImmunityFilter,
-                                    immunityLogic,
-                                    setImmunityLogic,
-                                    clearAllFilters,
-                                    CLASSES,
-                                    selectedClass,
-                                    setSelectedClass
-                                }}
-                                rosterState={{
-                                    roster,
-                                    filteredGlobalRoster,
-                                    selectedTeam,
-                                    synergyIds,
-                                    isRosterExpanded,
-                                    setIsRosterExpanded,
-                                    resolveRosterItem,
-                                    handleSelectCounter,
-                                    handleSelectPrefight
-                                }}
-                                isNodesCollapsed={isNodesCollapsed}
-                                setIsNodesCollapsed={setIsNodesCollapsed}
-                                renderChampionItem={renderChampionItem}
-                                renderListPick={renderListPick}
-                            />
-                        ); })}
+                        <QuestEncounterList
+                            encounters={filteredEncounters}
+                            allEncounters={quest.encounters}
+                            difficultyFilter={difficultyFilter}
+                            revivesByEncounterId={revivesByEncounterId}
+                            quest={quest}
+                            expandedId={expandedId}
+                            toggleExpand={toggleExpand}
+                            selections={activeSelections}
+                            prefightSelections={activePrefightSelections}
+                            onSetRevives={handleSetRevives}
+                            readOnly={readOnly}
+                            showVideoId={showVideoId}
+                            setShowVideoId={setShowVideoId}
+                            tabState={{
+                                encounterTabs,
+                                setEncounterTabs,
+                                featuredPicks,
+                                alliancePicks,
+                                popularCounters
+                            }}
+                            filterState={{
+                                searchQuery,
+                                setSearchQuery,
+                                showAdvancedFilters,
+                                setShowAdvancedFilters,
+                                activeFiltersCount,
+                                filterMetadata,
+                                tagFilter,
+                                setTagFilter,
+                                tagLogic,
+                                setTagLogic,
+                                abilityCategoryFilter,
+                                setAbilityCategoryFilter,
+                                abilityCategoryLogic,
+                                setAbilityCategoryLogic,
+                                abilityFilter,
+                                setAbilityFilter,
+                                abilityLogic,
+                                setAbilityLogic,
+                                immunityFilter,
+                                setImmunityFilter,
+                                immunityLogic,
+                                setImmunityLogic,
+                                clearAllFilters,
+                                CLASSES,
+                                selectedClass,
+                                setSelectedClass
+                            }}
+                            rosterState={{
+                                roster,
+                                filteredGlobalRoster,
+                                selectedTeam,
+                                synergyIds,
+                                isRosterExpanded,
+                                setIsRosterExpanded,
+                                resolveRosterItem,
+                                handleSelectCounter,
+                                handleSelectPrefight
+                            }}
+                            isNodesCollapsed={isNodesCollapsed}
+                            setIsNodesCollapsed={setIsNodesCollapsed}
+                            renderChampionItem={renderChampionItem}
+                            renderListPick={renderListPick}
+                        />
                     </div>
                 )}
             </div>
