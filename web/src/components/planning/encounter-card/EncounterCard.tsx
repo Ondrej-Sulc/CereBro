@@ -11,7 +11,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { 
-    AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Crosshair, 
+    CheckCircle2, ChevronDown, ChevronUp, Crosshair, 
     ChevronsUpDown, Filter, Info, Search, Shield, ShieldAlert, TagIcon, Trash2, 
     X, Youtube, Zap, BookOpen, Users, Star
 } from "lucide-react";
@@ -27,7 +27,6 @@ import type { ChampionImages } from "@/types/champion";
 import type { ChampionClass, Tag } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
-import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { MultiSelectFilter } from "@/components/ui/filters";
 import { InfoPopover } from "@/components/ui/info-popover";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
@@ -39,6 +38,8 @@ import { EncounterDetails } from "./encounter-details";
 import { EncounterVideoGuides, getEncounterVideos } from "./encounter-video-guides";
 import { ReviveControl, ReviveOrbIcon } from "./revive-control";
 import { EncounterNodeList } from "./encounter-node-list";
+import { EncounterRestrictions } from "./encounter-restrictions";
+import { StrategyTips } from "./strategy-tips";
 
 export { ReviveOrbIcon };
 
@@ -976,27 +977,7 @@ function EncounterExpandedContent({
     return (
         <>
             <div className="flex flex-col gap-3 mb-5">
-                {(quest.minStarLevel || quest.maxStarLevel || quest.requiredClasses?.length || encounter.minStarLevel || encounter.maxStarLevel || encounter.requiredClasses?.length) ? (
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-red-950/10 px-4 py-2.5 rounded-lg border border-red-900/30">
-                        <div className="flex items-center gap-2 text-xs text-red-400 uppercase tracking-wide font-bold whitespace-nowrap shrink-0">
-                            <AlertCircle className="w-4 h-4" /> Restrictions
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                            {[
-                                quest.minStarLevel ? `Min ${quest.minStarLevel}★ (Quest)` : null,
-                                quest.maxStarLevel ? `Max ${quest.maxStarLevel}★ (Quest)` : null,
-                                quest.requiredClasses?.length ? `Class: ${quest.requiredClasses.join(", ")} (Quest)` : null,
-                                encounter.minStarLevel ? `Min ${encounter.minStarLevel}★ (Encounter)` : null,
-                                encounter.maxStarLevel ? `Max ${encounter.maxStarLevel}★ (Encounter)` : null,
-                                encounter.requiredClasses?.length ? `Class: ${encounter.requiredClasses.join(", ")} (Encounter)` : null,
-                                quest.requiredTags?.length ? `Quest Tags: ${quest.requiredTags.map((t) => t.name).join(", ")}` : null,
-                                encounter.requiredTags?.length ? `Fight Tags: ${encounter.requiredTags.map((t) => t.name).join(", ")}` : null
-                            ].filter(Boolean).map((req, i) => (
-                                <Badge key={i} variant="outline" className="border-red-800/60 text-red-200 bg-red-950/40 text-[10px] py-0 h-5">{req}</Badge>
-                            ))}
-                        </div>
-                    </div>
-                ) : null}
+                <EncounterRestrictions quest={quest} encounter={encounter} />
 
                 <EncounterVideoGuides
                     encounter={encounter}
@@ -1012,17 +993,7 @@ function EncounterExpandedContent({
                         isCollapsed={isNodesCollapsed}
                         setIsCollapsed={setIsNodesCollapsed}
                     />
-                    {encounter.tips && (
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <div className="h-6 w-1 bg-indigo-500 rounded-full" />
-                                <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-[0.2em]">Strategy & Tips</h4>
-                            </div>
-                            <div className="bg-indigo-950/20 p-5 rounded-xl border border-indigo-900/40 text-indigo-100 text-sm leading-relaxed shadow-inner">
-                                <SimpleMarkdown content={encounter.tips} />
-                            </div>
-                        </div>
-                    )}
+                    <StrategyTips tips={encounter.tips} />
                 </div>
 
                 <div className="xl:col-span-5 space-y-2.5">
