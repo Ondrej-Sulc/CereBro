@@ -38,6 +38,7 @@ import { isChampionValidForEncounterOrQuest } from "../utils";
 import { EncounterDetails } from "./encounter-details";
 import { EncounterVideoGuides, getEncounterVideos } from "./encounter-video-guides";
 import { ReviveControl, ReviveOrbIcon } from "./revive-control";
+import { EncounterNodeList } from "./encounter-node-list";
 
 export { ReviveOrbIcon };
 
@@ -1006,67 +1007,11 @@ function EncounterExpandedContent({
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pt-2">
                 <div className="xl:col-span-7 space-y-4">
-                    {sortedNodes.length > 0 && (
-                        <div className="space-y-3">
-                            <button
-                                type="button"
-                                onClick={() => setIsNodesCollapsed(!isNodesCollapsed)}
-                                className="flex items-center gap-2 w-full text-left group/nodes-toggle rounded-md px-2 py-1 -mx-2 -my-1 hover:bg-sky-950/30 transition-colors"
-                            >
-                                <div className="h-6 w-1 bg-sky-500 rounded-full shrink-0 group-hover/nodes-toggle:bg-sky-400 transition-colors" />
-                                <h4 className="text-xs font-bold text-sky-400 uppercase tracking-[0.2em] flex-1 group-hover/nodes-toggle:text-sky-300 transition-colors">Encounter Nodes</h4>
-                                {isNodesCollapsed ? (
-                                    <ChevronDown className="w-3.5 h-3.5 text-sky-600 group-hover/nodes-toggle:text-sky-300 transition-colors shrink-0" />
-                                ) : (
-                                    <ChevronUp className="w-3.5 h-3.5 text-sky-600 group-hover/nodes-toggle:text-sky-300 transition-colors shrink-0" />
-                                )}
-                            </button>
-                            {isNodesCollapsed ? (
-                                <div className="flex flex-wrap gap-1.5">
-                                    {sortedNodes.map((n: EncounterNodeWithRelations) => (
-                                        <Badge
-                                            key={n.id}
-                                            variant="secondary"
-                                            className={cn(
-                                                "gap-1 text-[11px] py-0.5 font-medium",
-                                                n.isHighlighted
-                                                    ? "bg-amber-950/60 border-amber-600/60 text-amber-200"
-                                                    : "bg-sky-950/40 border-sky-900/50 text-sky-300"
-                                            )}
-                                        >
-                                            {n.isHighlighted && <Star className="h-3 w-3 shrink-0 fill-current" />}
-                                            {n.nodeModifier.name}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {sortedNodes.map((n: EncounterNodeWithRelations) => (
-                                        <div
-                                            key={n.id}
-                                            className={cn(
-                                                "p-3 rounded-lg border group/node transition-all",
-                                                n.isHighlighted
-                                                    ? "bg-amber-950/20 border-amber-600/50 hover:border-amber-400/60 hover:bg-amber-950/30"
-                                                    : "bg-slate-950/80 border-slate-800/80 hover:border-sky-800/50 hover:bg-slate-900/50"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <div className={cn(
-                                                    "p-1 rounded shrink-0",
-                                                    n.isHighlighted ? "bg-amber-500/15 text-amber-300" : "bg-sky-500/10 text-sky-500"
-                                                )}>
-                                                    {n.isHighlighted ? <Star className="w-3.5 h-3.5 fill-current" /> : <Info className="w-3.5 h-3.5" />}
-                                                </div>
-                                                <span className="font-bold text-sm text-slate-100">{n.nodeModifier.name}</span>
-                                            </div>
-                                            <span className="text-xs text-slate-400 leading-normal block pl-8 pr-2">{n.nodeModifier.description}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    <EncounterNodeList
+                        nodes={sortedNodes}
+                        isCollapsed={isNodesCollapsed}
+                        setIsCollapsed={setIsNodesCollapsed}
+                    />
                     {encounter.tips && (
                         <div className="space-y-3">
                             <div className="flex items-center gap-2">
