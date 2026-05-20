@@ -3,7 +3,6 @@ import { EncounterCard } from "./encounter-card/EncounterCard";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { X, Trash2 } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
@@ -49,6 +48,7 @@ import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
 import { reportClientError } from "@/lib/observability/client";
 import { MultiPlayerPopover, PlayerTeamSummary } from "./player-team-popover";
+import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
 
@@ -1028,61 +1028,15 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                             onRouteChoice={handleRouteChoice}
                             scrollToEncounter={scrollToEncounter}
                         />
-                        {/* Difficulty Filter Bar */}
-                        <div className="flex items-center flex-wrap justify-between gap-x-2 gap-y-1.5 pl-6 md:pl-10 -mt-2 mb-2">
-                            <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 shrink-0">Difficulty</span>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                {(["HARD", "NORMAL", "EASY"] as const).map(d => {
-                                    const isActive = difficultyFilter.includes(d);
-                                    const label = d === "HARD" ? "Hard" : d === "NORMAL" ? "Normal" : "Easy";
-                                    const activeClass = d === "HARD"
-                                        ? "bg-red-950/60 border-red-500/50 text-red-400 shadow-[0_0_8px_rgba(239,68,68,0.15)]"
-                                        : d === "NORMAL"
-                                            ? "bg-amber-950/60 border-amber-500/50 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]"
-                                            : "bg-emerald-950/60 border-emerald-500/50 text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.12)]";
-                                    const inactiveClass = "bg-slate-900/60 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-400";
-                                    return (
-                                        <button
-                                            key={d}
-                                            onClick={() => toggleDifficultyFilter(d)}
-                                            className={cn(
-                                                "px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-200",
-                                                isActive ? activeClass : inactiveClass
-                                            )}
-                                        >
-                                            {label}
-                                        </button>
-                                    );
-                                })}
-                                {difficultyFilter.length > 0 && (
-                                    <button
-                                        onClick={() => setDifficultyFilter([])}
-                                        className="flex items-center gap-0.5 px-2 py-0.5 rounded-full border border-slate-800 bg-slate-900/60 text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 hover:text-slate-300 hover:border-slate-700 transition-all duration-200"
-                                    >
-                                        <X className="w-2.5 h-2.5" />
-                                        All
-                                    </button>
-                                )}
-                            </div>
-                            {difficultyFilter.length > 0 && (
-                                <span className="text-[9px] text-slate-600 ml-1">
-                                    {filteredEncounters.length}/{quest.encounters.length} fights
-                                </span>
-                            )}
-                            </div>
-                            {!readOnly && (
-                                <button
-                                    onClick={() => setIsClearPlanOpen(true)}
-                                    title="Clear all counter and prefight selections"
-                                    className="flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-slate-800 bg-slate-900/60 text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 hover:border-red-800/60 hover:bg-red-950/30 hover:text-red-400 transition-all duration-200 shrink-0"
-                                >
-                                    <Trash2 className="w-2.5 h-2.5" />
-                                    <span className="hidden sm:inline">Clear Plan</span>
-                                </button>
-                            )}
-                        </div>
-
+                        <QuestTimelineActionBar
+                            difficultyFilter={difficultyFilter}
+                            filteredEncounterCount={filteredEncounters.length}
+                            totalEncounterCount={quest.encounters.length}
+                            readOnly={readOnly}
+                            onToggleDifficulty={toggleDifficultyFilter}
+                            onClearDifficultyFilter={() => setDifficultyFilter([])}
+                            onOpenClearPlan={() => setIsClearPlanOpen(true)}
+                        />
                         {filteredEncounters.length === 0 ? (
                             <p className="text-center text-slate-500 italic mt-8 pl-6 md:pl-10 text-sm">No {difficultyFilter.map(d => d.toLowerCase()).join(" or ")} fights in this quest.</p>
                         ) : filteredEncounters.map((encounter: EncounterWithRelations) => {
