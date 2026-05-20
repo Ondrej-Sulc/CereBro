@@ -22,7 +22,6 @@ import {
 import {
     applyQuestTimelineTeamMemberRemoval,
     clearQuestTimelinePlanSelections,
-    decideQuestTimelineSynergy,
     decideQuestTimelineTeamMemberRemoval,
     type QuestTimelineTeamMemberRemovalTarget,
 } from "./quest-timeline-controller";
@@ -38,6 +37,7 @@ import { useQuestEncounterRevives } from "./use-quest-encounter-revives";
 import { useQuestPlanSharing } from "./use-quest-plan-sharing";
 import { useQuestRouteChoices } from "./use-quest-route-choices";
 import { useQuestSelectionMutations } from "./use-quest-selection-mutations";
+import { useQuestSynergyMutations } from "./use-quest-synergy-mutations";
 import { useQuestTimelineScroll } from "./use-quest-timeline-scroll";
 import { useRouteConnectorGeometry } from "./use-route-connector-geometry";
 
@@ -352,33 +352,14 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         toast,
     });
 
-    const handleSelectSynergy = async (championId: number) => {
-        const decision = decideQuestTimelineSynergy({
-            quest,
-            championId,
-            synergyIds,
-            activeQuestAssignments,
-            activeSynergyChampions,
-        });
-        if (decision.kind === "ignored") return;
-        if (decision.kind === "rejected") {
-            toast({ title: decision.title, description: decision.description, variant: "destructive" });
-            return;
-        }
-
-        setSynergyIds(decision.nextSynergyIds);
-
-        try {
-            await savePlayerQuestSynergy(quest.id, championId, decision.isRemoving);
-        } catch (error) {
-            reportClientError("quest_timeline_save_synergy", error, {
-                quest_id: quest.id,
-                champion_id: championId,
-            });
-            setSynergyIds(decision.rollbackSynergyIds);
-            toast({ title: "Error", description: "Failed to save synergy.", variant: "destructive" });
-        }
-    };
+    const { handleSelectSynergy } = useQuestSynergyMutations({
+        quest,
+        synergyIds,
+        activeQuestAssignments,
+        activeSynergyChampions,
+        setSynergyIds,
+        toast,
+    });
 
     const { renderChampionItem, renderListPick } = createQuestTimelinePickRenderers({
         quest,
