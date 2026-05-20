@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
-import { getShareablePlanId } from "@/app/actions/quest-plan-sharing";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,6 +41,7 @@ import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
+import { useQuestPlanSharing } from "./use-quest-plan-sharing";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
 const EMPTY_ROSTER: NonNullable<QuestTimelineProps["roster"]> = [];
@@ -68,8 +68,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     const [isTeamExpanded, setIsTeamExpanded] = useState(false);
     const [showVideoId, setShowVideoId] = useState<string | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isSharing, setIsSharing] = useState(false);
-    const [shareSuccess, setShareSuccess] = useState(false);
+    const { isSharing, shareSuccess, sharePlan } = useQuestPlanSharing({ quest, toast });
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const [routeChoices, setRouteChoices] = useState<Record<string, string>>(() =>
         createInitialQuestRouteChoices({
@@ -228,23 +227,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         handleScroll();
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
-
-    const handleShare = async () => {
-        if (quest.status !== "VISIBLE") return;
-        setIsSharing(true);
-        try {
-            const planId = await getShareablePlanId(quest.id);
-            const url = `${window.location.origin}/planning/quests/shared/${planId}`;
-            await navigator.clipboard.writeText(url);
-            setShareSuccess(true);
-            toast({ title: "Link Copied!", description: "Share link copied to clipboard." });
-            setTimeout(() => setShareSuccess(false), 2000);
-        } catch {
-            toast({ title: "Error", description: "Failed to generate share link.", variant: "destructive" });
-        } finally {
-            setIsSharing(false);
-        }
-    };
 
     // Difficulty Filter State
     const [difficultyFilter, setDifficultyFilter] = useState<("EASY" | "NORMAL" | "HARD")[]>([]);
@@ -660,7 +642,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                 activeRevivesTotal={activeRevivesTotal}
                 allRevivesTotal={allRevivesTotal}
                 onToggleExpanded={() => setIsTeamExpanded(prev => !prev)}
-                onShare={handleShare}
+                onShare={sharePlan}
                 onRemoveTeamMember={initiateRemoveTeamMember}
                 onSelectSynergy={handleSelectSynergy}
                 scrollToEncounter={scrollToEncounter}
