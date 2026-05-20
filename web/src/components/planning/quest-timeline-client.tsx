@@ -1,13 +1,9 @@
 "use client";
-import { EncounterCard, ReviveOrbIcon } from "./encounter-card/EncounterCard";
+import { EncounterCard } from "./encounter-card/EncounterCard";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, CheckCircle2, AlertCircle, X, Trash2, Crosshair, Users, Share2, Check, Target, Swords, ShieldAlert, Zap } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { X, Trash2 } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestRouteChoice, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
@@ -15,7 +11,6 @@ import type { PickCounterWithChampion } from "@/app/actions/quest-catalog";
 import { getShareablePlanId } from "@/app/actions/quest-plan-sharing";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
-import { ChampionAvatar } from "@/components/champion-avatar";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +49,8 @@ import type { ChampionClass } from "@prisma/client";
 import type { Champion } from "@/types/champion";
 import { reportClientError } from "@/lib/observability/client";
 import { MultiPlayerPopover, PlayerTeamSummary } from "./player-team-popover";
+import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
+import { SelectedTeamPanel } from "./selected-team-panel";
 
 const CLASSES = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"] as const;
 const EMPTY_ROSTER: NonNullable<QuestTimelineProps["roster"]> = [];
@@ -376,149 +373,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         window.addEventListener("resize", updateRouteConnectorGeometry);
         return () => window.removeEventListener("resize", updateRouteConnectorGeometry);
     }, [updateRouteConnectorGeometry]);
-
-    const renderRoutePathCard = (
-        sectionId: string,
-        path: QuestTimelineProps["quest"]["routeSections"][number]["paths"][number],
-        isSelected: boolean,
-        compact: boolean = false
-    ) => {
-        const pathEncounters = encountersByRoutePathId.get(path.id) || [];
-        const previewLimit = compact ? 6 : 5;
-        const previewEncounters = pathEncounters.slice(0, previewLimit);
-        const hiddenCount = Math.max(0, pathEncounters.length - previewEncounters.length);
-
-        return (
-            <div
-                key={path.id}
-                ref={(node) => {
-                    routeCardRefs.current[path.id] = node;
-                }}
-                role="button"
-                tabIndex={readOnly ? -1 : 0}
-                aria-pressed={isSelected}
-                onClick={() => handleRouteChoice(sectionId, path.id)}
-                onKeyDown={(event) => {
-                    if (readOnly) return;
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleRouteChoice(sectionId, path.id);
-                    }
-                }}
-                className={cn(
-                    "group/path relative min-w-0 rounded-lg border text-left transition-all backdrop-blur-sm",
-                    compact ? cn("w-max max-w-[calc(100vw-5rem)] p-2", isSelected ? "opacity-100" : "opacity-70 hover:opacity-100") : "w-full p-2.5",
-                    isSelected
-                        ? "border-cyan-400/70 bg-slate-950 shadow-[0_0_22px_rgba(34,211,238,0.16),inset_0_0_18px_rgba(8,145,178,0.16)]"
-                        : "border-slate-800 bg-slate-950/95 hover:border-slate-700 hover:bg-slate-900",
-                    readOnly ? "cursor-default" : "cursor-pointer"
-                )}
-            >
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                    <div className="min-w-0 flex items-center gap-1.5">
-                        <div className={cn(
-                            "flex shrink-0 items-center justify-center rounded-full border transition-colors",
-                            compact ? "h-4 w-4" : "h-5 w-5",
-                            isSelected ? "border-cyan-300 bg-cyan-400 text-slate-950" : "border-slate-700 bg-slate-950 text-slate-600 group-hover/path:text-slate-400"
-                        )}>
-                            {isSelected ? <Check className={compact ? "h-2.5 w-2.5" : "h-3 w-3"} /> : <div className="h-1.5 w-1.5 rounded-full bg-current" />}
-                        </div>
-                        <span className={cn(
-                            "min-w-0 truncate font-black uppercase tracking-[0.08em]",
-                            compact ? "text-[10px]" : "text-[11px]",
-                            isSelected ? "text-cyan-100" : "text-slate-300"
-                        )}>
-                            {path.title}
-                        </span>
-                    </div>
-                    <span className={cn(
-                        "shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider",
-                        isSelected ? "border-cyan-700/60 bg-cyan-950/60 text-cyan-200" : "border-slate-800 bg-slate-950/80 text-slate-600"
-                    )}>
-                        {pathEncounters.length > 0 ? pathEncounters.length : "Choice"}
-                    </span>
-                </div>
-                <div className={cn("mt-2 flex items-center", compact ? "min-h-7" : "min-h-9")}>
-                    {previewEncounters.length > 0 ? (
-                        <div className="flex min-w-0 items-center overflow-hidden pr-1">
-                            {previewEncounters.map((encounter, encounterIndex) => {
-                                const classColors = encounter.defender
-                                    ? getChampionClassColors(encounter.defender.class as ChampionClass)
-                                    : null;
-                                const difficultyClasses = encounter.difficulty === "HARD"
-                                    ? "border-red-500/70 bg-red-950/50 shadow-red-950/50"
-                                    : encounter.difficulty === "EASY"
-                                        ? "border-emerald-500/60 bg-emerald-950/40 shadow-emerald-950/40"
-                                        : encounter.difficulty === "NORMAL"
-                                            ? "border-amber-500/60 bg-amber-950/40 shadow-amber-950/40"
-                                            : "border-slate-700 bg-slate-950";
-                                const difficultyDot = encounter.difficulty === "HARD"
-                                    ? "bg-red-400"
-                                    : encounter.difficulty === "EASY"
-                                        ? "bg-emerald-400"
-                                        : encounter.difficulty === "NORMAL"
-                                            ? "bg-amber-400"
-                                            : "bg-slate-500";
-                                return (
-                                    <div key={encounter.id} className="flex items-center">
-                                        {encounterIndex > 0 && (
-                                            <div className={cn(
-                                                "h-px shrink-0",
-                                                compact ? "w-2" : "w-3",
-                                                isSelected ? "bg-cyan-600/80" : "bg-slate-800"
-                                            )} />
-                                        )}
-                                        <button
-                                            type="button"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                scrollToEncounter(encounter.id);
-                                            }}
-                                            className={cn(
-                                                "relative shrink-0 overflow-hidden rounded-md border shadow-sm transition-transform hover:-translate-y-0.5 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70",
-                                                compact ? "h-8 w-8" : "h-9 w-9",
-                                                classColors?.bg || "bg-slate-950",
-                                                difficultyClasses,
-                                                isSelected && "outline outline-1 outline-offset-1 outline-cyan-300/60",
-                                                classColors?.border && encounter.difficulty !== "HARD" && encounter.difficulty !== "EASY" && encounter.difficulty !== "NORMAL" ? classColors.border : null
-                                            )}
-                                            title={`Fight ${encounter.sequence}: ${encounter.defender?.name || "Unknown defender"} (${encounter.difficulty})`}
-                                        >
-                                            <div className="absolute inset-0 bg-slate-950/25" />
-                                            {encounter.defender ? (
-                                                <Image
-                                                    src={getChampionImageUrlOrPlaceholder(encounter.defender.images, "64")}
-                                                    alt={encounter.defender.name}
-                                                    fill
-                                                    className="object-cover rounded-[5px] p-0.5"
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-600">?</div>
-                                            )}
-                                            <div className={cn("absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full ring-1 ring-slate-950", difficultyDot)} />
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                            {hiddenCount > 0 && (
-                                <>
-                                    <div className={cn("h-px shrink-0", compact ? "w-2" : "w-3", isSelected ? "bg-cyan-600/80" : "bg-slate-800")} />
-                                    <div className={cn("relative flex shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-950 text-[10px] font-black text-slate-500", compact ? "h-8 w-8" : "h-9 w-9")}>
-                                        +{hiddenCount}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                            <ChevronRight className="h-3 w-3" />
-                            <span>Unlocks later sections</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
 
     // Advanced Filter States
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -1047,406 +901,26 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
             {/* Invisible marker for scroll detection */}
             <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
-            <div data-sticky-team className="sticky top-0 md:top-[68px] z-40 mb-8 -mx-4 md:mx-0 px-4 md:px-0 flex justify-center pointer-events-none">
-                <motion.div 
-                    layout
-                    initial={false}
-                    className={cn(
-                        "pointer-events-auto",
-                        isScrolled ? "py-2" : "py-0"
-                    )}
-                    animate={{
-                        scale: isScrolled ? 0.98 : 1
-                    }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                >
-                    <Card 
-                        className={cn(
-                            "bg-slate-950/90 border shadow-2xl shadow-black/60 backdrop-blur-xl transition-[background-color,border-color,opacity,box-shadow,border-radius] duration-500 ease-in-out overflow-hidden flex flex-col cursor-pointer group/team-card",
-                            isScrolled ? "border-sky-500/40 rounded-3xl" : "border-sky-900/30 rounded-2xl",
-                            isTeamExpanded 
-                                ? "w-[95vw] sm:w-[90vw] md:max-w-5xl bg-slate-900/90" 
-                                : "w-fit max-w-[calc(100vw-2rem)] hover:bg-slate-900/60 hover:border-sky-500/50"
-                        )}
-                        onClick={() => setIsTeamExpanded(!isTeamExpanded)}
-                    >
-                        <motion.div layout className="flex flex-col">
-                            <div
-                                className={cn(
-                                    "py-2 px-4 flex items-center justify-between transition-all",
-                                    isScrolled && !isTeamExpanded ? "justify-center gap-4" : ""
-                                )}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                        "p-1 rounded-md bg-sky-500/10 text-sky-400 group-hover/team-card:bg-sky-500/20 transition-colors",
-                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                    )}>
-                                        <Users className="w-3.5 h-3.5" />
-                                    </div>
-                                    <span className={cn(
-                                        "text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover/team-card:text-sky-400 transition-colors",
-                                        isScrolled && !isTeamExpanded ? "hidden sm:block" : ""
-                                    )}>
-                                        {readOnly ? 'Team' : 'Your Team'}
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    {!readOnly && quest.status === 'VISIBLE' && (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleShare(); }}
-                                        disabled={isSharing}
-                                        className={cn(
-                                            "p-1.5 rounded-lg border transition-all",
-                                            shareSuccess
-                                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                                                : "bg-slate-900/50 border-slate-800 text-slate-400 hover:text-sky-400 hover:border-sky-800 hover:bg-sky-950/30"
-                                        )}
-                                        title="Share your plan"
-                                    >
-                                        {shareSuccess ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                                    </button>
-                                    )}
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/80 border border-slate-800 shadow-inner">
-                                        <span className={cn(
-                                            "text-[10px] font-black",
-                                            (quest.teamLimit && selectedTeam.length > quest.teamLimit) ? "text-red-400" : "text-sky-400"
-                                        )}>
-                                            {selectedTeam.length}
-                                        </span>
-                                        {quest.teamLimit ? (
-                                            <>
-                                                <span className="text-[10px] text-slate-600 font-bold">/</span>
-                                                <span className="text-[10px] text-slate-400 font-bold">{quest.teamLimit}</span>
-                                            </>
-                                        ) : (
-                                            <span className="text-[10px] text-slate-600 font-bold ml-0.5">Champions</span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-950/35 border border-emerald-800/60 shadow-inner">
-                                        <ReviveOrbIcon className="h-4 w-4" />
-                                        <span className="text-[10px] font-black text-emerald-100">{activeRevivesTotal}</span>
-                                        <span className="text-[10px] text-emerald-200/70 font-bold">Revives</span>
-                                        {allRevivesTotal !== activeRevivesTotal && (
-                                            <span className="text-[10px] text-slate-500 font-bold ml-1">All {allRevivesTotal}</span>
-                                        )}
-                                    </div>
-                                    <motion.div
-                                        animate={{ rotate: isTeamExpanded ? 180 : 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-                                    </motion.div>
-                                </div>
-                            </div>
-
-                            <AnimatePresence initial={false}>
-                                {isTeamExpanded && (
-                                    <motion.div
-                                        key="team-expanded-content"
-                                        layout
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: "auto", opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.4, ease: "easeInOut" }}
-                                        className="overflow-hidden cursor-auto"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <div className="px-4 pb-4 pt-1 max-h-[calc(100svh-60px)] md:max-h-none overflow-y-auto custom-scrollbar"
-                                            style={{ WebkitOverflowScrolling: 'touch' }}
-                                        >
-                                        {selectedTeam.length === 0 && readOnly ? (
-                                            <div className="py-8 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
-                                                <div className="p-3 rounded-full bg-slate-800/50 text-slate-500">
-                                                    <Users className="w-6 h-6" />
-                                                </div>
-                                                <p className="text-sm text-slate-400 font-medium">No champions selected yet</p>
-                                                <p className="text-xs text-slate-600">Assign counters to build your team</p>
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col gap-6">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {selectedTeamMembers.map(({ rosterEntry: r, assignedEncounters, prefightEncounters: assignedPrefightEncounters }) => {
-                                                        const classColors = getChampionClassColors(r.champion.class);
-
-                                                        return (
-                                                            <motion.div 
-                                                                layout
-                                                                key={r.id} 
-                                                                className={cn(
-                                                                    "relative group/team-member flex flex-col bg-slate-950/40 border rounded-2xl overflow-hidden transition-all duration-300 hover:bg-slate-900/60",
-                                                                    classColors.hoverBorder.replace('hover:', 'group-hover/team-member:'),
-                                                                    "border-slate-800/60"
-                                                                )}
-                                                            >
-                                                                {/* Remove Button */}
-                                                                {!readOnly && (
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            initiateRemoveTeamMember(r.id, r.championId, r.champion.name);
-                                                                        }}
-                                                                        className="absolute top-2 right-2 z-20 p-1.5 rounded-full bg-slate-950/50 text-slate-400 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 border border-transparent transition-all opacity-0 group-hover/team-member:opacity-100"
-                                                                        title="Remove from team"
-                                                                    >
-                                                                        <X className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                )}
-
-                                                                {/* Accent background based on class */}
-                                                                <div className={cn("absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-5 transition-opacity group-hover/team-member:opacity-10", classColors.bg)} />
-
-                                                                <div className="p-3 flex items-start gap-3 relative z-10">
-                                                                    <div className="shrink-0">
-                                                                        <ChampionAvatar
-                                                                            images={r.champion.images}
-                                                                            name={r.champion.name}
-                                                                            stars={r.stars}
-                                                                            rank={r.rank}
-                                                                            isAwakened={r.isAwakened}
-                                                                            sigLevel={r.sigLevel}
-                                                                            isAscended={r.isAscended}
-                                                                            ascensionLevel={r.ascensionLevel}
-                                                                            championClass={r.champion.class}
-                                                                            size="lg"
-                                                                            showRank={true}
-                                                                            showStars={true}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0 py-1 pr-6">
-                                                                        <h4 className={cn("text-xs font-black uppercase tracking-wider truncate mb-0.5", classColors.text)}>
-                                                                            {r.champion.name}
-                                                                        </h4>
-                                                                        <div className="flex items-center gap-2">
-                                                                            {assignedEncounters.length + assignedPrefightEncounters.length > 0 ? (
-                                                                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                                                                    {assignedEncounters.length} Fight{assignedEncounters.length === 1 ? '' : 's'} · {assignedPrefightEncounters.length} Prefight{assignedPrefightEncounters.length === 1 ? '' : 's'}
-                                                                                </span>
-                                                                            ) : (
-                                                                                <span className="text-[10px] text-sky-500/80 font-bold uppercase tracking-widest flex items-center gap-1">
-                                                                                    <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-                                                                                    Synergy
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="mt-auto px-3 pb-3 relative z-10">
-                                                                    {assignedEncounters.length + assignedPrefightEncounters.length > 0 ? (
-                                                                        <div className="flex flex-wrap gap-1.5 p-2 bg-slate-950/60 rounded-xl border border-slate-800/50 shadow-inner group-hover/team-member:border-slate-700/50 transition-colors">
-                                                                            {assignedEncounters.map((enc: EncounterWithRelations) => {
-                                                                                const diffBorder = enc.difficulty === "HARD"
-                                                                                    ? "border-red-700/60"
-                                                                                    : enc.difficulty === "EASY"
-                                                                                        ? "border-emerald-700/50"
-                                                                                        : enc.difficulty === "NORMAL"
-                                                                                            ? "border-amber-700/50"
-                                                                                            : "border-slate-700";
-                                                                                const diffBg = enc.difficulty === "HARD"
-                                                                                    ? "bg-red-950/60"
-                                                                                    : enc.difficulty === "EASY"
-                                                                                        ? "bg-emerald-950/60"
-                                                                                        : enc.difficulty === "NORMAL"
-                                                                                            ? "bg-amber-950/60"
-                                                                                            : "bg-slate-800";
-                                                                                return (
-                                                                                <motion.div
-                                                                                    whileHover={{ scale: 1.05 }}
-                                                                                    whileTap={{ scale: 0.95 }}
-                                                                                    key={`tgt-${enc.id}`}
-                                                                                    role="button"
-                                                                                    tabIndex={0}
-                                                                                    aria-label={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                    title={`Fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                    className={cn(
-                                                                                        "relative w-8 h-8 rounded-lg border overflow-hidden group/tgt cursor-pointer hover:border-sky-500 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
-                                                                                        diffBorder, diffBg
-                                                                                    )}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        scrollToEncounter(enc.id);
-                                                                                    }}
-                                                                                >
-                                                                                    {enc.defender ? (
-                                                                                        <Image src={getChampionImageUrlOrPlaceholder(enc.defender.images, '64')} alt={enc.defender.name} fill className="object-cover group-hover/tgt:scale-110 transition-transform" />
-                                                                                    ) : (
-                                                                                        <div className="w-full h-full flex items-center justify-center bg-slate-800"><ShieldAlert className="w-3 h-3 text-slate-500" /></div>
-                                                                                    )}
-                                                                                    <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover/tgt:opacity-100 transition-opacity" />
-                                                                                </motion.div>
-                                                                                );
-                                                                            })}
-                                                                            {assignedPrefightEncounters.map((enc: EncounterWithRelations) => (
-                                                                                <motion.div
-                                                                                    whileHover={{ scale: 1.05 }}
-                                                                                    whileTap={{ scale: 0.95 }}
-                                                                                    key={`prefight-tgt-${enc.id}`}
-                                                                                    role="button"
-                                                                                    tabIndex={0}
-                                                                                    aria-label={`Prefight for fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                    title={`Prefight for fight ${enc.sequence}: ${enc.defender?.name || "Unknown"}`}
-                                                                                    className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-700/70 bg-slate-950/70 text-slate-400 shadow-sm transition-colors hover:border-slate-500 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        scrollToEncounter(enc.id);
-                                                                                    }}
-                                                                                >
-                                                                                    <Zap className="h-3 w-3" />
-                                                                                </motion.div>
-                                                                            ))}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div className="py-2 px-3 bg-slate-950/40 rounded-xl border border-slate-800/30 border-dashed text-center">
-                                                                            <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic">Unassigned</span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
-                                                        );
-                                                    })}
-
-                                                    {/* Add Synergy Combobox Placeholder Block */}
-                                                    {!readOnly && (
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <button className="flex flex-col items-center justify-center gap-3 bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-2xl p-6 hover:bg-slate-900/50 hover:border-sky-500/50 transition-all group/add-synergy min-h-[160px]">
-                                                                    <div className="p-3 rounded-full bg-slate-800/50 text-slate-400 group-hover/add-synergy:bg-sky-500/20 group-hover/add-synergy:text-sky-400 transition-colors shadow-inner">
-                                                                        <Users className="w-6 h-6" />
-                                                                    </div>
-                                                                    <div className="flex flex-col items-center">
-                                                                        <span className="text-xs font-black uppercase tracking-wider text-slate-300 group-hover/add-synergy:text-sky-400 transition-colors">Add Synergy</span>
-                                                                        <span className="text-[10px] text-slate-500 font-medium">Search roster...</span>
-                                                                    </div>
-                                                                </button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent 
-                                                                className="w-[calc(100vw-32px)] sm:w-[320px] p-0 bg-slate-950/95 border border-slate-700/80 shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(14,165,233,0.15)] backdrop-blur-xl rounded-xl overflow-hidden z-[100]" 
-                                                                align="start"
-                                                                sideOffset={8}
-                                                            >
-                                                                <Command className="bg-transparent" filter={(value, search) => {
-                                                                    if (value.toLowerCase().includes(search.toLowerCase())) return 1;
-                                                                    return 0;
-                                                                }}>
-                                                                    <CommandInput placeholder="Search champions..." className="h-11" />
-                                                                    <CommandEmpty className="py-4 text-center text-sm text-slate-500">No champions found.</CommandEmpty>
-                                                                    <CommandList className="max-h-[300px] custom-scrollbar">
-                                                                        <CommandGroup>
-                                                                            {/* Only show unique champions from roster that meet quest requirements */}
-                                                                            {roster.filter((r, i, self) => self.findIndex(t => t.championId === r.championId) === i).filter(r => isChampionValidForEncounterOrQuest(r, quest, undefined)).map((r) => {
-                                                                                const isAssigned = Object.values(activeSelections).some(rid => {
-                                                                                    if (!rid) return false;
-                                                                                    return roster.find(re => re.id === rid)?.championId === r.championId;
-                                                                                });
-                                                                                const isSynergy = synergyIds.includes(r.championId);
-                                                                                const isSelected = isAssigned || isSynergy;
-
-                                                                                return (
-                                                                                    <CommandItem
-                                                                                        key={r.championId}
-                                                                                        value={`${r.champion.name} ${r.champion.shortName || ''}`}
-                                                                                        className="flex items-center gap-3 px-3 py-2 cursor-pointer aria-selected:bg-slate-800/60"
-                                                                                        onSelect={() => {
-                                                                                            if (!isAssigned) handleSelectSynergy(r.championId);
-                                                                                        }}
-                                                                                        disabled={isAssigned}
-                                                                                    >
-                                                                                        <div className={cn(
-                                                                                            "relative w-8 h-8 rounded-lg overflow-hidden border border-slate-700 shrink-0",
-                                                                                            isAssigned && "opacity-40 grayscale"
-                                                                                        )}>
-                                                                                            <Image 
-                                                                                                src={getChampionImageUrlOrPlaceholder(r.champion.images, "64")} 
-                                                                                                alt={r.champion.name} 
-                                                                                                fill 
-                                                                                                className="object-cover"
-                                                                                            />
-                                                                                        </div>
-                                                                                        <span className={cn(
-                                                                                            "text-sm font-bold truncate flex-1",
-                                                                                            isAssigned ? "text-slate-600" : "text-slate-200"
-                                                                                        )}>
-                                                                                            {r.champion.name}
-                                                                                        </span>
-                                                                                        {isSelected && !isAssigned && (
-                                                                                            <CheckCircle2 className="w-4 h-4 text-sky-500 shrink-0" />
-                                                                                        )}
-                                                                                        {isAssigned && (
-                                                                                            <Target className="w-4 h-4 text-slate-600 shrink-0" />
-                                                                                        )}
-                                                                                    </CommandItem>
-                                                                                );
-                                                                            })}
-                                                                        </CommandGroup>
-                                                                    </CommandList>
-                                                                </Command>
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    )}
-                                                </div>
-
-                                                {quest.teamLimit !== null && selectedTeam.length > quest.teamLimit && (
-                                                    <motion.div 
-                                                        initial={{ opacity: 0, scale: 0.9 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        className="w-full flex items-center gap-3 px-4 py-2.5 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 shadow-lg shadow-red-900/10"
-                                                    >
-                                                        <AlertCircle className="w-4 h-4 shrink-0" />
-                                                        <p className="text-xs font-bold uppercase tracking-wider">Team limit exceeded by {selectedTeam.length - quest.teamLimit} champions</p>
-                                                    </motion.div>
-                                                )}
-                                            </div>
-                                        )}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Compact View when collapsed */}
-                            <AnimatePresence>
-                                {!isTeamExpanded && selectedTeam.length > 0 && (
-                                    <motion.div
-                                        key="team-collapsed-content"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="px-4 pb-3 flex flex-row gap-3 justify-center items-center"
-                                    >
-                                        <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
-                                            {selectedTeam.map(r => (
-                                                <div key={`collapsed-${r.id}`} className="relative group/mini-avatar">
-                                                    <div className="relative w-8 h-8 rounded-full border-2 border-slate-950 overflow-hidden shadow-lg transition-transform group-hover/mini-avatar:-translate-y-1">
-                                                        <Image src={getChampionImageUrlOrPlaceholder(r.champion.images, '64')} alt={r.champion.name} fill className="object-cover" />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        {selectedTeam.length > 0 && (
-                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1">
-                                                Active Team
-                                            </span>
-                                        )}
-                                    </motion.div>
-                                )}
-                                {!isTeamExpanded && selectedTeam.length === 0 && (
-                                    <motion.div
-                                        key="team-empty-collapsed"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="px-4 pb-2 text-center"
-                                    >
-                                        <p className="text-[9px] text-slate-600 uppercase tracking-tighter font-bold">Click to expand</p>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
-                    </Card>
-                </motion.div>
-            </div>
-
+            <SelectedTeamPanel
+                quest={quest}
+                roster={roster}
+                selectedTeam={selectedTeam}
+                selectedTeamMembers={selectedTeamMembers}
+                activeSelections={activeSelections}
+                synergyIds={synergyIds}
+                readOnly={readOnly}
+                isScrolled={isScrolled}
+                isTeamExpanded={isTeamExpanded}
+                isSharing={isSharing}
+                shareSuccess={shareSuccess}
+                activeRevivesTotal={activeRevivesTotal}
+                allRevivesTotal={allRevivesTotal}
+                onToggleExpanded={() => setIsTeamExpanded(prev => !prev)}
+                onShare={handleShare}
+                onRemoveTeamMember={initiateRemoveTeamMember}
+                onSelectSynergy={handleSelectSynergy}
+                scrollToEncounter={scrollToEncounter}
+            />
             <div className="relative pl-3 md:pl-10 pb-20">
                 {/* Continuous Vertical Timeline Line */}
                 <style>{`
@@ -1534,212 +1008,26 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                     <p className="text-center text-slate-400 italic mt-8">No encounters have been added to this quest yet.</p>
                 ) : (
                     <div className="space-y-6">
-                        {/* Column Header */}
-                        <div className="relative mb-8">
-                            {/* Origin node — same absolute positioning as encounter nodes */}
-                            <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                                {[0, 0.8, 1.6].map((delay, i) => (
-                                    <div
-                                        key={i}
-                                        className="absolute rounded-full border border-sky-400/50"
-                                        style={{
-                                            width: '18px', height: '18px',
-                                            top: '50%', left: '50%',
-                                            animation: `tlRing${i + 1} 2.4s ease-out infinite`,
-                                            animationDelay: `${delay}s`,
-                                        }}
-                                    />
-                                ))}
-                                {[-35, 0, 35].map((deg, i) => (
-                                    <div
-                                        key={`tick-${i}`}
-                                        className="absolute bg-sky-400/50 rounded-full"
-                                        style={{
-                                            width: '1.5px', height: '7px',
-                                            bottom: '50%', left: 'calc(50% - 0.75px)',
-                                            transformOrigin: 'bottom center',
-                                            transform: `rotate(${deg}deg) translateY(12px)`,
-                                            animation: `tlTick 2.4s ease-in-out infinite`,
-                                            animationDelay: `${i * 0.15}s`,
-                                        }}
-                                    />
-                                ))}
-                                <div
-                                    className="relative w-2.5 h-2.5 rounded-full bg-sky-400 z-10"
-                                    style={{ animation: 'tlCorePulse 2.4s ease-in-out infinite' }}
-                                />
-                            </div>
-                            {/* Header box — ml-5 md:ml-10 matches encounter card pl-5 md:pl-10 exactly */}
-                            <div className="ml-5 md:ml-10 flex items-center py-3 bg-slate-950/40 border border-slate-800/50 rounded-xl px-2 md:px-4">
-                            <div className="flex-1 flex items-center justify-start px-2 md:px-6 gap-2 md:gap-3">
-                                <div className="relative shrink-0">
-                                    <div className="absolute -inset-1 bg-red-500/20 blur-sm rounded-full" />
-                                    <Target className="relative w-3.5 h-3.5 md:w-4 md:h-4 text-red-500" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-orange-500 truncate">
-                                        Target
-                                    </span>
-                                    <div className="h-0.5 w-8 md:w-12 bg-gradient-to-r from-red-500/50 to-transparent rounded-full mt-0.5" />
-                                </div>
-                            </div>
+                        <TimelineColumnHeader />
 
-                            <div className="w-12 md:w-24 shrink-0 flex items-center justify-center">
-                                <div className="relative flex items-center justify-center w-6 h-6 md:w-8 md:h-8">
-                                     <div className="absolute inset-0 border border-slate-800 rotate-45 rounded-sm" />
-                                     <span className="relative z-10 text-[8px] md:text-[10px] font-black text-slate-600 uppercase italic">VS</span>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 flex items-center justify-end px-2 md:px-6 gap-2 md:gap-3 text-right">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-l from-sky-400 to-indigo-500 truncate">
-                                        Counter
-                                    </span>
-                                    <div className="h-0.5 w-8 md:w-12 bg-gradient-to-l from-sky-500/50 to-transparent rounded-full mt-0.5" />
-                                </div>
-                                <div className="relative shrink-0">
-                                    <div className="absolute -inset-1 bg-sky-500/20 blur-sm rounded-full" />
-                                    <Swords className="relative w-3.5 h-3.5 md:w-4 md:h-4 text-sky-500" />
-                                </div>
-                            </div>
-                            </div> {/* end header box */}
-                        </div> {/* end column header */}
-
-                        {visibleRouteSections.length > 0 && (
-                            <div className="pl-6 md:pl-10 -mt-2 mb-4">
-                                <div className="rounded-xl border border-slate-800 bg-slate-950/70 overflow-hidden">
-                                    <div className="flex items-center justify-between gap-3 px-3 md:px-4 py-3 border-b border-slate-800/70 bg-slate-900/40">
-                                        <div className="min-w-0 flex items-center gap-3">
-                                            <div className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg border border-sky-900/60 bg-sky-950/30 text-sky-400">
-                                                <Crosshair className="h-4 w-4" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h3 className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300">Route Planner</h3>
-                                                <p className="text-[11px] text-slate-600 mt-0.5 truncate">{routeFilteredEncounters.length} fights on selected route</p>
-                                            </div>
-                                        </div>
-                                        <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                                            <span>{visibleRouteSections.length}</span>
-                                            <span>{visibleRouteSections.length === 1 ? "section" : "sections"}</span>
-                                        </div>
-                                    </div>
-                                    {selectedRouteSummary.length > 0 && (
-                                        <div className="px-3 md:px-4 py-2 border-b border-slate-800/70 bg-slate-950/50 overflow-x-auto">
-                                            <div className="flex items-center gap-1.5 min-w-max">
-                                                {selectedRouteSummary.map((item, index) => (
-                                                    <div key={`${item.sectionTitle}-${index}`} className="flex items-center gap-1.5">
-                                                        {index > 0 && <ChevronRight className="h-3 w-3 text-slate-700" />}
-                                                        <div className="rounded-md border border-slate-800 bg-slate-900/70 px-2 py-1">
-                                                            <span className="text-[10px] font-black uppercase tracking-[0.12em] text-sky-300">{item.pathTitle}</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div className="overflow-x-auto px-3 md:px-4 py-4">
-                                        <div
-                                            ref={routeMapRef}
-                                            className="relative flex min-w-max items-center gap-9 pr-2"
-                                        >
-                                            <svg
-                                                className="pointer-events-none absolute inset-0 z-0"
-                                                width={routeMapSize.width}
-                                                height={routeMapSize.height}
-                                                viewBox={`0 0 ${routeMapSize.width} ${routeMapSize.height}`}
-                                                preserveAspectRatio="none"
-                                            >
-                                                {routeConnectorPaths.map((path, index) => (
-                                                    <g key={index}>
-                                                        <path
-                                                            d={path}
-                                                            fill="none"
-                                                            stroke="rgb(8 47 73)"
-                                                            strokeWidth="7"
-                                                            strokeLinecap="round"
-                                                            opacity="0.65"
-                                                        />
-                                                        <path
-                                                            d={path}
-                                                            fill="none"
-                                                            stroke="rgb(34 211 238)"
-                                                            strokeWidth="2.5"
-                                                            strokeLinecap="round"
-                                                            opacity="0.86"
-                                                        />
-                                                        <path
-                                                            d={path}
-                                                            fill="none"
-                                                            stroke="white"
-                                                            strokeWidth="1"
-                                                            strokeLinecap="round"
-                                                            opacity="0.24"
-                                                        />
-                                                        <path
-                                                            d={path}
-                                                            fill="none"
-                                                            stroke="rgb(34 211 238)"
-                                                            strokeWidth="8"
-                                                            strokeLinecap="round"
-                                                            strokeDasharray="0.5 92"
-                                                            opacity="0"
-                                                            style={{
-                                                                filter: "blur(5px)",
-                                                                animation: "routeHalo 3.1s ease-in-out infinite",
-                                                                animationDelay: `${index * 0.22}s`
-                                                            }}
-                                                        />
-                                                        <path
-                                                            d={path}
-                                                            fill="none"
-                                                            stroke="rgb(236 254 255)"
-                                                            strokeWidth="4"
-                                                            strokeLinecap="round"
-                                                            strokeDasharray="0.5 92"
-                                                            opacity="0"
-                                                            style={{
-                                                                animation: "routePulse 3.1s ease-in-out infinite",
-                                                                animationDelay: `${index * 0.22}s`
-                                                            }}
-                                                        />
-                                                    </g>
-                                                ))}
-                                            </svg>
-
-                                            <div
-                                                ref={routeStartRef}
-                                                className="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-cyan-500/60 bg-cyan-950/40 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]"
-                                            >
-                                                <Crosshair className="h-5 w-5" />
-                                            </div>
-
-                                            {visibleRouteSections.map((section) => {
-                                                const selectedPathId = routeChoices[section.id] || section.paths[0]?.id;
-                                                const selectedPath = section.paths.find(path => path.id === selectedPathId) || section.paths[0];
-
-                                                return (
-                                                    <div
-                                                        key={section.id}
-                                                        className="relative z-10 flex shrink-0 flex-col justify-center gap-2"
-                                                    >
-                                                        {section.paths.map(path => renderRoutePathCard(section.id, path, path.id === selectedPath?.id, true))}
-                                                    </div>
-                                                );
-                                            })}
-
-                                            <div
-                                                ref={routeEndRef}
-                                                className="relative z-10 flex h-12 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-950 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500"
-                                            >
-                                                End
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
+                        <RoutePlannerPanel
+                            visibleRouteSections={visibleRouteSections}
+                            routeFilteredEncounterCount={routeFilteredEncounters.length}
+                            routeChoices={routeChoices}
+                            selectedRouteSummary={selectedRouteSummary}
+                            encountersByRoutePathId={encountersByRoutePathId}
+                            routeMapRef={routeMapRef}
+                            routeStartRef={routeStartRef}
+                            routeEndRef={routeEndRef}
+                            routeConnectorPaths={routeConnectorPaths}
+                            routeMapSize={routeMapSize}
+                            readOnly={readOnly}
+                            setRouteCardRef={(pathId, node) => {
+                                routeCardRefs.current[pathId] = node;
+                            }}
+                            onRouteChoice={handleRouteChoice}
+                            scrollToEncounter={scrollToEncounter}
+                        />
                         {/* Difficulty Filter Bar */}
                         <div className="flex items-center flex-wrap justify-between gap-x-2 gap-y-1.5 pl-6 md:pl-10 -mt-2 mb-2">
                             <div className="flex items-center gap-2 min-w-0 flex-wrap">
