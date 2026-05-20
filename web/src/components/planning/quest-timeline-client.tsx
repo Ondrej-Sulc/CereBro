@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestEncounterRevives, savePlayerQuestPrefightChampion, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
+import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestPrefightChampion, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -15,7 +15,6 @@ import {
 } from "./utils";
 import {
     createInitialQuestTimelinePrefightSelections,
-    createInitialQuestTimelineRevives,
     createInitialQuestTimelineSelections,
     isReadOnlyRosterEntry,
     projectQuestTimelineViewModel,
@@ -25,7 +24,6 @@ import {
     clearQuestTimelinePlanSelections,
     decideQuestTimelineCounterSelection,
     decideQuestTimelinePrefightSelection,
-    decideQuestTimelineRevives,
     decideQuestTimelineSynergy,
     decideQuestTimelineTeamMemberRemoval,
     type QuestTimelineTeamMemberRemovalTarget,
@@ -38,6 +36,7 @@ import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
+import { useQuestEncounterRevives } from "./use-quest-encounter-revives";
 import { useQuestPlanSharing } from "./use-quest-plan-sharing";
 import { useQuestRouteChoices } from "./use-quest-route-choices";
 import { useQuestTimelineScroll } from "./use-quest-timeline-scroll";
@@ -105,9 +104,12 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         })
     );
 
-    const [revivesByEncounterId, setRevivesByEncounterId] = useState<Record<string, number>>(() =>
-        createInitialQuestTimelineRevives(savedEncounters)
-    );
+    const { revivesByEncounterId, handleSetRevives } = useQuestEncounterRevives({
+        questId: quest.id,
+        savedEncounters,
+        readOnly,
+        toast,
+    });
 
     // Champion Removal State
     const [championToRemove, setChampionToRemove] = useState<(QuestTimelineTeamMemberRemovalTarget & { championName: string }) | null>(null);
@@ -408,29 +410,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
             setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.previousRosterId }));
             const msg = error instanceof Error ? error.message : "Failed to save prefight.";
             toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleSetRevives = async (encounterId: string, revivesUsed: number) => {
-        const decision = decideQuestTimelineRevives({
-            readOnly,
-            encounterId,
-            revivesUsed,
-            revivesByEncounterId,
-        });
-        if (decision.kind === "ignored") return;
-
-        setRevivesByEncounterId(decision.nextRevivesByEncounterId);
-
-        try {
-            await savePlayerQuestEncounterRevives(quest.id, encounterId, decision.nextRevives);
-        } catch (error) {
-            reportClientError("quest_timeline_save_revives", error, {
-                quest_id: quest.id,
-                encounter_id: encounterId,
-            });
-            setRevivesByEncounterId(decision.rollbackRevivesByEncounterId);
-            toast({ title: "Error", description: "Failed to save revive count.", variant: "destructive" });
         }
     };
 
