@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { clearAllQuestCounters, savePlayerQuestCounter, savePlayerQuestPrefightChampion, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
+import { clearAllQuestCounters, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -22,8 +22,6 @@ import {
 import {
     applyQuestTimelineTeamMemberRemoval,
     clearQuestTimelinePlanSelections,
-    decideQuestTimelineCounterSelection,
-    decideQuestTimelinePrefightSelection,
     decideQuestTimelineSynergy,
     decideQuestTimelineTeamMemberRemoval,
     type QuestTimelineTeamMemberRemovalTarget,
@@ -39,6 +37,7 @@ import { SelectedTeamPanel } from "./selected-team-panel";
 import { useQuestEncounterRevives } from "./use-quest-encounter-revives";
 import { useQuestPlanSharing } from "./use-quest-plan-sharing";
 import { useQuestRouteChoices } from "./use-quest-route-choices";
+import { useQuestSelectionMutations } from "./use-quest-selection-mutations";
 import { useQuestTimelineScroll } from "./use-quest-timeline-scroll";
 import { useRouteConnectorGeometry } from "./use-route-connector-geometry";
 
@@ -339,79 +338,19 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         setImmunityFilter([]);
     };
 
-    const handleSelectCounter = async (encounterId: string, rosterId: string) => {
-        const decision = decideQuestTimelineCounterSelection({
-            quest,
-            encounterId,
-            rosterId,
-            roster,
-            selections,
-            prefightSelections,
-            activeQuestAssignments,
-            activeSynergyChampions,
-        });
-        if (decision.kind === "ignored") return;
-        if (decision.kind === "rejected") {
-            toast({ title: decision.title, description: decision.description, variant: "destructive" });
-            return;
-        }
-        
-        setSelections(prev => ({ ...prev, [encounterId]: decision.nextRosterId }));
-        if (decision.shouldClearPrefight) {
-            setPrefightSelections(prev => ({ ...prev, [encounterId]: null }));
-        }
-
-        // Autoclose the card if a selection was made
-        if (decision.nextRosterId !== null) {
-            closeEncounterAfterSelection(encounterId);
-        }
-
-        try {
-            await savePlayerQuestCounter(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars);
-        } catch (error) {
-            reportClientError("quest_timeline_save_counter", error, {
-                quest_id: quest.id,
-                encounter_id: encounterId,
-            });
-            setSelections(prev => ({ ...prev, [encounterId]: decision.previousRosterId }));
-            if (decision.shouldClearPrefight) {
-                setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.previousPrefightRosterId ?? null }));
-            }
-            toast({ title: "Error", description: "Failed to save selection.", variant: "destructive" });
-        }
-    };
-
-    const handleSelectPrefight = async (encounterId: string, rosterId: string) => {
-        const decision = decideQuestTimelinePrefightSelection({
-            quest,
-            encounterId,
-            rosterId,
-            roster,
-            selections,
-            prefightSelections,
-            activeQuestAssignments,
-            activeSynergyChampions,
-        });
-        if (decision.kind === "ignored") return;
-        if (decision.kind === "rejected") {
-            toast({ title: decision.title, description: decision.description, variant: "destructive" });
-            return;
-        }
-
-        setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.nextRosterId }));
-
-        try {
-            await savePlayerQuestPrefightChampion(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars);
-        } catch (error) {
-            reportClientError("quest_timeline_save_prefight", error, {
-                quest_id: quest.id,
-                encounter_id: encounterId,
-            });
-            setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.previousRosterId }));
-            const msg = error instanceof Error ? error.message : "Failed to save prefight.";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
+    const { handleSelectCounter, handleSelectPrefight } = useQuestSelectionMutations({
+        quest,
+        roster,
+        readOnly,
+        selections,
+        prefightSelections,
+        activeQuestAssignments,
+        activeSynergyChampions,
+        setSelections,
+        setPrefightSelections,
+        closeEncounterAfterSelection,
+        toast,
+    });
 
     const handleSelectSynergy = async (championId: number) => {
         const decision = decideQuestTimelineSynergy({
