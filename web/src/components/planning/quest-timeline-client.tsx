@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { clearAllQuestCounters, savePlayerQuestSynergy } from "@/app/actions/player-quest-progress";
+import { clearAllQuestCounters } from "@/app/actions/player-quest-progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -20,14 +20,10 @@ import {
     projectQuestTimelineViewModel,
 } from "./quest-timeline-view-model";
 import {
-    applyQuestTimelineTeamMemberRemoval,
     clearQuestTimelinePlanSelections,
-    decideQuestTimelineTeamMemberRemoval,
-    type QuestTimelineTeamMemberRemovalTarget,
 } from "./quest-timeline-controller";
 
 import type { ChampionClass } from "@prisma/client";
-import { reportClientError } from "@/lib/observability/client";
 import { createQuestTimelinePickRenderers } from "./quest-pick-renderers";
 import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
@@ -38,6 +34,7 @@ import { useQuestPlanSharing } from "./use-quest-plan-sharing";
 import { useQuestRouteChoices } from "./use-quest-route-choices";
 import { useQuestSelectionMutations } from "./use-quest-selection-mutations";
 import { useQuestSynergyMutations } from "./use-quest-synergy-mutations";
+import { useQuestTeamMemberRemoval } from "./use-quest-team-member-removal";
 import { useQuestTimelineScroll } from "./use-quest-timeline-scroll";
 import { useRouteConnectorGeometry } from "./use-route-connector-geometry";
 
@@ -110,71 +107,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         toast,
     });
 
-    // Champion Removal State
-    const [championToRemove, setChampionToRemove] = useState<(QuestTimelineTeamMemberRemovalTarget & { championName: string }) | null>(null);
-
-    // Shared helper for champion removal logic
-    const removeTeamMemberLogic = async (target: QuestTimelineTeamMemberRemovalTarget) => {
-        const { championId, assignedEncounters, assignedPrefights, isSynergy } = target;
-
-        try {
-            // Wait for all remote operations to complete successfully FIRST
-            const promises: Promise<unknown>[] = [];
-            
-            if (isSynergy) {
-                promises.push(savePlayerQuestSynergy(quest.id, championId, true));
-            }
-
-            if (assignedEncounters.length > 0) {
-                assignedEncounters.forEach(encId => {
-                    promises.push(savePlayerQuestCounter(quest.id, encId, null));
-                });
-            }
-            if (assignedPrefights.length > 0) {
-                assignedPrefights.forEach(encId => {
-                    promises.push(savePlayerQuestPrefightChampion(quest.id, encId, null));
-                });
-            }
-
-            await Promise.all(promises);
-
-            setSelections(prev => applyQuestTimelineTeamMemberRemoval({
-                target,
-                selections: prev,
-                prefightSelections: {},
-                synergyIds: [],
-            }).selections);
-            setPrefightSelections(prev => applyQuestTimelineTeamMemberRemoval({
-                target,
-                selections: {},
-                prefightSelections: prev,
-                synergyIds: [],
-            }).prefightSelections);
-            setSynergyIds(prev => applyQuestTimelineTeamMemberRemoval({
-                target,
-                selections: {},
-                prefightSelections: {},
-                synergyIds: prev,
-            }).synergyIds);
-
-            if (assignedEncounters.length > 0 || assignedPrefights.length > 0) {
-                toast({ title: "Assignments Cleared", description: "Champion has been unassigned from fights and prefights." });
-            } else if (isSynergy) {
-                toast({ title: "Synergy Removed", description: "Champion has been removed from synergy." });
-            }
-            
-        } catch (error) {
-            reportClientError("quest_timeline_remove_team_member", error, { quest_id: quest.id });
-            toast({ title: "Error", description: "Failed to remove champion completely. Some operations may have failed.", variant: "destructive" });
-        }
-    };
-
-    const executeRemoveTeamMember = async () => {
-        if (!championToRemove) return;
-        await removeTeamMemberLogic(championToRemove);
-        setChampionToRemove(null);
-    };
-
     const executeClearPlan = async () => {
         try {
             await clearAllQuestCounters(quest.id);
@@ -184,28 +116,6 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
             toast({ title: "Plan Cleared", description: "All counter and prefight selections have been removed. Revive counts were kept." });
         } catch {
             toast({ title: "Error", description: "Failed to clear the plan.", variant: "destructive" });
-        }
-    };
-
-    // Refactored helper for immediate execution
-    const confirmAndRemoveTeamMember = async (target: QuestTimelineTeamMemberRemovalTarget) => {
-        await removeTeamMemberLogic(target);
-    };
-
-    const initiateRemoveTeamMember = (rosterId: string, championId: number, championName: string) => {
-        const decision = decideQuestTimelineTeamMemberRemoval({
-            rosterId,
-            championId,
-            championName,
-            teamLimit: quest.teamLimit,
-            selectedTeamMembers,
-            synergyIds,
-        });
-        if (decision.kind === "ignored") return;
-        if (decision.kind === "confirm") {
-            setChampionToRemove({ ...decision.target, championName });
-        } else {
-            confirmAndRemoveTeamMember(decision.target);
         }
     };
 
@@ -260,6 +170,21 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         routeMapSize,
         setRouteCardRef,
     } = useRouteConnectorGeometry(selectedRoutePathIds);
+
+    const {
+        championToRemove,
+        setChampionToRemove,
+        initiateRemoveTeamMember,
+        executeRemoveTeamMember,
+    } = useQuestTeamMemberRemoval({
+        quest,
+        selectedTeamMembers,
+        synergyIds,
+        setSelections,
+        setPrefightSelections,
+        setSynergyIds,
+        toast,
+    });
 
     const resolveRosterItem = useCallback((rosterId: string, encounterId: string) => {
         if (readOnly) {
