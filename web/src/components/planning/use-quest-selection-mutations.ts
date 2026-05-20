@@ -43,6 +43,8 @@ export function useQuestSelectionMutations({
     toast: Toast;
 }) {
     const handleSelectCounter = async (encounterId: string, rosterId: string) => {
+        if (readOnly) return;
+
         const decision = decideQuestTimelineCounterSelection({
             quest,
             encounterId,
@@ -84,6 +86,8 @@ export function useQuestSelectionMutations({
     };
 
     const handleSelectPrefight = async (encounterId: string, rosterId: string) => {
+        if (readOnly) return;
+
         const decision = decideQuestTimelinePrefightSelection({
             quest,
             encounterId,
@@ -93,7 +97,6 @@ export function useQuestSelectionMutations({
             prefightSelections,
             activeQuestAssignments,
             activeSynergyChampions,
-            readOnly,
         });
         if (decision.kind === "ignored") return;
         if (decision.kind === "rejected") {

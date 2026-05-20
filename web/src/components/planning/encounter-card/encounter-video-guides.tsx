@@ -30,15 +30,16 @@ export function EncounterVideoGuides({
     const hasVideos = getEncounterVideos(encounter).length > 0 || Boolean(encounter.videoUrl);
     if (!hasVideos) return null;
 
-    const isShowingVideo = showVideoId?.startsWith(encounter.id + "|");
+    const activeVideoUrl = showVideoId?.startsWith(encounter.id + "|")
+        ? showVideoId.split("|").slice(1).join("|")
+        : null;
 
     return (
         <div className="flex flex-col gap-2">
-            {isShowingVideo && (
+            {activeVideoUrl && (
                 <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-800 bg-black shadow-2xl">
                     {(() => {
-                        const videoUrl = showVideoId.split("|").slice(1).join("|");
-                        const embedUrl = getYoutubeEmbedUrl(videoUrl);
+                        const embedUrl = getYoutubeEmbedUrl(activeVideoUrl);
                         if (embedUrl) {
                             return (
                                 <iframe
@@ -66,7 +67,7 @@ export function EncounterVideoGuides({
                 </div>
             )}
 
-            {!isShowingVideo && (
+            {!activeVideoUrl && (
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
                     <div className="flex shrink-0 items-center gap-1.5 rounded-md border border-red-900/30 bg-red-950/20 px-2 py-1.5">
                         <Youtube className="h-3.5 w-3.5 text-red-500" />
