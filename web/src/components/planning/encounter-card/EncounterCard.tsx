@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { 
     AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Crosshair, 
-    ChevronsUpDown, Filter, Info, PlayCircle, Search, Shield, ShieldAlert, TagIcon, Trash2, 
+    ChevronsUpDown, Filter, Info, Search, Shield, ShieldAlert, TagIcon, Trash2, 
     X, Youtube, Zap, BookOpen, Users, Star
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +28,6 @@ import type { ChampionClass, Tag } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder, getStarBorderClass } from "@/lib/championHelper";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
-import { getYoutubeEmbedUrl } from "@/lib/youtube";
 import { MultiSelectFilter } from "@/components/ui/filters";
 import { InfoPopover } from "@/components/ui/info-popover";
 import { UpdatedChampionItem } from "@/components/UpdatedChampionItem";
@@ -36,19 +35,13 @@ import type { EnhancedCountersMap, PickCounterWithChampion, PopularCountersMap }
 import { Champion } from "@/types/champion";
 import { FilterMetadata } from "../types";
 import { isChampionValidForEncounterOrQuest } from "../utils";
+import { EncounterDetails } from "./encounter-details";
+import { EncounterVideoGuides, getEncounterVideos } from "./encounter-video-guides";
 import { ReviveControl, ReviveOrbIcon } from "./revive-control";
 
 export { ReviveOrbIcon };
 
 type EncounterTab = "recommended" | "featured" | "alliance";
-type EncounterVideoGuide = {
-    videoUrl: string;
-    player?: { ingameName: string | null; avatar?: string | null } | null;
-};
-type EncounterWithVideoGuides = EncounterWithRelations & {
-    videos?: EncounterVideoGuide[];
-};
-
 interface EncounterFilterState {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
@@ -113,10 +106,6 @@ interface EncounterHeaderProps {
     readOnly: boolean;
     toggleExpand: (id: string) => void;
     handleSelectCounter: (encounterId: string, rosterId: string) => void;
-}
-
-interface EncounterDetailsProps {
-    children: React.ReactNode;
 }
 
 interface RosterSelectorProps {
@@ -184,10 +173,6 @@ function sortEncounterNodes(nodes: EncounterNodeWithRelations[]): EncounterNodeW
 
         return compareStableText(a.id, b.id);
     });
-}
-
-function getEncounterVideos(encounter: EncounterWithRelations): EncounterVideoGuide[] {
-    return (encounter as EncounterWithVideoGuides).videos ?? [];
 }
 
 function compareStableText(a: string, b: string): number {
@@ -465,24 +450,6 @@ function EncounterHeader({
                 </div>
             </div>
         </div>
-    );
-}
-
-function EncounterDetails({
-    children
-}: EncounterDetailsProps) {
-    return (
-        <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="border-t border-slate-800/60 bg-gradient-to-b from-slate-950 to-[#03060c] overflow-hidden"
-        >
-            <div className="p-4 space-y-6">
-                {children}
-            </div>
-        </motion.div>
     );
 }
 
@@ -1030,71 +997,11 @@ function EncounterExpandedContent({
                     </div>
                 ) : null}
 
-                {(getEncounterVideos(encounter).length > 0 || encounter.videoUrl) && (
-                    <div className="flex flex-col gap-2">
-                        {showVideoId?.startsWith(encounter.id + "|") && (
-                            <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 shadow-2xl bg-black">
-                                {(() => {
-                                    const videoUrl = showVideoId.split('|').slice(1).join('|');
-                                    const embedUrl = getYoutubeEmbedUrl(videoUrl);
-                                    if (embedUrl) {
-                                        return (
-                                            <iframe
-                                                src={embedUrl}
-                                                title="YouTube video player"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                allowFullScreen
-                                                className="absolute inset-0 w-full h-full border-0"
-                                            ></iframe>
-                                        );
-                                    }
-                                    return <div className="p-8 text-center text-slate-500">Invalid video URL</div>;
-                                })()}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full h-8 w-8 z-50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowVideoId(null);
-                                    }}
-                                >
-                                    <X className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        )}
-                        
-                        {(!showVideoId || !showVideoId.startsWith(encounter.id + "|")) && (
-                            <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1">
-                                <div className="flex items-center gap-1.5 px-2 py-1.5 bg-red-950/20 border border-red-900/30 rounded-md shrink-0">
-                                    <Youtube className="w-3.5 h-3.5 text-red-500" />
-                                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Video Guides</span>
-                                </div>
-                                
-                                {(() => {
-                                    const allVideos = [...getEncounterVideos(encounter)];
-                                    if (encounter.videoUrl && !allVideos.some(v => v.videoUrl === encounter.videoUrl)) {
-                                        allVideos.push({ videoUrl: encounter.videoUrl, player: { ingameName: "Strategy Guide" } });
-                                    }
-                                    return allVideos.map((video, idx) => (
-                                        <button
-                                            key={idx}
-                                            className="group/video flex items-center gap-2 bg-slate-900/50 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 rounded-lg px-3 py-1.5 transition-all shrink-0"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowVideoId(`${encounter.id}|${video.videoUrl}`);
-                                            }}
-                                        >
-                                            <PlayCircle className="w-4 h-4 text-red-500/70 group-hover/video:text-red-500" />
-                                            {video.player?.avatar && <img src={video.player.avatar} alt={video.player.ingameName ?? "Player"} className="w-4 h-4 rounded-full" />}
-                                            <span className="text-xs font-medium text-slate-300 group-hover/video:text-white">{video.player?.ingameName || "Strategy Guide"}</span>
-                                        </button>
-                                    ));
-                                })()}
-                            </div>
-                        )}
-                    </div>
-                )}
+                <EncounterVideoGuides
+                    encounter={encounter}
+                    showVideoId={showVideoId}
+                    setShowVideoId={setShowVideoId}
+                />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 pt-2">
