@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { clearAllQuestCounters } from "@/app/actions/player-quest-progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,16 +18,13 @@ import {
     isReadOnlyRosterEntry,
     projectQuestTimelineViewModel,
 } from "./quest-timeline-view-model";
-import {
-    clearQuestTimelinePlanSelections,
-} from "./quest-timeline-controller";
-
 import type { ChampionClass } from "@prisma/client";
 import { createQuestTimelinePickRenderers } from "./quest-pick-renderers";
 import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
+import { useQuestClearPlan } from "./use-quest-clear-plan";
 import { useQuestEncounterRevives } from "./use-quest-encounter-revives";
 import { useQuestPlanSharing } from "./use-quest-plan-sharing";
 import { useQuestRouteChoices } from "./use-quest-route-choices";
@@ -107,17 +103,12 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         toast,
     });
 
-    const executeClearPlan = async () => {
-        try {
-            await clearAllQuestCounters(quest.id);
-            const nextState = clearQuestTimelinePlanSelections();
-            setSelections(nextState.selections);
-            setPrefightSelections(nextState.prefightSelections);
-            toast({ title: "Plan Cleared", description: "All counter and prefight selections have been removed. Revive counts were kept." });
-        } catch {
-            toast({ title: "Error", description: "Failed to clear the plan.", variant: "destructive" });
-        }
-    };
+    const { executeClearPlan } = useQuestClearPlan({
+        questId: quest.id,
+        setSelections,
+        setPrefightSelections,
+        toast,
+    });
 
     // Difficulty Filter State
     const [difficultyFilter, setDifficultyFilter] = useState<("EASY" | "NORMAL" | "HARD")[]>([]);
