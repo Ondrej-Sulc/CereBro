@@ -35,6 +35,10 @@ export interface DiscordChannel {
     type: number;
 }
 
+export type DistributePlanResult =
+  | { success: true }
+  | { success: false; error: string };
+
 const createWarSchema = z.object({
   season: z.number().min(1),
   warNumber: z.number().min(1).optional(),
@@ -652,7 +656,7 @@ export const getExtraChampions = withActionContext('getExtraChampions', async (w
   }));
 });
 
-export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string, targetPlayerId?: string) => {
+export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string, targetPlayerId?: string): Promise<DistributePlanResult> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
@@ -688,11 +692,14 @@ export const distributePlan = withActionContext('distributePlan', async (warId: 
       const missingBattlegroups = findMissingBattlegroupChannels(alliance, requiredBgs);
 
       if (missingBattlegroups.length > 0) {
-          throw new Error(createMissingDiscordChannelMessage({
+          return {
+            success: false,
+            error: createMissingDiscordChannelMessage({
               code: "MISSING_DISCORD_CHANNELS",
               missingBattlegroups,
               context: "attack-plan",
-          }));
+            }),
+          };
       }
   }
 

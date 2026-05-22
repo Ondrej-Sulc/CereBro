@@ -106,10 +106,19 @@ async function fetchDiscordGuildOptions(guildId: string): Promise<{
     channels: DiscordChannelOption[];
 }> {
     const headers = { Authorization: `Bot ${config.BOT_TOKEN}` };
-    const [rolesResponse, channelsResponse] = await Promise.all([
-        fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, { headers }),
-        fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, { headers }),
-    ]);
+    let rolesResponse: Response;
+    let channelsResponse: Response;
+
+    try {
+        const signal = AbortSignal.timeout(10_000);
+        [rolesResponse, channelsResponse] = await Promise.all([
+            fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, { headers, signal }),
+            fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, { headers, signal }),
+        ]);
+    } catch (error) {
+        logger.warn({ guildId, error }, "Timed out fetching Discord guild options");
+        throw new Error("CereBro cannot read this Discord server. Check that the bot is still installed and has permission.");
+    }
 
     if (!rolesResponse.ok || !channelsResponse.ok) {
         const roleText = rolesResponse.ok ? undefined : await rolesResponse.text();

@@ -487,7 +487,19 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
 
   const handleDistribute = async (battlegroup?: number, targetChannelId?: string) => {
       try {
-          await distributeDefensePlanToDiscord(props.planId, battlegroup, targetChannelId);
+          const result = await distributeDefensePlanToDiscord(props.planId, battlegroup, targetChannelId);
+          if (!result.success) {
+              const missing = parseMissingDiscordChannelMessage(result.error);
+              if (missing && missing.context === "defense-plan") {
+                  setPendingDistribution({ battlegroup, targetChannelId });
+                  setMissingDiscordConfig({
+                      missingBattlegroups: missing.missingBattlegroups,
+                      context: "defense-plan",
+                  });
+                  return;
+              }
+              throw new Error(result.error);
+          }
           const target = battlegroup ? `BG${battlegroup}` : "all battlegroups";
           toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
       } catch (e) {
@@ -513,7 +525,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       setMissingDiscordConfig(null);
 
       try {
-          await distributeDefensePlanToDiscord(props.planId, request.battlegroup, request.targetChannelId);
+          const result = await distributeDefensePlanToDiscord(props.planId, request.battlegroup, request.targetChannelId);
+          if (!result.success) {
+              throw new Error(result.error);
+          }
           const target = request.battlegroup ? `BG${request.battlegroup}` : "all battlegroups";
           toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
       } catch (e) {

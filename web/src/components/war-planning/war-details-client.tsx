@@ -135,7 +135,19 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
 
   const handleDistribute = useCallback(async (battlegroup?: number, targetChannelId?: string) => {
     try {
-        await distributePlan(props.warId, battlegroup, targetChannelId);
+        const result = await distributePlan(props.warId, battlegroup, targetChannelId);
+        if (!result.success) {
+            const missing = parseMissingDiscordChannelMessage(result.error);
+            if (missing && missing.context === "attack-plan") {
+                setPendingDistribution({ battlegroup, targetChannelId });
+                setMissingDiscordConfig({
+                    missingBattlegroups: missing.missingBattlegroups,
+                    context: "attack-plan",
+                });
+                return;
+            }
+            throw new Error(result.error);
+        }
         toast({
             title: "Plan Distribution Started",
             description: `Distribution job queued for ${battlegroup ? `Battlegroup ${battlegroup}` : 'all battlegroups'}${targetChannelId ? ' to custom channel' : ''}.`,
@@ -166,7 +178,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     setMissingDiscordConfig(null);
 
     try {
-      await distributePlan(props.warId, request.battlegroup, request.targetChannelId, request.targetPlayerId);
+      const result = await distributePlan(props.warId, request.battlegroup, request.targetChannelId, request.targetPlayerId);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       toast({
         title: "Plan Distribution Started",
         description: `Distribution job queued for ${request.battlegroup ? `Battlegroup ${request.battlegroup}` : 'all battlegroups'}.`,
@@ -183,7 +198,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
 
   const handleDistributePlayer = useCallback(async (playerId: string, battlegroup: number) => {
     try {
-        await distributePlan(props.warId, battlegroup, undefined, playerId);
+        const result = await distributePlan(props.warId, battlegroup, undefined, playerId);
+        if (!result.success) {
+            throw new Error(result.error);
+        }
         toast({
             title: "Plan Distribution Started",
             description: `Distribution job queued for player's thread.`,

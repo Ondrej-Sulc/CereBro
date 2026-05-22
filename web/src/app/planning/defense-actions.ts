@@ -10,6 +10,10 @@ import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { withActionContext } from "@/lib/with-request-context";
 import { createMissingDiscordChannelMessage, findMissingBattlegroupChannels } from "@/lib/discord-config-validation";
 
+export type DistributeDefensePlanResult =
+  | { success: true }
+  | { success: false; error: string };
+
 const createDefensePlanSchema = z.object({
   name: z.string().min(1),
   mapType: z.nativeEnum(WarMapType).optional(),
@@ -275,7 +279,7 @@ export const renameDefensePlan = withActionContext('renameDefensePlan', async (p
   revalidatePath(`/planning/defense/${planId}`);
 });
 
-export const distributeDefensePlanToDiscord = withActionContext('distributeDefensePlanToDiscord', async (planId: string, battlegroup?: number, targetChannelId?: string) => {
+export const distributeDefensePlanToDiscord = withActionContext('distributeDefensePlanToDiscord', async (planId: string, battlegroup?: number, targetChannelId?: string): Promise<DistributeDefensePlanResult> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player) {
@@ -312,11 +316,14 @@ export const distributeDefensePlanToDiscord = withActionContext('distributeDefen
       const missingBattlegroups = findMissingBattlegroupChannels(alliance, requiredBgs);
 
       if (missingBattlegroups.length > 0) {
-          throw new Error(createMissingDiscordChannelMessage({
+          return {
+            success: false,
+            error: createMissingDiscordChannelMessage({
               code: "MISSING_DISCORD_CHANNELS",
               missingBattlegroups,
               context: "defense-plan",
-          }));
+            }),
+          };
       }
   }
 
