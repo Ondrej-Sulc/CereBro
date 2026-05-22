@@ -195,7 +195,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const [discordConfigError, setDiscordConfigError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!isSettingsOpen || !alliance.guildId || !isOfficer || discordConfig || isLoadingDiscordConfig) return;
+        if (!isSettingsOpen || !alliance.guildId || !isOfficer || discordConfig) return;
 
         let cancelled = false;
         setIsLoadingDiscordConfig(true);
@@ -222,7 +222,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         return () => {
             cancelled = true;
         };
-    }, [alliance.guildId, discordConfig, isLoadingDiscordConfig, isOfficer, isSettingsOpen, toast]);
+    }, [alliance.guildId, discordConfig, isOfficer, isSettingsOpen, toast]);
 
     const handleUpdateSettings = async (checked: boolean) => {
         setRemoveMissingMembers(checked);
