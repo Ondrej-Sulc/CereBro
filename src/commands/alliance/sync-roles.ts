@@ -23,7 +23,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
 
   const alliance = alliances[0];
 
-  if (!alliance.officerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role) {
+  if (!alliance.officerRole && !alliance.plannerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role) {
     loggerService.warn({ guildId: guild.id }, 'Attempted to sync roles for an alliance with no roles configured.');
     return { updated: 0, created: 0, removed: 0 };
   }
@@ -45,12 +45,14 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
 
   const anyBgRoleConfigured = !!(alliance.battlegroup1Role || alliance.battlegroup2Role || alliance.battlegroup3Role);
   const isOfficerRoleConfigured = !!alliance.officerRole;
+  const isPlannerRoleConfigured = !!alliance.plannerRole;
 
   for (const member of members.values()) {
     try {
       // 1. Determine "Target State" based on Discord roles
       let battlegroup: number | null = null;
       let isOfficer = false;
+      let isPlanner = false;
       let hasRelevantRole = false;
 
       if (alliance.battlegroup1Role && member.roles.cache.has(alliance.battlegroup1Role)) {
@@ -69,6 +71,11 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
         hasRelevantRole = true;
       }
 
+      if (alliance.plannerRole && member.roles.cache.has(alliance.plannerRole)) {
+        isPlanner = true;
+        hasRelevantRole = true;
+      }
+
       const existingAllianceMember = dbMembersMap.get(member.id);
 
       if (hasRelevantRole) {
@@ -76,11 +83,13 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
           // UPDATE existing alliance member
           const shouldUpdateBg = anyBgRoleConfigured && existingAllianceMember.battlegroup !== battlegroup;
           const shouldUpdateOfficer = isOfficerRoleConfigured && existingAllianceMember.isOfficer !== isOfficer;
+          const shouldUpdatePlanner = isPlannerRoleConfigured && existingAllianceMember.isPlanner !== isPlanner;
 
-          if (shouldUpdateBg || shouldUpdateOfficer) {
+          if (shouldUpdateBg || shouldUpdateOfficer || shouldUpdatePlanner) {
             const updateData: any = {};
             if (shouldUpdateBg) updateData.battlegroup = battlegroup;
             if (shouldUpdateOfficer) updateData.isOfficer = isOfficer;
+            if (shouldUpdatePlanner) updateData.isPlanner = isPlanner;
 
             await prisma.player.update({
               where: { id: existingAllianceMember.id },
@@ -136,6 +145,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
             };
             if (anyBgRoleConfigured) updateData.battlegroup = battlegroup;
             if (isOfficerRoleConfigured) updateData.isOfficer = isOfficer;
+            if (isPlannerRoleConfigured) updateData.isPlanner = isPlanner;
 
             await prisma.player.update({
               where: { id: globalPlayer.id },
@@ -165,6 +175,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
             };
             if (anyBgRoleConfigured) data.battlegroup = battlegroup;
             if (isOfficerRoleConfigured) data.isOfficer = isOfficer;
+            if (isPlannerRoleConfigured) data.isPlanner = isPlanner;
 
             const newPlayer = await prisma.player.create({
               data
@@ -209,6 +220,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
               allianceId: null,
               battlegroup: null,
               isOfficer: false,
+              isPlanner: false,
             },
           });
           removedCount++;
@@ -247,6 +259,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
             allianceId: null,
             battlegroup: null,
             isOfficer: false,
+            isPlanner: false,
           },
         });
         removedCount++;

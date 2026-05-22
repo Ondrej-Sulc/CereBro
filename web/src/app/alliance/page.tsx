@@ -47,6 +47,16 @@ export default async function AlliancePage() {
                 linkCode: true,
                 linkCodeExpires: true,
                 removeMissingMembers: true,
+                officerRole: true,
+                plannerRole: true,
+                battlegroup1Role: true,
+                battlegroup2Role: true,
+                battlegroup3Role: true,
+                warVideosChannelId: true,
+                deathChannelId: true,
+                battlegroup1ChannelId: true,
+                battlegroup2ChannelId: true,
+                battlegroup3ChannelId: true,
                 membershipRequests: {
                     include: {
                         player: true

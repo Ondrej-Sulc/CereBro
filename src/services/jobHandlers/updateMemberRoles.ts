@@ -49,7 +49,16 @@ export async function handleUpdateMemberRoles(client: Client, payload: unknown) 
         }
     }
 
-    // 2. Battlegroup Roles
+    // Planner Role
+    if (alliance.plannerRole) {
+        if (player.isPlanner) {
+            rolesToAdd.push(alliance.plannerRole);
+        } else {
+            rolesToRemove.push(alliance.plannerRole);
+        }
+    }
+
+    // Battlegroup Roles
     const bgRoles = [
         alliance.battlegroup1Role,
         alliance.battlegroup2Role,

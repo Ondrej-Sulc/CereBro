@@ -1,0 +1,3 @@
+ALTER TABLE "Player" ADD COLUMN "isPlanner" BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE "Alliance" ADD COLUMN "plannerRole" TEXT;

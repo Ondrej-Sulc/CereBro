@@ -6,6 +6,7 @@ import { getAlliance } from '../../utils/allianceHelper';
 
 export async function handleAllianceConfigRoles(interaction: ChatInputCommandInteraction) {
   const officerRole = interaction.options.getRole('officer');
+  const plannerRole = interaction.options.getRole('planner');
   const bg1Role = interaction.options.getRole('battlegroup1');
   const bg2Role = interaction.options.getRole('battlegroup2');
   const bg3Role = interaction.options.getRole('battlegroup3');
@@ -25,6 +26,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
   try {
     const updateData: {
       officerRole?: string;
+      plannerRole?: string;
       battlegroup1Role?: string;
       battlegroup2Role?: string;
       battlegroup3Role?: string;
@@ -32,6 +34,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
     } = {};
 
     if (officerRole) updateData.officerRole = officerRole.id;
+    if (plannerRole) updateData.plannerRole = plannerRole.id;
     if (bg1Role) updateData.battlegroup1Role = bg1Role.id;
     if (bg2Role) updateData.battlegroup2Role = bg2Role.id;
     if (bg3Role) updateData.battlegroup3Role = bg3Role.id;
@@ -50,6 +53,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
 
       let replyMessage = 'Current Alliance Role Configuration:\n';
       replyMessage += `- Officer Role: ${alliance.officerRole ? `<@&${alliance.officerRole}>` : 'Not set'}\n`;
+      replyMessage += `- Planner Role: ${alliance.plannerRole ? `<@&${alliance.plannerRole}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 1 Role: ${alliance.battlegroup1Role ? `<@&${alliance.battlegroup1Role}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 2 Role: ${alliance.battlegroup2Role ? `<@&${alliance.battlegroup2Role}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 3 Role: ${alliance.battlegroup3Role ? `<@&${alliance.battlegroup3Role}>` : 'Not set'}\n`;
@@ -66,6 +70,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
 
     let replyMessage = '✅ Alliance roles have been updated. Now running automatic sync...\n';
     if (alliance.officerRole) replyMessage += `- Officer Role: <@&${alliance.officerRole}>\n`;
+    if (alliance.plannerRole) replyMessage += `- Planner Role: <@&${alliance.plannerRole}>\n`;
     if (alliance.battlegroup1Role) replyMessage += `- Battlegroup 1 Role: <@&${alliance.battlegroup1Role}>\n`;
     if (alliance.battlegroup2Role) replyMessage += `- Battlegroup 2 Role: <@&${alliance.battlegroup2Role}>\n`;
     if (alliance.battlegroup3Role) replyMessage += `- Battlegroup 3 Role: <@&${alliance.battlegroup3Role}>\n`;

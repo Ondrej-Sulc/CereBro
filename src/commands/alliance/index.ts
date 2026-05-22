@@ -49,8 +49,9 @@ export const command: Command = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName('config-roles')
-        .setDescription('Configure officer and battlegroup roles for your alliance.')
+        .setDescription('Configure officer, planner, and battlegroup roles for your alliance.')
         .addRoleOption(option => option.setName('officer').setDescription('The role for alliance officers.'))
+        .addRoleOption(option => option.setName('planner').setDescription('The role for alliance war planners.'))
         .addRoleOption(option => option.setName('battlegroup1').setDescription('The role for Battlegroup 1.'))
         .addRoleOption(option => option.setName('battlegroup2').setDescription('The role for Battlegroup 2.'))
         .addRoleOption(option => option.setName('battlegroup3').setDescription('The role for Battlegroup 3.'))

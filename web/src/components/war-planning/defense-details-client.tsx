@@ -40,6 +40,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import DefenseStatsPanel from "./defense-stats-panel";
+import { parseMissingDiscordChannelMessage } from "@/lib/discord-config-validation";
+import { MissingDiscordConfigDialog } from "@/components/alliance/missing-discord-config-dialog";
 
 interface DefenseDetailsClientProps {
   plan: WarDefensePlan;
@@ -49,6 +51,7 @@ interface DefenseDetailsClientProps {
   players: PlayerWithRoster[];
   availableTags: Tag[];
   isOfficer?: boolean;
+  canConfigureDiscord?: boolean;
   bgColors?: Record<number, string>;
   userBattlegroup?: number | null;
   paletteStyle?: PlayerPaletteStyle;
@@ -165,6 +168,14 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [channels, setChannels] = useState<{ id: string; name: string }[]>([]);
   const [selectedChannel, setSelectedChannel] = useState<string>("");
   const [isLoadingChannels, setIsLoadingChannels] = useState(false);
+  const [missingDiscordConfig, setMissingDiscordConfig] = useState<{
+    missingBattlegroups: number[];
+    context: "defense-plan";
+  } | null>(null);
+  const [pendingDistribution, setPendingDistribution] = useState<{
+    battlegroup?: number;
+    targetChannelId?: string;
+  } | null>(null);
 
   const handleOpenShareDialog = async () => {
     setIsShareDialogOpen(true);
@@ -480,8 +491,34 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
           const target = battlegroup ? `BG${battlegroup}` : "all battlegroups";
           toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
       } catch (e) {
+          const error = e as Error;
+          const missing = parseMissingDiscordChannelMessage(error.message);
+          if (missing && missing.context === "defense-plan") {
+              setPendingDistribution({ battlegroup, targetChannelId });
+              setMissingDiscordConfig({
+                  missingBattlegroups: missing.missingBattlegroups,
+                  context: "defense-plan",
+              });
+              return;
+          }
           console.error(e);
-          toast({ title: "Distribution Failed", description: "Failed to start distribution.", variant: "destructive" });
+          toast({ title: "Distribution Failed", description: error.message || "Failed to start distribution.", variant: "destructive" });
+      }
+  };
+
+  const retryPendingDistribution = async () => {
+      if (!pendingDistribution) return;
+      const request = pendingDistribution;
+      setPendingDistribution(null);
+      setMissingDiscordConfig(null);
+
+      try {
+          await distributeDefensePlanToDiscord(props.planId, request.battlegroup, request.targetChannelId);
+          const target = request.battlegroup ? `BG${request.battlegroup}` : "all battlegroups";
+          toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
+      } catch (e) {
+          const error = e as Error;
+          toast({ title: "Distribution Failed", description: error.message || "Failed to start distribution.", variant: "destructive" });
       }
   };
 
@@ -492,6 +529,19 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
           isFullscreen ? "fixed inset-0 z-[100] h-screen bg-slate-950" : "h-[calc(100dvh-65px)]", // Keep solid bg in fullscreen
           isDesktop ? "flex-row" : "flex-col"
       )}>
+        <MissingDiscordConfigDialog
+            open={!!missingDiscordConfig}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setMissingDiscordConfig(null);
+                    setPendingDistribution(null);
+                }
+            }}
+            missingBattlegroups={missingDiscordConfig?.missingBattlegroups ?? []}
+            context="defense-plan"
+            canConfigure={props.canConfigureDiscord ?? false}
+            onConfigured={retryPendingDistribution}
+        />
         
         {/* Left Panel (Player Roster) - Hide in Roster View */}
         {viewMode === 'map' && (

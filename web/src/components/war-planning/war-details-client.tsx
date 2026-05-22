@@ -18,6 +18,8 @@ import { distributePlan } from "@/app/planning/actions";
 import { exportBattlegroupText, exportBattlegroupMarkdown } from "@/lib/war-plan-export";
 import { PlayerColorProvider } from "./player-color-context";
 import { PlayerPaletteStyle } from "@/lib/player-colors";
+import { parseMissingDiscordChannelMessage } from "@/lib/discord-config-validation";
+import { MissingDiscordConfigDialog } from "@/components/alliance/missing-discord-config-dialog";
 
 interface WarDetailsClientProps {
   war: War;
@@ -31,6 +33,7 @@ interface WarDetailsClientProps {
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
   isOfficer?: boolean;
+  canConfigureDiscord?: boolean;
   bgColors?: Record<number, string>;
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
   userBattlegroup?: number | null;
@@ -88,6 +91,15 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   const [isDesktop, setIsDesktop] = useState(true);
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true); // Default open
   const [highlightedPlayerId, setHighlightedPlayerId] = useState<string | null>(null);
+  const [missingDiscordConfig, setMissingDiscordConfig] = useState<{
+    missingBattlegroups: number[];
+    context: "attack-plan";
+  } | null>(null);
+  const [pendingDistribution, setPendingDistribution] = useState<{
+    battlegroup?: number;
+    targetChannelId?: string;
+    targetPlayerId?: string;
+  } | null>(null);
 
   const handleToggleFullscreen = useCallback(() => {
     setIsFullscreen((prev: boolean) => !prev);
@@ -130,6 +142,15 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         });
     } catch (e: unknown) {
         const error = e as Error;
+        const missing = parseMissingDiscordChannelMessage(error.message);
+        if (missing && missing.context === "attack-plan") {
+            setPendingDistribution({ battlegroup, targetChannelId });
+            setMissingDiscordConfig({
+                missingBattlegroups: missing.missingBattlegroups,
+                context: "attack-plan",
+            });
+            return;
+        }
         toast({
             title: "Distribution Failed",
             description: error.message,
@@ -137,6 +158,28 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         });
     }
   }, [props.warId, toast]);
+
+  const retryPendingDistribution = useCallback(async () => {
+    if (!pendingDistribution) return;
+    const request = pendingDistribution;
+    setPendingDistribution(null);
+    setMissingDiscordConfig(null);
+
+    try {
+      await distributePlan(props.warId, request.battlegroup, request.targetChannelId, request.targetPlayerId);
+      toast({
+        title: "Plan Distribution Started",
+        description: `Distribution job queued for ${request.battlegroup ? `Battlegroup ${request.battlegroup}` : 'all battlegroups'}.`,
+      });
+    } catch (e: unknown) {
+      const error = e as Error;
+      toast({
+        title: "Distribution Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }, [pendingDistribution, props.warId, toast]);
 
   const handleDistributePlayer = useCallback(async (playerId: string, battlegroup: number) => {
     try {
@@ -210,6 +253,21 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
           isFullscreen ? "fixed inset-0 z-[100] h-screen" : "h-[calc(100dvh-65px)]",
           isDesktop ? "flex-row" : "flex-col"
       )}>
+        {/* Briefing Modal */}
+        <MissingDiscordConfigDialog
+          open={!!missingDiscordConfig}
+          onOpenChange={(open) => {
+            if (!open) {
+              setMissingDiscordConfig(null);
+              setPendingDistribution(null);
+            }
+          }}
+          missingBattlegroups={missingDiscordConfig?.missingBattlegroups ?? []}
+          context="attack-plan"
+          canConfigure={props.canConfigureDiscord ?? false}
+          onConfigured={retryPendingDistribution}
+        />
+
         {/* Briefing Modal */}
         <PlayerBriefingModal
             isOpen={!!selectedPlayerId}

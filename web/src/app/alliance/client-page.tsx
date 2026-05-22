@@ -1,16 +1,32 @@
 'use client';
 
 import { Player } from "@prisma/client";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updatePlayerRole, updateAllianceColors, updateAlliancePalette, removeMember, leaveAlliance, respondToMembershipRequest, invitePlayerToAlliance, generateAllianceLinkCode, updateAllianceSettings, updateAllianceGeneral } from "../actions/alliance";
+import {
+    updatePlayerRole,
+    updateAllianceColors,
+    updateAlliancePalette,
+    removeMember,
+    leaveAlliance,
+    respondToMembershipRequest,
+    invitePlayerToAlliance,
+    generateAllianceLinkCode,
+    updateAllianceSettings,
+    updateAllianceGeneral,
+    getAllianceDiscordOptions,
+    updateAllianceDiscordConfig,
+    type AllianceDiscordConfig,
+    type DiscordChannelOption,
+    type DiscordRoleOption,
+} from "../actions/alliance";
 import { PALETTES, PALETTE_LABELS, PALETTE_DESCRIPTIONS, DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
-import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle, Heart, Sparkles } from "lucide-react";
+import { Crown, Shield, Users, HelpCircle, Settings, LogOut, UserPlus, Mail, Search, Clock, Link as LinkIcon, Bot, Check, Plus, RotateCcw, AlertTriangle, Heart, Sparkles, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +54,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
 import { ALLIANCE_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
+import { DiscordConfigForm } from "@/components/alliance/discord-config-form";
 
 interface MembershipRequest {
     id: string;
@@ -70,6 +87,16 @@ interface AllianceWithRequests {
     linkCode: string | null;
     linkCodeExpires: Date | null;
     removeMissingMembers: boolean;
+    officerRole: string | null;
+    plannerRole: string | null;
+    battlegroup1Role: string | null;
+    battlegroup2Role: string | null;
+    battlegroup3Role: string | null;
+    warVideosChannelId: string | null;
+    deathChannelId: string | null;
+    battlegroup1ChannelId: string | null;
+    battlegroup2ChannelId: string | null;
+    battlegroup3ChannelId: string | null;
     screenshotUnlock?: {
         currentMonthMinor: number;
         thresholdMinor: number;
@@ -89,6 +116,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const { toast } = useToast();
     const router = useRouter();
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const isOfficer = currentUser.isOfficer || currentUser.isBotAdmin;
     const screenshotUnlock = alliance.screenshotUnlock ?? {
@@ -159,6 +187,42 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     // Discord Sync Settings
     const [removeMissingMembers, setRemoveMissingMembers] = useState(alliance.removeMissingMembers);
     const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+    const [discordConfig, setDiscordConfig] = useState<AllianceDiscordConfig | null>(null);
+    const [discordRoles, setDiscordRoles] = useState<DiscordRoleOption[]>([]);
+    const [discordChannels, setDiscordChannels] = useState<DiscordChannelOption[]>([]);
+    const [isLoadingDiscordConfig, setIsLoadingDiscordConfig] = useState(false);
+    const [isSavingDiscordConfig, setIsSavingDiscordConfig] = useState(false);
+    const [discordConfigError, setDiscordConfigError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!isSettingsOpen || !alliance.guildId || !isOfficer || discordConfig || isLoadingDiscordConfig) return;
+
+        let cancelled = false;
+        setIsLoadingDiscordConfig(true);
+        setDiscordConfigError(null);
+
+        getAllianceDiscordOptions()
+            .then((result) => {
+                if (cancelled) return;
+                setDiscordConfig(result.config);
+                setDiscordRoles(result.roles);
+                setDiscordChannels(result.channels);
+            })
+            .catch((error: unknown) => {
+                const message = error instanceof Error ? error.message : "Could not load Discord configuration.";
+                if (!cancelled) {
+                    setDiscordConfigError(message);
+                    toast({ title: "Failed to load Discord configuration", description: message, variant: "destructive" });
+                }
+            })
+            .finally(() => {
+                if (!cancelled) setIsLoadingDiscordConfig(false);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [alliance.guildId, discordConfig, isLoadingDiscordConfig, isOfficer, isSettingsOpen, toast]);
 
     const handleUpdateSettings = async (checked: boolean) => {
         setRemoveMissingMembers(checked);
@@ -272,6 +336,38 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         try {
             await updatePlayerRole(player.id, { isOfficer: !player.isOfficer });
             toast({ title: player.isOfficer ? "Officer Demoted" : "Member Promoted" });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : "Failed to update role";
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setLoadingId(null);
+        }
+    };
+
+    const handleSaveDiscordConfig = async (config: AllianceDiscordConfig) => {
+        setIsSavingDiscordConfig(true);
+        try {
+            const result = await updateAllianceDiscordConfig(config);
+            setDiscordConfig(config);
+            toast({
+                title: "Discord configuration saved",
+                description: result.queuedRoleSync ? "Role sync has been queued." : undefined,
+            });
+            return { queuedRoleSync: result.queuedRoleSync };
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to save Discord configuration.";
+            toast({ title: "Error", description: message, variant: "destructive" });
+            throw error;
+        } finally {
+            setIsSavingDiscordConfig(false);
+        }
+    };
+
+    const handleTogglePlanner = async (player: Player) => {
+        setLoadingId(player.id);
+        try {
+            await updatePlayerRole(player.id, { isPlanner: !player.isPlanner });
+            toast({ title: player.isPlanner ? "Planner Removed" : "Planner Granted" });
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : "Failed to update role";
             toast({ title: "Error", description: message, variant: "destructive" });
@@ -410,6 +506,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 <div className="flex items-center gap-1.5">
                                     <Link href={`/player/${player.id}`} className="font-semibold text-sm truncate hover:text-sky-400 transition-colors" onClick={(e) => e.stopPropagation()}>{player.ingameName}</Link>
                                     {player.isOfficer && <Crown className="w-3 h-3 text-yellow-500 fill-yellow-500" />}
+                                    {player.isPlanner && <ClipboardList className="w-3 h-3 text-sky-400 shrink-0" />}
                                     {player.isSupporter && (
                                         <Heart className="w-3.5 h-3.5 text-amber-400 fill-amber-400/50 shrink-0" />
                                     )}
@@ -449,6 +546,9 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                             <DropdownMenuContent align="end" className="bg-slate-950 border-slate-800">
                                                 <DropdownMenuItem onClick={() => handleToggleOfficer(player)} className="text-xs">
                                                     {player.isOfficer ? "Demote from Officer" : "Promote to Officer"}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleTogglePlanner(player)} className="text-xs">
+                                                    {player.isPlanner ? "Remove Planner" : "Grant Planner"}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-slate-800" />
                                                 <DropdownMenuItem onClick={() => handleKick(player.id)} className="text-xs text-red-400 focus:text-red-300">
@@ -509,7 +609,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             </Dialog>
 
                             {isOfficer && (
-                                <Dialog>
+                                <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-300">
                                             <Settings className="h-4 w-4" />
@@ -745,6 +845,31 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                                     )}
                                                                 </div>
                                                             </div>
+                                                        </div>
+
+                                                        <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800">
+                                                            {isLoadingDiscordConfig ? (
+                                                                <div className="flex items-center justify-center py-8 text-sm text-slate-400">
+                                                                    <RotateCcw className="mr-2 h-4 w-4 animate-spin" />
+                                                                    Loading roles and channels...
+                                                                </div>
+                                                            ) : discordConfigError ? (
+                                                                <div className="rounded-md border border-red-500/30 bg-red-950/20 p-3 text-sm text-red-100">
+                                                                    {discordConfigError}
+                                                                </div>
+                                                            ) : discordConfig ? (
+                                                                <DiscordConfigForm
+                                                                    initialConfig={discordConfig}
+                                                                    roles={discordRoles}
+                                                                    channels={discordChannels}
+                                                                    onSave={handleSaveDiscordConfig}
+                                                                    saving={isSavingDiscordConfig}
+                                                                />
+                                                            ) : (
+                                                                <div className="text-sm text-slate-500">
+                                                                    Open this tab to load Discord roles and channels.
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}
