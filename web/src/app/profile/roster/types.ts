@@ -38,6 +38,9 @@ export interface Recommendation {
     toRank: number;
     prestigeGain: number;
     accountGain: number;
+    reason: PrestigeRecommendationReason;
+    globalPrestigeRank: number | null;
+    globalPrestigeRankTotal: number | null;
 }
 
 export interface SigRecommendation {
@@ -53,7 +56,34 @@ export interface SigRecommendation {
     prestigeGain: number;
     accountGain: number;
     prestigePerSig: number;
+    reason: PrestigeRecommendationReason;
+    globalPrestigeRank: number | null;
+    globalPrestigeRankTotal: number | null;
 }
+
+export interface PotentialRecommendation {
+    championId: number;
+    championName: string;
+    championClass: ChampionClass;
+    championImage: ChampionImages;
+    stars: number;
+    ascensionLevel: number;
+    fromRank: number;
+    toRank: number;
+    fromSig: number;
+    toSig: number;
+    currentPrestige: number;
+    targetPrestige: number;
+    prestigeGain: number;
+    accountGain: number;
+    reason: PrestigeRecommendationReason;
+    globalPrestigeRank: number | null;
+    globalPrestigeRankTotal: number | null;
+}
+
+export type PrestigeRecommendationReason = "already_top30" | "enters_top30" | "improves_top30";
+
+export type PrestigeInsightTab = "potential" | "rank" | "sig";
 
 export interface FilterState {
     tags: string[];

@@ -15,7 +15,7 @@ import { Player, Alliance } from "@prisma/client";
 import { isChampionObtainableAs } from "@/lib/champion-obtainable";
 
 // Local imports
-import { ProfileRosterEntry, Recommendation, SigRecommendation, PrestigePoint } from "./types";
+import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab } from "./types";
 import { ChampionCard } from "./components/champion-card";
 import { RosterFilters } from "./components/roster-filters";
 import { RosterInsights } from "./components/roster-insights";
@@ -54,9 +54,11 @@ interface RosterViewProps {
   player: Player & { alliance: Alliance | null };
   profiles: (Player & { alliance: Alliance | null })[];
   top30Average: number;
+  top30Cutoff: number;
   prestigeMap: Record<string, number>;
   recommendations?: Recommendation[];
   sigRecommendations?: SigRecommendation[];
+  potentialRecommendations?: PotentialRecommendation[];
   simulationTargetRank: number;
   initialSigBudget?: number;
   initialRankClassFilter: ChampionClass[];
@@ -70,6 +72,7 @@ interface RosterViewProps {
   initialImmunities: { id: string | number, name: string }[];
   initialLimit: number;
   initialShowInsights?: boolean;
+  initialInsightTab: PrestigeInsightTab;
   /** When false, hides all edit/add controls. Default: true */
   canEdit?: boolean;
   /** When set, API mutations target this player instead of the session player */
@@ -89,15 +92,18 @@ interface ApiRosterResponse {
   prestigeMap: Record<string, number>;
   recommendations: Recommendation[];
   sigRecommendations: SigRecommendation[];
+  potentialRecommendations: PotentialRecommendation[];
   top30Average: number;
+  top30Cutoff: number;
 }
 
 export function RosterView({
-  initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations,
+  initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, top30Cutoff: initialTop30Cutoff, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter, initialSigAwakenedOnly,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit,
   initialShowInsights = false,
+  initialInsightTab,
   canEdit = true,
   targetPlayerId,
   shareUrl,
@@ -123,7 +129,9 @@ export function RosterView({
   const [clientPrestigeMap, setPrestigeMap] = useState<Record<string, number>>(initialPrestigeMap);
   const [clientRecommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations || []);
   const [clientSigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
+  const [clientPotentialRecommendations, setPotentialRecommendations] = useState<PotentialRecommendation[]>(initialPotentialRecommendations || []);
   const [clientTop30Average, setTop30Average] = useState(initialTop30Average);
+  const [clientTop30Cutoff, setTop30Cutoff] = useState(initialTop30Cutoff);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(Object.keys(initialPrestigeMap).length === 0);
   const lastFetchedParams = useRef<string | null>(null);
 
@@ -168,7 +176,9 @@ export function RosterView({
   const prestigeMap = usePropsData ? initialPrestigeMap : clientPrestigeMap;
   const recommendations = usePropsData ? (initialRecommendations || []) : clientRecommendations;
   const sigRecommendations = usePropsData ? (initialSigRecommendations || []) : clientSigRecommendations;
+  const potentialRecommendations = usePropsData ? (initialPotentialRecommendations || []) : clientPotentialRecommendations;
   const top30Average = usePropsData ? initialTop30Average : clientTop30Average;
+  const top30Cutoff = usePropsData ? initialTop30Cutoff : clientTop30Cutoff;
 
   const triggerPrestigeUpdate = useCallback((val: number) => {
     if (val <= 0) return;
@@ -219,7 +229,9 @@ export function RosterView({
         setPrestigeMap(data.prestigeMap);
         setRecommendations(data.recommendations);
         setSigRecommendations(data.sigRecommendations);
+        setPotentialRecommendations(data.potentialRecommendations);
         setTop30Average(data.top30Average);
+        setTop30Cutoff(data.top30Cutoff);
         
         // Trigger background update of prestige in DB
         triggerPrestigeUpdate(data.top30Average);
@@ -569,6 +581,10 @@ export function RosterView({
       <RosterInsights
         showInsights={showInsights}
         recommendations={recommendations} sigRecommendations={sigRecommendations}
+        potentialRecommendations={potentialRecommendations}
+        top30Cutoff={top30Cutoff}
+        initialInsightTab={initialInsightTab}
+        onInsightTabChange={(tab) => updateUrlParams({ insightsTab: tab === 'potential' ? null : tab })}
         simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
         sigBudget={sigBudget} onSigBudgetChange={setSigBudget}
         rankUpClassFilter={rankUpClassFilter} onRankUpClassFilterChange={handleRankClassFilterChange}

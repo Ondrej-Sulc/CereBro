@@ -6,9 +6,8 @@ import { RosterView } from "./roster-view";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ChampionImages } from "@/types/champion";
-import { ProfileRosterEntry } from "./types";
+import { PrestigeInsightTab, ProfileRosterEntry } from "./types";
 import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
-import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
   title: "My Roster | CereBro",
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string; limit?: string; insights?: string; sigAwakenedOnly?: string }>;
+  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string; limit?: string; insights?: string; sigAwakenedOnly?: string; insightsTab?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
@@ -87,9 +86,10 @@ export default async function RosterPage(props: {
 
   const {
     options: insightOptions,
-    insights: { prestigeMap, recommendations, sigRecommendations, top30Average },
+    insights: { prestigeMap, recommendations, sigRecommendations, potentialRecommendations, top30Average, top30Cutoff },
   } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, searchParams);
   const showInsights = searchParams.insights === 'true';
+  const initialInsightTab = normalizePrestigeInsightTab(searchParams.insightsTab);
 
   const reqHeaders = await headers();
   const host = reqHeaders.get("host") ?? "localhost:3000";
@@ -106,9 +106,11 @@ export default async function RosterPage(props: {
         profiles={profiles}
         shareUrl={shareUrl}
         top30Average={top30Average || player.championPrestige || 0}
+        top30Cutoff={top30Cutoff}
         prestigeMap={prestigeMap}
         recommendations={recommendations}
         sigRecommendations={sigRecommendations}
+        potentialRecommendations={potentialRecommendations}
         simulationTargetRank={insightOptions.targetRank}
         initialSigBudget={insightOptions.sigBudget}
         initialRankClassFilter={insightOptions.rankClassFilter}
@@ -122,7 +124,13 @@ export default async function RosterPage(props: {
         initialImmunities={immunities}
         initialLimit={insightOptions.limit ?? 5}
         initialShowInsights={showInsights}
+        initialInsightTab={initialInsightTab}
       />
     </div>
   );
+}
+
+function normalizePrestigeInsightTab(value: string | undefined): PrestigeInsightTab {
+  if (value === "rank" || value === "sig") return value;
+  return "potential";
 }

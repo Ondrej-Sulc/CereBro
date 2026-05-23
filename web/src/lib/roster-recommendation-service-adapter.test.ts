@@ -52,7 +52,7 @@ describe("Roster Prestige Insights adapter", () => {
     rosterFindMany.mockReset();
   });
 
-  it("loads unique champion prestige rows before calling the pure insights module", async () => {
+  it("loads global champion prestige rows before calling the pure insights module", async () => {
     championPrestigeFindMany.mockResolvedValue([
       { championId: 1, rarity: 6, rank: 1, sig: 0, prestige: 10000 },
       { championId: 2, rarity: 6, rank: 1, sig: 0, prestige: 12000 },
@@ -73,7 +73,7 @@ describe("Roster Prestige Insights adapter", () => {
     );
 
     expect(championPrestigeFindMany).toHaveBeenCalledWith({
-      where: { championId: { in: [1, 2] } },
+      where: { sig: { in: [0, 1, 99, 200] } },
       select: { championId: true, rarity: true, rank: true, sig: true, prestige: true },
     });
     expect(result.prestigeMap).toEqual({
@@ -82,6 +82,7 @@ describe("Roster Prestige Insights adapter", () => {
       r3: 12000,
     });
     expect(result.top30Average).toBe(10667);
+    expect(result.top30Cutoff).toBe(10000);
   });
 
   it("normalizes query options and chooses a roster-aware default target rank", async () => {
@@ -171,6 +172,7 @@ describe("Roster Prestige Insights adapter", () => {
 
     expect(visibleRosterPrestigeInsights({
       top30Average: 10000,
+      top30Cutoff: 10000,
       prestigeMap: { r1: 10000 },
       recommendations: [{
         championId: 1,
@@ -183,6 +185,9 @@ describe("Roster Prestige Insights adapter", () => {
         toRank: 2,
         prestigeGain: 1000,
         accountGain: 100,
+        reason: "improves_top30",
+        globalPrestigeRank: 1,
+        globalPrestigeRankTotal: 1,
       }],
       sigRecommendations: [{
         championId: 1,
@@ -197,12 +202,36 @@ describe("Roster Prestige Insights adapter", () => {
         prestigeGain: 100,
         accountGain: 10,
         prestigePerSig: 10,
+        reason: "improves_top30",
+        globalPrestigeRank: 1,
+        globalPrestigeRankTotal: 1,
+      }],
+      potentialRecommendations: [{
+        championId: 1,
+        championName: "Alpha",
+        championClass: ChampionClass.COSMIC,
+        championImage: emptyImages,
+        stars: 6,
+        ascensionLevel: 0,
+        fromRank: 1,
+        toRank: 5,
+        fromSig: 0,
+        toSig: 200,
+        currentPrestige: 10000,
+        targetPrestige: 20000,
+        prestigeGain: 10000,
+        accountGain: 200,
+        reason: "improves_top30",
+        globalPrestigeRank: 1,
+        globalPrestigeRankTotal: 1,
       }],
     }, { includeSuggestions: false })).toEqual({
       top30Average: 10000,
+      top30Cutoff: 10000,
       prestigeMap: { r1: 10000 },
       recommendations: [],
       sigRecommendations: [],
+      potentialRecommendations: [],
     });
   });
 });

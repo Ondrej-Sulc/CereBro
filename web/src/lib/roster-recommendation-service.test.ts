@@ -65,14 +65,14 @@ function rosterEntry({
   };
 }
 
-function prestigeRows(championId: number, rank: number, prestige: number): RosterPrestigeRow[] {
-  return [{ championId, rarity: 6, rank, sig: 0, prestige }];
+function prestigeRows(championId: number, rank: number, prestige: number, rarity = 6): RosterPrestigeRow[] {
+  return [{ championId, rarity, rank, sig: 0, prestige }];
 }
 
-function sigPrestigeRows(championId: number, rank: number, prestigeBySig: Record<number, number>): RosterPrestigeRow[] {
+function sigPrestigeRows(championId: number, rank: number, prestigeBySig: Record<number, number>, rarity = 6): RosterPrestigeRow[] {
   return Object.entries(prestigeBySig).map(([sig, prestige]) => ({
     championId,
-    rarity: 6,
+    rarity,
     rank,
     sig: Number(sig),
     prestige,
@@ -198,5 +198,114 @@ describe("Roster Prestige Insights", () => {
       prestigeGain: 2000,
       accountGain: 33,
     });
+  });
+
+  it("reports low-rank champions with high practical max prestige as potential recommendations", () => {
+    const roster = Array.from({ length: 30 }, (_, index) =>
+      rosterEntry({
+        id: `top-${index}`,
+        championId: index + 1,
+        name: `Top ${index}`,
+        rank: 5,
+      })
+    );
+    roster.push(rosterEntry({
+      id: "sleeper",
+      championId: 101,
+      name: "Sleeper",
+      stars: 7,
+      rank: 1,
+      sigLevel: 20,
+    }));
+
+    const prestigeData: RosterPrestigeRow[] = [
+      ...roster.slice(0, 30).flatMap(entry => prestigeRows(entry.championId, entry.rank, 10000)),
+      ...sigPrestigeRows(101, 1, { 0: 9000, 1: 9100, 200: 10000 }, 7),
+      ...sigPrestigeRows(101, 4, { 0: 16000, 1: 16100, 200: 25000 }, 7),
+    ];
+
+    const result = calculateRosterPrestigeInsights(roster, prestigeData, {
+      ...defaultOptions,
+      targetRank: 4,
+    });
+
+    expect(result.top30Average).toBe(10000);
+    expect(result.potentialRecommendations[0]).toMatchObject({
+      championName: "Sleeper",
+      fromRank: 1,
+      toRank: 4,
+      fromSig: 20,
+      toSig: 200,
+      targetPrestige: 25000,
+      accountGain: 500,
+    });
+    expect(result.potentialRecommendations[0].prestigeGain).toBe(
+      result.potentialRecommendations[0].targetPrestige - result.potentialRecommendations[0].currentPrestige
+    );
+  });
+
+  it("uses the selected target rank for 7-star potential instead of always using rank 6", () => {
+    const roster = [
+      rosterEntry({ id: "r1", championId: 1, name: "Alpha", stars: 7, rank: 1 }),
+    ];
+    const prestigeData = [
+      ...sigPrestigeRows(1, 1, { 0: 9000, 1: 9100, 200: 10000 }, 7),
+      ...sigPrestigeRows(1, 4, { 0: 16000, 1: 16100, 200: 20000 }, 7),
+      ...sigPrestigeRows(1, 6, { 0: 24000, 1: 24100, 200: 30000 }, 7),
+    ];
+
+    const result = calculateRosterPrestigeInsights(roster, prestigeData, {
+      ...defaultOptions,
+      targetRank: 4,
+    });
+
+    expect(result.potentialRecommendations[0]).toMatchObject({
+      championName: "Alpha",
+      fromRank: 1,
+      toRank: 4,
+      targetPrestige: 20000,
+    });
+  });
+
+  it("does not reduce a 7-star current rank when target rank is lower", () => {
+    const roster = [
+      rosterEntry({ id: "r1", championId: 1, name: "Alpha", stars: 7, rank: 5 }),
+    ];
+    const prestigeData = [
+      ...sigPrestigeRows(1, 4, { 0: 16000, 1: 16100, 200: 20000 }, 7),
+      ...sigPrestigeRows(1, 5, { 0: 19000, 1: 19100, 200: 24000 }, 7),
+    ];
+
+    const result = calculateRosterPrestigeInsights(roster, prestigeData, {
+      ...defaultOptions,
+      targetRank: 4,
+    });
+
+    expect(result.potentialRecommendations[0]).toMatchObject({
+      championName: "Alpha",
+      fromRank: 5,
+      toRank: 5,
+      targetPrestige: 24000,
+    });
+  });
+
+  it("applies rank class and Saga filters to potential recommendations", () => {
+    const roster = [
+      rosterEntry({ id: "r1", championId: 1, name: "Alpha", rank: 1, championClass: ChampionClass.COSMIC, tags: ["#Saga Champions"] }),
+      rosterEntry({ id: "r2", championId: 2, name: "Bravo", rank: 1, championClass: ChampionClass.MUTANT, tags: ["#Saga Champions"] }),
+      rosterEntry({ id: "r3", championId: 3, name: "Charlie", rank: 1, championClass: ChampionClass.COSMIC }),
+    ];
+    const prestigeData = roster.flatMap(entry => [
+      ...prestigeRows(entry.championId, 1, 9000),
+      ...sigPrestigeRows(entry.championId, 5, { 0: 12000, 1: 12100, 200: 16000 }),
+    ]);
+
+    const result = calculateRosterPrestigeInsights(roster, prestigeData, {
+      ...defaultOptions,
+      rankClassFilter: [ChampionClass.COSMIC],
+      rankSagaFilter: true,
+    });
+
+    expect(result.potentialRecommendations.map(item => item.championName)).toEqual(["Alpha"]);
   });
 });

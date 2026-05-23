@@ -124,7 +124,7 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
     // Calculate prestige map and top 30 average on the server to ensure correct sorting by default
     const {
         options: insightOptions,
-        insights: { prestigeMap, top30Average },
+        insights: { prestigeMap, top30Average, top30Cutoff },
     } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, {});
 
     const quota = currentUser
@@ -175,6 +175,7 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
                 player={targetPlayer}
                 profiles={[]}
                 top30Average={top30Average}
+                top30Cutoff={top30Cutoff}
                 prestigeMap={prestigeMap}
                 simulationTargetRank={insightOptions.targetRank}
                 initialRankClassFilter={insightOptions.rankClassFilter}
@@ -187,6 +188,7 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
                 initialAbilities={abilities}
                 initialImmunities={immunities}
                 initialLimit={insightOptions.limit ?? 5}
+                initialInsightTab="potential"
                 canEdit={canEdit}
                 targetPlayerId={targetPlayerId}
                 shareUrl={shareUrl}

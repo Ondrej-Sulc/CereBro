@@ -14,6 +14,7 @@ export {
     type RosterPrestigeInsightRosterEntry,
     type RosterPrestigeInsights,
     type RosterPrestigeRow,
+    type RosterPrestigePotentialInsight,
 } from "./roster-prestige-insights";
 
 type RosterPrestigeInsightSearchParams =
@@ -80,9 +81,8 @@ export async function loadRosterPrestigeInsights(
         return calculateRosterPrestigeInsights(roster, [], options);
     }
 
-    const championIds = Array.from(new Set(roster.map(r => r.championId)));
     const prestigeRows = await prisma.championPrestige.findMany({
-        where: { championId: { in: championIds } },
+        where: { sig: { in: [0, 1, 99, 200] } },
         select: { championId: true, rarity: true, rank: true, sig: true, prestige: true },
     });
 
@@ -98,9 +98,11 @@ export function visibleRosterPrestigeInsights(
     if (options.includeSuggestions) return insights;
     return {
         top30Average: insights.top30Average,
+        top30Cutoff: insights.top30Cutoff,
         prestigeMap: insights.prestigeMap,
         recommendations: [],
         sigRecommendations: [],
+        potentialRecommendations: [],
     };
 }
 
