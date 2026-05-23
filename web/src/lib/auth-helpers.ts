@@ -8,6 +8,7 @@ export type UserPlayerWithAlliance = Omit<Player, "isBotAdmin"> & {
   alliance: Alliance | null;
   isBotAdmin: boolean;
   permissions: string[];
+  botUser: { isBotAdmin: boolean; permissions: string[] } | null;
 };
 
 export async function isUserBotAdmin(): Promise<boolean> {
@@ -74,7 +75,11 @@ export const getUserPlayerWithAlliance = cache(async (): Promise<UserPlayerWithA
     return {
       ...player,
       isBotAdmin: botUser?.isBotAdmin ?? false,
-      permissions: botUser?.permissions ?? []
+      permissions: botUser?.permissions ?? [],
+      botUser: botUser ? {
+        isBotAdmin: botUser.isBotAdmin,
+        permissions: botUser.permissions ?? [],
+      } : null,
     };
   }
 

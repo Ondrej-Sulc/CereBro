@@ -16,7 +16,9 @@ export const GET = withRouteContext(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const targetPlayerId = searchParams.get("playerId") || currentUser.id;
 
-  if (targetPlayerId !== currentUser.id && !currentUser.isBotAdmin) {
+  const isBotAdmin = currentUser.botUser?.isBotAdmin ?? false;
+
+  if (targetPlayerId !== currentUser.id && !isBotAdmin) {
     const targetPlayer = await prisma.player.findUnique({
       where: { id: targetPlayerId },
       select: { allianceId: true },
