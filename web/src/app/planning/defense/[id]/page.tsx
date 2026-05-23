@@ -86,7 +86,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
     return <p>Plan not found or you do not have permission to view it.</p>;
   }
 
-  const canPlan = canPlanAllianceWar(player);
+  const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const champions = await getCachedChampions();
 
@@ -138,7 +138,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         players={allianceMembers}
         availableTags={tags}
         isOfficer={canPlan}
-        canConfigureDiscord={player.isOfficer || player.isBotAdmin}
+        canConfigureDiscord={player.isOfficer || isBotAdmin}
         bgColors={bgColors}
         userBattlegroup={player.battlegroup}
         paletteStyle={plan.alliance.playerColorPalette as import("@/lib/player-colors").PlayerPaletteStyle}

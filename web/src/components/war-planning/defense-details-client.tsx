@@ -521,18 +521,34 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const retryPendingDistribution = async () => {
       if (!pendingDistribution) return;
       const request = pendingDistribution;
-      setPendingDistribution(null);
-      setMissingDiscordConfig(null);
 
       try {
           const result = await distributeDefensePlanToDiscord(props.planId, request.battlegroup, request.targetChannelId);
           if (!result.success) {
+              const missing = parseMissingDiscordChannelMessage(result.error);
+              if (missing && missing.context === "defense-plan") {
+                  setMissingDiscordConfig({
+                      missingBattlegroups: missing.missingBattlegroups,
+                      context: "defense-plan",
+                  });
+                  return;
+              }
               throw new Error(result.error);
           }
+          setPendingDistribution(null);
+          setMissingDiscordConfig(null);
           const target = request.battlegroup ? `BG${request.battlegroup}` : "all battlegroups";
           toast({ title: "Distribution Started", description: `The defense plan for ${target} is being sent to Discord channels.` });
       } catch (e) {
           const error = e as Error;
+          const missing = parseMissingDiscordChannelMessage(error.message);
+          if (missing && missing.context === "defense-plan") {
+              setMissingDiscordConfig({
+                  missingBattlegroups: missing.missingBattlegroups,
+                  context: "defense-plan",
+              });
+              return;
+          }
           toast({ title: "Distribution Failed", description: error.message || "Failed to start distribution.", variant: "destructive" });
       }
   };

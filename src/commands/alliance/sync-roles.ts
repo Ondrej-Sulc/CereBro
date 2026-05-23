@@ -84,12 +84,14 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
           const shouldUpdateBg = anyBgRoleConfigured && existingAllianceMember.battlegroup !== battlegroup;
           const shouldUpdateOfficer = isOfficerRoleConfigured && existingAllianceMember.isOfficer !== isOfficer;
           const shouldUpdatePlanner = isPlannerRoleConfigured && existingAllianceMember.isPlanner !== isPlanner;
+          const shouldClearPlanner = !isPlannerRoleConfigured && existingAllianceMember.isPlanner;
 
-          if (shouldUpdateBg || shouldUpdateOfficer || shouldUpdatePlanner) {
+          if (shouldUpdateBg || shouldUpdateOfficer || shouldUpdatePlanner || shouldClearPlanner) {
             const updateData: any = {};
             if (shouldUpdateBg) updateData.battlegroup = battlegroup;
             if (shouldUpdateOfficer) updateData.isOfficer = isOfficer;
             if (shouldUpdatePlanner) updateData.isPlanner = isPlanner;
+            if (shouldClearPlanner) updateData.isPlanner = false;
 
             await prisma.player.update({
               where: { id: existingAllianceMember.id },
@@ -146,6 +148,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
             if (anyBgRoleConfigured) updateData.battlegroup = battlegroup;
             if (isOfficerRoleConfigured) updateData.isOfficer = isOfficer;
             if (isPlannerRoleConfigured) updateData.isPlanner = isPlanner;
+            if (!isPlannerRoleConfigured && globalPlayer.isPlanner) updateData.isPlanner = false;
 
             await prisma.player.update({
               where: { id: globalPlayer.id },

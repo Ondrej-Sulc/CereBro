@@ -58,7 +58,7 @@ export function findMissingBattlegroupChannels(
   requiredBattlegroups: number[]
 ): number[] {
   return [...new Set(requiredBattlegroups)]
-    .filter((bg) => bg >= 1 && bg <= 3)
+    .filter((bg) => Number.isInteger(bg) && bg >= 1 && bg <= 3)
     .filter((bg) => {
       const channelId = bg === 1
         ? config.battlegroup1ChannelId

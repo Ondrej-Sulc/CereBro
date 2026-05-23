@@ -49,7 +49,7 @@ const createWarSchema = z.object({
 
 export const getGuildChannels = withActionContext('getGuildChannels', async (allianceId: string): Promise<DiscordChannel[]> => {
     const player = await getUserPlayerWithAlliance();
-    if (!player || !canPlanAllianceWar(player)) {
+    if (!player || !canPlanAllianceWar(player, player.isBotAdmin)) {
          throw new Error("Unauthorized");
     }
     
@@ -166,7 +166,7 @@ export const getWarProgress = withActionContext('getWarProgress', async (warId: 
 export const createWar = withActionContext('createWar', async (formData: FormData) => {
   const player = await getUserPlayerWithAlliance();
 
-  if (!player || !player.allianceId || !canPlanAllianceWar(player)) {
+  if (!player || !player.allianceId || !canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to plan a war.");
   }
 
@@ -231,7 +231,7 @@ export const updateWarFight = withActionContext('updateWarFight', async (updated
       return { success: false, error: "Unauthorized." };
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     return { success: false, error: "You must be an Alliance Planner, Officer, or Bot Admin to update war fights." };
   }
 
@@ -448,7 +448,7 @@ export const updateWarStatus = withActionContext('updateWarStatus', async (warId
       throw new Error("Unauthorized");
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to update war status.");
   }
 
@@ -492,7 +492,7 @@ export const deleteWar = withActionContext('deleteWar', async (warId: string) =>
       throw new Error("Unauthorized");
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to delete a war.");
   }
 
@@ -515,7 +515,7 @@ export const addExtraChampion = withActionContext('addExtraChampion', async (war
       throw new Error("Unauthorized");
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage extra champions.");
   }
 
@@ -549,7 +549,7 @@ export const removeExtraChampion = withActionContext('removeExtraChampion', asyn
       throw new Error("Unauthorized");
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage extra champions.");
   }
 
@@ -576,7 +576,7 @@ export const addWarBan = withActionContext('addWarBan', async (warId: string, ch
         throw new Error("Unauthorized");
     }
 
-    if (!canPlanAllianceWar(player)) {
+    if (!canPlanAllianceWar(player, player.isBotAdmin)) {
         throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.");
     }
 
@@ -608,7 +608,7 @@ export const removeWarBan = withActionContext('removeWarBan', async (id: string)
         throw new Error("Unauthorized");
     }
 
-    if (!canPlanAllianceWar(player)) {
+    if (!canPlanAllianceWar(player, player.isBotAdmin)) {
         throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.");
     }
 
@@ -663,7 +663,7 @@ export const distributePlan = withActionContext('distributePlan', async (warId: 
       throw new Error("Unauthorized");
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to distribute plans.");
   }
 
@@ -726,7 +726,7 @@ export const updateWarDetails = withActionContext('updateWarDetails', async (war
       throw new Error("Unauthorized");
   }
 
-  if (!canPlanAllianceWar(player)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to update war details.");
   }
 

@@ -24,6 +24,16 @@ type MissingDiscordConfigDialogProps = {
 };
 
 const NONE = "__none__";
+const MIN_BATTLEGROUP = 1;
+const MAX_BATTLEGROUP = 3;
+
+function normalizeBattlegroups(battlegroups: number[]) {
+  return [...new Set(
+    battlegroups
+      .map((bg) => Number(bg))
+      .filter((bg) => Number.isInteger(bg) && bg >= MIN_BATTLEGROUP && bg <= MAX_BATTLEGROUP)
+  )].sort((a, b) => a - b);
+}
 
 export function MissingDiscordConfigDialog({
   open,
@@ -40,7 +50,7 @@ export function MissingDiscordConfigDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const sortedBgs = useMemo(() => [...new Set(missingBattlegroups)].sort((a, b) => a - b), [missingBattlegroups]);
+  const sortedBgs = useMemo(() => normalizeBattlegroups(missingBattlegroups), [missingBattlegroups]);
   const planLabel = context === "attack-plan" ? "attack plan" : "defense plan";
 
   useEffect(() => {
@@ -76,10 +86,11 @@ export function MissingDiscordConfigDialog({
     };
   }, [open, canConfigure, toast]);
 
-  const fieldForBg = (bg: number): keyof AllianceDiscordConfig => {
+  const fieldForBg = (bg: number): keyof AllianceDiscordConfig | null => {
     if (bg === 1) return "battlegroup1ChannelId";
     if (bg === 2) return "battlegroup2ChannelId";
-    return "battlegroup3ChannelId";
+    if (bg === 3) return "battlegroup3ChannelId";
+    return null;
   };
 
   const handleSave = async () => {
@@ -133,6 +144,7 @@ export function MissingDiscordConfigDialog({
               <div className="space-y-3">
                 {sortedBgs.map((bg) => {
                   const field = fieldForBg(bg);
+                  if (!field) return null;
                   return (
                     <div key={bg} className="space-y-1.5">
                       <Label>BG{bg} channel</Label>

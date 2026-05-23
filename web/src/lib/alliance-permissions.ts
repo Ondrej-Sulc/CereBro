@@ -1,9 +1,9 @@
 import type { UserPlayerWithAlliance } from "@/lib/auth-helpers";
 
-export function canManageAllianceMembers(player: Pick<UserPlayerWithAlliance, "isOfficer" | "isBotAdmin">) {
-  return player.isOfficer || player.isBotAdmin;
+export function canManageAllianceMembers(player: Pick<UserPlayerWithAlliance, "isOfficer">, botUserIsBotAdmin: boolean) {
+  return player.isOfficer || botUserIsBotAdmin;
 }
 
-export function canPlanAllianceWar(player: Pick<UserPlayerWithAlliance, "isOfficer" | "isPlanner" | "isBotAdmin">) {
-  return player.isBotAdmin || player.isOfficer || player.isPlanner;
+export function canPlanAllianceWar(player: { isOfficer: boolean; isPlanner?: boolean }, botUserIsBotAdmin: boolean) {
+  return botUserIsBotAdmin || player.isOfficer || !!player.isPlanner;
 }

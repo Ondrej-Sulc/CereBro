@@ -51,7 +51,7 @@ export default async function WarPlanningPage() {
   const defaultWarNumber = lastWar && lastWar.warNumber !== null ? lastWar.warNumber + 1 : 1;
   const defaultTier = lastWar ? lastWar.warTier : 1;
 
-  const canPlan = canPlanAllianceWar(player);
+  const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const bgColors = {
       1: player.alliance?.battlegroup1Color || "#ef4444",

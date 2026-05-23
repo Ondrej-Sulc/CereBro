@@ -55,6 +55,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
 import { ALLIANCE_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { DiscordConfigForm } from "@/components/alliance/discord-config-form";
+import type { UserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 interface MembershipRequest {
     id: string;
@@ -108,7 +109,7 @@ type PlayerWithRoster = Player & { _count: { roster: number }; isSupporter?: boo
 
 interface ClientPageProps {
     members: PlayerWithRoster[];
-    currentUser: Player;
+    currentUser: UserPlayerWithAlliance;
     alliance: AllianceWithRequests;
 }
 
@@ -118,7 +119,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const [loadingId, setLoadingId] = useState<string | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    const isOfficer = currentUser.isOfficer || currentUser.isBotAdmin;
+    const canManageAlliance = currentUser.isOfficer || currentUser.isBotAdmin;
     const screenshotUnlock = alliance.screenshotUnlock ?? {
         currentMonthMinor: 0,
         thresholdMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR,
@@ -195,7 +196,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const [discordConfigError, setDiscordConfigError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!isSettingsOpen || !alliance.guildId || !isOfficer || discordConfig) return;
+        if (!isSettingsOpen || !alliance.guildId || !canManageAlliance || discordConfig) return;
 
         let cancelled = false;
         setIsLoadingDiscordConfig(true);
@@ -222,7 +223,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         return () => {
             cancelled = true;
         };
-    }, [alliance.guildId, discordConfig, isOfficer, isSettingsOpen, toast]);
+    }, [alliance.guildId, canManageAlliance, discordConfig, isSettingsOpen, toast]);
 
     const handleUpdateSettings = async (checked: boolean) => {
         setRemoveMissingMembers(checked);
@@ -518,7 +519,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 </p>
                             </div>
 
-                            {isOfficer ? (
+                            {canManageAlliance ? (
                                 <div className="flex items-center gap-2">
                                     <Select 
                                         disabled={loadingId === player.id}
@@ -608,7 +609,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 </DialogContent>
                             </Dialog>
 
-                            {isOfficer && (
+                            {canManageAlliance && (
                                 <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-300">
@@ -938,7 +939,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {isOfficer && (
+                    {canManageAlliance && (
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant="outline" className="gap-2 border-slate-700 bg-slate-900/50">

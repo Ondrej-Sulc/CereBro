@@ -55,14 +55,19 @@ export async function handlePlan(interaction: ChatInputCommandInteraction) {
   }
 
   // Permission Check
-  const activePlayer = await getActivePlayer(interaction.user.id);
-  if (!activePlayer || (!activePlayer.isPlanner && !activePlayer.isOfficer && !activePlayer.isBotAdmin)) {
+  const [activePlayer, botUser] = await Promise.all([
+    getActivePlayer(interaction.user.id),
+    prisma.botUser.findUnique({ where: { discordId: interaction.user.id } }),
+  ]);
+  const isBotAdmin = botUser?.isBotAdmin ?? false;
+
+  if (!activePlayer || (!activePlayer.isPlanner && !activePlayer.isOfficer && !isBotAdmin)) {
       await interaction.editReply("You must be an Alliance Planner, Officer, or Bot Admin to distribute war plans.");
       return;
   }
 
   // Ensure they belong to THIS alliance if they aren't a global admin
-  if (!activePlayer.isBotAdmin && activePlayer.allianceId !== alliance.id) {
+  if (!isBotAdmin && activePlayer.allianceId !== alliance.id) {
        await interaction.editReply("You are not authorized for this alliance.");
        return;
   }

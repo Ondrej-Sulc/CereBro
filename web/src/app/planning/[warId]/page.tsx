@@ -79,7 +79,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
 
   logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing War Planning [warId] page");
 
-  const canPlan = canPlanAllianceWar(player);
+  const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const champions = await getCachedChampions();
 
@@ -169,7 +169,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       seasonBans={seasonBans}
       warBans={warBans}
       isOfficer={canPlan}
-      canConfigureDiscord={player.isOfficer || player.isBotAdmin}
+      canConfigureDiscord={player.isOfficer || isBotAdmin}
       bgColors={bgColors}
       activeDefensePlan={activeDefensePlan?.activeDefensePlan}
       userBattlegroup={player.battlegroup}

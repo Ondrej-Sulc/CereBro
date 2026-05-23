@@ -174,20 +174,38 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
   const retryPendingDistribution = useCallback(async () => {
     if (!pendingDistribution) return;
     const request = pendingDistribution;
-    setPendingDistribution(null);
-    setMissingDiscordConfig(null);
 
     try {
       const result = await distributePlan(props.warId, request.battlegroup, request.targetChannelId, request.targetPlayerId);
       if (!result.success) {
+        const missing = parseMissingDiscordChannelMessage(result.error);
+        if (missing && missing.context === "attack-plan") {
+          setPendingDistribution(request);
+          setMissingDiscordConfig({
+            missingBattlegroups: missing.missingBattlegroups,
+            context: "attack-plan",
+          });
+          return;
+        }
         throw new Error(result.error);
       }
+      setPendingDistribution(null);
+      setMissingDiscordConfig(null);
       toast({
         title: "Plan Distribution Started",
         description: `Distribution job queued for ${request.battlegroup ? `Battlegroup ${request.battlegroup}` : 'all battlegroups'}.`,
       });
     } catch (e: unknown) {
       const error = e as Error;
+      const missing = parseMissingDiscordChannelMessage(error.message);
+      if (missing && missing.context === "attack-plan") {
+        setPendingDistribution(request);
+        setMissingDiscordConfig({
+          missingBattlegroups: missing.missingBattlegroups,
+          context: "attack-plan",
+        });
+        return;
+      }
       toast({
         title: "Distribution Failed",
         description: error.message,
@@ -200,6 +218,15 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     try {
         const result = await distributePlan(props.warId, battlegroup, undefined, playerId);
         if (!result.success) {
+            const missing = parseMissingDiscordChannelMessage(result.error);
+            if (missing && missing.context === "attack-plan") {
+                setPendingDistribution({ battlegroup, targetPlayerId: playerId });
+                setMissingDiscordConfig({
+                    missingBattlegroups: missing.missingBattlegroups,
+                    context: "attack-plan",
+                });
+                return;
+            }
             throw new Error(result.error);
         }
         toast({
@@ -208,6 +235,15 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
         });
     } catch (e: unknown) {
         const error = e as Error;
+        const missing = parseMissingDiscordChannelMessage(error.message);
+        if (missing && missing.context === "attack-plan") {
+            setPendingDistribution({ battlegroup, targetPlayerId: playerId });
+            setMissingDiscordConfig({
+                missingBattlegroups: missing.missingBattlegroups,
+                context: "attack-plan",
+            });
+            return;
+        }
         toast({
             title: "Distribution Failed",
             description: error.message,

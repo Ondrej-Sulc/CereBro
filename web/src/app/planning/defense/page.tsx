@@ -49,7 +49,7 @@ export default async function DefensePlanningPage() {
         <DefenseDashboard
           plans={plans}
           userTimezone={player.timezone}
-          isOfficer={canPlanAllianceWar(player)}
+          isOfficer={canPlanAllianceWar(player, player.isBotAdmin)}
           activeDefensePlanId={alliance?.activeDefensePlanId}
         />
       </main>

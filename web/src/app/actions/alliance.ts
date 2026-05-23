@@ -172,7 +172,7 @@ export const updatePlayerRole = withActionContext('updatePlayerRole', async (tar
     }
 
     // Verify acting user is Officer or Admin
-    if (!canManageAllianceMembers(actingUser)) {
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
         throw new Error("Insufficient permissions");
     }
 
@@ -209,7 +209,7 @@ export const updateAllianceGeneral = withActionContext('updateAllianceGeneral', 
 }) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
-    if (!canManageAllianceMembers(actingUser)) throw new Error("Insufficient permissions");
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) throw new Error("Insufficient permissions");
 
     const name = data.name.trim();
     if (!name || name.length > 50) throw new Error("Alliance name must be between 1 and 50 characters");
@@ -245,7 +245,7 @@ export const updateAllianceColors = withActionContext('updateAllianceColors', as
         throw new Error("Unauthorized");
     }
 
-    if (!canManageAllianceMembers(actingUser)) {
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
         throw new Error("Insufficient permissions");
     }
 
@@ -268,7 +268,7 @@ export const updateAlliancePalette = withActionContext('updateAlliancePalette', 
         throw new Error("Unauthorized");
     }
 
-    if (!canManageAllianceMembers(actingUser)) {
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
         throw new Error("Insufficient permissions");
     }
 
@@ -288,7 +288,7 @@ export const updateAllianceSettings = withActionContext('updateAllianceSettings'
         throw new Error("Unauthorized");
     }
 
-    if (!canManageAllianceMembers(actingUser)) {
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
         throw new Error("Insufficient permissions");
     }
 
@@ -314,7 +314,7 @@ export const getAllianceDiscordOptions = withActionContext('getAllianceDiscordOp
         throw new Error("Unauthorized");
     }
 
-    if (!canManageAllianceMembers(actingUser)) {
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
         throw new Error("Insufficient permissions");
     }
 
@@ -348,7 +348,7 @@ export const updateAllianceDiscordConfig = withActionContext('updateAllianceDisc
         throw new Error("Unauthorized");
     }
 
-    if (!canManageAllianceMembers(actingUser)) {
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
         throw new Error("Insufficient permissions");
     }
 
@@ -390,41 +390,43 @@ export const updateAllianceDiscordConfig = withActionContext('updateAllianceDisc
     const previous = pickDiscordConfig(alliance);
     const roleChanged = ROLE_FIELDS.some((field) => previous[field] !== normalized[field]);
 
-    await prisma.alliance.update({
-        where: { id: alliance.id },
-        data: normalized,
-    });
+    await prisma.$transaction(async (tx) => {
+        await tx.alliance.update({
+            where: { id: alliance.id },
+            data: normalized,
+        });
 
-    if (roleChanged) {
-        await prisma.botJob.upsert({
-            where: {
-                type_referenceId: {
+        if (roleChanged) {
+            await tx.botJob.upsert({
+                where: {
+                    type_referenceId: {
+                        type: BotJobType.SYNC_ALLIANCE_ROLES,
+                        referenceId: `sync-alliance-roles:${alliance.id}`,
+                    },
+                },
+                create: {
                     type: BotJobType.SYNC_ALLIANCE_ROLES,
                     referenceId: `sync-alliance-roles:${alliance.id}`,
+                    status: "PENDING",
+                    error: null,
+                    payload: {
+                        allianceId: alliance.id,
+                        guildId: alliance.guildId,
+                        requestedByPlayerId: actingUser.id,
+                    },
                 },
-            },
-            create: {
-                type: BotJobType.SYNC_ALLIANCE_ROLES,
-                referenceId: `sync-alliance-roles:${alliance.id}`,
-                status: "PENDING",
-                error: null,
-                payload: {
-                    allianceId: alliance.id,
-                    guildId: alliance.guildId,
-                    requestedByPlayerId: actingUser.id,
+                update: {
+                    status: "PENDING",
+                    error: null,
+                    payload: {
+                        allianceId: alliance.id,
+                        guildId: alliance.guildId,
+                        requestedByPlayerId: actingUser.id,
+                    },
                 },
-            },
-            update: {
-                status: "PENDING",
-                error: null,
-                payload: {
-                    allianceId: alliance.id,
-                    guildId: alliance.guildId,
-                    requestedByPlayerId: actingUser.id,
-                },
-            },
-        });
-    }
+            });
+        }
+    });
 
     revalidatePath('/alliance');
     revalidatePath('/planning');
@@ -487,7 +489,7 @@ export const leaveAlliance = withActionContext('leaveAlliance', async () => {
 export const removeMember = withActionContext('removeMember', async (playerId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
-    if (!canManageAllianceMembers(actingUser)) throw new Error("Insufficient permissions");
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) throw new Error("Insufficient permissions");
 
     const targetPlayer = await prisma.player.findUnique({ where: { id: playerId } });
     if (!targetPlayer || targetPlayer.allianceId !== actingUser.allianceId) throw new Error("Player not in alliance");
@@ -558,7 +560,7 @@ export const requestToJoinAlliance = withActionContext('requestToJoinAlliance', 
 export const invitePlayerToAlliance = withActionContext('invitePlayerToAlliance', async (playerId: string) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
-    if (!canManageAllianceMembers(actingUser)) throw new Error("Insufficient permissions");
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) throw new Error("Insufficient permissions");
 
     const targetPlayer = await prisma.player.findUnique({ where: { id: playerId } });
     if (!targetPlayer) {
@@ -613,7 +615,7 @@ export const respondToMembershipRequest = withActionContext('respondToMembership
 
     if (request.type === 'REQUEST') {
         // Only officers can accept/reject join requests
-        if (!actingUser.allianceId || actingUser.allianceId !== request.allianceId || !canManageAllianceMembers(actingUser)) {
+        if (!actingUser.allianceId || actingUser.allianceId !== request.allianceId || !canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) {
             logger.warn({ userId: actingUser.id, requestId, type: 'REQUEST' }, "Unauthorized response to join request");
             return { error: "Insufficient permissions" };
         }
@@ -683,7 +685,7 @@ export const respondToMembershipRequest = withActionContext('respondToMembership
 export const generateAllianceLinkCode = withActionContext('generateAllianceLinkCode', async () => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
-    if (!canManageAllianceMembers(actingUser)) throw new Error("Insufficient permissions");
+    if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) throw new Error("Insufficient permissions");
 
     // Generate CB-XXXXXX code
     const code = `CB-${Math.floor(100000 + Math.random() * 900000)}`;

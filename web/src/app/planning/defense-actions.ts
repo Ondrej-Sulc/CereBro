@@ -27,7 +27,7 @@ export const createDefensePlan = withActionContext('createDefensePlan', async (f
   }
 
   // Even Bot Admins need to be in an alliance to create a plan for it (in the current UI context)
-  if (!player.allianceId || !canPlanAllianceWar(player)) {
+  if (!player.allianceId || !canPlanAllianceWar(player, player.isBotAdmin)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin (and in an alliance) to create a defense plan.");
   }
 
@@ -89,7 +89,7 @@ export const updateDefensePlacement = withActionContext('updateDefensePlacement'
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to update defense placements.");
   }
 
@@ -171,7 +171,7 @@ export const deleteDefensePlan = withActionContext('deleteDefensePlan', async (p
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
     throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to delete a defense plan.");
   }
 
@@ -203,7 +203,7 @@ export const updateDefensePlanHighlightTag = withActionContext('updateDefensePla
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
       throw new Error("Unauthorized");
   }
 
@@ -231,7 +231,7 @@ export const updateDefensePlanTier = withActionContext('updateDefensePlanTier', 
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
       throw new Error("Unauthorized");
   }
 
@@ -259,7 +259,7 @@ export const renameDefensePlan = withActionContext('renameDefensePlan', async (p
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
       throw new Error("Unauthorized");
   }
 
@@ -288,7 +288,7 @@ export const distributeDefensePlanToDiscord = withActionContext('distributeDefen
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
       throw new Error("Unauthorized");
   }
 
@@ -352,7 +352,7 @@ export const setDefensePlanActive = withActionContext('setDefensePlanActive', as
 
   const isBotAdmin = player.isBotAdmin;
 
-  if (!canPlanAllianceWar(player) || (!isBotAdmin && !player.allianceId)) {
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
       throw new Error("Unauthorized: Only planners, officers, or bot admins can set active plans.");
   }
 

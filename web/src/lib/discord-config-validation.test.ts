@@ -40,4 +40,12 @@ describe("discord config validation", () => {
       battlegroup3ChannelId: "c3",
     }, [1, 2, 3])).toEqual([1]);
   });
+
+  it("ignores non-integer battlegroup values", () => {
+    expect(findMissingBattlegroupChannels({
+      battlegroup1ChannelId: "c1",
+      battlegroup2ChannelId: "c2",
+      battlegroup3ChannelId: null,
+    }, [1, 1.5, 3, 4])).toEqual([3]);
+  });
 });

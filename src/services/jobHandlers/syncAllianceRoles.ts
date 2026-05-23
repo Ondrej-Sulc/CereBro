@@ -9,11 +9,19 @@ export type SyncAllianceRolesPayload = {
 };
 
 export async function handleSyncAllianceRoles(client: Client, payload: unknown) {
-  const { allianceId, guildId, requestedByPlayerId } = payload as SyncAllianceRolesPayload;
+  const parsed = payload as Partial<SyncAllianceRolesPayload>;
 
-  if (!allianceId || !guildId || !requestedByPlayerId) {
-    throw new Error('Invalid SYNC_ALLIANCE_ROLES payload');
+  if (
+    typeof parsed.allianceId !== 'string' || parsed.allianceId.trim().length === 0 ||
+    typeof parsed.guildId !== 'string' || parsed.guildId.trim().length === 0 ||
+    typeof parsed.requestedByPlayerId !== 'string' || parsed.requestedByPlayerId.trim().length === 0
+  ) {
+    throw new Error('Invalid SYNC_ALLIANCE_ROLES payload: allianceId, guildId, and requestedByPlayerId must be non-empty strings');
   }
+
+  const allianceId = parsed.allianceId.trim();
+  const guildId = parsed.guildId.trim();
+  const requestedByPlayerId = parsed.requestedByPlayerId.trim();
 
   logger.info({ allianceId, guildId, requestedByPlayerId }, 'Starting full alliance role sync job');
 
