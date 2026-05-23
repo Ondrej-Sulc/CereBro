@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useTransition, type FormEvent } from "react";
 import { War, WarStatus, WarMapType } from "@prisma/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Plus, 
   Swords, 
@@ -36,7 +37,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -64,11 +64,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { createWar, deleteWar, updateWarDetails } from "@/app/planning/actions";
+import { createWar, deleteWar, type CreateWarResult } from "@/app/planning/actions";
 import { useToast } from "@/hooks/use-toast";
 import { EditWarDialog } from "./edit-war-dialog";
 import { WarResult } from "@prisma/client";
 import { reportClientError } from "@/lib/observability/client";
+
+type CreateWarFieldErrors = Extract<CreateWarResult, { success: false }>["fieldErrors"];
 
 interface ExtendedWar extends War {
     fights?: { death: number }[];
@@ -94,11 +96,16 @@ export default function WarPlanningDashboard({
   isBotAdmin,
   isOfficer,
 }: WarPlanningDashboardProps) {
+  const router = useRouter();
+  const { toast } = useToast();
   const defaultMapType = wars[0]?.mapType || WarMapType.STANDARD;
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedMapType, setSelectedMapType] = useState<WarMapType>(defaultMapType);
   const [lastDefaultMapType, setLastDefaultMapType] = useState<WarMapType>(defaultMapType);
   const [isOffSeason, setIsOffSeason] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createFieldErrors, setCreateFieldErrors] = useState<CreateWarFieldErrors>(undefined);
+  const [isCreatePending, startCreateTransition] = useTransition();
 
   if (lastDefaultMapType !== defaultMapType) {
     setLastDefaultMapType(defaultMapType);
@@ -107,6 +114,55 @@ export default function WarPlanningDashboard({
 
   const activeWars = wars.filter((w) => w.status === WarStatus.PLANNING);
   const archivedWars = wars.filter((w) => w.status === WarStatus.FINISHED);
+
+  const clearCreateErrors = () => {
+    setCreateError(null);
+    setCreateFieldErrors(undefined);
+  };
+
+  const handleCreateOpenChange = (open: boolean) => {
+    setIsCreateOpen(open);
+    if (!open) {
+      clearCreateErrors();
+    }
+  };
+
+  const handleOffSeasonChange = (checked: boolean) => {
+    setIsOffSeason(checked);
+    if (createFieldErrors?.warNumber) {
+      setCreateFieldErrors({ ...createFieldErrors, warNumber: undefined });
+      setCreateError(null);
+    }
+  };
+
+  const handleCreateWarSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    clearCreateErrors();
+
+    startCreateTransition(async () => {
+      try {
+        const result = await createWar(formData);
+
+        if (result.success) {
+          setIsCreateOpen(false);
+          clearCreateErrors();
+          router.push(`/planning/${result.warId}`);
+          return;
+        }
+
+        setCreateError(result.error);
+        setCreateFieldErrors(result.fieldErrors);
+      } catch (error) {
+        reportClientError("war_planning_create_war", error);
+        toast({
+          title: "Create Failed",
+          description: "Could not create the war plan. Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -145,7 +201,7 @@ export default function WarPlanningDashboard({
                 </>
             )}
             {isOfficer && (
-              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <Dialog open={isCreateOpen} onOpenChange={handleCreateOpenChange}>
               <DialogTrigger asChild>
                   <Button size="lg" className="bg-sky-600 hover:bg-sky-500 text-white shadow-glow transition-all">
                   <Plus className="mr-2 h-5 w-5" />
@@ -159,7 +215,7 @@ export default function WarPlanningDashboard({
                       Set up details for the next Alliance War.
                   </DialogDescription>
                   </DialogHeader>
-                  <form action={createWar} className="grid gap-4 py-4">
+                  <form onSubmit={handleCreateWarSubmit} className="grid gap-4 py-4">
                   <input type="hidden" name="isOffSeason" value={isOffSeason ? "true" : "false"} />
                   <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -171,8 +227,12 @@ export default function WarPlanningDashboard({
                           required
                           defaultValue={defaultSeason}
                           onFocus={(e) => e.target.select()}
+                          aria-invalid={!!createFieldErrors?.season}
                           className="bg-slate-900 border-slate-800 no-spin-buttons"
                       />
+                      {createFieldErrors?.season && (
+                        <p className="text-sm text-red-400">{createFieldErrors.season}</p>
+                      )}
                       </div>
                       <div className="space-y-2">
                       <Label htmlFor="warNumber">War #</Label>
@@ -181,10 +241,15 @@ export default function WarPlanningDashboard({
                           name="warNumber"
                           type="number"
                           disabled={isOffSeason}
+                          required={!isOffSeason}
                           defaultValue={defaultWarNumber}
                           onFocus={(e) => e.target.select()}
+                          aria-invalid={!!createFieldErrors?.warNumber}
                           className="bg-slate-900 border-slate-800 no-spin-buttons disabled:opacity-50"
                       />
+                      {createFieldErrors?.warNumber && (
+                        <p className="text-sm text-red-400">{createFieldErrors.warNumber}</p>
+                      )}
                       </div>
                   </div>
                   
@@ -192,7 +257,7 @@ export default function WarPlanningDashboard({
                     <Checkbox 
                       id="isOffSeason" 
                       checked={isOffSeason}
-                      onCheckedChange={(checked) => setIsOffSeason(checked as boolean)}
+                      onCheckedChange={(checked) => handleOffSeasonChange(checked === true)}
                     />
                     <Label 
                       htmlFor="isOffSeason" 
@@ -211,13 +276,17 @@ export default function WarPlanningDashboard({
                       required
                       defaultValue={defaultTier}
                       onFocus={(e) => e.target.select()}
+                      aria-invalid={!!createFieldErrors?.tier}
                       className="bg-slate-900 border-slate-800 no-spin-buttons"
                       />
+                      {createFieldErrors?.tier && (
+                        <p className="text-sm text-red-400">{createFieldErrors.tier}</p>
+                      )}
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="mapType">Map Type</Label>
                       <Select name="mapType" value={selectedMapType} onValueChange={(val) => setSelectedMapType(val as WarMapType)}>
-                          <SelectTrigger className="bg-slate-900 border-slate-800">
+                          <SelectTrigger className="bg-slate-900 border-slate-800" aria-invalid={!!createFieldErrors?.mapType}>
                               <SelectValue placeholder="Select Map Type" />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-900 border-slate-800">
@@ -225,6 +294,9 @@ export default function WarPlanningDashboard({
                               <SelectItem value={WarMapType.BIG_THING}>Big Thing (10 Nodes)</SelectItem>
                           </SelectContent>
                       </Select>
+                      {createFieldErrors?.mapType && (
+                        <p className="text-sm text-red-400">{createFieldErrors.mapType}</p>
+                      )}
                   </div>
                   <div className="space-y-2">
                       <Label htmlFor="opponent">Opponent Alliance</Label>
@@ -234,13 +306,22 @@ export default function WarPlanningDashboard({
                       type="text"
                       required
                       placeholder="e.g. [TAG] Alliance Name"
+                      aria-invalid={!!createFieldErrors?.opponent}
                       className="bg-slate-900 border-slate-800"
                       />
+                      {createFieldErrors?.opponent && (
+                        <p className="text-sm text-red-400">{createFieldErrors.opponent}</p>
+                      )}
                   </div>
+                  {createError && (
+                    <div className="rounded-md border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-200">
+                      {createError}
+                    </div>
+                  )}
                   <div className="flex justify-end pt-4">
-                      <Button type="submit" className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg shadow-sky-900/20 transition-all duration-300 transform hover:scale-[1.02]">
+                      <Button type="submit" disabled={isCreatePending} className="w-full bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-lg shadow-sky-900/20 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100">
                       <Rocket className="mr-2 h-4 w-4" />
-                      Create War Plan
+                      {isCreatePending ? "Creating..." : "Create War Plan"}
                       </Button>
                   </div>
                   </form>
@@ -347,7 +428,7 @@ function WarCard({ war, isActive = false, userTimezone, isOfficer }: { war: Exte
       return date.toLocaleDateString(undefined, { 
          timeZone: userTimezone || undefined 
       });
-    } catch (e) {
+    } catch {
       // Fallback to local timezone if userTimezone is invalid
       return date.toLocaleDateString();
     }

@@ -3,10 +3,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
-import { WarFight, WarMapType, War, Alliance, WarResult, ChampionClass } from "@prisma/client";
-import { redirect } from "next/navigation";
+import { WarFight, WarMapType, War, Alliance, WarResult, ChampionClass, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { ChampionImages } from "@/types/champion";
@@ -39,13 +37,109 @@ export type DistributePlanResult =
   | { success: true }
   | { success: false; error: string };
 
-const createWarSchema = z.object({
-  season: z.number().min(1),
-  warNumber: z.number().min(1).optional(),
-  tier: z.number().min(1),
-  opponent: z.string().min(1),
-  mapType: z.nativeEnum(WarMapType).optional(),
-});
+export type CreateWarField = "season" | "warNumber" | "tier" | "opponent" | "mapType";
+
+export type CreateWarResult =
+  | { success: true; warId: string }
+  | {
+      success: false;
+      error: string;
+      fieldErrors?: Partial<Record<CreateWarField, string>>;
+    };
+
+type CreateWarData = {
+  season: number;
+  warNumber: number | null;
+  tier: number;
+  opponent: string;
+  mapType: WarMapType;
+  isOffSeason: boolean;
+};
+
+type CreateWarValidationResult =
+  | { success: true; data: CreateWarData }
+  | Extract<CreateWarResult, { success: false }>;
+
+function parsePositiveInteger(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) ? parsed : null;
+}
+
+function validateCreateWarForm(formData: FormData): CreateWarValidationResult {
+  const fieldErrors: Partial<Record<CreateWarField, string>> = {};
+  const isOffSeason = formData.get("isOffSeason") === "true";
+  const season = parsePositiveInteger(formData.get("season"));
+  const warNumber = parsePositiveInteger(formData.get("warNumber"));
+  const tier = parsePositiveInteger(formData.get("tier"));
+  const opponent = typeof formData.get("opponent") === "string"
+    ? (formData.get("opponent") as string).trim()
+    : "";
+  const rawMapType = formData.get("mapType");
+  const mapType = typeof rawMapType === "string" && rawMapType
+    ? rawMapType
+    : WarMapType.STANDARD;
+
+  if (season === null) {
+    fieldErrors.season = "Season is required.";
+  } else if (season < 1) {
+    fieldErrors.season = "Season must be at least 1.";
+  }
+
+  if (!isOffSeason) {
+    if (warNumber === null) {
+      fieldErrors.warNumber = "War # is required for season wars.";
+    } else if (warNumber < 1) {
+      fieldErrors.warNumber = "War # must be at least 1.";
+    }
+  }
+
+  if (tier === null) {
+    fieldErrors.tier = "Tier is required.";
+  } else if (tier < 1) {
+    fieldErrors.tier = "Tier must be at least 1.";
+  }
+
+  if (!opponent) {
+    fieldErrors.opponent = "Opponent alliance is required.";
+  }
+
+  if (!Object.values(WarMapType).includes(mapType as WarMapType)) {
+    fieldErrors.mapType = "Select a valid map type.";
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return {
+      success: false,
+      error: "Check the war details and try again.",
+      fieldErrors,
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      season: season!,
+      warNumber: isOffSeason ? null : warNumber!,
+      tier: tier!,
+      opponent,
+      mapType: mapType as WarMapType,
+      isOffSeason,
+    },
+  };
+}
+
+function duplicateWarResult(season: number, warNumber: number): CreateWarResult {
+  return {
+    success: false,
+    error: `Season ${season}, War ${warNumber} already exists. Open the existing war plan or choose a different war number.`,
+    fieldErrors: {
+      warNumber: "A war plan already exists for this Season and War #.",
+    },
+  };
+}
 
 export const getGuildChannels = withActionContext('getGuildChannels', async (allianceId: string): Promise<DiscordChannel[]> => {
     const player = await getUserPlayerWithAlliance();
@@ -163,63 +257,96 @@ export const getWarProgress = withActionContext('getWarProgress', async (warId: 
   return progress;
 });
 
-export const createWar = withActionContext('createWar', async (formData: FormData) => {
+export const createWar = withActionContext('createWar', async (formData: FormData): Promise<CreateWarResult> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || !player.allianceId || !canPlanAllianceWar(player, player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to plan a war.");
+    return {
+      success: false,
+      error: "You must be an Alliance Planner, Officer, or Bot Admin to plan a war.",
+    };
   }
 
-  const season = parseInt(formData.get("season") as string);
-  const isOffSeason = formData.get("isOffSeason") === "true";
-  const warNumber = !isOffSeason && formData.get("warNumber") ? parseInt(formData.get("warNumber") as string) : undefined;
-  const tier = parseInt(formData.get("tier") as string);
-  const opponent = formData.get("opponent") as string;
-  const mapType = (formData.get("mapType") as WarMapType) || WarMapType.STANDARD;
+  const validation = validateCreateWarForm(formData);
+  if (!validation.success) {
+    return validation;
+  }
 
-  const data = createWarSchema.parse({ season, warNumber, tier, opponent, mapType });
+  const { data } = validation;
 
-  const war = await prisma.$transaction(async (tx) => {
-    const newWar = await tx.war.create({
-      data: {
-        season: data.season,
-        warNumber: data.warNumber,
-        warTier: data.tier,
-        enemyAlliance: data.opponent,
-        allianceId: player.allianceId!,
-        status: WarStatus.PLANNING,
-        mapType: data.mapType,
+  if (!data.isOffSeason) {
+    const existingWar = await prisma.war.findUnique({
+      where: {
+        allianceId_season_warNumber: {
+          allianceId: player.allianceId,
+          season: data.season,
+          warNumber: data.warNumber!,
+        },
       },
+      select: { id: true },
     });
-    
-    const warNodes = await tx.warNode.findMany();
-    const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
 
-    const maxNodes = data.mapType === WarMapType.BIG_THING ? 10 : 50;
+    if (existingWar) {
+      return duplicateWarResult(data.season, data.warNumber!);
+    }
+  }
 
-    const fightsData = [];
-    for (let bg = 1; bg <= 3; bg++) {
-      for (let nodeNum = 1; nodeNum <= maxNodes; nodeNum++) {
-        const nodeId = nodeMap.get(nodeNum);
-        if (nodeId) {
-            fightsData.push({
-                warId: newWar.id,
-                battlegroup: bg,
-                nodeId: nodeId,
-                death: 0,
-            });
+  try {
+    const war = await prisma.$transaction(async (tx) => {
+      const newWar = await tx.war.create({
+        data: {
+          season: data.season,
+          warNumber: data.warNumber,
+          warTier: data.tier,
+          enemyAlliance: data.opponent,
+          allianceId: player.allianceId!,
+          status: WarStatus.PLANNING,
+          mapType: data.mapType,
+        },
+      });
+
+      const warNodes = await tx.warNode.findMany();
+      const nodeMap = new Map(warNodes.map(n => [n.nodeNumber, n.id]));
+
+      const maxNodes = data.mapType === WarMapType.BIG_THING ? 10 : 50;
+
+      const fightsData = [];
+      for (let bg = 1; bg <= 3; bg++) {
+        for (let nodeNum = 1; nodeNum <= maxNodes; nodeNum++) {
+          const nodeId = nodeMap.get(nodeNum);
+          if (nodeId) {
+              fightsData.push({
+                  warId: newWar.id,
+                  battlegroup: bg,
+                  nodeId: nodeId,
+                  death: 0,
+              });
+          }
         }
       }
-    }
 
-    await tx.warFight.createMany({
-      data: fightsData,
+      await tx.warFight.createMany({
+        data: fightsData,
+      });
+
+      return newWar;
     });
 
-    return newWar;
-  });
+    revalidatePath("/planning");
 
-  redirect(`/planning/${war.id}`);
+    return { success: true, warId: war.id };
+  } catch (error) {
+    if (
+      !data.isOffSeason &&
+      data.warNumber !== null &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return duplicateWarResult(data.season, data.warNumber);
+    }
+
+    throw error;
+  }
 });
 
 export const updateWarFight = withActionContext('updateWarFight', async (updatedFight: Partial<WarFight> & {
