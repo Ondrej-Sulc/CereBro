@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { ChampionImages } from "@/types/champion";
 import { config } from "@cerebro/core/config";
 import { validateNodeAssignment } from "@cerebro/core/data/war-planning/path-logic";
@@ -17,6 +18,7 @@ import { getPathInfo } from "@cerebro/core/data/war-planning/path-logic";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { withActionContext } from "@/lib/with-request-context";
 import logger from "@/lib/logger";
+import { createMissingDiscordChannelMessage, findMissingBattlegroupChannels } from "@/lib/discord-config-validation";
 
 export interface ExtraChampion {
   id: string;
@@ -33,6 +35,10 @@ export interface DiscordChannel {
     type: number;
 }
 
+export type DistributePlanResult =
+  | { success: true }
+  | { success: false; error: string };
+
 const createWarSchema = z.object({
   season: z.number().min(1),
   warNumber: z.number().min(1).optional(),
@@ -43,7 +49,7 @@ const createWarSchema = z.object({
 
 export const getGuildChannels = withActionContext('getGuildChannels', async (allianceId: string): Promise<DiscordChannel[]> => {
     const player = await getUserPlayerWithAlliance();
-    if (!player || (!player.isOfficer && !player.isBotAdmin)) {
+    if (!player || !canPlanAllianceWar(player, player.isBotAdmin)) {
          throw new Error("Unauthorized");
     }
     
@@ -160,8 +166,8 @@ export const getWarProgress = withActionContext('getWarProgress', async (warId: 
 export const createWar = withActionContext('createWar', async (formData: FormData) => {
   const player = await getUserPlayerWithAlliance();
 
-  if (!player || !player.allianceId || (!player.isOfficer && !player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to plan a war.");
+  if (!player || !player.allianceId || !canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to plan a war.");
   }
 
   const season = parseInt(formData.get("season") as string);
@@ -225,8 +231,8 @@ export const updateWarFight = withActionContext('updateWarFight', async (updated
       return { success: false, error: "Unauthorized." };
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    return { success: false, error: "You must be an Alliance Officer or Bot Admin to update war fights." };
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    return { success: false, error: "You must be an Alliance Planner, Officer, or Bot Admin to update war fights." };
   }
 
   const { id, warId, battlegroup, nodeId, prefightUpdates, ...rest } = updatedFight;
@@ -442,8 +448,8 @@ export const updateWarStatus = withActionContext('updateWarStatus', async (warId
       throw new Error("Unauthorized");
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to update war status.");
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to update war status.");
   }
 
   if (data?.enemyDeaths !== undefined && (typeof data.enemyDeaths !== 'number' || data.enemyDeaths < 0)) {
@@ -486,8 +492,8 @@ export const deleteWar = withActionContext('deleteWar', async (warId: string) =>
       throw new Error("Unauthorized");
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to delete a war.");
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to delete a war.");
   }
 
   if (!player.isBotAdmin) {
@@ -509,8 +515,8 @@ export const addExtraChampion = withActionContext('addExtraChampion', async (war
       throw new Error("Unauthorized");
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to manage extra champions.");
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage extra champions.");
   }
 
   const targetWar = await prisma.war.findUnique({ where: { id: warId } });
@@ -543,8 +549,8 @@ export const removeExtraChampion = withActionContext('removeExtraChampion', asyn
       throw new Error("Unauthorized");
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to manage extra champions.");
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage extra champions.");
   }
 
   const extraChampionToDelete = await prisma.warExtraChampion.findUnique({
@@ -570,8 +576,8 @@ export const addWarBan = withActionContext('addWarBan', async (warId: string, ch
         throw new Error("Unauthorized");
     }
 
-    if (!player.isOfficer && !player.isBotAdmin) {
-        throw new Error("You must be an Alliance Officer or Bot Admin to manage war bans.");
+    if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+        throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.");
     }
 
     const targetWar = await prisma.war.findUnique({ where: { id: warId } });
@@ -602,8 +608,8 @@ export const removeWarBan = withActionContext('removeWarBan', async (id: string)
         throw new Error("Unauthorized");
     }
 
-    if (!player.isOfficer && !player.isBotAdmin) {
-        throw new Error("You must be an Alliance Officer or Bot Admin to manage war bans.");
+    if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+        throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.");
     }
 
     const banToDelete = await prisma.warBan.findUnique({
@@ -650,15 +656,15 @@ export const getExtraChampions = withActionContext('getExtraChampions', async (w
   }));
 });
 
-export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string, targetPlayerId?: string) => {
+export const distributePlan = withActionContext('distributePlan', async (warId: string, battlegroup?: number, targetChannelId?: string, targetPlayerId?: string): Promise<DistributePlanResult> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
       throw new Error("Unauthorized");
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to distribute plans.");
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to distribute plans.");
   }
 
   const war = await prisma.war.findUnique({ 
@@ -683,20 +689,17 @@ export const distributePlan = withActionContext('distributePlan', async (warId: 
   // We only check for missing channels if we are distributing to a whole BG (not a single player or custom channel)
   if (!targetChannelId && !targetPlayerId) {
       const requiredBgs = battlegroup ? [battlegroup] : Array.from(new Set(war.fights.map(p => p.battlegroup)));
-      const missingChannels = [];
+      const missingBattlegroups = findMissingBattlegroupChannels(alliance, requiredBgs);
 
-      for (const bg of requiredBgs) {
-          const channelId = bg === 1 ? alliance.battlegroup1ChannelId :
-                            bg === 2 ? alliance.battlegroup2ChannelId :
-                            bg === 3 ? alliance.battlegroup3ChannelId : null;
-          
-          if (!channelId) {
-              missingChannels.push(`BG ${bg}`);
-          }
-      }
-
-      if (missingChannels.length > 0) {
-          throw new Error(`Cannot distribute plan: Discord channels for ${missingChannels.join(', ')} are not configured. Use /alliance config-channels in Discord.`);
+      if (missingBattlegroups.length > 0) {
+          return {
+            success: false,
+            error: createMissingDiscordChannelMessage({
+              code: "MISSING_DISCORD_CHANNELS",
+              missingBattlegroups,
+              context: "attack-plan",
+            }),
+          };
       }
   }
 
@@ -723,8 +726,8 @@ export const updateWarDetails = withActionContext('updateWarDetails', async (war
       throw new Error("Unauthorized");
   }
 
-  if (!player.isOfficer && !player.isBotAdmin) {
-    throw new Error("You must be an Alliance Officer or Bot Admin to update war details.");
+  if (!canPlanAllianceWar(player, player.isBotAdmin)) {
+    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to update war details.");
   }
 
   const war = await prisma.war.findUnique({ where: { id: warId } });

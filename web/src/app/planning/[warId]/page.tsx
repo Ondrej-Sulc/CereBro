@@ -6,6 +6,7 @@ import { updateWarFight, updateWarStatus } from "../actions";
 import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
 import { DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import logger from "@/lib/logger";
@@ -78,7 +79,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
 
   logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing War Planning [warId] page");
 
-  const isOfficer = player.isOfficer || isBotAdmin;
+  const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const champions = await getCachedChampions();
 
@@ -167,7 +168,8 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       players={allianceMembers}
       seasonBans={seasonBans}
       warBans={warBans}
-      isOfficer={isOfficer}
+      isOfficer={canPlan}
+      canConfigureDiscord={player.isOfficer || isBotAdmin}
       bgColors={bgColors}
       activeDefensePlan={activeDefensePlan?.activeDefensePlan}
       userBattlegroup={player.battlegroup}

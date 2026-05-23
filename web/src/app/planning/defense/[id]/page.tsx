@@ -9,6 +9,7 @@ import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { cache } from "react";
 
 interface DefenseDetailsPageProps {
@@ -85,7 +86,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
     return <p>Plan not found or you do not have permission to view it.</p>;
   }
 
-  const isOfficer = player.isOfficer || isBotAdmin;
+  const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const champions = await getCachedChampions();
 
@@ -136,7 +137,8 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         champions={champions}
         players={allianceMembers}
         availableTags={tags}
-        isOfficer={isOfficer}
+        isOfficer={canPlan}
+        canConfigureDiscord={player.isOfficer || isBotAdmin}
         bgColors={bgColors}
         userBattlegroup={player.battlegroup}
         paletteStyle={plan.alliance.playerColorPalette as import("@/lib/player-colors").PlayerPaletteStyle}

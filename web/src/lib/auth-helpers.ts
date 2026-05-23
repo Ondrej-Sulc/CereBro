@@ -4,7 +4,7 @@ import { Player, Alliance, Prisma } from "@prisma/client";
 import { Permission } from "./permissions";
 import { cache } from "react";
 
-export type UserPlayerWithAlliance = Player & {
+export type UserPlayerWithAlliance = Omit<Player, "isBotAdmin"> & {
   alliance: Alliance | null;
   isBotAdmin: boolean;
   permissions: string[];

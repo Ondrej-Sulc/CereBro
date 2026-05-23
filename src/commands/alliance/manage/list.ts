@@ -30,7 +30,7 @@ export async function handleAllianceManageList(interaction: ChatInputCommandInte
 
     const header = `Alliance Roster for ${alliance.name} (${alliance.members.length} members):\n\n`;
     const playerLines = alliance.members.map(p => 
-      `- ${p.ingameName} (<@${p.discordId}>) | Officer: ${p.isOfficer ? 'Yes' : 'No'} | BG: ${p.battlegroup || 'N/A'}`
+      `- ${p.ingameName} (<@${p.discordId}>) | Officer: ${p.isOfficer ? 'Yes' : 'No'} | Planner: ${p.isPlanner ? 'Yes' : 'No'} | BG: ${p.battlegroup || 'N/A'}`
     );
 
     const fullMessage = header + playerLines.join('\n');

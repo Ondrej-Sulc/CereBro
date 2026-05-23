@@ -4,6 +4,7 @@ import DefenseDashboard from "@/components/war-planning/defense-dashboard";
 import { redirect } from "next/navigation";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
@@ -48,7 +49,7 @@ export default async function DefensePlanningPage() {
         <DefenseDashboard
           plans={plans}
           userTimezone={player.timezone}
-          isOfficer={player.isOfficer || player.isBotAdmin}
+          isOfficer={canPlanAllianceWar(player, player.isBotAdmin)}
           activeDefensePlanId={alliance?.activeDefensePlanId}
         />
       </main>

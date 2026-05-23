@@ -5,9 +5,9 @@ import { prisma } from "../services/prismaService.js";
 
 import { Prisma } from "@prisma/client";
 
-export type ActivePlayerWithAlliance = Prisma.PlayerGetPayload<{
+export type ActivePlayerWithAlliance = Omit<Prisma.PlayerGetPayload<{
   include: { alliance: true }
-}> & { isBotAdmin: boolean };
+}>, "isBotAdmin"> & { isBotAdmin: boolean };
 
 export async function getActivePlayer(discordId: string): Promise<ActivePlayerWithAlliance | null> {
   // 1. Fetch the BotUser for global permissions

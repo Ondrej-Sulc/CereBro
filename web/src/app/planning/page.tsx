@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import WarPlanningDashboard from "@/components/war-planning/war-planning-dashboard";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import logger from "@/lib/logger";
 
 export const metadata: Metadata = {
@@ -50,7 +51,7 @@ export default async function WarPlanningPage() {
   const defaultWarNumber = lastWar && lastWar.warNumber !== null ? lastWar.warNumber + 1 : 1;
   const defaultTier = lastWar ? lastWar.warTier : 1;
 
-  const isOfficer = player.isOfficer || player.isBotAdmin;
+  const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const bgColors = {
       1: player.alliance?.battlegroup1Color || "#ef4444",
@@ -67,7 +68,7 @@ export default async function WarPlanningPage() {
         defaultTier={defaultTier}
         userTimezone={player.timezone}
         isBotAdmin={player.isBotAdmin}
-        isOfficer={isOfficer}
+        isOfficer={canPlan}
         bgColors={bgColors}
       />
     </div>

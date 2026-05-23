@@ -282,6 +282,7 @@ model Player {
   isTrustedUploader  Boolean                     @default(false)
   battlegroup        Int?
   isOfficer          Boolean                     @default(false)
+  isPlanner          Boolean                     @default(false)
   avatar             String?
   useDiscordAvatar   Boolean                     @default(true)
   botUserId          String?
@@ -366,6 +367,7 @@ model Alliance {
   battlegroup2Role       String?
   battlegroup3Role       String?
   officerRole            String?
+  plannerRole            String?
   canUploadFiles         Boolean                     @default(false)
   warVideosChannelId     String?
   battlegroup1ChannelId  String?
@@ -1083,6 +1085,7 @@ enum BotJobType {
   DISTRIBUTE_DEFENSE_PLAN
   LEAVE_GUILD
   ASSIGN_SUPPORTER_ROLE
+  SYNC_ALLIANCE_ROLES
 }
 
 enum QuestPlanStatus {

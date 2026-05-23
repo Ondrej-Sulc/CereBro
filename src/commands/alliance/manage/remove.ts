@@ -33,6 +33,7 @@ export async function handleAllianceManageRemove(interaction: ChatInputCommandIn
       data: {
         allianceId: null,
         isOfficer: false,
+        isPlanner: false,
         battlegroup: null,
       },
     });
