@@ -9,14 +9,28 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { RosterView } from "@/app/profile/roster/roster-view";
 import { Button } from "@/components/ui/button";
 import { ChampionImages } from "@/types/champion";
-import { ProfileRosterEntry } from "@/app/profile/roster/types";
+import { PrestigeInsightTab, ProfileRosterEntry } from "@/app/profile/roster/types";
 import { UploadSection } from "./upload-section";
 import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
+import { normalizeGlobalPrestigeListOptions } from "@/lib/global-prestige-list";
 import { cache } from "react";
 import { getRosterScreenshotQuota } from "@cerebro/core/services/rosterScreenshotQuotaService";
 
 interface PlayerRosterPageProps {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{
+        insights?: string;
+        insightsTab?: string;
+        globalRarity?: string;
+        globalRank?: string;
+        globalSig?: string;
+        globalAscension?: string;
+        globalClassFilter?: string;
+        globalOwnership?: string;
+        globalSaga?: string;
+        globalSearch?: string;
+        globalLimit?: string;
+    }>;
 }
 
 const getTargetPlayer = cache(async (id: string) => {
@@ -29,15 +43,16 @@ const getTargetPlayer = cache(async (id: string) => {
 export async function generateMetadata({ params }: PlayerRosterPageProps): Promise<Metadata> {
     const { id } = await params;
     const player = await getTargetPlayer(id);
-    if (!player) return { title: "Roster - CereBro" };
+    if (!player) return { title: "Champions - CereBro" };
     return {
-        title: `${player.ingameName}'s Roster - CereBro`,
-        description: `View ${player.ingameName}'s full champion roster.`,
+        title: `${player.ingameName}'s Champions - CereBro`,
+        description: `View ${player.ingameName}'s champions.`,
     };
 }
 
-export default async function PlayerRosterPage({ params }: PlayerRosterPageProps) {
+export default async function PlayerRosterPage({ params, searchParams }: PlayerRosterPageProps) {
     const { id } = await params;
+    const resolvedSearchParams = await searchParams;
 
     const [targetPlayer, currentUser] = await Promise.all([
         getTargetPlayer(id),
@@ -126,6 +141,11 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
         options: insightOptions,
         insights: { prestigeMap, top30Average, top30Cutoff },
     } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, {});
+    const initialGlobalPrestigeOptions = normalizeGlobalPrestigeListOptions(resolvedSearchParams, {
+        targetRank: insightOptions.targetRank,
+    });
+    const showInsights = resolvedSearchParams.insights === "true";
+    const initialInsightTab = normalizePrestigeInsightTab(resolvedSearchParams.insightsTab);
 
     const quota = currentUser
         ? await getRosterScreenshotQuota(
@@ -188,7 +208,9 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
                 initialAbilities={abilities}
                 initialImmunities={immunities}
                 initialLimit={insightOptions.limit ?? 5}
-                initialInsightTab="potential"
+                initialShowInsights={showInsights}
+                initialInsightTab={initialInsightTab}
+                initialGlobalPrestigeOptions={initialGlobalPrestigeOptions}
                 canEdit={canEdit}
                 targetPlayerId={targetPlayerId}
                 shareUrl={shareUrl}
@@ -197,3 +219,7 @@ export default async function PlayerRosterPage({ params }: PlayerRosterPageProps
     );
 }
 
+function normalizePrestigeInsightTab(value: string | undefined): PrestigeInsightTab {
+    if (value === "rank" || value === "sig" || value === "global") return value;
+    return "potential";
+}

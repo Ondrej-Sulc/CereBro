@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition, useRef } from "react";
+import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition, useRef, type ReactNode } from "react";
 import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
 import Link from "next/link";
-import { Upload, TrendingUp, ChevronDown, Share2 } from "lucide-react";
+import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,12 @@ import { isChampionObtainableAs } from "@/lib/champion-obtainable";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab } from "./types";
+import {
+  defaultGlobalPrestigeRank,
+  maxRankForGlobalPrestigeRarity,
+  normalizeGlobalPrestigeListOptionValues,
+  type GlobalPrestigeListOptions,
+} from "@/lib/global-prestige-list";
 import { ChampionCard } from "./components/champion-card";
 import { RosterFilters } from "./components/roster-filters";
 import { RosterInsights } from "./components/roster-insights";
@@ -73,6 +79,7 @@ interface RosterViewProps {
   initialLimit: number;
   initialShowInsights?: boolean;
   initialInsightTab: PrestigeInsightTab;
+  initialGlobalPrestigeOptions: GlobalPrestigeListOptions;
   /** When false, hides all edit/add controls. Default: true */
   canEdit?: boolean;
   /** When set, API mutations target this player instead of the session player */
@@ -98,12 +105,13 @@ interface ApiRosterResponse {
 }
 
 export function RosterView({
-  initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, top30Cutoff: initialTop30Cutoff, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
+  initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter, initialSigAwakenedOnly,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit,
   initialShowInsights = false,
   initialInsightTab,
+  initialGlobalPrestigeOptions,
   canEdit = true,
   targetPlayerId,
   shareUrl,
@@ -131,7 +139,6 @@ export function RosterView({
   const [clientSigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
   const [clientPotentialRecommendations, setPotentialRecommendations] = useState<PotentialRecommendation[]>(initialPotentialRecommendations || []);
   const [clientTop30Average, setTop30Average] = useState(initialTop30Average);
-  const [clientTop30Cutoff, setTop30Cutoff] = useState(initialTop30Cutoff);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(Object.keys(initialPrestigeMap).length === 0);
   const lastFetchedParams = useRef<string | null>(null);
 
@@ -178,7 +185,6 @@ export function RosterView({
   const sigRecommendations = usePropsData ? (initialSigRecommendations || []) : clientSigRecommendations;
   const potentialRecommendations = usePropsData ? (initialPotentialRecommendations || []) : clientPotentialRecommendations;
   const top30Average = usePropsData ? initialTop30Average : clientTop30Average;
-  const top30Cutoff = usePropsData ? initialTop30Cutoff : clientTop30Cutoff;
 
   const triggerPrestigeUpdate = useCallback((val: number) => {
     if (val <= 0) return;
@@ -231,7 +237,6 @@ export function RosterView({
         setSigRecommendations(data.sigRecommendations);
         setPotentialRecommendations(data.potentialRecommendations);
         setTop30Average(data.top30Average);
-        setTop30Cutoff(data.top30Cutoff);
         
         // Trigger background update of prestige in DB
         triggerPrestigeUpdate(data.top30Average);
@@ -313,6 +318,24 @@ export function RosterView({
   const handleSigSagaFilterChange = (val: boolean) => {
     setSigSagaFilter(val); setPendingSection('sig');
     updateUrlParams({ sigSagaFilter: val ? 'true' : null });
+  };
+
+  const handleGlobalPrestigeOptionsChange = (nextOptions: GlobalPrestigeListOptions) => {
+    const normalized = normalizeGlobalPrestigeListOptionValues(nextOptions, simulationTargetRank);
+    const defaultRank = defaultGlobalPrestigeRank(normalized.rarity, simulationTargetRank);
+    const updates: Record<string, string | null> = {
+      globalRarity: normalized.rarity !== 7 ? String(normalized.rarity) : null,
+      globalRank: normalized.rank !== defaultRank ? String(normalized.rank) : null,
+      globalSig: normalized.sig !== 200 ? String(normalized.sig) : null,
+      globalAscension: normalized.ascensionLevel !== 0 ? String(normalized.ascensionLevel) : null,
+      globalClassFilter: normalized.classFilter.length > 0 ? normalized.classFilter.join(",") : null,
+      globalOwnership: normalized.ownership !== "all" ? normalized.ownership : null,
+      globalSaga: normalized.sagaOnly ? "true" : null,
+      globalSearch: normalized.search ? normalized.search : null,
+      globalLimit: normalized.limit !== 100 ? String(normalized.limit) : null,
+    };
+
+    updateUrlParams(updates);
   };
 
   const handleRecommendationClick = async (rec: SigRecommendation) => {
@@ -492,7 +515,7 @@ export function RosterView({
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-white tracking-tight">
-              {player.ingameName}&apos;s Roster
+              {player.ingameName}&apos;s Champions
             </h1>
             {!targetPlayerId && profiles.length > 1 && (
               <DropdownMenu>
@@ -550,24 +573,6 @@ export function RosterView({
           )}
 
           {!targetPlayerId && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                const newValue = !showInsights;
-                setShowInsights(newValue);
-                updateUrlParams({ insights: newValue ? 'true' : null });
-              }}
-              className={cn(
-                "h-10 px-4 gap-2 border-slate-700 transition-all",
-                showInsights ? "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-700" : "bg-slate-900 text-slate-400 hover:text-slate-200"
-              )}
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span>Prestige Insights</span>
-            </Button>
-          )}
-
-          {!targetPlayerId && (
             <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
               <Link href="/profile/update">
                 <Upload className="w-4 h-4" />
@@ -578,13 +583,28 @@ export function RosterView({
         </div>
       </div>
 
+      <RosterModeSwitch
+        activeMode={showInsights ? "prestige" : "roster"}
+        onModeChange={(mode) => {
+          const nextShowInsights = mode === "prestige";
+          setShowInsights(nextShowInsights);
+          updateUrlParams({ insights: nextShowInsights ? "true" : null });
+        }}
+        rosterCount={filteredRoster.length}
+        prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
+      />
+
       <RosterInsights
         showInsights={showInsights}
         recommendations={recommendations} sigRecommendations={sigRecommendations}
         potentialRecommendations={potentialRecommendations}
-        top30Cutoff={top30Cutoff}
         initialInsightTab={initialInsightTab}
         onInsightTabChange={(tab) => updateUrlParams({ insightsTab: tab === 'potential' ? null : tab })}
+        targetPlayerId={targetPlayerId}
+        initialGlobalPrestigeOptions={initialGlobalPrestigeOptions}
+        onGlobalPrestigeOptionsChange={handleGlobalPrestigeOptionsChange}
+        globalDefaultTargetRank={simulationTargetRank}
+        globalMaxRankForRarity={maxRankForGlobalPrestigeRarity}
         simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
         sigBudget={sigBudget} onSigBudgetChange={setSigBudget}
         rankUpClassFilter={rankUpClassFilter} onRankUpClassFilterChange={handleRankClassFilterChange}
@@ -596,31 +616,101 @@ export function RosterView({
         isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
       />
 
-      <RosterFilters
-        search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
-        showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
-        onAddClick={() => setIsAddingChampion(true)}
-        sortBy={sortBy} onSortByChange={setSortBy} filterStars={filterStars} onFilterStarsChange={setFilterStars}
-        filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
-        tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
-        abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
-        abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
-        immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
-        initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
-        canEdit={canEdit} championCount={filteredRoster.length}
-      />
+      {!showInsights && (
+        <>
+          <RosterFilters
+            search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
+            showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
+            onAddClick={() => setIsAddingChampion(true)}
+            sortBy={sortBy} onSortByChange={setSortBy} filterStars={filterStars} onFilterStarsChange={setFilterStars}
+            filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
+            tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
+            abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
+            abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
+            immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
+            initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
+            canEdit={canEdit}
+          />
 
-      {filteredRoster.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 bg-slate-900/20 rounded-lg border border-slate-800 border-dashed">
-          <p>No champions found matching your criteria.</p>
-        </div>
-      ) : (
-        <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
+          {filteredRoster.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 bg-slate-900/20 rounded-lg border border-slate-800 border-dashed">
+              <p>No champions found matching your criteria.</p>
+            </div>
+          ) : (
+            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
+          )}
+        </>
       )}
 
       {canEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
       {canEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>
+  );
+}
+
+function RosterModeSwitch({
+  activeMode,
+  onModeChange,
+  rosterCount,
+  prestigeCount,
+}: {
+  activeMode: "roster" | "prestige";
+  onModeChange: (mode: "roster" | "prestige") => void;
+  rosterCount: number;
+  prestigeCount: number;
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-700 bg-slate-950/90 p-1.5 shadow-[0_12px_48px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] md:rounded-full">
+      <div className="grid gap-1.5 md:grid-cols-2">
+        <ModeSwitchPill
+          active={activeMode === "roster"}
+          icon={<Grid3X3 className="h-4 w-4" />}
+          title="Champions"
+          count={rosterCount}
+          onClick={() => onModeChange("roster")}
+        />
+        <ModeSwitchPill
+          active={activeMode === "prestige"}
+          icon={<TrendingUp className="h-4 w-4" />}
+          title="Prestige Insights"
+          count={prestigeCount}
+          onClick={() => onModeChange("prestige")}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ModeSwitchPill({
+  active,
+  icon,
+  title,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  icon: ReactNode;
+  title: string;
+  count: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex min-w-0 items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-black transition-all md:rounded-full md:px-5",
+        active
+          ? "bg-sky-400 text-slate-950 shadow-[0_0_28px_rgba(56,189,248,0.25)]"
+          : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+      )}
+    >
+      {icon}
+      <span className="truncate">{title}</span>
+      <span className={cn("rounded-full px-2 py-0.5 text-xs font-mono", active ? "bg-slate-950 text-sky-100" : "bg-slate-800 text-slate-300")}>
+        {count.toLocaleString("en-US")}
+      </span>
+    </button>
   );
 }

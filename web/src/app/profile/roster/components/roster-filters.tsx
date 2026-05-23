@@ -52,7 +52,6 @@ interface RosterFiltersProps {
     initialAbilities: { id: string | number, name: string }[];
     initialImmunities: { id: string | number, name: string }[];
     canEdit?: boolean;
-    championCount?: number;
 }
 
 export function RosterFilters({
@@ -64,7 +63,7 @@ export function RosterFilters({
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities,
-    canEdit = true, championCount,
+    canEdit = true,
 }: RosterFiltersProps) {
     const activeFilters = useMemo(() => {
         const filters: { label: string, type: string, onRemove: () => void }[] = [];
@@ -123,9 +122,6 @@ export function RosterFilters({
                                 className="w-full pl-8 h-8 bg-slate-950/50 border border-slate-700 rounded-md text-xs text-slate-200 placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-sky-500/50 transition-all border-none"
                             />
                         </div>
-                        {championCount !== undefined && (
-                            <span className="text-xs text-slate-500 whitespace-nowrap">{championCount} champ{championCount !== 1 ? 's' : ''}</span>
-                        )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">

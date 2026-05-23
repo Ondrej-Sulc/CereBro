@@ -83,7 +83,7 @@ export interface PotentialRecommendation {
 
 export type PrestigeRecommendationReason = "already_top30" | "enters_top30" | "improves_top30";
 
-export type PrestigeInsightTab = "potential" | "rank" | "sig";
+export type PrestigeInsightTab = "potential" | "rank" | "sig" | "global";
 
 export interface FilterState {
     tags: string[];

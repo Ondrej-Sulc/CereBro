@@ -308,4 +308,43 @@ describe("Roster Prestige Insights", () => {
 
     expect(result.potentialRecommendations.map(item => item.championName)).toEqual(["Alpha"]);
   });
+
+  it("matches imported Saga tags without a leading hash", () => {
+    const roster = [
+      rosterEntry({ id: "r1", championId: 1, name: "Alpha", rank: 1, tags: ["Saga Champions"] }),
+      rosterEntry({ id: "r2", championId: 2, name: "Bravo", rank: 1 }),
+    ];
+    const prestigeData = [
+      ...prestigeRows(1, 1, 10000),
+      ...prestigeRows(1, 2, 13000),
+      ...prestigeRows(2, 1, 11000),
+      ...prestigeRows(2, 2, 15000),
+    ];
+
+    const result = calculateRosterPrestigeInsights(roster, prestigeData, {
+      ...defaultOptions,
+      rankSagaFilter: true,
+    });
+
+    expect(result.recommendations.map(item => item.championName)).toEqual(["Alpha"]);
+  });
+
+  it("reports global rank for interpolated sig targets", () => {
+    const roster = [
+      rosterEntry({ id: "r1", championId: 1, name: "Alpha", rank: 1, sigLevel: 20 }),
+    ];
+    const prestigeData = [
+      ...prestigeRows(1, 1, 9000),
+      ...sigPrestigeRows(1, 2, { 0: 10000, 1: 10100, 200: 20000 }),
+      ...sigPrestigeRows(2, 2, { 0: 20000, 1: 20100, 200: 30000 }),
+    ];
+
+    const result = calculateRosterPrestigeInsights(roster, prestigeData, defaultOptions);
+
+    expect(result.recommendations[0]).toMatchObject({
+      championName: "Alpha",
+      globalPrestigeRank: 2,
+      globalPrestigeRankTotal: 2,
+    });
+  });
 });

@@ -8,14 +8,35 @@ import { prisma } from "@/lib/prisma";
 import { ChampionImages } from "@/types/champion";
 import { PrestigeInsightTab, ProfileRosterEntry } from "./types";
 import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
+import { normalizeGlobalPrestigeListOptions } from "@/lib/global-prestige-list";
 
 export const metadata: Metadata = {
-  title: "My Roster | CereBro",
-  description: "Manage and view your MCOC champion roster.",
+  title: "My Champions | CereBro",
+  description: "Manage and view your MCOC champions.",
 };
 
 export default async function RosterPage(props: {
-  searchParams: Promise<{ targetRank?: string; sigBudget?: string; rankClassFilter?: string; sigClassFilter?: string; rankSagaFilter?: string; sigSagaFilter?: string; limit?: string; insights?: string; sigAwakenedOnly?: string; insightsTab?: string }>;
+  searchParams: Promise<{
+    targetRank?: string;
+    sigBudget?: string;
+    rankClassFilter?: string;
+    sigClassFilter?: string;
+    rankSagaFilter?: string;
+    sigSagaFilter?: string;
+    limit?: string;
+    insights?: string;
+    sigAwakenedOnly?: string;
+    insightsTab?: string;
+    globalRarity?: string;
+    globalRank?: string;
+    globalSig?: string;
+    globalAscension?: string;
+    globalClassFilter?: string;
+    globalOwnership?: string;
+    globalSaga?: string;
+    globalSearch?: string;
+    globalLimit?: string;
+  }>;
 }) {
   const searchParams = await props.searchParams;
   const player = await getUserPlayerWithAlliance();
@@ -88,6 +109,9 @@ export default async function RosterPage(props: {
     options: insightOptions,
     insights: { prestigeMap, recommendations, sigRecommendations, potentialRecommendations, top30Average, top30Cutoff },
   } = await loadRosterPrestigeInsightSnapshot(typedRosterEntries, searchParams);
+  const initialGlobalPrestigeOptions = normalizeGlobalPrestigeListOptions(searchParams, {
+    targetRank: insightOptions.targetRank,
+  });
   const showInsights = searchParams.insights === 'true';
   const initialInsightTab = normalizePrestigeInsightTab(searchParams.insightsTab);
 
@@ -125,12 +149,13 @@ export default async function RosterPage(props: {
         initialLimit={insightOptions.limit ?? 5}
         initialShowInsights={showInsights}
         initialInsightTab={initialInsightTab}
+        initialGlobalPrestigeOptions={initialGlobalPrestigeOptions}
       />
     </div>
   );
 }
 
 function normalizePrestigeInsightTab(value: string | undefined): PrestigeInsightTab {
-  if (value === "rank" || value === "sig") return value;
+  if (value === "rank" || value === "sig" || value === "global") return value;
   return "potential";
 }

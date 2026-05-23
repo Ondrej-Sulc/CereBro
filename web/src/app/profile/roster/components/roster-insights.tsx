@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { TrendingUp, Info, ChevronRight, Sparkles, Zap, Trophy } from "lucide-react";
+import { TrendingUp, Info, ChevronRight, Sparkles, Trophy, Search, Globe2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,20 +13,31 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassFilterToggle } from "./class-filter-toggle";
+import { PrestigeImpactModal } from "./modals/prestige-impact-modal";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { Recommendation, SigRecommendation, PotentialRecommendation, PrestigeInsightTab } from "../types";
 import { ChampionClass } from "@prisma/client";
+import {
+    normalizeGlobalPrestigeListOptionValues,
+    type GlobalPrestigeListEntry,
+    type GlobalPrestigeListOptions,
+} from "@/lib/global-prestige-list";
+import { reportClientError } from "@/lib/observability/client";
 
 interface RosterInsightsProps {
     showInsights: boolean;
     recommendations?: Recommendation[];
     sigRecommendations?: SigRecommendation[];
     potentialRecommendations?: PotentialRecommendation[];
-    top30Cutoff: number;
     initialInsightTab: PrestigeInsightTab;
     onInsightTabChange: (tab: PrestigeInsightTab) => void;
+    targetPlayerId?: string;
+    initialGlobalPrestigeOptions: GlobalPrestigeListOptions;
+    onGlobalPrestigeOptionsChange: (options: GlobalPrestigeListOptions) => void;
+    globalDefaultTargetRank: number;
+    globalMaxRankForRarity: (rarity: number) => number;
     simulationTargetRank: number;
     onTargetRankChange: (val: string) => void;
     sigBudget: number;
@@ -49,29 +61,32 @@ interface RosterInsightsProps {
 
 function ClassFilterSelector({ selectedClasses, onChange }: { selectedClasses: ChampionClass[], onChange: (classes: ChampionClass[]) => void }) {
     return (
-        <div className="flex items-center">
-            <div className="lg:hidden">
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className={cn("h-7 w-7 rounded-full", selectedClasses.length > 0 ? "bg-sky-600/20 text-sky-400" : "text-slate-400")}>
-                            {selectedClasses.length > 0 ? <div className="w-4 h-4 rounded-full bg-sky-500 text-[10px] text-white font-bold flex items-center justify-center ring-2 ring-slate-900">{selectedClasses.length}</div> : <Zap className="w-4 h-4" />}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2 bg-slate-900 border-slate-800" align="end">
-                        <ClassFilterToggle selectedClasses={selectedClasses} onChange={onChange} size="sm" className="bg-transparent border-none p-0" />
-                    </PopoverContent>
-                </Popover>
-            </div>
-            <div className="hidden lg:flex items-center">
-                <ClassFilterToggle selectedClasses={selectedClasses} onChange={onChange} className="bg-slate-900/50 p-1 rounded-full border border-slate-800" />
-            </div>
+        <div className="flex min-w-0 items-center overflow-x-auto">
+            <ClassFilterToggle selectedClasses={selectedClasses} onChange={onChange} size="sm" className="bg-slate-900/50 p-1 rounded-full border border-slate-800" />
         </div>
     );
 }
 
+function buildGlobalPrestigeApiQuery(options: GlobalPrestigeListOptions, targetPlayerId?: string) {
+    const params = new URLSearchParams({
+        rarity: String(options.rarity),
+        rank: String(options.rank),
+        sig: String(options.sig),
+        ascensionLevel: String(options.ascensionLevel),
+        ownership: options.ownership,
+        saga: String(options.sagaOnly),
+        search: options.search,
+        limit: String(options.limit),
+    });
+    if (options.classFilter.length > 0) params.set("classFilter", options.classFilter.join(","));
+    if (targetPlayerId) params.set("playerId", targetPlayerId);
+    return params.toString();
+}
+
 export function RosterInsights({
-    showInsights, recommendations = [], sigRecommendations = [], potentialRecommendations = [], top30Cutoff,
+    showInsights, recommendations = [], sigRecommendations = [], potentialRecommendations = [],
     initialInsightTab, onInsightTabChange,
+    targetPlayerId, initialGlobalPrestigeOptions, onGlobalPrestigeOptionsChange, globalDefaultTargetRank, globalMaxRankForRarity,
     simulationTargetRank, onTargetRankChange, sigBudget, onSigBudgetChange,
     rankUpClassFilter, onRankUpClassFilterChange, sigClassFilter, onSigClassFilterChange,
     rankUpSagaFilter, onRankUpSagaFilterChange, sigSagaFilter, onSigSagaFilterChange,
@@ -80,10 +95,52 @@ export function RosterInsights({
     isPending, pendingSection, onRecommendationClick
 }: RosterInsightsProps) {
     const [activeTab, setActiveTab] = useState<PrestigeInsightTab>(initialInsightTab);
+    const [globalOptions, setGlobalOptions] = useState<GlobalPrestigeListOptions>(initialGlobalPrestigeOptions);
+    const [globalEntries, setGlobalEntries] = useState<GlobalPrestigeListEntry[]>([]);
+    const [globalTotalMatching, setGlobalTotalMatching] = useState(0);
+    const [isLoadingGlobalPrestige, setIsLoadingGlobalPrestige] = useState(false);
+    const [globalPrestigeError, setGlobalPrestigeError] = useState<string | null>(null);
+    const [impactModal, setImpactModal] = useState<{ type: "potential"; rec: PotentialRecommendation } | { type: "rank"; rec: Recommendation } | null>(null);
 
     useEffect(() => {
         setActiveTab(initialInsightTab);
     }, [initialInsightTab]);
+
+    useEffect(() => {
+        setGlobalOptions(initialGlobalPrestigeOptions);
+    }, [initialGlobalPrestigeOptions]);
+
+    useEffect(() => {
+        if (!showInsights || activeTab !== "global") return;
+
+        const controller = new AbortController();
+        const fetchGlobalPrestige = async () => {
+            setIsLoadingGlobalPrestige(true);
+            setGlobalPrestigeError(null);
+            try {
+                const query = buildGlobalPrestigeApiQuery(globalOptions, targetPlayerId);
+                const res = await fetch(`/api/profile/roster/global-prestige?${query}`, { signal: controller.signal });
+                if (!res.ok) throw new Error("Failed to load global prestige list");
+                const data = await res.json() as {
+                    options: GlobalPrestigeListOptions;
+                    entries: GlobalPrestigeListEntry[];
+                    totalMatching: number;
+                };
+                setGlobalOptions(current => JSON.stringify(current) === JSON.stringify(data.options) ? current : data.options);
+                setGlobalEntries(data.entries);
+                setGlobalTotalMatching(data.totalMatching);
+            } catch (error) {
+                if (error instanceof Error && error.name === "AbortError") return;
+                reportClientError("profile_roster_fetch_global_prestige", error, { player_id: targetPlayerId });
+                setGlobalPrestigeError("Could not load global prestige champions.");
+            } finally {
+                if (!controller.signal.aborted) setIsLoadingGlobalPrestige(false);
+            }
+        };
+
+        fetchGlobalPrestige();
+        return () => controller.abort();
+    }, [activeTab, globalOptions, showInsights, targetPlayerId]);
 
     if (!showInsights) return null;
 
@@ -93,32 +150,17 @@ export function RosterInsights({
         onInsightTabChange(nextTab);
     };
 
-    const handlePotentialRecommendationClick = (rec: PotentialRecommendation) => {
-        const sigsNeeded = rec.toSig - rec.fromSig;
-        onRecommendationClick({
-            championId: rec.championId,
-            championName: rec.championName,
-            championClass: rec.championClass,
-            championImage: rec.championImage,
-            stars: rec.stars,
-            ascensionLevel: rec.ascensionLevel,
-            rank: rec.toRank,
-            fromSig: rec.fromSig,
-            toSig: rec.toSig,
-            prestigeGain: rec.prestigeGain,
-            accountGain: rec.accountGain,
-            prestigePerSig: sigsNeeded > 0 ? parseFloat((rec.accountGain / sigsNeeded).toFixed(2)) : 0,
-            reason: rec.reason,
-            globalPrestigeRank: rec.globalPrestigeRank,
-            globalPrestigeRankTotal: rec.globalPrestigeRankTotal,
-        });
+    const updateGlobalOptions = (updates: Partial<GlobalPrestigeListOptions>) => {
+        const next = normalizeGlobalPrestigeListOptionValues({ ...globalOptions, ...updates }, globalDefaultTargetRank);
+        setGlobalOptions(next);
+        onGlobalPrestigeOptionsChange(next);
     };
 
     const showLimitControl = (
         <div className="flex items-center gap-2">
             <Label className="text-[10px] text-slate-400 uppercase tracking-wider whitespace-nowrap">Show Limit</Label>
             <Select value={String(limit)} onValueChange={(val) => onLimitChange(parseInt(val))}>
-                <SelectTrigger className="h-7 w-[80px] bg-slate-950 border-slate-700 text-slate-300 text-xs">
+                <SelectTrigger className="h-7 w-[92px] bg-slate-950 border-slate-700 text-slate-300 text-xs">
                     <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-800">
@@ -176,6 +218,15 @@ export function RosterInsights({
         </>
     );
 
+    const globalControls = (
+        <GlobalPrestigeControls
+            options={globalOptions}
+            onChange={updateGlobalOptions}
+            defaultTargetRank={globalDefaultTargetRank}
+            maxRankForRarity={globalMaxRankForRarity}
+        />
+    );
+
     return (
         <Card className="overflow-hidden border-slate-800 bg-slate-950/60 animate-in slide-in-from-top-2 fade-in duration-300">
             <Tabs value={activeTab} onValueChange={handleTabChange}>
@@ -184,22 +235,18 @@ export function RosterInsights({
                         <div className="p-1 bg-indigo-500/20 rounded-md"><TrendingUp className="w-4 h-4 text-indigo-400" /></div>
                         <h2 className="font-bold text-lg text-slate-100">Prestige Suggestions</h2>
                         <InsightInfo activeTab={activeTab} sigBudget={sigBudget} />
-                        {top30Cutoff > 0 && (
-                            <span className="ml-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                                #30 Cutoff {top30Cutoff.toLocaleString("en-US")}
-                            </span>
-                        )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                        {activeTab === "sig" ? sigControls : rankControls}
+                        {activeTab === "global" ? globalControls : activeTab === "sig" ? sigControls : rankControls}
                     </div>
                 </div>
 
                 <div className="px-4 pt-4">
-                    <TabsList className="grid h-auto w-full grid-cols-1 gap-2 rounded-none bg-transparent p-0 text-slate-400 sm:grid-cols-3">
-                        <InsightTabTrigger value="potential" label="Upgrade Potential" subtitle="Long-term roster upside" count={potentialRecommendations.length} icon={<Trophy className="h-3.5 w-3.5" />} />
-                        <InsightTabTrigger value="rank" label="Rank Up" subtitle="Best next rank move" count={recommendations.length} icon={<TrendingUp className="h-3.5 w-3.5" />} />
-                        <InsightTabTrigger value="sig" label="Add Sig Stones" subtitle="Stone value and allocation" count={sigRecommendations.length} icon={<Sparkles className="h-3.5 w-3.5" />} />
+                    <TabsList className="grid h-auto w-full grid-cols-2 gap-2 rounded-none bg-transparent p-0 text-slate-400 xl:grid-cols-4">
+                        <InsightTabTrigger value="potential" label="Upgrade Potential" subtitle="Long-term roster upside" icon={<Trophy className="h-3.5 w-3.5" />} />
+                        <InsightTabTrigger value="rank" label="Rank Up" subtitle="Best next rank move" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+                        <InsightTabTrigger value="sig" label="Add Sig Stones" subtitle="Stone value and allocation" icon={<Sparkles className="h-3.5 w-3.5" />} />
+                        <InsightTabTrigger value="global" label="Global Prestige" subtitle="Top prestige champions" icon={<Globe2 className="h-3.5 w-3.5" />} />
                     </TabsList>
                 </div>
 
@@ -211,7 +258,6 @@ export function RosterInsights({
                         isPending={isPending}
                         isBlurred={isPending && potentialRecommendations.length > 0 && (pendingSection === "rank" || pendingSection === "all")}
                         itemCount={potentialRecommendations.length}
-                        skeletonHeight="h-[74px]"
                         emptyState={
                             <InsightEmptyState
                                 icon={<Trophy className="w-5 h-5 text-slate-500" />}
@@ -220,7 +266,7 @@ export function RosterInsights({
                             />
                         }
                     >
-                        {potentialRecommendations.map((rec, i) => <PotentialRecommendationCard key={`${rec.championId}-${i}`} rec={rec} onClick={() => handlePotentialRecommendationClick(rec)} />)}
+                        {potentialRecommendations.map((rec, i) => <PotentialRecommendationCard key={`${rec.championId}-${i}`} rec={rec} onClick={() => setImpactModal({ type: "potential", rec })} />)}
                     </RecommendationGrid>
                 </TabsContent>
 
@@ -232,7 +278,6 @@ export function RosterInsights({
                         isPending={isPending}
                         isBlurred={isPending && recommendations.length > 0 && (pendingSection === "rank" || pendingSection === "all")}
                         itemCount={recommendations.length}
-                        skeletonHeight="h-[66px]"
                         emptyState={
                             <InsightEmptyState
                                 icon={<Info className="w-5 h-5 text-slate-500" />}
@@ -241,7 +286,7 @@ export function RosterInsights({
                             />
                         }
                     >
-                        {recommendations.map((rec, i) => <RankRecommendationCard key={`${rec.championName}-${i}`} rec={rec} />)}
+                        {recommendations.map((rec, i) => <RankRecommendationCard key={`${rec.championName}-${i}`} rec={rec} onClick={() => setImpactModal({ type: "rank", rec })} />)}
                     </RecommendationGrid>
                 </TabsContent>
 
@@ -253,7 +298,6 @@ export function RosterInsights({
                         isPending={isPending}
                         isBlurred={isPending && sigRecommendations.length > 0 && (pendingSection === "sig" || pendingSection === "all")}
                         itemCount={sigRecommendations.length}
-                        skeletonHeight="h-[66px]"
                         emptyState={
                             <InsightEmptyState
                                 icon={<Sparkles className="w-5 h-5 text-slate-500" />}
@@ -267,32 +311,46 @@ export function RosterInsights({
                         {sigRecommendations.map((rec, i) => <SigRecommendationCard key={`${rec.championId}-${i}`} rec={rec} onClick={() => onRecommendationClick(rec)} />)}
                     </RecommendationGrid>
                 </TabsContent>
+
+                <TabsContent value="global" className="mt-0 p-4 focus-visible:ring-0 focus-visible:ring-offset-0">
+                    <InsightTabDescription>
+                        Browse the highest-prestige champions at a selected rarity, rank, sig, and ascension target.
+                    </InsightTabDescription>
+                    <GlobalPrestigeList
+                        entries={globalEntries}
+                        totalMatching={globalTotalMatching}
+                        isLoading={isLoadingGlobalPrestige}
+                        error={globalPrestigeError}
+                    />
+                </TabsContent>
             </Tabs>
+            <PrestigeImpactModal impact={impactModal} onClose={() => setImpactModal(null)} />
         </Card>
     );
 }
 
 function normalizeInsightTab(value: string): PrestigeInsightTab {
-    if (value === "rank" || value === "sig") return value;
+    if (value === "rank" || value === "sig" || value === "global") return value;
     return "potential";
 }
 
-function InsightTabTrigger({ value, label, subtitle, count, icon }: { value: PrestigeInsightTab; label: string; subtitle: string; count: number; icon: ReactNode }) {
+function InsightTabTrigger({ value, label, subtitle, icon }: { value: PrestigeInsightTab; label: string; subtitle: string; icon: ReactNode }) {
     const tone = {
         potential: {
             active: "data-[state=active]:border-emerald-400/50 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-100",
             icon: "bg-emerald-500/15 text-emerald-400 group-data-[state=active]:bg-emerald-500/25",
-            count: "group-data-[state=active]:border-emerald-400/30 group-data-[state=active]:bg-emerald-500/20 group-data-[state=active]:text-emerald-200",
         },
         rank: {
             active: "data-[state=active]:border-indigo-400/50 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-100",
             icon: "bg-indigo-500/15 text-indigo-400 group-data-[state=active]:bg-indigo-500/25",
-            count: "group-data-[state=active]:border-indigo-400/30 group-data-[state=active]:bg-indigo-500/20 group-data-[state=active]:text-indigo-200",
         },
         sig: {
             active: "data-[state=active]:border-purple-400/50 data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-100",
             icon: "bg-purple-500/15 text-purple-400 group-data-[state=active]:bg-purple-500/25",
-            count: "group-data-[state=active]:border-purple-400/30 group-data-[state=active]:bg-purple-500/20 group-data-[state=active]:text-purple-200",
+        },
+        global: {
+            active: "data-[state=active]:border-sky-400/50 data-[state=active]:bg-sky-500/10 data-[state=active]:text-sky-100",
+            icon: "bg-sky-500/15 text-sky-400 group-data-[state=active]:bg-sky-500/25",
         },
     }[value];
 
@@ -305,15 +363,12 @@ function InsightTabTrigger({ value, label, subtitle, count, icon }: { value: Pre
             )}
         >
             <span className="flex w-full min-w-0 items-center gap-2">
-                <span className={cn("hidden h-7 w-7 shrink-0 items-center justify-center rounded-md sm:inline-flex", tone.icon)}>
+                <span className={cn("inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md", tone.icon)}>
                     {icon}
                 </span>
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-black leading-tight text-slate-100 sm:text-sm">{label}</span>
+                    <span className="block truncate text-[11px] font-black leading-tight text-slate-100 sm:text-sm">{label}</span>
                     <span className="mt-0.5 hidden truncate text-[10px] font-medium leading-tight text-slate-500 group-data-[state=active]:text-slate-300 md:block">{subtitle}</span>
-                </span>
-                <span className={cn("rounded-full border border-white/10 bg-black/25 px-1.5 py-0.5 text-[10px] font-mono font-bold leading-none text-slate-300", tone.count)}>
-                    {count}
                 </span>
             </span>
         </TabsTrigger>
@@ -325,9 +380,11 @@ function InsightInfo({ activeTab, sigBudget }: { activeTab: PrestigeInsightTab; 
         ? "Shows champions with the biggest projected Top 30 Prestige increase if built to the selected practical target rank and max sig."
         : activeTab === "rank"
             ? "Shows the next rank-ups that provide the highest immediate increase to your Top 30 Prestige."
-            : sigBudget > 0
-                ? "Shows an optimized sig stone allocation for the current budget."
-                : "Shows champions with the highest Top 30 Prestige increase if taken to max sig at their current rank.";
+            : activeTab === "global"
+                ? "Shows the highest-prestige obtainable champions at the selected target state, with owned and missing roster context."
+                : sigBudget > 0
+                    ? "Shows an optimized sig stone allocation for the current budget."
+                    : "Shows champions with the highest Top 30 Prestige increase if taken to max sig at their current rank.";
 
     return (
         <Popover>
@@ -366,23 +423,216 @@ function SagaToggle({ active, onClick }: { active: boolean; onClick: () => void 
     );
 }
 
+function GlobalPrestigeControls({
+    options,
+    onChange,
+    defaultTargetRank,
+    maxRankForRarity,
+}: {
+    options: GlobalPrestigeListOptions;
+    onChange: (updates: Partial<GlobalPrestigeListOptions>) => void;
+    defaultTargetRank: number;
+    maxRankForRarity: (rarity: number) => number;
+}) {
+    const rankOptions = Array.from({ length: maxRankForRarity(options.rarity) }, (_, index) => index + 1);
+    const sigOptions = [0, 1, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200];
+    const selectedSig = sigOptions.includes(options.sig) ? String(options.sig) : String(Math.min(options.sig, 200));
+
+    return (
+        <>
+            <div className="relative">
+                <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                <Input
+                    value={options.search}
+                    placeholder="Search champions"
+                    onChange={(event) => onChange({ search: event.target.value })}
+                    className="h-7 w-[170px] bg-slate-950 border-slate-700 pl-7 text-xs text-slate-300 placeholder:text-slate-600"
+                />
+            </div>
+            <Select
+                value={String(options.rarity)}
+                onValueChange={(value) => {
+                    const rarity = parseInt(value, 10);
+                    onChange({
+                        rarity,
+                        rank: rarity === 7 ? defaultTargetRank : maxRankForRarity(rarity),
+                        ascensionLevel: rarity === 7 ? options.ascensionLevel : 0,
+                    });
+                }}
+            >
+                <SelectTrigger className="h-7 w-[64px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                    {[7, 6, 5].map(rarity => <SelectItem key={rarity} value={String(rarity)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">{rarity}&#9733;</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={String(options.rank)} onValueChange={(value) => onChange({ rank: parseInt(value, 10) })}>
+                <SelectTrigger className="h-7 w-[88px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                    {rankOptions.map(rank => <SelectItem key={rank} value={String(rank)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">Rank {rank}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Select value={selectedSig} onValueChange={(value) => onChange({ sig: parseInt(value, 10) })}>
+                <SelectTrigger className="h-7 w-[72px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                    {sigOptions.map(sig => <SelectItem key={sig} value={String(sig)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">S{sig}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            {options.rarity === 7 && (
+                <Select value={String(options.ascensionLevel)} onValueChange={(value) => onChange({ ascensionLevel: parseInt(value, 10) })}>
+                    <SelectTrigger className="h-7 w-[64px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-slate-800">
+                        {[0, 1, 2, 3, 4, 5].map(level => <SelectItem key={level} value={String(level)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">A{level}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            )}
+            <ClassFilterSelector selectedClasses={options.classFilter} onChange={(classFilter) => onChange({ classFilter })} />
+            <Select value={options.ownership} onValueChange={(value) => onChange({ ownership: value as GlobalPrestigeListOptions["ownership"] })}>
+                <SelectTrigger className="h-7 w-[92px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                    <SelectItem value="all" className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">All</SelectItem>
+                    <SelectItem value="owned" className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">Owned</SelectItem>
+                    <SelectItem value="missing" className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">Missing</SelectItem>
+                </SelectContent>
+            </Select>
+            <SagaToggle active={options.sagaOnly} onClick={() => onChange({ sagaOnly: !options.sagaOnly })} />
+            <Select value={String(options.limit)} onValueChange={(value) => onChange({ limit: parseInt(value, 10) })}>
+                <SelectTrigger className="h-7 w-[88px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-800">
+                    {[30, 50, 100].map(limit => <SelectItem key={limit} value={String(limit)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">Top {limit}</SelectItem>)}
+                </SelectContent>
+            </Select>
+        </>
+    );
+}
+
+function GlobalPrestigeList({
+    entries,
+    totalMatching,
+    isLoading,
+    error,
+}: {
+    entries: GlobalPrestigeListEntry[];
+    totalMatching: number;
+    isLoading: boolean;
+    error: string | null;
+}) {
+    if (isLoading && entries.length === 0) {
+        return <GlobalPrestigeSkeletonRows />;
+    }
+
+    if (error) {
+        return (
+            <InsightEmptyState
+                icon={<Info className="w-5 h-5 text-slate-500" />}
+                title={error}
+                detail="Try changing a filter or reloading the page."
+            />
+        );
+    }
+
+    if (entries.length === 0) {
+        return (
+            <InsightEmptyState
+                icon={<Globe2 className="w-5 h-5 text-slate-500" />}
+                title="No global prestige champions found."
+                detail="Try clearing search, class, Saga, or ownership filters."
+            />
+        );
+    }
+
+    return (
+        <div className={cn("space-y-2 transition-opacity", isLoading && "opacity-70")}>
+            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <span>Showing {entries.length.toLocaleString("en-US")} of {totalMatching.toLocaleString("en-US")}</span>
+                <span>Target Prestige</span>
+            </div>
+            <div className="overflow-hidden rounded-lg border border-slate-800">
+                {entries.map(entry => <GlobalPrestigeRow key={`${entry.championId}-${entry.targetRarity}`} entry={entry} />)}
+            </div>
+        </div>
+    );
+}
+
+function GlobalPrestigeSkeletonRows() {
+    return (
+        <div className="overflow-hidden rounded-lg border border-slate-800">
+            {Array.from({ length: 8 }, (_, index) => (
+                <div key={index} className="grid min-w-0 grid-cols-[72px_minmax(0,1fr)_110px] items-center gap-3 border-b border-slate-900/80 bg-slate-900/20 p-2 last:border-b-0 md:grid-cols-[90px_minmax(0,1.5fr)_150px_140px_130px]">
+                    <div className="h-5 w-14 animate-pulse rounded bg-slate-800/60" />
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 animate-pulse rounded bg-slate-800/60" />
+                        <div className="space-y-2">
+                            <div className="h-3 w-32 animate-pulse rounded bg-slate-800/60" />
+                            <div className="h-2.5 w-20 animate-pulse rounded bg-slate-800/60" />
+                        </div>
+                    </div>
+                    <div className="h-5 w-20 animate-pulse rounded bg-slate-800/60" />
+                    <div className="hidden h-5 w-24 animate-pulse rounded bg-slate-800/60 md:block" />
+                    <div className="hidden h-5 w-24 animate-pulse rounded bg-slate-800/60 md:block" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function GlobalPrestigeRow({ entry }: { entry: GlobalPrestigeListEntry }) {
+    const colors = getChampionClassColors(entry.championClass);
+    const name = entry.championSlug ? (
+        <Link href={`/champions/${entry.championSlug}`} className="block truncate text-sm font-bold text-slate-100 hover:text-sky-300" title={entry.championName}>
+            {entry.championName}
+        </Link>
+    ) : (
+        <span className="block truncate text-sm font-bold text-slate-100" title={entry.championName}>{entry.championName}</span>
+    );
+
+    return (
+        <div className="grid min-w-0 grid-cols-[42px_minmax(0,1fr)_auto] gap-x-2 gap-y-1 border-b border-slate-900/80 bg-slate-950/30 p-2 last:border-b-0 sm:grid-cols-[70px_minmax(0,1fr)_auto] md:grid-cols-[90px_minmax(0,1.5fr)_150px_140px_130px] md:items-center md:gap-3">
+            <div className="row-span-2 flex items-center md:row-span-1">
+                <span className={cn("rounded px-2 py-1 text-[10px] font-bold leading-none ring-1", globalRankTone(entry.globalRank))}>
+                    <span className="sm:hidden">#{entry.globalRank}</span>
+                    <span className="hidden sm:inline">Global #{entry.globalRank}</span>
+                </span>
+            </div>
+            <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md border border-white/10 bg-slate-900">
+                    <Image src={getChampionImageUrlOrPlaceholder(entry.championImage, "full")} alt={entry.championName} fill className="object-cover" />
+                </div>
+                <div className="min-w-0">
+                    {name}
+                    <div className={cn("mt-0.5 text-[10px] font-bold uppercase tracking-wider", colors.text)}>{entry.championClass}</div>
+                </div>
+            </div>
+            <div className="col-start-2 min-w-0 whitespace-nowrap pl-[56px] text-[10px] font-mono text-slate-300 md:col-start-auto md:pl-0 md:text-[11px]">
+                <span>{entry.targetRarity}<span className="text-yellow-500">&#9733;</span> R{entry.targetRank} S{entry.targetSig}</span>
+                {entry.targetRarity === 7 && <span className="text-amber-300">A{entry.targetAscensionLevel}</span>}
+            </div>
+            <div className="col-start-3 row-start-1 text-right text-base font-black font-mono text-slate-100 md:col-start-auto md:row-start-auto md:text-left md:text-lg">
+                {entry.targetPrestige.toLocaleString("en-US")}
+            </div>
+            <div className="col-start-3 row-start-2 min-w-0 text-right md:col-start-auto md:row-start-auto md:text-left">
+                <Badge className={cn("border-0 px-2 py-0.5 text-[10px] font-bold", entry.isOwned ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-800 text-slate-300")}>
+                    {entry.ownedGapLabel}
+                </Badge>
+            </div>
+        </div>
+    );
+}
+
 function RecommendationGrid({
     isPending,
     isBlurred,
     itemCount,
-    skeletonHeight,
     emptyState,
     children,
 }: {
     isPending: boolean;
     isBlurred: boolean;
     itemCount: number;
-    skeletonHeight: string;
     emptyState: ReactNode;
     children: ReactNode;
 }) {
     if (isPending && itemCount === 0) {
-        return <InsightSkeletonGrid skeletonHeight={skeletonHeight} />;
+        return <InsightSkeletonGrid />;
     }
 
     if (itemCount === 0) {
@@ -390,26 +640,26 @@ function RecommendationGrid({
     }
 
     return (
-        <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 transition-all duration-500", isBlurred && "blur-[1px] opacity-80 pointer-events-none")}>
+        <div className={cn("grid grid-cols-1 gap-3 transition-all duration-500", isBlurred && "blur-[1px] opacity-80 pointer-events-none")}>
             {children}
         </div>
     );
 }
 
-function InsightSkeletonGrid({ skeletonHeight }: { skeletonHeight: string }) {
+function InsightSkeletonGrid() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 gap-3">
             {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={cn("flex items-center gap-3 p-2 pr-3 rounded-xl border border-slate-800 bg-slate-900/20", skeletonHeight)}>
-                    <div className="w-12 h-12 rounded-lg bg-slate-800/50 animate-pulse shrink-0" />
-                    <div className="flex flex-col flex-1 gap-2 min-w-0">
-                        <div className="flex justify-between gap-2">
-                            <div className="w-8 h-2.5 rounded bg-slate-800/50 animate-pulse" />
-                            <div className="w-10 h-2.5 rounded bg-slate-800/50 animate-pulse" />
-                        </div>
-                        <div className="w-3/4 h-3 rounded bg-slate-800/50 animate-pulse" />
-                        {skeletonHeight === "h-[74px]" && <div className="w-1/2 h-2.5 rounded bg-slate-800/50 animate-pulse" />}
+                <div key={i} className="grid min-h-[86px] grid-cols-[56px_minmax(0,1fr)] gap-3 rounded-xl border border-slate-800 bg-slate-900/20 p-3 md:grid-cols-[64px_minmax(0,1fr)_180px_150px_150px] md:items-center">
+                    <div className="h-14 w-14 rounded-lg bg-slate-800/50 animate-pulse shrink-0 md:h-16 md:w-16" />
+                    <div className="flex flex-col gap-2 min-w-0">
+                        <div className="w-28 h-3 rounded bg-slate-800/50 animate-pulse" />
+                        <div className="w-44 h-4 rounded bg-slate-800/50 animate-pulse" />
+                        <div className="w-24 h-2.5 rounded bg-slate-800/50 animate-pulse" />
                     </div>
+                    <div className="hidden h-8 rounded bg-slate-800/50 animate-pulse md:block" />
+                    <div className="hidden h-8 rounded bg-slate-800/50 animate-pulse md:block" />
+                    <div className="hidden h-8 rounded bg-slate-800/50 animate-pulse md:block" />
                 </div>
             ))}
         </div>
@@ -428,80 +678,173 @@ function InsightEmptyState({ icon, title, detail }: { icon: ReactNode; title: st
     );
 }
 
-function RankRecommendationCard({ rec }: { rec: Recommendation }) {
-    const colors = getChampionClassColors(rec.championClass);
+function RankRecommendationCard({ rec, onClick }: { rec: Recommendation; onClick: () => void }) {
     return (
-        <div className={cn("flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative", colors.bg, "bg-opacity-10 hover:bg-opacity-20", colors.border, "border-opacity-30")}>
-            <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                <Image src={getChampionImageUrlOrPlaceholder(rec.championImage, "full")} alt={rec.championName} fill className="object-cover" />
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-                <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[10px] font-bold leading-none text-white">{rec.stars}<span className="text-yellow-500">&#9733;</span>{rec.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{rec.ascensionLevel}</span>}</span>
-                    <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
-                        <span>R{rec.fromRank}</span><ChevronRight className="w-2.5 h-2.5" /><span className={cn(colors.text, "brightness-150")}>R{rec.toRank}</span>
-                    </div>
-                </div>
-                <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-emerald-500/20">+{rec.accountGain}</Badge>
-                    <GlobalRankPill rank={rec.globalPrestigeRank} total={rec.globalPrestigeRankTotal} />
-                </div>
-            </div>
-        </div>
+        <PrestigeRecommendationRow
+            championName={rec.championName}
+            championClass={rec.championClass}
+            championImage={rec.championImage}
+            rarity={rec.stars}
+            ascensionLevel={rec.ascensionLevel}
+            moveLabel={<><span>R{rec.fromRank}</span><ChevronRight className="h-3 w-3" /><span>R{rec.toRank}</span></>}
+            primaryMetric={{ label: "Account Gain", value: `+${rec.accountGain.toLocaleString("en-US")}` }}
+            secondaryMetric={{ label: "Prestige Gain", value: `+${rec.prestigeGain.toLocaleString("en-US")}` }}
+            globalRank={rec.globalPrestigeRank}
+            globalRankTotal={rec.globalPrestigeRankTotal}
+            tone="rank"
+            onClick={onClick}
+        />
     );
 }
 
 function SigRecommendationCard({ rec, onClick }: { rec: SigRecommendation; onClick: () => void }) {
-    const colors = getChampionClassColors(rec.championClass);
     return (
-        <div onClick={onClick} className={cn("flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer hover:scale-[1.02] active:scale-[0.98]", colors.bg, "bg-opacity-10 hover:bg-opacity-20", colors.border, "border-opacity-30")}>
-            <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                <Image src={getChampionImageUrlOrPlaceholder(rec.championImage, "full")} alt={rec.championName} fill className="object-cover" />
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-                <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[10px] font-bold leading-none text-white">{rec.stars}<span className="text-yellow-500">&#9733;</span> R{rec.rank}{rec.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{rec.ascensionLevel}</span>}</span>
-                    <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400">
-                        <span>S{rec.fromSig}</span><ChevronRight className="w-2.5 h-2.5" /><span className={cn(colors.text, "brightness-150")}>S{rec.toSig}</span>
-                    </div>
-                </div>
-                <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge className="w-fit bg-purple-500/20 text-purple-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-purple-500/20">+{rec.accountGain}</Badge>
-                    <GlobalRankPill rank={rec.globalPrestigeRank} total={rec.globalPrestigeRankTotal} />
-                    {rec.prestigePerSig > 0 && <div className="flex items-center gap-0.5 text-[9px] font-mono text-purple-300/80"><Zap className="w-2.5 h-2.5" />{rec.prestigePerSig}/sig</div>}
-                </div>
-            </div>
-        </div>
+        <PrestigeRecommendationRow
+            championName={rec.championName}
+            championClass={rec.championClass}
+            championImage={rec.championImage}
+            rarity={rec.stars}
+            rank={rec.rank}
+            ascensionLevel={rec.ascensionLevel}
+            moveLabel={<><span>S{rec.fromSig}</span><ChevronRight className="h-3 w-3" /><span>S{rec.toSig}</span></>}
+            primaryMetric={{ label: "Account Gain", value: `+${rec.accountGain.toLocaleString("en-US")}` }}
+            secondaryMetric={{ label: "Prestige Gain", value: `+${rec.prestigeGain.toLocaleString("en-US")}` }}
+            detailMetric={rec.prestigePerSig > 0 ? { label: "Per Sig", value: rec.prestigePerSig.toLocaleString("en-US") } : undefined}
+            globalRank={rec.globalPrestigeRank}
+            globalRankTotal={rec.globalPrestigeRankTotal}
+            tone="sig"
+            onClick={onClick}
+        />
     );
 }
 
 function PotentialRecommendationCard({ rec, onClick }: { rec: PotentialRecommendation; onClick: () => void }) {
-    const colors = getChampionClassColors(rec.championClass);
     return (
-        <div onClick={onClick} className={cn("flex items-center gap-3 p-2 pr-3 rounded-xl border transition-all group overflow-hidden relative cursor-pointer hover:scale-[1.02] active:scale-[0.98]", colors.bg, "bg-opacity-10 hover:bg-opacity-20", colors.border, "border-opacity-30")}>
-            <div className="relative w-12 h-12 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-sm">
-                <Image src={getChampionImageUrlOrPlaceholder(rec.championImage, "full")} alt={rec.championName} fill className="object-cover" />
+        <PrestigeRecommendationRow
+            championName={rec.championName}
+            championClass={rec.championClass}
+            championImage={rec.championImage}
+            rarity={rec.stars}
+            ascensionLevel={rec.ascensionLevel}
+            moveLabel={<><span>R{rec.fromRank} S{rec.fromSig}</span><ChevronRight className="h-3 w-3" /><span>R{rec.toRank} S{rec.toSig}</span></>}
+            primaryMetric={{ label: "Account Gain", value: `+${rec.accountGain.toLocaleString("en-US")}` }}
+            detailMetric={{ label: "Target Prestige", value: rec.targetPrestige.toLocaleString("en-US") }}
+            globalRank={rec.globalPrestigeRank}
+            globalRankTotal={rec.globalPrestigeRankTotal}
+            tone="potential"
+            onClick={onClick}
+        />
+    );
+}
+
+function PrestigeRecommendationRow({
+    championName,
+    championClass,
+    championImage,
+    rarity,
+    rank,
+    ascensionLevel,
+    moveLabel,
+    primaryMetric,
+    secondaryMetric,
+    detailMetric,
+    globalRank,
+    globalRankTotal,
+    tone,
+    onClick,
+}: {
+    championName: string;
+    championClass: ChampionClass;
+    championImage: Recommendation["championImage"];
+    rarity: number;
+    rank?: number;
+    ascensionLevel: number;
+    moveLabel: ReactNode;
+    primaryMetric: { label: string; value: string };
+    secondaryMetric?: { label: string; value: string };
+    detailMetric?: { label: string; value: string };
+    globalRank: number | null;
+    globalRankTotal: number | null;
+    tone: "potential" | "rank" | "sig";
+    onClick?: () => void;
+}) {
+    const colors = getChampionClassColors(championClass);
+    const toneStyles = {
+        potential: {
+            border: "border-emerald-500/20 hover:border-emerald-400/45",
+            glow: "hover:shadow-[0_14px_44px_rgba(16,185,129,0.10)]",
+            icon: "bg-emerald-500/15 text-emerald-300",
+            metric: "text-emerald-300",
+            badge: "bg-emerald-500/15 text-emerald-300",
+        },
+        rank: {
+            border: "border-indigo-500/20 hover:border-indigo-400/45",
+            glow: "hover:shadow-[0_14px_44px_rgba(99,102,241,0.12)]",
+            icon: "bg-indigo-500/15 text-indigo-300",
+            metric: "text-indigo-300",
+            badge: "bg-indigo-500/15 text-indigo-300",
+        },
+        sig: {
+            border: "border-purple-500/20 hover:border-purple-400/45",
+            glow: "hover:shadow-[0_14px_44px_rgba(168,85,247,0.12)]",
+            icon: "bg-purple-500/15 text-purple-300",
+            metric: "text-purple-300",
+            badge: "bg-purple-500/15 text-purple-300",
+        },
+    }[tone];
+    const Component = onClick ? "button" : "div";
+
+    return (
+        <Component
+            type={onClick ? "button" : undefined}
+            onClick={onClick}
+            className={cn(
+                "group grid min-w-0 grid-cols-[48px_minmax(0,1fr)] gap-3 border-b border-slate-900/80 bg-slate-950/45 p-2.5 text-left transition-all last:border-b-0 sm:grid-cols-[52px_minmax(140px,1fr)_140px_110px_120px] sm:items-center sm:gap-3 md:grid-cols-[52px_minmax(0,1.4fr)_180px_132px_132px] md:px-3",
+                toneStyles.border,
+                toneStyles.glow,
+                onClick && "cursor-pointer active:scale-[0.995]"
+            )}
+        >
+            <div className={cn("relative h-12 w-12 overflow-hidden rounded-md border shadow-sm", colors.border, "border-opacity-70")}>
+                <Image src={getChampionImageUrlOrPlaceholder(championImage, "full")} alt={championName} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
             </div>
-            <div className="flex flex-col min-w-0 flex-1">
-                <div className="flex items-center justify-between mb-0.5 gap-2">
-                    <span className="text-[10px] font-bold leading-none text-white shrink-0">{rec.stars}<span className="text-yellow-500">&#9733;</span>{rec.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{rec.ascensionLevel}</span>}</span>
-                    <div className="flex items-center gap-1 text-[10px] font-bold font-mono text-slate-400 min-w-0">
-                        <span>R{rec.fromRank}</span><ChevronRight className="w-2.5 h-2.5 shrink-0" /><span className={cn(colors.text, "brightness-150")}>R{rec.toRank}</span>
-                        <span className="text-slate-600">/</span>
-                        <span>S{rec.fromSig}</span><ChevronRight className="w-2.5 h-2.5 shrink-0" /><span className={cn(colors.text, "brightness-150")}>S{rec.toSig}</span>
-                    </div>
+
+            <div className="min-w-0">
+                <div className="mb-1 flex min-w-0 flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-black leading-none text-white">
+                        {rarity}<span className="text-yellow-500">&#9733;</span>{rank ? ` R${rank}` : ""}{ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{ascensionLevel}</span>}
+                    </span>
+                    <span className={cn("rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider", toneStyles.badge)}>
+                        {tone === "potential" ? "Upgrade" : tone === "rank" ? "Rank Up" : "Sig Stones"}
+                    </span>
                 </div>
-                <p className="text-xs font-bold text-slate-100 truncate leading-tight mb-1">{rec.championName}</p>
-                <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-                    <Badge className="w-fit bg-emerald-500/20 text-emerald-400 border-0 text-[10px] px-1.5 py-0 h-4 font-mono font-bold hover:bg-emerald-500/20">+{rec.accountGain}</Badge>
-                    <GlobalRankPill rank={rec.globalPrestigeRank} total={rec.globalPrestigeRankTotal} />
-                    <div className="text-[9px] font-mono text-emerald-300/80 truncate">
-                        {rec.currentPrestige.toLocaleString("en-US")} -&gt; {rec.targetPrestige.toLocaleString("en-US")}
-                    </div>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="min-w-0 truncate text-sm font-black leading-tight text-slate-100 md:text-[15px]" title={championName}>{championName}</p>
+                    <GlobalRankPill rank={globalRank} total={globalRankTotal} />
                 </div>
             </div>
+
+            <div className="col-start-2 flex min-w-0 flex-wrap items-center gap-2 text-xs font-black text-slate-300 sm:col-start-auto sm:row-start-auto sm:justify-start">
+                <span className={cn("inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-mono ring-1 ring-white/10", toneStyles.icon)}>
+                    {moveLabel}
+                </span>
+            </div>
+
+            <MetricBlock label={primaryMetric.label} value={primaryMetric.value} className={toneStyles.metric} />
+
+            <div className="col-start-2 grid min-w-0 grid-cols-2 gap-2 sm:col-start-auto sm:row-start-auto sm:block">
+                {secondaryMetric && <MetricBlock label={secondaryMetric.label} value={secondaryMetric.value} />}
+                {detailMetric && <MetricBlock label={detailMetric.label} value={detailMetric.value} compact />}
+            </div>
+        </Component>
+    );
+}
+
+function MetricBlock({ label, value, className, compact = false }: { label: string; value: string; className?: string; compact?: boolean }) {
+    return (
+        <div className="min-w-0">
+            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{label}</div>
+            <div className={cn(compact ? "text-xs" : "text-lg", "mt-0.5 truncate font-black font-mono text-slate-100", className)}>{value}</div>
         </div>
     );
 }

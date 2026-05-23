@@ -1,6 +1,7 @@
 import { ChampionClass } from "@prisma/client";
 import type { ChampionImages } from "../types/champion";
 import { createMcocPrestigeProjector, maxSigForRarity } from "./mcoc-prestige";
+import { isSagaChampionTag } from "./saga-champion-tag";
 
 export interface RosterPrestigeInsightOptions {
     targetRank: number;
@@ -122,6 +123,21 @@ export function calculateRosterPrestigeInsights(
             ascensionLevel,
         });
     };
+    const globalRankCache = new Map<string, { rank: number; total: number } | null>();
+    const getGlobalPrestigeRank = (championId: number, rarity: number, rank: number, sig: number) => {
+        const key = `${championId}:${rarity}:${rank}:${sig}`;
+        if (globalRankCache.has(key)) return globalRankCache.get(key) ?? null;
+        const result = globalPrestigeRank({
+            prestigeRows,
+            prestigeProjector,
+            championId,
+            rarity,
+            rank,
+            sig,
+        });
+        globalRankCache.set(key, result);
+        return result;
+    };
 
     const rosterWithPrestige = roster.map(r => {
         const prestige = getCalculatedPrestige(r.championId, r.stars, r.rank, r.sigLevel || 0, r.ascensionLevel || 0);
@@ -140,7 +156,7 @@ export function calculateRosterPrestigeInsights(
 
     const candidates = roster.filter(r => {
         if (options.rankClassFilter.length > 0 && !options.rankClassFilter.includes(r.champion.class)) return false;
-        if (options.rankSagaFilter && !r.champion.tags.some(t => t.name === "#Saga Champions")) return false;
+        if (options.rankSagaFilter && !r.champion.tags.some(isSagaChampionTag)) return false;
         if (r.stars === 7) return r.rank < Math.min(options.targetRank, 6);
         if (r.stars === 6) return r.rank < 5;
         if (r.stars === 5) return r.rank < 5;
@@ -175,20 +191,8 @@ export function calculateRosterPrestigeInsights(
                 projectedPrestige: nextPrestige,
                 top30Cutoff,
             }),
-            globalPrestigeRank: globalPrestigeRank({
-                prestigeRows,
-                championId: c.championId,
-                rarity: c.stars,
-                rank: c.rank + 1,
-                sig: c.sigLevel || 0,
-            })?.rank ?? null,
-            globalPrestigeRankTotal: globalPrestigeRank({
-                prestigeRows,
-                championId: c.championId,
-                rarity: c.stars,
-                rank: c.rank + 1,
-                sig: c.sigLevel || 0,
-            })?.total ?? null,
+            globalPrestigeRank: getGlobalPrestigeRank(c.championId, c.stars, c.rank + 1, c.sigLevel || 0)?.rank ?? null,
+            globalPrestigeRankTotal: getGlobalPrestigeRank(c.championId, c.stars, c.rank + 1, c.sigLevel || 0)?.total ?? null,
         };
     }).filter((r): r is NonNullable<typeof r> => r !== null && r.accountGain > 0);
 
@@ -198,7 +202,7 @@ export function calculateRosterPrestigeInsights(
 
     const potentialRecommendations = roster.map(c => {
         if (options.rankClassFilter.length > 0 && !options.rankClassFilter.includes(c.champion.class)) return null;
-        if (options.rankSagaFilter && !c.champion.tags.some(t => t.name === "#Saga Champions")) return null;
+        if (options.rankSagaFilter && !c.champion.tags.some(isSagaChampionTag)) return null;
         if (c.stars < 5) return null;
 
         const toRank = targetPotentialRank(c, options);
@@ -238,20 +242,8 @@ export function calculateRosterPrestigeInsights(
                 projectedPrestige: targetPrestige,
                 top30Cutoff,
             }),
-            globalPrestigeRank: globalPrestigeRank({
-                prestigeRows,
-                championId: c.championId,
-                rarity: c.stars,
-                rank: toRank,
-                sig: toSig,
-            })?.rank ?? null,
-            globalPrestigeRankTotal: globalPrestigeRank({
-                prestigeRows,
-                championId: c.championId,
-                rarity: c.stars,
-                rank: toRank,
-                sig: toSig,
-            })?.total ?? null,
+            globalPrestigeRank: getGlobalPrestigeRank(c.championId, c.stars, toRank, toSig)?.rank ?? null,
+            globalPrestigeRankTotal: getGlobalPrestigeRank(c.championId, c.stars, toRank, toSig)?.total ?? null,
         };
     }).filter((r): r is RosterPrestigePotentialInsight => r !== null)
         .sort((a, b) =>
@@ -264,7 +256,7 @@ export function calculateRosterPrestigeInsights(
 
     const sigCandidates = roster.filter(r => {
         if (options.sigClassFilter.length > 0 && !options.sigClassFilter.includes(r.champion.class)) return false;
-        if (options.sigSagaFilter && !r.champion.tags.some(t => t.name === "#Saga Champions")) return false;
+        if (options.sigSagaFilter && !r.champion.tags.some(isSagaChampionTag)) return false;
 
         const isDupped = r.isAwakened && (r.sigLevel || 0) > 0;
         if (options.sigAwakenedOnly && !isDupped) return false;
@@ -345,20 +337,8 @@ export function calculateRosterPrestigeInsights(
                     projectedPrestige: finalPrestige,
                     top30Cutoff,
                 }),
-                globalPrestigeRank: globalPrestigeRank({
-                    prestigeRows,
-                    championId: original.championId,
-                    rarity: original.stars,
-                    rank: original.rank,
-                    sig: finalSig,
-                })?.rank ?? null,
-                globalPrestigeRankTotal: globalPrestigeRank({
-                    prestigeRows,
-                    championId: original.championId,
-                    rarity: original.stars,
-                    rank: original.rank,
-                    sig: finalSig,
-                })?.total ?? null,
+                globalPrestigeRank: getGlobalPrestigeRank(original.championId, original.stars, original.rank, finalSig)?.rank ?? null,
+                globalPrestigeRankTotal: getGlobalPrestigeRank(original.championId, original.stars, original.rank, finalSig)?.total ?? null,
             };
         }).sort((a, b) => b.accountGain - a.accountGain);
     } else {
@@ -396,20 +376,8 @@ export function calculateRosterPrestigeInsights(
                     projectedPrestige: nextPrestige,
                     top30Cutoff,
                 }),
-                globalPrestigeRank: globalPrestigeRank({
-                    prestigeRows,
-                    championId: c.championId,
-                    rarity: c.stars,
-                    rank: c.rank,
-                    sig: maxSig,
-                })?.rank ?? null,
-                globalPrestigeRankTotal: globalPrestigeRank({
-                    prestigeRows,
-                    championId: c.championId,
-                    rarity: c.stars,
-                    rank: c.rank,
-                    sig: maxSig,
-                })?.total ?? null,
+                globalPrestigeRank: getGlobalPrestigeRank(c.championId, c.stars, c.rank, maxSig)?.rank ?? null,
+                globalPrestigeRankTotal: getGlobalPrestigeRank(c.championId, c.stars, c.rank, maxSig)?.total ?? null,
             };
         }).filter((r): r is NonNullable<typeof r> => r !== null && r.accountGain > 0)
             .sort((a, b) => b.accountGain - a.accountGain)
@@ -472,19 +440,34 @@ function recommendationReason({
 
 function globalPrestigeRank({
     prestigeRows,
+    prestigeProjector,
     championId,
     rarity,
     rank,
     sig,
 }: {
     prestigeRows: RosterPrestigeRow[];
+    prestigeProjector: ReturnType<typeof createMcocPrestigeProjector>;
     championId: number;
     rarity: number;
     rank: number;
     sig: number;
 }) {
-    const rows = prestigeRows
-        .filter(row => row.rarity === rarity && row.rank === rank && row.sig === sig)
+    const championIds = [...new Set(prestigeRows
+        .filter(row => row.rarity === rarity && row.rank === rank)
+        .map(row => row.championId))];
+
+    const rows = championIds
+        .map(rowChampionId => ({
+            championId: rowChampionId,
+            prestige: prestigeProjector.project({
+                championId: rowChampionId,
+                rarity,
+                rank,
+                sigLevel: sig,
+            }),
+        }))
+        .filter(row => row.prestige > 0)
         .sort((a, b) => b.prestige - a.prestige || a.championId - b.championId);
 
     const index = rows.findIndex(row => row.championId === championId);
