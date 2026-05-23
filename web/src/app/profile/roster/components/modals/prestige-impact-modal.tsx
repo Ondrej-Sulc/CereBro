@@ -19,14 +19,14 @@ export function PrestigeImpactModal({ impact, onClose }: PrestigeImpactModalProp
     const rec = impact.rec;
     const colors = getChampionClassColors(rec.championClass);
     const currentState = impact.type === "potential"
-        ? `${rec.stars}\u2605 R${rec.fromRank} S${rec.fromSig} A${rec.ascensionLevel}`
-        : `${rec.stars}\u2605 R${rec.fromRank} A${rec.ascensionLevel}`;
+        ? `${impact.rec.stars}\u2605 R${impact.rec.fromRank} S${impact.rec.fromSig} A${impact.rec.ascensionLevel}`
+        : `${impact.rec.stars}\u2605 R${impact.rec.fromRank} A${impact.rec.ascensionLevel}`;
     const targetState = impact.type === "potential"
-        ? `${rec.stars}\u2605 R${rec.toRank} S${rec.toSig} A${rec.ascensionLevel}`
-        : `${rec.stars}\u2605 R${rec.toRank} A${rec.ascensionLevel}`;
-    const championPrestigeGain = impact.type === "potential"
-        ? rec.prestigeGain
-        : rec.prestigeGain;
+        ? `${impact.rec.stars}\u2605 R${impact.rec.toRank} S${impact.rec.toSig} A${impact.rec.ascensionLevel}`
+        : `${impact.rec.stars}\u2605 R${impact.rec.toRank} A${impact.rec.ascensionLevel}`;
+    const currentPrestige = impact.type === "potential" ? impact.rec.currentPrestige : null;
+    const targetPrestige = impact.type === "potential" ? impact.rec.targetPrestige : null;
+    const championPrestigeGain = rec.prestigeGain;
     const reason = recommendationReasonCopy(rec.reason);
 
     return (
@@ -75,10 +75,10 @@ export function PrestigeImpactModal({ impact, onClose }: PrestigeImpactModalProp
                         <ImpactMetric label="Champion Prestige" value={`+${championPrestigeGain.toLocaleString("en-US")}`} />
                     </div>
 
-                    {impact.type === "potential" && (
+                    {currentPrestige !== null && targetPrestige !== null && (
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <ImpactMetric label="Current Prestige" value={rec.currentPrestige.toLocaleString("en-US")} />
-                            <ImpactMetric label="Target Prestige" value={rec.targetPrestige.toLocaleString("en-US")} tone="primary" />
+                            <ImpactMetric label="Current Prestige" value={currentPrestige.toLocaleString("en-US")} />
+                            <ImpactMetric label="Target Prestige" value={targetPrestige.toLocaleString("en-US")} tone="primary" />
                         </div>
                     )}
 
