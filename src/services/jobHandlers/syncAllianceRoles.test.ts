@@ -43,4 +43,16 @@ describe('handleSyncAllianceRoles', () => {
       requestedByPlayerId: 'player-1',
     })).rejects.toThrow('missing access');
   });
+
+  it('throws a validation error for null or non-object payloads', async () => {
+    const client = {
+      guilds: {
+        fetch: vi.fn(),
+      },
+    };
+
+    await expect(handleSyncAllianceRoles(client as never, null)).rejects.toThrow('Invalid SYNC_ALLIANCE_ROLES payload');
+    await expect(handleSyncAllianceRoles(client as never, 'guild-1')).rejects.toThrow('Invalid SYNC_ALLIANCE_ROLES payload');
+    expect(client.guilds.fetch).not.toHaveBeenCalled();
+  });
 });

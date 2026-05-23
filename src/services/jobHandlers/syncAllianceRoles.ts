@@ -9,6 +9,10 @@ export type SyncAllianceRolesPayload = {
 };
 
 export async function handleSyncAllianceRoles(client: Client, payload: unknown) {
+  if (typeof payload !== 'object' || payload === null) {
+    throw new Error('Invalid SYNC_ALLIANCE_ROLES payload: allianceId, guildId, and requestedByPlayerId must be non-empty strings');
+  }
+
   const parsed = payload as Partial<SyncAllianceRolesPayload>;
 
   if (
