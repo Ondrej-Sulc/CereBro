@@ -75,7 +75,7 @@ function getEncounterVideos(encounter: EncounterWithRelations): EncounterVideoFo
 
 function hasPlayer(
     plan: QuestWithRelations["playerPlans"][number]
-): plan is { player: { id: string; ingameName: string | null; avatar: string | null } } {
+): boolean {
     return Boolean(plan.player?.id);
 }
 

@@ -221,14 +221,15 @@ export function projectQuestTimelineViewModel({
   activeObjective?: QuestTimelineProps["activeObjective"];
   showObjectiveContinuation?: boolean;
 }) {
+  const questWithObjective = { ...quest, objective: activeObjective ?? null };
   const projection = projectQuestPlanningState<
-    QuestTimelineProps["quest"],
+    typeof questWithObjective,
     EncounterWithRelations,
     QuestRouteSectionWithRelations,
     RosterWithChampion,
     SynergyWithChampion
   >({
-    quest: { ...quest, objective: activeObjective ?? null },
+    quest: questWithObjective,
     routeChoices,
     selections,
     prefightSelections,
