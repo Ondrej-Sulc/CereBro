@@ -27,10 +27,69 @@ type ChallengePresetsPanelProps = {
     tags: Tag[];
 };
 
+type RouteSection = NonNullable<ChallengePresetsPanelProps["routeSections"]>[number];
+
 const AVAILABLE_CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "COSMIC", "TECH", "MYSTIC"];
 
 function getErrorMessage(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
+}
+
+function getVisiblePresetRouteSections(
+    routeSections: RouteSection[],
+    routeChoices: Record<string, string | undefined>
+) {
+    const visible = new Set<string>();
+    let changed = true;
+
+    while (changed) {
+        changed = false;
+        for (const section of routeSections) {
+            if (visible.has(section.id)) continue;
+            if (!section.parentPathId) {
+                visible.add(section.id);
+                changed = true;
+                continue;
+            }
+
+            const parentSection = routeSections.find(candidate =>
+                candidate.paths.some(path => path.id === section.parentPathId)
+            );
+            if (!parentSection || !visible.has(parentSection.id)) continue;
+            if (routeChoices[parentSection.id] === section.parentPathId) {
+                visible.add(section.id);
+                changed = true;
+            }
+        }
+    }
+
+    return routeSections.filter(section => visible.has(section.id));
+}
+
+function prunePresetRouteChoices<TValue>(
+    routeSections: RouteSection[],
+    routeChoices: Record<string, TValue>,
+    getPathId: (value: TValue) => string | undefined
+) {
+    const selectedPathBySection = Object.fromEntries(
+        Object.entries(routeChoices).map(([sectionId, value]) => [sectionId, getPathId(value)])
+    );
+    const visibleSectionIds = new Set(
+        getVisiblePresetRouteSections(routeSections, selectedPathBySection).map(section => section.id)
+    );
+
+    return Object.fromEntries(
+        Object.entries(routeChoices).filter(([sectionId, value]) => {
+            const section = routeSections.find(candidate => candidate.id === sectionId);
+            const pathId = getPathId(value);
+            return Boolean(
+                section &&
+                pathId &&
+                visibleSectionIds.has(sectionId) &&
+                section.paths.some(path => path.id === pathId)
+            );
+        })
+    );
 }
 
 export function ChallengePresetsPanel({
@@ -44,6 +103,7 @@ export function ChallengePresetsPanel({
     const router = useRouter();
     const { toast } = useToast();
     const isNecropolisQuest = isNecropolisQuestTitle(questTitle);
+    const routeSectionList = routeSections || [];
 
     const [isSeedingObjectives, setIsSeedingObjectives] = useState(false);
     const [objectiveEditingId, setObjectiveEditingId] = useState<string | null>(null);
@@ -114,7 +174,10 @@ export function ChallengePresetsPanel({
             slug: recommendation.slug,
             order: recommendation.order,
             choices: Object.fromEntries(
-                recommendation.choices.map(choice => [choice.questRouteSectionId, choice.questRoutePathId])
+                recommendation.choices.map((choice: { questRouteSectionId: string; questRoutePathId: string }) => [
+                    choice.questRouteSectionId,
+                    choice.questRoutePathId,
+                ])
             ),
         })));
     };
@@ -122,7 +185,12 @@ export function ChallengePresetsPanel({
     const handleSaveObjective = async () => {
         setIsSavingObjective(true);
         try {
-            const routeChoices = Object.entries(objectiveRouteChoices)
+            const prunedRouteChoices = prunePresetRouteChoices(
+                routeSectionList,
+                objectiveRouteChoices,
+                choice => choice.pathId
+            );
+            const routeChoices = Object.entries(prunedRouteChoices)
                 .filter(([, choice]) => choice.pathId)
                 .map(([questRouteSectionId, choice]) => ({
                     questRouteSectionId,
@@ -135,7 +203,11 @@ export function ChallengePresetsPanel({
                     slug: recommendation.slug || recommendation.title,
                     title: recommendation.title,
                     order: recommendation.order || index + 1,
-                    choices: Object.entries(recommendation.choices)
+                    choices: Object.entries(prunePresetRouteChoices(
+                        routeSectionList,
+                        recommendation.choices,
+                        pathId => pathId
+                    ))
                         .filter(([, questRoutePathId]) => Boolean(questRoutePathId))
                         .map(([questRouteSectionId, questRoutePathId]) => ({
                             questRouteSectionId,
@@ -227,7 +299,7 @@ export function ChallengePresetsPanel({
         );
         setObjectiveRouteRecommendations(prev => prev.map((recommendation, recommendationIndex) =>
             recommendationIndex === index
-                ? { ...recommendation, choices }
+                ? { ...recommendation, choices: prunePresetRouteChoices(routeSectionList, choices, pathId => pathId) }
                 : recommendation
         ));
     };
@@ -559,9 +631,14 @@ export function ChallengePresetsPanel({
 
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Route Defaults</Label>
-                                    {(routeSections || []).length ? (
+                                    {routeSectionList.length ? (
                                         <div className="space-y-2">
-                                            {(routeSections || []).map((section) => {
+                                            {getVisiblePresetRouteSections(
+                                                routeSectionList,
+                                                Object.fromEntries(
+                                                    Object.entries(objectiveRouteChoices).map(([sectionId, choice]) => [sectionId, choice.pathId])
+                                                )
+                                            ).map((section) => {
                                                 const choice = objectiveRouteChoices[section.id];
                                                 return (
                                                     <div key={section.id} className="grid gap-2 rounded-md border border-slate-800 bg-slate-900/60 p-2 md:grid-cols-[150px_minmax(0,1fr)_92px] md:items-center">
@@ -580,7 +657,7 @@ export function ChallengePresetsPanel({
                                                                             isLocked: prev[section.id]?.isLocked ?? false,
                                                                         };
                                                                     }
-                                                                    return next;
+                                                                    return prunePresetRouteChoices(routeSectionList, next, choice => choice.pathId);
                                                                 });
                                                             }}
                                                             className="w-full h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -698,9 +775,9 @@ export function ChallengePresetsPanel({
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
-                                                    {(routeSections || []).length ? (
+                                                    {routeSectionList.length ? (
                                                         <div className="grid gap-2">
-                                                            {(routeSections || []).map((section) => (
+                                                            {getVisiblePresetRouteSections(routeSectionList, recommendation.choices).map((section) => (
                                                                 <div key={section.id} className="grid gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-2 md:grid-cols-[150px_minmax(0,1fr)] md:items-center">
                                                                     <div className="truncate text-xs font-bold text-slate-300">{section.title}</div>
                                                                     <select
@@ -715,7 +792,10 @@ export function ChallengePresetsPanel({
                                                                                 } else {
                                                                                     delete choices[section.id];
                                                                                 }
-                                                                                return { ...item, choices };
+                                                                                return {
+                                                                                    ...item,
+                                                                                    choices: prunePresetRouteChoices(routeSectionList, choices, pathId => pathId),
+                                                                                };
                                                                             }));
                                                                         }}
                                                                         className="h-8 w-full rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
