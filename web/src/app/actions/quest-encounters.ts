@@ -463,7 +463,10 @@ export const bulkAddEncounterVideos = withActionContext('bulkAddEncounterVideos'
 
     if (data.items.length === 0) return { success: true, created: 0, skipped: 0 };
 
-    const encounterIds = [...new Set(data.items.map(i => i.encounterId))];
+    const uniqueItems = Array.from(
+        new Map(data.items.map(item => [`${item.encounterId}::${item.videoUrl}`, item])).values()
+    );
+    const encounterIds = [...new Set(uniqueItems.map(i => i.encounterId))];
     const encounters = await prisma.questEncounter.findMany({
         where: { id: { in: encounterIds } },
         select: { id: true, questPlanId: true }
@@ -481,7 +484,7 @@ export const bulkAddEncounterVideos = withActionContext('bulkAddEncounterVideos'
         select: { questEncounterId: true, videoUrl: true }
     });
     const existingSet = new Set(existing.map(v => `${v.questEncounterId}::${v.videoUrl}`));
-    const toCreate = data.items.filter(item => !existingSet.has(`${item.encounterId}::${item.videoUrl}`));
+    const toCreate = uniqueItems.filter(item => !existingSet.has(`${item.encounterId}::${item.videoUrl}`));
 
     if (toCreate.length > 0) {
         await prisma.questEncounterVideo.createMany({

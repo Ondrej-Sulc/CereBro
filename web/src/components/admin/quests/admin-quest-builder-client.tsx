@@ -92,7 +92,7 @@ function AdminQuestTabs({ children }: { children: ReactNode }) {
     return (
         <Tabs defaultValue="fights" className="w-full space-y-6 overflow-visible">
             <div className="overflow-x-auto">
-                <TabsList className="inline-grid min-w-max grid-cols-5 bg-slate-950/90 border border-slate-800 p-1 h-11">
+                <TabsList className="inline-grid min-w-max grid-cols-6 bg-slate-950/90 border border-slate-800 p-1 h-11">
                     <TabsTrigger
                         value="fights"
                         className="gap-2 data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
@@ -113,6 +113,13 @@ function AdminQuestTabs({ children }: { children: ReactNode }) {
                     >
                         <Star className="h-4 w-4 shrink-0 opacity-90" />
                         Presets
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="videos"
+                        className="gap-2 data-[state=active]:bg-red-700 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
+                    >
+                        <Video className="h-4 w-4 shrink-0 opacity-90" />
+                        Videos
                     </TabsTrigger>
                     <TabsTrigger
                         value="import"
@@ -162,6 +169,14 @@ function ImportToolsPanel({ children }: { children: ReactNode }) {
     );
 }
 
+function VideosPanel({ children }: { children: ReactNode }) {
+    return (
+        <TabsContent value="videos" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
+            {children}
+        </TabsContent>
+    );
+}
+
 function QuestSettingsPanel({ children }: { children: ReactNode }) {
     return (
         <TabsContent value="settings" className="mt-6 space-y-4 outline-none focus-visible:outline-none pb-24">
@@ -180,6 +195,15 @@ function championMatchesRequiredTagIds(champion: Champion, requiredTagIds: numbe
     return mode === "ANY"
         ? requiredTagIds.some(tagId => championTagIds.has(tagId))
         : requiredTagIds.every(tagId => championTagIds.has(tagId));
+}
+
+function getBulkVideoEncounterLabel(
+    encounter: EncounterWithRelations,
+    routePathLabelById: Map<string, string>
+) {
+    const defenderName = encounter.defender?.name || "Unknown Defender";
+    const routeLabel = encounter.routePathId ? routePathLabelById.get(encounter.routePathId) || "Unknown route" : "Shared";
+    return `#${encounter.sequence} · ${defenderName} · ${routeLabel}`;
 }
 
 export default function AdminQuestBuilderClient({ initialQuest, categories, tags, champions, nodeModifiers }: Props) {
@@ -245,6 +269,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [bulkVideoCreator, setBulkVideoCreator] = useState<{ id: string; name: string; avatar: string | null } | null>(null);
     const [bulkVideoAssignments, setBulkVideoAssignments] = useState<(string | null)[]>([]);
     const [bulkVideoRemovedRows, setBulkVideoRemovedRows] = useState<Set<number>>(new Set());
+    const [bulkVideoScopeObjectiveId, setBulkVideoScopeObjectiveId] = useState<string>("");
+    const [bulkVideoRouteChoices, setBulkVideoRouteChoices] = useState<Record<string, string>>(() =>
+        createAdminQuestRouteChoices({ routeSections: initialQuest.routeSections })
+    );
+    const [bulkVideoShowObjectiveContinuation, setBulkVideoShowObjectiveContinuation] = useState(false);
+    const [bulkVideoShowAllFights, setBulkVideoShowAllFights] = useState(true);
     const [isBulkVideoApplying, setIsBulkVideoApplying] = useState(false);
 
     const bulkImportPreview = useMemo(() => {
@@ -287,6 +317,11 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         [visibleObjectives, adminScopeObjectiveId]
     );
 
+    const bulkVideoActiveObjective = useMemo(
+        () => visibleObjectives.find(objective => objective.id === bulkVideoScopeObjectiveId) || null,
+        [visibleObjectives, bulkVideoScopeObjectiveId]
+    );
+
     useEffect(() => {
         setAdminRouteChoices(createAdminQuestRouteChoices({
             routeSections: initialQuest.routeSections,
@@ -295,6 +330,15 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setShowAdminObjectiveContinuation(Boolean(activeAdminObjective?.defaultShowContinuation));
         setShowAllAdminFights(!activeAdminObjective);
     }, [initialQuest.routeSections, activeAdminObjective]);
+
+    useEffect(() => {
+        setBulkVideoRouteChoices(createAdminQuestRouteChoices({
+            routeSections: initialQuest.routeSections,
+            activeObjective: bulkVideoActiveObjective,
+        }));
+        setBulkVideoShowObjectiveContinuation(Boolean(bulkVideoActiveObjective?.defaultShowContinuation));
+        setBulkVideoShowAllFights(!bulkVideoActiveObjective);
+    }, [initialQuest.routeSections, bulkVideoActiveObjective]);
 
     const adminTimelineProjection = useMemo(() => projectAdminQuestBuilderTimeline({
         encounters: sortedPathEncounters,
@@ -311,6 +355,24 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         showAdminObjectiveContinuation,
         showAllAdminFights,
     ]);
+
+    const bulkVideoTimelineProjection = useMemo(() => projectAdminQuestBuilderTimeline({
+        encounters: sortedPathEncounters,
+        routeSections: initialQuest.routeSections,
+        routeChoices: bulkVideoRouteChoices,
+        activeObjective: bulkVideoActiveObjective,
+        showObjectiveContinuation: bulkVideoShowObjectiveContinuation,
+        showAllFights: bulkVideoShowAllFights,
+    }), [
+        sortedPathEncounters,
+        initialQuest.routeSections,
+        bulkVideoRouteChoices,
+        bulkVideoActiveObjective,
+        bulkVideoShowObjectiveContinuation,
+        bulkVideoShowAllFights,
+    ]);
+
+    const bulkVideoEncounterOptions = bulkVideoTimelineProjection.filteredEncounters;
 
     const displayedPathEncounters = useMemo(
         () => adminTimelineProjection.filteredEncounters.map(encounter =>
@@ -330,19 +392,26 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         [bulkVideoText, bulkVideoBaseUrl]
     );
 
-    // Auto-assign rows when parsed timestamps change
+    const bulkVideoEncounterCountLabel = bulkVideoShowAllFights ? "all-fights view" : "selected route run";
+    const bulkVideoIsAutoMatched = Boolean(
+        parsedBulkTimestamps &&
+        parsedBulkTimestamps.length === bulkVideoEncounterOptions.length &&
+        bulkVideoEncounterOptions.length > 0
+    );
+
+    // Auto-assign rows when parsed timestamps or the selected video route run changes.
     useEffect(() => {
         if (!parsedBulkTimestamps) {
             setBulkVideoAssignments([]);
             setBulkVideoRemovedRows(new Set());
             return;
         }
-        const autoMatch = parsedBulkTimestamps.length === sortedPathEncounters.length;
+        const autoMatch = parsedBulkTimestamps.length === bulkVideoEncounterOptions.length;
         setBulkVideoAssignments(
-            parsedBulkTimestamps.map((_, i) => autoMatch ? (sortedPathEncounters[i]?.id ?? null) : null)
+            parsedBulkTimestamps.map((_, i) => autoMatch ? (bulkVideoEncounterOptions[i]?.id ?? null) : null)
         );
         setBulkVideoRemovedRows(new Set());
-    }, [parsedBulkTimestamps]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [parsedBulkTimestamps, bulkVideoEncounterOptions]);
 
     const handleBulkEncounterParse = async () => {
         const lines = bulkEncountersText.split('\n').map(l => l.trim()).filter(Boolean);
@@ -611,6 +680,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             setBulkVideoBaseUrl('');
             setBulkVideoText('');
             setBulkVideoCreator(null);
+            setBulkVideoAssignments([]);
+            setBulkVideoRemovedRows(new Set());
             router.refresh();
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : "Failed to add videos";
@@ -1539,6 +1610,286 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     tags={tags}
                 />
 
+                <VideosPanel>
+                    <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-red-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20">
+                                    <Video className="w-4 h-4 text-red-400" />
+                                </div>
+                                Bulk Video Assignment
+                            </CardTitle>
+                            <CardDescription>Paste a YouTube video URL and description chapters to assign timestamped videos to a route-aware encounter list.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+                                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-slate-100">Video route scope</h3>
+                                        <p className="text-xs text-slate-500">
+                                            Matching against {bulkVideoEncounterOptions.length} fight{bulkVideoEncounterOptions.length === 1 ? "" : "s"} in {bulkVideoEncounterCountLabel}
+                                            {bulkVideoActiveObjective ? ` for ${bulkVideoActiveObjective.title}` : ""}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        <select
+                                            value={bulkVideoScopeObjectiveId}
+                                            onChange={(e) => {
+                                                setBulkVideoScopeObjectiveId(e.target.value);
+                                                setBulkVideoShowAllFights(!e.target.value);
+                                            }}
+                                            className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                        >
+                                            <option value="">Base Quest</option>
+                                            {visibleObjectives.map(objective => (
+                                                <option key={objective.id} value={objective.id}>{objective.title}</option>
+                                            ))}
+                                        </select>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-9 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                            onClick={() => setBulkVideoShowAllFights(prev => !prev)}
+                                        >
+                                            {bulkVideoShowAllFights ? "Use Route Filter" : "Show All Fights"}
+                                        </Button>
+                                        {!bulkVideoShowAllFights && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-9 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                                onClick={() => {
+                                                    setBulkVideoRouteChoices(createAdminQuestRouteChoices({
+                                                        routeSections: initialQuest.routeSections,
+                                                        activeObjective: bulkVideoActiveObjective,
+                                                    }));
+                                                    setBulkVideoShowObjectiveContinuation(Boolean(bulkVideoActiveObjective?.defaultShowContinuation));
+                                                }}
+                                            >
+                                                Reset Filter
+                                            </Button>
+                                        )}
+                                        {bulkVideoActiveObjective?.endpointEncounterId && !bulkVideoShowAllFights && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-9 border-amber-800 text-amber-300 hover:bg-amber-950/40"
+                                                onClick={() => setBulkVideoShowObjectiveContinuation(prev => !prev)}
+                                            >
+                                                {bulkVideoShowObjectiveContinuation ? "Stop at Objective" : "Continue after Objective"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                                {!bulkVideoShowAllFights && (initialQuest.routeSections?.length ?? 0) > 0 && (
+                                    <div className="grid gap-2 md:grid-cols-2">
+                                        {bulkVideoTimelineProjection.visibleRouteSections.map(section => {
+                                            const lockedPathId = bulkVideoTimelineProjection.lockedRouteChoices.get(section.id);
+                                            return (
+                                                <div key={section.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-2">
+                                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                                        <Label className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">{section.title}</Label>
+                                                        {lockedPathId && (
+                                                            <Badge variant="outline" className="border-amber-800 bg-amber-950/30 text-[9px] uppercase text-amber-300">Locked</Badge>
+                                                        )}
+                                                    </div>
+                                                    <select
+                                                        value={bulkVideoRouteChoices[section.id] || section.paths[0]?.id || ""}
+                                                        disabled={Boolean(lockedPathId)}
+                                                        onChange={(e) => setBulkVideoRouteChoices(prev => ({
+                                                            ...prev,
+                                                            [section.id]: e.target.value,
+                                                        }))}
+                                                        className="h-8 w-full rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-200 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                                    >
+                                                        {section.paths.map(path => (
+                                                            <option key={path.id} value={path.id}>{path.title}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Base Video URL</Label>
+                                    <div className="relative">
+                                        <Input
+                                            value={bulkVideoBaseUrl}
+                                            onChange={e => setBulkVideoBaseUrl(e.target.value)}
+                                            placeholder="https://www.youtube.com/watch?v=..."
+                                            className={cn(
+                                                "bg-slate-900 border-slate-800 focus-visible:ring-sky-500 pr-8",
+                                                bulkVideoBaseUrl && !extractYouTubeVideoId(bulkVideoBaseUrl) && "border-red-700/50"
+                                            )}
+                                        />
+                                        {bulkVideoBaseUrl && (
+                                            extractYouTubeVideoId(bulkVideoBaseUrl)
+                                                ? <Check className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 pointer-events-none" />
+                                                : <XCircle className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500 pointer-events-none" />
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-slate-300">Creator</Label>
+                                    {bulkVideoCreator ? (
+                                        <div className="flex items-center gap-2 px-2.5 py-2 bg-slate-900 rounded-lg border border-slate-800 text-sm">
+                                            {bulkVideoCreator.avatar ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={bulkVideoCreator.avatar} className="w-5 h-5 rounded-full shrink-0" alt={bulkVideoCreator.name} />
+                                            ) : (
+                                                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-slate-400 shrink-0">
+                                                    {bulkVideoCreator.name.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <span className="text-slate-300 flex-1 truncate text-sm">{bulkVideoCreator.name}</span>
+                                            <button onClick={() => setBulkVideoCreator(null)} className="text-slate-600 hover:text-red-400 shrink-0">
+                                                <XCircle className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <AsyncPlayerSearchCombobox
+                                            value=""
+                                            onSelect={(id, name, avatar) => { if (id) setBulkVideoCreator({ id, name, avatar }); }}
+                                            placeholder="Select creator..."
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-300">Chapter / Timestamp List</Label>
+                                <Textarea
+                                    value={bulkVideoText}
+                                    onChange={e => setBulkVideoText(e.target.value)}
+                                    placeholder={"0:00 Intro\n0:45 Fight 1 - Crossbones\n2:10 Fight 2 - Void\n..."}
+                                    className="bg-slate-900 border-slate-800 focus-visible:ring-sky-500 min-h-[120px] text-sm font-mono resize-y"
+                                />
+                                {parsedBulkTimestamps && (
+                                    <p className="text-[11px] text-slate-500">
+                                        {parsedBulkTimestamps.length} timestamp{parsedBulkTimestamps.length !== 1 ? 's' : ''} parsed
+                                        {bulkVideoIsAutoMatched
+                                            ? <span className="ml-1.5 text-emerald-500">· count matches {bulkVideoEncounterCountLabel} - auto-assigned in order</span>
+                                            : <span className="ml-1.5 text-slate-600">· {bulkVideoEncounterOptions.length} fight{bulkVideoEncounterOptions.length === 1 ? "" : "s"} in {bulkVideoEncounterCountLabel} - assign rows manually</span>
+                                        }
+                                    </p>
+                                )}
+                            </div>
+
+                            {parsedBulkTimestamps && parsedBulkTimestamps.length > 0 && (
+                                <>
+                                    <div className="rounded-lg border border-slate-800 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b border-slate-800 bg-slate-900/60 text-[11px] text-slate-500 uppercase tracking-widest">
+                                                        <th className="text-left px-3 py-2 font-medium">Time</th>
+                                                        <th className="text-left px-3 py-2 font-medium">Label</th>
+                                                        <th className="text-left px-3 py-2 font-medium">Encounter</th>
+                                                        <th className="px-2 py-2 w-8" />
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {parsedBulkTimestamps.map((ts, i) => {
+                                                        if (bulkVideoRemovedRows.has(i)) return null;
+                                                        const assignedId = bulkVideoAssignments[i] ?? null;
+                                                        const assignedEncounter = bulkVideoEncounterOptions.find(e => e.id === assignedId);
+                                                        const routeLabel = assignedEncounter?.routePathId
+                                                            ? routePathLabelById.get(assignedEncounter.routePathId) || "Unknown route"
+                                                            : "Shared";
+
+                                                        return (
+                                                            <tr key={i} className="border-b border-slate-800/50 last:border-0 hover:bg-slate-900/30">
+                                                                <td className="px-3 py-2 font-mono text-sky-400 text-xs whitespace-nowrap">
+                                                                    {formatSeconds(ts.seconds)}
+                                                                </td>
+                                                                <td className="px-3 py-2 text-slate-300 max-w-[180px] truncate text-xs">
+                                                                    {ts.label || <span className="text-slate-600 italic">no label</span>}
+                                                                </td>
+                                                                <td className="px-3 py-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        {bulkVideoIsAutoMatched && (
+                                                                            <Badge className="bg-emerald-900/40 text-emerald-400 border-emerald-800/60 text-[10px] px-1.5 py-0 shrink-0">Auto</Badge>
+                                                                        )}
+                                                                        <select
+                                                                            value={assignedId || ""}
+                                                                            onChange={e => {
+                                                                                const next = [...bulkVideoAssignments];
+                                                                                next[i] = e.target.value || null;
+                                                                                setBulkVideoAssignments(next);
+                                                                            }}
+                                                                            className="h-7 rounded border border-slate-700 bg-slate-900 px-2 text-xs text-slate-300 focus:ring-1 focus:ring-sky-500 focus:outline-none"
+                                                                        >
+                                                                            <option value="">— unassigned —</option>
+                                                                            {bulkVideoEncounterOptions.map(enc => (
+                                                                                <option key={enc.id} value={enc.id}>
+                                                                                    {getBulkVideoEncounterLabel(enc, routePathLabelById)}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                        {assignedEncounter && !bulkVideoIsAutoMatched && (
+                                                                            <span className="text-slate-600 text-xs truncate hidden sm:block">{routeLabel}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-2 py-2">
+                                                                    <button
+                                                                        onClick={() => setBulkVideoRemovedRows(prev => new Set([...prev, i]))}
+                                                                        className="text-slate-700 hover:text-red-400 transition-colors"
+                                                                        title="Remove this row"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {(() => {
+                                        const visibleRows = parsedBulkTimestamps.filter((_, i) => !bulkVideoRemovedRows.has(i));
+                                        const unassignedCount = parsedBulkTimestamps
+                                            .map((_, i) => i)
+                                            .filter(i => !bulkVideoRemovedRows.has(i) && !bulkVideoAssignments[i])
+                                            .length;
+                                        const canApply = visibleRows.length > 0 && unassignedCount === 0 && !!bulkVideoCreator && !!extractYouTubeVideoId(bulkVideoBaseUrl);
+
+                                        return (
+                                            <div className="flex items-center justify-between gap-4 pt-1">
+                                                <p className="text-xs text-slate-500">
+                                                    {visibleRows.length} row{visibleRows.length !== 1 ? 's' : ''} to apply
+                                                    {unassignedCount > 0 && <span className="text-amber-500 ml-1.5">· {unassignedCount} unassigned</span>}
+                                                    {!bulkVideoCreator && <span className="text-amber-500 ml-1.5">· no creator selected</span>}
+                                                </p>
+                                                <Button
+                                                    onClick={handleBulkVideoApply}
+                                                    disabled={!canApply || isBulkVideoApplying}
+                                                    className="bg-red-700 hover:bg-red-600 text-white disabled:opacity-50"
+                                                >
+                                                    {isBulkVideoApplying
+                                                        ? <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                                                        : <ClipboardPaste className="mr-2 w-4 h-4" />
+                                                    }
+                                                    Apply All
+                                                </Button>
+                                            </div>
+                                        );
+                                    })()}
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+                </VideosPanel>
+
                 <ImportToolsPanel>
                     <details className="group rounded-xl border border-slate-800 bg-slate-950/60 mb-4 open:border-sky-900/40">
                         <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-900/40 rounded-xl [&::-webkit-details-marker]:hidden">
@@ -1668,7 +2019,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             )}
                         </div>
                     </details>
-                    {/* Bulk Video Assignment */}
+                    {false && (
+                    /* Bulk Video Assignment moved to the Videos tab */
                     <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
                         <div className="h-0.5 w-full bg-red-500" />
                         <CardHeader className="pb-3 pt-4">
@@ -1858,6 +2210,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             )}
                         </CardContent>
                     </Card>
+
+                    )}
 
                     <Card className="bg-slate-950/80 border-red-900/50 shadow-md overflow-hidden">
                         <div className="h-0.5 w-full bg-red-500" />
