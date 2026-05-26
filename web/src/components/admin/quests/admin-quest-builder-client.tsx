@@ -174,6 +174,14 @@ function areNumberArraysEqual(a: number[], b: number[]) {
     return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
+function championMatchesRequiredTagIds(champion: Champion, requiredTagIds: number[], mode: "ALL" | "ANY" = "ALL") {
+    if (requiredTagIds.length === 0) return true;
+    const championTagIds = new Set((champion.tags || []).map(tag => tag.id));
+    return mode === "ANY"
+        ? requiredTagIds.some(tagId => championTagIds.has(tagId))
+        : requiredTagIds.every(tagId => championTagIds.has(tagId));
+}
+
 export default function AdminQuestBuilderClient({ initialQuest, categories, tags, champions, nodeModifiers }: Props) {
     const router = useRouter();
     const { toast } = useToast();
@@ -648,6 +656,17 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+
+    const recommendedChampionOptions = useMemo(() => {
+        const objectiveRequiredTagIds = activeAdminObjective?.requiredTags.map(tag => tag.id) || [];
+        const objectiveRequiredTagMode = activeAdminObjective?.requiredTagMode === "ANY" ? "ANY" : "ALL";
+
+        return champions.filter(champion =>
+            championMatchesRequiredTagIds(champion, requiredTags) &&
+            championMatchesRequiredTagIds(champion, encounterRequiredTagIds) &&
+            championMatchesRequiredTagIds(champion, objectiveRequiredTagIds, objectiveRequiredTagMode)
+        );
+    }, [activeAdminObjective, champions, encounterRequiredTagIds, requiredTags]);
 
     // Autosave state & refs for the encounter editor
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'unsaved'>('idle');
@@ -2208,7 +2227,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                             </div>
                                         </div>
                                         <MultiChampionCombobox
-                                            champions={champions}
+                                            champions={recommendedChampionOptions}
+                                            selectedChampionPool={champions}
                                             values={recommendedChampionIds}
                                             onSelect={setRecommendedChampionIds}
                                             placeholder="Search champions..."

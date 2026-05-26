@@ -1,10 +1,9 @@
 import * as React from "react"
-import { ChevronsUpDown, X } from "lucide-react"
+import { ChevronsUpDown } from "lucide-react"
 import Image from "next/image";
 import Fuse from "fuse.js"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   Command,
@@ -19,11 +18,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Champion, ChampionImages } from "@/types/champion"
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { Champion } from "@/types/champion"
+import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 
 interface MultiChampionComboboxProps {
   champions: Champion[];
+  selectedChampionPool?: Champion[];
   values: number[]; // Array of Champion IDs
   onSelect: (values: number[]) => void;
   placeholder?: string;
@@ -75,6 +75,7 @@ ComboboxTrigger.displayName = "ComboboxTrigger";
 
 export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
   champions,
+  selectedChampionPool,
   values,
   onSelect,
   placeholder = "Select champions...",
@@ -108,9 +109,9 @@ export const MultiChampionCombobox = React.memo(function MultiChampionCombobox({
 
   const championMap = React.useMemo(() => {
     const map = new Map<number, Champion>();
-    champions.forEach(c => map.set(c.id, c));
+    (selectedChampionPool ?? champions).forEach(c => map.set(c.id, c));
     return map;
-  }, [champions]);
+  }, [champions, selectedChampionPool]);
 
   const selectedChampions = React.useMemo(() => {
     const isChampion = (v: unknown): v is Champion => v !== undefined && v !== null;

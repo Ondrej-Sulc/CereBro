@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import { getQuestPlanById } from "@/app/actions/quest-catalog";
 import AdminQuestBuilderClient from "@/components/admin/quests/admin-quest-builder-client";
 import type { QuestWithRelations } from "@/components/admin/quests/admin-quest-builder/types";
@@ -70,7 +68,10 @@ export default async function AdminQuestBuilderPage({ params }: { params: Promis
 
     const categories = await prisma.questCategory.findMany({ orderBy: { order: 'asc' } });
     const tags = await prisma.tag.findMany({ orderBy: { name: 'asc' } });
-    const champions = await prisma.champion.findMany({ orderBy: { name: 'asc' } });
+    const champions = await prisma.champion.findMany({
+        orderBy: { name: 'asc' },
+        include: { tags: true },
+    });
     const nodeModifiers = await prisma.nodeModifier.findMany({ orderBy: { name: 'asc' } });
 
     return (
