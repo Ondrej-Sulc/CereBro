@@ -12,9 +12,28 @@ import {
 const champion = (id: number) => ({
   id,
   name: `Champion ${id}`,
+  slug: `champion-${id}`,
   shortName: `C${id}`,
+  gameId: `champion_${id}`,
   class: "SCIENCE" as const,
-  images: {},
+  releaseDate: new Date("2026-01-01T00:00:00.000Z"),
+  obtainable: ["7"],
+  images: {
+    hero: "",
+    full_primary: "",
+    full_secondary: "",
+    p_32: "",
+    s_32: "",
+    p_64: "",
+    s_64: "",
+    p_128: "",
+    s_128: "",
+  },
+  discordEmoji: null,
+  fullAbilities: {},
+  isPlayable: true,
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 });
 
 const rosterEntry = (id: string, championId: number, stars = 7) => ({

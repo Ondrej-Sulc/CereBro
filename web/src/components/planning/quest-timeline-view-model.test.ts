@@ -10,9 +10,28 @@ import {
 const champion = (id: number, name = `Champion ${id}`) => ({
   id,
   name,
+  slug: `champion-${id}`,
   shortName: name,
+  gameId: `champion_${id}`,
   class: "SCIENCE" as const,
-  images: {},
+  releaseDate: new Date("2026-01-01T00:00:00.000Z"),
+  obtainable: ["7"],
+  images: {
+    hero: "",
+    full_primary: "",
+    full_secondary: "",
+    p_32: "",
+    s_32: "",
+    p_64: "",
+    s_64: "",
+    p_128: "",
+    s_128: "",
+  },
+  discordEmoji: null,
+  fullAbilities: {},
+  isPlayable: true,
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 });
 
 const rosterEntry = (id: string, championId: number, stars: number) => ({
@@ -71,6 +90,7 @@ const quest = {
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
   category: null,
   requiredTags: [],
+  objectives: [],
   routeSections,
   creators: [],
   encounters: [
@@ -92,6 +112,7 @@ const quest = {
       defender: null,
       requiredTags: [],
       recommendedChampions: [],
+      objectiveRecommendationSets: [],
       videos: [],
       nodes: [],
     },
@@ -113,6 +134,7 @@ const quest = {
       defender: null,
       requiredTags: [],
       recommendedChampions: [],
+      objectiveRecommendationSets: [],
       videos: [],
       nodes: [],
     },

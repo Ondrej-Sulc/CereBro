@@ -321,6 +321,7 @@ describe("Quest Planning Transition", () => {
     });
 
     expect(decision.valid).toBe(true);
+    if (!decision.valid) throw new Error(decision.reason);
     expect(decision.activeEncounterIds?.has("right-fight")).toBe(true);
     expect(decision.activeEncounterIds?.has("left-fight")).toBe(false);
   });
@@ -361,6 +362,7 @@ describe("Quest Planning Transition", () => {
     });
 
     expect(decision.valid).toBe(true);
+    if (!decision.valid) throw new Error(decision.reason);
     expect(decision.activeEncounterIds?.has("left-fight")).toBe(true);
     expect(decision.activeEncounterIds?.has("right-fight")).toBe(false);
   });
@@ -403,6 +405,7 @@ describe("Quest Planning Transition", () => {
     });
 
     expect(decision.valid).toBe(true);
+    if (!decision.valid) throw new Error(decision.reason);
     expect(decision.activeEncounterIds?.has("left-fight")).toBe(true);
     expect(decision.activeEncounterIds?.has("right-fight")).toBe(false);
   });
