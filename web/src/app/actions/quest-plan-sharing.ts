@@ -26,6 +26,10 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                         include: {
                             requiredTags: true,
                             routeChoices: true,
+                            routeRecommendations: {
+                                orderBy: { order: 'asc' },
+                                include: { choices: true }
+                            },
                             endpointEncounter: {
                                 select: { id: true, sequence: true, defender: { select: { name: true } } }
                             }
@@ -85,6 +89,10 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                 include: {
                     requiredTags: true,
                     routeChoices: true,
+                    routeRecommendations: {
+                        orderBy: { order: 'asc' },
+                        include: { choices: true }
+                    },
                     endpointEncounter: {
                         select: { id: true, sequence: true, defender: { select: { name: true } } }
                     }

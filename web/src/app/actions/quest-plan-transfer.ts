@@ -87,6 +87,10 @@ export const exportQuestPlan = withActionContext('exportQuestPlan', async (quest
                 include: {
                     requiredTags: true,
                     routeChoices: true,
+                    routeRecommendations: {
+                        orderBy: { order: 'asc' },
+                        include: { choices: true }
+                    },
                     endpointEncounter: { select: { sequence: true } }
                 }
             },
@@ -198,6 +202,17 @@ export const exportQuestPlan = withActionContext('exportQuestPlan', async (quest
                     isLocked: choice.isLocked,
                 }))
                 .filter(choice => choice.routeSectionKey && choice.routePathKey),
+            routeRecommendations: objective.routeRecommendations.map(recommendation => ({
+                slug: recommendation.slug,
+                title: recommendation.title,
+                order: recommendation.order,
+                choices: recommendation.choices
+                    .map(choice => ({
+                        routeSectionKey: sectionKeyById.get(choice.questRouteSectionId) ?? "",
+                        routePathKey: pathKeyById.get(choice.questRoutePathId) ?? "",
+                    }))
+                    .filter(choice => choice.routeSectionKey && choice.routePathKey),
+            })),
         })),
         encounters: quest.encounters.map(encounter => ({
             sequence: encounter.sequence,
@@ -521,6 +536,26 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
                                 };
                             })
                             .filter((choice): choice is { questRouteSectionId: string; questRoutePathId: string; isLocked: boolean } => Boolean(choice))
+                    },
+                    routeRecommendations: {
+                        create: objective.routeRecommendations.map(recommendation => ({
+                            slug: recommendation.slug,
+                            title: recommendation.title,
+                            order: recommendation.order,
+                            choices: {
+                                create: recommendation.choices
+                                    .map(choice => {
+                                        const sectionId = sectionIdByKey.get(choice.routeSectionKey);
+                                        const pathId = pathIdByKey.get(choice.routePathKey);
+                                        if (!sectionId || !pathId) return null;
+                                        return {
+                                            questRouteSectionId: sectionId,
+                                            questRoutePathId: pathId,
+                                        };
+                                    })
+                                    .filter((choice): choice is { questRouteSectionId: string; questRoutePathId: string } => Boolean(choice))
+                            }
+                        }))
                     }
                 }
             });

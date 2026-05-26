@@ -79,6 +79,15 @@ export type QuestPlanExportPayload = {
             routePathKey: string;
             isLocked: boolean;
         }[];
+        routeRecommendations: {
+            slug: string;
+            title: string;
+            order: number;
+            choices: {
+                routeSectionKey: string;
+                routePathKey: string;
+            }[];
+        }[];
     }[];
     encounters: {
         sequence: number;
@@ -282,6 +291,22 @@ export function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
                         isLocked: choice.isLocked === true,
                     }))
                     .filter(choice => choice.routeSectionKey && choice.routePathKey),
+                routeRecommendations: (Array.isArray(objective.routeRecommendations) ? objective.routeRecommendations : [])
+                    .filter(isPlainObject)
+                    .map(recommendation => ({
+                        slug: asString(recommendation.slug)?.trim() || "",
+                        title: asString(recommendation.title)?.trim() || "",
+                        order: asNumberOrNull(recommendation.order) ?? 0,
+                        choices: (Array.isArray(recommendation.choices) ? recommendation.choices : [])
+                            .filter(isPlainObject)
+                            .map(choice => ({
+                                routeSectionKey: asString(choice.routeSectionKey)?.trim() || "",
+                                routePathKey: asString(choice.routePathKey)?.trim() || "",
+                            }))
+                            .filter(choice => choice.routeSectionKey && choice.routePathKey),
+                    }))
+                    .filter(recommendation => recommendation.slug && recommendation.title && recommendation.choices.length > 0)
+                    .slice(0, 2),
             }))
             .filter(objective => objective.slug && objective.title),
         encounters: encounters

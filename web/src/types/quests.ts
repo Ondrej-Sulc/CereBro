@@ -12,6 +12,8 @@ import {
     QuestRoutePath,
     QuestObjective,
     QuestObjectiveRouteChoice,
+    QuestObjectiveRouteRecommendation,
+    QuestObjectiveRouteRecommendationChoice,
     QuestObjectiveEncounterRecommendationSet,
     QuestObjectiveEncounterRecommendedChampion,
     PlayerQuestPlan,
@@ -42,6 +44,9 @@ export type EncounterWithRelations = QuestEncounter & {
 export type QuestObjectiveWithRelations = QuestObjective & {
     requiredTags: Tag[];
     routeChoices: QuestObjectiveRouteChoice[];
+    routeRecommendations: (QuestObjectiveRouteRecommendation & {
+        choices: QuestObjectiveRouteRecommendationChoice[];
+    })[];
     endpointEncounter: {
         id: string;
         sequence: number;

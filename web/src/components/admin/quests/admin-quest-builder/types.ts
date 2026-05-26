@@ -34,6 +34,14 @@ export type EncounterWithVideos = EncounterWithRelations & {
 
 export type ObjectiveRouteChoiceForm = Record<string, { pathId: string; isLocked: boolean }>;
 
+export type ObjectiveRouteRecommendationForm = {
+    id?: string;
+    title: string;
+    slug?: string;
+    order: number;
+    choices: Record<string, string>;
+};
+
 export type RoutePathOption = {
     id: string;
     label: string;

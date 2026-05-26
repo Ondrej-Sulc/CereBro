@@ -20,7 +20,7 @@ import {
     projectQuestTimelineViewModel,
 } from "./quest-timeline-view-model";
 import type { ChampionClass } from "@prisma/client";
-import { applyQuestObjectiveToQuest } from "@/lib/quest-objectives";
+import { applyQuestObjectiveToQuest, getQuestObjectiveRouteRecommendationVariants } from "@/lib/quest-objectives";
 import { createQuestTimelinePickRenderers } from "./quest-pick-renderers";
 import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
@@ -70,6 +70,10 @@ export default function QuestTimelineClient({ quest, activeObjective = null, obj
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
     const initialQuestScope = useMemo(() => applyQuestObjectiveToQuest(quest, activeObjective), [quest, activeObjective]);
     const { routeChoices, lockedRouteChoices, handleRouteChoice } = useQuestRouteChoices({ quest, savedRouteChoices, readOnly, objectiveSlug, activeObjective, toast });
+    const recommendedRouteVariants = useMemo(
+        () => getQuestObjectiveRouteRecommendationVariants(activeObjective),
+        [activeObjective]
+    );
     const [showObjectiveContinuation, setShowObjectiveContinuation] = useState(() => Boolean(activeObjective?.defaultShowContinuation));
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
     const [isClearPlanOpen, setIsClearPlanOpen] = useState(false);
@@ -460,6 +464,7 @@ export default function QuestTimelineClient({ quest, activeObjective = null, obj
                             setRouteCardRef={setRouteCardRef}
                             onRouteChoice={handleRouteChoice}
                             scrollToEncounter={scrollToEncounter}
+                            recommendedRouteVariants={recommendedRouteVariants}
                         />
                         {activeObjective && (
                             <div className="mb-4 pl-6 md:pl-10">

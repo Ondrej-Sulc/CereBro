@@ -21,6 +21,7 @@ import {
 } from "./player-quest-selection";
 import {
   applyQuestObjectiveToQuest,
+  getFirstQuestObjectiveRouteRecommendationChoices,
   getLockedQuestObjectiveRouteChoices,
   mergeQuestObjectiveRouteChoices,
   type QuestObjectiveRestriction,
@@ -336,12 +337,19 @@ function activePlanState<
     routeSections,
     savedRouteChoices: plan.routeChoices ?? [],
   });
+  const routeRecommendationChoices = (plan.routeChoices ?? []).length === 0
+    ? getFirstQuestObjectiveRouteRecommendationChoices(quest.objective)
+    : {};
   const routeChoices = routeChoicesOverride
     ? sanitizeQuestRouteChoices(routeSections, mergeQuestObjectiveRouteChoices({
         ...savedRouteChoices,
+        ...routeRecommendationChoices,
         ...routeChoicesOverride,
       }, quest.objective))
-    : sanitizeQuestRouteChoices(routeSections, mergeQuestObjectiveRouteChoices(savedRouteChoices, quest.objective));
+    : sanitizeQuestRouteChoices(routeSections, mergeQuestObjectiveRouteChoices({
+        ...savedRouteChoices,
+        ...routeRecommendationChoices,
+      }, quest.objective));
   const { activeEncounterIds } = projectQuestRouteProgress({
     encounters: quest.encounters,
     routeSections,

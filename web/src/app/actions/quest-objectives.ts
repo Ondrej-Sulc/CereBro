@@ -13,6 +13,17 @@ export type QuestObjectiveRouteChoiceInput = {
     isLocked?: boolean;
 };
 
+export type QuestObjectiveRouteRecommendationInput = {
+    id?: string;
+    slug?: string;
+    title: string;
+    order: number;
+    choices: {
+        questRouteSectionId: string;
+        questRoutePathId: string;
+    }[];
+};
+
 export type QuestObjectiveUpsertInput = {
     id?: string;
     questPlanId: string;
@@ -31,6 +42,7 @@ export type QuestObjectiveUpsertInput = {
     endpointEncounterId?: string | null;
     defaultShowContinuation?: boolean;
     routeChoices?: QuestObjectiveRouteChoiceInput[];
+    routeRecommendations?: QuestObjectiveRouteRecommendationInput[];
 };
 
 export type QuestObjectiveEncounterRecommendationsInput = {
@@ -59,10 +71,12 @@ async function assertObjectiveRefsBelongToQuest({
     questPlanId,
     endpointEncounterId,
     routeChoices = [],
+    routeRecommendations,
 }: {
     questPlanId: string;
     endpointEncounterId?: string | null;
     routeChoices?: QuestObjectiveRouteChoiceInput[];
+    routeRecommendations?: QuestObjectiveRouteRecommendationInput[];
 }) {
     if (endpointEncounterId) {
         const endpoint = await prisma.questEncounter.findUnique({
@@ -74,14 +88,46 @@ async function assertObjectiveRefsBelongToQuest({
         }
     }
 
-    if (routeChoices.length === 0) return;
+    const recommendationChoices = (routeRecommendations ?? []).flatMap(recommendation => recommendation.choices);
+    const allRouteChoices = [...routeChoices, ...recommendationChoices];
 
-    const sectionIds = [...new Set(routeChoices.map(choice => choice.questRouteSectionId))];
-    const pathIds = [...new Set(routeChoices.map(choice => choice.questRoutePathId))];
+    if (routeRecommendations !== undefined) {
+        if (routeRecommendations.length > 2) {
+            throw new Error("An objective can have at most two recommended routes.");
+        }
+        const recommendationOrders = new Set<number>();
+        const recommendationSlugs = new Set<string>();
+        for (const recommendation of routeRecommendations) {
+            if (!recommendation.title.trim()) {
+                throw new Error("Recommended route title is required.");
+            }
+            if (!Number.isInteger(recommendation.order) || recommendation.order < 1) {
+                throw new Error("Recommended route order must be a positive integer.");
+            }
+            if (recommendationOrders.has(recommendation.order)) {
+                throw new Error("Recommended route order must be unique per objective.");
+            }
+            recommendationOrders.add(recommendation.order);
+            const slug = normalizeSlug(recommendation.slug || recommendation.title);
+            if (!slug) throw new Error("Recommended route slug is required.");
+            if (recommendationSlugs.has(slug)) {
+                throw new Error("Recommended route slug must be unique per objective.");
+            }
+            recommendationSlugs.add(slug);
+            if (recommendation.choices.length === 0) {
+                throw new Error("Recommended routes must include at least one route choice.");
+            }
+        }
+    }
+
+    if (allRouteChoices.length === 0) return;
+
+    const sectionIds = [...new Set(allRouteChoices.map(choice => choice.questRouteSectionId))];
+    const pathIds = [...new Set(allRouteChoices.map(choice => choice.questRoutePathId))];
     const [sections, paths] = await Promise.all([
         prisma.questRouteSection.findMany({
             where: { id: { in: sectionIds } },
-            select: { id: true, questPlanId: true },
+            select: { id: true, questPlanId: true, parentPathId: true },
         }),
         prisma.questRoutePath.findMany({
             where: { id: { in: pathIds } },
@@ -90,15 +136,35 @@ async function assertObjectiveRefsBelongToQuest({
     ]);
 
     const sectionQuestById = new Map(sections.map(section => [section.id, section.questPlanId]));
+    const sectionById = new Map(sections.map(section => [section.id, section]));
     const pathById = new Map(paths.map(path => [path.id, path]));
 
-    for (const choice of routeChoices) {
+    for (const choice of allRouteChoices) {
         if (sectionQuestById.get(choice.questRouteSectionId) !== questPlanId) {
             throw new Error("Objective route section does not belong to this quest plan.");
         }
         const path = pathById.get(choice.questRoutePathId);
         if (!path || path.section.questPlanId !== questPlanId || path.sectionId !== choice.questRouteSectionId) {
             throw new Error("Objective route path does not belong to the selected route section.");
+        }
+    }
+
+    if (routeRecommendations !== undefined) {
+        for (const recommendation of routeRecommendations) {
+            const selectedPathBySection = new Map(
+                recommendation.choices.map(choice => [choice.questRouteSectionId, choice.questRoutePathId])
+            );
+            for (const choice of recommendation.choices) {
+                const section = sectionById.get(choice.questRouteSectionId);
+                if (section?.parentPathId) {
+                    const parentSection = sections.find(candidate =>
+                        paths.some(path => path.sectionId === candidate.id && path.id === section.parentPathId)
+                    );
+                    if (!parentSection || selectedPathBySection.get(parentSection.id) !== section.parentPathId) {
+                        throw new Error("Recommended route child choices must include their parent path choice.");
+                    }
+                }
+            }
         }
     }
 }
@@ -115,6 +181,7 @@ export const upsertQuestObjective = withActionContext('upsertQuestObjective', as
         questPlanId: input.questPlanId,
         endpointEncounterId: input.endpointEncounterId,
         routeChoices: input.routeChoices,
+        routeRecommendations: input.routeRecommendations,
     });
 
     const objective = await prisma.$transaction(async (tx) => {
@@ -167,6 +234,26 @@ export const upsertQuestObjective = withActionContext('upsertQuestObjective', as
                         questRoutePathId: choice.questRoutePathId,
                         isLocked: Boolean(choice.isLocked),
                     })),
+                });
+            }
+        }
+
+        if (input.routeRecommendations !== undefined) {
+            await tx.questObjectiveRouteRecommendation.deleteMany({ where: { questObjectiveId: saved.id } });
+            for (const recommendation of input.routeRecommendations) {
+                await tx.questObjectiveRouteRecommendation.create({
+                    data: {
+                        questObjectiveId: saved.id,
+                        slug: normalizeSlug(recommendation.slug || recommendation.title),
+                        title: recommendation.title.trim(),
+                        order: recommendation.order,
+                        choices: {
+                            create: recommendation.choices.map(choice => ({
+                                questRouteSectionId: choice.questRouteSectionId,
+                                questRoutePathId: choice.questRoutePathId,
+                            })),
+                        },
+                    },
                 });
             }
         }
@@ -389,6 +476,16 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
                 { questRouteSectionId: leftPath1!.sectionId, questRoutePathId: leftPath1!.id },
                 { questRouteSectionId: leftS2Path1!.sectionId, questRoutePathId: leftS2Path1!.id },
             ],
+            routeRecommendations: [{
+                slug: "titania-guardian",
+                title: "Titania -> Guardian",
+                order: 1,
+                choices: [
+                    { questRouteSectionId: startLeft!.sectionId, questRoutePathId: startLeft!.id },
+                    { questRouteSectionId: leftPath1!.sectionId, questRoutePathId: leftPath1!.id },
+                    { questRouteSectionId: leftS2Path1!.sectionId, questRoutePathId: leftS2Path1!.id },
+                ],
+            }],
         },
         {
             questPlanId,
@@ -404,6 +501,16 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
                 { questRouteSectionId: leftPath1!.sectionId, questRoutePathId: leftPath1!.id },
                 { questRouteSectionId: leftS2Path1!.sectionId, questRoutePathId: leftS2Path1!.id },
             ],
+            routeRecommendations: [{
+                slug: "titania-guardian",
+                title: "Titania -> Guardian",
+                order: 1,
+                choices: [
+                    { questRouteSectionId: startLeft!.sectionId, questRoutePathId: startLeft!.id },
+                    { questRouteSectionId: leftPath1!.sectionId, questRoutePathId: leftPath1!.id },
+                    { questRouteSectionId: leftS2Path1!.sectionId, questRoutePathId: leftS2Path1!.id },
+                ],
+            }],
         },
         {
             questPlanId,
@@ -417,6 +524,15 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
                 { questRouteSectionId: startLeft!.sectionId, questRoutePathId: startLeft!.id, isLocked: true },
                 { questRouteSectionId: leftPath3!.sectionId, questRoutePathId: leftPath3!.id, isLocked: true },
             ],
+            routeRecommendations: [{
+                slug: "required-sauron-route",
+                title: "Required Sauron Route",
+                order: 1,
+                choices: [
+                    { questRouteSectionId: startLeft!.sectionId, questRoutePathId: startLeft!.id },
+                    { questRouteSectionId: leftPath3!.sectionId, questRoutePathId: leftPath3!.id },
+                ],
+            }],
         },
         {
             questPlanId,
@@ -430,6 +546,15 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
                 { questRouteSectionId: startRight!.sectionId, questRoutePathId: startRight!.id, isLocked: true },
                 { questRouteSectionId: rightPath4!.sectionId, questRoutePathId: rightPath4!.id, isLocked: true },
             ],
+            routeRecommendations: [{
+                slug: "required-jubilee-route",
+                title: "Required Jubilee Route",
+                order: 1,
+                choices: [
+                    { questRouteSectionId: startRight!.sectionId, questRoutePathId: startRight!.id },
+                    { questRouteSectionId: rightPath4!.sectionId, questRoutePathId: rightPath4!.id },
+                ],
+            }],
         },
         {
             questPlanId,
@@ -444,6 +569,15 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
                 { questRouteSectionId: startLeft!.sectionId, questRoutePathId: startLeft!.id, isLocked: true },
                 { questRouteSectionId: leftPath1!.sectionId, questRoutePathId: leftPath1!.id, isLocked: true },
             ],
+            routeRecommendations: [{
+                slug: "required-titania-route",
+                title: "Required Titania Route",
+                order: 1,
+                choices: [
+                    { questRouteSectionId: startLeft!.sectionId, questRoutePathId: startLeft!.id },
+                    { questRouteSectionId: leftPath1!.sectionId, questRoutePathId: leftPath1!.id },
+                ],
+            }],
         },
         {
             questPlanId,
@@ -457,6 +591,15 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
                 { questRouteSectionId: startRight!.sectionId, questRoutePathId: startRight!.id, isLocked: true },
                 { questRouteSectionId: rightPath6!.sectionId, questRoutePathId: rightPath6!.id, isLocked: true },
             ],
+            routeRecommendations: [{
+                slug: "required-odin-route",
+                title: "Required Odin Route",
+                order: 1,
+                choices: [
+                    { questRouteSectionId: startRight!.sectionId, questRoutePathId: startRight!.id },
+                    { questRouteSectionId: rightPath6!.sectionId, questRoutePathId: rightPath6!.id },
+                ],
+            }],
         },
     ];
 

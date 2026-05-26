@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { savePlayerQuestRouteChoice } from "@/app/actions/player-quest-progress";
 import { createInitialQuestRouteChoices } from "@/lib/quest-planning-projection";
-import { getLockedQuestObjectiveRouteChoices, mergeQuestObjectiveRouteChoices } from "@/lib/quest-objectives";
+import {
+    getFirstQuestObjectiveRouteRecommendationChoices,
+    getLockedQuestObjectiveRouteChoices,
+    mergeQuestObjectiveRouteChoices,
+} from "@/lib/quest-objectives";
 import type { QuestTimelineProps } from "./types";
 
 type Toast = (input: {
@@ -29,10 +33,15 @@ export function useQuestRouteChoices({
 }) {
     const [routeChoices, setRouteChoices] = useState<Record<string, string>>(() =>
         mergeQuestObjectiveRouteChoices(
-            createInitialQuestRouteChoices({
-                routeSections: quest.routeSections,
-                savedRouteChoices,
-            }),
+            {
+                ...createInitialQuestRouteChoices({
+                    routeSections: quest.routeSections,
+                    savedRouteChoices,
+                }),
+                ...(savedRouteChoices.length === 0
+                    ? getFirstQuestObjectiveRouteRecommendationChoices(activeObjective)
+                    : {}),
+            },
             activeObjective
         )
     );

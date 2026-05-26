@@ -287,4 +287,123 @@ describe("Quest Planning Transition", () => {
       reason: "This route choice is locked by the selected objective.",
     });
   });
+
+  it("uses the first objective recommended route when no saved route choices exist", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "counter",
+      quest: {
+        ...quest,
+        objective: {
+          id: "objective-1",
+          slug: "recommended",
+          title: "Recommended",
+          order: 1,
+          requiredClasses: [],
+          requiredTags: [],
+          routeRecommendations: [{
+            id: "variant-1",
+            slug: "right",
+            title: "Right",
+            order: 1,
+            choices: [{ questRouteSectionId: "root", questRoutePathId: "right" }],
+          }],
+        },
+      },
+      plan: { encounters: [] },
+      field: "selectedChampionId",
+      questEncounterId: "right-fight",
+      candidate: {
+        championId: 1,
+        champion: scienceChampion,
+        rosterEntries: [{ championId: 1, stars: 7, rank: 1 }],
+      },
+      encounter: { id: "right-fight" },
+    });
+
+    expect(decision.valid).toBe(true);
+    expect(decision.activeEncounterIds?.has("right-fight")).toBe(true);
+    expect(decision.activeEncounterIds?.has("left-fight")).toBe(false);
+  });
+
+  it("keeps saved route choices ahead of objective recommendations", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "counter",
+      quest: {
+        ...quest,
+        objective: {
+          id: "objective-1",
+          slug: "recommended",
+          title: "Recommended",
+          order: 1,
+          requiredClasses: [],
+          requiredTags: [],
+          routeRecommendations: [{
+            id: "variant-1",
+            slug: "right",
+            title: "Right",
+            order: 1,
+            choices: [{ questRouteSectionId: "root", questRoutePathId: "right" }],
+          }],
+        },
+      },
+      plan: {
+        routeChoices: [{ questRouteSectionId: "root", questRoutePathId: "left" }],
+        encounters: [],
+      },
+      field: "selectedChampionId",
+      questEncounterId: "left-fight",
+      candidate: {
+        championId: 1,
+        champion: scienceChampion,
+        rosterEntries: [{ championId: 1, stars: 7, rank: 1 }],
+      },
+      encounter: { id: "left-fight" },
+    });
+
+    expect(decision.valid).toBe(true);
+    expect(decision.activeEncounterIds?.has("left-fight")).toBe(true);
+    expect(decision.activeEncounterIds?.has("right-fight")).toBe(false);
+  });
+
+  it("applies objective locks after recommended route choices", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "counter",
+      quest: {
+        ...quest,
+        objective: {
+          id: "objective-1",
+          slug: "locked",
+          title: "Locked",
+          order: 1,
+          requiredClasses: [],
+          requiredTags: [],
+          routeChoices: [{
+            questRouteSectionId: "root",
+            questRoutePathId: "left",
+            isLocked: true,
+          }],
+          routeRecommendations: [{
+            id: "variant-1",
+            slug: "right",
+            title: "Right",
+            order: 1,
+            choices: [{ questRouteSectionId: "root", questRoutePathId: "right" }],
+          }],
+        },
+      },
+      plan: { encounters: [] },
+      field: "selectedChampionId",
+      questEncounterId: "left-fight",
+      candidate: {
+        championId: 1,
+        champion: scienceChampion,
+        rosterEntries: [{ championId: 1, stars: 7, rank: 1 }],
+      },
+      encounter: { id: "left-fight" },
+    });
+
+    expect(decision.valid).toBe(true);
+    expect(decision.activeEncounterIds?.has("left-fight")).toBe(true);
+    expect(decision.activeEncounterIds?.has("right-fight")).toBe(false);
+  });
 });

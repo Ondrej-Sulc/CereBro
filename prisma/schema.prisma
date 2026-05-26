@@ -868,6 +868,7 @@ model QuestObjective {
   endpointEncounter       QuestEncounter?              @relation("QuestObjectiveEndpoint", fields: [endpointEncounterId], references: [id], onDelete: SetNull)
   requiredTags            Tag[]                        @relation("QuestObjectiveRequiredTags")
   routeChoices            QuestObjectiveRouteChoice[]
+  routeRecommendations    QuestObjectiveRouteRecommendation[]
   playerPlans             PlayerQuestPlan[]
   encounterRecommendationSets QuestObjectiveEncounterRecommendationSet[]
 
@@ -889,6 +890,35 @@ model QuestObjectiveRouteChoice {
 
   @@unique([questObjectiveId, questRouteSectionId])
   @@index([questRouteSectionId])
+  @@index([questRoutePathId])
+}
+
+model QuestObjectiveRouteRecommendation {
+  id               String                                     @id @default(cuid())
+  questObjectiveId String
+  slug             String
+  title            String
+  order            Int
+  createdAt        DateTime                                   @default(now())
+  updatedAt        DateTime                                   @updatedAt
+  objective        QuestObjective                             @relation(fields: [questObjectiveId], references: [id], onDelete: Cascade)
+  choices          QuestObjectiveRouteRecommendationChoice[]
+
+  @@unique([questObjectiveId, slug])
+  @@unique([questObjectiveId, order])
+  @@index([questObjectiveId])
+}
+
+model QuestObjectiveRouteRecommendationChoice {
+  id                    String                            @id @default(cuid())
+  routeRecommendationId String
+  questRouteSectionId   String
+  questRoutePathId      String
+  routeRecommendation   QuestObjectiveRouteRecommendation @relation(fields: [routeRecommendationId], references: [id], onDelete: Cascade)
+  questRouteSection     QuestRouteSection                 @relation(fields: [questRouteSectionId], references: [id], onDelete: Cascade)
+  questRoutePath        QuestRoutePath                    @relation(fields: [questRoutePathId], references: [id], onDelete: Cascade)
+
+  @@unique([routeRecommendationId, questRouteSectionId])
   @@index([questRoutePathId])
 }
 
@@ -931,6 +961,7 @@ model QuestRouteSection {
   paths       QuestRoutePath[]
   choices     PlayerQuestRouteChoice[]
   objectiveChoices QuestObjectiveRouteChoice[]
+  objectiveRouteRecommendationChoices QuestObjectiveRouteRecommendationChoice[]
 
   @@unique([questPlanId, order])
   @@index([questPlanId])
@@ -949,6 +980,7 @@ model QuestRoutePath {
   encounters  QuestEncounter[]
   choices     PlayerQuestRouteChoice[]
   objectiveChoices QuestObjectiveRouteChoice[]
+  objectiveRouteRecommendationChoices QuestObjectiveRouteRecommendationChoice[]
 
   @@unique([id, sectionId])
   @@unique([sectionId, order])

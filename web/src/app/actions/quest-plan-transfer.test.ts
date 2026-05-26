@@ -32,6 +32,17 @@ describe("Quest Plan Transfer", () => {
         parentPathKey: null,
         paths: [{ key: pathKey, title: "Path A", order: 1 }],
       }],
+      objectives: [{
+        slug: "carina",
+        title: "Carina",
+        order: 1,
+        routeRecommendations: [{
+          slug: "recommended",
+          title: "Recommended",
+          order: 1,
+          choices: [{ routeSectionKey: sectionKey, routePathKey: pathKey }],
+        }],
+      }],
       encounters: [{
         sequence: 2,
         difficulty: "BOGUS",
@@ -57,6 +68,12 @@ describe("Quest Plan Transfer", () => {
       requiredClasses: [ChampionClass.SCIENCE],
     });
     expect(payload.routeSections[0].paths[0].key).toBe(pathKey);
+    expect(payload.objectives[0].routeRecommendations).toEqual([{
+      slug: "recommended",
+      title: "Recommended",
+      order: 1,
+      choices: [{ routeSectionKey: sectionKey, routePathKey: pathKey }],
+    }]);
     expect(payload.encounters[0]).toMatchObject({
       difficulty: EncounterDifficulty.NORMAL,
       routePathKey: pathKey,

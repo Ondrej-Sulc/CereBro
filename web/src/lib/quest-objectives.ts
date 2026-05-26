@@ -20,6 +20,16 @@ export type QuestObjectiveRestriction = QuestSelectionRestrictions & {
     questRoutePathId: string;
     isLocked?: boolean;
   }>;
+  routeRecommendations?: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    order: number;
+    choices: Array<{
+      questRouteSectionId: string;
+      questRoutePathId: string;
+    }>;
+  }>;
 };
 
 export type ObjectiveScopedQuest<TQuest extends { teamLimit?: number | null }> = TQuest & {
@@ -47,6 +57,40 @@ export function getQuestObjectiveRouteChoices(objective?: QuestObjectiveRestrict
     choices[choice.questRouteSectionId] = choice.questRoutePathId;
   }
   return choices;
+}
+
+export type QuestObjectiveRouteVariant = {
+  id: string;
+  slug?: string;
+  title: string;
+  order: number;
+  choices: QuestPlanningRouteChoices;
+};
+
+export function getQuestObjectiveRouteRecommendationVariants(
+  objective?: QuestObjectiveRestriction | null
+): QuestObjectiveRouteVariant[] {
+  return [...(objective?.routeRecommendations ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map(recommendation => {
+      const choices: QuestPlanningRouteChoices = {};
+      for (const choice of recommendation.choices ?? []) {
+        choices[choice.questRouteSectionId] = choice.questRoutePathId;
+      }
+      return {
+        id: recommendation.id,
+        slug: recommendation.slug,
+        title: recommendation.title,
+        order: recommendation.order,
+        choices,
+      };
+    });
+}
+
+export function getFirstQuestObjectiveRouteRecommendationChoices(
+  objective?: QuestObjectiveRestriction | null
+): QuestPlanningRouteChoices {
+  return getQuestObjectiveRouteRecommendationVariants(objective)[0]?.choices ?? {};
 }
 
 export function getLockedQuestObjectiveRouteChoices(objective?: QuestObjectiveRestriction | null) {

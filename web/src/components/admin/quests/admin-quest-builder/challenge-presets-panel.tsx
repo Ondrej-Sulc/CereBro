@@ -15,8 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { deleteQuestObjective, seedNecropolisCarinaObjectives, upsertQuestObjective } from "@/app/actions/quest-objectives";
 import { isNecropolisQuestTitle } from "@/lib/quest-objectives";
 import { cn } from "@/lib/utils";
-import { Loader2, Plus, Save, Star, Trash2 } from "lucide-react";
-import type { EncounterWithRelations, ObjectiveRouteChoiceForm, QuestWithRelations } from "./types";
+import { Copy, Loader2, Plus, Save, Star, Trash2 } from "lucide-react";
+import type { EncounterWithRelations, ObjectiveRouteChoiceForm, ObjectiveRouteRecommendationForm, QuestWithRelations } from "./types";
 
 type ChallengePresetsPanelProps = {
     questPlanId: string;
@@ -62,6 +62,7 @@ export function ChallengePresetsPanel({
     const [objectiveEndpointEncounterId, setObjectiveEndpointEncounterId] = useState("");
     const [objectiveDefaultShowContinuation, setObjectiveDefaultShowContinuation] = useState(false);
     const [objectiveRouteChoices, setObjectiveRouteChoices] = useState<ObjectiveRouteChoiceForm>({});
+    const [objectiveRouteRecommendations, setObjectiveRouteRecommendations] = useState<ObjectiveRouteRecommendationForm[]>([]);
     const [isSavingObjective, setIsSavingObjective] = useState(false);
     const [isDeletingObjectiveId, setIsDeletingObjectiveId] = useState<string | null>(null);
 
@@ -82,6 +83,7 @@ export function ChallengePresetsPanel({
         setObjectiveEndpointEncounterId("");
         setObjectiveDefaultShowContinuation(false);
         setObjectiveRouteChoices({});
+        setObjectiveRouteRecommendations([]);
     };
 
     const editObjective = (objective: QuestWithRelations["objectives"][number]) => {
@@ -106,6 +108,15 @@ export function ChallengePresetsPanel({
                 { pathId: choice.questRoutePathId, isLocked: choice.isLocked }
             ])
         ));
+        setObjectiveRouteRecommendations((objective.routeRecommendations || []).map(recommendation => ({
+            id: recommendation.id,
+            title: recommendation.title,
+            slug: recommendation.slug,
+            order: recommendation.order,
+            choices: Object.fromEntries(
+                recommendation.choices.map(choice => [choice.questRouteSectionId, choice.questRoutePathId])
+            ),
+        })));
     };
 
     const handleSaveObjective = async () => {
@@ -118,6 +129,20 @@ export function ChallengePresetsPanel({
                     questRoutePathId: choice.pathId,
                     isLocked: choice.isLocked,
                 }));
+            const routeRecommendations = objectiveRouteRecommendations
+                .map((recommendation, index) => ({
+                    id: recommendation.id,
+                    slug: recommendation.slug || recommendation.title,
+                    title: recommendation.title,
+                    order: recommendation.order || index + 1,
+                    choices: Object.entries(recommendation.choices)
+                        .filter(([, questRoutePathId]) => Boolean(questRoutePathId))
+                        .map(([questRouteSectionId, questRoutePathId]) => ({
+                            questRouteSectionId,
+                            questRoutePathId,
+                        })),
+                }))
+                .filter(recommendation => recommendation.title.trim() && recommendation.choices.length > 0);
 
             const result = await upsertQuestObjective({
                 id: objectiveEditingId || undefined,
@@ -137,6 +162,7 @@ export function ChallengePresetsPanel({
                 endpointEncounterId: objectiveEndpointEncounterId || null,
                 defaultShowContinuation: objectiveDefaultShowContinuation,
                 routeChoices,
+                routeRecommendations,
             });
             setObjectiveEditingId(result.objectiveId);
             router.refresh();
@@ -179,6 +205,34 @@ export function ChallengePresetsPanel({
             setIsSeedingObjectives(false);
         }
     };
+
+    const addRecommendedRoute = () => {
+        if (objectiveRouteRecommendations.length >= 2) return;
+        const order = objectiveRouteRecommendations.length + 1;
+        setObjectiveRouteRecommendations(prev => [
+            ...prev,
+            {
+                title: order === 1 ? "Recommended Route" : "Alternate Route",
+                order,
+                choices: {},
+            },
+        ]);
+    };
+
+    const copyRouteDefaultsToRecommendation = (index: number) => {
+        const choices = Object.fromEntries(
+            Object.entries(objectiveRouteChoices)
+                .filter(([, choice]) => Boolean(choice.pathId))
+                .map(([sectionId, choice]) => [sectionId, choice.pathId])
+        );
+        setObjectiveRouteRecommendations(prev => prev.map((recommendation, recommendationIndex) =>
+            recommendationIndex === index
+                ? { ...recommendation, choices }
+                : recommendation
+        ));
+    };
+
+    const hasRouteDefaults = Object.values(objectiveRouteChoices).some(choice => Boolean(choice.pathId));
 
     return (
         <TabsContent value="presets" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
@@ -564,6 +618,127 @@ export function ChallengePresetsPanel({
                                     ) : (
                                         <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-3 text-center text-xs text-slate-500">
                                             Create route sections before assigning objective defaults.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div>
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Recommended Routes</Label>
+                                            <p className="mt-0.5 text-[11px] text-slate-600">Up to two optional route variants highlighted in the player planner.</p>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 shrink-0 border-amber-800/60 text-amber-300 hover:bg-amber-950/40"
+                                            onClick={addRecommendedRoute}
+                                            disabled={objectiveRouteRecommendations.length >= 2}
+                                        >
+                                            <Plus className="mr-1 h-3.5 w-3.5" />
+                                            Add Recommended Route
+                                        </Button>
+                                    </div>
+                                    {objectiveRouteRecommendations.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {objectiveRouteRecommendations.map((recommendation, index) => (
+                                                <div key={recommendation.id || index} className="space-y-2 rounded-lg border border-amber-900/40 bg-amber-950/10 p-3">
+                                                    <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto_auto_auto] md:items-end">
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Route Title</Label>
+                                                            <Input
+                                                                value={recommendation.title}
+                                                                onChange={(e) => {
+                                                                    const title = e.target.value;
+                                                                    setObjectiveRouteRecommendations(prev => prev.map((item, itemIndex) =>
+                                                                        itemIndex === index ? { ...item, title } : item
+                                                                    ));
+                                                                }}
+                                                                className="h-8 bg-slate-950 border-slate-800 text-xs"
+                                                            />
+                                                        </div>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-8 border-slate-800 text-slate-300 hover:bg-slate-900"
+                                                            onClick={() => copyRouteDefaultsToRecommendation(index)}
+                                                            disabled={!hasRouteDefaults}
+                                                        >
+                                                            <Copy className="mr-1 h-3.5 w-3.5" />
+                                                            Copy Defaults
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-8 border-slate-800 text-slate-300 hover:bg-slate-900"
+                                                            onClick={() => {
+                                                                setObjectiveRouteRecommendations(prev => prev.map((item, itemIndex) =>
+                                                                    itemIndex === index ? { ...item, choices: {} } : item
+                                                                ));
+                                                            }}
+                                                        >
+                                                            Clear
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="h-8 text-red-300 hover:bg-red-950/30"
+                                                            onClick={() => {
+                                                                setObjectiveRouteRecommendations(prev =>
+                                                                    prev
+                                                                        .filter((_, itemIndex) => itemIndex !== index)
+                                                                        .map((item, itemIndex) => ({ ...item, order: itemIndex + 1 }))
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                    {(routeSections || []).length ? (
+                                                        <div className="grid gap-2">
+                                                            {(routeSections || []).map((section) => (
+                                                                <div key={section.id} className="grid gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-2 md:grid-cols-[150px_minmax(0,1fr)] md:items-center">
+                                                                    <div className="truncate text-xs font-bold text-slate-300">{section.title}</div>
+                                                                    <select
+                                                                        value={recommendation.choices[section.id] || ""}
+                                                                        onChange={(e) => {
+                                                                            const pathId = e.target.value;
+                                                                            setObjectiveRouteRecommendations(prev => prev.map((item, itemIndex) => {
+                                                                                if (itemIndex !== index) return item;
+                                                                                const choices = { ...item.choices };
+                                                                                if (pathId) {
+                                                                                    choices[section.id] = pathId;
+                                                                                } else {
+                                                                                    delete choices[section.id];
+                                                                                }
+                                                                                return { ...item, choices };
+                                                                            }));
+                                                                        }}
+                                                                        className="h-8 w-full rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                                                    >
+                                                                        <option value="">No recommendation</option>
+                                                                        {section.paths.map((path) => (
+                                                                            <option key={path.id} value={path.id}>{path.title}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-3 text-center text-xs text-slate-500">
+                                                            Create route sections before assigning recommended routes.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-3 text-center text-xs text-slate-500">
+                                            No recommended routes yet.
                                         </div>
                                     )}
                                 </div>

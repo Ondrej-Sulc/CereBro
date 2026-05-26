@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { RefObject } from "react";
-import { Check, ChevronRight, Crosshair, Swords, Target } from "lucide-react";
+import { Check, ChevronRight, Crosshair, Swords, Star, Target } from "lucide-react";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,26 @@ import type { EncounterWithRelations, QuestTimelineProps } from "./types";
 type RouteSection = NonNullable<QuestTimelineProps["quest"]["routeSections"]>[number];
 type RoutePath = RouteSection["paths"][number];
 type RouteSummaryItem = { sectionTitle: string; pathTitle: string };
+type RecommendedRouteVariant = {
+    id: string;
+    title: string;
+    order: number;
+    choices: Record<string, string>;
+};
+
+function getRouteVariantSummary(routeSections: RouteSection[], choices: Record<string, string>) {
+    return routeSections
+        .map(section => {
+            const path = section.paths.find(candidate => candidate.id === choices[section.id]);
+            return path ? path.title : null;
+        })
+        .filter((title): title is string => Boolean(title));
+}
+
+function doesRouteMatchVariant(routeChoices: Record<string, string>, variant: RecommendedRouteVariant) {
+    const entries = Object.entries(variant.choices);
+    return entries.length > 0 && entries.every(([sectionId, pathId]) => routeChoices[sectionId] === pathId);
+}
 
 export function TimelineColumnHeader() {
     return (
@@ -97,6 +117,7 @@ function RoutePathCard({
     encounters,
     isSelected,
     isLocked,
+    isRecommended,
     compact,
     readOnly,
     setRouteCardRef,
@@ -108,6 +129,7 @@ function RoutePathCard({
     encounters: EncounterWithRelations[];
     isSelected: boolean;
     isLocked: boolean;
+    isRecommended: boolean;
     compact: boolean;
     readOnly: boolean;
     setRouteCardRef: (pathId: string, node: HTMLDivElement | null) => void;
@@ -137,6 +159,8 @@ function RoutePathCard({
                 compact ? cn("w-max max-w-[calc(100vw-5rem)] p-2", isSelected ? "opacity-100" : "opacity-70 hover:opacity-100") : "w-full p-2.5",
                 isSelected
                     ? "border-cyan-400/70 bg-slate-950 shadow-[0_0_22px_rgba(34,211,238,0.16),inset_0_0_18px_rgba(8,145,178,0.16)]"
+                    : isRecommended
+                        ? "border-amber-600/70 bg-amber-950/20 shadow-[0_0_18px_rgba(245,158,11,0.12)] hover:border-amber-500/80"
                     : "border-slate-800 bg-slate-950/95 hover:border-slate-700 hover:bg-slate-900",
                 readOnly || isLocked ? "cursor-default" : "cursor-pointer"
             )}
@@ -167,6 +191,11 @@ function RoutePathCard({
                 {isLocked && (
                     <span className="shrink-0 rounded-full border border-amber-700/60 bg-amber-950/50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-200">
                         Locked
+                    </span>
+                )}
+                {isRecommended && (
+                    <span className="shrink-0 rounded-full border border-amber-600/60 bg-amber-950/60 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-200">
+                        Recommended
                     </span>
                 )}
             </div>
@@ -293,6 +322,7 @@ export function RoutePlannerPanel({
     setRouteCardRef,
     onRouteChoice,
     scrollToEncounter,
+    recommendedRouteVariants = [],
 }: {
     visibleRouteSections: RouteSection[];
     routeFilteredEncounterCount: number;
@@ -309,8 +339,20 @@ export function RoutePlannerPanel({
     setRouteCardRef: (pathId: string, node: HTMLDivElement | null) => void;
     onRouteChoice: (sectionId: string, pathId: string) => void;
     scrollToEncounter: (encounterId: string) => void;
+    recommendedRouteVariants?: RecommendedRouteVariant[];
 }) {
     if (visibleRouteSections.length === 0) return null;
+
+    const sortedRecommendedRouteVariants = [...recommendedRouteVariants].sort((a, b) => a.order - b.order);
+    const followingRecommendedVariant = sortedRecommendedRouteVariants.find(variant => doesRouteMatchVariant(routeChoices, variant));
+    const recommendedPathIdsBySection = new Map<string, Set<string>>();
+    for (const variant of sortedRecommendedRouteVariants) {
+        for (const [sectionId, pathId] of Object.entries(variant.choices)) {
+            const paths = recommendedPathIdsBySection.get(sectionId) ?? new Set<string>();
+            paths.add(pathId);
+            recommendedPathIdsBySection.set(sectionId, paths);
+        }
+    }
 
     return (
         <div className="-mt-2 mb-4 pl-6 md:pl-10">
@@ -342,6 +384,51 @@ export function RoutePlannerPanel({
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {sortedRecommendedRouteVariants.length > 0 && (
+                    <div className="border-b border-amber-900/30 bg-amber-950/10 px-3 py-2 md:px-4">
+                        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-amber-300">
+                                    <Star className="h-3 w-3" />
+                                    Recommended routes
+                                </div>
+                                {followingRecommendedVariant && (
+                                    <span className="rounded-full border border-cyan-700/60 bg-cyan-950/40 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-cyan-200">
+                                        Following {followingRecommendedVariant.title}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex min-w-0 flex-wrap gap-1.5">
+                                {sortedRecommendedRouteVariants.map(variant => {
+                                    const summary = getRouteVariantSummary(visibleRouteSections, variant.choices);
+                                    const isFollowing = followingRecommendedVariant?.id === variant.id;
+                                    return (
+                                        <div
+                                            key={variant.id}
+                                            className={cn(
+                                                "max-w-full rounded-md border px-2 py-1",
+                                                isFollowing ? "border-cyan-700/70 bg-cyan-950/40" : "border-amber-800/50 bg-slate-950/60"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "truncate text-[10px] font-black uppercase tracking-[0.12em]",
+                                                isFollowing ? "text-cyan-200" : "text-amber-200"
+                                            )}>
+                                                {variant.title}
+                                            </div>
+                                            {summary.length > 0 && (
+                                                <div className="mt-0.5 truncate text-[10px] font-semibold text-slate-500">
+                                                    {summary.join(" -> ")}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -418,6 +505,7 @@ export function RoutePlannerPanel({
                                             encounters={encountersByRoutePathId.get(path.id) || []}
                                             isSelected={path.id === selectedPath?.id}
                                             isLocked={Boolean(lockedRouteChoices?.has(section.id) && lockedRouteChoices.get(section.id) !== path.id)}
+                                            isRecommended={Boolean(recommendedPathIdsBySection.get(section.id)?.has(path.id))}
                                             compact={true}
                                             readOnly={readOnly}
                                             setRouteCardRef={setRouteCardRef}
