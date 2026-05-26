@@ -15,18 +15,20 @@ type Toast = (input: {
 
 export function useQuestClearPlan({
     questId,
+    objectiveSlug,
     setSelections,
     setPrefightSelections,
     toast,
 }: {
     questId: string;
+    objectiveSlug?: string | null;
     setSelections: Dispatch<SetStateAction<QuestPlanningSelectionMap>>;
     setPrefightSelections: Dispatch<SetStateAction<QuestPlanningSelectionMap>>;
     toast: Toast;
 }) {
     const executeClearPlan = async () => {
         try {
-            await clearAllQuestCounters(questId);
+            await clearAllQuestCounters(questId, objectiveSlug);
             const nextState = clearQuestTimelinePlanSelections();
             setSelections(nextState.selections);
             setPrefightSelections(nextState.prefightSelections);

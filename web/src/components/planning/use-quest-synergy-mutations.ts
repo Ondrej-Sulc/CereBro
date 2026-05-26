@@ -20,6 +20,7 @@ export function useQuestSynergyMutations({
     synergyIds,
     activeQuestAssignments,
     activeSynergyChampions,
+    objectiveSlug,
     setSynergyIds,
     toast,
 }: {
@@ -27,6 +28,7 @@ export function useQuestSynergyMutations({
     synergyIds: number[];
     activeQuestAssignments: QuestSelectionAssignment[];
     activeSynergyChampions: QuestSelectionSynergy[];
+    objectiveSlug?: string | null;
     setSynergyIds: Dispatch<SetStateAction<number[]>>;
     toast: Toast;
 }) {
@@ -47,7 +49,7 @@ export function useQuestSynergyMutations({
         setSynergyIds(decision.nextSynergyIds);
 
         try {
-            await savePlayerQuestSynergy(quest.id, championId, decision.isRemoving);
+            await savePlayerQuestSynergy(quest.id, championId, decision.isRemoving, objectiveSlug);
         } catch (error) {
             reportClientError("quest_timeline_save_synergy", error, {
                 quest_id: quest.id,

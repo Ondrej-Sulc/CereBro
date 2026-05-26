@@ -39,7 +39,8 @@ async function applyCurrentPlayerQuestMutation(
 export const savePlayerQuestRouteChoice = withActionContext('savePlayerQuestRouteChoice', async (
     questPlanId: string,
     sectionId: string,
-    pathId: string
+    pathId: string,
+    objectiveSlug?: string | null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -47,7 +48,7 @@ export const savePlayerQuestRouteChoice = withActionContext('savePlayerQuestRout
     return applyCurrentPlayerQuestMutation(
         applyPlayerQuestPlanningMutation({
             playerId: actingUser.id,
-            mutation: { kind: "routeChoice", questPlanId, sectionId, pathId },
+            mutation: { kind: "routeChoice", questPlanId, sectionId, pathId, objectiveSlug },
         }),
         actingUser.allianceId
     );
@@ -57,7 +58,8 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
     questPlanId: string,
     questEncounterId: string,
     selectedChampionId: number | null,
-    selectedChampionStars: number | null = null
+    selectedChampionStars: number | null = null,
+    objectiveSlug?: string | null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -71,6 +73,7 @@ export const savePlayerQuestCounter = withActionContext('savePlayerQuestCounter'
                 questEncounterId,
                 championId: selectedChampionId,
                 championStars: selectedChampionStars,
+                objectiveSlug,
             },
         }),
         actingUser.allianceId
@@ -81,7 +84,8 @@ export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQues
     questPlanId: string,
     questEncounterId: string,
     prefightChampionId: number | null,
-    prefightChampionStars: number | null = null
+    prefightChampionStars: number | null = null,
+    objectiveSlug?: string | null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -95,6 +99,7 @@ export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQues
                 questEncounterId,
                 championId: prefightChampionId,
                 championStars: prefightChampionStars,
+                objectiveSlug,
             },
         }),
         actingUser.allianceId
@@ -104,7 +109,8 @@ export const savePlayerQuestPrefightChampion = withActionContext('savePlayerQues
 export const savePlayerQuestEncounterRevives = withActionContext('savePlayerQuestEncounterRevives', async (
     questPlanId: string,
     questEncounterId: string,
-    revivesUsed: number
+    revivesUsed: number,
+    objectiveSlug?: string | null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -112,20 +118,20 @@ export const savePlayerQuestEncounterRevives = withActionContext('savePlayerQues
     return applyCurrentPlayerQuestMutation(
         applyPlayerQuestPlanningMutation({
             playerId: actingUser.id,
-            mutation: { kind: "revives", questPlanId, questEncounterId, revivesUsed },
+            mutation: { kind: "revives", questPlanId, questEncounterId, revivesUsed, objectiveSlug },
         }),
         actingUser.allianceId
     );
 });
 
-export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', async (questPlanId: string) => {
+export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', async (questPlanId: string, objectiveSlug?: string | null) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
 
     return applyCurrentPlayerQuestMutation(
         applyPlayerQuestPlanningMutation({
             playerId: actingUser.id,
-            mutation: { kind: "clearCounters", questPlanId },
+            mutation: { kind: "clearCounters", questPlanId, objectiveSlug },
         }),
         actingUser.allianceId
     );
@@ -134,7 +140,8 @@ export const clearAllQuestCounters = withActionContext('clearAllQuestCounters', 
 export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy', async (
     questPlanId: string,
     championId: number,
-    isRemoving: boolean = false
+    isRemoving: boolean = false,
+    objectiveSlug?: string | null
 ) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser) throw new Error("Unauthorized");
@@ -147,6 +154,7 @@ export const savePlayerQuestSynergy = withActionContext('savePlayerQuestSynergy'
                 questPlanId,
                 championId,
                 isRemoving,
+                objectiveSlug,
             },
         }),
         actingUser.allianceId

@@ -202,6 +202,8 @@ export function projectQuestTimelineViewModel({
   rosterMap,
   featuredPicks,
   alliancePicks,
+  activeObjective,
+  showObjectiveContinuation,
 }: {
   quest: QuestTimelineProps["quest"];
   routeChoices: Record<string, string>;
@@ -216,6 +218,8 @@ export function projectQuestTimelineViewModel({
   rosterMap: NonNullable<QuestTimelineProps["rosterMap"]>;
   featuredPicks: NonNullable<QuestTimelineProps["featuredPicks"]>;
   alliancePicks: NonNullable<QuestTimelineProps["alliancePicks"]>;
+  activeObjective?: QuestTimelineProps["activeObjective"];
+  showObjectiveContinuation?: boolean;
 }) {
   const projection = projectQuestPlanningState<
     QuestTimelineProps["quest"],
@@ -224,7 +228,7 @@ export function projectQuestTimelineViewModel({
     RosterWithChampion,
     SynergyWithChampion
   >({
-    quest,
+    quest: { ...quest, objective: activeObjective ?? null },
     routeChoices,
     selections,
     prefightSelections,
@@ -259,6 +263,7 @@ export function projectQuestTimelineViewModel({
       createdAt: new Date(),
       updatedAt: new Date(),
     }),
+    showObjectiveContinuation,
   });
 
   const playerPicksMap = groupQuestPlayerPicks({ featuredPicks, alliancePicks });

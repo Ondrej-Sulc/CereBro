@@ -21,6 +21,16 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                 include: {
                     category: true,
                     requiredTags: true,
+                    objectives: {
+                        orderBy: { order: 'asc' },
+                        include: {
+                            requiredTags: true,
+                            routeChoices: true,
+                            endpointEncounter: {
+                                select: { id: true, sequence: true, defender: { select: { name: true } } }
+                            }
+                        }
+                    },
                     creators: true,
                     routeSections: {
                         orderBy: { order: 'asc' },
@@ -60,6 +70,15 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                         select: {
                             playerPlans: true
                         }
+                    }
+                }
+            },
+            questObjective: {
+                include: {
+                    requiredTags: true,
+                    routeChoices: true,
+                    endpointEncounter: {
+                        select: { id: true, sequence: true, defender: { select: { name: true } } }
                     }
                 }
             },
@@ -158,6 +177,14 @@ export const getPlayerQuestPlansForProfile = withActionContext('getPlayerQuestPl
                     requiredClasses: true
                 }
             },
+            questObjective: {
+                select: {
+                    id: true,
+                    title: true,
+                    shortTitle: true,
+                    slug: true
+                }
+            },
             encounters: {
                 where: {
                     OR: [
@@ -194,14 +221,16 @@ export const getShareablePlanId = withActionContext('getShareablePlanId', async 
 
     const playerPlan = await prisma.playerQuestPlan.upsert({
         where: {
-            playerId_questPlanId: {
+            playerId_questPlanId_scopeKey: {
                 playerId: actingUser.id,
-                questPlanId: questPlanId
+                questPlanId: questPlanId,
+                scopeKey: "base"
             }
         },
         create: {
             playerId: actingUser.id,
-            questPlanId: questPlanId
+            questPlanId: questPlanId,
+            scopeKey: "base"
         },
         update: {},
         select: { id: true }

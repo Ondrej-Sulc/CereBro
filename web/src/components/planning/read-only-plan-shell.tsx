@@ -40,6 +40,7 @@ type ReadOnlyPlan = {
     synergyChampions?: ReadOnlySynergyChampion[];
     rosterMap?: Record<string, unknown>;
     routeChoices?: unknown[];
+    questObjective?: QuestTimelineProps["activeObjective"];
 };
 
 type ReadOnlyQuest = {
@@ -192,6 +193,8 @@ export function ReadOnlyPlanShell({
             {/* Read-only Timeline */}
             <QuestTimelineClient
                 quest={quest as unknown as QuestTimelineProps["quest"]}
+                activeObjective={plan.questObjective || null}
+                objectiveSlug={plan.questObjective?.slug ?? null}
                 roster={roster}
                 savedEncounters={plan.encounters as unknown as NonNullable<QuestTimelineProps["savedEncounters"]>}
                 readOnly

@@ -144,6 +144,16 @@ export const getQuestPlanById = unstable_cache(
             include: {
                 category: true,
                 requiredTags: true,
+                objectives: {
+                    orderBy: { order: 'asc' },
+                    include: {
+                        requiredTags: true,
+                        routeChoices: true,
+                        endpointEncounter: {
+                            select: { id: true, sequence: true, defender: { select: { name: true } } }
+                        }
+                    }
+                },
                 routeSections: {
                     orderBy: { order: 'asc' },
                     include: {
@@ -272,12 +282,12 @@ export type ChampionCounterData = {
     images: unknown;
 };
 
-export const getEncounterPopularCounters = async (questPlanId: string): Promise<PopularCountersMap> => {
+export const getEncounterPopularCounters = async (questPlanId: string, scopeKey: string = "base"): Promise<PopularCountersMap> => {
     return unstable_cache(
         async () => {
             // Get total player plans to determine a sensible dynamic threshold
             const totalPlayers = await prisma.playerQuestPlan.count({
-                where: { questPlanId }
+                where: { questPlanId, scopeKey }
             });
 
             // Threshold: At least 3 picks, or 2% of players (capped at 50 to avoid hiding consensus)
@@ -287,6 +297,7 @@ export const getEncounterPopularCounters = async (questPlanId: string): Promise<
                 by: ['questEncounterId', 'selectedChampionId'],
                 where: {
                     questPlanId,
+                    playerQuestPlan: { scopeKey },
                     selectedChampionId: { not: null }
                 },
                 _count: { selectedChampionId: true },
@@ -328,7 +339,7 @@ export const getEncounterPopularCounters = async (questPlanId: string): Promise<
 
             return map;
         },
-        [`quest-popular-counters-${questPlanId}`],
+        [`quest-popular-counters-${questPlanId}-${scopeKey}`],
         { tags: [`quest-popular-counters-${questPlanId}`, 'quest-popular-counters'] }
     )();
 };
@@ -342,12 +353,13 @@ export type PickCounterWithChampion = {
 
 export type EnhancedCountersMap = Record<string, PickCounterWithChampion[]>;
 
-export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<EnhancedCountersMap> => {
+export const getEncounterFeaturedPicks = async (questPlanId: string, scopeKey: string = "base"): Promise<EnhancedCountersMap> => {
     return unstable_cache(
         async () => {
             const playerPlans = await prisma.playerQuestPlan.findMany({
                 where: {
                     questPlanId,
+                    scopeKey,
                     isFeatured: true,
                     // Only plans that have at least one encounter selection or synergy selection
                     OR: [
@@ -454,16 +466,17 @@ export const getEncounterFeaturedPicks = async (questPlanId: string): Promise<En
 
             return map;
         },
-        [`quest-featured-picks-${questPlanId}`],
+        [`quest-featured-picks-${questPlanId}-${scopeKey}`],
         { tags: [`quest-featured-picks-${questPlanId}`, 'quest-featured-picks'] }
     )();
 };
-export const getEncounterAlliancePicks = async (questPlanId: string, allianceId: string, excludePlayerId?: string): Promise<EnhancedCountersMap> => {
+export const getEncounterAlliancePicks = async (questPlanId: string, allianceId: string, excludePlayerId?: string, scopeKey: string = "base"): Promise<EnhancedCountersMap> => {
     return unstable_cache(
         async () => {
             const playerPlans = await prisma.playerQuestPlan.findMany({
                 where: {
                     questPlanId,
+                    scopeKey,
                     player: { 
                         allianceId,
                         id: excludePlayerId ? { not: excludePlayerId } : undefined
@@ -554,7 +567,7 @@ export const getEncounterAlliancePicks = async (questPlanId: string, allianceId:
 
             return map;
         },
-        [`quest-alliance-picks-${questPlanId}-${allianceId}-${excludePlayerId || 'none'}`],
+        [`quest-alliance-picks-${questPlanId}-${allianceId}-${excludePlayerId || 'none'}-${scopeKey}`],
         { tags: [`quest-alliance-picks-${questPlanId}-${allianceId}`, 'quest-alliance-picks'] }
     )();
 };

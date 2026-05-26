@@ -121,6 +121,43 @@ describe("Player Quest Selection", () => {
     })).toBe(false);
   });
 
+  it("applies objective restrictions with ANY tag matching and star ranges", () => {
+    const godChampion = rosterEntry({
+      champion: {
+        ...scienceChampion,
+        tags: [{ id: 20, name: "God" }],
+      },
+    });
+    const deathlessSixStar = rosterEntry({
+      stars: 6,
+      champion: {
+        ...scienceChampion,
+        tags: [{ id: 30, name: "Deathless" }],
+      },
+    });
+
+    expect(isChampionValidForEncounterOrQuest(
+      godChampion,
+      {
+        objective: {
+          requiredTags: [{ id: 20, name: "God" }, { id: 21, name: "Cul's Worthy" }],
+          requiredTagMode: "ANY",
+        },
+      }
+    )).toBe(true);
+
+    expect(isChampionValidForEncounterOrQuest(
+      deathlessSixStar,
+      {
+        objective: {
+          minStarLevel: 7,
+          maxStarLevel: 7,
+          requiredTags: [{ id: 30, name: "Deathless" }],
+        },
+      }
+    )).toBe(false);
+  });
+
   it("marks a champion rarity unavailable when already selected on an active Unlimited Swaps encounter", () => {
     const activeEncounterIds = new Set(["e1", "e2"]);
     const roster = [

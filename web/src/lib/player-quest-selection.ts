@@ -27,10 +27,12 @@ export type QuestSelectionRestrictions = {
   maxStarLevel?: number | null;
   requiredClasses?: ChampionClass[];
   requiredTags?: QuestSelectionTag[];
+  requiredTagMode?: "ALL" | "ANY" | null;
 };
 
 export type QuestSelectionQuest = QuestSelectionRestrictions & {
   teamLimit?: number | null;
+  objective?: QuestSelectionRestrictions | null;
 };
 
 export type QuestSelectionEncounter = QuestSelectionRestrictions & {
@@ -80,6 +82,8 @@ export function validateRosterEntryForQuestSelection(
 ): QuestSelectionValidation {
   const questResult = validateRestrictionScope("Quest", quest, entry);
   if (!questResult.valid) return questResult;
+  const objectiveResult = validateRestrictionScope("Objective", quest.objective ?? undefined, entry);
+  if (!objectiveResult.valid) return objectiveResult;
   return validateRestrictionScope("Fight", encounter, entry);
 }
 
@@ -286,7 +290,7 @@ export function wouldExceedQuestTeamLimit({
 }
 
 function validateRestrictionScope(
-  scope: "Quest" | "Fight",
+  scope: "Quest" | "Objective" | "Fight",
   restrictions: QuestSelectionRestrictions | undefined,
   entry: QuestSelectionRosterEntry
 ): QuestSelectionValidation {
@@ -304,9 +308,16 @@ function validateRestrictionScope(
 
   if (restrictions.requiredTags?.length) {
     const championTagIds = new Set((entry.champion.tags ?? []).map(tag => String(tag.id)));
-    const missingTags = restrictions.requiredTags.filter(tag => !championTagIds.has(String(tag.id)));
-    if (missingTags.length > 0) {
-      return invalid(`${scope} requires champions with all of: ${restrictions.requiredTags.map(tag => tag.name).join(", ")}`);
+    if (restrictions.requiredTagMode === "ANY") {
+      const hasAnyTag = restrictions.requiredTags.some(tag => championTagIds.has(String(tag.id)));
+      if (!hasAnyTag) {
+        return invalid(`${scope} requires champions with one of: ${restrictions.requiredTags.map(tag => tag.name).join(", ")}`);
+      }
+    } else {
+      const missingTags = restrictions.requiredTags.filter(tag => !championTagIds.has(String(tag.id)));
+      if (missingTags.length > 0) {
+        return invalid(`${scope} requires champions with all of: ${restrictions.requiredTags.map(tag => tag.name).join(", ")}`);
+      }
     }
   }
 
@@ -314,7 +325,7 @@ function validateRestrictionScope(
 }
 
 function validateStarRestrictions(
-  scope: "Quest" | "Fight",
+  scope: "Quest" | "Objective" | "Fight",
   restrictions: QuestSelectionRestrictions,
   entry: QuestSelectionRosterEntry
 ): QuestSelectionValidation {
@@ -335,7 +346,7 @@ function validateStarRestrictions(
   return { valid: true };
 }
 
-function starRangeMessage(scope: "Quest" | "Fight", min?: number | null, max?: number | null) {
+function starRangeMessage(scope: "Quest" | "Objective" | "Fight", min?: number | null, max?: number | null) {
   if (min && max) return `${scope} requires ${min}-${max} star champions.`;
   if (min) return `${scope} requires minimum ${min} stars.`;
   if (max) return `${scope} requires maximum ${max} stars.`;

@@ -257,4 +257,34 @@ describe("Quest Planning Transition", () => {
       },
     });
   });
+
+  it("rejects changes to objective-locked route choices", () => {
+    const decision = decideQuestPlanningTransition({
+      kind: "routeChoice",
+      quest: {
+        ...quest,
+        objective: {
+          id: "objective-1",
+          slug: "locked",
+          title: "Locked",
+          order: 1,
+          requiredClasses: [],
+          requiredTags: [],
+          routeChoices: [{
+            questRouteSectionId: "root",
+            questRoutePathId: "left",
+            isLocked: true,
+          }],
+        },
+      },
+      plan: { encounters: [] },
+      sectionId: "root",
+      pathId: "right",
+    });
+
+    expect(decision).toEqual({
+      valid: false,
+      reason: "This route choice is locked by the selected objective.",
+    });
+  });
 });

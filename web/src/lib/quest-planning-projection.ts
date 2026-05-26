@@ -1,5 +1,10 @@
 import type { QuestSelectionAssignment, QuestSelectionSynergy } from "./player-quest-selection";
 import {
+  applyQuestObjectiveToQuest,
+  filterQuestEncountersToObjectiveEndpoint,
+  type QuestObjectiveRestriction,
+} from "./quest-objectives";
+import {
   createInitialQuestRouteChoices,
   getActiveQuestEncounterIds,
   getRouteFilteredQuestEncounters,
@@ -45,6 +50,7 @@ export type QuestPlanningQuest<
   encounters: TEncounter[];
   routeSections?: TSection[] | null;
   teamLimit?: number | null;
+  objective?: QuestObjectiveRestriction | null;
 };
 
 export type QuestPlanningRosterEntry = {
@@ -89,6 +95,7 @@ export type QuestPlanningProjection<
   filteredEncounters: TEncounter[];
   selectedTeam: TRoster[];
   selectedTeamMembers: QuestPlanningTeamMember<TRoster, TEncounter>[];
+  objectiveEndpointEncounterId?: string | null;
 };
 
 export type QuestPlanningTeamMember<
@@ -119,6 +126,7 @@ export function projectQuestPlanningState<
   difficultyFilter = [],
   resolveRosterEntry,
   createSynergyRosterEntry,
+  showObjectiveContinuation = false,
 }: {
   quest: TQuest;
   routeChoices: QuestPlanningRouteChoices;
@@ -131,8 +139,10 @@ export function projectQuestPlanningState<
   difficultyFilter?: string[];
   resolveRosterEntry?: QuestPlanningRosterResolver<TRoster>;
   createSynergyRosterEntry?: (synergy: TSynergy) => TRoster;
+  showObjectiveContinuation?: boolean;
 }): QuestPlanningProjection<TQuest, TEncounter, TSection, TRoster> {
   const routeSections = quest.routeSections ?? [];
+  const effectiveQuest = applyQuestObjectiveToQuest(quest, quest.objective);
   const {
     visibleRouteSections,
     selectedRoutePathIds,
@@ -143,51 +153,60 @@ export function projectQuestPlanningState<
     routeSections,
     routeChoices,
   });
+  const objectiveRouteFilteredEncounters = filterQuestEncountersToObjectiveEndpoint({
+    encounters: routeFilteredEncounters,
+    endpointEncounterId: quest.objective?.endpointEncounterId,
+    showContinuation: showObjectiveContinuation,
+  });
+  const objectiveActiveEncounterIds = getActiveQuestEncounterIds(objectiveRouteFilteredEncounters);
   const activeSelections = filterQuestSelectionMapByActiveEncounters(selections, activeEncounterIds);
+  const objectiveActiveSelections = filterQuestSelectionMapByActiveEncounters(activeSelections, objectiveActiveEncounterIds);
   const activePrefightSelections = filterQuestSelectionMapByActiveEncounters(prefightSelections, activeEncounterIds);
+  const objectiveActivePrefightSelections = filterQuestSelectionMapByActiveEncounters(activePrefightSelections, objectiveActiveEncounterIds);
   const selectedTeam = projectSelectedQuestTeam({
-    activeSelections,
-    activePrefightSelections,
+    activeSelections: objectiveActiveSelections,
+    activePrefightSelections: objectiveActivePrefightSelections,
     synergyIds,
     roster,
     savedSynergies,
-    teamLimit: quest.teamLimit ?? null,
+    teamLimit: effectiveQuest.teamLimit ?? null,
     resolveRosterEntry,
     createSynergyRosterEntry,
   });
 
   return {
     visibleRouteSections,
-    routeFilteredEncounters,
-    activeEncounterIds,
-    activeSelections,
-    activePrefightSelections,
+    routeFilteredEncounters: objectiveRouteFilteredEncounters,
+    activeEncounterIds: objectiveActiveEncounterIds,
+    activeSelections: objectiveActiveSelections,
+    activePrefightSelections: objectiveActivePrefightSelections,
     activeQuestAssignments: projectQuestAssignments({
-      selections: activeSelections,
-      prefightSelections: activePrefightSelections,
+      selections: objectiveActiveSelections,
+      prefightSelections: objectiveActivePrefightSelections,
       roster,
     }),
     activeSynergyChampions: synergyIds.map(championId => ({ championId })),
-    activeRevivesTotal: sumQuestRevives(revivesByEncounterId, activeEncounterIds),
+    activeRevivesTotal: sumQuestRevives(revivesByEncounterId, objectiveActiveEncounterIds),
     allRevivesTotal: sumQuestRevives(revivesByEncounterId),
-    activeQuest: { ...quest, encounters: routeFilteredEncounters },
+    activeQuest: { ...effectiveQuest, encounters: objectiveRouteFilteredEncounters },
     encountersByRoutePathId: getQuestEncountersByRoutePathId(quest.encounters),
     selectedRouteSummary: getSelectedQuestRouteSummary({
       visibleRouteSections,
       routeChoices,
     }),
     selectedRoutePathIds,
-    filteredEncounters: filterQuestEncountersByDifficulty(routeFilteredEncounters, difficultyFilter),
+    filteredEncounters: filterQuestEncountersByDifficulty(objectiveRouteFilteredEncounters, difficultyFilter),
     selectedTeam,
     selectedTeamMembers: projectSelectedQuestTeamMembers({
-      activeSelections,
-      activePrefightSelections,
+      activeSelections: objectiveActiveSelections,
+      activePrefightSelections: objectiveActivePrefightSelections,
       roster,
-      routeFilteredEncounters,
+      routeFilteredEncounters: objectiveRouteFilteredEncounters,
       selectedTeam,
-      teamLimit: quest.teamLimit ?? null,
+      teamLimit: effectiveQuest.teamLimit ?? null,
       resolveRosterEntry,
     }),
+    objectiveEndpointEncounterId: quest.objective?.endpointEncounterId,
   };
 }
 

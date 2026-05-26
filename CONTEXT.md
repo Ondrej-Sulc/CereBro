@@ -30,6 +30,8 @@ In Unlimited Swaps, a prefight champion is not an additional team member. A pref
 
 Quest Planning Projection is the render-ready view of a player's route-aware plan. It owns visible route sections, active encounters, active assignments, selected team members, route summaries, and revive totals before the quest timeline renders them.
 
+Quest Objectives are preset planning scopes layered over a base quest plan. They add objective-specific roster restrictions, route defaults and locks, optional endpoint filtering, and a separate `PlayerQuestPlan.scopeKey` so base plans and challenge-specific plans do not overwrite each other.
+
 ## Website Observability
 
 Website Observability is the domain rule set for turning website requests, server actions, client errors, and product interactions into searchable logs, PostHog events, error reports, and dashboard metrics.

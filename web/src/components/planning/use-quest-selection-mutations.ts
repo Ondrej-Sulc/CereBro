@@ -25,6 +25,7 @@ export function useQuestSelectionMutations({
     prefightSelections,
     activeQuestAssignments,
     activeSynergyChampions,
+    objectiveSlug,
     setSelections,
     setPrefightSelections,
     closeEncounterAfterSelection,
@@ -37,6 +38,7 @@ export function useQuestSelectionMutations({
     prefightSelections: QuestPlanningSelectionMap;
     activeQuestAssignments: QuestSelectionAssignment[];
     activeSynergyChampions: QuestSelectionSynergy[];
+    objectiveSlug?: string | null;
     setSelections: Dispatch<SetStateAction<QuestPlanningSelectionMap>>;
     setPrefightSelections: Dispatch<SetStateAction<QuestPlanningSelectionMap>>;
     closeEncounterAfterSelection: (encounterId: string) => void;
@@ -71,7 +73,7 @@ export function useQuestSelectionMutations({
         }
 
         try {
-            await savePlayerQuestCounter(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars);
+            await savePlayerQuestCounter(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars, objectiveSlug);
         } catch (error) {
             reportClientError("quest_timeline_save_counter", error, {
                 quest_id: quest.id,
@@ -107,7 +109,7 @@ export function useQuestSelectionMutations({
         setPrefightSelections(prev => ({ ...prev, [encounterId]: decision.nextRosterId }));
 
         try {
-            await savePlayerQuestPrefightChampion(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars);
+            await savePlayerQuestPrefightChampion(quest.id, encounterId, decision.nextChampionId, decision.nextChampionStars, objectiveSlug);
         } catch (error) {
             reportClientError("quest_timeline_save_prefight", error, {
                 quest_id: quest.id,

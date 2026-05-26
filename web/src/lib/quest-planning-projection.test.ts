@@ -159,4 +159,41 @@ describe("Quest Planning Projection", () => {
       teamLimit: null,
     }).map(entry => entry.id)).toEqual(["r1", "r1-alt"]);
   });
+
+  it("filters objective half-runs to the endpoint unless continuation is enabled", () => {
+    const baseInput = {
+      quest: {
+        encounters,
+        routeSections,
+        teamLimit: 3,
+        objective: {
+          id: "objective-1",
+          slug: "half-run",
+          title: "Half Run",
+          order: 1,
+          requiredClasses: [],
+          requiredTags: [],
+          endpointEncounterId: "right-fight",
+        },
+      },
+      routeChoices: {
+        root: "right",
+        "right-child": "upper",
+      },
+      selections: {
+        shared: "r1",
+        "right-fight": "r2",
+        "upper-fight": "r3",
+      },
+      prefightSelections: {},
+      synergyIds: [],
+      revivesByEncounterId: {},
+      roster,
+    };
+
+    expect(projectQuestPlanningState(baseInput).routeFilteredEncounters.map(encounter => encounter.id))
+      .toEqual(["shared", "right-fight"]);
+    expect(projectQuestPlanningState({ ...baseInput, showObjectiveContinuation: true }).routeFilteredEncounters.map(encounter => encounter.id))
+      .toEqual(["shared", "right-fight", "upper-fight"]);
+  });
 });

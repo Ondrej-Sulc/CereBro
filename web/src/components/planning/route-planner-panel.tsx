@@ -96,6 +96,7 @@ function RoutePathCard({
     path,
     encounters,
     isSelected,
+    isLocked,
     compact,
     readOnly,
     setRouteCardRef,
@@ -106,6 +107,7 @@ function RoutePathCard({
     path: RoutePath;
     encounters: EncounterWithRelations[];
     isSelected: boolean;
+    isLocked: boolean;
     compact: boolean;
     readOnly: boolean;
     setRouteCardRef: (pathId: string, node: HTMLDivElement | null) => void;
@@ -120,11 +122,11 @@ function RoutePathCard({
         <div
             ref={(node) => setRouteCardRef(path.id, node)}
             role="button"
-            tabIndex={readOnly ? -1 : 0}
+            tabIndex={readOnly || isLocked ? -1 : 0}
             aria-pressed={isSelected}
-            onClick={() => onRouteChoice(sectionId, path.id)}
+            onClick={() => !isLocked && onRouteChoice(sectionId, path.id)}
             onKeyDown={(event) => {
-                if (readOnly) return;
+                if (readOnly || isLocked) return;
                 if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     onRouteChoice(sectionId, path.id);
@@ -136,7 +138,7 @@ function RoutePathCard({
                 isSelected
                     ? "border-cyan-400/70 bg-slate-950 shadow-[0_0_22px_rgba(34,211,238,0.16),inset_0_0_18px_rgba(8,145,178,0.16)]"
                     : "border-slate-800 bg-slate-950/95 hover:border-slate-700 hover:bg-slate-900",
-                readOnly ? "cursor-default" : "cursor-pointer"
+                readOnly || isLocked ? "cursor-default" : "cursor-pointer"
             )}
         >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
@@ -162,6 +164,11 @@ function RoutePathCard({
                 )}>
                     {encounters.length > 0 ? encounters.length : "Choice"}
                 </span>
+                {isLocked && (
+                    <span className="shrink-0 rounded-full border border-amber-700/60 bg-amber-950/50 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-amber-200">
+                        Locked
+                    </span>
+                )}
             </div>
 
             <div className={cn("mt-2 flex items-center", compact ? "min-h-7" : "min-h-9")}>
@@ -274,6 +281,7 @@ export function RoutePlannerPanel({
     visibleRouteSections,
     routeFilteredEncounterCount,
     routeChoices,
+    lockedRouteChoices,
     selectedRouteSummary,
     encountersByRoutePathId,
     routeMapRef,
@@ -289,6 +297,7 @@ export function RoutePlannerPanel({
     visibleRouteSections: RouteSection[];
     routeFilteredEncounterCount: number;
     routeChoices: Record<string, string>;
+    lockedRouteChoices?: Map<string, string>;
     selectedRouteSummary: RouteSummaryItem[];
     encountersByRoutePathId: Map<string, EncounterWithRelations[]>;
     routeMapRef: RefObject<HTMLDivElement | null>;
@@ -408,6 +417,7 @@ export function RoutePlannerPanel({
                                             path={path}
                                             encounters={encountersByRoutePathId.get(path.id) || []}
                                             isSelected={path.id === selectedPath?.id}
+                                            isLocked={Boolean(lockedRouteChoices?.has(section.id) && lockedRouteChoices.get(section.id) !== path.id)}
                                             compact={true}
                                             readOnly={readOnly}
                                             setRouteCardRef={setRouteCardRef}

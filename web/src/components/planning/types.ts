@@ -24,6 +24,8 @@ export interface FilterMetadata {
 
 export interface QuestTimelineProps {
     quest: QuestWithRelations;
+    activeObjective?: QuestWithRelations["objectives"][number] | null;
+    objectiveSlug?: string | null;
     roster?: RosterWithChampion[];
     savedEncounters?: (PlayerQuestEncounter & {
         prefightChampionId?: number | null;

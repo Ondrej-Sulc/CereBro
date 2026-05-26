@@ -15,6 +15,7 @@ const getPlayerQuestPlan = cache(async (playerId: string, questId: string) => {
         where: {
             playerId,
             questPlanId: questId,
+            scopeKey: "base",
             questPlan: { status: QuestPlanStatus.VISIBLE }
         },
         select: { id: true }

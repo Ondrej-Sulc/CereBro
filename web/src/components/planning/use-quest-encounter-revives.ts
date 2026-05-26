@@ -21,11 +21,13 @@ export function useQuestEncounterRevives({
     questId,
     savedEncounters,
     readOnly,
+    objectiveSlug,
     toast,
 }: {
     questId: string;
     savedEncounters: NonNullable<QuestTimelineProps["savedEncounters"]>;
     readOnly: boolean;
+    objectiveSlug?: string | null;
     toast: Toast;
 }) {
     const [revivesByEncounterId, setRevivesByEncounterId] = useState<Record<string, number>>(() =>
@@ -44,7 +46,7 @@ export function useQuestEncounterRevives({
         setRevivesByEncounterId(decision.nextRevivesByEncounterId);
 
         try {
-            await savePlayerQuestEncounterRevives(questId, encounterId, decision.nextRevives);
+            await savePlayerQuestEncounterRevives(questId, encounterId, decision.nextRevives, objectiveSlug);
         } catch (error) {
             reportClientError("quest_timeline_save_revives", error, {
                 quest_id: questId,

@@ -23,15 +23,16 @@ export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', 
 
         await prisma.$transaction([
             prisma.playerQuestPlan.updateMany({
-                where: { questPlanId },
+                where: { questPlanId, scopeKey: "base" },
                 data: { isFeatured: false }
             }),
             ...uniquePlayerIds.map(playerId =>
                 prisma.playerQuestPlan.upsert({
                     where: {
-                        playerId_questPlanId: {
+                        playerId_questPlanId_scopeKey: {
                             playerId,
-                            questPlanId
+                            questPlanId,
+                            scopeKey: "base"
                         }
                     },
                     update: {
@@ -40,6 +41,7 @@ export const updateFeaturedPlayers = withActionContext('updateFeaturedPlayers', 
                     create: {
                         playerId,
                         questPlanId,
+                        scopeKey: "base",
                         isFeatured: true
                     }
                 })

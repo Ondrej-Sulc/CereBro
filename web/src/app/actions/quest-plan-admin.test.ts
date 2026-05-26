@@ -58,7 +58,7 @@ describe("quest plan admin actions", () => {
       .resolves.toEqual({ success: true });
 
     expect(prismaFake.playerQuestPlan.updateMany).toHaveBeenCalledWith({
-      where: { questPlanId: "quest_1" },
+      where: { questPlanId: "quest_1", scopeKey: "base" },
       data: { isFeatured: false },
     });
     expect(prismaFake.playerQuestPlan.upsert).toHaveBeenCalledTimes(2);

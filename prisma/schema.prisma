@@ -175,6 +175,7 @@ model Tag {
   defenseTactics            WarTactic[]      @relation("DefenseTactic")
   champions                 Champion[]       @relation("ChampionToTag")
   questRequiredInEncounters QuestEncounter[] @relation("EncounterRequiredTags")
+  questObjectiveRequiredIn  QuestObjective[] @relation("QuestObjectiveRequiredTags")
   questRequiredInPlans      QuestPlan[]      @relation("QuestRequiredTags")
 
   @@unique([name, category])
@@ -835,12 +836,58 @@ model QuestPlan {
   bannerPosition  String?           @default("center")
   videoUrl        String?
   playerPlans     PlayerQuestPlan[]
+  objectives      QuestObjective[]
   encounters      QuestEncounter[]
   routeSections   QuestRouteSection[]
   category        QuestCategory?    @relation(fields: [categoryId], references: [id])
   creator         Player?           @relation("QuestCreator", fields: [creatorId], references: [id])
   creators        BotUser[]         @relation("QuestPlanCreators")
   requiredTags    Tag[]             @relation("QuestRequiredTags")
+}
+
+model QuestObjective {
+  id                      String                       @id @default(cuid())
+  questPlanId             String
+  slug                    String
+  title                   String
+  shortTitle              String?
+  description             String?
+  order                   Int
+  isVisible               Boolean                      @default(true)
+  teamLimitOverride       Int?
+  minStarLevel            Int?
+  maxStarLevel            Int?
+  requiredClasses         ChampionClass[]
+  requiredTagMode         QuestObjectiveTagMode        @default(ALL)
+  endpointEncounterId     String?
+  defaultShowContinuation Boolean                      @default(false)
+  createdAt               DateTime                     @default(now())
+  updatedAt               DateTime                     @updatedAt
+  questPlan               QuestPlan                    @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  endpointEncounter       QuestEncounter?              @relation("QuestObjectiveEndpoint", fields: [endpointEncounterId], references: [id], onDelete: SetNull)
+  requiredTags            Tag[]                        @relation("QuestObjectiveRequiredTags")
+  routeChoices            QuestObjectiveRouteChoice[]
+  playerPlans             PlayerQuestPlan[]
+
+  @@unique([questPlanId, slug])
+  @@unique([questPlanId, order])
+  @@index([questPlanId])
+  @@index([endpointEncounterId])
+}
+
+model QuestObjectiveRouteChoice {
+  id                  String            @id @default(cuid())
+  questObjectiveId    String
+  questRouteSectionId String
+  questRoutePathId    String
+  isLocked            Boolean           @default(false)
+  objective           QuestObjective    @relation(fields: [questObjectiveId], references: [id], onDelete: Cascade)
+  questRouteSection   QuestRouteSection @relation(fields: [questRouteSectionId], references: [id], onDelete: Cascade)
+  questRoutePath      QuestRoutePath    @relation(fields: [questRoutePathId], references: [id], onDelete: Cascade)
+
+  @@unique([questObjectiveId, questRouteSectionId])
+  @@index([questRouteSectionId])
+  @@index([questRoutePathId])
 }
 
 model QuestRouteSection {
@@ -855,6 +902,7 @@ model QuestRouteSection {
   parentPath  QuestRoutePath?   @relation("RouteSectionParentPath", fields: [parentPathId], references: [id], onDelete: SetNull)
   paths       QuestRoutePath[]
   choices     PlayerQuestRouteChoice[]
+  objectiveChoices QuestObjectiveRouteChoice[]
 
   @@unique([questPlanId, order])
   @@index([questPlanId])
@@ -872,6 +920,7 @@ model QuestRoutePath {
   childSections QuestRouteSection[] @relation("RouteSectionParentPath")
   encounters  QuestEncounter[]
   choices     PlayerQuestRouteChoice[]
+  objectiveChoices QuestObjectiveRouteChoice[]
 
   @@unique([id, sectionId])
   @@unique([sectionId, order])
@@ -894,6 +943,7 @@ model QuestEncounter {
   playerEncounters     PlayerQuestEncounter[]
   defender             Champion?              @relation(fields: [defenderId], references: [id])
   questPlan            QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  objectiveEndpoints   QuestObjective[]       @relation("QuestObjectiveEndpoint")
   routePath            QuestRoutePath?         @relation(fields: [routePathId], references: [id], onDelete: SetNull)
   nodes                QuestEncounterNode[]
   recommendedChampions Champion[]             @relation("EncounterRecommendedChampions")
@@ -938,6 +988,8 @@ model PlayerQuestPlan {
   id               String                       @id @default(cuid())
   playerId         String
   questPlanId      String
+  scopeKey         String                       @default("base")
+  questObjectiveId String?
   createdAt        DateTime                     @default(now())
   updatedAt        DateTime                     @updatedAt
   isFeatured       Boolean                      @default(false)
@@ -946,11 +998,13 @@ model PlayerQuestPlan {
   routeChoices     PlayerQuestRouteChoice[]
   player           Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
   questPlan        QuestPlan                    @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
+  questObjective   QuestObjective?              @relation(fields: [questObjectiveId], references: [id], onDelete: Cascade)
 
-  @@unique([playerId, questPlanId])
+  @@unique([playerId, questPlanId, scopeKey])
   @@unique([id, questPlanId])
   @@index([playerId])
   @@index([questPlanId])
+  @@index([questObjectiveId])
 }
 
 model PlayerQuestRouteChoice {
@@ -1092,6 +1146,11 @@ enum QuestPlanStatus {
   DRAFT
   VISIBLE
   ARCHIVED
+}
+
+enum QuestObjectiveTagMode {
+  ALL
+  ANY
 }
 
 enum EncounterDifficulty {

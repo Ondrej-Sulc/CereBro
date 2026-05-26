@@ -254,4 +254,70 @@ describe("Quest Planning Mutation", () => {
     });
     expect(db.questPlan.findUnique).not.toHaveBeenCalled();
   });
+
+  it("creates separate player plans for objective scopes", async () => {
+    const db = createMutationDb({
+      questPlan: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: "quest-1",
+          teamLimit: 3,
+          minStarLevel: null,
+          maxStarLevel: null,
+          requiredClasses: [],
+          requiredTags: [],
+          objective: null,
+          objectives: [{
+            id: "objective-1",
+            slug: "worthy-gods",
+            title: "Worthy Gods",
+            order: 1,
+            isVisible: true,
+            minStarLevel: null,
+            maxStarLevel: null,
+            requiredClasses: [],
+            requiredTags: [{ id: 20, name: "God" }],
+            requiredTagMode: "ANY",
+            routeChoices: [],
+          }],
+          encounters: [{ id: "encounter-1", routePathId: null, sequence: 1 }],
+          routeSections: [],
+        }),
+      },
+      champion: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 1,
+          class: ChampionClass.SCIENCE,
+          tags: [{ id: 20, name: "God" }],
+          obtainable: ["6*", "7*"],
+        }),
+      },
+    });
+
+    await applyPlayerQuestPlanningMutation({
+      db,
+      playerId: "player-1",
+      mutation: {
+        kind: "counter",
+        questPlanId: "quest-1",
+        questEncounterId: "encounter-1",
+        championId: 1,
+        championStars: 7,
+        objectiveSlug: "worthy-gods",
+      },
+    });
+
+    expect(db.playerQuestPlan.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        playerId_questPlanId_scopeKey: {
+          playerId: "player-1",
+          questPlanId: "quest-1",
+          scopeKey: "objective:objective-1",
+        },
+      },
+      create: expect.objectContaining({
+        scopeKey: "objective:objective-1",
+        questObjectiveId: "objective-1",
+      }),
+    }));
+  });
 });

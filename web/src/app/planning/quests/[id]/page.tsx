@@ -17,6 +17,7 @@ import { ChampionImages } from "@/types/champion";
 import { cache } from "react";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { getObtainableStarLevels } from "@/lib/champion-obtainable";
+import { questObjectiveScopeKey } from "@/lib/quest-objectives";
 
 function PlayerCount({ count, className, iconOnly = false }: { count: number; className?: string; iconOnly?: boolean }) {
     if (count <= 0) return null;
@@ -66,13 +67,20 @@ export async function generateMetadata({
   };
 }
 
-export default async function QuestTimelinePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuestTimelinePage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ id: string }>;
+    searchParams?: Promise<{ objective?: string }>;
+}) {
     const session = await auth();
     if (!session?.user?.id) {
         redirect("/api/auth/discord-login?redirectTo=/planning/quests");
     }
 
     const { id } = await params;
+    const objectiveSlug = (await searchParams)?.objective || null;
 
     // We need the Player ID, which means looking up the account
     const account = await prisma.account.findFirst({
@@ -104,6 +112,13 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     // Fetch the Quest (now enriched with creators)
     const quest = await getQuestPlan(id);
     if (!quest) return <p>Quest not found</p>;
+    const activeObjective = objectiveSlug
+        ? quest.objectives.find(objective => objective.slug === objectiveSlug && objective.isVisible)
+        : null;
+    if (objectiveSlug && !activeObjective) {
+        return <div className="p-8 text-center text-slate-400 italic">Quest objective not found.</div>;
+    }
+    const scopeKey = questObjectiveScopeKey(activeObjective?.id);
 
     // Visibility check — mirrors ensureAdmin("MANAGE_QUESTS"): isBotAdmin OR MANAGE_QUESTS permission
     const userPlayer = await getUserPlayerWithAlliance();
@@ -115,9 +130,10 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
     // Fetch the user's saved plan for this quest
     const playerPlan = await prisma.playerQuestPlan.findUnique({
         where: {
-            playerId_questPlanId: {
+            playerId_questPlanId_scopeKey: {
                 playerId: activePlayer.id,
-                questPlanId: id
+                questPlanId: id,
+                scopeKey
             }
         },
         include: {
@@ -187,10 +203,10 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
         prisma.abilityCategory.findMany({ orderBy: { name: 'asc' } }),
         prisma.championAbilityLink.findMany({ where: { type: 'ABILITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
         prisma.championAbilityLink.findMany({ where: { type: 'IMMUNITY' }, select: { abilityId: true }, distinct: ['abilityId'] }),
-        getEncounterPopularCounters(id),
-        getEncounterFeaturedPicks(id),
+        getEncounterPopularCounters(id, scopeKey),
+        getEncounterFeaturedPicks(id, scopeKey),
         activePlayer.allianceId
-            ? getEncounterAlliancePicks(id, activePlayer.allianceId, activePlayer.id)
+            ? getEncounterAlliancePicks(id, activePlayer.allianceId, activePlayer.id, scopeKey)
             : Promise.resolve<EnhancedCountersMap>({})
     ]);
 
@@ -428,7 +444,10 @@ export default async function QuestTimelinePage({ params }: { params: Promise<{ 
             )}
 
             <QuestTimelineClient
+                key={scopeKey}
                 quest={quest}
+                activeObjective={activeObjective}
+                objectiveSlug={activeObjective?.slug ?? null}
                 roster={roster}
                 savedEncounters={playerPlan?.encounters || []}
                 savedRouteChoices={playerPlan?.routeChoices || []}

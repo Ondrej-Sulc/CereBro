@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { questObjectiveScopeKey } from "./quest-objectives";
 import { decideQuestPlanningTransition } from "./quest-planning-transition";
 
 type QuestPlanningMutationDb = typeof prisma;
@@ -9,6 +10,7 @@ export type QuestPlanningMutationInput =
       questPlanId: string;
       sectionId: string;
       pathId: string;
+      objectiveSlug?: string | null;
     }
   | {
       kind: "counter";
@@ -16,6 +18,7 @@ export type QuestPlanningMutationInput =
       questEncounterId: string;
       championId: number | null;
       championStars?: number | null;
+      objectiveSlug?: string | null;
     }
   | {
       kind: "prefight";
@@ -23,22 +26,26 @@ export type QuestPlanningMutationInput =
       questEncounterId: string;
       championId: number | null;
       championStars?: number | null;
+      objectiveSlug?: string | null;
     }
   | {
       kind: "revives";
       questPlanId: string;
       questEncounterId: string;
       revivesUsed: number;
+      objectiveSlug?: string | null;
     }
   | {
       kind: "synergy";
       questPlanId: string;
       championId: number;
       isRemoving?: boolean;
+      objectiveSlug?: string | null;
     }
   | {
       kind: "clearCounters";
       questPlanId: string;
+      objectiveSlug?: string | null;
     };
 
 export type QuestPlanningMutationResult = {
@@ -57,7 +64,7 @@ export async function applyPlayerQuestPlanningMutation({
   mutation: QuestPlanningMutationInput;
 }): Promise<QuestPlanningMutationResult> {
   if (mutation.kind === "clearCounters") {
-    return clearQuestCounters({ db, playerId, questPlanId: mutation.questPlanId });
+    return clearQuestCounters({ db, playerId, questPlanId: mutation.questPlanId, objectiveSlug: mutation.objectiveSlug });
   }
 
   if (mutation.kind === "routeChoice") {
@@ -84,7 +91,7 @@ async function applyRouteChoiceMutation({
   playerId: string;
   mutation: Extract<QuestPlanningMutationInput, { kind: "routeChoice" }>;
 }): Promise<QuestPlanningMutationResult> {
-  const quest = await loadQuestForPlanning(db, mutation.questPlanId);
+  const quest = await loadQuestForPlanning(db, mutation.questPlanId, mutation.objectiveSlug);
   if (!quest) throw new Error("Quest plan not found.");
 
   const decision = decideQuestPlanningTransition({
@@ -97,7 +104,7 @@ async function applyRouteChoiceMutation({
   if (!decision.valid) throw new Error(decision.reason);
   if (decision.intent.kind !== "routeChoice") throw new Error("Invalid route transition.");
 
-  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId);
+  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId, quest.objective?.id ?? null);
 
   await db.playerQuestRouteChoice.upsert({
     where: {
@@ -128,12 +135,15 @@ async function applyEncounterSelectionMutation({
   playerId: string;
   mutation: Extract<QuestPlanningMutationInput, { kind: "counter" | "prefight" }>;
 }): Promise<QuestPlanningMutationResult> {
-  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId);
+  const quest = await loadQuestForPlanning(db, mutation.questPlanId, mutation.objectiveSlug);
+  if (!quest) throw new Error("Quest plan not found.");
+  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId, quest.objective?.id ?? null);
   const intent = await decideSelectionIntent({
     db,
     playerId,
     playerQuestPlanId: playerPlan.id,
     questPlanId: mutation.questPlanId,
+    objectiveSlug: mutation.objectiveSlug,
     questEncounterId: mutation.questEncounterId,
     championId: mutation.championId,
     championStars: mutation.championStars ?? null,
@@ -201,8 +211,10 @@ async function applyRevivesMutation({
   if (!transition.valid) throw new Error(transition.reason);
   if (transition.intent.kind !== "revives") throw new Error("Invalid revives transition.");
 
+  const quest = await loadQuestForPlanning(db, mutation.questPlanId, mutation.objectiveSlug);
+  if (!quest) throw new Error("Quest plan not found.");
   await assertEncounterBelongsToQuest(db, transition.intent.questEncounterId, mutation.questPlanId);
-  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId);
+  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId, quest.objective?.id ?? null);
 
   await db.playerQuestEncounter.upsert({
     where: {
@@ -238,9 +250,11 @@ async function applySynergyMutation({
   playerId: string;
   mutation: Extract<QuestPlanningMutationInput, { kind: "synergy" }>;
 }): Promise<QuestPlanningMutationResult> {
-  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId);
-
   if (mutation.isRemoving) {
+    const objectiveId = mutation.objectiveSlug
+      ? (await loadQuestForPlanning(db, mutation.questPlanId, mutation.objectiveSlug))?.objective?.id ?? null
+      : null;
+    const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId, objectiveId);
     await db.playerQuestSynergyChampion.deleteMany({
       where: {
         playerQuestPlanId: playerPlan.id,
@@ -250,11 +264,16 @@ async function applySynergyMutation({
     return { success: true, questPlanId: mutation.questPlanId };
   }
 
+  const quest = await loadQuestForPlanning(db, mutation.questPlanId, mutation.objectiveSlug);
+  if (!quest) throw new Error("Quest plan not found.");
+  const playerPlan = await upsertPlayerQuestPlan(db, playerId, mutation.questPlanId, quest.objective?.id ?? null);
+
   const intent = await decideSelectionIntent({
     db,
     playerId,
     playerQuestPlanId: playerPlan.id,
     questPlanId: mutation.questPlanId,
+    objectiveSlug: mutation.objectiveSlug,
     championId: mutation.championId,
     championStars: null,
     field: "synergyChampionId",
@@ -283,13 +302,17 @@ async function clearQuestCounters({
   db,
   playerId,
   questPlanId,
+  objectiveSlug,
 }: {
   db: QuestPlanningMutationDb;
   playerId: string;
   questPlanId: string;
+  objectiveSlug?: string | null;
 }): Promise<QuestPlanningMutationResult> {
+  const quest = await loadQuestForPlanning(db, questPlanId, objectiveSlug);
+  if (!quest) throw new Error("Quest plan not found.");
   const playerPlan = await db.playerQuestPlan.findUnique({
-    where: { playerId_questPlanId: { playerId, questPlanId } },
+    where: { playerId_questPlanId_scopeKey: { playerId, questPlanId, scopeKey: questObjectiveScopeKey(quest?.objective?.id) } },
   });
 
   if (playerPlan) {
@@ -320,6 +343,7 @@ async function decideSelectionIntent({
   playerId,
   playerQuestPlanId,
   questPlanId,
+  objectiveSlug,
   questEncounterId,
   championId,
   championStars,
@@ -330,6 +354,7 @@ async function decideSelectionIntent({
   playerId: string;
   playerQuestPlanId: string;
   questPlanId: string;
+  objectiveSlug?: string | null;
   questEncounterId?: string;
   championId: number | null;
   championStars: number | null;
@@ -337,7 +362,7 @@ async function decideSelectionIntent({
   kind: "counter" | "prefight" | "synergy";
 }) {
   const [quest, encounter, planDetails, rosterEntries, champion] = await Promise.all([
-    loadQuestForPlanning(db, questPlanId),
+    loadQuestForPlanning(db, questPlanId, objectiveSlug),
     questEncounterId
       ? db.questEncounter.findUnique({
           where: { id: questEncounterId },
@@ -425,11 +450,18 @@ async function decideSelectionIntent({
   };
 }
 
-async function loadQuestForPlanning(db: QuestPlanningMutationDb, questPlanId: string) {
-  return db.questPlan.findUnique({
+async function loadQuestForPlanning(db: QuestPlanningMutationDb, questPlanId: string, objectiveSlug?: string | null) {
+  const quest = await db.questPlan.findUnique({
     where: { id: questPlanId },
     include: {
       requiredTags: true,
+      objectives: {
+        where: objectiveSlug ? { slug: objectiveSlug } : undefined,
+        include: {
+          requiredTags: true,
+          routeChoices: true,
+        },
+      },
       encounters: {
         select: { id: true, routePathId: true, sequence: true },
       },
@@ -447,6 +479,15 @@ async function loadQuestForPlanning(db: QuestPlanningMutationDb, questPlanId: st
       },
     },
   });
+  if (!quest) return null;
+  const objective = objectiveSlug ? quest.objectives[0] : null;
+  if (objectiveSlug && (!objective || !objective.isVisible)) {
+    throw new Error("Quest objective not found.");
+  }
+  return {
+    ...quest,
+    objective,
+  };
 }
 
 async function assertEncounterBelongsToQuest(
@@ -467,18 +508,23 @@ async function assertEncounterBelongsToQuest(
 function upsertPlayerQuestPlan(
   db: QuestPlanningMutationDb,
   playerId: string,
-  questPlanId: string
+  questPlanId: string,
+  questObjectiveId: string | null
 ) {
+  const scopeKey = questObjectiveScopeKey(questObjectiveId);
   return db.playerQuestPlan.upsert({
     where: {
-      playerId_questPlanId: {
+      playerId_questPlanId_scopeKey: {
         playerId,
         questPlanId,
+        scopeKey,
       },
     },
     create: {
       playerId,
       questPlanId,
+      scopeKey,
+      questObjectiveId,
     },
     update: {},
   });

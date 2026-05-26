@@ -24,6 +24,7 @@ export function useQuestTeamMemberRemoval({
     quest,
     selectedTeamMembers,
     synergyIds,
+    objectiveSlug,
     setSelections,
     setPrefightSelections,
     setSynergyIds,
@@ -32,6 +33,7 @@ export function useQuestTeamMemberRemoval({
     quest: QuestTimelineProps["quest"];
     selectedTeamMembers: QuestPlanningTeamMember<RosterWithChampion, EncounterWithRelations>[];
     synergyIds: number[];
+    objectiveSlug?: string | null;
     setSelections: Dispatch<SetStateAction<QuestPlanningSelectionMap>>;
     setPrefightSelections: Dispatch<SetStateAction<QuestPlanningSelectionMap>>;
     setSynergyIds: Dispatch<SetStateAction<number[]>>;
@@ -46,14 +48,14 @@ export function useQuestTeamMemberRemoval({
             const promises: Promise<unknown>[] = [];
 
             if (isSynergy) {
-                promises.push(savePlayerQuestSynergy(quest.id, championId, true));
+                promises.push(savePlayerQuestSynergy(quest.id, championId, true, objectiveSlug));
             }
 
             assignedEncounters.forEach(encounterId => {
-                promises.push(savePlayerQuestCounter(quest.id, encounterId, null));
+                promises.push(savePlayerQuestCounter(quest.id, encounterId, null, null, objectiveSlug));
             });
             assignedPrefights.forEach(encounterId => {
-                promises.push(savePlayerQuestPrefightChampion(quest.id, encounterId, null));
+                promises.push(savePlayerQuestPrefightChampion(quest.id, encounterId, null, null, objectiveSlug));
             });
 
             await Promise.all(promises);

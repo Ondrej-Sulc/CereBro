@@ -19,6 +19,12 @@ import {
   type QuestSelectionQuest,
   type QuestSelectionSynergy,
 } from "./player-quest-selection";
+import {
+  applyQuestObjectiveToQuest,
+  getLockedQuestObjectiveRouteChoices,
+  mergeQuestObjectiveRouteChoices,
+  type QuestObjectiveRestriction,
+} from "./quest-objectives";
 
 export type QuestPlanningTransitionKind =
   | "counter"
@@ -33,6 +39,7 @@ type QuestPlanningTransitionQuest<
 > = QuestSelectionQuest & {
   encounters: TEncounter[];
   routeSections?: TSection[] | null;
+  objective?: QuestObjectiveRestriction | null;
 };
 
 export type QuestPlanningTransitionPlanState = {
@@ -159,6 +166,7 @@ function decideSelectionTransition<
   if ((input.field === "selectedChampionId" || input.field === "prefightChampionId") && !input.questEncounterId) {
     return { valid: false, reason: "Quest encounter is required for this transition." };
   }
+  const effectiveQuest = applyQuestObjectiveToQuest(input.quest, input.quest.objective);
 
   let validRosterEntry: OwnedRosterEntry | undefined;
   if (input.candidate.championId !== null) {
@@ -166,7 +174,7 @@ function decideSelectionTransition<
     const validation = validateOwnedChampionForQuestSelection({
       rosterEntries: input.candidate.rosterEntries ?? [],
       champion: input.candidate.champion,
-      quest: input.quest,
+      quest: effectiveQuest,
       encounter: input.encounter,
     });
     if (!validation.valid) return validation;
@@ -179,7 +187,7 @@ function decideSelectionTransition<
     : undefined;
   const candidateStars = validRosterEntry?.stars ?? input.candidate.stars ?? null;
 
-  if (input.quest.teamLimit == null) {
+  if (effectiveQuest.teamLimit == null) {
     const conflictReason = unlimitedSwapsSelectionConflictReason({
       encounters: active.activeAssignments,
       replacement: {
@@ -199,7 +207,7 @@ function decideSelectionTransition<
     if (conflictReason) return { valid: false, reason: conflictReason };
   }
 
-  if (input.quest.teamLimit != null && input.field === "prefightChampionId") {
+  if (effectiveQuest.teamLimit != null && input.field === "prefightChampionId") {
     const conflictReason = questEncounterSelectionConflictReason({
       field: "prefightChampionId",
       candidateChampionId: input.candidate.championId,
@@ -209,11 +217,11 @@ function decideSelectionTransition<
   }
 
   if (
-    input.quest.teamLimit !== null &&
-    input.quest.teamLimit !== undefined &&
+    effectiveQuest.teamLimit !== null &&
+    effectiveQuest.teamLimit !== undefined &&
     input.candidate.championId !== null &&
     wouldExceedQuestTeamLimit({
-      teamLimit: input.quest.teamLimit,
+      teamLimit: effectiveQuest.teamLimit,
       encounters: active.activeAssignments,
       synergyChampions: active.activeSynergyChampions,
       replacement: {
@@ -224,7 +232,7 @@ function decideSelectionTransition<
       },
     })
   ) {
-    return { valid: false, reason: `Team limit of ${input.quest.teamLimit} reached.` };
+    return { valid: false, reason: `Team limit of ${effectiveQuest.teamLimit} reached.` };
   }
 
   const intent =
@@ -241,7 +249,7 @@ function decideSelectionTransition<
           championId: input.candidate.championId,
           championStars: candidateStars,
           clearPrefight: input.field === "selectedChampionId" &&
-            input.quest.teamLimit == null &&
+            effectiveQuest.teamLimit == null &&
             (existingAssignment?.prefightChampionId != null || existingAssignment?.prefightChampionStars != null) &&
             (
               existingAssignment.prefightChampionId !== input.candidate.championId ||
@@ -273,12 +281,19 @@ function decideRouteChoiceTransition<
   if (!section || !section.paths.some(path => path.id === input.pathId)) {
     return { valid: false, reason: "Invalid route choice for this quest plan." };
   }
+  const lockedChoice = getLockedQuestObjectiveRouteChoices(input.quest.objective).get(input.sectionId);
+  if (lockedChoice && lockedChoice !== input.pathId) {
+    return { valid: false, reason: "This route choice is locked by the selected objective." };
+  }
 
   const routeChoices = sanitizeQuestRouteChoices(routeSections, {
-    ...createInitialQuestRouteChoices({
-      routeSections,
-      savedRouteChoices: input.plan.routeChoices ?? [],
-    }),
+    ...mergeQuestObjectiveRouteChoices(
+      createInitialQuestRouteChoices({
+        routeSections,
+        savedRouteChoices: input.plan.routeChoices ?? [],
+      }),
+      input.quest.objective
+    ),
     [input.sectionId]: input.pathId,
   });
 
@@ -322,11 +337,11 @@ function activePlanState<
     savedRouteChoices: plan.routeChoices ?? [],
   });
   const routeChoices = routeChoicesOverride
-    ? sanitizeQuestRouteChoices(routeSections, {
+    ? sanitizeQuestRouteChoices(routeSections, mergeQuestObjectiveRouteChoices({
         ...savedRouteChoices,
         ...routeChoicesOverride,
-      })
-    : savedRouteChoices;
+      }, quest.objective))
+    : sanitizeQuestRouteChoices(routeSections, mergeQuestObjectiveRouteChoices(savedRouteChoices, quest.objective));
   const { activeEncounterIds } = projectQuestRouteProgress({
     encounters: quest.encounters,
     routeSections,

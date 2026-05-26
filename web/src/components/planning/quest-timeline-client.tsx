@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,6 +20,7 @@ import {
     projectQuestTimelineViewModel,
 } from "./quest-timeline-view-model";
 import type { ChampionClass } from "@prisma/client";
+import { applyQuestObjectiveToQuest } from "@/lib/quest-objectives";
 import { createQuestTimelinePickRenderers } from "./quest-pick-renderers";
 import { QuestEncounterList } from "./quest-encounter-list";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
@@ -50,7 +52,7 @@ const EMPTY_FILTER_METADATA: NonNullable<QuestTimelineProps["filterMetadata"]> =
 };
 const EMPTY_ROSTER_MAP: NonNullable<QuestTimelineProps["rosterMap"]> = {};
 
-export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, savedEncounters = EMPTY_SAVED_ENCOUNTERS, savedRouteChoices = EMPTY_SAVED_ROUTE_CHOICES, savedSynergies = EMPTY_SAVED_SYNERGIES, popularCounters = EMPTY_POPULAR_COUNTERS, featuredPicks = EMPTY_FEATURED_PICKS, alliancePicks = EMPTY_ALLIANCE_PICKS, filterMetadata = EMPTY_FILTER_METADATA, readOnly = false, rosterMap = EMPTY_ROSTER_MAP, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
+export default function QuestTimelineClient({ quest, activeObjective = null, objectiveSlug = null, roster = EMPTY_ROSTER, savedEncounters = EMPTY_SAVED_ENCOUNTERS, savedRouteChoices = EMPTY_SAVED_ROUTE_CHOICES, savedSynergies = EMPTY_SAVED_SYNERGIES, popularCounters = EMPTY_POPULAR_COUNTERS, featuredPicks = EMPTY_FEATURED_PICKS, alliancePicks = EMPTY_ALLIANCE_PICKS, filterMetadata = EMPTY_FILTER_METADATA, readOnly = false, rosterMap = EMPTY_ROSTER_MAP, initialSelections, initialPrefightSelections }: QuestTimelineProps) {
     const { toast } = useToast();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedClass, setSelectedClass] = useState<ChampionClass | null>(null);
@@ -66,7 +68,9 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         closeEncounterAfterSelection,
     } = useQuestTimelineScroll({ setShowVideoId, setIsTeamExpanded });
     const [encounterTabs, setEncounterTabs] = useState<Record<string, 'recommended' | 'featured' | 'alliance'>>({});
-    const { routeChoices, handleRouteChoice } = useQuestRouteChoices({ quest, savedRouteChoices, readOnly, toast });
+    const initialQuestScope = useMemo(() => applyQuestObjectiveToQuest(quest, activeObjective), [quest, activeObjective]);
+    const { routeChoices, lockedRouteChoices, handleRouteChoice } = useQuestRouteChoices({ quest, savedRouteChoices, readOnly, objectiveSlug, activeObjective, toast });
+    const [showObjectiveContinuation, setShowObjectiveContinuation] = useState(() => Boolean(activeObjective?.defaultShowContinuation));
     const [isRosterExpanded, setIsRosterExpanded] = useState(false);
     const [isClearPlanOpen, setIsClearPlanOpen] = useState(false);
     const [isNodesCollapsed, setIsNodesCollapsed] = useState(false);
@@ -76,7 +80,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     // Track selections locally for immediate UI updates
     const [selections, setSelections] = useState<Record<string, string | null>>(() =>
         createInitialQuestTimelineSelections({
-            quest,
+            quest: initialQuestScope,
             roster,
             savedEncounters,
             readOnly,
@@ -87,7 +91,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
 
     const [prefightSelections, setPrefightSelections] = useState<Record<string, string | null>>(() =>
         createInitialQuestTimelinePrefightSelections({
-            quest,
+            quest: initialQuestScope,
             roster,
             savedEncounters,
             readOnly,
@@ -100,11 +104,13 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         questId: quest.id,
         savedEncounters,
         readOnly,
+        objectiveSlug,
         toast,
     });
 
     const { executeClearPlan } = useQuestClearPlan({
         questId: quest.id,
+        objectiveSlug,
         setSelections,
         setPrefightSelections,
         toast,
@@ -151,7 +157,9 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         rosterMap,
         featuredPicks,
         alliancePicks,
-    }), [quest, routeChoices, selections, prefightSelections, synergyIds, revivesByEncounterId, roster, savedSynergies, difficultyFilter, readOnly, rosterMap, featuredPicks, alliancePicks]);
+        activeObjective,
+        showObjectiveContinuation,
+    }), [quest, routeChoices, selections, prefightSelections, synergyIds, revivesByEncounterId, roster, savedSynergies, difficultyFilter, readOnly, rosterMap, featuredPicks, alliancePicks, activeObjective, showObjectiveContinuation]);
 
     const {
         routeMapRef,
@@ -168,9 +176,10 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         initiateRemoveTeamMember,
         executeRemoveTeamMember,
     } = useQuestTeamMemberRemoval({
-        quest,
+        quest: activeQuest,
         selectedTeamMembers,
         synergyIds,
+        objectiveSlug,
         setSelections,
         setPrefightSelections,
         setSynergyIds,
@@ -255,13 +264,14 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     };
 
     const { handleSelectCounter, handleSelectPrefight } = useQuestSelectionMutations({
-        quest,
+        quest: activeQuest,
         roster,
         readOnly,
         selections,
         prefightSelections,
         activeQuestAssignments,
         activeSynergyChampions,
+        objectiveSlug,
         setSelections,
         setPrefightSelections,
         closeEncounterAfterSelection,
@@ -269,16 +279,17 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
     });
 
     const { handleSelectSynergy } = useQuestSynergyMutations({
-        quest,
+        quest: activeQuest,
         synergyIds,
         activeQuestAssignments,
         activeSynergyChampions,
+        objectiveSlug,
         setSynergyIds,
         toast,
     });
 
     const { renderChampionItem, renderListPick } = createQuestTimelinePickRenderers({
-        quest,
+        quest: activeQuest,
         activeQuest,
         roster,
         readOnly,
@@ -289,13 +300,43 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
         handleSelectCounter,
         scrollToEncounter,
     });
+    const visibleObjectives = (quest.objectives || []).filter(objective => objective.isVisible);
+
     return (
         <div className="relative pt-4 pb-20">
             {/* Invisible marker for scroll detection */}
             <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
+            {visibleObjectives.length > 0 && !readOnly && (
+                <div className="mb-4 overflow-x-auto">
+                    <div className="flex min-w-max items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-2">
+                        <Link
+                            href={`/planning/quests/${quest.id}`}
+                            className={cn(
+                                "rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-wider transition-colors",
+                                !activeObjective ? "bg-sky-600 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                            )}
+                        >
+                            Base Quest
+                        </Link>
+                        {visibleObjectives.map(objective => (
+                            <Link
+                                key={objective.id}
+                                href={`/planning/quests/${quest.id}?objective=${encodeURIComponent(objective.slug)}`}
+                                className={cn(
+                                    "rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-wider transition-colors",
+                                    activeObjective?.id === objective.id ? "bg-amber-600 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                                )}
+                            >
+                                {objective.shortTitle || objective.title}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <SelectedTeamPanel
-                quest={quest}
+                quest={activeQuest}
                 roster={roster}
                 selectedTeam={selectedTeam}
                 selectedTeamMembers={selectedTeamMembers}
@@ -407,6 +448,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                             visibleRouteSections={visibleRouteSections}
                             routeFilteredEncounterCount={routeFilteredEncounters.length}
                             routeChoices={routeChoices}
+                            lockedRouteChoices={lockedRouteChoices}
                             selectedRouteSummary={selectedRouteSummary}
                             encountersByRoutePathId={encountersByRoutePathId}
                             routeMapRef={routeMapRef}
@@ -419,6 +461,27 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                             onRouteChoice={handleRouteChoice}
                             scrollToEncounter={scrollToEncounter}
                         />
+                        {activeObjective && (
+                            <div className="mb-4 pl-6 md:pl-10">
+                                <div className="rounded-xl border border-amber-900/50 bg-amber-950/20 px-4 py-3">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-400">Challenge Preset</p>
+                                            <h2 className="mt-1 text-sm font-black uppercase tracking-wide text-white">{activeObjective.title}</h2>
+                                        </div>
+                                        {activeObjective.endpointEncounterId && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowObjectiveContinuation(prev => !prev)}
+                                                className="rounded-lg border border-amber-700/50 bg-slate-950/60 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-amber-200 hover:border-amber-500"
+                                            >
+                                                {showObjectiveContinuation ? "Hide after objective" : "Continue after objective"}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <QuestTimelineActionBar
                             difficultyFilter={difficultyFilter}
                             filteredEncounterCount={filteredEncounters.length}
@@ -433,7 +496,7 @@ export default function QuestTimelineClient({ quest, roster = EMPTY_ROSTER, save
                             allEncounters={quest.encounters}
                             difficultyFilter={difficultyFilter}
                             revivesByEncounterId={revivesByEncounterId}
-                            quest={quest}
+                            quest={activeQuest}
                             expandedId={expandedId}
                             toggleExpand={toggleExpand}
                             selections={activeSelections}
