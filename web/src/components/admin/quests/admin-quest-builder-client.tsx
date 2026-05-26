@@ -170,6 +170,10 @@ function QuestSettingsPanel({ children }: { children: ReactNode }) {
     );
 }
 
+function areNumberArraysEqual(a: number[], b: number[]) {
+    return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
 export default function AdminQuestBuilderClient({ initialQuest, categories, tags, champions, nodeModifiers }: Props) {
     const router = useRouter();
     const { toast } = useToast();
@@ -1017,10 +1021,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         if (!editingEncounterId) return;
         const encounter = localEncounters.find(item => item.id === editingEncounterId);
         if (!encounter) return;
-        setRecommendedChampionIds(
-            activeAdminObjective
-                ? getEffectiveEncounterRecommendedChampions(encounter, activeAdminObjective.id).map(champion => champion.id)
-                : encounter.recommendedChampions?.map(c => c.id) || []
+        const nextRecommendedChampionIds = activeAdminObjective
+            ? getEffectiveEncounterRecommendedChampions(encounter, activeAdminObjective.id).map(champion => champion.id)
+            : encounter.recommendedChampions?.map(c => c.id) || [];
+
+        setRecommendedChampionIds(prev =>
+            areNumberArraysEqual(prev, nextRecommendedChampionIds) ? prev : nextRecommendedChampionIds
         );
     }, [activeAdminObjective, editingEncounterId, localEncounters]);
 
