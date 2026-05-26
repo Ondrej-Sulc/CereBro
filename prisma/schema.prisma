@@ -65,6 +65,7 @@ model Champion {
   asDefender                   WarFight[]                   @relation("DefenderRelation")
   tags                         Tag[]                        @relation("ChampionToTag")
   questRecommendedInEncounters QuestEncounter[]             @relation("EncounterRecommendedChampions")
+  questObjectiveEncounterRecommendations QuestObjectiveEncounterRecommendedChampion[]
 }
 
 model ChampionPrestige {
@@ -868,6 +869,7 @@ model QuestObjective {
   requiredTags            Tag[]                        @relation("QuestObjectiveRequiredTags")
   routeChoices            QuestObjectiveRouteChoice[]
   playerPlans             PlayerQuestPlan[]
+  encounterRecommendationSets QuestObjectiveEncounterRecommendationSet[]
 
   @@unique([questPlanId, slug])
   @@unique([questPlanId, order])
@@ -888,6 +890,32 @@ model QuestObjectiveRouteChoice {
   @@unique([questObjectiveId, questRouteSectionId])
   @@index([questRouteSectionId])
   @@index([questRoutePathId])
+}
+
+model QuestObjectiveEncounterRecommendationSet {
+  id               String                                         @id @default(cuid())
+  questObjectiveId String
+  questEncounterId String
+  createdAt        DateTime                                       @default(now())
+  updatedAt        DateTime                                       @updatedAt
+  objective        QuestObjective                                 @relation(fields: [questObjectiveId], references: [id], onDelete: Cascade)
+  encounter        QuestEncounter                                 @relation(fields: [questEncounterId], references: [id], onDelete: Cascade)
+  champions        QuestObjectiveEncounterRecommendedChampion[]
+
+  @@unique([questObjectiveId, questEncounterId])
+  @@index([questEncounterId])
+}
+
+model QuestObjectiveEncounterRecommendedChampion {
+  id                  String                                  @id @default(cuid())
+  recommendationSetId String
+  championId          Int
+  order               Int                                     @default(0)
+  recommendationSet   QuestObjectiveEncounterRecommendationSet @relation(fields: [recommendationSetId], references: [id], onDelete: Cascade)
+  champion            Champion                                @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@unique([recommendationSetId, championId])
+  @@index([championId])
 }
 
 model QuestRouteSection {
@@ -944,6 +972,7 @@ model QuestEncounter {
   defender             Champion?              @relation(fields: [defenderId], references: [id])
   questPlan            QuestPlan              @relation(fields: [questPlanId], references: [id], onDelete: Cascade)
   objectiveEndpoints   QuestObjective[]       @relation("QuestObjectiveEndpoint")
+  objectiveRecommendationSets QuestObjectiveEncounterRecommendationSet[]
   routePath            QuestRoutePath?         @relation(fields: [routePathId], references: [id], onDelete: SetNull)
   nodes                QuestEncounterNode[]
   recommendedChampions Champion[]             @relation("EncounterRecommendedChampions")

@@ -194,6 +194,16 @@ export const getQuestPlanById = unstable_cache(
                         recommendedChampions: {
                             where: { isPlayable: true }
                         },
+                        objectiveRecommendationSets: {
+                            include: {
+                                champions: {
+                                    orderBy: { order: 'asc' },
+                                    include: {
+                                        champion: true
+                                    }
+                                }
+                            }
+                        },
                         videos: {
                             include: {
                                 player: {

@@ -82,11 +82,30 @@ export const exportQuestPlan = withActionContext('exportQuestPlan', async (quest
                     }
                 }
             },
+            objectives: {
+                orderBy: { order: 'asc' },
+                include: {
+                    requiredTags: true,
+                    routeChoices: true,
+                    endpointEncounter: { select: { sequence: true } }
+                }
+            },
             encounters: {
                 orderBy: { sequence: 'asc' },
                 include: {
                     defender: { select: { slug: true, name: true } },
                     recommendedChampions: { select: { slug: true, name: true } },
+                    objectiveRecommendationSets: {
+                        include: {
+                            objective: { select: { slug: true } },
+                            champions: {
+                                orderBy: { order: 'asc' },
+                                include: {
+                                    champion: { select: { slug: true, name: true } }
+                                }
+                            }
+                        }
+                    },
                     requiredTags: true,
                     nodes: {
                         include: {
@@ -157,6 +176,29 @@ export const exportQuestPlan = withActionContext('exportQuestPlan', async (quest
                 order: path.order
             }))
         })),
+        objectives: quest.objectives.map(objective => ({
+            slug: objective.slug,
+            title: objective.title,
+            shortTitle: objective.shortTitle,
+            description: objective.description,
+            order: objective.order,
+            isVisible: objective.isVisible,
+            teamLimitOverride: objective.teamLimitOverride,
+            minStarLevel: objective.minStarLevel,
+            maxStarLevel: objective.maxStarLevel,
+            requiredClasses: objective.requiredClasses,
+            requiredTagMode: objective.requiredTagMode,
+            requiredTags: objective.requiredTags.map(tag => ({ name: tag.name, category: tag.category })),
+            endpointEncounterSequence: objective.endpointEncounter?.sequence ?? null,
+            defaultShowContinuation: objective.defaultShowContinuation,
+            routeChoices: objective.routeChoices
+                .map(choice => ({
+                    routeSectionKey: sectionKeyById.get(choice.questRouteSectionId) ?? "",
+                    routePathKey: pathKeyById.get(choice.questRoutePathId) ?? "",
+                    isLocked: choice.isLocked,
+                }))
+                .filter(choice => choice.routeSectionKey && choice.routePathKey),
+        })),
         encounters: quest.encounters.map(encounter => ({
             sequence: encounter.sequence,
             difficulty: encounter.difficulty,
@@ -168,6 +210,15 @@ export const exportQuestPlan = withActionContext('exportQuestPlan', async (quest
                 slug: champion.slug,
                 name: champion.name
             })),
+            objectiveRecommendedChampions: Object.fromEntries(
+                encounter.objectiveRecommendationSets.map(set => [
+                    set.objective.slug,
+                    set.champions.map(item => ({
+                        slug: item.champion.slug,
+                        name: item.champion.name,
+                    }))
+                ])
+            ),
             requiredTags: encounter.requiredTags.map(tag => ({ name: tag.name, category: tag.category })),
             nodes: encounter.nodes.map(node => ({
                 name: node.nodeModifier.name,
@@ -207,7 +258,8 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
     const championRefs = [
         ...payload.encounters.flatMap(encounter => [
             ...(encounter.defender ? [encounter.defender] : []),
-            ...encounter.recommendedChampions
+            ...encounter.recommendedChampions,
+            ...Object.values(encounter.objectiveRecommendedChampions).flat()
         ])
     ];
     const championSlugs = uniqueStrings(championRefs.map(champion => champion.slug || ""));
@@ -241,6 +293,7 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
 
     const tagRefs = [
         ...payload.quest.requiredTags,
+        ...payload.objectives.flatMap(objective => objective.requiredTags),
         ...payload.encounters.flatMap(encounter => encounter.requiredTags)
     ];
     const tagNames = uniqueStrings(tagRefs.map(tag => tag.name));
@@ -354,6 +407,7 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
             }
         });
 
+        const sectionIdByKey = new Map<string, string>();
         const pathIdByKey = new Map<string, string>();
         const sortedSections = [...payload.routeSections].sort((a, b) => a.order - b.order);
         for (const section of sortedSections) {
@@ -365,6 +419,7 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
                     parentPathId: null
                 }
             });
+            sectionIdByKey.set(section.key, createdSection.id);
             for (const path of [...section.paths].sort((a, b) => a.order - b.order)) {
                 const createdPath = await tx.questRoutePath.create({
                     data: {
@@ -395,8 +450,9 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
             }
         }
 
+        const encounterIdBySequence = new Map<number, string>();
         for (const encounter of payload.encounters) {
-            await tx.questEncounter.create({
+            const createdEncounter = await tx.questEncounter.create({
                 data: {
                     questPlanId: plan.id,
                     sequence: encounter.sequence,
@@ -426,6 +482,70 @@ export const importQuestPlan = withActionContext('importQuestPlan', async (jsonT
                     }
                 }
             });
+            encounterIdBySequence.set(encounter.sequence, createdEncounter.id);
+        }
+
+        const objectiveIdBySlug = new Map<string, string>();
+        for (const objective of [...payload.objectives].sort((a, b) => a.order - b.order)) {
+            const createdObjective = await tx.questObjective.create({
+                data: {
+                    questPlanId: plan.id,
+                    slug: objective.slug,
+                    title: objective.title,
+                    shortTitle: objective.shortTitle,
+                    description: objective.description,
+                    order: objective.order,
+                    isVisible: objective.isVisible,
+                    teamLimitOverride: objective.teamLimitOverride,
+                    minStarLevel: objective.minStarLevel,
+                    maxStarLevel: objective.maxStarLevel,
+                    requiredClasses: objective.requiredClasses,
+                    requiredTagMode: objective.requiredTagMode,
+                    endpointEncounterId: objective.endpointEncounterSequence == null
+                        ? null
+                        : encounterIdBySequence.get(objective.endpointEncounterSequence) ?? null,
+                    defaultShowContinuation: objective.defaultShowContinuation,
+                    requiredTags: {
+                        connect: objective.requiredTags.map(tag => ({ id: resolveTagId(tag)! }))
+                    },
+                    routeChoices: {
+                        create: objective.routeChoices
+                            .map(choice => {
+                                const sectionId = sectionIdByKey.get(choice.routeSectionKey);
+                                const pathId = pathIdByKey.get(choice.routePathKey);
+                                if (!sectionId || !pathId) return null;
+                                return {
+                                    questRouteSectionId: sectionId,
+                                    questRoutePathId: pathId,
+                                    isLocked: choice.isLocked,
+                                };
+                            })
+                            .filter((choice): choice is { questRouteSectionId: string; questRoutePathId: string; isLocked: boolean } => Boolean(choice))
+                    }
+                }
+            });
+            objectiveIdBySlug.set(objective.slug, createdObjective.id);
+        }
+
+        for (const encounter of payload.encounters) {
+            const questEncounterId = encounterIdBySequence.get(encounter.sequence);
+            if (!questEncounterId) continue;
+            for (const [objectiveSlug, recommendations] of Object.entries(encounter.objectiveRecommendedChampions)) {
+                const questObjectiveId = objectiveIdBySlug.get(objectiveSlug);
+                if (!questObjectiveId) continue;
+                await tx.questObjectiveEncounterRecommendationSet.create({
+                    data: {
+                        questObjectiveId,
+                        questEncounterId,
+                        champions: {
+                            create: recommendations.map((champion, order) => ({
+                                championId: resolveChampionId(champion)!,
+                                order,
+                            }))
+                        }
+                    }
+                });
+            }
         }
 
         return plan.id;

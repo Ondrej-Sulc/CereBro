@@ -1,4 +1,4 @@
-import { ChampionClass, EncounterDifficulty } from "@prisma/client";
+import { ChampionClass, EncounterDifficulty, QuestObjectiveTagMode } from "@prisma/client";
 export type QuestExportCategory = {
     name: string;
     path: string[];
@@ -59,6 +59,27 @@ export type QuestPlanExportPayload = {
             order: number;
         }[];
     }[];
+    objectives: {
+        slug: string;
+        title: string;
+        shortTitle: string | null;
+        description: string | null;
+        order: number;
+        isVisible: boolean;
+        teamLimitOverride: number | null;
+        minStarLevel: number | null;
+        maxStarLevel: number | null;
+        requiredClasses: ChampionClass[];
+        requiredTagMode: QuestObjectiveTagMode;
+        requiredTags: QuestExportTagRef[];
+        endpointEncounterSequence: number | null;
+        defaultShowContinuation: boolean;
+        routeChoices: {
+            routeSectionKey: string;
+            routePathKey: string;
+            isLocked: boolean;
+        }[];
+    }[];
     encounters: {
         sequence: number;
         difficulty: EncounterDifficulty;
@@ -67,6 +88,7 @@ export type QuestPlanExportPayload = {
         defender: QuestExportChampionRef | null;
         recommendedTags: string[];
         recommendedChampions: QuestExportChampionRef[];
+        objectiveRecommendedChampions: Record<string, QuestExportChampionRef[]>;
         requiredTags: QuestExportTagRef[];
         nodes: QuestExportNodeRef[];
         routePathKey: string | null;
@@ -176,6 +198,7 @@ export function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
     }
 
     const routeSections = Array.isArray(parsed.routeSections) ? parsed.routeSections : [];
+    const objectives = Array.isArray(parsed.objectives) ? parsed.objectives : [];
     const encounters = Array.isArray(parsed.encounters) ? parsed.encounters : [];
 
     return {
@@ -224,10 +247,64 @@ export function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
                     .filter(path => path.key)
             }))
             .filter(section => section.key),
+        objectives: objectives
+            .filter(isPlainObject)
+            .map(objective => ({
+                slug: asString(objective.slug)?.trim() || "",
+                title: asString(objective.title)?.trim() || "",
+                shortTitle: asOptionalString(objective.shortTitle),
+                description: asOptionalString(objective.description),
+                order: asNumberOrNull(objective.order) ?? 0,
+                isVisible: objective.isVisible !== false,
+                teamLimitOverride: asNumberOrNull(objective.teamLimitOverride),
+                minStarLevel: asNumberOrNull(objective.minStarLevel),
+                maxStarLevel: asNumberOrNull(objective.maxStarLevel),
+                requiredClasses: asStringArray(objective.requiredClasses).filter((item): item is ChampionClass =>
+                    Object.values(ChampionClass).includes(item as ChampionClass)
+                ),
+                requiredTagMode: Object.values(QuestObjectiveTagMode).includes(objective.requiredTagMode as QuestObjectiveTagMode)
+                    ? objective.requiredTagMode as QuestObjectiveTagMode
+                    : QuestObjectiveTagMode.ALL,
+                requiredTags: (Array.isArray(objective.requiredTags) ? objective.requiredTags : [])
+                    .filter(isPlainObject)
+                    .map(tag => ({
+                        name: asString(tag.name)?.trim() || "",
+                        category: asString(tag.category)?.trim() || ""
+                    }))
+                    .filter(tag => tag.name),
+                endpointEncounterSequence: asNumberOrNull(objective.endpointEncounterSequence),
+                defaultShowContinuation: objective.defaultShowContinuation === true,
+                routeChoices: (Array.isArray(objective.routeChoices) ? objective.routeChoices : [])
+                    .filter(isPlainObject)
+                    .map(choice => ({
+                        routeSectionKey: asString(choice.routeSectionKey)?.trim() || "",
+                        routePathKey: asString(choice.routePathKey)?.trim() || "",
+                        isLocked: choice.isLocked === true,
+                    }))
+                    .filter(choice => choice.routeSectionKey && choice.routePathKey),
+            }))
+            .filter(objective => objective.slug && objective.title),
         encounters: encounters
             .filter(isPlainObject)
             .map(encounter => {
                 const rawDefender = isPlainObject(encounter.defender) ? encounter.defender : null;
+                const rawObjectiveRecommendedChampions = isPlainObject(encounter.objectiveRecommendedChampions)
+                    ? encounter.objectiveRecommendedChampions
+                    : {};
+                const objectiveRecommendedChampions = Object.fromEntries(
+                    Object.entries(rawObjectiveRecommendedChampions)
+                        .filter(([slug, value]) => typeof slug === "string" && Array.isArray(value))
+                        .map(([slug, value]) => [
+                            slug,
+                            (value as unknown[])
+                                .filter(isPlainObject)
+                                .map(champion => ({
+                                    slug: asOptionalString(champion.slug),
+                                    name: asString(champion.name)?.trim() || ""
+                                }))
+                                .filter(champion => champion.name)
+                        ])
+                );
                 return {
                     sequence: asNumberOrNull(encounter.sequence) ?? 0,
                     difficulty: Object.values(EncounterDifficulty).includes(encounter.difficulty as EncounterDifficulty)
@@ -247,6 +324,7 @@ export function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
                             name: asString(champion.name)?.trim() || ""
                         }))
                         .filter(champion => champion.name),
+                    objectiveRecommendedChampions,
                     requiredTags: (Array.isArray(encounter.requiredTags) ? encounter.requiredTags : [])
                         .filter(isPlainObject)
                         .map(tag => ({

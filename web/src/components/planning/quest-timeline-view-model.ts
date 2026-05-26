@@ -4,6 +4,7 @@ import {
   type QuestPlanningReviveMap,
   type QuestPlanningSelectionMap,
 } from "../../lib/quest-planning-projection";
+import { applyObjectiveRecommendedChampions } from "../../lib/quest-objectives";
 import { isChampionValidForEncounterOrQuest } from "../../lib/player-quest-selection";
 import type {
   EncounterWithRelations,
@@ -221,7 +222,13 @@ export function projectQuestTimelineViewModel({
   activeObjective?: QuestTimelineProps["activeObjective"];
   showObjectiveContinuation?: boolean;
 }) {
-  const questWithObjective = { ...quest, objective: activeObjective ?? null };
+  const questWithObjective = {
+    ...quest,
+    objective: activeObjective ?? null,
+    encounters: quest.encounters.map(encounter =>
+      applyObjectiveRecommendedChampions(encounter, activeObjective?.id)
+    ),
+  };
   const projection = projectQuestPlanningState<
     typeof questWithObjective,
     EncounterWithRelations,

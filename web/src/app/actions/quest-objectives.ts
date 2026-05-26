@@ -2,6 +2,7 @@
 
 import { requireBotAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { isNecropolisQuestTitle } from "@/lib/quest-objectives";
 import { withActionContext } from "@/lib/with-request-context";
 import { ChampionClass, QuestObjectiveTagMode } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
@@ -30,6 +31,13 @@ export type QuestObjectiveUpsertInput = {
     endpointEncounterId?: string | null;
     defaultShowContinuation?: boolean;
     routeChoices?: QuestObjectiveRouteChoiceInput[];
+};
+
+export type QuestObjectiveEncounterRecommendationsInput = {
+    questPlanId: string;
+    questObjectiveId: string;
+    questEncounterId: string;
+    championIds: number[];
 };
 
 function revalidateQuestObjectivePlan(questPlanId: string) {
@@ -186,6 +194,102 @@ export const deleteQuestObjective = withActionContext('deleteQuestObjective', as
     return { success: true };
 });
 
+async function assertObjectiveAndEncounterBelongToQuest(input: {
+    questPlanId: string;
+    questObjectiveId: string;
+    questEncounterId: string;
+}) {
+    const [objective, encounter] = await Promise.all([
+        prisma.questObjective.findUnique({
+            where: { id: input.questObjectiveId },
+            select: { questPlanId: true },
+        }),
+        prisma.questEncounter.findUnique({
+            where: { id: input.questEncounterId },
+            select: { questPlanId: true },
+        }),
+    ]);
+
+    if (!objective || objective.questPlanId !== input.questPlanId) {
+        throw new Error("Objective not found or does not belong to this quest plan.");
+    }
+    if (!encounter || encounter.questPlanId !== input.questPlanId) {
+        throw new Error("Encounter not found or does not belong to this quest plan.");
+    }
+}
+
+export const saveQuestObjectiveEncounterRecommendations = withActionContext(
+    'saveQuestObjectiveEncounterRecommendations',
+    async (input: QuestObjectiveEncounterRecommendationsInput) => {
+        await requireBotAdmin("MANAGE_QUESTS");
+        await assertObjectiveAndEncounterBelongToQuest(input);
+
+        const championIds = [...new Set(input.championIds)];
+        if (championIds.length > 0) {
+            const champions = await prisma.champion.findMany({
+                where: { id: { in: championIds }, isPlayable: true },
+                select: { id: true },
+            });
+            const foundIds = new Set(champions.map(champion => champion.id));
+            const missingId = championIds.find(id => !foundIds.has(id));
+            if (missingId !== undefined) {
+                throw new Error(`Playable champion with ID ${missingId} was not found.`);
+            }
+        }
+
+        await prisma.$transaction(async (tx) => {
+            const set = await tx.questObjectiveEncounterRecommendationSet.upsert({
+                where: {
+                    questObjectiveId_questEncounterId: {
+                        questObjectiveId: input.questObjectiveId,
+                        questEncounterId: input.questEncounterId,
+                    },
+                },
+                create: {
+                    questObjectiveId: input.questObjectiveId,
+                    questEncounterId: input.questEncounterId,
+                },
+                update: {},
+            });
+
+            await tx.questObjectiveEncounterRecommendedChampion.deleteMany({
+                where: { recommendationSetId: set.id },
+            });
+
+            if (championIds.length > 0) {
+                await tx.questObjectiveEncounterRecommendedChampion.createMany({
+                    data: championIds.map((championId, order) => ({
+                        recommendationSetId: set.id,
+                        championId,
+                        order,
+                    })),
+                });
+            }
+        });
+
+        revalidateQuestObjectivePlan(input.questPlanId);
+        return { success: true };
+    }
+);
+
+export const deleteQuestObjectiveEncounterRecommendationOverride = withActionContext(
+    'deleteQuestObjectiveEncounterRecommendationOverride',
+    async (input: Omit<QuestObjectiveEncounterRecommendationsInput, "championIds">) => {
+        await requireBotAdmin("MANAGE_QUESTS");
+        await assertObjectiveAndEncounterBelongToQuest(input);
+
+        await prisma.questObjectiveEncounterRecommendationSet.deleteMany({
+            where: {
+                questObjectiveId: input.questObjectiveId,
+                questEncounterId: input.questEncounterId,
+            },
+        });
+
+        revalidateQuestObjectivePlan(input.questPlanId);
+        return { success: true };
+    }
+);
+
 async function findRoutePath(questPlanId: string, sectionTitle: string, pathTitle: string, parentPathTitle?: string) {
     return prisma.questRoutePath.findFirst({
         where: {
@@ -217,8 +321,8 @@ export const seedNecropolisCarinaObjectives = withActionContext('seedNecropolisC
     await requireBotAdmin("MANAGE_QUESTS");
 
     const quest = await prisma.questPlan.findUnique({ where: { id: questPlanId }, select: { id: true, title: true } });
-    if (!quest || !quest.title.toLowerCase().includes("necropolis")) {
-        throw new Error("This seed is only intended for The Necropolis quest plan.");
+    if (!quest || !isNecropolisQuestTitle(quest.title)) {
+        throw new Error("Necropolis presets can only be seeded on The Necropolis quest plan.");
     }
 
     const startLeft = await findRoutePath(questPlanId, "Start", "Left");

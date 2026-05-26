@@ -59,6 +59,14 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                             defender: true,
                             requiredTags: true,
                             recommendedChampions: true,
+                            objectiveRecommendationSets: {
+                                include: {
+                                    champions: {
+                                        orderBy: { order: 'asc' },
+                                        include: { champion: true }
+                                    }
+                                }
+                            },
                             nodes: {
                                 include: {
                                     nodeModifier: true

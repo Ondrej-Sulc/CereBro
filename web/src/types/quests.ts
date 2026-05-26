@@ -12,6 +12,8 @@ import {
     QuestRoutePath,
     QuestObjective,
     QuestObjectiveRouteChoice,
+    QuestObjectiveEncounterRecommendationSet,
+    QuestObjectiveEncounterRecommendedChampion,
     PlayerQuestPlan,
 } from "@prisma/client";
 
@@ -27,6 +29,11 @@ export type EncounterWithRelations = QuestEncounter & {
     defender: Champion | null;
     requiredTags: Tag[];
     recommendedChampions: Champion[];
+    objectiveRecommendationSets: (QuestObjectiveEncounterRecommendationSet & {
+        champions: (QuestObjectiveEncounterRecommendedChampion & {
+            champion: Champion;
+        })[];
+    })[];
     nodes: (QuestEncounterNode & {
         nodeModifier: NodeModifier;
     })[];

@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { bulkAddEncounterVideos, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, createQuestEncounter, deleteQuestEncounter, reorderQuestEncounters, reorderQuestEncountersByRoute, updateQuestEncounter } from "@/app/actions/quest-encounters";
 import type { BulkNodeImportResult } from "@/app/actions/quest-encounters";
 import { clearRecommendedChampionsInQuest, updateFeaturedPlayers, updateQuestPlan, uploadQuestBanner } from "@/app/actions/quest-plan-admin";
-import { deleteQuestObjective, seedNecropolisCarinaObjectives, upsertQuestObjective } from "@/app/actions/quest-objectives";
+import { deleteQuestObjective, deleteQuestObjectiveEncounterRecommendationOverride, saveQuestObjectiveEncounterRecommendations, seedNecropolisCarinaObjectives, upsertQuestObjective } from "@/app/actions/quest-objectives";
 import { exportQuestPlan } from "@/app/actions/quest-plan-transfer";
 import { createQuestRoutePath, createQuestRouteSection, deleteQuestRoutePath, deleteQuestRouteSection, duplicateQuestRoutePathFights, reorderQuestRoutePaths, reorderQuestRouteSections, updateQuestRoutePath, updateQuestRouteSection } from "@/app/actions/quest-routes";
 import { parseTimestamps, extractYouTubeVideoId } from "@/lib/parseTimestamps";
@@ -42,6 +42,8 @@ import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
 import { getQuestPlanById } from "@/app/actions/quest-catalog";
 import { Champion } from "@/types/champion";
+import { createAdminQuestRouteChoices, projectAdminQuestBuilderTimeline } from "@/lib/admin-quest-builder-timeline";
+import { applyObjectiveRecommendedChampions, getEffectiveEncounterRecommendedChampions, getObjectiveRecommendationSet, isNecropolisQuestTitle } from "@/lib/quest-objectives";
 
 type BaseQuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
 export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
@@ -153,6 +155,17 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [objectiveRouteChoices, setObjectiveRouteChoices] = useState<ObjectiveRouteChoiceForm>({});
     const [isSavingObjective, setIsSavingObjective] = useState(false);
     const [isDeletingObjectiveId, setIsDeletingObjectiveId] = useState<string | null>(null);
+    const visibleObjectives = useMemo(
+        () => (initialQuest.objectives || []).filter(objective => objective.isVisible),
+        [initialQuest.objectives]
+    );
+    const [adminScopeObjectiveId, setAdminScopeObjectiveId] = useState<string>("");
+    const [adminRouteChoices, setAdminRouteChoices] = useState<Record<string, string>>(() =>
+        createAdminQuestRouteChoices({ routeSections: initialQuest.routeSections })
+    );
+    const [showAdminObjectiveContinuation, setShowAdminObjectiveContinuation] = useState(false);
+    const [showAllAdminFights, setShowAllAdminFights] = useState(true);
+    const [isSavingObjectiveRecommendations, setIsSavingObjectiveRecommendations] = useState(false);
 
     // Bulk Add Encounters
     const [bulkEncountersText, setBulkEncountersText] = useState("");
@@ -207,11 +220,50 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         return new Map(routePathOptions.map(path => [path.id, path.label]));
     }, [routePathOptions]);
 
+    const activeAdminObjective = useMemo(
+        () => visibleObjectives.find(objective => objective.id === adminScopeObjectiveId) || null,
+        [visibleObjectives, adminScopeObjectiveId]
+    );
+
+    useEffect(() => {
+        setAdminRouteChoices(createAdminQuestRouteChoices({
+            routeSections: initialQuest.routeSections,
+            activeObjective: activeAdminObjective,
+        }));
+        setShowAdminObjectiveContinuation(Boolean(activeAdminObjective?.defaultShowContinuation));
+        setShowAllAdminFights(!activeAdminObjective);
+    }, [initialQuest.routeSections, activeAdminObjective]);
+
+    const adminTimelineProjection = useMemo(() => projectAdminQuestBuilderTimeline({
+        encounters: sortedPathEncounters,
+        routeSections: initialQuest.routeSections,
+        routeChoices: adminRouteChoices,
+        activeObjective: activeAdminObjective,
+        showObjectiveContinuation: showAdminObjectiveContinuation,
+        showAllFights: showAllAdminFights,
+    }), [
+        sortedPathEncounters,
+        initialQuest.routeSections,
+        adminRouteChoices,
+        activeAdminObjective,
+        showAdminObjectiveContinuation,
+        showAllAdminFights,
+    ]);
+
+    const displayedPathEncounters = useMemo(
+        () => adminTimelineProjection.filteredEncounters.map(encounter =>
+            applyObjectiveRecommendedChampions(encounter, activeAdminObjective?.id)
+        ),
+        [adminTimelineProjection.filteredEncounters, activeAdminObjective]
+    );
+
     const editingEncounterIndex = editingEncounterId
-        ? sortedPathEncounters.findIndex((e) => e.id === editingEncounterId)
+        ? displayedPathEncounters.findIndex((e) => e.id === editingEncounterId)
         : -1;
 
-    const pathNavDisabled = sortedPathEncounters.length === 0;
+    const pathNavDisabled = displayedPathEncounters.length === 0;
+    const isAdminTimelineFiltered = !showAllAdminFights;
+    const isNecropolisQuest = isNecropolisQuestTitle(initialQuest.title);
 
     useEffect(() => {
         const sectionTitles: Record<string, string> = {};
@@ -797,6 +849,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         const defender = defenderId
             ? champions.find(champion => champion.id === parseInt(defenderId))
             : null;
+        const selectedRecommendedChampions = champions.filter(champion => recommendedChampionIds.includes(champion.id)) as unknown as EncounterWithRelations["recommendedChampions"];
         const selectedNodes = nodeModifierIds
             .map(nodeId => nodeModifiers.find(modifier => modifier.id === nodeId))
             .filter((modifier): modifier is NodeModifier => Boolean(modifier));
@@ -815,7 +868,24 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 videoUrl: videoUrl || null,
                 routePathId: routePathId || null,
                 recommendedTags,
-                recommendedChampions: champions.filter(champion => recommendedChampionIds.includes(champion.id)) as unknown as EncounterWithRelations["recommendedChampions"],
+                recommendedChampions: activeAdminObjective ? encounter.recommendedChampions : selectedRecommendedChampions,
+                objectiveRecommendationSets: activeAdminObjective ? [
+                    ...(encounter.objectiveRecommendationSets || []).filter(set => set.questObjectiveId !== activeAdminObjective.id),
+                    {
+                        id: `local-objective-recommendations-${activeAdminObjective.id}-${encounter.id}`,
+                        questObjectiveId: activeAdminObjective.id,
+                        questEncounterId: encounter.id,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        champions: selectedRecommendedChampions.map((champion, order) => ({
+                            id: `local-objective-recommendation-${activeAdminObjective.id}-${encounter.id}-${champion.id}`,
+                            recommendationSetId: `local-objective-recommendations-${activeAdminObjective.id}-${encounter.id}`,
+                            championId: champion.id,
+                            order,
+                            champion,
+                        })),
+                    } as EncounterWithRelations["objectiveRecommendationSets"][number]
+                ] : encounter.objectiveRecommendationSets,
                 requiredTags: tags.filter(tag => encounterRequiredTagIds.includes(tag.id)),
                 nodes: selectedNodes.map(modifier => {
                     const existingNode = encounter.nodes.find(node => node.nodeModifierId === modifier.id);
@@ -858,13 +928,21 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 tips: tips || null,
                 routePathId: routePathId || null,
                 recommendedTagNames: recommendedTags,
-                recommendedChampionIds: recommendedChampionIds,
+                recommendedChampionIds: activeAdminObjective ? undefined : recommendedChampionIds,
                 requiredTagIds: encounterRequiredTagIds,
                 nodeLinks: nodeModifierIds.map(nodeModifierId => ({
                     nodeModifierId,
                     isHighlighted: highlightedNodeModifierIds.includes(nodeModifierId)
                 }))
             });
+            if (activeAdminObjective) {
+                await saveQuestObjectiveEncounterRecommendations({
+                    questPlanId: initialQuest.id,
+                    questObjectiveId: activeAdminObjective.id,
+                    questEncounterId: editingEncounterId,
+                    championIds: recommendedChampionIds,
+                });
+            }
             updateLocalEncounterFromEditor(difficultyOverride);
             setSaveStatus('saved');
             setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2500);
@@ -885,7 +963,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             await saveEncounterChanges();
         } else {
             try {
-                await createQuestEncounter({
+                const result = await createQuestEncounter({
                     questPlanId: initialQuest.id,
                     sequence: parseInt(effectiveSequence),
                     difficulty,
@@ -895,13 +973,21 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     tips: tips || undefined,
                     routePathId: routePathId || null,
                     recommendedTagNames: recommendedTags,
-                    recommendedChampionIds: recommendedChampionIds,
+                    recommendedChampionIds: activeAdminObjective ? undefined : recommendedChampionIds,
                     requiredTagIds: encounterRequiredTagIds,
                     nodeLinks: nodeModifierIds.map(nodeModifierId => ({
                         nodeModifierId,
                         isHighlighted: highlightedNodeModifierIds.includes(nodeModifierId)
                     }))
                 });
+                if (activeAdminObjective) {
+                    await saveQuestObjectiveEncounterRecommendations({
+                        questPlanId: initialQuest.id,
+                        questObjectiveId: activeAdminObjective.id,
+                        questEncounterId: result.encounterId,
+                        championIds: recommendedChampionIds,
+                    });
+                }
                 cancelEditing();
                 router.refresh();
             } catch (error: unknown) {
@@ -924,7 +1010,11 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setVideos(getEncounterVideos(encounter));
         setRecommendedTags(encounter.recommendedTags);
         setEncounterRequiredTagIds(encounter.requiredTags?.map(t => t.id) || []);
-        setRecommendedChampionIds(encounter.recommendedChampions?.map(c => c.id) || []);
+        setRecommendedChampionIds(
+            activeAdminObjective
+                ? getEffectiveEncounterRecommendedChampions(encounter, activeAdminObjective.id).map(champion => champion.id)
+                : encounter.recommendedChampions?.map(c => c.id) || []
+        );
         setNodeModifierIds(encounter.nodes?.map(n => n.nodeModifierId) || []);
         setHighlightedNodeModifierIds(encounter.nodes?.filter(n => n.isHighlighted).map(n => n.nodeModifierId) || []);
         setDifficulty(encounter.difficulty as EncounterDifficulty || "NORMAL");
@@ -960,28 +1050,28 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         if (pathNavDisabled) return;
         await flushAutoSave();
         if (editingEncounterIndex === -1) {
-            startEditingEncounter(sortedPathEncounters[sortedPathEncounters.length - 1], { scrollTimeline: true });
+            startEditingEncounter(displayedPathEncounters[displayedPathEncounters.length - 1], { scrollTimeline: true });
             return;
         }
         if (editingEncounterIndex === 0) {
             cancelEditing();
             return;
         }
-        startEditingEncounter(sortedPathEncounters[editingEncounterIndex - 1], { scrollTimeline: true });
+        startEditingEncounter(displayedPathEncounters[editingEncounterIndex - 1], { scrollTimeline: true });
     };
 
     const goToNextPathEncounter = async () => {
         if (pathNavDisabled) return;
         await flushAutoSave();
         if (editingEncounterIndex === -1) {
-            startEditingEncounter(sortedPathEncounters[0], { scrollTimeline: true });
+            startEditingEncounter(displayedPathEncounters[0], { scrollTimeline: true });
             return;
         }
-        if (editingEncounterIndex === sortedPathEncounters.length - 1) {
+        if (editingEncounterIndex === displayedPathEncounters.length - 1) {
             cancelEditing();
             return;
         }
-        startEditingEncounter(sortedPathEncounters[editingEncounterIndex + 1], { scrollTimeline: true });
+        startEditingEncounter(displayedPathEncounters[editingEncounterIndex + 1], { scrollTimeline: true });
     };
 
     const cancelEditing = () => {
@@ -999,6 +1089,17 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         setDifficulty("NORMAL");
         setRoutePathId("");
     };
+
+    useEffect(() => {
+        if (!editingEncounterId) return;
+        const encounter = localEncounters.find(item => item.id === editingEncounterId);
+        if (!encounter) return;
+        setRecommendedChampionIds(
+            activeAdminObjective
+                ? getEffectiveEncounterRecommendedChampions(encounter, activeAdminObjective.id).map(champion => champion.id)
+                : encounter.recommendedChampions?.map(c => c.id) || []
+        );
+    }, [activeAdminObjective, editingEncounterId, localEncounters]);
 
     const handleCreateRouteSection = async () => {
         try {
@@ -1216,6 +1317,50 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             console.error(error);
             const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to clear recommendations";
             toast({ title: "Error", description: msg, variant: "destructive" });
+        }
+    };
+
+    const currentEditingEncounter = editingEncounterId
+        ? localEncounters.find(encounter => encounter.id === editingEncounterId) || null
+        : null;
+    const currentObjectiveRecommendationSet = currentEditingEncounter && activeAdminObjective
+        ? getObjectiveRecommendationSet(currentEditingEncounter, activeAdminObjective.id)
+        : null;
+    const objectiveRecommendationStatus = !activeAdminObjective
+        ? null
+        : currentObjectiveRecommendationSet
+            ? currentObjectiveRecommendationSet.champions.length > 0
+                ? "Using objective override"
+                : "Explicitly empty"
+            : "Using base recommendations";
+
+    const handleUseBaseObjectiveRecommendations = async () => {
+        if (!activeAdminObjective || !editingEncounterId) return;
+        setIsSavingObjectiveRecommendations(true);
+        try {
+            await deleteQuestObjectiveEncounterRecommendationOverride({
+                questPlanId: initialQuest.id,
+                questObjectiveId: activeAdminObjective.id,
+                questEncounterId: editingEncounterId,
+            });
+            setLocalEncounters(prev => prev.map(encounter => (
+                encounter.id === editingEncounterId
+                    ? {
+                        ...encounter,
+                        objectiveRecommendationSets: (encounter.objectiveRecommendationSets || [])
+                            .filter(set => set.questObjectiveId !== activeAdminObjective.id),
+                    }
+                    : encounter
+            )));
+            const baseEncounter = localEncounters.find(encounter => encounter.id === editingEncounterId);
+            setRecommendedChampionIds(baseEncounter?.recommendedChampions.map(champion => champion.id) || []);
+            toast({ title: "Objective override removed", description: "This fight now uses base recommendations." });
+            router.refresh();
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to remove objective recommendations";
+            toast({ title: "Error", description: msg, variant: "destructive" });
+        } finally {
+            setIsSavingObjectiveRecommendations(false);
         }
     };
 
@@ -1859,8 +2004,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     {!pathNavDisabled && (
                                         <span className="px-2 text-[11px] font-bold tabular-nums text-slate-400 select-none min-w-[48px] text-center">
                                             {editingEncounterIndex >= 0
-                                                ? `${editingEncounterIndex + 1} / ${sortedPathEncounters.length}`
-                                                : `— / ${sortedPathEncounters.length}`}
+                                                ? `${editingEncounterIndex + 1} / ${displayedPathEncounters.length}`
+                                                : `— / ${displayedPathEncounters.length}`}
                                         </span>
                                     )}
                                     <Button
@@ -1873,10 +2018,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                         title={
                                             pathNavDisabled ? "No encounters on this path"
                                                 : editingEncounterIndex === -1 ? "Edit first encounter"
-                                                : editingEncounterIndex === sortedPathEncounters.length - 1 ? "Back to new encounter"
+                                                : editingEncounterIndex === displayedPathEncounters.length - 1 ? "Back to new encounter"
                                                 : "Next encounter"
                                         }
-                                        aria-label={editingEncounterIndex === sortedPathEncounters.length - 1 ? "Back to new encounter" : "Next encounter"}
+                                        aria-label={editingEncounterIndex === displayedPathEncounters.length - 1 ? "Back to new encounter" : "Next encounter"}
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </Button>
@@ -1887,7 +2032,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     <CardTitle className={cn("text-base leading-tight", editingEncounterId ? "text-amber-400" : "text-slate-100")}>
                                         {editingEncounterId
                                             ? (() => {
-                                                const enc = sortedPathEncounters[editingEncounterIndex];
+                                                const enc = displayedPathEncounters[editingEncounterIndex];
                                                 const name = enc?.defender?.name;
                                                 return name ? `Editing: ${name}` : "Edit Encounter";
                                               })()
@@ -2096,7 +2241,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Recommended Tags</Label>
+                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Base Recommended Tags</Label>
                                             <MultiTagCombobox
                                                 tags={tags}
                                                 values={recommendedTags}
@@ -2107,7 +2252,16 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     </div>
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <Label className="text-[11px] text-slate-500 uppercase tracking-widest">Recommended Champions</Label>
+                                            <div className="min-w-0">
+                                                <Label className="text-[11px] text-slate-500 uppercase tracking-widest">
+                                                    {activeAdminObjective ? "Objective Recommended Champions" : "Recommended Champions"}
+                                                </Label>
+                                                {activeAdminObjective && (
+                                                    <p className="mt-0.5 text-[10px] font-medium text-amber-300/80">
+                                                        {objectiveRecommendationStatus}
+                                                    </p>
+                                                )}
+                                            </div>
                                             <div className="flex items-center gap-1">
                                                 {recommendedChampionIds.length > 0 && (
                                                     <Button
@@ -2118,6 +2272,23 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                         title="Clear recommended champions for this encounter"
                                                     >
                                                         <Eraser className="w-3 h-3 mr-1" /> Clear
+                                                    </Button>
+                                                )}
+                                                {activeAdminObjective && currentObjectiveRecommendationSet && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 px-2 text-[10px] text-slate-400 hover:text-amber-300 hover:bg-amber-950/20"
+                                                        onClick={handleUseBaseObjectiveRecommendations}
+                                                        disabled={isSavingObjectiveRecommendations}
+                                                        title="Delete the objective override and use base recommendations"
+                                                    >
+                                                        {isSavingObjectiveRecommendations ? (
+                                                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                        ) : (
+                                                            <Copy className="w-3 h-3 mr-1" />
+                                                        )}
+                                                        Use Base
                                                     </Button>
                                                 )}
                                             <Popover>
@@ -2276,7 +2447,104 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                 {/* Existing Encounters */}
                 <div className="lg:col-span-7 space-y-4 min-w-0">
-                    <h2 className="text-2xl font-semibold mb-2">Path timeline</h2>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+                        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-100">Path timeline</h2>
+                                <p className="text-xs text-slate-500">
+                                    Showing {displayedPathEncounters.length} of {sortedPathEncounters.length} fights
+                                    {activeAdminObjective ? ` for ${activeAdminObjective.title}` : ""}
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                <select
+                                    value={adminScopeObjectiveId}
+                                    onChange={(e) => {
+                                        setAdminScopeObjectiveId(e.target.value);
+                                        setShowAllAdminFights(!e.target.value);
+                                    }}
+                                    className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                >
+                                    <option value="">Base Quest</option>
+                                    {visibleObjectives.map(objective => (
+                                        <option key={objective.id} value={objective.id}>{objective.title}</option>
+                                    ))}
+                                </select>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                    onClick={() => setShowAllAdminFights(prev => !prev)}
+                                >
+                                    {showAllAdminFights ? "Use Route Filter" : "Show All Fights"}
+                                </Button>
+                                {!showAllAdminFights && (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-9 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                        onClick={() => {
+                                            setAdminRouteChoices(createAdminQuestRouteChoices({
+                                                routeSections: initialQuest.routeSections,
+                                                activeObjective: activeAdminObjective,
+                                            }));
+                                            setShowAdminObjectiveContinuation(Boolean(activeAdminObjective?.defaultShowContinuation));
+                                        }}
+                                    >
+                                        Reset Filter
+                                    </Button>
+                                )}
+                                {activeAdminObjective?.endpointEncounterId && !showAllAdminFights && (
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-9 border-amber-800 text-amber-300 hover:bg-amber-950/40"
+                                        onClick={() => setShowAdminObjectiveContinuation(prev => !prev)}
+                                    >
+                                        {showAdminObjectiveContinuation ? "Stop at Objective" : "Continue after Objective"}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                        {!showAllAdminFights && (initialQuest.routeSections?.length ?? 0) > 0 && (
+                            <div className="grid gap-2 md:grid-cols-2">
+                                {adminTimelineProjection.visibleRouteSections.map(section => {
+                                    const lockedPathId = adminTimelineProjection.lockedRouteChoices.get(section.id);
+                                    return (
+                                        <div key={section.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-2">
+                                            <div className="mb-1 flex items-center justify-between gap-2">
+                                                <Label className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">{section.title}</Label>
+                                                {lockedPathId && (
+                                                    <Badge variant="outline" className="border-amber-800 bg-amber-950/30 text-[9px] uppercase text-amber-300">Locked</Badge>
+                                                )}
+                                            </div>
+                                            <select
+                                                value={adminRouteChoices[section.id] || section.paths[0]?.id || ""}
+                                                disabled={Boolean(lockedPathId)}
+                                                onChange={(e) => setAdminRouteChoices(prev => ({
+                                                    ...prev,
+                                                    [section.id]: e.target.value,
+                                                }))}
+                                                className="h-8 w-full rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-200 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                            >
+                                                {section.paths.map(path => (
+                                                    <option key={path.id} value={path.id}>{path.title}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                        {isAdminTimelineFiltered && (
+                            <p className="rounded-lg border border-amber-900/40 bg-amber-950/10 px-3 py-2 text-xs text-amber-200/80">
+                                Reordering is available in All fights view.
+                            </p>
+                        )}
+                    </div>
                     <details className="group rounded-xl border border-slate-800 bg-slate-950/60 mb-4 open:border-sky-900/40">
                         <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-900/40 rounded-xl [&::-webkit-details-marker]:hidden">
                             <span className="flex items-center gap-2 min-w-0">
@@ -2411,21 +2679,23 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Challenge Presets</h3>
                                 <p className="text-xs text-slate-500 mt-1">Objective-specific route defaults, locks, endpoints, and roster restrictions.</p>
                             </div>
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="shrink-0 border-amber-800 text-amber-300 hover:bg-amber-950/40"
-                                onClick={handleSeedNecropolisObjectives}
-                                disabled={isSeedingObjectives}
-                            >
-                                {isSeedingObjectives ? (
-                                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                                ) : (
-                                    <Star className="w-3.5 h-3.5 mr-1.5" />
-                                )}
-                                Seed Necropolis
-                            </Button>
+                            {isNecropolisQuest && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="shrink-0 border-amber-800 text-amber-300 hover:bg-amber-950/40"
+                                    onClick={handleSeedNecropolisObjectives}
+                                    disabled={isSeedingObjectives}
+                                >
+                                    {isSeedingObjectives ? (
+                                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                    ) : (
+                                        <Star className="w-3.5 h-3.5 mr-1.5" />
+                                    )}
+                                    Seed Necropolis
+                                </Button>
+                            )}
                         </div>
 
                         <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)]">
@@ -2999,7 +3269,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                             <div className="space-y-6">
                                 <AnimatePresence mode="popLayout">
-                                {sortedPathEncounters
+                                {displayedPathEncounters
                                     .map((encounter: EncounterWithRelations, index: number) => {
                                         const colors = encounter.defender ? getChampionClassColors(encounter.defender.class as ChampionClass) : { border: "border-slate-700", text: "text-slate-300", bg: "bg-slate-900", glow: "from-slate-950/20" };
                                         const routePathLabel = encounter.routePathId ? routePathLabelById.get(encounter.routePathId) : null;
@@ -3105,18 +3375,20 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                 <Button
                                                                     variant="ghost" 
                                                                     size="icon"
-                                                                    disabled={index === 0}
+                                                                    disabled={isAdminTimelineFiltered || index === 0}
                                                                     onClick={(e) => { e.stopPropagation(); handleMoveEncounter(encounter.id, 'up'); }}
                                                                     className="h-6 w-6 rounded bg-slate-900 border border-slate-800 hover:bg-sky-950 hover:text-sky-400"
+                                                                    title={isAdminTimelineFiltered ? "Reordering is available in All fights view" : "Move up"}
                                                                 >
                                                                     <ChevronUp className="h-3 w-3" />
                                                                 </Button>
                                                                 <Button
                                                                     variant="ghost" 
                                                                     size="icon"
-                                                                    disabled={index === localEncounters.length - 1}
+                                                                    disabled={isAdminTimelineFiltered || index === displayedPathEncounters.length - 1}
                                                                     onClick={(e) => { e.stopPropagation(); handleMoveEncounter(encounter.id, 'down'); }}
                                                                     className="h-6 w-6 rounded bg-slate-900 border border-slate-800 hover:bg-sky-950 hover:text-sky-400"
+                                                                    title={isAdminTimelineFiltered ? "Reordering is available in All fights view" : "Move down"}
                                                                 >
                                                                     <ChevronDown className="h-3 w-3" />
                                                                 </Button>

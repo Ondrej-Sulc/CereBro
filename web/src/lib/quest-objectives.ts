@@ -31,6 +31,16 @@ export function questObjectiveScopeKey(objectiveId?: string | null) {
   return objectiveId ? `objective:${objectiveId}` : BASE_QUEST_SCOPE_KEY;
 }
 
+export function isNecropolisQuestTitle(title: string): boolean {
+  const normalized = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+
+  return normalized === "necropolis" || normalized === "the necropolis";
+}
+
 export function getQuestObjectiveRouteChoices(objective?: QuestObjectiveRestriction | null): QuestPlanningRouteChoices {
   const choices: QuestPlanningRouteChoices = {};
   for (const choice of objective?.routeChoices ?? []) {
@@ -103,4 +113,48 @@ export function filterQuestEncountersToObjectiveEndpoint<
   const endpoint = encounters.find(encounter => encounter.id === endpointEncounterId);
   if (!endpoint) return encounters;
   return encounters.filter(encounter => encounter.sequence <= endpoint.sequence);
+}
+
+export type ObjectiveRecommendationSet<TChampion> = {
+  questObjectiveId: string;
+  champions: Array<{
+    champion: TChampion;
+    order?: number | null;
+  }>;
+};
+
+export type EncounterWithObjectiveRecommendations<TChampion> = {
+  recommendedChampions: TChampion[];
+  objectiveRecommendationSets?: ObjectiveRecommendationSet<TChampion>[];
+};
+
+export function getObjectiveRecommendationSet<TChampion>(
+  encounter: EncounterWithObjectiveRecommendations<TChampion>,
+  questObjectiveId?: string | null
+) {
+  if (!questObjectiveId) return null;
+  return encounter.objectiveRecommendationSets?.find(set => set.questObjectiveId === questObjectiveId) ?? null;
+}
+
+export function getEffectiveEncounterRecommendedChampions<TChampion>(
+  encounter: EncounterWithObjectiveRecommendations<TChampion>,
+  questObjectiveId?: string | null
+) {
+  const objectiveSet = getObjectiveRecommendationSet(encounter, questObjectiveId);
+  if (!objectiveSet) return encounter.recommendedChampions;
+
+  return [...objectiveSet.champions]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .map(item => item.champion);
+}
+
+export function applyObjectiveRecommendedChampions<
+  TEncounter extends EncounterWithObjectiveRecommendations<TChampion>,
+  TChampion
+>(encounter: TEncounter, questObjectiveId?: string | null): TEncounter {
+  if (!questObjectiveId) return encounter;
+  return {
+    ...encounter,
+    recommendedChampions: getEffectiveEncounterRecommendedChampions(encounter, questObjectiveId),
+  };
 }
