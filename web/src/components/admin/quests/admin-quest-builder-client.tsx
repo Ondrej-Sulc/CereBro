@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useRef, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { QuestCategory, Tag, ChampionClass, QuestPlanStatus, EncounterDifficulty, Prisma, QuestObjectiveTagMode } from "@prisma/client";
@@ -95,6 +95,104 @@ interface Props {
     tags: Tag[];
     champions: Champion[];
     nodeModifiers: NodeModifier[];
+}
+
+function AdminQuestTabs({ children }: { children: ReactNode }) {
+    return (
+        <Tabs defaultValue="fights" className="w-full space-y-6 overflow-visible">
+            <div className="overflow-x-auto">
+                <TabsList className="inline-grid min-w-max grid-cols-5 bg-slate-950/90 border border-slate-800 p-1 h-11">
+                    <TabsTrigger
+                        value="fights"
+                        className="gap-2 data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
+                    >
+                        <LayoutList className="h-4 w-4 shrink-0 opacity-90" />
+                        Fights
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="routes"
+                        className="gap-2 data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
+                    >
+                        <LayoutList className="h-4 w-4 shrink-0 opacity-90" />
+                        Routes
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="presets"
+                        className="gap-2 data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
+                    >
+                        <Star className="h-4 w-4 shrink-0 opacity-90" />
+                        Presets
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="import"
+                        className="gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-sky-200 data-[state=active]:shadow-md rounded-md"
+                    >
+                        <FileStack className="h-4 w-4 shrink-0 opacity-90" />
+                        Import
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="settings"
+                        className="gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-sky-200 data-[state=active]:shadow-md rounded-md"
+                    >
+                        <SlidersHorizontal className="h-4 w-4 shrink-0 opacity-90" />
+                        Settings
+                    </TabsTrigger>
+                </TabsList>
+            </div>
+            {children}
+        </Tabs>
+    );
+}
+
+function EncounterEditorPanel({ children }: { children: ReactNode }) {
+    return (
+        <div
+            id="encounter-editor"
+            className="space-y-6 lg:col-span-5 lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:self-start pr-0 lg:pr-2 pb-4 lg:pb-6 custom-scrollbar"
+        >
+            {children}
+        </div>
+    );
+}
+
+function FightTimelinePanel({ children }: { children: ReactNode }) {
+    return (
+        <div className="lg:col-span-7 space-y-4 min-w-0">
+            {children}
+        </div>
+    );
+}
+
+function RouteLayoutPanel({ children }: { children: ReactNode }) {
+    return (
+        <TabsContent value="routes" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
+            {children}
+        </TabsContent>
+    );
+}
+
+function ChallengePresetsPanel({ children }: { children: ReactNode }) {
+    return (
+        <TabsContent value="presets" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
+            {children}
+        </TabsContent>
+    );
+}
+
+function ImportToolsPanel({ children }: { children: ReactNode }) {
+    return (
+        <TabsContent value="import" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
+            {children}
+        </TabsContent>
+    );
+}
+
+function QuestSettingsPanel({ children }: { children: ReactNode }) {
+    return (
+        <TabsContent value="settings" className="mt-6 space-y-4 outline-none focus-visible:outline-none pb-24">
+            {children}
+        </TabsContent>
+    );
 }
 
 export default function AdminQuestBuilderClient({ initialQuest, categories, tags, champions, nodeModifiers }: Props) {
@@ -1393,25 +1491,8 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 </div>
             </div>
 
-            <Tabs defaultValue="path" className="w-full space-y-6 overflow-visible">
-                <TabsList className="grid w-full max-w-lg grid-cols-2 bg-slate-950/90 border border-slate-800 p-1 h-11">
-                    <TabsTrigger
-                        value="path"
-                        className="gap-2 data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-md"
-                    >
-                        <LayoutList className="h-4 w-4 shrink-0 opacity-90" />
-                        {"Path & encounters"}
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="settings"
-                        className="gap-2 data-[state=active]:bg-slate-800 data-[state=active]:text-sky-200 data-[state=active]:shadow-md rounded-md"
-                    >
-                        <SlidersHorizontal className="h-4 w-4 shrink-0 opacity-90" />
-                        Quest settings
-                    </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="settings" className="mt-6 space-y-4 outline-none focus-visible:outline-none pb-24">
+            <AdminQuestTabs>
+                <QuestSettingsPanel>
 
                     {/* General Information */}
                     <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
@@ -1751,6 +1832,742 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         </CardContent>
                     </Card>
 
+                    {/* Focus sentinel — lets keyboard users reach a known position before the fixed bar */}
+                    <div tabIndex={-1} aria-hidden="true" className="sr-only" />
+
+                    {/* Sticky save bar */}
+                    <div
+                        role="toolbar"
+                        aria-label="Save settings toolbar"
+                        className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-end gap-4"
+                    >
+                        <Button onClick={handleSaveSettings} disabled={isSavingSettings} aria-label={isSavingSettings ? "Saving settings…" : "Save settings"} className="bg-sky-600 hover:bg-sky-500 text-white min-w-[150px] shadow-md shadow-sky-900/20 transition-all">
+                            <Save className="mr-2 h-4 w-4" /> {isSavingSettings ? "Saving..." : "Save Settings"}
+                        </Button>
+                    </div>
+
+                </QuestSettingsPanel>
+
+                <RouteLayoutPanel>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsRouteLayoutCollapsed(prev => !prev)}
+                                className="min-w-0 flex items-center gap-2 text-left group"
+                                aria-expanded={!isRouteLayoutCollapsed}
+                            >
+                                {isRouteLayoutCollapsed ? (
+                                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
+                                ) : (
+                                    <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
+                                )}
+                                <div className="min-w-0">
+                                    <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider group-hover:text-white transition-colors">Route Layout</h3>
+                                    <p className="text-xs text-slate-500 mt-1">Create sections and paths, then assign fights from the encounter editor.</p>
+                                </div>
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                                    onClick={handleSortEncountersByRoute}
+                                    disabled={!initialQuest.routeSections?.length || !localEncounters.length}
+                                >
+                                    <LayoutList className="w-3.5 h-3.5 mr-1.5" /> Sort Fights
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-sky-800 text-sky-400 hover:bg-sky-950/40"
+                                    onClick={handleCreateRouteSection}
+                                >
+                                    <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Section
+                                </Button>
+                            </div>
+                        </div>
+
+                        {!isRouteLayoutCollapsed && (initialQuest.routeSections?.length ? (
+                            <div className="space-y-2">
+                                {initialQuest.routeSections.map((section, sectionIndex) => (
+                                    <div key={section.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <Input
+                                                    value={routeSectionTitles[section.id] ?? section.title}
+                                                    onChange={(e) => setRouteSectionTitles(prev => ({ ...prev, [section.id]: e.target.value }))}
+                                                    onBlur={() => handleSaveRouteSectionTitle(section.id)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter") {
+                                                            e.currentTarget.blur();
+                                                        }
+                                                    }}
+                                                    className="h-8 bg-slate-950/70 border-slate-800 text-xs font-bold text-slate-200"
+                                                />
+                                                <div className="text-[11px] text-slate-600 mt-1">{section.paths.length} path{section.paths.length === 1 ? "" : "s"}</div>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    disabled={sectionIndex === 0}
+                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                    onClick={() => handleMoveRouteSection(section.id, "up")}
+                                                    title="Move section up"
+                                                >
+                                                    <ChevronUp className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    disabled={sectionIndex === initialQuest.routeSections.length - 1}
+                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                    onClick={() => handleMoveRouteSection(section.id, "down")}
+                                                    title="Move section down"
+                                                >
+                                                    <ChevronDown className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-7 text-[11px] text-slate-400 hover:text-sky-300 hover:bg-slate-800"
+                                                    onClick={() => handleCreateRoutePath(section.id)}
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" /> Path
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
+                                                    onClick={() => handleDeleteRouteSection(section.id)}
+                                                    title="Delete section"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Visible After</Label>
+                                            <select
+                                                value={section.parentPathId || ""}
+                                                onChange={(e) => handleChangeRouteSectionParent(section.id, e.target.value)}
+                                                className="mt-1 w-full h-8 rounded-md border border-slate-800 bg-slate-950/70 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                                            >
+                                                <option value="">Always visible</option>
+                                                {routePathOptions
+                                                    .filter(path => !section.paths.some(sectionPath => sectionPath.id === path.id))
+                                                    .map(path => (
+                                                        <option key={path.id} value={path.id}>{path.label}</option>
+                                                    ))}
+                                            </select>
+                                        </div>
+                                        <div className="mt-3 space-y-1.5">
+                                            {section.paths.map((path, pathIndex) => (
+                                                <div key={path.id} className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-2">
+                                                    <Input
+                                                        value={routePathTitles[path.id] ?? path.title}
+                                                        onChange={(e) => setRoutePathTitles(prev => ({ ...prev, [path.id]: e.target.value }))}
+                                                        onBlur={() => handleSaveRoutePathTitle(path.id)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter") {
+                                                                e.currentTarget.blur();
+                                                            }
+                                                        }}
+                                                        className="h-7 min-w-0 bg-slate-900 border-slate-800 text-xs text-slate-300"
+                                                    />
+                                                    <Badge variant="outline" className="shrink-0 border-slate-700 bg-slate-900/80 text-slate-500 text-[10px]">
+                                                        {path.encounters.length} fight{path.encounters.length === 1 ? "" : "s"}
+                                                    </Badge>
+                                                    <div className="flex items-center gap-0.5">
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            disabled={pathIndex === 0}
+                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "up")}
+                                                            title="Move path up"
+                                                        >
+                                                            <ChevronUp className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            disabled={pathIndex === section.paths.length - 1}
+                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
+                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "down")}
+                                                            title="Move path down"
+                                                        >
+                                                            <ChevronDown className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            disabled={duplicatingRoutePathId === path.id}
+                                                            className="h-7 w-7 text-slate-500 hover:text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
+                                                            onClick={() => handleDuplicateRoutePath(section.id, path.id)}
+                                                            title="Duplicate path fights"
+                                                        >
+                                                            {duplicatingRoutePathId === path.id ? (
+                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                            ) : (
+                                                                <Copy className="w-3.5 h-3.5" />
+                                                            )}
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
+                                                            onClick={() => handleDeleteRoutePath(path.id)}
+                                                            title="Delete path"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
+                                No route sections yet. Existing fights remain shared until you create sections and assign them to paths.
+                            </div>
+                        ))}
+                    </div>
+                </RouteLayoutPanel>
+
+                <ChallengePresetsPanel>
+                    <div className="rounded-xl border border-amber-900/40 bg-amber-950/10 p-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Challenge Presets</h3>
+                                <p className="text-xs text-slate-500 mt-1">Objective-specific route defaults, locks, endpoints, and roster restrictions.</p>
+                            </div>
+                            {isNecropolisQuest && (
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="shrink-0 border-amber-800 text-amber-300 hover:bg-amber-950/40"
+                                    onClick={handleSeedNecropolisObjectives}
+                                    disabled={isSeedingObjectives}
+                                >
+                                    {isSeedingObjectives ? (
+                                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                    ) : (
+                                        <Star className="w-3.5 h-3.5 mr-1.5" />
+                                    )}
+                                    Seed Necropolis
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)]">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Existing Presets</Label>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 text-[11px] text-amber-300 hover:bg-amber-950/40"
+                                        onClick={resetObjectiveForm}
+                                    >
+                                        <Plus className="w-3.5 h-3.5 mr-1" /> New
+                                    </Button>
+                                </div>
+                                {initialQuest.objectives?.length ? (
+                                    <div className="grid gap-2">
+                                        {initialQuest.objectives.map((objective) => (
+                                            <button
+                                                key={objective.id}
+                                                type="button"
+                                                onClick={() => editObjective(objective)}
+                                                className={cn(
+                                                    "rounded-lg border bg-slate-950/50 p-3 text-left transition-colors hover:border-amber-800/70 hover:bg-amber-950/10",
+                                                    objectiveEditingId === objective.id ? "border-amber-700/80 bg-amber-950/20" : "border-slate-800"
+                                                )}
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">#{objective.order}</span>
+                                                            {!objective.isVisible && (
+                                                                <Badge variant="outline" className="border-slate-700 text-slate-500 text-[9px] uppercase">Hidden</Badge>
+                                                            )}
+                                                        </div>
+                                                        <h4 className="mt-1 truncate text-sm font-black uppercase tracking-wide text-white">{objective.title}</h4>
+                                                        <p className="mt-0.5 truncate text-[11px] text-slate-500">{objective.slug}</p>
+                                                    </div>
+                                                    <Badge variant="outline" className="shrink-0 border-amber-800/60 bg-amber-950/30 text-amber-200 text-[9px] uppercase">
+                                                        {objective.routeChoices.length} route{objective.routeChoices.length === 1 ? "" : "s"}
+                                                    </Badge>
+                                                </div>
+                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                    {objective.requiredClasses.map((cls) => (
+                                                        <Badge key={cls} variant="outline" className="border-slate-700 bg-slate-900 text-slate-300 text-[9px] uppercase">{cls}</Badge>
+                                                    ))}
+                                                    {objective.requiredTags.map((tag) => (
+                                                        <Badge key={tag.id} variant="outline" className="border-slate-700 bg-slate-900 text-slate-300 text-[9px] uppercase">{tag.name}</Badge>
+                                                    ))}
+                                                    {objective.requiredTagMode === "ANY" && (
+                                                        <Badge variant="outline" className="border-sky-800 bg-sky-950/30 text-sky-300 text-[9px] uppercase">Any Tag</Badge>
+                                                    )}
+                                                    {(objective.minStarLevel || objective.maxStarLevel) && (
+                                                        <Badge variant="outline" className="border-amber-800 bg-amber-950/30 text-amber-300 text-[9px] uppercase">
+                                                            {objective.minStarLevel && objective.maxStarLevel ? `${objective.minStarLevel}-${objective.maxStarLevel}★` : objective.minStarLevel ? `${objective.minStarLevel}★+` : `Up to ${objective.maxStarLevel}★`}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
+                                        {isNecropolisQuest ? "No challenge presets yet. Seed Necropolis defaults or create a custom preset." : "No challenge presets yet. Create a custom preset."}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3 space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                        <h4 className="text-sm font-black uppercase tracking-wide text-white">
+                                            {objectiveEditingId ? "Edit Preset" : "New Preset"}
+                                        </h4>
+                                        <p className="text-[11px] text-slate-500">Restrictions, endpoint, and route defaults for this planning scope.</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {objectiveEditingId && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="border-red-900/70 text-red-300 hover:bg-red-950/40"
+                                                onClick={() => handleDeleteObjective(objectiveEditingId)}
+                                                disabled={isDeletingObjectiveId === objectiveEditingId}
+                                            >
+                                                {isDeletingObjectiveId === objectiveEditingId ? (
+                                                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                                                )}
+                                                Delete
+                                            </Button>
+                                        )}
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            className="bg-amber-600 hover:bg-amber-500 text-white"
+                                            onClick={handleSaveObjective}
+                                            disabled={isSavingObjective}
+                                        >
+                                            {isSavingObjective ? (
+                                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                            ) : (
+                                                <Save className="w-3.5 h-3.5 mr-1.5" />
+                                            )}
+                                            Save
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Title</Label>
+                                        <Input
+                                            value={objectiveTitle}
+                                            onChange={(e) => setObjectiveTitle(e.target.value)}
+                                            placeholder="Masterful Mutants"
+                                            className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Slug</Label>
+                                        <Input
+                                            value={objectiveSlug}
+                                            onChange={(e) => setObjectiveSlug(e.target.value)}
+                                            placeholder="masterful-mutants"
+                                            className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Short Title</Label>
+                                        <Input
+                                            value={objectiveShortTitle}
+                                            onChange={(e) => setObjectiveShortTitle(e.target.value)}
+                                            placeholder="Mutants"
+                                            className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Order</Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                value={objectiveOrder}
+                                                onChange={(e) => setObjectiveOrder(e.target.value)}
+                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                            />
+                                        </div>
+                                        <label className="mt-6 flex h-9 items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 text-xs text-slate-300">
+                                            <input
+                                                type="checkbox"
+                                                checked={objectiveIsVisible}
+                                                onChange={(e) => setObjectiveIsVisible(e.target.checked)}
+                                                className="rounded border-slate-700 bg-slate-950"
+                                            />
+                                            Visible
+                                        </label>
+                                    </div>
+                                    <div className="md:col-span-2 space-y-1.5">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Description</Label>
+                                        <Textarea
+                                            value={objectiveDescription}
+                                            onChange={(e) => setObjectiveDescription(e.target.value)}
+                                            placeholder="Optional planning notes shown in the objective banner."
+                                            className="min-h-[70px] bg-slate-900 border-slate-800 text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-slate-800/60" />
+
+                                <div className="space-y-3">
+                                    <div className="grid gap-3 md:grid-cols-3">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Team Limit</Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                value={objectiveTeamLimit}
+                                                onChange={(e) => setObjectiveTeamLimit(e.target.value)}
+                                                placeholder="Quest default"
+                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Min Stars</Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                max={7}
+                                                value={objectiveMinStars}
+                                                onChange={(e) => setObjectiveMinStars(e.target.value)}
+                                                placeholder="None"
+                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Max Stars</Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                max={7}
+                                                value={objectiveMaxStars}
+                                                onChange={(e) => setObjectiveMaxStars(e.target.value)}
+                                                placeholder="None"
+                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Required Classes</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {AVAILABLE_CLASSES.map(cls => (
+                                                <Badge
+                                                    key={cls}
+                                                    variant={objectiveRequiredClasses.includes(cls) ? "default" : "outline"}
+                                                    className={objectiveRequiredClasses.includes(cls) ? "bg-amber-600 cursor-pointer py-1.5 px-3" : "border-slate-700 text-slate-400 cursor-pointer py-1.5 px-3 hover:border-slate-600 hover:text-slate-300 transition-colors"}
+                                                    onClick={() => {
+                                                        setObjectiveRequiredClasses(prev => (
+                                                            prev.includes(cls) ? prev.filter(c => c !== cls) : [...prev, cls]
+                                                        ));
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <Image
+                                                            src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
+                                                            alt={cls}
+                                                            width={16}
+                                                            height={16}
+                                                            className="object-contain"
+                                                        />
+                                                        {cls}
+                                                    </div>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid gap-3 md:grid-cols-[140px_minmax(0,1fr)]">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tag Mode</Label>
+                                            <select
+                                                value={objectiveRequiredTagMode}
+                                                onChange={(e) => setObjectiveRequiredTagMode(e.target.value as QuestObjectiveTagMode)}
+                                                className="w-full h-9 rounded-md border border-slate-800 bg-slate-900 px-2 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                            >
+                                                <option value={QuestObjectiveTagMode.ALL}>All tags</option>
+                                                <option value={QuestObjectiveTagMode.ANY}>Any tag</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Required Tags</Label>
+                                            <MultiTagCombobox
+                                                tags={tags}
+                                                values={objectiveRequiredTags.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
+                                                onSelect={(names) => setObjectiveRequiredTags(names.map(name => {
+                                                    const foundTag = tags.find(t => t.name === name);
+                                                    return foundTag ? foundTag.id : undefined;
+                                                }).filter((id): id is number => id !== undefined))}
+                                                placeholder="Search tags..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-slate-800/60" />
+
+                                <div className="grid gap-3 md:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Endpoint Encounter</Label>
+                                        <select
+                                            value={objectiveEndpointEncounterId}
+                                            onChange={(e) => setObjectiveEndpointEncounterId(e.target.value)}
+                                            className="w-full h-9 rounded-md border border-slate-800 bg-slate-900 px-2 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                        >
+                                            <option value="">Full run / no endpoint</option>
+                                            {sortedPathEncounters.map((encounter) => (
+                                                <option key={encounter.id} value={encounter.id}>
+                                                    {encounter.sequence}. {encounter.defender?.name || "Unknown Defender"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <label className="mt-6 flex h-9 items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 text-xs text-slate-300">
+                                        <input
+                                            type="checkbox"
+                                            checked={objectiveDefaultShowContinuation}
+                                            onChange={(e) => setObjectiveDefaultShowContinuation(e.target.checked)}
+                                            className="rounded border-slate-700 bg-slate-950"
+                                        />
+                                        Show continuation by default
+                                    </label>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Route Defaults</Label>
+                                    {(initialQuest.routeSections || []).length ? (
+                                        <div className="space-y-2">
+                                            {(initialQuest.routeSections || []).map((section) => {
+                                                const choice = objectiveRouteChoices[section.id];
+                                                return (
+                                                    <div key={section.id} className="grid gap-2 rounded-md border border-slate-800 bg-slate-900/60 p-2 md:grid-cols-[150px_minmax(0,1fr)_92px] md:items-center">
+                                                        <div className="text-xs font-bold text-slate-300 truncate">{section.title}</div>
+                                                        <select
+                                                            value={choice?.pathId || ""}
+                                                            onChange={(e) => {
+                                                                const pathId = e.target.value;
+                                                                setObjectiveRouteChoices(prev => {
+                                                                    const next = { ...prev };
+                                                                    if (!pathId) {
+                                                                        delete next[section.id];
+                                                                    } else {
+                                                                        next[section.id] = {
+                                                                            pathId,
+                                                                            isLocked: prev[section.id]?.isLocked ?? false,
+                                                                        };
+                                                                    }
+                                                                    return next;
+                                                                });
+                                                            }}
+                                                            className="w-full h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                                        >
+                                                            <option value="">No default</option>
+                                                            {section.paths.map((path) => (
+                                                                <option key={path.id} value={path.id}>{path.title}</option>
+                                                            ))}
+                                                        </select>
+                                                        <label className={cn(
+                                                            "flex h-8 items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300",
+                                                            !choice?.pathId && "opacity-50"
+                                                        )}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={choice?.isLocked || false}
+                                                                disabled={!choice?.pathId}
+                                                                onChange={(e) => {
+                                                                    setObjectiveRouteChoices(prev => ({
+                                                                        ...prev,
+                                                                        [section.id]: {
+                                                                            pathId: prev[section.id]?.pathId || "",
+                                                                            isLocked: e.target.checked,
+                                                                        },
+                                                                    }));
+                                                                }}
+                                                                className="rounded border-slate-700 bg-slate-950"
+                                                            />
+                                                            Lock
+                                                        </label>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-3 text-center text-xs text-slate-500">
+                                            Create route sections before assigning objective defaults.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ChallengePresetsPanel>
+
+                <ImportToolsPanel>
+                    <details className="group rounded-xl border border-slate-800 bg-slate-950/60 mb-4 open:border-sky-900/40">
+                        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-900/40 rounded-xl [&::-webkit-details-marker]:hidden">
+                            <span className="flex items-center gap-2 min-w-0">
+                                <FileStack className="h-4 w-4 shrink-0 text-sky-400" />
+                                <span className="truncate">Bulk import</span>
+                            </span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="border-t border-slate-800/60">
+                            <div className="flex border-b border-slate-800/60">
+                                <button
+                                    type="button"
+                                    onClick={() => setBulkNodeImportTab("encounters")}
+                                    className={cn(
+                                        "px-4 py-2 text-xs font-medium transition-colors",
+                                        bulkNodeImportTab === "encounters"
+                                            ? "text-sky-400 border-b-2 border-sky-400 -mb-px"
+                                            : "text-slate-400 hover:text-slate-200"
+                                    )}
+                                >
+                                    Encounters
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => { setBulkNodeImportTab("nodes"); setBulkNodeImportResults(null); }}
+                                    className={cn(
+                                        "px-4 py-2 text-xs font-medium transition-colors",
+                                        bulkNodeImportTab === "nodes"
+                                            ? "text-sky-400 border-b-2 border-sky-400 -mb-px"
+                                            : "text-slate-400 hover:text-slate-200"
+                                    )}
+                                >
+                                    Node Modifiers
+                                </button>
+                            </div>
+
+                            {bulkNodeImportTab === "encounters" && (
+                                <div className="px-4 pb-4 pt-3 space-y-3">
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        Paste defender names, one per line. New fights are appended in order starting at sequence {defaultSequence}.
+                                        Lines that do not match a champion still create a placeholder row you can edit later.
+                                    </p>
+                                    <Textarea
+                                        value={bulkEncountersText}
+                                        onChange={(e) => setBulkEncountersText(e.target.value)}
+                                        placeholder={"Hercules\nKitty Pryde\nOmega Red"}
+                                        className="min-h-[140px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
+                                    />
+                                    {bulkImportPreview.total > 0 && (
+                                        <p className="text-xs text-slate-400">
+                                            {bulkImportPreview.matched} matched, {bulkImportPreview.unmatched} unmatched — {bulkImportPreview.total} rows
+                                        </p>
+                                    )}
+                                    <Button
+                                        type="button"
+                                        onClick={handleBulkEncounterParse}
+                                        disabled={isBulkAdding || bulkImportPreview.total === 0}
+                                        className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
+                                    >
+                                        {isBulkAdding ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileStack className="mr-2 h-4 w-4" /> Import {bulkImportPreview.total > 0 ? `${bulkImportPreview.total} encounters` : "encounters"}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {bulkNodeImportTab === "nodes" && (
+                                <div className="px-4 pb-4 pt-3 space-y-3">
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        Paste the JSON array of champion nodes. Existing encounters are matched by champion name; unmatched champions get new encounters.
+                                        &quot;Champion Boost&quot;, &quot;Health&quot;, and &quot;WARNING&quot; nodes are ignored. Node modifiers are created if not already in the database.
+                                    </p>
+                                    <Textarea
+                                        value={bulkNodeJsonText}
+                                        onChange={(e) => { setBulkNodeJsonText(e.target.value); setBulkNodeImportResults(null); }}
+                                        placeholder={'[{"champion": "VISION", "nodes": [{"title": "Tunnel Vision", "description": "..."}]}]'}
+                                        className="min-h-[160px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={handleBulkNodeImport}
+                                        disabled={isBulkNodeImporting || !bulkNodeJsonText.trim()}
+                                        className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
+                                    >
+                                        {isBulkNodeImporting ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileStack className="mr-2 h-4 w-4" /> Import node modifiers
+                                            </>
+                                        )}
+                                    </Button>
+
+                                    {bulkNodeImportResults && (
+                                        <div className="mt-3 rounded-lg border border-slate-800 bg-slate-900/60 overflow-hidden">
+                                            <div className="px-3 py-2 border-b border-slate-800 text-xs font-medium text-slate-300">
+                                                Import results — {bulkNodeImportResults.length} champions
+                                            </div>
+                                            <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60">
+                                                {bulkNodeImportResults.map((r, i) => (
+                                                    <div key={i} className="px-3 py-2 flex items-start gap-2 text-xs">
+                                                        <span className={cn("mt-0.5 h-1.5 w-1.5 rounded-full shrink-0", r.encounterCreated ? "bg-amber-400" : "bg-sky-400")} />
+                                                        <div className="min-w-0 flex-1">
+                                                            <span className="font-medium text-slate-200">{r.champion}</span>
+                                                            {r.encounterCreated && <span className="ml-1.5 text-amber-400/80">(new encounter)</span>}
+                                                            <span className="ml-2 text-slate-500">
+                                                                {r.nodesLinked} linked
+                                                                {r.nodesCreated > 0 && <>, <span className="text-emerald-400">{r.nodesCreated} created</span></>}
+                                                                {r.nodesSkipped > 0 && <>, {r.nodesSkipped} skipped</>}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </details>
                     {/* Bulk Video Assignment */}
                     <Card className="bg-slate-950/80 border-slate-800 shadow-md overflow-hidden">
                         <div className="h-0.5 w-full bg-red-500" />
@@ -1942,37 +2759,33 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                         </CardContent>
                     </Card>
 
-                    {/* Focus sentinel — lets keyboard users reach a known position before the fixed bar */}
-                    <div tabIndex={-1} aria-hidden="true" className="sr-only" />
+                    <Card className="bg-slate-950/80 border-red-900/50 shadow-md overflow-hidden">
+                        <div className="h-0.5 w-full bg-red-500" />
+                        <CardHeader className="pb-3 pt-4">
+                            <CardTitle className="flex items-center gap-2.5 text-base">
+                                <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20">
+                                    <Eraser className="w-4 h-4 text-red-400" />
+                                </div>
+                                Maintenance
+                            </CardTitle>
+                            <CardDescription>Destructive utilities for imported and generated encounter data.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Button
+                                variant="outline"
+                                onClick={handleClearRecommended}
+                                aria-label="Clear all recommended champions"
+                                className="border-red-900/50 text-red-400 hover:bg-red-950/30 hover:text-red-300"
+                            >
+                                <Eraser className="mr-2 h-4 w-4" /> Clear All Recommendations
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </ImportToolsPanel>
 
-                    {/* Sticky save bar */}
-                    <div
-                        role="toolbar"
-                        aria-label="Save settings toolbar"
-                        className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-4"
-                    >
-                        <Button
-                            variant="outline"
-                            onClick={handleClearRecommended}
-                            aria-label="Clear all recommended champions"
-                            className="border-red-900/50 text-red-400 hover:bg-red-950/30 hover:text-red-300"
-                        >
-                            <Eraser className="mr-2 h-4 w-4" /> Clear All Recommendations
-                        </Button>
-                        <Button onClick={handleSaveSettings} disabled={isSavingSettings} aria-label={isSavingSettings ? "Saving settings…" : "Save settings"} className="bg-sky-600 hover:bg-sky-500 text-white min-w-[150px] shadow-md shadow-sky-900/20 transition-all">
-                            <Save className="mr-2 h-4 w-4" /> {isSavingSettings ? "Saving..." : "Save Settings"}
-                        </Button>
-                    </div>
-
-                </TabsContent>
-
-                <TabsContent value="path" className="mt-6 space-y-6 overflow-visible outline-none focus-visible:outline-none">
+                <TabsContent value="fights" className="mt-6 space-y-6 overflow-visible outline-none focus-visible:outline-none">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start overflow-visible">
-                {/* Create Encounter Form — sticky on large screens so it stays visible while scrolling the timeline */}
-                <div
-                    id="encounter-editor"
-                    className="space-y-6 lg:col-span-5 lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:overscroll-contain lg:self-start pr-0 lg:pr-2 pb-4 lg:pb-6 custom-scrollbar"
-                >
+                <EncounterEditorPanel>
                     <Card className={cn(
                         "bg-slate-950/50 border-slate-800 transition-all duration-200 overflow-hidden",
                         editingEncounterId ? "border-amber-500/40 shadow-[0_0_24px_rgba(245,158,11,0.07)]" : ""
@@ -2443,10 +3256,9 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             </div>
                         </CardContent>
                     </Card>
-                </div>
+                </EncounterEditorPanel>
 
-                {/* Existing Encounters */}
-                <div className="lg:col-span-7 space-y-4 min-w-0">
+                <FightTimelinePanel>
                     <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
                         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                             <div>
@@ -2544,719 +3356,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                 Reordering is available in All fights view.
                             </p>
                         )}
-                    </div>
-                    <details className="group rounded-xl border border-slate-800 bg-slate-950/60 mb-4 open:border-sky-900/40">
-                        <summary className="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-900/40 rounded-xl [&::-webkit-details-marker]:hidden">
-                            <span className="flex items-center gap-2 min-w-0">
-                                <FileStack className="h-4 w-4 shrink-0 text-sky-400" />
-                                <span className="truncate">Bulk import</span>
-                            </span>
-                            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
-                        </summary>
-                        <div className="border-t border-slate-800/60">
-                            <div className="flex border-b border-slate-800/60">
-                                <button
-                                    type="button"
-                                    onClick={() => setBulkNodeImportTab("encounters")}
-                                    className={cn(
-                                        "px-4 py-2 text-xs font-medium transition-colors",
-                                        bulkNodeImportTab === "encounters"
-                                            ? "text-sky-400 border-b-2 border-sky-400 -mb-px"
-                                            : "text-slate-400 hover:text-slate-200"
-                                    )}
-                                >
-                                    Encounters
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => { setBulkNodeImportTab("nodes"); setBulkNodeImportResults(null); }}
-                                    className={cn(
-                                        "px-4 py-2 text-xs font-medium transition-colors",
-                                        bulkNodeImportTab === "nodes"
-                                            ? "text-sky-400 border-b-2 border-sky-400 -mb-px"
-                                            : "text-slate-400 hover:text-slate-200"
-                                    )}
-                                >
-                                    Node Modifiers
-                                </button>
-                            </div>
-
-                            {bulkNodeImportTab === "encounters" && (
-                                <div className="px-4 pb-4 pt-3 space-y-3">
-                                    <p className="text-xs text-slate-500 leading-relaxed">
-                                        Paste defender names, one per line. New fights are appended in order starting at sequence {defaultSequence}.
-                                        Lines that do not match a champion still create a placeholder row you can edit later.
-                                    </p>
-                                    <Textarea
-                                        value={bulkEncountersText}
-                                        onChange={(e) => setBulkEncountersText(e.target.value)}
-                                        placeholder={"Hercules\nKitty Pryde\nOmega Red"}
-                                        className="min-h-[140px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
-                                    />
-                                    {bulkImportPreview.total > 0 && (
-                                        <p className="text-xs text-slate-400">
-                                            {bulkImportPreview.matched} matched, {bulkImportPreview.unmatched} unmatched — {bulkImportPreview.total} rows
-                                        </p>
-                                    )}
-                                    <Button
-                                        type="button"
-                                        onClick={handleBulkEncounterParse}
-                                        disabled={isBulkAdding || bulkImportPreview.total === 0}
-                                        className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
-                                    >
-                                        {isBulkAdding ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FileStack className="mr-2 h-4 w-4" /> Import {bulkImportPreview.total > 0 ? `${bulkImportPreview.total} encounters` : "encounters"}
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            )}
-
-                            {bulkNodeImportTab === "nodes" && (
-                                <div className="px-4 pb-4 pt-3 space-y-3">
-                                    <p className="text-xs text-slate-500 leading-relaxed">
-                                        Paste the JSON array of champion nodes. Existing encounters are matched by champion name; unmatched champions get new encounters.
-                                        &quot;Champion Boost&quot;, &quot;Health&quot;, and &quot;WARNING&quot; nodes are ignored. Node modifiers are created if not already in the database.
-                                    </p>
-                                    <Textarea
-                                        value={bulkNodeJsonText}
-                                        onChange={(e) => { setBulkNodeJsonText(e.target.value); setBulkNodeImportResults(null); }}
-                                        placeholder={'[{"champion": "VISION", "nodes": [{"title": "Tunnel Vision", "description": "..."}]}]'}
-                                        className="min-h-[160px] text-sm bg-slate-900 border-slate-800 focus-visible:ring-sky-500 font-mono"
-                                    />
-                                    <Button
-                                        type="button"
-                                        onClick={handleBulkNodeImport}
-                                        disabled={isBulkNodeImporting || !bulkNodeJsonText.trim()}
-                                        className="bg-sky-600 hover:bg-sky-500 text-white w-full sm:w-auto"
-                                    >
-                                        {isBulkNodeImporting ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importing…
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FileStack className="mr-2 h-4 w-4" /> Import node modifiers
-                                            </>
-                                        )}
-                                    </Button>
-
-                                    {bulkNodeImportResults && (
-                                        <div className="mt-3 rounded-lg border border-slate-800 bg-slate-900/60 overflow-hidden">
-                                            <div className="px-3 py-2 border-b border-slate-800 text-xs font-medium text-slate-300">
-                                                Import results — {bulkNodeImportResults.length} champions
-                                            </div>
-                                            <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60">
-                                                {bulkNodeImportResults.map((r, i) => (
-                                                    <div key={i} className="px-3 py-2 flex items-start gap-2 text-xs">
-                                                        <span className={cn("mt-0.5 h-1.5 w-1.5 rounded-full shrink-0", r.encounterCreated ? "bg-amber-400" : "bg-sky-400")} />
-                                                        <div className="min-w-0 flex-1">
-                                                            <span className="font-medium text-slate-200">{r.champion}</span>
-                                                            {r.encounterCreated && <span className="ml-1.5 text-amber-400/80">(new encounter)</span>}
-                                                            <span className="ml-2 text-slate-500">
-                                                                {r.nodesLinked} linked
-                                                                {r.nodesCreated > 0 && <>, <span className="text-emerald-400">{r.nodesCreated} created</span></>}
-                                                                {r.nodesSkipped > 0 && <>, {r.nodesSkipped} skipped</>}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </details>
-                    <div className="rounded-xl border border-amber-900/40 bg-amber-950/10 p-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                                <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">Challenge Presets</h3>
-                                <p className="text-xs text-slate-500 mt-1">Objective-specific route defaults, locks, endpoints, and roster restrictions.</p>
-                            </div>
-                            {isNecropolisQuest && (
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="shrink-0 border-amber-800 text-amber-300 hover:bg-amber-950/40"
-                                    onClick={handleSeedNecropolisObjectives}
-                                    disabled={isSeedingObjectives}
-                                >
-                                    {isSeedingObjectives ? (
-                                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                                    ) : (
-                                        <Star className="w-3.5 h-3.5 mr-1.5" />
-                                    )}
-                                    Seed Necropolis
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.35fr)]">
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between gap-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Existing Presets</Label>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-7 text-[11px] text-amber-300 hover:bg-amber-950/40"
-                                        onClick={resetObjectiveForm}
-                                    >
-                                        <Plus className="w-3.5 h-3.5 mr-1" /> New
-                                    </Button>
-                                </div>
-                                {initialQuest.objectives?.length ? (
-                                    <div className="grid gap-2">
-                                        {initialQuest.objectives.map((objective) => (
-                                            <button
-                                                key={objective.id}
-                                                type="button"
-                                                onClick={() => editObjective(objective)}
-                                                className={cn(
-                                                    "rounded-lg border bg-slate-950/50 p-3 text-left transition-colors hover:border-amber-800/70 hover:bg-amber-950/10",
-                                                    objectiveEditingId === objective.id ? "border-amber-700/80 bg-amber-950/20" : "border-slate-800"
-                                                )}
-                                            >
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">#{objective.order}</span>
-                                                            {!objective.isVisible && (
-                                                                <Badge variant="outline" className="border-slate-700 text-slate-500 text-[9px] uppercase">Hidden</Badge>
-                                                            )}
-                                                        </div>
-                                                        <h4 className="mt-1 truncate text-sm font-black uppercase tracking-wide text-white">{objective.title}</h4>
-                                                        <p className="mt-0.5 truncate text-[11px] text-slate-500">{objective.slug}</p>
-                                                    </div>
-                                                    <Badge variant="outline" className="shrink-0 border-amber-800/60 bg-amber-950/30 text-amber-200 text-[9px] uppercase">
-                                                        {objective.routeChoices.length} route{objective.routeChoices.length === 1 ? "" : "s"}
-                                                    </Badge>
-                                                </div>
-                                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                                    {objective.requiredClasses.map((cls) => (
-                                                        <Badge key={cls} variant="outline" className="border-slate-700 bg-slate-900 text-slate-300 text-[9px] uppercase">{cls}</Badge>
-                                                    ))}
-                                                    {objective.requiredTags.map((tag) => (
-                                                        <Badge key={tag.id} variant="outline" className="border-slate-700 bg-slate-900 text-slate-300 text-[9px] uppercase">{tag.name}</Badge>
-                                                    ))}
-                                                    {objective.requiredTagMode === "ANY" && (
-                                                        <Badge variant="outline" className="border-sky-800 bg-sky-950/30 text-sky-300 text-[9px] uppercase">Any Tag</Badge>
-                                                    )}
-                                                    {(objective.minStarLevel || objective.maxStarLevel) && (
-                                                        <Badge variant="outline" className="border-amber-800 bg-amber-950/30 text-amber-300 text-[9px] uppercase">
-                                                            {objective.minStarLevel && objective.maxStarLevel ? `${objective.minStarLevel}-${objective.maxStarLevel}★` : objective.minStarLevel ? `${objective.minStarLevel}★+` : `Up to ${objective.maxStarLevel}★`}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
-                                        No challenge presets yet. Seed Necropolis defaults or create a custom preset.
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-3 space-y-4">
-                                <div className="flex items-center justify-between gap-2">
-                                    <div>
-                                        <h4 className="text-sm font-black uppercase tracking-wide text-white">
-                                            {objectiveEditingId ? "Edit Preset" : "New Preset"}
-                                        </h4>
-                                        <p className="text-[11px] text-slate-500">Restrictions, endpoint, and route defaults for this planning scope.</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {objectiveEditingId && (
-                                            <Button
-                                                type="button"
-                                                size="sm"
-                                                variant="outline"
-                                                className="border-red-900/70 text-red-300 hover:bg-red-950/40"
-                                                onClick={() => handleDeleteObjective(objectiveEditingId)}
-                                                disabled={isDeletingObjectiveId === objectiveEditingId}
-                                            >
-                                                {isDeletingObjectiveId === objectiveEditingId ? (
-                                                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                                                ) : (
-                                                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                                                )}
-                                                Delete
-                                            </Button>
-                                        )}
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            className="bg-amber-600 hover:bg-amber-500 text-white"
-                                            onClick={handleSaveObjective}
-                                            disabled={isSavingObjective}
-                                        >
-                                            {isSavingObjective ? (
-                                                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                                            ) : (
-                                                <Save className="w-3.5 h-3.5 mr-1.5" />
-                                            )}
-                                            Save
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="grid gap-3 md:grid-cols-2">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Title</Label>
-                                        <Input
-                                            value={objectiveTitle}
-                                            onChange={(e) => setObjectiveTitle(e.target.value)}
-                                            placeholder="Masterful Mutants"
-                                            className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Slug</Label>
-                                        <Input
-                                            value={objectiveSlug}
-                                            onChange={(e) => setObjectiveSlug(e.target.value)}
-                                            placeholder="masterful-mutants"
-                                            className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Short Title</Label>
-                                        <Input
-                                            value={objectiveShortTitle}
-                                            onChange={(e) => setObjectiveShortTitle(e.target.value)}
-                                            placeholder="Mutants"
-                                            className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Order</Label>
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                value={objectiveOrder}
-                                                onChange={(e) => setObjectiveOrder(e.target.value)}
-                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                            />
-                                        </div>
-                                        <label className="mt-6 flex h-9 items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 text-xs text-slate-300">
-                                            <input
-                                                type="checkbox"
-                                                checked={objectiveIsVisible}
-                                                onChange={(e) => setObjectiveIsVisible(e.target.checked)}
-                                                className="rounded border-slate-700 bg-slate-950"
-                                            />
-                                            Visible
-                                        </label>
-                                    </div>
-                                    <div className="md:col-span-2 space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Description</Label>
-                                        <Textarea
-                                            value={objectiveDescription}
-                                            onChange={(e) => setObjectiveDescription(e.target.value)}
-                                            placeholder="Optional planning notes shown in the objective banner."
-                                            className="min-h-[70px] bg-slate-900 border-slate-800 text-sm"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="h-px bg-slate-800/60" />
-
-                                <div className="space-y-3">
-                                    <div className="grid gap-3 md:grid-cols-3">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Team Limit</Label>
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                value={objectiveTeamLimit}
-                                                onChange={(e) => setObjectiveTeamLimit(e.target.value)}
-                                                placeholder="Quest default"
-                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Min Stars</Label>
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                max={7}
-                                                value={objectiveMinStars}
-                                                onChange={(e) => setObjectiveMinStars(e.target.value)}
-                                                placeholder="None"
-                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Max Stars</Label>
-                                            <Input
-                                                type="number"
-                                                min={1}
-                                                max={7}
-                                                value={objectiveMaxStars}
-                                                onChange={(e) => setObjectiveMaxStars(e.target.value)}
-                                                placeholder="None"
-                                                className="h-9 bg-slate-900 border-slate-800 text-sm"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Required Classes</Label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {AVAILABLE_CLASSES.map(cls => (
-                                                <Badge
-                                                    key={cls}
-                                                    variant={objectiveRequiredClasses.includes(cls) ? "default" : "outline"}
-                                                    className={objectiveRequiredClasses.includes(cls) ? "bg-amber-600 cursor-pointer py-1.5 px-3" : "border-slate-700 text-slate-400 cursor-pointer py-1.5 px-3 hover:border-slate-600 hover:text-slate-300 transition-colors"}
-                                                    onClick={() => {
-                                                        setObjectiveRequiredClasses(prev => (
-                                                            prev.includes(cls) ? prev.filter(c => c !== cls) : [...prev, cls]
-                                                        ));
-                                                    }}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <Image
-                                                            src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
-                                                            alt={cls}
-                                                            width={16}
-                                                            height={16}
-                                                            className="object-contain"
-                                                        />
-                                                        {cls}
-                                                    </div>
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-3 md:grid-cols-[140px_minmax(0,1fr)]">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tag Mode</Label>
-                                            <select
-                                                value={objectiveRequiredTagMode}
-                                                onChange={(e) => setObjectiveRequiredTagMode(e.target.value as QuestObjectiveTagMode)}
-                                                className="w-full h-9 rounded-md border border-slate-800 bg-slate-900 px-2 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                            >
-                                                <option value={QuestObjectiveTagMode.ALL}>All tags</option>
-                                                <option value={QuestObjectiveTagMode.ANY}>Any tag</option>
-                                            </select>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Required Tags</Label>
-                                            <MultiTagCombobox
-                                                tags={tags}
-                                                values={objectiveRequiredTags.map(id => tags.find(t => t.id === id)?.name || "").filter(Boolean)}
-                                                onSelect={(names) => setObjectiveRequiredTags(names.map(name => {
-                                                    const foundTag = tags.find(t => t.name === name);
-                                                    return foundTag ? foundTag.id : undefined;
-                                                }).filter((id): id is number => id !== undefined))}
-                                                placeholder="Search tags..."
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="h-px bg-slate-800/60" />
-
-                                <div className="grid gap-3 md:grid-cols-2">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Endpoint Encounter</Label>
-                                        <select
-                                            value={objectiveEndpointEncounterId}
-                                            onChange={(e) => setObjectiveEndpointEncounterId(e.target.value)}
-                                            className="w-full h-9 rounded-md border border-slate-800 bg-slate-900 px-2 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                        >
-                                            <option value="">Full run / no endpoint</option>
-                                            {sortedPathEncounters.map((encounter) => (
-                                                <option key={encounter.id} value={encounter.id}>
-                                                    {encounter.sequence}. {encounter.defender?.name || "Unknown Defender"}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <label className="mt-6 flex h-9 items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 text-xs text-slate-300">
-                                        <input
-                                            type="checkbox"
-                                            checked={objectiveDefaultShowContinuation}
-                                            onChange={(e) => setObjectiveDefaultShowContinuation(e.target.checked)}
-                                            className="rounded border-slate-700 bg-slate-950"
-                                        />
-                                        Show continuation by default
-                                    </label>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Route Defaults</Label>
-                                    {(initialQuest.routeSections || []).length ? (
-                                        <div className="space-y-2">
-                                            {(initialQuest.routeSections || []).map((section) => {
-                                                const choice = objectiveRouteChoices[section.id];
-                                                return (
-                                                    <div key={section.id} className="grid gap-2 rounded-md border border-slate-800 bg-slate-900/60 p-2 md:grid-cols-[150px_minmax(0,1fr)_92px] md:items-center">
-                                                        <div className="text-xs font-bold text-slate-300 truncate">{section.title}</div>
-                                                        <select
-                                                            value={choice?.pathId || ""}
-                                                            onChange={(e) => {
-                                                                const pathId = e.target.value;
-                                                                setObjectiveRouteChoices(prev => {
-                                                                    const next = { ...prev };
-                                                                    if (!pathId) {
-                                                                        delete next[section.id];
-                                                                    } else {
-                                                                        next[section.id] = {
-                                                                            pathId,
-                                                                            isLocked: prev[section.id]?.isLocked ?? false,
-                                                                        };
-                                                                    }
-                                                                    return next;
-                                                                });
-                                                            }}
-                                                            className="w-full h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                                        >
-                                                            <option value="">No default</option>
-                                                            {section.paths.map((path) => (
-                                                                <option key={path.id} value={path.id}>{path.title}</option>
-                                                            ))}
-                                                        </select>
-                                                        <label className={cn(
-                                                            "flex h-8 items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-300",
-                                                            !choice?.pathId && "opacity-50"
-                                                        )}>
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={choice?.isLocked || false}
-                                                                disabled={!choice?.pathId}
-                                                                onChange={(e) => {
-                                                                    setObjectiveRouteChoices(prev => ({
-                                                                        ...prev,
-                                                                        [section.id]: {
-                                                                            pathId: prev[section.id]?.pathId || "",
-                                                                            isLocked: e.target.checked,
-                                                                        },
-                                                                    }));
-                                                                }}
-                                                                className="rounded border-slate-700 bg-slate-950"
-                                                            />
-                                                            Lock
-                                                        </label>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-3 text-center text-xs text-slate-500">
-                                            Create route sections before assigning objective defaults.
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setIsRouteLayoutCollapsed(prev => !prev)}
-                                className="min-w-0 flex items-center gap-2 text-left group"
-                                aria-expanded={!isRouteLayoutCollapsed}
-                            >
-                                {isRouteLayoutCollapsed ? (
-                                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
-                                ) : (
-                                    <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
-                                )}
-                                <div className="min-w-0">
-                                    <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider group-hover:text-white transition-colors">Route Layout</h3>
-                                    <p className="text-xs text-slate-500 mt-1">Create sections and paths, then assign fights from the encounter editor.</p>
-                                </div>
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
-                                    onClick={handleSortEncountersByRoute}
-                                    disabled={!initialQuest.routeSections?.length || !localEncounters.length}
-                                >
-                                    <LayoutList className="w-3.5 h-3.5 mr-1.5" /> Sort Fights
-                                </Button>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-sky-800 text-sky-400 hover:bg-sky-950/40"
-                                    onClick={handleCreateRouteSection}
-                                >
-                                    <Plus className="w-3.5 h-3.5 mr-1.5" /> Section
-                                </Button>
-                            </div>
-                        </div>
-
-                        {!isRouteLayoutCollapsed && (initialQuest.routeSections?.length ? (
-                            <div className="space-y-2">
-                                {initialQuest.routeSections.map((section, sectionIndex) => (
-                                    <div key={section.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <div className="min-w-0 flex-1">
-                                                <Input
-                                                    value={routeSectionTitles[section.id] ?? section.title}
-                                                    onChange={(e) => setRouteSectionTitles(prev => ({ ...prev, [section.id]: e.target.value }))}
-                                                    onBlur={() => handleSaveRouteSectionTitle(section.id)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.currentTarget.blur();
-                                                        }
-                                                    }}
-                                                    className="h-8 bg-slate-950/70 border-slate-800 text-xs font-bold text-slate-200"
-                                                />
-                                                <div className="text-[11px] text-slate-600 mt-1">{section.paths.length} path{section.paths.length === 1 ? "" : "s"}</div>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    disabled={sectionIndex === 0}
-                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                    onClick={() => handleMoveRouteSection(section.id, "up")}
-                                                    title="Move section up"
-                                                >
-                                                    <ChevronUp className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    disabled={sectionIndex === initialQuest.routeSections.length - 1}
-                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                    onClick={() => handleMoveRouteSection(section.id, "down")}
-                                                    title="Move section down"
-                                                >
-                                                    <ChevronDown className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    className="h-7 text-[11px] text-slate-400 hover:text-sky-300 hover:bg-slate-800"
-                                                    onClick={() => handleCreateRoutePath(section.id)}
-                                                >
-                                                    <Plus className="w-3 h-3 mr-1" /> Path
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
-                                                    onClick={() => handleDeleteRouteSection(section.id)}
-                                                    title="Delete section"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <div className="mt-2">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Visible After</Label>
-                                            <select
-                                                value={section.parentPathId || ""}
-                                                onChange={(e) => handleChangeRouteSectionParent(section.id, e.target.value)}
-                                                className="mt-1 w-full h-8 rounded-md border border-slate-800 bg-slate-950/70 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                                            >
-                                                <option value="">Always visible</option>
-                                                {routePathOptions
-                                                    .filter(path => !section.paths.some(sectionPath => sectionPath.id === path.id))
-                                                    .map(path => (
-                                                        <option key={path.id} value={path.id}>{path.label}</option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                        <div className="mt-3 space-y-1.5">
-                                            {section.paths.map((path, pathIndex) => (
-                                                <div key={path.id} className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-2">
-                                                    <Input
-                                                        value={routePathTitles[path.id] ?? path.title}
-                                                        onChange={(e) => setRoutePathTitles(prev => ({ ...prev, [path.id]: e.target.value }))}
-                                                        onBlur={() => handleSaveRoutePathTitle(path.id)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter") {
-                                                                e.currentTarget.blur();
-                                                            }
-                                                        }}
-                                                        className="h-7 min-w-0 bg-slate-900 border-slate-800 text-xs text-slate-300"
-                                                    />
-                                                    <Badge variant="outline" className="shrink-0 border-slate-700 bg-slate-900/80 text-slate-500 text-[10px]">
-                                                        {path.encounters.length} fight{path.encounters.length === 1 ? "" : "s"}
-                                                    </Badge>
-                                                    <div className="flex items-center gap-0.5">
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            disabled={pathIndex === 0}
-                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "up")}
-                                                            title="Move path up"
-                                                        >
-                                                            <ChevronUp className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            disabled={pathIndex === section.paths.length - 1}
-                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "down")}
-                                                            title="Move path down"
-                                                        >
-                                                            <ChevronDown className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            disabled={duplicatingRoutePathId === path.id}
-                                                            className="h-7 w-7 text-slate-500 hover:text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
-                                                            onClick={() => handleDuplicateRoutePath(section.id, path.id)}
-                                                            title="Duplicate path fights"
-                                                        >
-                                                            {duplicatingRoutePathId === path.id ? (
-                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                            ) : (
-                                                                <Copy className="w-3.5 h-3.5" />
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
-                                                            onClick={() => handleDeleteRoutePath(path.id)}
-                                                            title="Delete path"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
-                                No route sections yet. Existing fights remain shared until you create sections and assign them to paths.
-                            </div>
-                        ))}
                     </div>
                     {localEncounters.length === 0 ? (
                         <p className="text-muted-foreground italic bg-slate-950/50 p-6 rounded-xl border border-dashed border-slate-800 text-center">No encounters added to this quest yet. Start by adding a fight on the left.</p>
@@ -3445,10 +3544,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                             </div>
                         </div>
                     )}
-                </div>
+                </FightTimelinePanel>
             </div>
                 </TabsContent>
-            </Tabs>
+            </AdminQuestTabs>
         </div>
     );
 }
