@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { getQuestPlanById } from "@/app/actions/quest-catalog";
 import AdminQuestBuilderClient from "@/components/admin/quests/admin-quest-builder-client";
-import { QuestWithRelations } from "@/components/admin/quests/admin-quest-builder-client";
+import type { QuestWithRelations } from "@/components/admin/quests/admin-quest-builder/types";
 import { Champion } from "@/types/champion";
 import { ensureAdmin } from "../../actions";
 import { cache } from "react";

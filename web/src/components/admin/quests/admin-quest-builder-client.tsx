@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { QuestCategory, Tag, ChampionClass, QuestPlanStatus, EncounterDifficulty, Prisma, QuestObjectiveTagMode } from "@prisma/client";
+import { QuestCategory, Tag, ChampionClass, QuestPlanStatus, EncounterDifficulty, QuestObjectiveTagMode } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { bulkAddEncounterVideos, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, createQuestEncounter, deleteQuestEncounter, reorderQuestEncounters, reorderQuestEncountersByRoute, updateQuestEncounter } from "@/app/actions/quest-encounters";
+import { bulkAddEncounterVideos, bulkCreateQuestEncounters, bulkImportNodeModifiersFromJson, createQuestEncounter, deleteQuestEncounter, reorderQuestEncounters, updateQuestEncounter } from "@/app/actions/quest-encounters";
 import type { BulkNodeImportResult } from "@/app/actions/quest-encounters";
 import { clearRecommendedChampionsInQuest, updateFeaturedPlayers, updateQuestPlan, uploadQuestBanner } from "@/app/actions/quest-plan-admin";
 import { deleteQuestObjective, deleteQuestObjectiveEncounterRecommendationOverride, saveQuestObjectiveEncounterRecommendations, seedNecropolisCarinaObjectives, upsertQuestObjective } from "@/app/actions/quest-objectives";
 import { exportQuestPlan } from "@/app/actions/quest-plan-transfer";
-import { createQuestRoutePath, createQuestRouteSection, deleteQuestRoutePath, deleteQuestRouteSection, duplicateQuestRoutePathFights, reorderQuestRoutePaths, reorderQuestRouteSections, updateQuestRoutePath, updateQuestRouteSection } from "@/app/actions/quest-routes";
 import { parseTimestamps, extractYouTubeVideoId } from "@/lib/parseTimestamps";
 import { autoFormatTipsAction } from "@/app/actions/ai-format-tips";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +24,7 @@ import {
     ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ExternalLink,
     XCircle, ImageIcon, Loader2, Upload, Eraser, Save, Wand2, Download,
     ClipboardPaste, Plus, Trash2, LayoutList, SlidersHorizontal, FileStack,
-    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video, Copy, Star
+    Info, ShieldAlert, Users, Tag as TagIcon, EyeOff, Eye, Archive, Check, Video, Star
 } from "lucide-react";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { MultiChampionCombobox } from "@/components/comboboxes/MultiChampionCombobox";
@@ -40,27 +39,19 @@ import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
-import { getQuestPlanById } from "@/app/actions/quest-catalog";
 import { Champion } from "@/types/champion";
 import { createAdminQuestRouteChoices, projectAdminQuestBuilderTimeline } from "@/lib/admin-quest-builder-timeline";
 import { applyObjectiveRecommendedChampions, getEffectiveEncounterRecommendedChampions, getObjectiveRecommendationSet, isNecropolisQuestTitle } from "@/lib/quest-objectives";
-
-type BaseQuestWithRelations = NonNullable<Prisma.PromiseReturnType<typeof getQuestPlanById>>;
-export type QuestWithRelations = Omit<BaseQuestWithRelations, 'creators'> & {
-    creators: (BaseQuestWithRelations["creators"][0] & { name?: string })[];
-    playerPlans: { player?: { id: string; ingameName: string | null; avatar: string | null } | null }[];
-};
-type EncounterWithRelations = BaseQuestWithRelations["encounters"][0];
-type SelectedCreator = { id: string; name: string; avatar: string | null; discordId?: string | null };
-type EncounterVideoFormValue = { videoUrl: string; playerId: string | null; playerName: string | null; playerAvatar: string | null };
-type EncounterWithVideos = EncounterWithRelations & {
-    videos?: {
-        videoUrl: string;
-        playerId: string | null;
-        player?: { ingameName: string | null; avatar: string | null } | null;
-    }[];
-};
-type ObjectiveRouteChoiceForm = Record<string, { pathId: string; isLocked: boolean }>;
+import { RouteLayoutPanel } from "./admin-quest-builder/route-layout-panel";
+import type {
+    EncounterVideoFormValue,
+    EncounterWithRelations,
+    EncounterWithVideos,
+    ObjectiveRouteChoiceForm,
+    QuestWithRelations,
+    RoutePathOption,
+    SelectedCreator,
+} from "./admin-quest-builder/types";
 
 function getErrorMessage(error: unknown, fallback: string): string {
     return error instanceof Error ? error.message : fallback;
@@ -163,14 +154,6 @@ function FightTimelinePanel({ children }: { children: ReactNode }) {
     );
 }
 
-function RouteLayoutPanel({ children }: { children: ReactNode }) {
-    return (
-        <TabsContent value="routes" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
-            {children}
-        </TabsContent>
-    );
-}
-
 function ChallengePresetsPanel({ children }: { children: ReactNode }) {
     return (
         <TabsContent value="presets" className="mt-6 space-y-4 outline-none focus-visible:outline-none">
@@ -230,10 +213,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const [difficulty, setDifficulty] = useState<EncounterDifficulty>("NORMAL");
     const [routePathId, setRoutePathId] = useState<string>("");
     const [isFormattingTips, setIsFormattingTips] = useState(false);
-    const [routeSectionTitles, setRouteSectionTitles] = useState<Record<string, string>>({});
-    const [routePathTitles, setRoutePathTitles] = useState<Record<string, string>>({});
-    const [isRouteLayoutCollapsed, setIsRouteLayoutCollapsed] = useState(false);
-    const [duplicatingRoutePathId, setDuplicatingRoutePathId] = useState<string | null>(null);
     const [isSeedingObjectives, setIsSeedingObjectives] = useState(false);
     const [objectiveEditingId, setObjectiveEditingId] = useState<string | null>(null);
     const [objectiveTitle, setObjectiveTitle] = useState("");
@@ -302,7 +281,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         [localEncounters]
     );
 
-    const routePathOptions = useMemo(
+    const routePathOptions = useMemo<RoutePathOption[]>(
         () => (initialQuest.routeSections || []).flatMap(section =>
             section.paths.map(path => ({
                 id: path.id,
@@ -362,19 +341,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const pathNavDisabled = displayedPathEncounters.length === 0;
     const isAdminTimelineFiltered = !showAllAdminFights;
     const isNecropolisQuest = isNecropolisQuestTitle(initialQuest.title);
-
-    useEffect(() => {
-        const sectionTitles: Record<string, string> = {};
-        const pathTitles: Record<string, string> = {};
-        (initialQuest.routeSections || []).forEach(section => {
-            sectionTitles[section.id] = section.title;
-            section.paths.forEach(path => {
-                pathTitles[path.id] = path.title;
-            });
-        });
-        setRouteSectionTitles(sectionTitles);
-        setRoutePathTitles(pathTitles);
-    }, [initialQuest.routeSections]);
 
     const parsedBulkTimestamps = useMemo(
         () => parseTimestamps(bulkVideoText, bulkVideoBaseUrl),
@@ -929,18 +895,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         }
     };
 
-    const handleSortEncountersByRoute = async () => {
-        if (!confirm("Resort all fights by route section and path order? This will rewrite fight sequence numbers.")) return;
-        try {
-            const result = await reorderQuestEncountersByRoute(initialQuest.id);
-            router.refresh();
-            toast({ title: "Timeline sorted", description: `Updated ${result.count} fight${result.count === 1 ? "" : "s"}.` });
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to sort fights by route";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
     const updateLocalEncounterFromEditor = (difficultyOverride?: EncounterDifficulty) => {
         if (!editingEncounterId) return;
 
@@ -1198,163 +1152,6 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                 : encounter.recommendedChampions?.map(c => c.id) || []
         );
     }, [activeAdminObjective, editingEncounterId, localEncounters]);
-
-    const handleCreateRouteSection = async () => {
-        try {
-            await createQuestRouteSection(initialQuest.id, `Section ${(initialQuest.routeSections?.length || 0) + 1}`);
-            router.refresh();
-            toast({ title: "Route section added", description: "A new section with Path A was created." });
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to add route section";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleCreateRoutePath = async (sectionId: string) => {
-        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
-        try {
-            await createQuestRoutePath(initialQuest.id, sectionId, `Path ${String.fromCharCode(65 + (section?.paths.length || 0))}`);
-            router.refresh();
-            toast({ title: "Route path added", description: "A new path was added to the section." });
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to add route path";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleSaveRouteSectionTitle = async (sectionId: string) => {
-        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
-        const title = routeSectionTitles[sectionId]?.trim() || "Section";
-        if (!section || title === section.title) return;
-        try {
-            await updateQuestRouteSection(initialQuest.id, sectionId, { title });
-            router.refresh();
-        } catch (error: unknown) {
-            setRouteSectionTitles(prev => ({ ...prev, [sectionId]: section.title }));
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to rename section";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleSaveRoutePathTitle = async (pathId: string) => {
-        const path = initialQuest.routeSections?.flatMap(s => s.paths).find(p => p.id === pathId);
-        const title = routePathTitles[pathId]?.trim() || "Path";
-        if (!path || title === path.title) return;
-        try {
-            await updateQuestRoutePath(initialQuest.id, pathId, { title });
-            router.refresh();
-        } catch (error: unknown) {
-            setRoutePathTitles(prev => ({ ...prev, [pathId]: path.title }));
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to rename path";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleMoveRouteSection = async (sectionId: string, direction: "up" | "down") => {
-        const sections = [...(initialQuest.routeSections || [])].sort((a, b) => a.order - b.order);
-        const index = sections.findIndex(section => section.id === sectionId);
-        if (index === -1) return;
-        const targetIndex = direction === "up" ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= sections.length) return;
-        const nextSections = [...sections];
-        [nextSections[index], nextSections[targetIndex]] = [nextSections[targetIndex], nextSections[index]];
-        try {
-            await reorderQuestRouteSections(initialQuest.id, nextSections.map(section => section.id));
-            router.refresh();
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder sections";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleChangeRouteSectionParent = async (sectionId: string, parentPathId: string) => {
-        try {
-            await updateQuestRouteSection(initialQuest.id, sectionId, {
-                parentPathId: parentPathId || null
-            });
-            router.refresh();
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to update section scope";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleMoveRoutePath = async (sectionId: string, pathId: string, direction: "up" | "down") => {
-        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
-        if (!section) return;
-        const paths = [...section.paths].sort((a, b) => a.order - b.order);
-        const index = paths.findIndex(path => path.id === pathId);
-        if (index === -1) return;
-        const targetIndex = direction === "up" ? index - 1 : index + 1;
-        if (targetIndex < 0 || targetIndex >= paths.length) return;
-        const nextPaths = [...paths];
-        [nextPaths[index], nextPaths[targetIndex]] = [nextPaths[targetIndex], nextPaths[index]];
-        try {
-            await reorderQuestRoutePaths(initialQuest.id, sectionId, nextPaths.map(path => path.id));
-            router.refresh();
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to reorder paths";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleDuplicateRoutePath = async (sectionId: string, pathId: string) => {
-        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
-        const path = section?.paths.find(p => p.id === pathId);
-        if (!section || !path) return;
-
-        if (!confirm(`Duplicate fights from "${section.title} / ${path.title}" into a new conditional section?`)) return;
-
-        setDuplicatingRoutePathId(pathId);
-        try {
-            const result = await duplicateQuestRoutePathFights(initialQuest.id, pathId);
-            setIsRouteLayoutCollapsed(false);
-            router.refresh();
-            toast({
-                title: "Path fights duplicated",
-                description: `Copied ${result.copiedCount} fight${result.copiedCount === 1 ? "" : "s"} into a new conditional section.`
-            });
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to duplicate path fights";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        } finally {
-            setDuplicatingRoutePathId(null);
-        }
-    };
-
-    const handleDeleteRouteSection = async (sectionId: string) => {
-        const section = initialQuest.routeSections?.find(s => s.id === sectionId);
-        const assignedFightCount = section?.paths.reduce((sum, path) => sum + path.encounters.length, 0) ?? 0;
-        const message = assignedFightCount > 0
-            ? `Delete ${section?.title || "this section"}? ${assignedFightCount} assigned fight${assignedFightCount === 1 ? "" : "s"} will become shared fights.`
-            : `Delete ${section?.title || "this section"}?`;
-        if (!confirm(message)) return;
-        try {
-            await deleteQuestRouteSection(initialQuest.id, sectionId);
-            router.refresh();
-            toast({ title: "Route section deleted" });
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to delete section";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
-
-    const handleDeleteRoutePath = async (pathId: string) => {
-        const path = initialQuest.routeSections?.flatMap(s => s.paths).find(p => p.id === pathId);
-        const assignedFightCount = path?.encounters.length ?? 0;
-        const message = assignedFightCount > 0
-            ? `Delete ${path?.title || "this path"}? ${assignedFightCount} assigned fight${assignedFightCount === 1 ? "" : "s"} will become shared fights.`
-            : `Delete ${path?.title || "this path"}?`;
-        if (!confirm(message)) return;
-        try {
-            await deleteQuestRoutePath(initialQuest.id, pathId);
-            router.refresh();
-            toast({ title: "Route path deleted" });
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : typeof error === "string" ? error : "Failed to delete path";
-            toast({ title: "Error", description: msg, variant: "destructive" });
-        }
-    };
 
     const handleSeedNecropolisObjectives = async () => {
         if (!confirm("Create or update the six Necropolis Carina challenge presets for this quest?")) return;
@@ -1848,205 +1645,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
                 </QuestSettingsPanel>
 
-                <RouteLayoutPanel>
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setIsRouteLayoutCollapsed(prev => !prev)}
-                                className="min-w-0 flex items-center gap-2 text-left group"
-                                aria-expanded={!isRouteLayoutCollapsed}
-                            >
-                                {isRouteLayoutCollapsed ? (
-                                    <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
-                                ) : (
-                                    <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-sky-400 transition-colors shrink-0" />
-                                )}
-                                <div className="min-w-0">
-                                    <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider group-hover:text-white transition-colors">Route Layout</h3>
-                                    <p className="text-xs text-slate-500 mt-1">Create sections and paths, then assign fights from the encounter editor.</p>
-                                </div>
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-slate-700 text-slate-300 hover:bg-slate-800"
-                                    onClick={handleSortEncountersByRoute}
-                                    disabled={!initialQuest.routeSections?.length || !localEncounters.length}
-                                >
-                                    <LayoutList className="w-3.5 h-3.5 mr-1.5" /> Sort Fights
-                                </Button>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-sky-800 text-sky-400 hover:bg-sky-950/40"
-                                    onClick={handleCreateRouteSection}
-                                >
-                                    <Plus className="w-3.5 h-3.5 mr-1.5" /> Add Section
-                                </Button>
-                            </div>
-                        </div>
-
-                        {!isRouteLayoutCollapsed && (initialQuest.routeSections?.length ? (
-                            <div className="space-y-2">
-                                {initialQuest.routeSections.map((section, sectionIndex) => (
-                                    <div key={section.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <div className="min-w-0 flex-1">
-                                                <Input
-                                                    value={routeSectionTitles[section.id] ?? section.title}
-                                                    onChange={(e) => setRouteSectionTitles(prev => ({ ...prev, [section.id]: e.target.value }))}
-                                                    onBlur={() => handleSaveRouteSectionTitle(section.id)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.currentTarget.blur();
-                                                        }
-                                                    }}
-                                                    className="h-8 bg-slate-950/70 border-slate-800 text-xs font-bold text-slate-200"
-                                                />
-                                                <div className="text-[11px] text-slate-600 mt-1">{section.paths.length} path{section.paths.length === 1 ? "" : "s"}</div>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    disabled={sectionIndex === 0}
-                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                    onClick={() => handleMoveRouteSection(section.id, "up")}
-                                                    title="Move section up"
-                                                >
-                                                    <ChevronUp className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    disabled={sectionIndex === initialQuest.routeSections.length - 1}
-                                                    className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                    onClick={() => handleMoveRouteSection(section.id, "down")}
-                                                    title="Move section down"
-                                                >
-                                                    <ChevronDown className="w-3.5 h-3.5" />
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    className="h-7 text-[11px] text-slate-400 hover:text-sky-300 hover:bg-slate-800"
-                                                    onClick={() => handleCreateRoutePath(section.id)}
-                                                >
-                                                    <Plus className="w-3 h-3 mr-1" /> Path
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
-                                                    onClick={() => handleDeleteRouteSection(section.id)}
-                                                    title="Delete section"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <div className="mt-2">
-                                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Visible After</Label>
-                                            <select
-                                                value={section.parentPathId || ""}
-                                                onChange={(e) => handleChangeRouteSectionParent(section.id, e.target.value)}
-                                                className="mt-1 w-full h-8 rounded-md border border-slate-800 bg-slate-950/70 px-2 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                                            >
-                                                <option value="">Always visible</option>
-                                                {routePathOptions
-                                                    .filter(path => !section.paths.some(sectionPath => sectionPath.id === path.id))
-                                                    .map(path => (
-                                                        <option key={path.id} value={path.id}>{path.label}</option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                        <div className="mt-3 space-y-1.5">
-                                            {section.paths.map((path, pathIndex) => (
-                                                <div key={path.id} className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-950/50 p-2">
-                                                    <Input
-                                                        value={routePathTitles[path.id] ?? path.title}
-                                                        onChange={(e) => setRoutePathTitles(prev => ({ ...prev, [path.id]: e.target.value }))}
-                                                        onBlur={() => handleSaveRoutePathTitle(path.id)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter") {
-                                                                e.currentTarget.blur();
-                                                            }
-                                                        }}
-                                                        className="h-7 min-w-0 bg-slate-900 border-slate-800 text-xs text-slate-300"
-                                                    />
-                                                    <Badge variant="outline" className="shrink-0 border-slate-700 bg-slate-900/80 text-slate-500 text-[10px]">
-                                                        {path.encounters.length} fight{path.encounters.length === 1 ? "" : "s"}
-                                                    </Badge>
-                                                    <div className="flex items-center gap-0.5">
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            disabled={pathIndex === 0}
-                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "up")}
-                                                            title="Move path up"
-                                                        >
-                                                            <ChevronUp className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            disabled={pathIndex === section.paths.length - 1}
-                                                            className="h-7 w-7 text-slate-500 hover:text-sky-300 hover:bg-slate-800 disabled:opacity-30"
-                                                            onClick={() => handleMoveRoutePath(section.id, path.id, "down")}
-                                                            title="Move path down"
-                                                        >
-                                                            <ChevronDown className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            disabled={duplicatingRoutePathId === path.id}
-                                                            className="h-7 w-7 text-slate-500 hover:text-emerald-300 hover:bg-emerald-950/40 disabled:opacity-40"
-                                                            onClick={() => handleDuplicateRoutePath(section.id, path.id)}
-                                                            title="Duplicate path fights"
-                                                        >
-                                                            {duplicatingRoutePathId === path.id ? (
-                                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                            ) : (
-                                                                <Copy className="w-3.5 h-3.5" />
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            className="h-7 w-7 text-slate-500 hover:text-red-400 hover:bg-red-950/40"
-                                                            onClick={() => handleDeleteRoutePath(path.id)}
-                                                            title="Delete path"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="rounded-lg border border-dashed border-slate-800 bg-slate-900/30 p-4 text-center text-xs text-slate-500">
-                                No route sections yet. Existing fights remain shared until you create sections and assign them to paths.
-                            </div>
-                        ))}
-                    </div>
-                </RouteLayoutPanel>
+                <RouteLayoutPanel
+                    questPlanId={initialQuest.id}
+                    routeSections={initialQuest.routeSections}
+                    routePathOptions={routePathOptions}
+                    fightCount={localEncounters.length}
+                />
 
                 <ChallengePresetsPanel>
                     <div className="rounded-xl border border-amber-900/40 bg-amber-950/10 p-4 space-y-3">
