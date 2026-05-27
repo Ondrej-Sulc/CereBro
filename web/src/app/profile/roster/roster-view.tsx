@@ -134,6 +134,7 @@ export function RosterView({
   const [sigAwakenedOnly, setSigAwakenedOnly] = useState(initialSigAwakenedOnly);
   const [limit, setLimit] = useState<number>(initialLimit || 5);
   const [pendingSection, setPendingSection] = useState<'rank' | 'sig' | 'all' | null>(null);
+  const [showAttackReservationControls, setShowAttackReservationControls] = useState(false);
 
   // Data State (Client-Side Fetching)
   const [clientPrestigeMap, setPrestigeMap] = useState<Record<string, number>>(initialPrestigeMap);
@@ -534,11 +535,11 @@ export function RosterView({
       <ChampionCard
         item={item} prestige={prestigeMap[item.id]} onClick={canEdit ? setEditingItem : () => {}} mode={canEdit ? viewMode : 'view'}
         filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
-        canManageAttackReservations={canManageAttackReservations}
+        canManageAttackReservations={canManageAttackReservations && showAttackReservationControls}
         onToggleAttackReservation={handleToggleAttackReservation}
       />
     );
-  }, [filteredRoster, prestigeMap, viewMode, canEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, canManageAttackReservations, handleToggleAttackReservation]);
+  }, [filteredRoster, prestigeMap, viewMode, canEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, canManageAttackReservations, showAttackReservationControls, handleToggleAttackReservation]);
 
   return (
     <div className="space-y-6">
@@ -661,6 +662,9 @@ export function RosterView({
             immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
             initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
             canEdit={canEdit}
+            canManageAttackReservations={canManageAttackReservations}
+            showAttackReservationControls={showAttackReservationControls}
+            onShowAttackReservationControlsChange={setShowAttackReservationControls}
           />
 
           {filteredRoster.length === 0 ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, TrendingUp } from "lucide-react";
+import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, TrendingUp, Swords } from "lucide-react";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,9 @@ interface RosterFiltersProps {
     initialAbilities: { id: string | number, name: string }[];
     initialImmunities: { id: string | number, name: string }[];
     canEdit?: boolean;
+    canManageAttackReservations?: boolean;
+    showAttackReservationControls?: boolean;
+    onShowAttackReservationControlsChange?: (value: boolean) => void;
 }
 
 export function RosterFilters({
@@ -64,6 +67,9 @@ export function RosterFilters({
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities,
     canEdit = true,
+    canManageAttackReservations = false,
+    showAttackReservationControls = false,
+    onShowAttackReservationControlsChange,
 }: RosterFiltersProps) {
     const activeFilters = useMemo(() => {
         const filters: { label: string, type: string, onRemove: () => void }[] = [];
@@ -142,6 +148,23 @@ export function RosterFilters({
                                     <PenLine className="w-3.5 h-3.5 mr-1" /> Edit
                                 </Button>
                             </div>
+                        )}
+
+                        {canManageAttackReservations && onShowAttackReservationControlsChange && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                title={showAttackReservationControls ? "Hide attack reservation controls" : "Show attack reservation controls"}
+                                onClick={() => onShowAttackReservationControlsChange(!showAttackReservationControls)}
+                                className={cn(
+                                    "h-7 px-2 rounded-md transition-all text-[11px] font-medium border border-slate-700 bg-slate-950/50",
+                                    showAttackReservationControls
+                                        ? "text-amber-300 border-amber-500/50 bg-amber-950/30"
+                                        : "text-slate-400 hover:text-slate-200"
+                                )}
+                            >
+                                <Swords className="w-3.5 h-3.5 mr-1" /> Attack
+                            </Button>
                         )}
 
                         <Button
