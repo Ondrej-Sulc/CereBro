@@ -372,7 +372,7 @@ function ObjectiveCard({
                             icon={<Flag className="h-3 w-3 text-rose-300" />}
                             className="border-rose-900/60 bg-rose-950/20 text-rose-200"
                         >
-                            Ends at #{objective.endpointEncounter.sequence}
+                            Ends at {objective.endpointEncounter.defender?.name || "objective endpoint"}
                         </ObjectiveBadge>
                     )}
 
