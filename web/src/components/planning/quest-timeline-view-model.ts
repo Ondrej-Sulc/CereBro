@@ -266,6 +266,7 @@ export function projectQuestTimelineViewModel({
       isAwakened: false,
       isAscended: false,
       ascensionLevel: 0,
+      reservedForAttack: false,
       powerRating: 0,
       champion: savedSynergy.champion,
       createdAt: new Date(),

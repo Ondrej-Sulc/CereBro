@@ -44,6 +44,7 @@ const rosterEntry = (id: string, championId: number, stars: number) => ({
   isAwakened: false,
   isAscended: false,
   ascensionLevel: 0,
+  reservedForAttack: false,
   powerRating: 0,
   champion: champion(championId),
   createdAt: new Date("2026-01-01T00:00:00.000Z"),
