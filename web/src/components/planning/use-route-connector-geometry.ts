@@ -59,9 +59,12 @@ export function useRouteConnectorGeometry(selectedRoutePathIds: string[]) {
     }, [selectedRoutePathIds]);
 
     useEffect(() => {
-        updateRouteConnectorGeometry();
+        const animationFrameId = window.requestAnimationFrame(updateRouteConnectorGeometry);
         window.addEventListener("resize", updateRouteConnectorGeometry);
-        return () => window.removeEventListener("resize", updateRouteConnectorGeometry);
+        return () => {
+            window.cancelAnimationFrame(animationFrameId);
+            window.removeEventListener("resize", updateRouteConnectorGeometry);
+        };
     }, [updateRouteConnectorGeometry]);
 
     const setRouteCardRef = useCallback((pathId: string, node: HTMLDivElement | null) => {

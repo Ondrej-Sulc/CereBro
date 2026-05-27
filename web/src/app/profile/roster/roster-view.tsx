@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
 import Link from "next/link";
-import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3 } from "lucide-react";
+import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -666,6 +666,15 @@ export function RosterView({
             showAttackReservationControls={showAttackReservationControls}
             onShowAttackReservationControlsChange={setShowAttackReservationControls}
           />
+
+          {canManageAttackReservations && showAttackReservationControls && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-3 text-sm text-amber-100 shadow-inner">
+              <Swords className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+              <p>
+                Reserve champions you want kept available for Alliance War attack. Defense planners will be warned if they try to place a reserved champion on defense.
+              </p>
+            </div>
+          )}
 
           {filteredRoster.length === 0 ? (
             <div className="text-center py-12 text-slate-500 bg-slate-900/20 rounded-lg border border-slate-800 border-dashed">
