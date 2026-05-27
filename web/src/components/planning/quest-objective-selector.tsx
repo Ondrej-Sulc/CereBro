@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { CheckCircle2, Flag, Lock, Map, Route, Star, Tag, Target, Users } from "lucide-react";
+import { CheckCircle2, Flag, ImageIcon, Lock, Route, Star, Tag, Target, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { QuestTimelineProps } from "./types";
 
@@ -29,6 +29,86 @@ function formatStarRestriction(minStarLevel?: number | null, maxStarLevel?: numb
 
 function classIconPath(championClass: string) {
     return `/assets/icons/${championClass.charAt(0).toUpperCase()}${championClass.slice(1).toLowerCase()}.png`;
+}
+
+function imageFitClass(fit?: string | null) {
+    return fit === "contain" ? "object-contain" : "object-cover";
+}
+
+function imagePositionClass(position?: string | null) {
+    if (position === "top") return "object-top";
+    if (position === "bottom") return "object-bottom";
+    return "object-center";
+}
+
+function ObjectiveFallbackArt({
+    classes,
+    accent,
+}: {
+    classes?: string[];
+    accent: "cyan" | "amber";
+}) {
+    const visibleClasses = classes?.slice(0, 4) ?? [];
+    const accentClasses = accent === "cyan"
+        ? "border-cyan-900/60 bg-cyan-950/30 text-cyan-300"
+        : "border-amber-900/60 bg-amber-950/30 text-amber-300";
+
+    return (
+        <div className={cn("flex h-full w-full items-center justify-center border-b", accentClasses)}>
+            {visibleClasses.length > 0 ? (
+                <div className="flex items-center gap-2">
+                    {visibleClasses.map((championClass) => (
+                        <span key={championClass} className="relative h-8 w-8 rounded-full border border-slate-950/50 bg-slate-950/70 p-1 shadow-lg" title={championClass}>
+                            <Image
+                                src={classIconPath(championClass)}
+                                alt={championClass}
+                                fill
+                                sizes="32px"
+                                className="object-contain p-1"
+                            />
+                        </span>
+                    ))}
+                </div>
+            ) : (
+                <ImageIcon className="h-8 w-8 opacity-70" />
+            )}
+        </div>
+    );
+}
+
+function CardMedia({
+    imageUrl,
+    imageFit,
+    imagePosition,
+    alt,
+    classes,
+    accent,
+}: {
+    imageUrl?: string | null;
+    imageFit?: string | null;
+    imagePosition?: string | null;
+    alt: string;
+    classes?: string[];
+    accent: "cyan" | "amber";
+}) {
+    return (
+        <div className="relative aspect-[16/9] overflow-hidden rounded-t-xl border-b border-slate-800 bg-slate-900">
+            {imageUrl ? (
+                <>
+                    <Image
+                        src={imageUrl.replace(/#/g, "%23")}
+                        alt={alt}
+                        fill
+                        sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 260px"
+                        className={cn(imageFitClass(imageFit), imagePositionClass(imagePosition))}
+                    />
+                    <div className="absolute inset-0 bg-slate-950/20" />
+                </>
+            ) : (
+                <ObjectiveFallbackArt classes={classes} accent={accent} />
+            )}
+        </div>
+    );
 }
 
 function ObjectiveBadge({
@@ -175,38 +255,39 @@ function BaseQuestCard({ quest, active }: { quest: Quest; active: boolean }) {
             href={`/planning/quests/${quest.id}`}
             aria-current={active ? "page" : undefined}
             className={cn(
-                "group/objective flex min-h-[170px] min-w-[260px] snap-start flex-col rounded-xl border p-3 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 sm:min-w-0",
+                "group/objective flex min-w-[260px] snap-start flex-col overflow-hidden rounded-xl border text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 sm:min-w-0",
                 active
                     ? "border-cyan-500/70 bg-cyan-950/25 shadow-[0_0_24px_rgba(34,211,238,0.12)]"
                     : "border-slate-800 bg-slate-950/70 hover:border-slate-700 hover:bg-slate-900/80"
             )}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Default</div>
-                    <h3 className="mt-1 truncate text-sm font-black uppercase tracking-[0.08em] text-white">Base Quest</h3>
-                    <p className="mt-1 text-[11px] font-semibold text-slate-500">Standard quest plan</p>
+            <CardMedia
+                imageUrl={quest.bannerUrl}
+                imageFit={quest.bannerFit}
+                imagePosition={quest.bannerPosition}
+                alt={`${quest.title} banner`}
+                classes={quest.requiredClasses}
+                accent="cyan"
+            />
+            <div className="flex flex-1 flex-col p-3">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <div className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-400/80">Default</div>
+                        <h3 className="mt-1 truncate text-sm font-black uppercase tracking-[0.08em] text-white">Base Quest</h3>
+                        <p className="mt-1 text-[11px] font-semibold text-slate-500">Standard quest plan</p>
+                    </div>
+                    <ActiveMarker active={active} />
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-cyan-900/60 bg-cyan-950/30 text-cyan-300">
-                    <Target className="h-4 w-4" />
-                </div>
-            </div>
 
-            <div className="mt-3 flex flex-wrap gap-1.5">
-                <RestrictionBadges
-                    minStarLevel={quest.minStarLevel}
-                    maxStarLevel={quest.maxStarLevel}
-                    requiredClasses={quest.requiredClasses}
-                    requiredTags={quest.requiredTags}
-                    teamLimit={quest.teamLimit}
-                />
-            </div>
-
-            <div className="mt-auto flex items-end justify-between gap-3 pt-3">
-                <div className="min-w-0 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">
-                    All route choices available
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                    <RestrictionBadges
+                        minStarLevel={quest.minStarLevel}
+                        maxStarLevel={quest.maxStarLevel}
+                        requiredClasses={quest.requiredClasses}
+                        requiredTags={quest.requiredTags}
+                        teamLimit={quest.teamLimit}
+                    />
                 </div>
-                <ActiveMarker active={active} />
             </div>
         </Link>
     );
@@ -224,7 +305,6 @@ function ObjectiveCard({
     const title = objective.shortTitle || objective.title;
     const showFullTitle = Boolean(objective.shortTitle && objective.shortTitle !== objective.title);
     const lockedRouteCount = objective.routeChoices.filter((choice) => choice.isLocked).length;
-    const routeDefaultCount = objective.routeChoices.length;
     const routeGuideCount = objective.routeRecommendations.length;
 
     return (
@@ -232,96 +312,88 @@ function ObjectiveCard({
             href={`/planning/quests/${questId}?objective=${encodeURIComponent(objective.slug)}`}
             aria-current={active ? "page" : undefined}
             className={cn(
-                "group/objective flex min-h-[170px] min-w-[260px] snap-start flex-col rounded-xl border p-3 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 sm:min-w-0",
+                "group/objective flex min-w-[260px] snap-start flex-col overflow-hidden rounded-xl border text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 sm:min-w-0",
                 active
                     ? "border-amber-500/70 bg-amber-950/20 shadow-[0_0_24px_rgba(245,158,11,0.12)]"
                     : "border-slate-800 bg-slate-950/70 hover:border-amber-900/70 hover:bg-slate-900/80"
             )}
         >
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400/80">
-                        Objective #{objective.order}
+            <CardMedia
+                imageUrl={objective.imageUrl}
+                imageFit={objective.imageFit}
+                imagePosition={objective.imagePosition}
+                alt={`${objective.title} objective`}
+                classes={objective.requiredClasses}
+                accent="amber"
+            />
+
+            <div className="flex flex-1 flex-col p-3">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400/80">
+                            Objective #{objective.order}
+                        </div>
+                        <h3 className="mt-1 truncate text-sm font-black uppercase tracking-[0.08em] text-white">{title}</h3>
+                        {showFullTitle && (
+                            <p className="mt-1 truncate text-[11px] font-semibold text-slate-500">{objective.title}</p>
+                        )}
                     </div>
-                    <h3 className="mt-1 truncate text-sm font-black uppercase tracking-[0.08em] text-white">{title}</h3>
-                    {showFullTitle && (
-                        <p className="mt-1 truncate text-[11px] font-semibold text-slate-500">{objective.title}</p>
+                    <ActiveMarker active={active} />
+                </div>
+
+                {objective.description && (
+                    <p
+                        className="mt-2 text-[11px] font-medium leading-4 text-slate-500"
+                        style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {objective.description}
+                    </p>
+                )}
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                    <RestrictionBadges
+                        minStarLevel={objective.minStarLevel}
+                        maxStarLevel={objective.maxStarLevel}
+                        requiredClasses={objective.requiredClasses}
+                        requiredTags={objective.requiredTags}
+                        requiredTagMode={objective.requiredTagMode}
+                        teamLimit={objective.teamLimitOverride}
+                    />
+                </div>
+
+                <div className="mt-auto flex flex-wrap gap-1.5 pt-3">
+                    {objective.endpointEncounter && (
+                        <ObjectiveBadge
+                            icon={<Flag className="h-3 w-3 text-rose-300" />}
+                            className="border-rose-900/60 bg-rose-950/20 text-rose-200"
+                        >
+                            Ends at #{objective.endpointEncounter.sequence}
+                        </ObjectiveBadge>
+                    )}
+
+                    {lockedRouteCount > 0 && (
+                        <ObjectiveBadge
+                            icon={<Lock className="h-3 w-3 text-amber-300" />}
+                            className="border-amber-800/60 bg-amber-950/30 text-amber-200"
+                        >
+                            {lockedRouteCount} locked
+                        </ObjectiveBadge>
+                    )}
+
+                    {routeGuideCount > 0 && (
+                        <ObjectiveBadge
+                            icon={<Route className="h-3 w-3 text-cyan-300" />}
+                            className="border-cyan-800/50 bg-cyan-950/25 text-cyan-200"
+                        >
+                            {routeGuideCount} guide{routeGuideCount === 1 ? "" : "s"}
+                        </ObjectiveBadge>
                     )}
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-900/60 bg-amber-950/30 text-amber-300">
-                    <Target className="h-4 w-4" />
-                </div>
-            </div>
-
-            {objective.description && (
-                <p
-                    className="mt-2 text-[11px] font-medium leading-4 text-slate-500"
-                    style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                    }}
-                >
-                    {objective.description}
-                </p>
-            )}
-
-            <div className="mt-3 flex flex-wrap gap-1.5">
-                <RestrictionBadges
-                    minStarLevel={objective.minStarLevel}
-                    maxStarLevel={objective.maxStarLevel}
-                    requiredClasses={objective.requiredClasses}
-                    requiredTags={objective.requiredTags}
-                    requiredTagMode={objective.requiredTagMode}
-                    teamLimit={objective.teamLimitOverride}
-                />
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-1.5">
-                {objective.endpointEncounter && (
-                    <ObjectiveBadge
-                        icon={<Flag className="h-3 w-3 text-rose-300" />}
-                        className="border-rose-900/60 bg-rose-950/20 text-rose-200"
-                    >
-                        Ends at #{objective.endpointEncounter.sequence}
-                        {objective.endpointEncounter.defender?.name ? ` ${objective.endpointEncounter.defender.name}` : ""}
-                    </ObjectiveBadge>
-                )}
-
-                {lockedRouteCount > 0 && (
-                    <ObjectiveBadge
-                        icon={<Lock className="h-3 w-3 text-amber-300" />}
-                        className="border-amber-800/60 bg-amber-950/30 text-amber-200"
-                    >
-                        {lockedRouteCount} locked
-                    </ObjectiveBadge>
-                )}
-
-                {lockedRouteCount === 0 && routeDefaultCount > 0 && (
-                    <ObjectiveBadge
-                        icon={<Map className="h-3 w-3 text-slate-400" />}
-                        className="border-slate-800 bg-slate-900/60 text-slate-400"
-                    >
-                        {routeDefaultCount} defaults
-                    </ObjectiveBadge>
-                )}
-
-                {routeGuideCount > 0 && (
-                    <ObjectiveBadge
-                        icon={<Route className="h-3 w-3 text-cyan-300" />}
-                        className="border-cyan-800/50 bg-cyan-950/25 text-cyan-200"
-                    >
-                        {routeGuideCount} route guide{routeGuideCount === 1 ? "" : "s"}
-                    </ObjectiveBadge>
-                )}
-            </div>
-
-            <div className="mt-auto flex items-end justify-between gap-3 pt-3">
-                <div className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.12em] text-slate-600">
-                    {objective.slug}
-                </div>
-                <ActiveMarker active={active} />
             </div>
         </Link>
     );

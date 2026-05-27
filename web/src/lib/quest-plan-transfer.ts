@@ -64,6 +64,9 @@ export type QuestPlanExportPayload = {
         title: string;
         shortTitle: string | null;
         description: string | null;
+        imageUrl: string | null;
+        imageFit: string | null;
+        imagePosition: string | null;
         order: number;
         isVisible: boolean;
         teamLimitOverride: number | null;
@@ -263,6 +266,9 @@ export function parseQuestPlanExport(jsonText: string): QuestPlanExportPayload {
                 title: asString(objective.title)?.trim() || "",
                 shortTitle: asOptionalString(objective.shortTitle),
                 description: asOptionalString(objective.description),
+                imageUrl: asOptionalString(objective.imageUrl),
+                imageFit: asOptionalString(objective.imageFit) || "cover",
+                imagePosition: asOptionalString(objective.imagePosition) || "center",
                 order: asNumberOrNull(objective.order) ?? 0,
                 isVisible: objective.isVisible !== false,
                 teamLimitOverride: asNumberOrNull(objective.teamLimitOverride),

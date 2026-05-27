@@ -854,6 +854,9 @@ model QuestObjective {
   title                   String
   shortTitle              String?
   description             String?
+  imageUrl                String?
+  imageFit                String?                      @default("cover")
+  imagePosition           String?                      @default("center")
   order                   Int
   isVisible               Boolean                      @default(true)
   teamLimitOverride       Int?

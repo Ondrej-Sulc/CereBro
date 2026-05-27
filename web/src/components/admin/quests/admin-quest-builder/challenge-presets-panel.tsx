@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChampionClass, QuestObjectiveTagMode, type Tag } from "@prisma/client";
 import Image from "next/image";
@@ -12,10 +12,10 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { MultiTagCombobox } from "@/components/comboboxes/MultiTagCombobox";
 import { useToast } from "@/hooks/use-toast";
-import { deleteQuestObjective, seedNecropolisCarinaObjectives, upsertQuestObjective } from "@/app/actions/quest-objectives";
+import { deleteQuestObjective, seedNecropolisCarinaObjectives, uploadQuestObjectiveImage, upsertQuestObjective } from "@/app/actions/quest-objectives";
 import { isNecropolisQuestTitle } from "@/lib/quest-objectives";
 import { cn } from "@/lib/utils";
-import { Copy, Loader2, Plus, Save, Star, Trash2 } from "lucide-react";
+import { Copy, ImageIcon, Loader2, Plus, Save, Star, Trash2, Upload, XCircle } from "lucide-react";
 import type { EncounterWithRelations, ObjectiveRouteChoiceForm, ObjectiveRouteRecommendationForm, QuestWithRelations } from "./types";
 
 type ChallengePresetsPanelProps = {
@@ -111,6 +111,9 @@ export function ChallengePresetsPanel({
     const [objectiveSlug, setObjectiveSlug] = useState("");
     const [objectiveShortTitle, setObjectiveShortTitle] = useState("");
     const [objectiveDescription, setObjectiveDescription] = useState("");
+    const [objectiveImageUrl, setObjectiveImageUrl] = useState<string | null>(null);
+    const [objectiveImageFit, setObjectiveImageFit] = useState("cover");
+    const [objectiveImagePosition, setObjectiveImagePosition] = useState("center");
     const [objectiveOrder, setObjectiveOrder] = useState("");
     const [objectiveIsVisible, setObjectiveIsVisible] = useState(true);
     const [objectiveTeamLimit, setObjectiveTeamLimit] = useState("");
@@ -125,6 +128,7 @@ export function ChallengePresetsPanel({
     const [objectiveRouteRecommendations, setObjectiveRouteRecommendations] = useState<ObjectiveRouteRecommendationForm[]>([]);
     const [isSavingObjective, setIsSavingObjective] = useState(false);
     const [isDeletingObjectiveId, setIsDeletingObjectiveId] = useState<string | null>(null);
+    const [isUploadingObjectiveImage, setIsUploadingObjectiveImage] = useState(false);
 
     const resetObjectiveForm = () => {
         setObjectiveEditingId(null);
@@ -132,6 +136,9 @@ export function ChallengePresetsPanel({
         setObjectiveSlug("");
         setObjectiveShortTitle("");
         setObjectiveDescription("");
+        setObjectiveImageUrl(null);
+        setObjectiveImageFit("cover");
+        setObjectiveImagePosition("center");
         setObjectiveOrder(String((objectives?.length || 0) + 1));
         setObjectiveIsVisible(true);
         setObjectiveTeamLimit("");
@@ -152,6 +159,9 @@ export function ChallengePresetsPanel({
         setObjectiveSlug(objective.slug);
         setObjectiveShortTitle(objective.shortTitle || "");
         setObjectiveDescription(objective.description || "");
+        setObjectiveImageUrl(objective.imageUrl || null);
+        setObjectiveImageFit(objective.imageFit || "cover");
+        setObjectiveImagePosition(objective.imagePosition || "center");
         setObjectiveOrder(String(objective.order));
         setObjectiveIsVisible(objective.isVisible);
         setObjectiveTeamLimit(objective.teamLimitOverride == null ? "" : String(objective.teamLimitOverride));
@@ -223,6 +233,9 @@ export function ChallengePresetsPanel({
                 slug: objectiveSlug || objectiveTitle,
                 shortTitle: objectiveShortTitle || null,
                 description: objectiveDescription || null,
+                imageUrl: objectiveImageUrl,
+                imageFit: objectiveImageFit,
+                imagePosition: objectiveImagePosition,
                 order: objectiveOrder ? parseInt(objectiveOrder) : (objectives?.length || 0) + 1,
                 isVisible: objectiveIsVisible,
                 teamLimitOverride: objectiveTeamLimit ? parseInt(objectiveTeamLimit) : null,
@@ -243,6 +256,29 @@ export function ChallengePresetsPanel({
             toast({ title: "Error", description: getErrorMessage(error, "Failed to save challenge preset"), variant: "destructive" });
         } finally {
             setIsSavingObjective(false);
+        }
+    };
+
+    const handleObjectiveImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (!file || !objectiveEditingId) return;
+
+        setIsUploadingObjectiveImage(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const result = await uploadQuestObjectiveImage(questPlanId, objectiveEditingId, formData);
+            if (result.success && result.url) {
+                setObjectiveImageUrl(result.url);
+                router.refresh();
+                toast({ title: "Objective image uploaded" });
+            }
+        } catch (error: unknown) {
+            toast({ title: "Error", description: getErrorMessage(error, "Failed to upload objective image"), variant: "destructive" });
+        } finally {
+            setIsUploadingObjectiveImage(false);
         }
     };
 
@@ -360,15 +396,36 @@ export function ChallengePresetsPanel({
                                                 )}
                                             >
                                                 <div className="flex items-start justify-between gap-2">
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">#{objective.order}</span>
-                                                            {!objective.isVisible && (
-                                                                <Badge variant="outline" className="border-slate-700 text-slate-500 text-[9px] uppercase">Hidden</Badge>
+                                                    <div className="flex min-w-0 gap-3">
+                                                        <div className="relative mt-0.5 hidden h-12 w-16 shrink-0 overflow-hidden rounded-md border border-slate-800 bg-slate-900 sm:block">
+                                                            {objective.imageUrl ? (
+                                                                <Image
+                                                                    src={objective.imageUrl.replace(/#/g, "%23")}
+                                                                    alt={objective.title}
+                                                                    fill
+                                                                    className={cn(
+                                                                        objective.imageFit === "contain" ? "object-contain" : "object-cover",
+                                                                        objective.imagePosition === "top" ? "object-top" : objective.imagePosition === "bottom" ? "object-bottom" : "object-center"
+                                                                    )}
+                                                                />
+                                                            ) : (
+                                                                <div className="flex h-full w-full items-center justify-center text-slate-700">
+                                                                    <ImageIcon className="h-4 w-4" />
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        <h4 className="mt-1 truncate text-sm font-black uppercase tracking-wide text-white">{objective.title}</h4>
-                                                        <p className="mt-0.5 truncate text-[11px] text-slate-500">{objective.slug}</p>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">#{objective.order}</span>
+                                                                {!objective.isVisible && (
+                                                                    <Badge variant="outline" className="border-slate-700 text-slate-500 text-[9px] uppercase">Hidden</Badge>
+                                                                )}
+                                                            </div>
+                                                            <h4 className="mt-1 truncate text-sm font-black uppercase tracking-wide text-white">{objective.title}</h4>
+                                                            <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                                                                {objective.shortTitle || objective.description || (objective.imageUrl ? "Image assigned" : "No card image")}
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                     <Badge variant="outline" className="shrink-0 border-amber-800/60 bg-amber-950/30 text-amber-200 text-[9px] uppercase">
                                                         {objective.routeChoices.length} route{objective.routeChoices.length === 1 ? "" : "s"}
@@ -500,6 +557,112 @@ export function ChallengePresetsPanel({
                                             placeholder="Optional planning notes shown in the objective banner."
                                             className="min-h-[70px] bg-slate-900 border-slate-800 text-sm"
                                         />
+                                    </div>
+                                    <div className="md:col-span-2 space-y-3 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div>
+                                                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Card Image</Label>
+                                                <p className="mt-1 text-[11px] text-slate-500">Shown on planning objective cards. Recommended ratio: 16:9.</p>
+                                            </div>
+                                            {!objectiveEditingId && (
+                                                <Badge variant="outline" className="shrink-0 border-slate-700 text-[9px] uppercase text-slate-500">
+                                                    Save first to upload
+                                                </Badge>
+                                            )}
+                                        </div>
+
+                                        <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+                                            <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
+                                                {objectiveImageUrl ? (
+                                                    <>
+                                                        <Image
+                                                            src={objectiveImageUrl.replace(/#/g, "%23")}
+                                                            alt="Objective card"
+                                                            fill
+                                                            className={cn(
+                                                                objectiveImageFit === "cover" ? "object-cover" : "object-contain",
+                                                                objectiveImagePosition === "top" ? "object-top" : objectiveImagePosition === "bottom" ? "object-bottom" : "object-center"
+                                                            )}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setObjectiveImageUrl(null)}
+                                                            className="absolute right-2 top-2 rounded-full border border-red-800/60 bg-red-950/80 p-1 text-red-200 shadow-lg transition-colors hover:bg-red-900"
+                                                            title="Remove image"
+                                                        >
+                                                            <XCircle className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <div className="flex flex-col items-center gap-2 text-slate-600">
+                                                        <ImageIcon className="h-8 w-8 opacity-30" />
+                                                        <span className="text-xs font-medium">No image assigned</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                <div className="flex flex-wrap gap-3">
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] text-slate-500 uppercase tracking-widest">Image Fit</Label>
+                                                        <select
+                                                            value={objectiveImageFit}
+                                                            onChange={(e) => setObjectiveImageFit(e.target.value)}
+                                                            className="block h-9 w-32 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:ring-1 focus:ring-amber-500"
+                                                        >
+                                                            <option value="cover">Zoom (Cover)</option>
+                                                            <option value="contain">Whole (Contain)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-[10px] text-slate-500 uppercase tracking-widest">Position</Label>
+                                                        <select
+                                                            value={objectiveImagePosition}
+                                                            onChange={(e) => setObjectiveImagePosition(e.target.value)}
+                                                            className="block h-9 w-28 rounded-md border border-slate-800 bg-slate-900 px-2 py-1 text-sm text-slate-300 focus:ring-1 focus:ring-amber-500"
+                                                        >
+                                                            <option value="top">Top</option>
+                                                            <option value="center">Center</option>
+                                                            <option value="bottom">Bottom</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-col gap-2 sm:flex-row">
+                                                    <label className={cn(
+                                                        "flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm transition-all hover:bg-slate-700",
+                                                        (!objectiveEditingId || isUploadingObjectiveImage) && "pointer-events-none opacity-50"
+                                                    )}>
+                                                        {isUploadingObjectiveImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                                        {isUploadingObjectiveImage ? "Uploading..." : "Upload Image"}
+                                                        <input
+                                                            type="file"
+                                                            className="hidden"
+                                                            accept="image/png,image/jpeg,image/webp"
+                                                            onChange={handleObjectiveImageUpload}
+                                                            disabled={!objectiveEditingId || isUploadingObjectiveImage}
+                                                        />
+                                                    </label>
+                                                    <div className="relative min-w-0 flex-1">
+                                                        <Input
+                                                            placeholder="Or paste external URL..."
+                                                            value={objectiveImageUrl || ""}
+                                                            onChange={(e) => setObjectiveImageUrl(e.target.value.trim() === "" ? null : e.target.value)}
+                                                            className="h-10 bg-slate-950 border-slate-800 pr-10 text-xs"
+                                                        />
+                                                        {objectiveImageUrl && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setObjectiveImageUrl(null)}
+                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                                                            >
+                                                                <XCircle className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

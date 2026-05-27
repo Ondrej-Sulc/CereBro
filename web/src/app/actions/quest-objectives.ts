@@ -1,6 +1,8 @@
 'use server'
 
 import { requireBotAdmin } from "@/lib/auth-helpers";
+import { deleteFromGcs, uploadToGcs } from "@/lib/gcs";
+import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { isNecropolisQuestTitle } from "@/lib/quest-objectives";
 import { withActionContext } from "@/lib/with-request-context";
@@ -31,6 +33,9 @@ export type QuestObjectiveUpsertInput = {
     title: string;
     shortTitle?: string | null;
     description?: string | null;
+    imageUrl?: string | null;
+    imageFit?: string | null;
+    imagePosition?: string | null;
     order: number;
     isVisible?: boolean;
     teamLimitOverride?: number | null;
@@ -195,6 +200,9 @@ export const upsertQuestObjective = withActionContext('upsertQuestObjective', as
                 title: input.title.trim(),
                 shortTitle: input.shortTitle?.trim() || null,
                 description: input.description?.trim() || null,
+                imageUrl: input.imageUrl?.trim() || null,
+                imageFit: input.imageFit || "cover",
+                imagePosition: input.imagePosition || "center",
                 order: input.order,
                 isVisible: input.isVisible ?? true,
                 teamLimitOverride: input.teamLimitOverride ?? null,
@@ -211,6 +219,9 @@ export const upsertQuestObjective = withActionContext('upsertQuestObjective', as
                 title: input.title.trim(),
                 shortTitle: input.shortTitle?.trim() || null,
                 description: input.description?.trim() || null,
+                imageUrl: input.imageUrl?.trim() || null,
+                imageFit: input.imageFit || "cover",
+                imagePosition: input.imagePosition || "center",
                 order: input.order,
                 isVisible: input.isVisible ?? true,
                 teamLimitOverride: input.teamLimitOverride ?? null,
@@ -263,6 +274,56 @@ export const upsertQuestObjective = withActionContext('upsertQuestObjective', as
 
     revalidateQuestObjectivePlan(input.questPlanId);
     return { success: true, objectiveId: objective.id };
+});
+
+export const uploadQuestObjectiveImage = withActionContext('uploadQuestObjectiveImage', async (
+    questPlanId: string,
+    objectiveId: string,
+    formData: FormData
+) => {
+    await requireBotAdmin("MANAGE_QUESTS");
+
+    const objective = await prisma.questObjective.findUnique({
+        where: { id: objectiveId },
+        select: { questPlanId: true },
+    });
+    if (!objective || objective.questPlanId !== questPlanId) {
+        throw new Error("Objective not found or does not belong to this quest plan.");
+    }
+
+    const file = formData.get('file');
+    if (!file || !(file instanceof File)) {
+        throw new Error("Invalid or missing file upload");
+    }
+
+    const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error("Invalid file type. Only PNG, JPEG, and WebP are allowed.");
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+        throw new Error("File is too large. Maximum size is 5MB.");
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const fileName = `quest-objectives/${questPlanId}/${objectiveId}-${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    const publicUrl = await uploadToGcs(buffer, fileName, file.type);
+
+    try {
+        await prisma.questObjective.update({
+            where: { id: objectiveId },
+            data: { imageUrl: publicUrl },
+        });
+    } catch (error) {
+        await deleteFromGcs(fileName);
+        logger.error({ err: error, questPlanId, objectiveId, fileName }, "Failed to update quest objective image URL, deleted GCS object");
+        throw error;
+    }
+
+    revalidateQuestObjectivePlan(questPlanId);
+    return { success: true, url: publicUrl };
 });
 
 export const deleteQuestObjective = withActionContext('deleteQuestObjective', async (questPlanId: string, objectiveId: string) => {
