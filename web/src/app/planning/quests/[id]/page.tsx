@@ -251,6 +251,7 @@ export default async function QuestTimelinePage({
         isAwakened: false,
         isAscended: false,
         ascensionLevel: 0,
+        reservedForAttack: false,
         powerRating: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
