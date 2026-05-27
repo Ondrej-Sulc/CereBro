@@ -2,17 +2,10 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import {
-    EncounterWithRelations,
-    RosterWithChampion,
     QuestTimelineProps,
 } from "./types";
-import {
-    isChampionValidForEncounterOrQuest,
-} from "./utils";
 import {
     createInitialQuestTimelinePrefightSelections,
     createInitialQuestTimelineSelections,
@@ -23,6 +16,7 @@ import type { ChampionClass } from "@prisma/client";
 import { applyQuestObjectiveToQuest, getQuestObjectiveRouteRecommendationVariants } from "@/lib/quest-objectives";
 import { createQuestTimelinePickRenderers } from "./quest-pick-renderers";
 import { QuestEncounterList } from "./quest-encounter-list";
+import { QuestObjectiveSelector } from "./quest-objective-selector";
 import { QuestTimelineActionBar } from "./quest-timeline-action-bar";
 import { RoutePlannerPanel, TimelineColumnHeader } from "./route-planner-panel";
 import { SelectedTeamPanel } from "./selected-team-panel";
@@ -312,31 +306,12 @@ export default function QuestTimelineClient({ quest, activeObjective = null, obj
             <div ref={headerRef} className="h-0 w-full" aria-hidden="true" />
 
             {visibleObjectives.length > 0 && !readOnly && (
-                <div className="mb-4 overflow-x-auto">
-                    <div className="flex min-w-max items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/70 p-2">
-                        <Link
-                            href={`/planning/quests/${quest.id}`}
-                            className={cn(
-                                "rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-wider transition-colors",
-                                !activeObjective ? "bg-sky-600 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-white"
-                            )}
-                        >
-                            Base Quest
-                        </Link>
-                        {visibleObjectives.map(objective => (
-                            <Link
-                                key={objective.id}
-                                href={`/planning/quests/${quest.id}?objective=${encodeURIComponent(objective.slug)}`}
-                                className={cn(
-                                    "rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-wider transition-colors",
-                                    activeObjective?.id === objective.id ? "bg-amber-600 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-white"
-                                )}
-                            >
-                                {objective.shortTitle || objective.title}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
+                <QuestObjectiveSelector
+                    questId={quest.id}
+                    baseQuest={quest}
+                    objectives={visibleObjectives}
+                    activeObjective={activeObjective}
+                />
             )}
 
             <SelectedTeamPanel
