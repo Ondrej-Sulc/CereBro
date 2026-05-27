@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { ExternalLink, Trophy, Edit2, Shield, Zap, Tag as TagIcon, Hash } from "lucide-react";
+import { ExternalLink, Trophy, Edit2, Shield, Zap, Tag as TagIcon, Hash, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -22,9 +22,11 @@ interface ChampionCardProps {
     onClick: (item: ProfileRosterEntry) => void;
     mode: 'view' | 'edit';
     filters: FilterState;
+    canManageAttackReservations?: boolean;
+    onToggleAttackReservation?: (item: ProfileRosterEntry) => void;
 }
 
-export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: ChampionCardProps) => {
+export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, canManageAttackReservations = false, onToggleAttackReservation }: ChampionCardProps) => {
     const [quickOpen, setQuickOpen] = useState(false);
     const classColors = getChampionClassColors(item.champion.class);
 
@@ -90,6 +92,36 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters }: Ch
                     <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
                         <Trophy className="w-3 h-3 text-yellow-400" />
                     </div>
+                )}
+
+                {!item.isUnowned && canManageAttackReservations && onToggleAttackReservation && (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn(
+                                        "h-6 w-6 rounded-full border bg-black/80 p-0 shadow-sm",
+                                        item.reservedForAttack
+                                            ? "border-amber-400/60 text-amber-300 hover:bg-amber-950/80 hover:text-amber-200"
+                                            : "border-white/10 text-slate-500 hover:bg-slate-900 hover:text-slate-200"
+                                    )}
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        onToggleAttackReservation(item);
+                                    }}
+                                >
+                                    <Swords className="h-3.5 w-3.5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                                {item.reservedForAttack ? "Reserved for attack" : "Reserve for attack"}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 )}
 
                 <div className="hidden sm:block">

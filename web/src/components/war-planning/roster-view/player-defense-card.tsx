@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Shield, AlertTriangle } from "lucide-react";
+import { Plus, X, Shield, AlertTriangle, Swords } from "lucide-react";
 import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -16,6 +16,7 @@ import { usePlayerColor } from "../player-color-context";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isReservedForAttack } from "@/lib/attack-reservations";
 
 interface NodeBadgePopoverProps {
     placement: PlacementWithNode;
@@ -211,6 +212,7 @@ export const PlayerDefenseCard = ({
                     const colors = getChampionClassColors(champ.class);
                     const hasTactic = Boolean(activeTag && champ.tags.some((t) => t.name === activeTag.name));
                     const isDuplicate = duplicateDefenders?.has(champ.id);
+                    const isAttackReserved = isReservedForAttack(player.roster, champ.id, placement.starLevel);
 
                     // Find Roster Entry
                     const rosterEntry = player.roster.find(r => 
@@ -225,6 +227,7 @@ export const PlayerDefenseCard = ({
                                 "group flex items-center gap-2 p-1.5 rounded border transition-colors",
                                 hasTactic ? "bg-teal-950/20 border-teal-500/40" : 
                                 isDuplicate ? "bg-orange-950/10 border-orange-500/40" :
+                                isAttackReserved ? "bg-amber-950/10 border-amber-500/40" :
                                 "bg-slate-950 border-slate-800 hover:border-slate-700"
                             )}
                         >
@@ -268,6 +271,7 @@ export const PlayerDefenseCard = ({
                                         </div>
                                         {hasTactic && <Shield className="h-3 w-3 text-teal-400 flex-shrink-0" />}
                                         {isDuplicate && <AlertTriangle className="h-3 w-3 text-orange-400 flex-shrink-0" />}
+                                        {isAttackReserved && <Swords className="h-3 w-3 text-amber-400 flex-shrink-0" />}
                                     </div>
                                     <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                                         {placement.starLevel && (

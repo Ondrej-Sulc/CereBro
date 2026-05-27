@@ -130,6 +130,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
             ascensionLevel: true,
             isAwakened: true,
             sigLevel: true,
+            reservedForAttack: true,
           }
         }
       }

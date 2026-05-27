@@ -150,6 +150,7 @@ export default async function RosterPage(props: {
         initialShowInsights={showInsights}
         initialInsightTab={initialInsightTab}
         initialGlobalPrestigeOptions={initialGlobalPrestigeOptions}
+        canManageAttackReservations={true}
       />
     </div>
   );

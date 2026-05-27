@@ -1,0 +1,1 @@
+ALTER TABLE "Roster" ADD COLUMN "reservedForAttack" BOOLEAN NOT NULL DEFAULT false;

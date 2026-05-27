@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { Player, Roster, ChampionClass, Tag } from "@prisma/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Shield, Star, X, CircleOff, Check } from "lucide-react";
+import { Users, Shield, Star, X, CircleOff, Check, Swords } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { getPlayerRoster, getOwnersOfChampion } from "@/app/planning/actions";
@@ -149,6 +149,13 @@ export default function PlanningToolsPanel({
   const handleAddChampion = (item: RosterWithChampion) => {
     if (onAddExtra && selectedPlayerId) {
       onAddExtra(selectedPlayerId, item.champion.id, item.stars);
+      if (item.reservedForAttack) {
+        toast({
+          title: "Reserved for attack",
+          description: `${item.champion.name} is marked as attack-reserved for this player.`,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -160,6 +167,13 @@ export default function PlanningToolsPanel({
 
     if (onAddExtra && champion) {
       onAddExtra(item.player.id, champion.id, item.stars);
+      if (item.reservedForAttack) {
+        toast({
+          title: "Reserved for attack",
+          description: `${champion.name} is marked as attack-reserved for ${item.player.ingameName}.`,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -339,6 +353,7 @@ export default function PlanningToolsPanel({
                           <div className="flex items-center gap-1.5">
                             <p className={cn("font-bold text-sm", classColors.text)}>{item.champion.name}</p>
                             {isTacticChampion && <Shield className="h-3 w-3 text-teal-400 flex-shrink-0" />}
+                            {item.reservedForAttack && <Swords className="h-3 w-3 text-amber-400 flex-shrink-0" />}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span className={cn("flex items-center font-bold", item.isAwakened ? "text-slate-300" : "text-yellow-500")}>
@@ -353,6 +368,9 @@ export default function PlanningToolsPanel({
                         </div>
                         {isAssigned && (
                           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        )}
+                        {item.reservedForAttack && (
+                          <Swords className="h-4 w-4 text-amber-400 flex-shrink-0" />
                         )}
                       </div>
                     );
@@ -421,6 +439,7 @@ export default function PlanningToolsPanel({
                             <span className="text-sky-400 font-bold">S{item.sigLevel}</span>
                         )}
                         {item.isAscended && <span className="text-amber-400 font-bold">{item.ascensionLevel > 0 ? `A${item.ascensionLevel}` : 'ASC'}</span>}
+                        {item.reservedForAttack && <Swords className="h-3 w-3 text-amber-400" />}
                       </div>
                     </div>
                   ))}

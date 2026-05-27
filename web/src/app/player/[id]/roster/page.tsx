@@ -15,6 +15,7 @@ import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-s
 import { normalizeGlobalPrestigeListOptions } from "@/lib/global-prestige-list";
 import { cache } from "react";
 import { getRosterScreenshotQuota } from "@cerebro/core/services/rosterScreenshotQuotaService";
+import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 
 interface PlayerRosterPageProps {
     params: Promise<{ id: string }>;
@@ -70,6 +71,15 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
         currentUser?.id === targetPlayer.id ||
         currentUser?.isBotAdmin === true ||
         isOfficerSameAlliance;
+    const canManageAttackReservations =
+        currentUser?.id === targetPlayer.id ||
+        currentUser?.isBotAdmin === true ||
+        (
+            currentUser !== null &&
+            currentUser.allianceId !== null &&
+            currentUser.allianceId === targetPlayer.allianceId &&
+            canPlanAllianceWar(currentUser, currentUser.isBotAdmin)
+        );
 
     // targetPlayerId is only set when viewing someone else's roster (for edit API calls)
     const targetPlayerId = currentUser?.id !== targetPlayer.id ? targetPlayer.id : undefined;
@@ -115,6 +125,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
 
     const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
         ...entry,
+        reservedForAttack: canManageAttackReservations ? entry.reservedForAttack : false,
         champion: {
             ...entry.champion,
             images: entry.champion.images as unknown as ChampionImages,
@@ -214,6 +225,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
                 canEdit={canEdit}
                 targetPlayerId={targetPlayerId}
                 shareUrl={shareUrl}
+                canManageAttackReservations={canManageAttackReservations}
             />
         </div>
     );

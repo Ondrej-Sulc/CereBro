@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ChampionCombobox } from "@/components/comboboxes/ChampionCombobox";
 import { PlayerCombobox } from "@/components/comboboxes/PlayerCombobox";
-import { X, Star } from "lucide-react";
+import { X, Star, Swords } from "lucide-react";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
 import { getActiveModifiers } from "@/lib/node-modifier-utils";
 import { ActiveModifiers } from "./active-modifiers";
@@ -18,6 +18,7 @@ import { WarTacticWithTags } from "../hooks/use-war-planning";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { findReservedAttackRosterEntries, formatReservedAttackRosterEntries } from "@/lib/attack-reservations";
 
 export interface WarNodeWithAllocations {
   allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
@@ -92,6 +93,16 @@ export default function DefenseEditor({
       }
       return null;
   }, [defenderId, bgPlacements, currentPlacement, dbNodeId]);
+
+  const attackReservationWarning = useMemo(() => {
+      if (!playerId || !defenderId) return null;
+      const player = players.find(p => p.id === playerId);
+      const selectedRosterEntry = rosterId ? player?.roster.find(r => r.id === rosterId) : undefined;
+      const selectedStarLevel = selectedRosterEntry?.stars ?? currentPlacement?.starLevel;
+      const reservedEntries = findReservedAttackRosterEntries(player?.roster, defenderId, selectedStarLevel);
+      if (reservedEntries.length === 0) return null;
+      return formatReservedAttackRosterEntries(reservedEntries);
+  }, [playerId, defenderId, players, rosterId, currentPlacement?.starLevel]);
 
 
   // Check for tactic matches
@@ -335,6 +346,17 @@ export default function DefenseEditor({
                               <AlertTitle className="text-xs font-bold mb-0.5">Duplicate Defender</AlertTitle>
                               <AlertDescription className="text-xs">
                                   Already placed on Node(s): {duplicateWarning.join(", ")}
+                              </AlertDescription>
+                          </div>
+                      </Alert>
+                  )}
+                  {attackReservationWarning && (
+                      <Alert className="py-2 px-3 border-amber-500/40 bg-amber-950/20 text-amber-100 [&>svg]:relative [&>svg]:left-auto [&>svg]:top-auto flex gap-2 items-start">
+                          <Swords className="h-4 w-4 mt-0.5 text-amber-400" />
+                          <div>
+                              <AlertTitle className="text-xs font-bold mb-0.5 text-amber-300">Reserved for Attack</AlertTitle>
+                              <AlertDescription className="text-xs text-amber-100/90">
+                                  Matching roster entry: {attackReservationWarning}
                               </AlertDescription>
                           </div>
                       </Alert>

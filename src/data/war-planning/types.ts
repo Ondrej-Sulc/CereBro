@@ -11,6 +11,7 @@ export type PlayerWithRoster = Player & {
     ascensionLevel: number;
     isAwakened: boolean;
     sigLevel: number;
+    reservedForAttack?: boolean;
   }[];
 };
 

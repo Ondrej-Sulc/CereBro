@@ -106,6 +106,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
             ascensionLevel: true,
             isAwakened: true,
             sigLevel: true,
+            reservedForAttack: true,
           }
         }      }
     });

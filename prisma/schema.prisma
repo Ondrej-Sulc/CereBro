@@ -469,6 +469,7 @@ model Roster {
   isAscended     Boolean  @default(false)
   ascensionLevel Int      @default(0)
   sigLevel       Int      @default(0)
+  reservedForAttack Boolean @default(false)
   champion       Champion @relation(fields: [championId], references: [id], onDelete: Cascade)
   player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 

@@ -86,6 +86,7 @@ interface RosterViewProps {
   targetPlayerId?: string;
   /** When set, shows a Share button that copies this URL to the clipboard */
   shareUrl?: string;
+  canManageAttackReservations?: boolean;
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
@@ -115,6 +116,7 @@ export function RosterView({
   canEdit = true,
   targetPlayerId,
   shareUrl,
+  canManageAttackReservations = false,
 }: RosterViewProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -405,6 +407,7 @@ export function RosterView({
         isAwakened: false,
         isAscended: false,
         ascensionLevel: 0,
+        reservedForAttack: false,
         powerRating: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -499,15 +502,43 @@ export function RosterView({
     }
   };
 
+  const handleToggleAttackReservation = useCallback(async (item: ProfileRosterEntry) => {
+    if (item.isUnowned) return;
+
+    const nextReserved = !item.reservedForAttack;
+    const previousRoster = roster;
+    setRoster(prev => prev.map(entry => entry.id === item.id ? { ...entry, reservedForAttack: nextReserved } : entry));
+
+    try {
+      const response = await fetch("/api/profile/roster/reservation", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rosterId: item.id, reservedForAttack: nextReserved }),
+      });
+      if (!response.ok) throw new Error("Failed to update attack reservation");
+      const updatedItem = await response.json() as ProfileRosterEntry;
+      setRoster(prev => prev.map(entry => entry.id === item.id ? { ...entry, reservedForAttack: updatedItem.reservedForAttack } : entry));
+      toast({
+        title: nextReserved ? "Reserved for attack" : "Attack reservation removed",
+        description: `${item.champion.name} ${nextReserved ? "will warn defense planners." : "is available for defense planning."}`,
+      });
+    } catch {
+      setRoster(previousRoster);
+      toast({ title: "Error", description: "Failed to update attack reservation.", variant: "destructive" });
+    }
+  }, [roster, toast]);
+
   const itemContent = useCallback((index: number) => {
     const item = filteredRoster[index];
     return (
       <ChampionCard
         item={item} prestige={prestigeMap[item.id]} onClick={canEdit ? setEditingItem : () => {}} mode={canEdit ? viewMode : 'view'}
         filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
+        canManageAttackReservations={canManageAttackReservations}
+        onToggleAttackReservation={handleToggleAttackReservation}
       />
     );
-  }, [filteredRoster, prestigeMap, viewMode, canEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
+  }, [filteredRoster, prestigeMap, viewMode, canEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, canManageAttackReservations, handleToggleAttackReservation]);
 
   return (
     <div className="space-y-6">
