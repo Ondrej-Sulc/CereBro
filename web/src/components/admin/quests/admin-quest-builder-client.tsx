@@ -41,7 +41,7 @@ import { SimpleMarkdown } from "@/components/ui/simple-markdown";
 import { cn } from "@/lib/utils";
 import { Champion } from "@/types/champion";
 import { createAdminQuestRouteChoices, projectAdminQuestBuilderTimeline } from "@/lib/admin-quest-builder-timeline";
-import { applyObjectiveRecommendedChampions, getEffectiveEncounterRecommendedChampions, getObjectiveRecommendationSet } from "@/lib/quest-objectives";
+import { applyObjectiveRecommendedChampions, getEffectiveEncounterRecommendedChampions, getObjectiveRecommendationSet, getQuestObjectiveRouteRecommendationVariants } from "@/lib/quest-objectives";
 import { ChallengePresetsPanel } from "./admin-quest-builder/challenge-presets-panel";
 import { RouteLayoutPanel } from "./admin-quest-builder/route-layout-panel";
 import type {
@@ -312,6 +312,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         return new Map(routePathOptions.map(path => [path.id, path.label]));
     }, [routePathOptions]);
 
+    const routeLayoutSignature = useMemo(() => JSON.stringify((initialQuest.routeSections || []).map(section => ({
+        id: section.id,
+        parentPathId: section.parentPathId,
+        paths: section.paths.map(path => path.id),
+    }))), [initialQuest.routeSections]);
+
     const activeAdminObjective = useMemo(
         () => visibleObjectives.find(objective => objective.id === adminScopeObjectiveId) || null,
         [visibleObjectives, adminScopeObjectiveId]
@@ -322,23 +328,42 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         [visibleObjectives, bulkVideoScopeObjectiveId]
     );
 
+    const activeAdminObjectiveRouteDefaultsSignature = useMemo(() => JSON.stringify({
+        defaultShowContinuation: activeAdminObjective?.defaultShowContinuation ?? false,
+        routeChoices: activeAdminObjective?.routeChoices ?? [],
+    }), [activeAdminObjective]);
+
+    const bulkVideoObjectiveRouteDefaultsSignature = useMemo(() => JSON.stringify({
+        defaultShowContinuation: bulkVideoActiveObjective?.defaultShowContinuation ?? false,
+        routeChoices: bulkVideoActiveObjective?.routeChoices ?? [],
+    }), [bulkVideoActiveObjective]);
+
+    const adminRouteResetKey = `${adminScopeObjectiveId || "base"}::${routeLayoutSignature}::${activeAdminObjectiveRouteDefaultsSignature}`;
+    const bulkVideoRouteResetKey = `${bulkVideoScopeObjectiveId || "base"}::${routeLayoutSignature}::${bulkVideoObjectiveRouteDefaultsSignature}`;
+    const adminRouteResetKeyRef = useRef<string | null>(null);
+    const bulkVideoRouteResetKeyRef = useRef<string | null>(null);
+
     useEffect(() => {
+        if (adminRouteResetKeyRef.current === adminRouteResetKey) return;
+        adminRouteResetKeyRef.current = adminRouteResetKey;
         setAdminRouteChoices(createAdminQuestRouteChoices({
             routeSections: initialQuest.routeSections,
             activeObjective: activeAdminObjective,
         }));
         setShowAdminObjectiveContinuation(Boolean(activeAdminObjective?.defaultShowContinuation));
         setShowAllAdminFights(!activeAdminObjective);
-    }, [initialQuest.routeSections, activeAdminObjective]);
+    }, [adminRouteResetKey, initialQuest.routeSections, activeAdminObjective]);
 
     useEffect(() => {
+        if (bulkVideoRouteResetKeyRef.current === bulkVideoRouteResetKey) return;
+        bulkVideoRouteResetKeyRef.current = bulkVideoRouteResetKey;
         setBulkVideoRouteChoices(createAdminQuestRouteChoices({
             routeSections: initialQuest.routeSections,
             activeObjective: bulkVideoActiveObjective,
         }));
         setBulkVideoShowObjectiveContinuation(Boolean(bulkVideoActiveObjective?.defaultShowContinuation));
         setBulkVideoShowAllFights(!bulkVideoActiveObjective);
-    }, [initialQuest.routeSections, bulkVideoActiveObjective]);
+    }, [bulkVideoRouteResetKey, initialQuest.routeSections, bulkVideoActiveObjective]);
 
     const adminTimelineProjection = useMemo(() => projectAdminQuestBuilderTimeline({
         encounters: sortedPathEncounters,
@@ -379,6 +404,11 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
             applyObjectiveRecommendedChampions(encounter, activeAdminObjective?.id)
         ),
         [adminTimelineProjection.filteredEncounters, activeAdminObjective]
+    );
+
+    const adminRouteRecommendationVariants = useMemo(
+        () => getQuestObjectiveRouteRecommendationVariants(activeAdminObjective),
+        [activeAdminObjective]
     );
 
     const editingEncounterIndex = editingEncounterId
@@ -2579,6 +2609,26 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                     >
                                         {showAdminObjectiveContinuation ? "Stop at Objective" : "Continue after Objective"}
                                     </Button>
+                                )}
+                                {activeAdminObjective && adminRouteRecommendationVariants.length > 0 && !showAllAdminFights && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {adminRouteRecommendationVariants.map(variant => (
+                                            <Button
+                                                key={variant.id}
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-9 border-amber-800/70 text-amber-300 hover:bg-amber-950/40"
+                                                onClick={() => setAdminRouteChoices(prev => ({
+                                                    ...prev,
+                                                    ...variant.choices,
+                                                }))}
+                                                title={`Use ${variant.title}`}
+                                            >
+                                                {variant.title}
+                                            </Button>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                         </div>
