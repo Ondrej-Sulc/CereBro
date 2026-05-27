@@ -211,11 +211,25 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const { toast } = useToast();
 
     const [editingEncounterId, setEditingEncounterId] = useState<string | null>(null);
+    const hasPendingEditorChangesRef = useRef(false);
     const [localEncounters, setLocalEncounters] = useState<EncounterWithRelations[]>(initialQuest.encounters);
 
     useEffect(() => {
-        setLocalEncounters(initialQuest.encounters);
-    }, [initialQuest.encounters]);
+        setLocalEncounters(prev => {
+            if (!editingEncounterId || !hasPendingEditorChangesRef.current) {
+                return initialQuest.encounters;
+            }
+
+            const localEditingEncounter = prev.find(encounter => encounter.id === editingEncounterId);
+            if (!localEditingEncounter) {
+                return initialQuest.encounters;
+            }
+
+            return initialQuest.encounters.map(encounter =>
+                encounter.id === editingEncounterId ? localEditingEncounter : encounter
+            );
+        });
+    }, [initialQuest.encounters, editingEncounterId]);
 
     const defaultSequence = String((localEncounters.length > 0
         ? Math.max(...localEncounters.map(e => e.sequence))
@@ -563,16 +577,22 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
         // A field changed while editing the same encounter — schedule autosave
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        editorRevisionRef.current += 1;
+        hasPendingEditorChangesRef.current = true;
         if (effectiveSequence) {
             updateLocalEncounterFromEditor();
         }
         setSaveStatus('unsaved');
         autoSaveTimerRef.current = setTimeout(() => {
+            autoSaveTimerRef.current = null;
             saveEncounterChangesRef.current?.();
         }, 1500);
 
         return () => {
-            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+                autoSaveTimerRef.current = null;
+            }
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editingEncounterId, defenderId, tips, videoUrl, videos, recommendedTags, encounterRequiredTagIds, recommendedChampionIds, nodeModifierIds, highlightedNodeModifierIds, sequence, difficulty, routePathId]);
@@ -774,6 +794,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const encIdForAutoSaveRef = useRef<string | null>(null);
     const saveEncounterChangesRef = useRef<() => Promise<void>>(async () => {});
+    const editorRevisionRef = useRef(0);
 
     const AVAILABLE_CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MUTANT", "COSMIC", "TECH", "MYSTIC"];
 
@@ -962,6 +983,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     // Saves the currently-editing encounter without canceling edit mode (used by autosave + manual save)
     const saveEncounterChanges = async (difficultyOverride?: EncounterDifficulty) => {
         if (!editingEncounterId || !effectiveSequence) return;
+        const saveRevision = editorRevisionRef.current;
         setSaveStatus('saving');
         try {
             await updateQuestEncounter({
@@ -990,9 +1012,17 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                     championIds: recommendedChampionIds,
                 });
             }
-            updateLocalEncounterFromEditor(difficultyOverride);
-            setSaveStatus('saved');
-            setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2500);
+            if (saveRevision === editorRevisionRef.current) {
+                updateLocalEncounterFromEditor(difficultyOverride);
+                hasPendingEditorChangesRef.current = false;
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2500);
+            } else if (!autoSaveTimerRef.current) {
+                autoSaveTimerRef.current = setTimeout(() => {
+                    autoSaveTimerRef.current = null;
+                    saveEncounterChangesRef.current?.();
+                }, 0);
+            }
         } catch (error: unknown) {
             console.error(error);
             setSaveStatus('idle');
@@ -1006,7 +1036,10 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
 
         if (editingEncounterId) {
             // Flush any pending debounce and save immediately
-            if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+                autoSaveTimerRef.current = null;
+            }
             await saveEncounterChanges();
         } else {
             try {
@@ -1049,6 +1082,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
         encounter: EncounterWithRelations,
         options?: { scrollTimeline?: boolean }
     ) => {
+        hasPendingEditorChangesRef.current = false;
         setEditingEncounterId(encounter.id);
         setSequence(String(encounter.sequence));
         setDefenderId(encounter.defenderId ? String(encounter.defenderId) : "");
@@ -1122,6 +1156,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
     };
 
     const cancelEditing = () => {
+        hasPendingEditorChangesRef.current = false;
         setEditingEncounterId(null);
         setSequence(defaultSequence);
         setDefenderId("");
