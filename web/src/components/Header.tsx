@@ -22,10 +22,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function Header({ userButton, isInAlliance }: { userButton: React.ReactNode; isInAlliance: boolean }) {
+export default function Header({ userButton, isInAlliance, hasPlayerProfile }: { userButton: React.ReactNode; isInAlliance: boolean; hasPlayerProfile: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const rosterLabel = hasPlayerProfile ? "My Roster" : "Champions";
 
   // Automatically close mobile menu on route change using the render-sync pattern
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -60,7 +61,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
                       <Link href="/profile/roster" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
                         <LayoutGrid className="w-4 h-4" />
-                        My Roster
+                        {rosterLabel}
                       </Link>
           
                       <Link href="/planning/quests" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
@@ -183,7 +184,7 @@ export default function Header({ userButton, isInAlliance }: { userButton: React
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                                       >
                                         <LayoutGrid className="w-5 h-5" />
-                                        My Roster
+                                        {rosterLabel}
                                       </Link>
                                       <Link
                                           href="/planning/quests"

@@ -1,19 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, TrendingUp, Swords } from "lucide-react";
-import Image from "next/image";
+import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, Swords } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
 import { ClassFilterToggle } from "./class-filter-toggle";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
-import { CLASSES } from "../constants";
 
 interface RosterFiltersProps {
     search: string;
@@ -55,6 +52,9 @@ interface RosterFiltersProps {
     canManageAttackReservations?: boolean;
     showAttackReservationControls?: boolean;
     onShowAttackReservationControlsChange?: (value: boolean) => void;
+    showOwnershipFilter?: boolean;
+    showRankFilter?: boolean;
+    showPrestigeSort?: boolean;
 }
 
 export function RosterFilters({
@@ -70,6 +70,9 @@ export function RosterFilters({
     canManageAttackReservations = false,
     showAttackReservationControls = false,
     onShowAttackReservationControlsChange,
+    showOwnershipFilter = true,
+    showRankFilter = true,
+    showPrestigeSort = true,
 }: RosterFiltersProps) {
     const activeFilters = useMemo(() => {
         const filters: { label: string, type: string, onRemove: () => void }[] = [];
@@ -82,9 +85,11 @@ export function RosterFilters({
             filters.push({ label: `${star} ★`, type: 'Stars', onRemove: () => onFilterStarsChange(filterStars.filter(s => s !== star)) });
         });
 
-        filterRanks.forEach(rank => {
-            filters.push({ label: `R${rank}`, type: 'Rank', onRemove: () => onFilterRanksChange(filterRanks.filter(r => r !== rank)) });
-        });
+        if (showRankFilter) {
+            filterRanks.forEach(rank => {
+                filters.push({ label: `R${rank}`, type: 'Rank', onRemove: () => onFilterRanksChange(filterRanks.filter(r => r !== rank)) });
+            });
+        }
 
         filterClasses.forEach(cls => {
             filters.push({ label: cls.charAt(0) + cls.slice(1).toLowerCase(), type: 'Class', onRemove: () => onFilterClassesChange(filterClasses.filter(c => c !== cls)) });
@@ -106,12 +111,12 @@ export function RosterFilters({
             filters.push({ label: imm, type: 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
         });
 
-        if (!showUnowned) {
+        if (showOwnershipFilter && !showUnowned) {
             filters.push({ label: 'Hidden', type: 'Unowned', onRemove: () => onShowUnownedChange(true) });
         }
 
         return filters;
-    }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, showUnowned, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onShowUnownedChange]);
+    }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, showUnowned, showOwnershipFilter, showRankFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onShowUnownedChange]);
 
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
@@ -167,24 +172,28 @@ export function RosterFilters({
                             </Button>
                         )}
 
-                        <Button
-                            variant="ghost" size="sm"
-                            onClick={() => onShowUnownedChange(!showUnowned)}
-                            className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium border border-slate-700 bg-slate-950/50", showUnowned ? "text-sky-400 border-sky-500/50 bg-sky-950/30" : "text-slate-400 hover:text-slate-200")}
-                        >
-                            <CircleOff className="w-3.5 h-3.5 mr-1" /> Unowned
-                        </Button>
+                        {showOwnershipFilter && (
+                            <Button
+                                variant="ghost" size="sm"
+                                onClick={() => onShowUnownedChange(!showUnowned)}
+                                className={cn("h-7 px-2 rounded-md transition-all text-[11px] font-medium border border-slate-700 bg-slate-950/50", showUnowned ? "text-sky-400 border-sky-500/50 bg-sky-950/30" : "text-slate-400 hover:text-slate-200")}
+                            >
+                                <CircleOff className="w-3.5 h-3.5 mr-1" /> Unowned
+                            </Button>
+                        )}
 
-                        <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
-                            <SelectTrigger className="h-8 w-full sm:w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
-                                <span className="text-slate-500 mr-1">Sort:</span>
-                                <SelectValue placeholder="Sort" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>
-                                <SelectItem value="NAME" className="text-xs">Name</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        {showPrestigeSort && (
+                            <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
+                                <SelectTrigger className="h-8 w-full sm:w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
+                                    <span className="text-slate-500 mr-1">Sort:</span>
+                                    <SelectValue placeholder="Sort" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>
+                                    <SelectItem value="NAME" className="text-xs">Name</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
 
                         {canEdit && (
                             <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3 flex-1 sm:flex-initial" onClick={onAddClick}>
@@ -207,12 +216,14 @@ export function RosterFilters({
                             onChange={(vals) => onFilterStarsChange(vals.map(Number))}
                             className="flex-1 sm:flex-initial"
                         />
-                        <MultiFilterGroup
-                            options={[1, 2, 3, 4, 5, 6].map(r => ({ value: String(r), label: `R${r}` }))}
-                            values={filterRanks.map(String)}
-                            onChange={(vals) => onFilterRanksChange(vals.map(Number))}
-                            className="flex-1 sm:flex-initial"
-                        />
+                        {showRankFilter && (
+                            <MultiFilterGroup
+                                options={[1, 2, 3, 4, 5, 6].map(r => ({ value: String(r), label: `R${r}` }))}
+                                values={filterRanks.map(String)}
+                                onChange={(vals) => onFilterRanksChange(vals.map(Number))}
+                                className="flex-1 sm:flex-initial"
+                            />
+                        )}
                     </div>
 
                     <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
@@ -257,9 +268,9 @@ export function RosterFilters({
                             className="h-7 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 ml-auto"
                             onClick={() => {
                                 onSearchChange("");
-                                onShowUnownedChange(true);
+                                if (showOwnershipFilter) onShowUnownedChange(true);
                                 onFilterStarsChange([]);
-                                onFilterRanksChange([]);
+                                if (showRankFilter) onFilterRanksChange([]);
                                 onFilterClassesChange([]);
                                 onTagFilterChange([]);
                                 onAbilityCategoryFilterChange([]);

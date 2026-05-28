@@ -44,7 +44,7 @@ export async function MainLayout({ children }: { children: React.ReactNode }) {
         identity={posthogIdentity}
         appVersion={getAppVersion()}
       />
-      <Header userButton={<UserButton />} isInAlliance={isInAlliance} />
+      <Header userButton={<UserButton />} isInAlliance={isInAlliance} hasPlayerProfile={!!player} />
       <main className="flex-grow">
         {children}
       </main>

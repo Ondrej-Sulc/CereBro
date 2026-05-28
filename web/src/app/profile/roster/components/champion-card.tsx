@@ -22,15 +22,21 @@ interface ChampionCardProps {
     onClick: (item: ProfileRosterEntry) => void;
     mode: 'view' | 'edit';
     filters: FilterState;
+    catalogMode?: boolean;
     canManageAttackReservations?: boolean;
     onToggleAttackReservation?: (item: ProfileRosterEntry) => void;
 }
 
-export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, canManageAttackReservations = false, onToggleAttackReservation }: ChampionCardProps) => {
+export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, catalogMode = false, canManageAttackReservations = false, onToggleAttackReservation }: ChampionCardProps) => {
     const [quickOpen, setQuickOpen] = useState(false);
     const classColors = getChampionClassColors(item.champion.class);
+    const showUnownedState = !!item.isUnowned && !catalogMode;
 
-    const borderClass = item.isUnowned ? 'border-slate-700 border-dashed' : getStarBorderClass(item.stars);
+    const borderClass = showUnownedState
+        ? 'border-slate-700 border-dashed'
+        : catalogMode && item.isUnowned
+            ? 'border-slate-800 shadow-black/10'
+            : getStarBorderClass(item.stars);
     const abilityEntries = (item.champion.abilities || []).filter(a => a.type === 'ABILITY');
     const immunityEntries = (item.champion.abilities || []).filter(a => a.type === 'IMMUNITY');
     const displayAbilities = groupItems(abilityEntries, {
@@ -51,7 +57,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, canM
                 "group relative aspect-[3/4] rounded-lg overflow-hidden border cursor-pointer bg-slate-900 shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/40 hover:border-white/20",
                 classColors.bg,
                 borderClass,
-                item.isUnowned && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 transition-all duration-300"
+                showUnownedState && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 transition-all duration-300"
             )}
             onClick={() => {
                 if (mode === 'edit') {
@@ -174,6 +180,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, canM
                     displayImmunities={displayImmunities}
                     highlightedTags={highlightedTags}
                     matchingTagsOnly={filters.tags.length > 0}
+                    showUnownedState={showUnownedState}
                 />
             </>
         );
@@ -247,6 +254,7 @@ function QuickChampionDialog({
     displayImmunities,
     highlightedTags,
     matchingTagsOnly,
+    showUnownedState,
 }: {
     item: ProfileRosterEntry;
     prestige?: number;
@@ -257,6 +265,7 @@ function QuickChampionDialog({
     displayImmunities: DetailItem[];
     highlightedTags: { id: string | number; name: string }[];
     matchingTagsOnly: boolean;
+    showUnownedState: boolean;
 }) {
     const heroUrl = getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full', 'hero');
     const portraitUrl = getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full');
@@ -371,9 +380,9 @@ function QuickChampionDialog({
                                         {item.champion.name}
                                     </h2>
 
-                                    {item.isUnowned ? (
+                                    {showUnownedState ? (
                                         <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Unowned</span>
-                                    ) : (
+                                    ) : !item.isUnowned ? (
                                         <div className="mt-1 flex flex-wrap items-center gap-2">
                                             <span className="inline-flex items-center gap-1 rounded-lg bg-black/40 border border-white/10 px-2.5 py-1 text-sm font-black text-white">
                                                 {item.stars}<span className="text-yellow-400">★</span> R{item.rank}
@@ -389,7 +398,7 @@ function QuickChampionDialog({
                                                 </span>
                                             )}
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
 

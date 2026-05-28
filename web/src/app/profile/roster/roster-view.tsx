@@ -55,10 +55,11 @@ function buildRosterQueryParams(params: {
 }
 
 interface RosterViewProps {
+  variant?: "roster" | "champions";
   initialRoster: ProfileRosterEntry[];
   allChampions: Champion[];
-  player: Player & { alliance: Alliance | null };
-  profiles: (Player & { alliance: Alliance | null })[];
+  player?: (Player & { alliance: Alliance | null }) | null;
+  profiles?: (Player & { alliance: Alliance | null })[];
   top30Average: number;
   top30Cutoff: number;
   prestigeMap: Record<string, number>;
@@ -106,7 +107,8 @@ interface ApiRosterResponse {
 }
 
 export function RosterView({
-  initialRoster, allChampions, player, profiles, top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
+  variant = "roster",
+  initialRoster, allChampions, player = null, profiles = [], top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter, initialSigAwakenedOnly,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit,
@@ -120,16 +122,20 @@ export function RosterView({
 }: RosterViewProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const isChampionsCatalog = variant === "champions";
+  const enablePrestigeInsights = !isChampionsCatalog && !!player;
+  const effectiveCanEdit = canEdit && !isChampionsCatalog && !!player;
+  const effectiveCanManageAttackReservations = canManageAttackReservations && !isChampionsCatalog;
 
   const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
   const [search, setSearch] = useState("");
   const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
   const [filterStars, setFilterStars] = useState<number[]>([]);
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
-  const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">("PRESTIGE");
+  const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">(isChampionsCatalog ? "NAME" : "PRESTIGE");
   const [showUnowned, setShowUnowned] = useState(true);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
-  const [showInsights, setShowInsights] = useState(initialShowInsights);
+  const [showInsights, setShowInsights] = useState(enablePrestigeInsights ? initialShowInsights : false);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [sigAwakenedOnly, setSigAwakenedOnly] = useState(initialSigAwakenedOnly);
   const [limit, setLimit] = useState<number>(initialLimit || 5);
@@ -142,7 +148,7 @@ export function RosterView({
   const [clientSigRecommendations, setSigRecommendations] = useState<SigRecommendation[]>(initialSigRecommendations || []);
   const [clientPotentialRecommendations, setPotentialRecommendations] = useState<PotentialRecommendation[]>(initialPotentialRecommendations || []);
   const [clientTop30Average, setTop30Average] = useState(initialTop30Average);
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(Object.keys(initialPrestigeMap).length === 0);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(enablePrestigeInsights && Object.keys(initialPrestigeMap).length === 0);
   const lastFetchedParams = useRef<string | null>(null);
 
   // Filter States
@@ -176,7 +182,7 @@ export function RosterView({
   useEffect(() => { setRankUpSagaFilter(initialRankSagaFilter); }, [initialRankSagaFilter]);
   useEffect(() => { setSigSagaFilter(initialSigSagaFilter); }, [initialSigSagaFilter]);
   useEffect(() => { setSigAwakenedOnly(initialSigAwakenedOnly); }, [initialSigAwakenedOnly]);
-  useEffect(() => { setShowInsights(initialShowInsights); }, [initialShowInsights]);
+  useEffect(() => { setShowInsights(enablePrestigeInsights ? initialShowInsights : false); }, [enablePrestigeInsights, initialShowInsights]);
 
   const currentParams = buildRosterQueryParams({
     simulationTargetRank, initialSigBudget, initialRankClassFilter, initialSigClassFilter, initialRankSagaFilter, initialSigSagaFilter, sigAwakenedOnly, limit: limit
@@ -190,6 +196,7 @@ export function RosterView({
   const top30Average = usePropsData ? initialTop30Average : clientTop30Average;
 
   const triggerPrestigeUpdate = useCallback((val: number) => {
+    if (!enablePrestigeInsights || !player) return;
     if (val <= 0) return;
     
     // Check if we actually need to update to avoid redundant calls
@@ -203,10 +210,15 @@ export function RosterView({
     }).catch(err => reportClientError("profile_roster_update_prestige", err, {
       player_id: player.id,
     }));
-  }, [player.championPrestige, player.id]);
+  }, [enablePrestigeInsights, player]);
 
   // Fetch Recommendations & Prestige
   useEffect(() => {
+    if (!enablePrestigeInsights) {
+      setIsLoadingRecommendations(false);
+      setPendingSection(null);
+      return;
+    }
 
     if (lastFetchedParams.current === currentParams) {
       setIsLoadingRecommendations(false);
@@ -248,7 +260,7 @@ export function RosterView({
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') return;
         reportClientError("profile_roster_fetch_recommendations", error, {
-          player_id: targetPlayerId ?? player.id,
+          player_id: targetPlayerId ?? player?.id,
         });
         toast({ title: "Warning", description: "Could not load prestige insights.", variant: "destructive" });
       } finally {
@@ -261,7 +273,7 @@ export function RosterView({
 
     fetchData();
     return () => controller.abort();
-  }, [currentParams, initialTop30Average, player.id, targetPlayerId, toast, memoizedPrestigeMap, triggerPrestigeUpdate]);
+  }, [currentParams, enablePrestigeInsights, initialTop30Average, player?.id, targetPlayerId, toast, memoizedPrestigeMap, triggerPrestigeUpdate]);
 
   const handleProfileSwitch = async (playerId: string) => {
     try {
@@ -374,6 +386,7 @@ export function RosterView({
 
 
   useEffect(() => {
+    if (!enablePrestigeInsights) return;
     const timer = setTimeout(() => {
       if (sigBudget !== initialSigBudget) {
         setPendingSection('sig');
@@ -381,7 +394,7 @@ export function RosterView({
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [sigBudget, updateUrlParams, initialSigBudget]);
+  }, [enablePrestigeInsights, sigBudget, updateUrlParams, initialSigBudget]);
 
   const filteredRoster = useMemo(() => {
     let baseRoster = [...roster];
@@ -533,13 +546,14 @@ export function RosterView({
     const item = filteredRoster[index];
     return (
       <ChampionCard
-        item={item} prestige={prestigeMap[item.id]} onClick={canEdit ? setEditingItem : () => {}} mode={canEdit ? viewMode : 'view'}
+        item={item} prestige={isChampionsCatalog ? undefined : prestigeMap[item.id]} onClick={effectiveCanEdit ? setEditingItem : () => {}} mode={effectiveCanEdit ? viewMode : 'view'}
         filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
-        canManageAttackReservations={canManageAttackReservations && showAttackReservationControls}
+        catalogMode={isChampionsCatalog}
+        canManageAttackReservations={effectiveCanManageAttackReservations && showAttackReservationControls}
         onToggleAttackReservation={handleToggleAttackReservation}
       />
     );
-  }, [filteredRoster, prestigeMap, viewMode, canEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, canManageAttackReservations, showAttackReservationControls, handleToggleAttackReservation]);
+  }, [filteredRoster, prestigeMap, viewMode, effectiveCanEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, isChampionsCatalog, effectiveCanManageAttackReservations, showAttackReservationControls, handleToggleAttackReservation]);
 
   return (
     <div className="space-y-6">
@@ -547,9 +561,9 @@ export function RosterView({
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-white tracking-tight">
-              {player.ingameName}&apos;s Champions
+              {isChampionsCatalog ? "Champions" : `${player?.ingameName ?? "Player"}'s Champions`}
             </h1>
-            {!targetPlayerId && profiles.length > 1 && (
+            {!isChampionsCatalog && !targetPlayerId && profiles.length > 1 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8 gap-1 bg-slate-900 border-slate-700">
@@ -562,10 +576,10 @@ export function RosterView({
                     <DropdownMenuItem
                       key={p.id}
                       onClick={() => handleProfileSwitch(p.id)}
-                      className={cn("cursor-pointer focus:bg-slate-800", p.id === player.id && "bg-slate-800/50")}
+                      className={cn("cursor-pointer focus:bg-slate-800", p.id === player?.id && "bg-slate-800/50")}
                     >
                       <div className="flex flex-col">
-                        <span className={cn("font-medium", p.id === player.id ? "text-white" : "text-slate-300")}>
+                        <span className={cn("font-medium", p.id === player?.id ? "text-white" : "text-slate-300")}>
                           {p.ingameName}
                         </span>
                         {p.alliance && (
@@ -579,18 +593,22 @@ export function RosterView({
             )}
           </div>
           <p className="text-slate-400 mt-1">
-            {targetPlayerId ? "View and manage this player's champions." : "Manage your champions, update stats, and track your progress."}
+            {isChampionsCatalog
+              ? "Browse all playable champions, filter by class, tags, abilities, and immunities."
+              : targetPlayerId
+                ? "View and manage this player's champions."
+                : "Manage your champions, update stats, and track your progress."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {top30Average > 0 && (
+          {enablePrestigeInsights && top30Average > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner h-10">
               <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
               <span className="text-amber-100 font-mono font-bold text-lg">{top30Average.toLocaleString('en-US')}</span>
             </div>
           )}
 
-          {shareUrl && (
+          {!isChampionsCatalog && shareUrl && (
             <Button
               variant="outline"
               onClick={() => {
@@ -604,7 +622,7 @@ export function RosterView({
             </Button>
           )}
 
-          {!targetPlayerId && (
+          {!isChampionsCatalog && !targetPlayerId && (
             <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
               <Link href="/profile/update">
                 <Upload className="w-4 h-4" />
@@ -615,38 +633,42 @@ export function RosterView({
         </div>
       </div>
 
-      <RosterModeSwitch
-        activeMode={showInsights ? "prestige" : "roster"}
-        onModeChange={(mode) => {
-          const nextShowInsights = mode === "prestige";
-          setShowInsights(nextShowInsights);
-          updateUrlParams({ insights: nextShowInsights ? "true" : null });
-        }}
-        rosterCount={filteredRoster.length}
-        prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
-      />
+      {enablePrestigeInsights && (
+        <>
+          <RosterModeSwitch
+            activeMode={showInsights ? "prestige" : "roster"}
+            onModeChange={(mode) => {
+              const nextShowInsights = mode === "prestige";
+              setShowInsights(nextShowInsights);
+              updateUrlParams({ insights: nextShowInsights ? "true" : null });
+            }}
+            rosterCount={filteredRoster.length}
+            prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
+          />
 
-      <RosterInsights
-        showInsights={showInsights}
-        recommendations={recommendations} sigRecommendations={sigRecommendations}
-        potentialRecommendations={potentialRecommendations}
-        initialInsightTab={initialInsightTab}
-        onInsightTabChange={(tab) => updateUrlParams({ insightsTab: tab === 'potential' ? null : tab })}
-        targetPlayerId={targetPlayerId}
-        initialGlobalPrestigeOptions={initialGlobalPrestigeOptions}
-        onGlobalPrestigeOptionsChange={handleGlobalPrestigeOptionsChange}
-        globalDefaultTargetRank={simulationTargetRank}
-        globalMaxRankForRarity={maxRankForGlobalPrestigeRarity}
-        simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
-        sigBudget={sigBudget} onSigBudgetChange={setSigBudget}
-        rankUpClassFilter={rankUpClassFilter} onRankUpClassFilterChange={handleRankClassFilterChange}
-        sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
-        rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
-        sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
-        sigAwakenedOnly={sigAwakenedOnly} onSigAwakenedOnlyChange={(val) => { setSigAwakenedOnly(val); setPendingSection('sig'); updateUrlParams({ sigAwakenedOnly: val ? 'true' : null }); }}
-        limit={limit} onLimitChange={(val) => { setLimit(val); updateUrlParams({ limit: val !== 5 ? val.toString() : null }); }}
-        isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
-      />
+          <RosterInsights
+            showInsights={showInsights}
+            recommendations={recommendations} sigRecommendations={sigRecommendations}
+            potentialRecommendations={potentialRecommendations}
+            initialInsightTab={initialInsightTab}
+            onInsightTabChange={(tab) => updateUrlParams({ insightsTab: tab === 'potential' ? null : tab })}
+            targetPlayerId={targetPlayerId}
+            initialGlobalPrestigeOptions={initialGlobalPrestigeOptions}
+            onGlobalPrestigeOptionsChange={handleGlobalPrestigeOptionsChange}
+            globalDefaultTargetRank={simulationTargetRank}
+            globalMaxRankForRarity={maxRankForGlobalPrestigeRarity}
+            simulationTargetRank={simulationTargetRank} onTargetRankChange={(val) => updateUrlParams({ targetRank: val })}
+            sigBudget={sigBudget} onSigBudgetChange={setSigBudget}
+            rankUpClassFilter={rankUpClassFilter} onRankUpClassFilterChange={handleRankClassFilterChange}
+            sigClassFilter={sigClassFilter} onSigClassFilterChange={handleSigClassFilterChange}
+            rankUpSagaFilter={rankUpSagaFilter} onRankUpSagaFilterChange={handleRankSagaFilterChange}
+            sigSagaFilter={sigSagaFilter} onSigSagaFilterChange={handleSigSagaFilterChange}
+            sigAwakenedOnly={sigAwakenedOnly} onSigAwakenedOnlyChange={(val) => { setSigAwakenedOnly(val); setPendingSection('sig'); updateUrlParams({ sigAwakenedOnly: val ? 'true' : null }); }}
+            limit={limit} onLimitChange={(val) => { setLimit(val); updateUrlParams({ limit: val !== 5 ? val.toString() : null }); }}
+            isPending={isLoadingRecommendations || isPending} pendingSection={pendingSection} onRecommendationClick={handleRecommendationClick}
+          />
+        </>
+      )}
 
       {!showInsights && (
         <>
@@ -661,13 +683,16 @@ export function RosterView({
             abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
             immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
             initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
-            canEdit={canEdit}
-            canManageAttackReservations={canManageAttackReservations}
+            canEdit={effectiveCanEdit}
+            canManageAttackReservations={effectiveCanManageAttackReservations}
             showAttackReservationControls={showAttackReservationControls}
             onShowAttackReservationControlsChange={setShowAttackReservationControls}
+            showOwnershipFilter={!isChampionsCatalog}
+            showRankFilter={!isChampionsCatalog}
+            showPrestigeSort={!isChampionsCatalog}
           />
 
-          {canManageAttackReservations && showAttackReservationControls && (
+          {effectiveCanManageAttackReservations && showAttackReservationControls && (
             <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-3 text-sm text-amber-100 shadow-inner">
               <Swords className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
               <p>
@@ -686,8 +711,8 @@ export function RosterView({
         </>
       )}
 
-      {canEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
-      {canEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
+      {effectiveCanEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
+      {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>
   );
