@@ -15,7 +15,7 @@ import { Player, Alliance } from "@prisma/client";
 import { isChampionObtainableAs } from "@/lib/champion-obtainable";
 
 // Local imports
-import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab } from "./types";
+import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab, RosterSortField, SortDirection } from "./types";
 import {
   defaultGlobalPrestigeRank,
   maxRankForGlobalPrestigeRarity,
@@ -54,6 +54,66 @@ function buildRosterQueryParams(params: {
   return searchParams.toString();
 }
 
+function getRosterSortName(item: ProfileRosterEntry) {
+  return item.champion.name;
+}
+
+function getRosterSortReleaseTime(item: ProfileRosterEntry) {
+  const value = item.champion.releaseDate;
+  if (!value) return null;
+  const time = value instanceof Date ? value.getTime() : new Date(value).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+function getRosterSortPrestige(
+  item: ProfileRosterEntry,
+  prestigeMap: Record<string, number>,
+  catalogPrestigeByChampionId: Record<number, number>
+) {
+  if (item.isUnowned) return catalogPrestigeByChampionId[item.championId] ?? 0;
+  return prestigeMap[item.id] ?? 0;
+}
+
+function compareRosterEntries(
+  a: ProfileRosterEntry,
+  b: ProfileRosterEntry,
+  field: RosterSortField,
+  direction: SortDirection,
+  maps: {
+    prestigeMap: Record<string, number>;
+    catalogPrestigeByChampionId: Record<number, number>;
+  }
+) {
+  const nameTieBreak = getRosterSortName(a).localeCompare(getRosterSortName(b));
+
+  if (field === "NAME") {
+    const nameCompare = getRosterSortName(a).localeCompare(getRosterSortName(b));
+    return direction === "ASC" ? nameCompare : -nameCompare;
+  }
+
+  if (field === "RELEASE_DATE") {
+    const releaseA = getRosterSortReleaseTime(a);
+    const releaseB = getRosterSortReleaseTime(b);
+    if (releaseA == null && releaseB == null) return nameTieBreak;
+    if (releaseA == null) return 1;
+    if (releaseB == null) return -1;
+    if (releaseA !== releaseB) {
+      return direction === "ASC" ? releaseA - releaseB : releaseB - releaseA;
+    }
+    return nameTieBreak;
+  }
+
+  const prestigeA = getRosterSortPrestige(a, maps.prestigeMap, maps.catalogPrestigeByChampionId);
+  const prestigeB = getRosterSortPrestige(b, maps.prestigeMap, maps.catalogPrestigeByChampionId);
+  if (prestigeA <= 0 && prestigeB <= 0) return nameTieBreak;
+  if (prestigeA <= 0) return 1;
+  if (prestigeB <= 0) return -1;
+  if (prestigeA !== prestigeB) {
+    return direction === "ASC" ? prestigeA - prestigeB : prestigeB - prestigeA;
+  }
+  return nameTieBreak;
+}
+
 interface RosterViewProps {
   variant?: "roster" | "champions";
   initialRoster: ProfileRosterEntry[];
@@ -63,6 +123,7 @@ interface RosterViewProps {
   top30Average: number;
   top30Cutoff: number;
   prestigeMap: Record<string, number>;
+  catalogPrestigeByChampionId?: Record<number, number>;
   recommendations?: Recommendation[];
   sigRecommendations?: SigRecommendation[];
   potentialRecommendations?: PotentialRecommendation[];
@@ -108,7 +169,7 @@ interface ApiRosterResponse {
 
 export function RosterView({
   variant = "roster",
-  initialRoster, allChampions, player = null, profiles = [], top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
+  initialRoster, allChampions, player = null, profiles = [], top30Average: initialTop30Average, prestigeMap: initialPrestigeMap, catalogPrestigeByChampionId = {}, recommendations: initialRecommendations, sigRecommendations: initialSigRecommendations, potentialRecommendations: initialPotentialRecommendations,
   simulationTargetRank, initialSigBudget = 0, initialRankClassFilter, initialSigClassFilter,
   initialRankSagaFilter, initialSigSagaFilter, initialSigAwakenedOnly,
   initialTags, initialAbilityCategories, initialAbilities, initialImmunities, initialLimit,
@@ -132,7 +193,8 @@ export function RosterView({
   const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
   const [filterStars, setFilterStars] = useState<number[]>([]);
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
-  const [sortBy, setSortBy] = useState<"PRESTIGE" | "NAME">(isChampionsCatalog ? "NAME" : "PRESTIGE");
+  const [sortBy, setSortBy] = useState<RosterSortField>("NAME");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("ASC");
   const [showUnowned, setShowUnowned] = useState(true);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(enablePrestigeInsights ? initialShowInsights : false);
@@ -471,14 +533,11 @@ export function RosterView({
       return true;
     });
 
-    return filtered.sort((a, b) => {
-      if (sortBy === "NAME") return a.champion.name.localeCompare(b.champion.name);
-      const prestigeA = prestigeMap[a.id] || 0;
-      const prestigeB = prestigeMap[b.id] || 0;
-      if (prestigeA !== prestigeB) return prestigeB - prestigeA;
-      return a.champion.name.localeCompare(b.champion.name);
-    });
-  }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, prestigeMap, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
+    return filtered.sort((a, b) => compareRosterEntries(a, b, sortBy, sortDirection, {
+      prestigeMap,
+      catalogPrestigeByChampionId,
+    }));
+  }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
 
   const handleUpdate = async (updatedData: Partial<ProfileRosterEntry> & { id: string }) => {
     try {
@@ -676,7 +735,7 @@ export function RosterView({
             search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
             showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
             onAddClick={() => setIsAddingChampion(true)}
-            sortBy={sortBy} onSortByChange={setSortBy} filterStars={filterStars} onFilterStarsChange={setFilterStars}
+            sortBy={sortBy} onSortByChange={setSortBy} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} filterStars={filterStars} onFilterStarsChange={setFilterStars}
             filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
             tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
             abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
@@ -689,7 +748,7 @@ export function RosterView({
             onShowAttackReservationControlsChange={setShowAttackReservationControls}
             showOwnershipFilter={!isChampionsCatalog}
             showRankFilter={!isChampionsCatalog}
-            showPrestigeSort={!isChampionsCatalog}
+            showPrestigeSort={true}
           />
 
           {effectiveCanManageAttackReservations && showAttackReservationControls && (

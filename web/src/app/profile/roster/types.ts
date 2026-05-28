@@ -85,6 +85,10 @@ export type PrestigeRecommendationReason = "already_top30" | "enters_top30" | "i
 
 export type PrestigeInsightTab = "potential" | "rank" | "sig" | "global";
 
+export type RosterSortField = "NAME" | "RELEASE_DATE" | "PRESTIGE";
+
+export type SortDirection = "ASC" | "DESC";
+
 export interface FilterState {
     tags: string[];
     categories: string[];

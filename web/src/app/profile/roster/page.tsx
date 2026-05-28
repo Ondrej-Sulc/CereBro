@@ -4,10 +4,12 @@ import { getUserPlayerWithAlliance, getUserProfiles } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { ChampionImages } from "@/types/champion";
+import { Champion, ChampionImages } from "@/types/champion";
 import { PrestigeInsightTab, ProfileRosterEntry } from "./types";
 import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-service";
 import { normalizeGlobalPrestigeListOptions } from "@/lib/global-prestige-list";
+import { createMcocPrestigeProjector } from "@/lib/mcoc-prestige";
+import { isChampionObtainableAs } from "@/lib/champion-obtainable";
 
 export const metadata: Metadata = {
   title: "My Champions | CereBro",
@@ -42,6 +44,7 @@ export default async function RosterPage(props: {
 
   if (!player) {
     const { allChampions, tags, abilityCategories, abilities, immunities } = await loadChampionCatalogData();
+    const catalogPrestigeByChampionId = await loadPublicCatalogPrestigeByChampionId(allChampions);
     const initialGlobalPrestigeOptions = normalizeGlobalPrestigeListOptions({}, { targetRank: 3 });
 
     return (
@@ -56,6 +59,7 @@ export default async function RosterPage(props: {
           top30Average={0}
           top30Cutoff={0}
           prestigeMap={{}}
+          catalogPrestigeByChampionId={catalogPrestigeByChampionId}
           recommendations={[]}
           sigRecommendations={[]}
           potentialRecommendations={[]}
@@ -205,4 +209,32 @@ async function loadChampionCatalogData() {
   ]);
 
   return { allChampions, tags, abilityCategories, abilities, immunities };
+}
+
+async function loadPublicCatalogPrestigeByChampionId(allChampions: Champion[]): Promise<Record<number, number>> {
+  const prestigeRows = await prisma.championPrestige.findMany({
+    where: {
+      rarity: 7,
+      rank: 3,
+      sig: { in: [0, 1, 200] },
+    },
+    select: { championId: true, rarity: true, rank: true, sig: true, prestige: true },
+  });
+  const projector = createMcocPrestigeProjector(prestigeRows);
+  const prestigeByChampionId: Record<number, number> = {};
+
+  for (const champion of allChampions) {
+    if (!isChampionObtainableAs(champion, 7)) continue;
+
+    const prestige = projector.project({
+      championId: champion.id,
+      rarity: 7,
+      rank: 3,
+      sigLevel: 200,
+      ascensionLevel: 0,
+    });
+    if (prestige > 0) prestigeByChampionId[champion.id] = prestige;
+  }
+
+  return prestigeByChampionId;
 }

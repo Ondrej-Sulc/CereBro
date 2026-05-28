@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, Swords } from "lucide-react";
+import { Search, Eye, PenLine, Plus, CircleOff, BookOpen, Zap, Shield, Tag as TagIcon, Trash2, X, Swords, ArrowUp, ArrowDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
 import { ClassFilterToggle } from "./class-filter-toggle";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
+import type { RosterSortField, SortDirection } from "../types";
 
 interface RosterFiltersProps {
     search: string;
@@ -20,8 +21,10 @@ interface RosterFiltersProps {
     showUnowned: boolean;
     onShowUnownedChange: (val: boolean) => void;
     onAddClick: () => void;
-    sortBy: "PRESTIGE" | "NAME";
-    onSortByChange: (val: "PRESTIGE" | "NAME") => void;
+    sortBy: RosterSortField;
+    onSortByChange: (val: RosterSortField) => void;
+    sortDirection: SortDirection;
+    onSortDirectionChange: (val: SortDirection) => void;
     filterStars: number[];
     onFilterStarsChange: (val: number[]) => void;
     filterRanks: number[];
@@ -60,7 +63,7 @@ interface RosterFiltersProps {
 export function RosterFilters({
     search, onSearchChange, viewMode, onViewModeChange, onAddClick,
     showUnowned, onShowUnownedChange,
-    sortBy, onSortByChange, filterStars, onFilterStarsChange, filterRanks, onFilterRanksChange,
+    sortBy, onSortByChange, sortDirection, onSortDirectionChange, filterStars, onFilterStarsChange, filterRanks, onFilterRanksChange,
     filterClasses, onFilterClassesChange, tagFilter, onTagFilterChange, tagLogic, onTagLogicChange,
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
@@ -182,18 +185,30 @@ export function RosterFilters({
                             </Button>
                         )}
 
-                        {showPrestigeSort && (
-                            <Select value={sortBy} onValueChange={(v) => onSortByChange(v as "PRESTIGE" | "NAME")}>
-                                <SelectTrigger className="h-8 w-full sm:w-[140px] bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
+                        <div className="flex min-w-0 flex-1 sm:flex-initial">
+                            <Select value={sortBy} onValueChange={(v) => onSortByChange(v as RosterSortField)}>
+                                <SelectTrigger className="h-8 w-full min-w-[128px] rounded-r-none bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
                                     <span className="text-slate-500 mr-1">Sort:</span>
                                     <SelectValue placeholder="Sort" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>
                                     <SelectItem value="NAME" className="text-xs">Name</SelectItem>
+                                    <SelectItem value="RELEASE_DATE" className="text-xs">Release Date</SelectItem>
+                                    {showPrestigeSort && <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>}
                                 </SelectContent>
                             </Select>
-                        )}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                title={sortDirection === "ASC" ? "Sort ascending" : "Sort descending"}
+                                aria-label={sortDirection === "ASC" ? "Sort ascending" : "Sort descending"}
+                                onClick={() => onSortDirectionChange(sortDirection === "ASC" ? "DESC" : "ASC")}
+                                className="h-8 w-9 rounded-l-none border-l-0 border-slate-700 bg-slate-950/50 text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                            >
+                                {sortDirection === "ASC" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+                            </Button>
+                        </div>
 
                         {canEdit && (
                             <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3 flex-1 sm:flex-initial" onClick={onAddClick}>
