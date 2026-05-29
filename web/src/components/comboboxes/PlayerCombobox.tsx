@@ -31,6 +31,18 @@ interface PlayerComboboxProps {
   attackerId?: number; // To show rank info
   compact?: boolean;
   disabled?: boolean;
+  showAttackReservationMarker?: boolean;
+}
+
+function compareRosterEntries(
+  a: PlayerWithRoster["roster"][number],
+  b: PlayerWithRoster["roster"][number]
+) {
+  if (a.stars !== b.stars) return b.stars - a.stars;
+  if (a.rank !== b.rank) return b.rank - a.rank;
+  if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
+  if (a.isAwakened !== b.isAwakened) return a.isAwakened ? -1 : 1;
+  return b.sigLevel - a.sigLevel;
 }
 
 export const PlayerCombobox = React.memo(function PlayerCombobox({
@@ -41,7 +53,8 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
   className,
   attackerId,
   compact,
-  disabled
+  disabled,
+  showAttackReservationMarker = false
 }: PlayerComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -167,15 +180,12 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                              itemContent={(index) => {
                                const p = filteredPlayers[index];
                                let rosterInfo = "";
+                               let isReservedForAttack = false;
                                if (attackerId != null) { // Changed to nullish check
                                    const matchingEntries = p.roster.filter((r: PlayerWithRoster['roster'][number]) => r.championId === attackerId);
                                    if (matchingEntries.length > 0) {
-                                       const r = matchingEntries.sort((a, b) => {
-                                           if (a.stars !== b.stars) return b.stars - a.stars;
-                                           if (a.rank !== b.rank) return b.rank - a.rank;
-                                           if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
-                                           return b.sigLevel - a.sigLevel;
-                                       })[0];
+                                       const r = matchingEntries.sort(compareRosterEntries)[0];
+                                       isReservedForAttack = Boolean(r.reservedForAttack);
                                        rosterInfo = `(${r.stars}* R${r.rank}${r.isAscended && r.ascensionLevel > 0 ? ` A${r.ascensionLevel}` : ''}${r.isAwakened && r.sigLevel > 0 ? ` S${r.sigLevel}` : ''})`;
                                    }
                                }
@@ -204,6 +214,9 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                                        {p.ingameName}
                                        {rosterInfo && ( // Conditionally render span
                                          <span className="text-xs text-muted-foreground ml-1">{rosterInfo}</span>
+                                       )}
+                                       {showAttackReservationMarker && isReservedForAttack && (
+                                         <span className="text-xs text-amber-400 ml-1">⚔️</span>
                                        )}
                                    </span>
                                  </CommandItem>

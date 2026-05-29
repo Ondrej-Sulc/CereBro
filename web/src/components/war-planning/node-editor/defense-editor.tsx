@@ -24,6 +24,38 @@ export interface WarNodeWithAllocations {
   allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
 }
 
+type DefenseRosterEntry = PlayerWithRoster["roster"][number];
+
+function compareDefenseRosterEntries(a: DefenseRosterEntry, b: DefenseRosterEntry) {
+  if (a.stars !== b.stars) return b.stars - a.stars;
+  if (a.rank !== b.rank) return b.rank - a.rank;
+  if (a.isAscended !== b.isAscended) return a.isAscended ? -1 : 1;
+  if (a.isAwakened !== b.isAwakened) return a.isAwakened ? -1 : 1;
+  return b.sigLevel - a.sigLevel;
+}
+
+function formatDefenseRosterRank(entry: DefenseRosterEntry) {
+  const parts = [`${entry.stars}*`, `R${entry.rank}`];
+
+  if (entry.isAscended && entry.ascensionLevel > 0) {
+    parts.push(`A${entry.ascensionLevel}`);
+  }
+
+  if (entry.isAwakened && entry.sigLevel > 0) {
+    parts.push(`S${entry.sigLevel}`);
+  }
+
+  if (entry.reservedForAttack) {
+    parts.push("⚔️");
+  }
+
+  return parts.join(" ");
+}
+
+function findBestDefenseRosterEntry(entries: DefenseRosterEntry[]) {
+  return [...entries].sort(compareDefenseRosterEntries)[0];
+}
+
 interface DefenseEditorProps {
   onClose: () => void;
   planId: string;
@@ -69,10 +101,11 @@ export default function DefenseEditor({
       if (!currentPlacement?.starLevel || !currentPlacement?.playerId || !currentPlacement?.defenderId) return undefined;
       const player = players.find(p => p.id === currentPlacement.playerId);
       // Best guess for initial roster entry match if we only have starLevel from DB
-      return player?.roster.find(r => 
+      const matchingEntries = player?.roster.filter(r => 
           r.championId === currentPlacement.defenderId && 
           r.stars === currentPlacement.starLevel
-      )?.id;
+      ) ?? [];
+      return findBestDefenseRosterEntry(matchingEntries)?.id;
   });
   
   const [isDefenderOpen, setIsDefenderOpen] = useState(false);
@@ -134,10 +167,11 @@ export default function DefenseEditor({
     const newRosterId = (() => {
         if (!currentPlacement?.starLevel || !currentPlacement?.playerId || !currentPlacement?.defenderId) return undefined;
         const player = players.find(p => p.id === currentPlacement.playerId);
-        return player?.roster.find(r => 
+        const matchingEntries = player?.roster.filter(r => 
             r.championId === currentPlacement.defenderId && 
             r.stars === currentPlacement.starLevel
-        )?.id;
+        ) ?? [];
+        return findBestDefenseRosterEntry(matchingEntries)?.id;
     })();
     if (newRosterId !== rosterId) setRosterId(newRosterId);
     
@@ -190,6 +224,55 @@ export default function DefenseEditor({
       return filtered.sort((a, b) => a.ingameName.localeCompare(b.ingameName));
   }, [players, currentBattlegroup, playerId]);
 
+  const displayChampions = useMemo(() => {
+      if (!playerId) return champions;
+
+      const player = players.find(p => p.id === playerId);
+      if (!player) return champions;
+
+      const rosterMap = new Map<number, DefenseRosterEntry>();
+      player.roster.forEach(entry => {
+          const existing = rosterMap.get(entry.championId);
+          if (!existing || compareDefenseRosterEntries(entry, existing) < 0) {
+              rosterMap.set(entry.championId, entry);
+          }
+      });
+
+      const rosterChampions: (Champion & { group: string; originalName: string; rankData: DefenseRosterEntry })[] = [];
+      const otherChampions: (Champion & { group: string; originalName: string })[] = [];
+
+      champions.forEach(champion => {
+          const rankData = rosterMap.get(champion.id);
+
+          if (rankData) {
+              rosterChampions.push({
+                  ...champion,
+                  name: `${champion.name} (${formatDefenseRosterRank(rankData)})`,
+                  originalName: champion.name,
+                  group: "Player Roster",
+                  rankData,
+              });
+              return;
+          }
+
+          otherChampions.push({
+              ...champion,
+              originalName: champion.name,
+              group: "All Champions",
+          });
+      });
+
+      rosterChampions.sort((a, b) => {
+          const rankComparison = compareDefenseRosterEntries(a.rankData, b.rankData);
+          if (rankComparison !== 0) return rankComparison;
+          return a.originalName.localeCompare(b.originalName);
+      });
+
+      otherChampions.sort((a, b) => a.originalName.localeCompare(b.originalName));
+
+      return [...rosterChampions, ...otherChampions];
+  }, [champions, playerId, players]);
+
   // Helper to trigger save
   const triggerSave = useCallback((updates: Partial<Pick<WarDefensePlacement, 'defenderId' | 'playerId' | 'starLevel'>>) => {
     if (nodeId === null) return;
@@ -220,13 +303,8 @@ export default function DefenseEditor({
     let newStarLevel = undefined;
     if (val && playerId) {
         const player = players.find(p => p.id === playerId);
-        const rosterEntry = player?.roster
-            .filter(r => r.championId === val)
-            .sort((a, b) => {
-                if (a.stars !== b.stars) return b.stars - a.stars;
-                if (a.rank !== b.rank) return b.rank - a.rank;
-                return b.sigLevel - a.sigLevel;
-            })[0];
+        const matchingEntries = player?.roster.filter(r => r.championId === val) ?? [];
+        const rosterEntry = findBestDefenseRosterEntry(matchingEntries);
             
         if (rosterEntry) {
             newStarLevel = rosterEntry.stars;
@@ -248,13 +326,8 @@ export default function DefenseEditor({
     let newStarLevel = undefined;
     if (val && defenderId) {
         const player = players.find(p => p.id === val);
-        const rosterEntry = player?.roster
-            .filter(r => r.championId === defenderId)
-            .sort((a, b) => {
-                if (a.stars !== b.stars) return b.stars - a.stars;
-                if (a.rank !== b.rank) return b.rank - a.rank;
-                return b.sigLevel - a.sigLevel;
-            })[0];
+        const matchingEntries = player?.roster.filter(r => r.championId === defenderId) ?? [];
+        const rosterEntry = findBestDefenseRosterEntry(matchingEntries);
             
         if (rosterEntry) {
              newStarLevel = rosterEntry.stars;
@@ -289,11 +362,7 @@ export default function DefenseEditor({
   const rosterEntries = useMemo(() => {
       if (!playerId || !defenderId) return [];
       const player = players.find(p => p.id === playerId);
-      return player?.roster.filter(r => r.championId === defenderId).sort((a, b) => {
-          if (a.stars !== b.stars) return b.stars - a.stars;
-          if (a.rank !== b.rank) return b.rank - a.rank;
-          return b.sigLevel - a.sigLevel;
-      }) || [];
+      return player?.roster.filter(r => r.championId === defenderId).sort(compareDefenseRosterEntries) || [];
   }, [playerId, defenderId, players]);
 
   if (nodeId === null) return null;
@@ -321,7 +390,7 @@ export default function DefenseEditor({
             <div className="col-span-3">
               <div className="flex flex-col gap-2">
                   <ChampionCombobox
-                    champions={champions}
+                    champions={displayChampions}
                     value={defenderId !== undefined ? String(defenderId) : ""}
                     onSelect={handleDefenderChange}
                     open={!isReadOnly && isDefenderOpen}
@@ -374,7 +443,8 @@ export default function DefenseEditor({
                 value={playerId}
                 onSelect={handlePlayerChange}
                 disabled={isReadOnly || !isReady}
-                attackerId={defenderId} 
+                attackerId={defenderId}
+                showAttackReservationMarker
               />
             </div>
           </div>
