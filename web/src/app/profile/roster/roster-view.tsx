@@ -194,8 +194,8 @@ export function RosterView({
   const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
   const [filterStars, setFilterStars] = useState<number[]>([]);
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
-  const [sortBy, setSortBy] = useState<RosterSortField>("NAME");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("ASC");
+  const [sortBy, setSortBy] = useState<RosterSortField>(enablePrestigeInsights ? "PRESTIGE" : "NAME");
+  const [sortDirection, setSortDirection] = useState<SortDirection>(enablePrestigeInsights ? "DESC" : "ASC");
   const [showUnowned, setShowUnowned] = useState(true);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(enablePrestigeInsights ? initialShowInsights : false);
