@@ -25,6 +25,9 @@ interface RosterFiltersProps {
     onSortByChange: (val: RosterSortField) => void;
     sortDirection: SortDirection;
     onSortDirectionChange: (val: SortDirection) => void;
+    visibleChampionCount: number;
+    totalChampionCount?: number;
+    countLabel: string;
     filterStars: number[];
     onFilterStarsChange: (val: number[]) => void;
     filterRanks: number[];
@@ -64,6 +67,7 @@ export function RosterFilters({
     search, onSearchChange, viewMode, onViewModeChange, onAddClick,
     showUnowned, onShowUnownedChange,
     sortBy, onSortByChange, sortDirection, onSortDirectionChange, filterStars, onFilterStarsChange, filterRanks, onFilterRanksChange,
+    countLabel,
     filterClasses, onFilterClassesChange, tagFilter, onTagFilterChange, tagLogic, onTagLogicChange,
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
@@ -124,7 +128,7 @@ export function RosterFilters({
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
             <div className="flex flex-col gap-2.5">
-                {/* Row 1: Search + View Toggle + Sort + Add */}
+                {/* Row 1: Search + Count + Sort + Controls */}
                 <div className="flex flex-wrap gap-2.5 items-center justify-between">
                     <div className="flex gap-2 items-center flex-1 min-w-[200px] max-w-full sm:max-w-md">
                         <div className="relative flex-1">
@@ -139,6 +143,37 @@ export function RosterFilters({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <div className="flex h-8 items-center rounded-lg border border-slate-800 bg-slate-950/50 px-3 text-[11px] font-semibold text-slate-300">
+                            {countLabel}
+                        </div>
+
+                        <div className="flex min-w-0 flex-1 items-center rounded-lg border border-slate-700 bg-slate-950/60 p-0.5 sm:flex-initial">
+                            <Select value={sortBy} onValueChange={(v) => onSortByChange(v as RosterSortField)}>
+                                <SelectTrigger className="h-7 w-full border-0 bg-transparent px-2.5 text-[11px] shadow-none focus:ring-0 focus:ring-offset-0 sm:w-[150px]">
+                                    <span className="text-slate-500 mr-1">Sort:</span>
+                                    <SelectValue placeholder="Sort" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="NAME" className="text-xs">Name</SelectItem>
+                                    <SelectItem value="RELEASE_DATE" className="text-xs">Release Date</SelectItem>
+                                    {showPrestigeSort && <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>}
+                                </SelectContent>
+                            </Select>
+                            <div className="mx-1 h-5 w-px bg-slate-800" />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                title={sortDirection === "ASC" ? "Sort ascending" : "Sort descending"}
+                                aria-label={sortDirection === "ASC" ? "Sort ascending" : "Sort descending"}
+                                onClick={() => onSortDirectionChange(sortDirection === "ASC" ? "DESC" : "ASC")}
+                                className="h-7 gap-1 rounded-md px-2 text-[11px] font-medium text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                            >
+                                {sortDirection === "ASC" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+                                {sortDirection === "ASC" ? "Asc" : "Desc"}
+                            </Button>
+                        </div>
+
                         {canEdit && (
                             <div className="flex items-center bg-slate-950/50 border border-slate-700 rounded-lg p-0.5 shrink-0">
                                 <Button
@@ -184,31 +219,6 @@ export function RosterFilters({
                                 <CircleOff className="w-3.5 h-3.5 mr-1" /> Unowned
                             </Button>
                         )}
-
-                        <div className="flex min-w-0 flex-1 sm:flex-initial">
-                            <Select value={sortBy} onValueChange={(v) => onSortByChange(v as RosterSortField)}>
-                                <SelectTrigger className="h-8 w-full min-w-[128px] rounded-r-none bg-slate-950/50 border-slate-700 text-[11px] px-2.5">
-                                    <span className="text-slate-500 mr-1">Sort:</span>
-                                    <SelectValue placeholder="Sort" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="NAME" className="text-xs">Name</SelectItem>
-                                    <SelectItem value="RELEASE_DATE" className="text-xs">Release Date</SelectItem>
-                                    {showPrestigeSort && <SelectItem value="PRESTIGE" className="text-xs">Prestige</SelectItem>}
-                                </SelectContent>
-                            </Select>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                title={sortDirection === "ASC" ? "Sort ascending" : "Sort descending"}
-                                aria-label={sortDirection === "ASC" ? "Sort ascending" : "Sort descending"}
-                                onClick={() => onSortDirectionChange(sortDirection === "ASC" ? "DESC" : "ASC")}
-                                className="h-8 w-9 rounded-l-none border-l-0 border-slate-700 bg-slate-950/50 text-slate-400 hover:bg-slate-900 hover:text-slate-100"
-                            >
-                                {sortDirection === "ASC" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
-                            </Button>
-                        </div>
 
                         {canEdit && (
                             <Button size="sm" className="h-8 bg-sky-600 hover:bg-sky-700 text-white px-3 flex-1 sm:flex-initial" onClick={onAddClick}>

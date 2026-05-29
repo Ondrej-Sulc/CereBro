@@ -7,12 +7,13 @@ import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
 import Link from "next/link";
-import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3, Swords } from "lucide-react";
+import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3, Swords, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
 import { isChampionObtainableAs } from "@/lib/champion-obtainable";
+import { signInAction } from "@/app/actions/auth";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab, RosterSortField, SortDirection } from "./types";
@@ -539,6 +540,23 @@ export function RosterView({
     }));
   }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
 
+  const visibleChampionCount = filteredRoster.length;
+  const totalChampionCount = isChampionsCatalog
+    ? allChampions.length
+    : showUnowned
+      ? filteredRoster.length
+      : roster.length;
+
+  const countLabel = isChampionsCatalog
+    ? visibleChampionCount === totalChampionCount
+      ? `${totalChampionCount.toLocaleString("en-US")} champions`
+      : `Showing ${visibleChampionCount.toLocaleString("en-US")} of ${totalChampionCount.toLocaleString("en-US")}`
+    : showUnowned
+      ? `Showing ${visibleChampionCount.toLocaleString("en-US")} champions`
+      : visibleChampionCount === totalChampionCount
+        ? `Showing ${totalChampionCount.toLocaleString("en-US")} roster champions`
+        : `Showing ${visibleChampionCount.toLocaleString("en-US")} of ${totalChampionCount.toLocaleString("en-US")}`;
+
   const handleUpdate = async (updatedData: Partial<ProfileRosterEntry> & { id: string }) => {
     try {
       const response = await fetch("/api/profile/roster/manage", {
@@ -692,6 +710,21 @@ export function RosterView({
         </div>
       </div>
 
+      {isChampionsCatalog && (
+        <div className="flex flex-col gap-3 rounded-lg border border-sky-500/20 bg-sky-950/20 px-4 py-3 text-sm text-slate-200 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold text-sky-100">Track your own champions</p>
+            <p className="text-slate-400">Sign in to build your roster, manage ranks, and unlock prestige insights.</p>
+          </div>
+          <form action={signInAction}>
+            <Button size="sm" className="gap-2 bg-sky-600 text-white hover:bg-sky-500">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          </form>
+        </div>
+      )}
+
       {enablePrestigeInsights && (
         <>
           <RosterModeSwitch
@@ -736,6 +769,9 @@ export function RosterView({
             showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
             onAddClick={() => setIsAddingChampion(true)}
             sortBy={sortBy} onSortByChange={setSortBy} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} filterStars={filterStars} onFilterStarsChange={setFilterStars}
+            visibleChampionCount={visibleChampionCount}
+            totalChampionCount={totalChampionCount}
+            countLabel={countLabel}
             filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
             tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
             abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
