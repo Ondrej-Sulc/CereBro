@@ -3,6 +3,7 @@ import {
   GuildBasedChannel,
   MessageFlags,
   AttachmentBuilder,
+  PermissionFlagsBits,
 } from "discord.js";
 import { CommandResult } from "../../types/command";
 import { AQState, getState, setState } from "./state";
@@ -23,6 +24,36 @@ interface AQCoreStartParams {
   userId?: string;
 }
 
+function isDiscordMissingAccessError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const code = (error as { code?: number | string }).code;
+  return code === 50001 || code === "50001";
+}
+
+function getCannotSendMessage(channelName: string): string {
+  return `I don't have permission to send AQ tracker messages in **${channelName}**. Please grant me permission to view and send messages there, then try again.`;
+}
+
+function canSendTrackerMessage(channel: GuildBasedChannel, guild: Guild): boolean {
+  const botMember = guild.members.me;
+  if (!botMember || typeof channel.permissionsFor !== "function") {
+    return true;
+  }
+
+  const permissions = channel.permissionsFor(botMember);
+  if (!permissions?.has(PermissionFlagsBits.ViewChannel)) {
+    return false;
+  }
+
+  const sendPermission = channel.isThread()
+    ? PermissionFlagsBits.SendMessagesInThreads
+    : PermissionFlagsBits.SendMessages;
+  return permissions.has(sendPermission);
+}
+
 export async function handleStart(
   params: AQCoreStartParams
 ): Promise<CommandResult> {
@@ -30,6 +61,13 @@ export async function handleStart(
 
   if (!("send" in channel)) {
     return {
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+
+  if (!canSendTrackerMessage(channel, guild)) {
+    return {
+      content: getCannotSendMessage(channelName),
       flags: MessageFlags.Ephemeral,
     };
   }
@@ -122,11 +160,27 @@ export async function handleStart(
 
   const container = buildAQContainer(state, channelName, battlegroupName);
   const file = new AttachmentBuilder(headerImage).setName("aq_header.png");
-  const sent = await (channel as any).send({
-    components: [container],
-    files: [file],
-    flags: [MessageFlags.IsComponentsV2],
-  });
+  let sent;
+  try {
+    sent = await (channel as any).send({
+      components: [container],
+      files: [file],
+      flags: [MessageFlags.IsComponentsV2],
+    });
+  } catch (error) {
+    if (isDiscordMissingAccessError(error)) {
+      logger.warn(
+        { err: error, guildId: guild.id, channelId },
+        "Cannot start AQ tracker without channel send access"
+      );
+      return {
+        content: getCannotSendMessage(channelName),
+        flags: MessageFlags.Ephemeral,
+      };
+    }
+
+    throw error;
+  }
   state.messageId = sent.id;
 
   if (alliance.createAqThread) {
