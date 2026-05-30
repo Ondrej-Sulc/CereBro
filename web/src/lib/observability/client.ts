@@ -2,6 +2,7 @@
 
 import posthog from "posthog-js";
 import { ObservabilityEvents, type ObservabilityEventName, type ProductEventName } from "./events";
+import { isReportableClientException } from "./reportable-client-exceptions";
 import { normalizeProperties } from "./sanitize";
 
 const isPostHogConfigured = Boolean(
@@ -24,6 +25,7 @@ export function captureClientException(
 ): void {
   if (typeof window === "undefined") return;
   if (!isPostHogConfigured) return;
+  if (!isReportableClientException(error)) return;
   posthog.captureException(error, normalizeProperties(properties));
 }
 
