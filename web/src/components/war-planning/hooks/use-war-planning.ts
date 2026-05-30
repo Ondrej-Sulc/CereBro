@@ -11,6 +11,7 @@ import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/n
 
 import { validateNodeAssignment } from "@cerebro/core/data/war-planning/path-logic";
 import { reportClientError } from "@/lib/observability/client";
+import { isTransientPollingError } from "@/lib/transient-client-errors";
 
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
@@ -246,6 +247,7 @@ export function useWarPlanning({
             }
 
         } catch (error) {
+            if (isTransientPollingError(error)) return;
             reportClientError("war_planning_poll", error, {
               war_id: warId,
               battlegroup: currentBattlegroup,

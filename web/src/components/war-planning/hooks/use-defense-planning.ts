@@ -5,6 +5,7 @@ import { PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-plan
 import { RightPanelState } from "./use-war-planning";
 import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 import { reportClientError } from "@/lib/observability/client";
+import { isTransientPollingError } from "@/lib/transient-client-errors";
 
 interface WarNodeWithAllocations extends WarNode {
     allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
@@ -145,6 +146,7 @@ export function useDefensePlanning({
                  });
              });
         } catch (e) {
+            if (isTransientPollingError(e)) return;
             reportClientError("defense_planning_poll", e, { plan_id: planId });
         } finally {
             inFlight = false;
