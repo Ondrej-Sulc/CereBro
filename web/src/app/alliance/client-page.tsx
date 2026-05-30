@@ -105,12 +105,49 @@ interface AllianceWithRequests {
     };
 }
 
-type PlayerWithRoster = Player & { _count: { roster: number }; isSupporter?: boolean };
+type PlayerWithRoster = Player & {
+    _count: { roster: number };
+    rosterLastUpdatedAt: Date | string | null;
+    isSupporter?: boolean;
+};
 
 interface ClientPageProps {
     members: PlayerWithRoster[];
     currentUser: UserPlayerWithAlliance;
     alliance: AllianceWithRequests;
+}
+
+const STALE_ROSTER_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function getDaysSince(date: Date | string | null): number | null {
+    if (!date) return null;
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return Math.floor((Date.now() - parsed.getTime()) / MS_PER_DAY);
+}
+
+// Uses Roster.updatedAt, so this is a roster-row freshness hint, not a strict content audit.
+function getRosterFreshness(player: PlayerWithRoster) {
+    if ((player._count?.roster ?? 0) === 0) {
+        return { state: "missing" as const, label: "No roster", days: null };
+    }
+
+    const days = getDaysSince(player.rosterLastUpdatedAt);
+    if (days === null) {
+        return { state: "unknown" as const, label: "Unknown", days: null };
+    }
+
+    if (days >= STALE_ROSTER_DAYS) {
+        return { state: "stale" as const, label: `Stale ${days}d`, days };
+    }
+
+    return { state: "fresh" as const, label: `Updated ${days}d ago`, days };
+}
+
+function needsRosterFreshnessAttention(player: PlayerWithRoster) {
+    const freshness = getRosterFreshness(player);
+    return freshness.state === "missing" || freshness.state === "stale";
 }
 
 export function AllianceManagementClient({ members, currentUser, alliance }: ClientPageProps) {
@@ -458,7 +495,10 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         return map;
     }, [members, selectedPalette]);
 
-    const renderColumn = (title: string, players: PlayerWithRoster[], icon: React.ReactNode, accentColor?: string, stats?: { count: number; avgPrestige: number | null }) => (
+    const renderColumn = (title: string, players: PlayerWithRoster[], icon: React.ReactNode, accentColor?: string, stats?: { count: number; avgPrestige: number | null }) => {
+        const staleCount = canManageAlliance ? players.filter(needsRosterFreshnessAttention).length : 0;
+
+        return (
         <div className="flex-1 min-w-[300px] flex flex-col gap-3">
             <div
                 className="flex items-center gap-2 pb-1.5 border-b transition-colors"
@@ -475,6 +515,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             {players.filter(player => player.isSupporter).length}
                         </span>
                     )}
+                    {staleCount > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-400">
+                            <AlertTriangle className="w-3 h-3" />
+                            {staleCount} stale
+                        </span>
+                    )}
                     {stats?.avgPrestige != null && (
                         <span className="text-[10px] text-slate-500">avg {stats.avgPrestige.toLocaleString('en-US')}</span>
                     )}
@@ -482,7 +528,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                 </div>
             </div>
             <div className="flex flex-col gap-2">
-                {players.map(player => (
+                {players.map(player => {
+                    const freshness = getRosterFreshness(player);
+                    const FreshnessIcon = freshness.state === "stale" || freshness.state === "missing" ? AlertTriangle : Clock;
+
+                    return (
                     <Card
                         key={player.id}
                         className={cn(
@@ -516,6 +566,23 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                     Prestige: {player.championPrestige?.toLocaleString('en-US') || "N/A"}
                                     <span className="text-slate-600"> · </span>
                                     {(player._count?.roster ?? 0).toLocaleString('en-US')} champs
+                                    {canManageAlliance && (
+                                        <>
+                                            <span className="text-slate-600"> · </span>
+                                            <span
+                                                className={cn(
+                                                    "inline-flex items-center gap-0.5",
+                                                    freshness.state === "stale" && "text-amber-400",
+                                                    freshness.state === "missing" && "text-red-400",
+                                                    freshness.state === "fresh" && "text-slate-500",
+                                                    freshness.state === "unknown" && "text-slate-500"
+                                                )}
+                                            >
+                                                <FreshnessIcon className="h-2.5 w-2.5" />
+                                                {freshness.label}
+                                            </span>
+                                        </>
+                                    )}
                                 </p>
                             </div>
 
@@ -566,10 +633,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             )}
                         </CardContent>
                     </Card>
-                ))}
+                    );
+                })}
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="container mx-auto py-6 px-4">

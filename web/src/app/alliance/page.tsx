@@ -28,7 +28,12 @@ export default async function AlliancePage() {
             include: {
                 _count: {
                     select: { roster: true }
-                }
+                },
+                roster: {
+                    select: { updatedAt: true },
+                    orderBy: { updatedAt: "desc" },
+                    take: 1,
+                },
             }
         }),
         prisma.alliance.findUnique({
@@ -70,8 +75,9 @@ export default async function AlliancePage() {
     if (!alliance) return null;
 
     const supporterPlayerIds = await listSupporterPlayerIds(members);
-    const membersWithSupportStatus = members.map((member) => ({
+    const membersWithSupportStatus = members.map(({ roster, ...member }) => ({
         ...member,
+        rosterLastUpdatedAt: roster[0]?.updatedAt ?? null,
         isSupporter: supporterPlayerIds.has(member.id),
     }));
 
