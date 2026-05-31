@@ -30,7 +30,12 @@ function isDiscordMissingAccessError(error: unknown): boolean {
   }
 
   const code = (error as { code?: number | string }).code;
-  return code === 50001 || code === "50001";
+  return (
+    code === 50001 ||
+    code === "50001" ||
+    code === 50013 ||
+    code === "50013"
+  );
 }
 
 function getCannotSendMessage(channelName: string): string {
@@ -51,7 +56,10 @@ function canSendTrackerMessage(channel: GuildBasedChannel, guild: Guild): boolea
   const sendPermission = channel.isThread()
     ? PermissionFlagsBits.SendMessagesInThreads
     : PermissionFlagsBits.SendMessages;
-  return permissions.has(sendPermission);
+  return (
+    permissions.has(sendPermission) &&
+    permissions.has(PermissionFlagsBits.AttachFiles)
+  );
 }
 
 export async function handleStart(
@@ -190,9 +198,9 @@ export async function handleStart(
         autoArchiveDuration: 1440, // 24 hours
       });
       state.threadId = thread.id;
-    } catch (error: any) {
+    } catch (error) {
       logger.error({ err: error, guildId: guild.id }, 'Failed to create AQ thread');
-      if (error.code === 50001) { // Missing Access
+      if (isDiscordMissingAccessError(error)) {
         try {
           await (channel as any).send("I tried to start a thread for AQ updates, but I don't have the required 'Create Public Threads' permission. Please grant it to me if you'd like this feature enabled.");
         } catch (sendMessageError) {
