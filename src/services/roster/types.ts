@@ -22,6 +22,9 @@ export interface GridCell {
     starContentWidth?: number;
     ascensionColor?: any;
     ascensionHsl?: any;
+    ascensionGoldRatio?: string;
+    ascensionDigit?: string;
+    ascensionDigitScore?: string;
     detectedAscensionLevel?: number;
     brightness?: number;
     bestMatchBuffer?: Buffer;

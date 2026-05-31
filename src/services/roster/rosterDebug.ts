@@ -87,7 +87,7 @@ export class RosterDebugService {
       if (cell.championName || cell.class || cell.rank !== undefined) {
         const rankSig = cell.rank !== undefined ? `R${cell.rank} S${cell.sigLevel || 0}` : '';
         const starStr = cell.stars ? `${cell.stars}*` : '';
-        const ascStr = cell.isAscended ? '(ASC)' : '';
+        const ascStr = cell.isAscended ? `(A${cell.ascensionLevel || 1})` : '';
         // @ts-ignore
         const starRatio = cell.debugInfo?.starWidthRatio || '';
         // @ts-ignore

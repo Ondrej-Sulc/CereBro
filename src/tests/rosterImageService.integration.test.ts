@@ -67,6 +67,7 @@ describe('RosterImageService Integration Tests', () => {
 
       const buffer = await fs.readFile(filePath);
       const { grid } = await rosterImageService.processBGView(buffer, { debugMode: false });
+      const expectedTracksAscensionLevel = expected.some((cell: any) => "ascensionLevel" in cell);
 
       // Transform actual grid to match expectation structure for deep comparison
       const actualSimplified = grid.map(cell => ({
@@ -76,6 +77,7 @@ describe('RosterImageService Integration Tests', () => {
         rank: cell.rank || null,
         sig: cell.sigLevel !== undefined ? cell.sigLevel : null,
         ascended: cell.isAscended || false,
+        ...(expectedTracksAscensionLevel ? { ascensionLevel: cell.ascensionLevel || 0 } : {}),
         pi: cell.powerRating || null
       }));
 

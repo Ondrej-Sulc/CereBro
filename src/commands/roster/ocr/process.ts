@@ -159,7 +159,8 @@ export async function processRosterScreenshot(
     playerId,
     stars,
     rank,
-    isAscended
+    isAscended,
+    ascensionLevel
   );
   const count = savedChampions.flat().length;
   logger.info({ ...logContext, count }, "Successfully saved roster");
