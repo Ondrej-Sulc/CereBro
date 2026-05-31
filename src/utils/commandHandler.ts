@@ -8,6 +8,8 @@ import logger from "../services/loggerService";
 const commandsPath = join(__dirname, "..", "commands");
 
 export const commands = new Collection<string, Command>();
+let commandLoadPromise: Promise<void> | null = null;
+let commandsLoaded = false;
 
 async function findCommandFiles(dir: string): Promise<string[]> {
   const entries = readdirSync(dir);
@@ -59,4 +61,18 @@ export async function loadCommands() {
       logger.error({ error: String(error) }, `   ❌ Error loading command from ${filePath}:`);
     }
   }
+}
+
+export async function ensureCommandsLoaded() {
+  if (commandsLoaded) return;
+  if (!commandLoadPromise) {
+    commandLoadPromise = loadCommands()
+      .then(() => {
+        commandsLoaded = true;
+      })
+      .finally(() => {
+        commandLoadPromise = null;
+      });
+  }
+  await commandLoadPromise;
 }

@@ -23,6 +23,29 @@ export function generateErrorId() {
   return randomBytes(4).toString("hex");
 }
 
+function getDiscordErrorCode(error: unknown): string | number | undefined {
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  return (error as { code?: string | number }).code;
+}
+
+export function isIgnorableInteractionLifecycleError(error: unknown): boolean {
+  const code = getDiscordErrorCode(error);
+  if (code === 10062 || code === "10062" || code === 40060 || code === "40060") {
+    return true;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("DiscordAPIError[10062]") ||
+    message.includes("DiscordAPIError[40060]") ||
+    message.includes("Unknown interaction") ||
+    message.includes("Interaction has already been acknowledged")
+  );
+}
+
 /**
  * Extracts all properties from an Error object for better logging.
  * @param error - The error to process.
@@ -56,30 +79,38 @@ export function handleError(error: unknown, context: ErrorContext = {}) {
     rawError: getErrorProperties(errorObj), // Log the full error object for more details
   };
 
-  logger.error(logContext, `[Error:${errorId}]`);
+  const shouldReport = !isIgnorableInteractionLifecycleError(error);
+
+  if (shouldReport) {
+    logger.error(logContext, `[Error:${errorId}]`);
+  } else {
+    logger.warn(logContext, `[IgnoredInteractionError:${errorId}]`);
+  }
 
   // --- PostHog Event Capture ---
-  (async () => {
-    try {
-      const posthogClient = await getPosthogClient();
-      if (posthogClient && context.userId) {
-        posthogClient.capture({
-          distinctId: context.userId,
-          event: "error_occurred",
-          properties: {
-            error_id: errorId,
-            error_name: errorObj.name,
-            error_message: errorObj.message,
-            error_stack: errorObj.stack,
-            location: context.location,
-            ...context.extra,
-          },
-        });
+  if (shouldReport) {
+    (async () => {
+      try {
+        const posthogClient = await getPosthogClient();
+        if (posthogClient && context.userId) {
+          posthogClient.capture({
+            distinctId: context.userId,
+            event: "error_occurred",
+            properties: {
+              error_id: errorId,
+              error_name: errorObj.name,
+              error_message: errorObj.message,
+              error_stack: errorObj.stack,
+              location: context.location,
+              ...context.extra,
+            },
+          });
+        }
+      } catch (e) {
+        logger.error({ err: e }, "Failed to capture PostHog error event");
       }
-    } catch (e) {
-      logger.error({ err: e }, "Failed to capture PostHog error event");
-    }
-  })();
+    })();
+  }
   // -----------------------------
 
   // More professional user-facing message
@@ -111,9 +142,15 @@ export async function safeReply(
       }
     }
   } catch (err) {
-    logger.error(
-      { err, interactionId: interaction.id, interactionType: interaction.type },
-      `[safeReply] Failed to reply to interaction`
-    );
+    const replyLogContext = {
+      err,
+      interactionId: interaction.id,
+      interactionType: interaction.type,
+    };
+    if (isIgnorableInteractionLifecycleError(err)) {
+      logger.debug(replyLogContext, `[safeReply] Ignored expired interaction reply`);
+    } else {
+      logger.error(replyLogContext, `[safeReply] Failed to reply to interaction`);
+    }
   }
 }

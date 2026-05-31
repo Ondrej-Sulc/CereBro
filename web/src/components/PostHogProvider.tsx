@@ -4,6 +4,7 @@ import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
+import { installIgnoredBrowserErrorFilter } from '@/lib/observability/ignored-browser-errors'
 
 const posthog_key = process.env.NEXT_PUBLIC_POSTHOG_KEY
 const posthog_host = process.env.NEXT_PUBLIC_POSTHOG_HOST
@@ -11,6 +12,7 @@ const isPostHogConfigured = Boolean(posthog_key && posthog_host)
 
 if (typeof window !== 'undefined') {
   if (posthog_key && posthog_host) {
+    installIgnoredBrowserErrorFilter()
     posthog.init(posthog_key, {
       api_host: posthog_host,
       capture_pageview: false, // we capture pageviews manually

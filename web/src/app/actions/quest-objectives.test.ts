@@ -55,8 +55,17 @@ const cacheFake = vi.hoisted(() => ({
   revalidateTag: vi.fn(),
 }));
 
+const gcsFake = vi.hoisted(() => ({
+  deleteFromGcs: vi.fn(),
+  uploadToGcs: vi.fn(),
+}));
+
 vi.mock("@/lib/prisma", () => ({ prisma: prismaFake }));
 vi.mock("@/lib/auth-helpers", () => authFake);
+vi.mock("@/lib/gcs", () => gcsFake);
+vi.mock("@/lib/logger", () => ({
+  default: { debug: vi.fn(), error: vi.fn(), warn: vi.fn() },
+}));
 vi.mock("@/lib/quest-objectives", () => ({
   isNecropolisQuestTitle: (title: string) => {
     const normalized = title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");

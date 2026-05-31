@@ -1,4 +1,10 @@
-import { GuildBasedChannel, MessageFlags, User } from "discord.js";
+import {
+  ContainerBuilder,
+  GuildBasedChannel,
+  MessageFlags,
+  TextDisplayBuilder,
+  User,
+} from "discord.js";
 import { CommandResult } from "../../types/command";
 import { getState, setState } from "./state";
 
@@ -22,9 +28,12 @@ export async function handleEnd(
   state.status = "ended_manual";
   await setState(channelId, state);
   const message = await (channel as any).messages.fetch(state.messageId);
+  const endedContainer = new ContainerBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(`AQ tracker manually ended by ${user}.`)
+  );
   await message.edit({
-    content: `AQ tracker manually ended by ${user}.`,
-    components: [],
+    components: [endedContainer],
+    flags: [MessageFlags.IsComponentsV2],
   });
   if (state.threadId) {
     const thread = await (channel as any).threads.fetch(state.threadId);

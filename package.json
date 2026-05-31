@@ -55,7 +55,7 @@
     "@google-cloud/vision": "^5.3.3",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-visually-hidden": "^1.2.4",
-    "axios": "^1.13.1",
+    "axios": "^1.16.1",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.0",
     "fuse.js": "^7.1.0",

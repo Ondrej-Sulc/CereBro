@@ -28,6 +28,7 @@ import axios from "axios";
 import Link from "next/link";
 import { UpdatedChampionItem, ChampionData, RosterWithChampion } from "@/components/UpdatedChampionItem";
 import { reportClientError } from "@/lib/observability/client";
+import { getRosterUpdateErrorState, type QuotaLimitError } from "@/lib/roster-update-errors";
 
 // Define local types matching what the API returns
 
@@ -36,15 +37,6 @@ interface UpdateResult {
     success: number;
     added: RosterWithChampion[];
     errors: string[];
-}
-
-interface QuotaLimitError {
-    limit: number;
-    used: number;
-    remaining: number;
-    requested: number;
-    resetAt: string;
-    supportUrl: string;
 }
 
 export interface RosterScreenshotQuotaSummary {
@@ -293,31 +285,18 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
             }
 
         } catch (err: unknown) {
-            let errorMessage = "Failed to update roster";
-            if (axios.isAxiosError(err)) {
-                const data = err.response?.data as Partial<QuotaLimitError> & { error?: string; reason?: string } | undefined;
-                errorMessage = data?.error || err.message;
-                if (err.response?.status === 403 && data?.reason === "free_limit_exceeded") {
-                    setQuotaLimitError({
-                        limit: typeof data.limit === "number" ? data.limit : 5,
-                        used: typeof data.used === "number" ? data.used : 0,
-                        remaining: typeof data.remaining === "number" ? data.remaining : 0,
-                        requested: typeof data.requested === "number" ? data.requested : files.length,
-                        resetAt: typeof data.resetAt === "string" ? data.resetAt : "",
-                        supportUrl: typeof data.supportUrl === "string" ? data.supportUrl : "/support",
-                    });
-                }
-            } else if (err instanceof Error) {
-                errorMessage = err.message;
+            const errorState = getRosterUpdateErrorState(err, files.length);
+            setQuotaLimitError(errorState.quotaLimitError);
+            if (errorState.shouldReportException) {
+                reportClientError("roster_update_form_submit", err, {
+                    mode,
+                    file_count: files.length,
+                });
             }
-            reportClientError("roster_update_form_submit", err, {
-                mode,
-                file_count: files.length,
-            });
             setResult({
                 success: 0,
                 added: [],
-                errors: [errorMessage],
+                errors: [errorState.errorMessage],
             });
         } finally {
             setLoading(false);

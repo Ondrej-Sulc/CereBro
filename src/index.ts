@@ -13,7 +13,7 @@ import {
   TextChannel,
 } from "discord.js";
 import { config } from "./config";
-import { loadCommands, commands } from "./utils/commandHandler";
+import { ensureCommandsLoaded, commands } from "./utils/commandHandler";
 import { Command, CommandAccess } from "./types/command";
 import { getPlayer } from "./utils/playerHelper";
 import { getAlliance } from "./utils/allianceHelper";
@@ -75,7 +75,7 @@ client.once(Events.ClientReady, async (readyClient) => {
       logger.info(`HTTP health check server listening on port ${port}`);
     });
 
-  await loadCommands();
+  await ensureCommandsLoaded();
   const commandData = Array.from(client.commands.values()).map((command) =>
     command.data.toJSON()
   );
@@ -353,6 +353,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // Handle autocomplete interactions
   if (interaction.isAutocomplete()) {
+    await ensureCommandsLoaded();
     const command = client.commands.get(interaction.commandName);
     if (command && command.autocomplete) {
       try {
@@ -370,6 +371,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   if (!interaction.isChatInputCommand()) return;
 
+  await ensureCommandsLoaded();
   const command = client.commands.get(interaction.commandName);
 
   if (!command) {
